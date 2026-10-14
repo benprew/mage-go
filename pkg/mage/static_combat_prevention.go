@@ -7,6 +7,8 @@ import (
 )
 
 type staticDamagePreventionRule struct {
+	condition        StateCondition
+	conditional      bool
 	subject          PermanentRef
 	from             PermanentFilter
 	outgoing         bool
@@ -23,6 +25,14 @@ func PreventDamageFromMatchingPermanents(subject PermanentRef, from PermanentFil
 		from = AnyPermanent
 	}
 	return staticDamagePreventionRule{subject: subject, from: from, allDamage: true, permanentSources: true}
+}
+
+// PreventDamageFromMatchingPermanentsIf checks the condition before prevention.
+// The condition uses the current source controller and battlefield visit.
+func PreventDamageFromMatchingPermanentsIf(subject PermanentRef, from PermanentFilter, condition StateCondition) StaticRule {
+	rule := PreventDamageFromMatchingPermanents(subject, from).(staticDamagePreventionRule)
+	rule.condition, rule.conditional = condition, true
+	return rule
 }
 
 // PreventCombatDamageFrom prevents combat damage from the current subject.
@@ -59,6 +69,13 @@ func (r staticDamagePreventionRule) inspectDefinition() definitionNode {
 		node.Text = "prevent damage from a card type"
 		if r.sourceType < core.TypeCreature || r.sourceType > core.TypePlaneswalker {
 			node.problem = "supply a valid damage source card type"
+		}
+	}
+	if r.conditional {
+		if nilDefinition(r.condition) {
+			node.problem = "conditional prevention requires a condition"
+		} else {
+			node.children = append(node.children, definitionEdge{"condition", r.condition})
 		}
 	}
 	return node
@@ -111,6 +128,9 @@ type staticDamagePreventionReplacement struct {
 func (r *staticDamagePreventionReplacement) currentSubject(g *Game) (*Permanent, bool) {
 	source := g.FindPermanent(r.sourceID)
 	if source == nil || source.incarnationID != r.sourceIncarnation {
+		return nil, false
+	}
+	if r.rule.conditional && (nilDefinition(r.rule.condition) || !r.rule.condition.checkState(g, StateContext{SourceID: source.ID(), ControllerID: source.ControllerID(), SourceIncarnation: source.incarnationID})) {
 		return nil, false
 	}
 	ctx := &EffectContext{Game: g, SourceID: source.ID(), Controller: source.ControllerID(), sourceCaptured: true, sourceIncarnation: source.incarnationID}

@@ -1370,9 +1370,21 @@ Ability targets remain permitted. Use the existing `NotCondition` to invert it.
 RON top-level static `If(condition, rules)`, `Unless(condition, rules)` and
 `IfElse(condition, trueRules, falseRules)` accept nonempty lists of the existing
 conditional modifications. Each branch keeps the existing same-layer limit.
-A branch can instead contain exactly one
-`PermanentRuleEffect(subject, [CantBeTheTargetOfSpells(filter)])`.
-Existing conditional attack and untap bodies retain their support. Branches
+A branch can combine those modifications with supported static declarations:
+`PermanentRuleEffect(subject, [CantBeTheTargetOfSpells(filter)])`, conditional
+attack or untap restrictions, all-player untap limits, or the existing static
+damage-redirection form. Each declaration keeps its current shape limits.
+Conditional prevention also accepts
+`PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(filter,
+Permanent(ThisPermanent)), [PreventThatDamage])`. Other prevention events,
+combat-pair source filters and collection recipients remain rejected.
+`PreventDamageFromMatchingPermanentsIf(subject PermanentRef,
+from PermanentFilter, condition StateCondition) StaticRule` supplies that rule.
+The condition is required. Damage rechecks and waiting prevention source queries
+read it with the source's current controller and exact battlefield visit.
+A false condition supplies no waiting subject. A later true condition can resume
+prevention without a new declaration. Source filters retain current and departure
+information; source departure, phasing and ability removal use the shared lifecycle. Branches
 cannot declare targets, costs, keywords as bare rules, triggers or resolving actions.
 Both branches must compile, including the currently inactive branch.
 

@@ -2,6 +2,22 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
+func compileConditionalStaticPrevention(n Node, ctx scope, condition mage.StateCondition) (optionFactory, error) {
+	if err := arity(n, 2); err != nil {
+		return nil, err
+	}
+	if n.Args[0].Name != "DamageWouldBeDealtByAPermanentToRecipient" {
+		return nil, unsupported(n.Args[0], "conditional static prevention event")
+	}
+	if err := arity(n.Args[0], 2); err != nil {
+		return nil, err
+	}
+	if containsCombatTarget(n.Args[0].Args[0]) {
+		return nil, unsupported(n.Args[0], "conditional combat-pair prevention")
+	}
+	return compileMatchingPermanentPrevention(n, ctx, condition)
+}
+
 func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
@@ -30,6 +46,11 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 	if event.Name != "DamageWouldBeDealtByAPermanentToRecipient" {
 		return nil, unsupported(event, "static prevention event")
 	}
+	return compileMatchingPermanentPrevention(n, ctx, nil)
+}
+
+func compileMatchingPermanentPrevention(n Node, ctx scope, condition mage.StateCondition) (optionFactory, error) {
+	event := n.Args[0]
 	if err := arity(event, 2); err != nil {
 		return nil, err
 	}
@@ -66,6 +87,10 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 		return nil, unsupported(operation, "static prevention operation")
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.Static(mage.PreventDamageFromMatchingPermanents(ref.build(instanceBindings{}), from)))
+		rule := mage.PreventDamageFromMatchingPermanents(ref.build(instanceBindings{}), from)
+		if condition != nil {
+			rule = mage.PreventDamageFromMatchingPermanentsIf(ref.build(instanceBindings{}), from, condition)
+		}
+		return mage.WithAbility(mage.Static(rule))
 	}, nil
 }

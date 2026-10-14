@@ -48,6 +48,56 @@ func compileConditionalStaticBody(body Node, ctx scope, condition mage.StateCond
 	if err != nil {
 		return nil, err
 	}
+	if len(rules) == 0 {
+		return nil, problem(body, "conditional static body must not be empty")
+	}
+	var layers []Node
+	var options []optionFactory
+	for _, rule := range rules {
+		if rule.Name == "PermanentLayerEffect" || rule.Name == "EachPermanentLayerEffect" {
+			layers = append(layers, rule)
+			continue
+		}
+		var build optionFactory
+		if rule.Name == "PreventDamage" {
+			build, err = compileConditionalStaticPrevention(rule, ctx, condition)
+		} else {
+			part := body
+			part.Args = []Node{rule}
+			build, err = compileConditionalStaticPart(part, ctx, condition)
+		}
+		if err != nil {
+			return nil, err
+		}
+		options = append(options, build)
+	}
+	if len(layers) > 0 {
+		part := body
+		part.Args = layers
+		build, err := compileConditionalStaticPart(part, ctx, condition)
+		if err != nil {
+			return nil, err
+		}
+		options = append(options, build)
+	}
+	return func() mage.CardOption {
+		built := make([]mage.CardOption, len(options))
+		for i, option := range options {
+			built[i] = option()
+		}
+		return func(card *mage.BaseCard) {
+			for _, option := range built {
+				option(card)
+			}
+		}
+	}, nil
+}
+
+func compileConditionalStaticPart(body Node, ctx scope, condition mage.StateCondition) (optionFactory, error) {
+	rules, err := list(body)
+	if err != nil {
+		return nil, err
+	}
 	if len(rules) == 1 && rules[0].Name == "ReplaceWouldDealDamage" {
 		return compileStaticDamageRedirect(rules[0], ctx, condition)
 	}

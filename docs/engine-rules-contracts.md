@@ -3240,7 +3240,10 @@ type changes affect controller conditions before bonuses apply. P/T counters
 remain separate from bonuses. Source phasing suspends grants, phase return
 restores them, and a returned host cannot inherit an old attachment's grant.
 The RON adapter supports the combined conditional animation shape documented
-below. Other mixed conditional bodies still reject.
+below. Supported rule and replacement declarations can share a conditional
+body with layer modifications. Layer modifications still use their existing
+same-layer and shared-membership checks; this composition does not add general
+mixed-layer support.
 
 `TestRONConditionalStatic*` verifies real casting and target legality, failed
 payment rollback, current controller/membership and tap changes, regeneration,
@@ -20266,3 +20269,42 @@ body resolves or is countered. `TestNextMainPhaseSavedSpellTargets` covers live,
 departed and recast spells, current color/control, defensive reads, clone
 isolation, filtered source choice and waiting/stack lifetime. Complete Mana Drain
 tests cover counter-before-capture, spell copies and independent cloned bodies.
+
+
+## Conditional static-body composition and permanent-source prevention
+
+`PreventDamageFromMatchingPermanentsIf(subject PermanentRef,
+from PermanentFilter, condition StateCondition) StaticRule` requires a valid
+condition and subject. It uses the existing static permanent-source prevention
+service and shared replacement pipeline (CR 604.2, 611.3a–c, 615.1, 616.1).
+The condition reads the exact source visit and its current controller at each
+replacement match and waiting-reference query. False conditions supply no
+waiting subject. The cycle still registers the declaration while false, so an
+earlier replacement can make the condition true before a recheck. Static
+conditions do not use source LKI. Damage source filters retain their existing
+current, departure and phase-information rules. Phasing suspends prevention;
+phase-in restores it; return cannot restore a saved cycle's source visit.
+Ability removal stops the rule through the existing static cycle lifecycle.
+Simultaneous damage keeps independent packets and ordinary unpreventable rules.
+
+RON owns branch validation and declaration composition for top-level static
+`If`, `Unless` and `IfElse` on permanent definitions. It combines supported
+conditional attack, untap, spell-target, untap-limit, damage-redirection and
+permanent-source prevention declarations with the existing conditional layers.
+Each family retains its supported subjects and shapes. All branches compile,
+even when inactive. Bare keywords, targets, payments, triggers, resolving actions,
+collection prevention and unsupported protection operations remain errors.
+Factories create separate abilities and static registrations. No result binding
+or announcement state transfers between declarations.
+
+Evidence: `TestConditionalStaticBodyPrevention`, `Definitions`,
+`WaitingAndIdentity` and `ControllerAndBatch` cover condition rechecks, invalid
+bindings, current control, exact visits, attachments, phasing, clones, ability
+removal, departure source facts, waiting queries, unpreventable and simultaneous
+damage. All engine names share the `TestConditionalStaticBody` prefix.
+`TestRONConditionalStaticBodyGameplay`, `Invalid`, `LoadAndInstances` and
+`RepositoryRegression` cover native paid casting, both branch directions,
+attack legality, P/T and prevention together, rejected inactive branches,
+independent factories and atomic loading. Repository regression uses complete
+Kird Ape, Sedge Troll, Giant Tortoise, Argothian Pixies, Desert Nomads and Uncle
+Istvan records. Synthetic mixed bodies establish no new full-card coverage.

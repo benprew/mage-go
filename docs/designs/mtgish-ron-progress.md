@@ -8,29 +8,31 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **876 accepted / 110 rejected names**
 (986 total), **2,244 compiled / 201 rejected records** (2,445 total).
-The latest slice is **NEXT-MAIN-PHASE-MANA**. Resolving CreateFutureTrigger
-accepts AtTheBeginningOfPlayersNextMainPhase(You). It waits for the next actual
-main phase of either kind on the resolving controller's turn. Fixed-color
-AddManaRepeated reads typed ManaValueOfSpell through the shared stack LKI
-service. Counter failure does not stop the independent delayed instruction;
-an illegal sole target prevents its creation. Copies, clones, returned spells,
-X, cleanup, skipped phases and extra main phases have tests. Estimated and
-actual gains are **one name / one record**. Complete-card RON gameplay coverage
-gains **Mana Drain**. Existing accepted records remain accepted.
+The latest slice is **CONDITIONAL-STATIC-BODY**. Permanent static If, Unless
+and IfElse compose supported rule, replacement and layer declarations.
+Conditional permanent-source prevention checks the live condition during
+replacement rechecks and waiting-source queries. Layer membership limits stay
+in force. Native RON casting, branch validation, attack legality, prevention,
+P/T, source identity, attachments, phasing, clones and simultaneous damage have
+focused tests. Estimated and actual gains are **zero names / zero records**.
+This is a shared prerequisite for Camel and Guardian Beast; neither has complete
+RON gameplay coverage yet. Existing accepted records remain accepted.
 
-The loader still rejects the collection atomically. Only Mana Drain's rejection
-is removed; all remaining diagnostics are unchanged. Runtime cutover, Go-card
-removal and DSL cleanup remain gated.
+The loader still rejects the collection atomically. Camel's diagnostic advances
+to its unsupported collection-recipient prevention event; other diagnostics are
+unchanged. Runtime cutover, Go-card removal and DSL cleanup remain gated.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Shared conditional static-rule bodies — Camel and Guardian Beast.**
-   Two downstream cards; no full unlock from the conditional dispatcher alone.
-   Include band membership or enchant/control protection prerequisites as needed.
-2. **Granted targeted activation prerequisite — Equinox.** Zero immediate
-   unlocks until destruction prediction; prefer a demonstrable shared grant use.
+1. **Band-aware collection references — Camel and Icatian Skirmishers.**
+   Shared band membership has two concrete consumers. Camel also requires
+   collection-recipient prevention; inspect event-time band formation before
+   estimating complete-card gains for Skirmishers.
+2. **Conditional artifact protections — Guardian Beast.** Static-body dispatch
+   is ready. Implement current-controller noncreature artifact membership and
+   enchant/control protection, with existing Auras retained.
 3. **Entry choice state — Primal Clay and Shapeshifter.** Compare finite copiable
    variants with saved numeric entry/upkeep choices. Check Primal Clay's Wall
    variant against Oracle before estimating full-card gains.
@@ -8915,3 +8917,171 @@ records are supported.
 Complete RON gameplay, native runtime loading, Go-card deletion, obsolete
 Go-set generation removal and unused DSL cleanup remain incomplete. No DSL
 function was removed; no cleanup caller audit is claimed. Stop after this slice.
+
+
+## 2026-10-14 — CONDITIONAL-STATIC-BODY
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before editing. The baseline loader
+exited 1 for collection rejection: 2,244 compiled / 201 rejected records,
+876 accepted / 110 rejected unique names. This was not a build or test failure.
+Complete Camel, Guardian Beast, Equinox, Primal Clay (ATQ and 3ED) and
+Shapeshifter records were inspected, including nested forms. Targeted vocabulary
+entries established If, BandedWith, both artifact protections and both entry
+choice forms. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Conditional static-body composition | Camel; Guardian Beast | 0 names / 0 records | Camel needs collection prevention and band membership. Guardian Beast needs enchant/control protection and noncreature artifact membership. Shared composition removes the body boundary for both. | Small: compiler composition, one live prevention engine contract and focused lifecycle tests. |
+| Granted targeted activation | Equinox | 0 | Complete record also needs WouldDestroyAPermanent prediction, including replacement effects and controlled-land selection. No additional complete-record grant user was established in this comparison. | Medium to large: grant identity/target scope, then a separate prediction contract. |
+| Entry choice state | Primal Clay; Shapeshifter | 0 for one common prerequisite; individual completion estimates deferred | Clay needs finite copiable P/T/type/keyword variants; its Wall P/T needs an Oracle audit. Shapeshifter needs an entry number, optional upkeep update, chosen-number storage and numeric layers. These are different downstream contracts. | Large for both; at least two bounded slices and a source audit. |
+
+Candidate #1 was dependency-ready and has concrete two-card downstream value.
+It was selected as a prerequisite, without claiming complete-card unlocks.
+Selection, reuse boundary and acceptance cases were stated before editing.
+No source defect was corrected. The Primal Clay concern remains unverified and
+was not used to invent implementation requirements. No Go definitions or RON
+source records changed. No obsolete DSL function was removed; no cleanup caller
+audit is claimed. Runtime and deletion gates remain unmet.
+
+### Supported shapes, dependencies and engine contract
+
+Top-level permanent static `If(condition, rules)`, `Unless(condition, rules)`
+and `IfElse(condition, trueRules, falseRules)` require nonempty branch lists.
+They compose the already supported conditional PermanentRuleEffect attack,
+untap and spell-target forms, EachPlayerEffect untap limits,
+ReplaceWouldDealDamage redirection, and conditional layer declarations.
+Each family keeps its exact prior subjects and operation shape. Layer parts
+are validated together and retain the existing same-layer restriction and
+shared type-layer membership service. Bare keywords, resolving actions,
+triggers, targets, payments, unsupported collection rule operations and
+unsupported protection forms still reject. Both branches compile before a
+factory is available. No declaration is silently dropped.
+
+The added prevention shape is exactly
+`PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(filter,
+Permanent(ThisPermanent)), [PreventThatDamage])` in a conditional static body.
+Combat-pair source filters and other prevention events remain unsupported here.
+No target, event or lexical result binding is introduced. All factory calls
+build separate abilities and registration state.
+
+Engine signature:
+`PreventDamageFromMatchingPermanentsIf(subject PermanentRef,
+from PermanentFilter, condition StateCondition) StaticRule`.
+The condition and subject must pass definition validation. Zero source filters
+retain the existing any-permanent meaning. The reusable engine service also
+supports AttachedPermanent; the new RON prevention shape is source-only.
+The shared static replacement cycle installs the declaration even when the
+condition is false. Each match and waiting-source query checks the current
+source controller and exact incarnation. Earlier replacements can change the
+condition before rechecks. False conditions supply no waiting subject.
+Source departure or phasing stops prevention; phase-in restores it; a returned
+source cannot restore an old cycle. Existing source filter LKI, unpreventable
+damage, simultaneous packet scope, attachment identity and clone services are
+reused. No new payment, replacement ordering or batch system was added.
+Rules read: CR 604, 611.3a–c, 615 and the established 616 replacement contract.
+API and rules documentation describe only this supported boundary.
+
+### Failing-first evidence and card-to-test mappings
+
+Before implementation, engine tests failed compilation only for the missing
+PreventDamageFromMatchingPermanentsIf signature. RON If, Unless and IfElse mixed
+body tests failed on unsupported conditional PermanentRuleEffect bodies.
+After implementation, the same behavior requirements pass. A test fixture's
+Unless clone expectation was corrected before the first passing run; no engine
+requirement or assertion was weakened.
+
+- Engine: **TestConditionalStaticBodyPrevention** covers true/false conditions,
+  phasing, phase return, ability removal, clones, source return, unpreventable
+  damage and earlier replacements that tap or untap before prevention rechecks.
+- Engine: **TestConditionalStaticBodyDefinitions** rejects missing subjects,
+  missing conditions and unbound condition reads.
+- Engine: **TestConditionalStaticBodyWaitingAndIdentity** checks live condition
+  changes without a new cycle, Aura reattachment, phase cycles and saved
+  replacement identity after source return.
+- Engine: **TestConditionalStaticBodyControllerAndBatch** checks current source
+  control, matching permanent departure facts, independent simultaneous player
+  and permanent packets, and restarted conditions under the new controller.
+- RON: **TestRONConditionalStaticBodyGameplay** uses complete synthetic RON
+  definitions and native paid casting. One body combines CantAttack, prevention
+  and fixed P/T, tests If/Unless/IfElse directions, tap changes, attack legality
+  and clone isolation.
+- RON: **TestRONConditionalStaticBodyInvalid** rejects empty bodies, inactive
+  branches with resolving actions, mixed layer families, out-of-scope targets
+  and bare keywords.
+- RON: **TestRONConditionalStaticBodyHostUntap** moves the exact formerly
+  unsupported host untap/P/T shape into positive gameplay coverage. Source
+  counters control both effects; native untap steps, phasing, clones and source
+  departure are checked. The old invalid-body table now retains a mixed body
+  with an unsupported modification instead.
+- RON: **TestRONConditionalStaticBodyLoadAndInstances** proves strict loading,
+  two independent factory instances, simultaneous recipient separation and
+  atomic rejection that preserves an existing explicit registry.
+- **Kird Ape and Sedge Troll → TestRONConditionalStaticController**;
+  **Giant Tortoise → TestRONConditionalStaticUntapped**;
+  **Argothian Pixies, Desert Nomads and Uncle Istvan → TestRONStaticPreventionCards
+  and TestRONStaticPreventionReplacementOrder**. The new
+  TestRONConditionalStaticBodyRepositoryRegression runs these complete-record
+  gameplay regressions under the focused slice prefix.
+- **Camel and Guardian Beast** receive shared prerequisite evidence only.
+  Their complete records still reject; no full-card gameplay claim is made.
+  Complete Icatian Skirmishers was read for the next-candidate dependency map:
+  it shares BandedWith with Camel but uses attack-event capture and a temporary
+  first-strike grant, so band formation timing must be investigated separately.
+
+Estimated and actual gains match: **0 unique names / 0 records**. No complete
+inventory-card gameplay coverage is added. Supported synthetic mixed-body
+contexts gain gameplay evidence; complete existing inventory coverage is
+preserved. Compilation acceptance and gameplay coverage remain separate.
+
+### Validation and loader evidence
+
+Focused RON and engine tests passed with `-count=1`. The first engine short
+run exposed TestRONHostStaticUntapInvalid's obsolete blanket mixed-body
+rejection. Its previously rejected exact shape now has the positive native
+untap/P/T gameplay test above, and the negative table still checks an invalid
+mixed body. No behavior test was weakened. After that test migration,
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`,
+`make test` and the skill's additional `go test ./... -short -count=1` passed.
+
+`make lint` passed with **0 issues**. Automatic formatting and fix output was
+reviewed; no additional code change remained. Focused RON and engine tests
+passed again after lint. `git diff --check` passed. No environment or remaining
+validation blocker exists.
+
+Final `go run ./cmd/loadcards -json` exited **1** for expected atomic collection
+rejection: **2,244 compiled / 201 rejected records**, **876 accepted / 110
+rejected unique names**, out of 2,445 records / 986 names. Exact baseline
+comparison changes only Camel's diagnostic, from unsupported conditional
+static body (PreventDamage), ARN 12:186, to unsupported conditional static
+prevention event (DamageWouldBeDealtByAPermanentToARecipient), ARN 12:200.
+No record becomes accepted or rejected. All other diagnostics remain identical.
+The vocabulary loader baseline equals the final report; syntax entries and
+source hashes are unchanged. Complete collection publication remains gated.
+
+Changed files: engine static_combat_prevention.go and new
+conditional_static_body_test.go; compiler conditional_static.go,
+static_prevention.go and new conditional_static_body_test.go; the existing
+host_static_untap_test.go rejection fixture; pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md, the vocabulary loader
+baseline and this ledger. No source syntax or hashes changed.
+
+### Ranked next candidates
+
+1. **Band-aware collection references — Camel and Icatian Skirmishers.**
+   Two consumers share BandedWith. Camel also needs the
+   DamageWouldBeDealtByAPermanentToARecipient collection prevention adapter.
+   Skirmishers needs attack-event band timing verified before an unlock estimate.
+2. **Conditional artifact protections — Guardian Beast.** Shared branch
+   composition is ready. Current noncreature artifact/controller selection,
+   no new Aura enchantment without removing existing Auras, and control-change
+   prohibition remain concrete engine/adaptation contracts.
+3. **Entry choices — Primal Clay and Shapeshifter.** Finite copiable variants
+   and saved numeric entry/upkeep choices remain distinct. Audit Clay's Wall
+   form before correcting all reprints or claiming full-card gains.
+
+Complete RON gameplay, native runtime loading, Go-card deletion, obsolete
+Go-set generation removal and unused DSL cleanup remain incomplete.
+Stop after this slice.

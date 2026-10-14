@@ -223,7 +223,7 @@ func TestRONHostStaticUntapInvalid(t *testing.T) {
 		`PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap,DoesntUntapDuringControllersUntap])`,
 		`PermanentRuleEffect(HostPermanent,[MayChooseNotToUntapDuringUntap])`,
 		`If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(NetCounter)),[EachPermanentRuleEffect(AnyPermanent,[DoesntUntapDuringControllersUntap])])`,
-		`If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(NetCounter)),[PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap]),PermanentLayerEffect(HostPermanent,[AdjustPT(1,1)])])`,
+		`If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(NetCounter)),[PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap]),PermanentLayerEffect(HostPermanent,[UnsupportedModification])])`,
 	} {
 		src := fmt.Sprintf(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[Aura]),Rules:[EnchantPermanent(IsCardtype(Creature)),%s])`, rule)
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")

@@ -1271,7 +1271,7 @@
       {"card": "Abu Ja'far", "source": {"File": "ARN.lines.ron", "Line": 1, "Column": 1}, "message": "ARN.lines.ron:1:259: unsupported permanent filter (BlockedDeadAttacker)"},
       {"card": "Aladdin's Lamp", "source": {"File": "ARN.lines.ron", "Line": 3, "Column": 1}, "message": "ARN.lines.ron:3:457: unsupported activation modifier (XCantBeZero)"},
       {"card": "Ali from Cairo", "source": {"File": "ARN.lines.ron", "Line": 6, "Column": 1}, "message": "ARN.lines.ron:6:181: unsupported player rule operation (DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead)"},
-      {"card": "Camel", "source": {"File": "ARN.lines.ron", "Line": 12, "Column": 1}, "message": "ARN.lines.ron:12:186: unsupported conditional static body (PreventDamage)"},
+      {"card": "Camel", "source": {"File": "ARN.lines.ron", "Line": 12, "Column": 1}, "message": "ARN.lines.ron:12:200: unsupported conditional static prevention event (DamageWouldBeDealtByAPermanentToARecipient)"},
       {"card": "Cyclone", "source": {"File": "ARN.lines.ron", "Line": 16, "Column": 1}, "message": "ARN.lines.ron:16:303: unsupported two-branch payment cost (PayManaForEach)"},
       {"card": "Eye for an Eye", "source": {"File": "ARN.lines.ron", "Line": 29, "Column": 1}, "message": "ARN.lines.ron:29:311: unsupported selected-source redirection recipient (Player)"},
       {"card": "Ghazbán Ogre", "source": {"File": "ARN.lines.ron", "Line": 33, "Column": 1}, "message": "ARN.lines.ron:33:316: unsupported indefinite type modification (SetController)"},

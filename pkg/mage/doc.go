@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventDamageFromMatchingPermanentsIf] checks a live static condition.
+// Replacement rechecks and waiting source queries use the same condition.
+// The current source controller and exact battlefield visit supply its context.
+// RON static If, Unless and IfElse accept lists of supported rule, prevention
+// and layer declarations. All branches must pass definition checks.
+// Layer parts keep their existing membership and same-layer limits.
+// Conditional prevention accepts one permanent source filter, ThisPermanent
+// recipient and PreventThatDamage. Collection recipients need an adapter.
+//
 // [YourMainPhase] matches each main phase on the controller's turn.
 // [AtNext] waits for the next actual boundary, including extra main phases.
 // Cleanup and skipped phases do not consume this schedule. The resolving
