@@ -19735,3 +19735,48 @@ Local `data/DRK.json` Oracle text agrees with the unchanged RON record.
 [Wizards' Commander Masters release notes](https://magic.wizards.com/en/news/feature/commander-masters-release-notes)
 confirm the cost, amount, color, replacement-order and restriction contracts.
 No RON source correction is needed.
+
+
+## Exact exile-card counter predicates
+
+`ExiledCard.Counters [core.NumCounters]int` belongs to one `Visit`, separate
+from the physical card definition. The shared exile constructors start each
+new visit with zero counters, including re-exile (CR 400.7/400.8, 122.2).
+`ZoneSystem.Clone` copies the array by value. Removing another exile member or
+replacing a card definition within the same visit does not change its counters.
+This storage adds no placement, removal, transfer, or characteristic-changing
+instruction. Future counter operations must use their own shared rules contracts.
+
+`ExiledCardHasCounter(card CardRef, counter core.CounterType) StateCondition`
+checks a positive count. `ExiledCardHasNoCounters(card CardRef, counter
+core.CounterType) StateCondition` checks zero. Both require a saved `FromCard`
+reference, a valid counter type, and a present face-up exile visit. Missing,
+wrong-zone, departed, returned and face-down sources make both conditions false.
+The zero predicate cannot infer counter absence from a failed reference. These
+conditions use current counters, not departure LKI (CR 400.7, 122.1).
+
+`WithSourceCardInZone` supplies exact event facts. `WithInterveningIf` checks at
+detection and resolution (CR 603.4); `IfState` checks at its instruction during
+resolution. The existing query-frame service preserves outer bindings. Queued
+triggers, copies and pending clones retain the saved visit and event player.
+Counter reads make no choices, pay no costs, and change no game state. Exile
+cards do not phase. Battlefield phasing, counter replacement ordering and
+simultaneous counter operations are outside this predicate/storage contract.
+
+RON lowers `ExiledCardPassesFilter(ThisExiledCard,
+HasACounterOfType(counter))` and `HasNoCountersOfType(counter)` in an ordinary
+owner-upkeep `FromExile(TriggerI(...))` and in resolving
+`If(condition, [actions])` under that zone declaration. The existing single
+`IsCardtype(type)` predicate also works in the resolving branch. Counter kinds
+reuse the existing checked counter parser. Conjunctions, numeric comparisons,
+other card references, source zones, target predicates and alternative branches
+remain unsupported. Every factory creates fresh card and event bindings.
+
+Evidence: native `TestExileCounterConditionVisits`, `Timing`, `Invalid` and
+`MissingFacts`; RON `TestRONExileCounterConditionGameplay`, `AllHallowsEve`,
+`Invalid` and `Inventory`. The real-record tests retain All Hallow's Eve's
+predicates with probe actions in place of unsupported spell exile, removal and
+mass return. The resolving probe uses the original event as `TriggerA` so that
+its zero predicate can run independently of the intervening guard. These tests
+establish prerequisite behavior, not complete-card gameplay. The unchanged full
+record still rejects at `Exile([Spell(ThisSpell)], ...)`.

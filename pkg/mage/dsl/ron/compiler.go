@@ -1406,6 +1406,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "If":
+		if len(n.Args) > 0 && n.Args[0].Name == "ExiledCardPassesFilter" {
+			build, err := compileResolvingExileBranch(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		if len(n.Args) > 0 && n.Args[0].Name == "PermanentsChangedControlThisWay" {
 			build, err := compileControlExchangeBranch(n, ctx)
 			if err != nil {

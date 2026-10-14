@@ -15054,3 +15054,30 @@ options still allow activation and payment of the tap cost, producing no mana
 without using the stack. Manual choices and automatic payment share legal
 options. Copies and clones query their own game and current controller.
 Queried mana restrictions and riders do not follow the color onto the new mana.
+
+
+## RON exact exile-card counter reads
+
+Under an ordinary owner-upkeep `FromExile` declaration, these conditions read
+only the saved source card's present face-up exile visit:
+
+```text
+ExiledCardPassesFilter(ThisExiledCard, HasACounterOfType(ScreamCounter))
+ExiledCardPassesFilter(ThisExiledCard, HasNoCountersOfType(ScreamCounter))
+```
+
+They are supported in `TriggerI` and resolving `If(condition, [actions])`.
+The resolving branch also accepts the existing `IsCardtype(type)` condition.
+The compiler reuses checked counter kinds and makes fresh per-factory bindings.
+Native constructors are `mage.ExiledCardHasCounter(mage.FromCard(binding), kind)`
+and `mage.ExiledCardHasNoCounters(mage.FromCard(binding), kind)`; both return
+`mage.StateCondition`. `mage.ExiledCard.Counters` stores integer counts per
+exile visit and is copied separately in game clones.
+
+An absent or returned card fails both conditions. Source departure cannot make
+`HasNoCountersOfType` true. Conditions read current counts at their specified
+timing and preserve the outer resolution frame. Numeric counter comparisons,
+conjunctions, other references, counter removal, placement and spell exile with
+counters need separate adapters. All Hallow's Eve remains incomplete. See
+`TestRONExileCounterCondition*` and `TestExileCounterCondition*` for the supported
+contract and strict declaration checks.

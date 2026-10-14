@@ -8,28 +8,27 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **867 accepted / 119 rejected names**
 (986 total), **2,235 compiled / 210 rejected records** (2,445 total).
-The latest slice is **DYNAMIC-MANA-COLOR-OPTIONS**. One source tap activation
-adds one color that matching opponent permanents could produce. Pure queries
-include current layers, hypothetical costs, recursive dependencies and all mana
-replacement orders. Manual choices and automatic payment share finite options.
-Estimated and actual full-card gains are **one name / one record**: Fellwar Stone.
-Complete-card gameplay coverage gains Fellwar Stone; accepted records stay accepted.
-Native and RON tests cover cycles, phasing, control, return, copies, clones,
-replacements, storage-land results, legal choices, stale plans and rollback.
+The latest slice is **EXACT-EXILE-COUNTER-READS**. Exile visits store integer
+counter arrays. Typed predicates read the saved present face-up visit at trigger
+detection, resolution and resolving If instructions. Missing or returned visits
+cannot satisfy either predicate. Clones keep separate counts and event frames.
+Estimated and actual full-card gains are **zero names / zero records**.
+All Hallow's Eve gains verified prerequisite predicates; complete-card gameplay
+coverage does not increase. Accepted records and diagnostics stay unchanged.
 
-The loader still rejects the collection atomically. Exile counters and other
-unsupported records remain gaps. Runtime cutover, Go-card removal and DSL cleanup
-stay gated.
+The loader still rejects the collection atomically. Spell exile with counters,
+exile counter removal and mass graveyard entry remain All Hallow's Eve gaps.
+Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; exact
-   visit storage precedes predicates/removal, spell exile and graveyard batches.
-2. **Counter-bound duration — Cyclopean Tomb.** Estimated zero immediate gains;
-   each-subject visits and source counter history precede delayed removal.
+1. **Exile-source counter removal — All Hallow's Eve.** Zero immediate gains;
+   exact storage and predicates are ready for its resolving removal operation.
+2. **Spell exile with counters — All Hallow's Eve.** Zero immediate gains;
+   preserve exact stack visits, spell copies and counter initialization timing.
 3. **Player-chosen trigger targets — The Abyss.** Assess the two-argument target
    shape and a saved event-player chooser; estimated one name/one record.
 
@@ -6650,3 +6649,182 @@ production Go definitions, generators and DSL exports remain unchanged.
 
 This run stops after dynamic mana color options. Runtime cutover, complete
 collection gameplay, Go-card deletion and DSL cleanup remain gated.
+
+
+## 2026-10-13 — EXACT-EXILE-COUNTER-READS
+
+### Candidate comparison and selection
+
+Fresh starting evidence: clean working tree; `make build` passed;
+`go test ./pkg/mage/dsl/ron -count=1` passed; `go run ./cmd/loadcards -json`
+exited 1 for expected collection rejection, with 2,235 compiled / 210 rejected
+records and 867 accepted / 119 rejected unique names. This was collection
+rejection, not an environment, compiler-build or test failure. The baseline
+JSON was retained outside the repository for final diagnostic comparison.
+
+The latest ledger's three candidates were checked against complete records and
+nested forms. Reprints count once. No first-error frequency was used as an
+unlock estimate.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream capability | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Exact exile-card counters and reads | All Hallow's Eve (LEG, one record) | 0 names / 0 records | Existing exact exile visits are ready. Storage and predicates enable the source countdown; spell exile with counters, removal and simultaneous all-graveyard entry remain. | Small storage/query contract, two predicate adapters, about 30 lifecycle/declaration cases; fits one run. |
+| Counter-bound duration | Cyclopean Tomb (LEA, LEB, 2ED, CED, CEI; five records) | 0 names / 0 records | Subject-bound counter lifetime precedes source-specific counter placement/removal history and persistent upkeep removal. A duration adapter alone cannot complete the card. | Moderate; exact subject lifetimes and layer transitions plus longer history dependencies. |
+| Event-player target chooser | The Abyss (LEG, one record) | 1 name / 1 record | Ordinary bound upkeep, creature/artifact filters and destroy-without-regeneration are ready. Explicit event-player target choice needs announcement and copy contracts. | Moderate; compiler target shape plus chooser frames, legality, target placement and retarget-copy tests. |
+
+Selected the dependency-ready first candidate as an unblocking prerequisite,
+following this run's explicit first-candidate rule. It has zero immediate gains,
+not an invented multi-card benefit. The exact-visit identity service already
+exists and is reused. The completed slice is storage and predicate reads, not
+all exile-counter operations. The other compared candidates affect one unique
+card each; Cyclopean Tomb has a longer dependency chain. The Abyss retains its
+credible one-card estimate for a subsequent run.
+
+Acceptance contract stated before edits: counters belong to an exact exile
+visit, both positive and zero predicates require a present face-up source,
+queries preserve outer frames, detection and resolution read current counts,
+return cannot replace a saved visit, and clones/instances remain independent.
+Invalid declarations reject before registry publication. No RON spelling or
+source-specific policy belongs in engine storage.
+
+### Implemented shape, engine reuse and boundaries
+
+Engine storage: `ExiledCard.Counters [core.NumCounters]int`. The exile zone owns
+this array beside `Visit`; existing exile constructors initialize it to zero.
+`ZoneSystem.Clone` copies it by value. New exile visits, including re-exile,
+start without counters. Counts above 255 remain exact.
+
+Native signatures:
+
+- `ExiledCardHasCounter(card CardRef, counter core.CounterType) StateCondition`
+- `ExiledCardHasNoCounters(card CardRef, counter core.CounterType) StateCondition`
+
+Both require saved `FromCard` references and valid counter kinds. They read only
+present face-up exile visits. A wrong-zone, missing, unwritten, departed,
+returned or hidden source cannot supply either positive or zero information.
+Counter reads do not use departure LKI. The existing `CardBinding`, captured
+card visits, `cardConditionContext`, source-zone event capture,
+`WithInterveningIf`, `IfState`, stack-copy and clone services own all identity,
+query frames and timing. No parallel zone, trigger or result system was added.
+
+RON signatures/context:
+
+```text
+FromExile(TriggerI(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+  ExiledCardPassesFilter(ThisExiledCard, HasACounterOfType(counter)),
+  ActionList([...])));
+If(ExiledCardPassesFilter(ThisExiledCard, HasNoCountersOfType(counter)),
+  [actions]);
+```
+
+Either counter predicate works in both of these source-zone contexts. The
+resolving branch also reuses the existing `IsCardtype(type)` predicate.
+Counter kinds reuse the checked counter parser, including its supported P/T
+counter syntax. Inventory distinguishes card counter kinds and retains roles
+for both event conditions and nested resolving conditions. Every factory makes
+fresh card/event bindings. Counter numeric comparisons, conjunctions, other
+card references, alternative branches, placement/removal and spell exile with
+counters remain explicit gaps. Storage alone establishes no counter-driven
+characteristic modifications or replacement instructions.
+
+CR 122.1/122.2 and 400.7/400.8 establish counter storage, loss on departure and
+new exile visits. CR 603.4 supplies event/resolution guard timing. Exile cards
+do not phase; battlefield phasing, payment rollback, replacement ordering and
+simultaneous counter operations do not apply to pure predicates. Existing
+movement/replacement services remain unchanged. No Go card definitions,
+generators or DSL exports were removed; their removal gates remain unmet.
+
+Complete All Hallow's Eve, all five Cyclopean Tomb records and The Abyss were
+read. Local `data/LEG.json` Oracle text matches the unchanged All Hallow's Eve
+record. No source defect was found or corrected. RON source and vocabulary
+snapshot hashes remain unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+The first native test run failed to compile at the missing `ExiledCard.Counters`,
+`ExiledCardHasCounter` and `ExiledCardHasNoCounters` declarations. After engine
+implementation, the first RON run failed with unsupported source-zone card
+filters for both predicates, including the real-record projection. After the
+adapters, two test assumptions were corrected: a copied RON body retains its
+saved upkeep player, and a sorcery projection must keep a valid SpellActions
+rule. Assertions now check those engine contracts explicitly; no test was
+weakened. The former rejection fixture for the now-supported predicate uses
+an unknown counter kind instead, preserving its invalid-declaration purpose.
+
+- **All Hallow's Eve → TestRONExileCounterConditionAllHallowsEve.** Its unchanged
+  full record must still reject at the independent spell-exile gap. A test-only
+  projection keeps the original metadata, owner-upkeep event and both actual
+  counter predicates; unsupported spell exile/removal/mass return use life
+  probes. The intervening condition is checked with 0, 1, 2 and 300 counters.
+  A separate resolving probe uses the original event as TriggerA to test zero,
+  positive, departed and returned reads without the intervening guard blocking
+  its body. Pending clones read their own counters. This is prerequisite
+  gameplay evidence, not complete-card gameplay or a production partial registry.
+- **TestRONExileCounterConditionGameplay.** Both predicates, strict loading,
+  correct upkeep owner, two fresh instances, counts above 255, unrelated counter
+  types, detection/resolution changes, departure, return, hidden sources,
+  stack copies and pending clone isolation.
+- **TestRONExileCounterConditionInvalid / Inventory.** Arity, unknown/malformed
+  counters, unbound/wrong references, unsupported conjunctions/comparisons,
+  wrong zones, ordinary spell misuse, empty bodies and atomic rejection; nested
+  card/filter/counter roles remain unverified in inventory reporting.
+- **TestExileCounterConditionVisits / Timing / Invalid / MissingFacts.** Exact
+  visits, fresh returns and re-exile, wide counts, clone arrays, separate counter
+  types, source-owner upkeep, current guards, pure query frames, pending clones,
+  copied controllers, two instances, hidden/unwritten/wrong-zone reads, valid
+  native resolving declarations and definition-time errors.
+
+Estimated and actual full-card gains both equal zero names / zero records.
+Complete-card gameplay coverage remains unchanged. All Hallow's Eve's two
+counter predicates now have RON-backed behavior evidence; its remaining rules
+retain separate gaps.
+
+### Validation, changed files and next work
+
+Passed in fast-fail order:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONExileCounterCondition -count=1`;
+   focused existing `TestRONSourceZoneCondition` regressions and native
+   `go test ./pkg/mage -run TestExileCounterCondition -count=1` also passed.
+2. `make build` and `go vet ./...` passed.
+3. `go test ./pkg/mage/... -short -count=1` and `make test` passed. The
+   skill-required `go test ./... -short -count=1` also passed.
+4. `make lint` passed with **0 issues**. Automatic formatter/fix results were
+   reviewed; no unrelated or semantic changes were introduced.
+   `git diff --check` passed.
+5. Final `go run ./cmd/loadcards -json` exited 1 for expected atomic collection
+   rejection: **2,235 compiled / 210 rejected records**, **867 accepted / 119
+   rejected names**. Exact baseline/final JSON equality was asserted. All
+   accepted records and all remaining diagnostics are unchanged, including
+   `LEG.lines.ron:12:190: unsupported exile subject (Spell)` for All Hallow's Eve.
+
+No required validation check failed and no environment blocker remains.
+Expected collection rejection does not block this validated prerequisite slice.
+Estimated and actual compilation gains match at zero names / zero records;
+complete-card gameplay gains remain zero. One descriptive slice commit is made
+after these checks; no next slice starts in this run.
+
+Changed engine files: new `exile_counter_condition.go` and native tests;
+`game.go`, `zone_system.go` and `doc.go`. Changed compiler files: new
+`exile_counter_condition.go` and RON tests; `compiler.go`, `inventory.go`,
+`source_zone_condition.go` and its rejection test. API/rules contracts and this
+ledger document the established behavior. No card source, vocabulary snapshot,
+production definition, generator or obsolete DSL caller was changed.
+
+### Ranked next candidates
+
+1. **Exact exile-source counter removal — All Hallow's Eve.** Storage and both
+   predicates are ready. Lower `RemoveCounters([ACounterOfTypeFromCardInExile
+   (ScreamCounter,ThisExiledCard)])` through an exact saved-visit engine operation;
+   cover current counters, absent/returned subjects and removal events. Estimated
+   zero full-card gains until spell exile and mass entry are implemented.
+2. **Spell exile with initial counters — All Hallow's Eve.** Support its singular
+   ThisSpell exile and fixed counter modifier before source-zone triggers can
+   observe it. Establish stack identity, copies, departure and initialization
+   timing. Estimated zero gains while mass graveyard return remains unsupported.
+3. **Event-player target chooser — The Abyss.** Existing bound upkeep and destroy
+   mechanics are ready. Implement its explicit target chooser with current
+   legality and copy-retarget contracts; estimated one name / one record.
+
+This run stops after exact exile-counter reads. Complete collection gameplay,
+runtime loading, Go-card deletion, DSL cleanup and native cutover remain gated.

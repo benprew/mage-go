@@ -88,6 +88,7 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 				Card:         card,
 				ExiledBy:     ec.ExiledBy,
 				Visit:        ec.Visit,
+				Counters:     ec.Counters,
 				FaceDown:     ec.FaceDown,
 				RevealedTo:   append([]uuid.UUID(nil), ec.RevealedTo...),
 			}

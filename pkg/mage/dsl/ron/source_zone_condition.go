@@ -13,6 +13,9 @@ func compileSourceZoneCondition(n Node, ctx scope) (func(instanceBindings) mage.
 	if err := arity(n, count); err != nil {
 		return nil, err
 	}
+	if ctx.sourceZone == nil {
+		return nil, problem(n, "condition requires a source zone card")
+	}
 	card, err := compileCardRef(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
@@ -21,6 +24,26 @@ func compileSourceZoneCondition(n Node, ctx scope) (func(instanceBindings) mage.
 		return nil, problem(n.Args[0], "condition requires the source zone card")
 	}
 	filterNode := n.Args[count-1]
+	if n.Name == "ExiledCardPassesFilter" {
+		if ctx.sourceZone.zone != core.ZoneExile {
+			return nil, problem(n, "exile condition requires an exile source")
+		}
+		if filterNode.Name == "HasACounterOfType" || filterNode.Name == "HasNoCountersOfType" {
+			if err := arity(filterNode, 1); err != nil {
+				return nil, err
+			}
+			counter, err := compilePermanentCounterType(filterNode.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			return func(bindings instanceBindings) mage.StateCondition {
+				if filterNode.Name == "HasNoCountersOfType" {
+					return mage.ExiledCardHasNoCounters(card.build(bindings), counter)
+				}
+				return mage.ExiledCardHasCounter(card.build(bindings), counter)
+			}, nil
+		}
+	}
 	if filterNode.Name != "IsCardtype" {
 		return nil, unsupported(filterNode, "source-zone card filter")
 	}

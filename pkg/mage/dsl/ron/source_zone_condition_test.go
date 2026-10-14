@@ -161,7 +161,7 @@ func TestRONSourceZoneConditionInvalid(t *testing.T) {
 	}
 	for _, src := range []string{
 		zoneConditionFixture("FromExile", orderedSourceCondition),
-		zoneConditionFixture("FromExile", `ExiledCardPassesFilter(ThisExiledCard,HasACounterOfType(ScreamCounter))`),
+		zoneConditionFixture("FromExile", `ExiledCardPassesFilter(ThisExiledCard,HasACounterOfType(UnknownCounter))`),
 		strings.Replace(zoneConditionFixture("FromGraveyard", orderedSourceCondition), "SinglePlayer(You)", "Opponent", 1),
 		strings.Replace(zoneConditionFixture("FromGraveyard", orderedSourceCondition), "ActionList([PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))])", "Targeted([TargetPlayer(AnyPlayer)],ActionList([GainLife(Integer(1))]))", 1),
 		strings.Replace(zoneConditionFixture("FromGraveyard", orderedSourceCondition), "GainLife(Integer(1))", "TapPermanent(ThisPermanent)", 1),

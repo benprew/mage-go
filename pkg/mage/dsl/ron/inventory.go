@@ -403,6 +403,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "condition":
+		if n.Name == "ExiledCardPassesFilter" && len(n.Args) == 2 {
+			return []string{"card_reference", "card_filter"}[index]
+		}
 		if n.Name == "PermanentDealtDamageToPlayerThisWay" && len(n.Args) == 2 {
 			return []string{"permanent_reference", "player_reference"}[index]
 		}
@@ -642,6 +645,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "card_filter":
+		if (n.Name == "HasACounterOfType" || n.Name == "HasNoCountersOfType") && len(n.Args) == 1 {
+			return "card_counter_type"
+		}
 		if n.Name == "IsColor" || n.Name == "IsNonColor" {
 			if len(n.Args) == 1 {
 				return "color"
@@ -1289,7 +1295,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}
-	case "permanent_counter_type":
+	case "permanent_counter_type", "card_counter_type":
 		if n.Name == "PTCounter" && len(n.Args) == 2 {
 			return "integer_literal"
 		}
