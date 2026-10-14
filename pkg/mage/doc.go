@@ -2280,6 +2280,10 @@
 // [PTEqualsCount], [PTEqualsControlledCount] and [ToughnessEqualsControlledCount]
 // keep their count declarations outside the battlefield. Copies keep those
 // declarations; each battlefield instance has a separate source binding.
+// [PTEqualsCountPlus], [PTEqualsControlledCountPlus] and
+// [PTEqualsOpponentCountPlus] add a fixed value to those layer 7a counts.
+// Opponent counts use the current source controller, or the card owner
+// outside the battlefield. An absent controller supplies zero for the count.
 // Saved object information must use the existing LKI services.
 // Use [CantBeTargetedBySpellsIf] for a live conditional spell target restriction.
 // The condition reads the current source controller at each target query.

@@ -26,7 +26,7 @@
     {
       "path": "cards/mtgish/ATQ.lines.ron",
       "records": 85,
-      "sha256": "28663a79c41a88ded168363ddcdc5c4048d7ffb6c72bc783628290aa9a11e728"
+      "sha256": "08e1803b11924129ca3f5810c061c6e1ac466f1dedcde7218a942b6f10d0903a"
     },
     {
       "path": "cards/mtgish/CED.lines.ron",
@@ -760,7 +760,7 @@
     {"name": "OnlyOtherPlayersMayActivate", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Clergy of the Holy Nimbus (cards/mtgish/LEG.lines.ron:47:420)"]},
     {"name": "OnlyPlayerMayActivate", "kind": "tuple", "arity": 1, "occurrences": 7, "examples": ["Personal Incarnation (cards/mtgish/2ED.lines.ron:181:446)", "Personal Incarnation (cards/mtgish/3ED.lines.ron:185:446)", "Personal Incarnation (cards/mtgish/CED.lines.ron:181:446)"]},
     {"name": "Ooze", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Primordial Ooze (cards/mtgish/LEG.lines.ron:196:92)"]},
-    {"name": "Opponent", "kind": "symbol", "arity": 0, "occurrences": 94, "examples": ["Black Vise (cards/mtgish/2ED.lines.ron:19:179)", "Demonic Hordes (cards/mtgish/2ED.lines.ron:61:542)", "Hypnotic Specter (cards/mtgish/2ED.lines.ron:117:250)"]},
+    {"name": "Opponent", "kind": "symbol", "arity": 0, "occurrences": 96, "examples": ["Black Vise (cards/mtgish/2ED.lines.ron:19:179)", "Demonic Hordes (cards/mtgish/2ED.lines.ron:61:542)", "Hypnotic Specter (cards/mtgish/2ED.lines.ron:117:250)"]},
     {"name": "Or", "kind": "tuple", "arity": 1, "occurrences": 102, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:315)", "Disenchant (cards/mtgish/2ED.lines.ron:64:180)", "Fork (cards/mtgish/2ED.lines.ron:92:161)"]},
     {"name": "Orc", "kind": "symbol", "arity": 0, "occurrences": 23, "examples": ["Ironclaw Orcs (cards/mtgish/2ED.lines.ron:124:90)", "Orcish Artillery (cards/mtgish/2ED.lines.ron:177:93)", "Orcish Artillery (cards/mtgish/3ED.lines.ron:180:93)"]},
     {"name": "Orgg", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Orgg (cards/mtgish/FEM.lines.ron:70:81)"]},
@@ -827,7 +827,7 @@
     {"name": "PlaysWithCardInHandRevealed", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Firestorm Phoenix (cards/mtgish/LEG.lines.ron:85:345)"]},
     {"name": "PlaysWithHandRevealed", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Revelation (cards/mtgish/LEG.lines.ron:221:159)"]},
     {"name": "PlaysWithTopOfLibraryRevealed", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Field of Dreams (cards/mtgish/LEG.lines.ron:83:164)"]},
-    {"name": "Plus", "kind": "tuple", "arity": 2, "occurrences": 10, "examples": ["Metamorphosis (cards/mtgish/ARN.lines.ron:53:270)", "Gaea's Avenger (cards/mtgish/ATQ.lines.ron:32:175)", "Gaea's Avenger (cards/mtgish/ATQ.lines.ron:32:316)"]},
+    {"name": "Plus", "kind": "tuple", "arity": 2, "occurrences": 10, "examples": ["Metamorphosis (cards/mtgish/ARN.lines.ron:53:270)", "Gaea's Avenger (cards/mtgish/ATQ.lines.ron:32:175)", "Gaea's Avenger (cards/mtgish/ATQ.lines.ron:32:307)"]},
     {"name": "PlusX", "kind": "symbol", "arity": 0, "occurrences": 20, "examples": ["Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:241)", "Berserk (cards/mtgish/2ED.lines.ron:15:336)", "Howl from Beyond (cards/mtgish/2ED.lines.ron:113:277)"]},
     {"name": "PlusY", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:248)", "Aspect of Wolf (cards/mtgish/3ED.lines.ron:10:248)", "Aspect of Wolf (cards/mtgish/CED.lines.ron:8:248)"]},
     {"name": "PoisonCounter", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Marsh Viper (cards/mtgish/DRK.lines.ron:68:302)", "Pit Scorpion (cards/mtgish/LEG.lines.ron:191:288)", "Serpent Generator (cards/mtgish/LEG.lines.ron:234:460)"]},
@@ -975,7 +975,7 @@
     {"name": "SimultaneousPermanentChoices", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Juxtapose (cards/mtgish/LEG.lines.ron:142:201)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:651)"]},
     {"name": "SingleCardInHand", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Psychic Purge (cards/mtgish/LEG.lines.ron:199:349)"]},
     {"name": "SinglePermanent", "kind": "tuple", "arity": 1, "occurrences": 239, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:250)", "Black Ward (cards/mtgish/2ED.lines.ron:20:282)", "Blue Ward (cards/mtgish/2ED.lines.ron:24:280)"]},
-    {"name": "SinglePlayer", "kind": "tuple", "arity": 1, "occurrences": 496, "examples": ["Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:354)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:475)", "Black Vise (cards/mtgish/2ED.lines.ron:19:232)"]},
+    {"name": "SinglePlayer", "kind": "tuple", "arity": 1, "occurrences": 494, "examples": ["Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:354)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:475)", "Black Vise (cards/mtgish/2ED.lines.ron:19:232)"]},
     {"name": "SingleSpell", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Mana Vortex (cards/mtgish/DRK.lines.ron:65:218)"]},
     {"name": "Skeleton", "kind": "symbol", "arity": 0, "occurrences": 12, "examples": ["Drudge Skeletons (cards/mtgish/2ED.lines.ron:70:93)", "Wall of Bone (cards/mtgish/2ED.lines.ron:268:89)", "Drudge Skeletons (cards/mtgish/3ED.lines.ron:72:93)"]},
     {"name": "SkipThisDrawStep", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Fasting (cards/mtgish/DRK.lines.ron:35:491)"]},
@@ -1227,12 +1227,12 @@
     {"name": "XCantBeZero", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Aladdin's Lamp (cards/mtgish/3ED.lines.ron:2:457)", "Aladdin's Lamp (cards/mtgish/ARN.lines.ron:3:457)"]},
     {"name": "XIs", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Reflecting Mirror (cards/mtgish/DRK.lines.ron:85:454)", "Voodoo Doll (cards/mtgish/LEG.lines.ron:288:857)"]},
     {"name": "Yeti", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Mountain Yeti (cards/mtgish/LEG.lines.ron:179:90)"]},
-    {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 762, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
+    {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 760, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
     {"name": "Zero", "kind": "symbol", "arity": 0, "occurrences": 14, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:343)", "Howl from Beyond (cards/mtgish/2ED.lines.ron:113:284)", "Howl from Beyond (cards/mtgish/3ED.lines.ron:118:284)"]},
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2272,
+    "compiled": 2273,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1279,7 +1279,6 @@
       {"card": "Shahrazad", "source": {"File": "ARN.lines.ron", "Line": 70, "Column": 1}, "message": "ARN.lines.ron:70:156: unsupported action (PlayAMagicSubgame)"},
       {"card": "Bronze Tablet", "source": {"File": "ATQ.lines.ron", "Line": 15, "Column": 1}, "message": "ATQ.lines.ron:15:372: unsupported permanent target owner (Opponent)"},
       {"card": "Drafna's Restoration", "source": {"File": "ATQ.lines.ron", "Line": 27, "Column": 1}, "message": "ATQ.lines.ron:27:154: unsupported singular permanent target group (TargetPlayer)"},
-      {"card": "Gaea's Avenger", "source": {"File": "ATQ.lines.ron", "Line": 32, "Column": 1}, "message": "ATQ.lines.ron:32:316: unsupported characteristic count value (Plus)"},
       {"card": "Phyrexian Gremlins", "source": {"File": "ATQ.lines.ron", "Line": 51, "Column": 1}, "message": "ATQ.lines.ron:51:405: unbound or incompatible permanent reference (ThePermanentTappedThisWay)"},
       {"card": "Tawnos's Coffin", "source": {"File": "ATQ.lines.ron", "Line": 67, "Column": 1}, "message": "ATQ.lines.ron:67:479: unsupported action (NoteCountersOnPermanent)"},
       {"card": "Tetravus", "source": {"File": "ATQ.lines.ron", "Line": 70, "Column": 1}, "message": "ATQ.lines.ron:70:596: unsupported token keyword (PermanentRuleEffect)"},

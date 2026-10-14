@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **898 accepted / 88 rejected names**
-(986 total), **2,272 compiled / 173 rejected records** (2,445 total).
-The latest slice is **SAVED-PLURAL-SACRIFICE-CONSUMERS**. Resolving numeric
-consumers read the saved optional sacrifice power. Exact saved graveyard card
-groups and the separately paid source use one simultaneous exile batch across
-owners. Sword of the Ages now executes its complete corrected RON record.
-Native and RON tests cover payment-time power, tokens, replacement destinations,
-source/card return, timing, legality, prevention, copies, clones and delays.
-The source repair adds the omitted artifact exile with local Oracle evidence.
-Estimated and actual gain: **one name / one record**. The vocabulary snapshot
-has fresh AST counts, positions, source hashes and loader diagnostics.
-All required checks pass; lint reports 0 issues. Final evidence is below.
+Latest measured result (2026-10-14): **899 accepted / 87 rejected names**
+(986 total), **2,273 compiled / 172 rejected records** (2,445 total).
+The latest slice is **ADDITIVE-BATTLEFIELD-COUNT-CDA**. Paired creature CDAs
+add a fixed integer to a live battlefield count in every zone. Controller
+selection supports all permanents, your permanents and opponents' permanents.
+Gaea's Avenger now executes its complete RON record. Both controller clauses
+use Opponent, as required by local Oracle data. Native and RON tests cover
+zones, layers, membership, control, phasing, return, copies, clones and LKI.
+Estimated and actual gain: **one name / one record**. All earlier accepted
+records remain accepted. The vocabulary snapshot has fresh AST counts,
+positions, source hashes and loader diagnostics. All required checks pass;
+lint reports 0 issues. Final validation evidence is below.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,13 +26,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Saved plural sacrifice result consumers.** Lower total power and exact
-   graveyard-card reads for Sword of the Ages. Audit complete cost timing and
-   repair its artifact-exile omission before claiming a full-card unlock.
-2. **Characteristic arithmetic.** Gaea's Avenger needs additive all-zone CDA
-   operands and a justified opponent-controller source repair.
-3. **Damage causation identity.** Silhouette needs distinct causing spell/ability
-   facts before temporary prevention. Reassess shared multi-card uses.
+1. **Repeated resolving mana cost:** PayManaForEach for Cyclone, using its live
+   wind-counter count and existing paid/unpaid branches and damage batch.
+2. **Unbounded resolving mana payment and paid-amount prevention:** Power Leak;
+   audit the symbol producer and its prevention consumer as one cohesive contract.
+3. **Damage causation identity and prevention:** Silhouette; require concrete
+   shared downstream value before selecting an isolated identity prerequisite.
 
 ## Dependencies and source blockers
 
@@ -13517,3 +13516,178 @@ Commit title: `feat(ron): implement saved plural sacrifice consumers`.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after SAVED-PLURAL-SACRIFICE-CONSUMERS.
+
+
+## 2026-10-14 — ADDITIVE-BATTLEFIELD-COUNT-CDA
+
+### Environment and candidate comparison
+
+The working tree was clean at the start. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict loader exited 1:
+2,272 compiled / 173 rejected records, 898 accepted / 88 rejected unique names.
+This was collection rejection, not a build, test or environment failure.
+Read the execution design, current status and latest entry only, relevant
+engine API and count-CDA rules contracts, targeted vocabulary entries, selected
+compiler/engine services, and complete RON records for the candidates and callers.
+
+Compared the latest entry's three ranked candidates:
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers, downstream value and effort |
+| --- | --- | --- | --- |
+| Additive all-zone count CDA | Gaea's Avenger; existing shared-service callers Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods | 1 name / 1 record | No later syntax blocker. Requires a justified controller repair. Extends the common all-zone count declaration for fixed additive values and opponent counts. Small adapter/engine change; medium zone/layer/identity test matrix. |
+| Variable resolving mana payments | Power Leak, Cyclone | At most 1 per separate payment shape | Complete records use different contracts: Power Leak has symbol PayAnyAmountOfMana plus AmountOfManaPaidThisWay prevention; Cyclone has PayManaForEach with wind-counter count and fixed paid/unpaid branches. Existing two-branch lowering accepts only fixed PayMana. Neither first error implies both cards unlock together. Dynamic payment results support further resolving payments, but the two candidates are not one cohesive shape. Medium effort for Cyclone; greater for Power Leak. |
+| Damage causation identity and prevention | Silhouette | 0 for identity alone; 1 with temporary prevention | Requires causing spell/ability identity distinct from the damage source, plus ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient and its temporary consumer. No second direct inventory card uses that event. Concrete multi-card downstream value is not yet established. Large cross-subsystem test effort. |
+
+Selected the first candidate: it is dependency-ready and has the largest
+credible gain for its bounded effort among these shapes. The comparison does
+not count accepted callers as new unlocks. No compared candidate offers a
+shared two-card unlock in one complete bounded shape. This run extends one
+existing engine capability; it does not begin a second payment or damage slice.
+
+### Exact supported contract and reuse boundary
+
+Top-level creature rules accept both CDA_Power(value) and CDA_Toughness(value),
+with the same position-free value:
+
+`Plus(Integer(n), TheNumberOfPermanentsOnTheBattlefield(filter))`
+
+The fixed integer is the left operand and may be negative. Count filters reuse
+the characteristic-safe leaf whitelist and nonempty nested And/Or. Controller
+restrictions are conjunctive ControlledByAPlayer(SinglePlayer(You)) or
+ControlledByAPlayer(Opponent). Repeated identical restrictions are allowed;
+incompatible restrictions and restrictions beneath Or reject. Other static
+contexts keep their existing selector boundary. Dynamic offsets, reversed
+operands, nested arithmetic, unequal axes, single-axis additive declarations,
+noncreatures and resolving-action CDAs reject during compilation.
+
+New engine signatures, all returning ContinuousEffect:
+
+- `PTEqualsCountPlus(filter PermanentFilter, offset int)`
+- `PTEqualsControlledCountPlus(filter PermanentFilter, offset int)`
+- `PTEqualsOpponentCountPlus(filter PermanentFilter, offset int)`
+
+These extend countCharacteristicPT with fixed offset and opponent scope.
+CountBattlefield, characteristic filter matching, GetPlayer/GetOpponent,
+CardPowerToughness, source-incarnation binding, layer reset, copy/clone support,
+and departure snapshots remain shared services. Opponent scope checks that the
+controller exists before selecting its opponent; the native unknown-owner test
+first observed 4/4 instead of the required offset-only 1/1 and caught this need.
+There is no second layer or zone store, mutable factory binding, card-name
+execution branch, global result slot, runtime declaration panic or Go fallback.
+Existing count and entry-result CDAs retain their behavior.
+
+Owner supplies the all-zone context outside the battlefield and stack; spells
+use their current controller. Battlefield control and type layers precede the
+live 7a count. Ability removal restores printed values. Bonuses, counters and
+switching apply after the CDA. Phased members do not count; phased sources keep
+their saved values. Return binds a new source visit. Copies and clones keep
+separate state. Departed source LKI retains final P/T; public-zone card queries
+use current counts. These are pure static queries. Target announcement, new
+payment results, delayed bindings, replacement ordering and simultaneous
+operations are not added by this slice. Real casting failure still tests the
+existing payment rollback boundary.
+
+Rules evidence: local CR 208.2a, 604.3/604.3a and 613.4a–d were read. Existing
+count-CDA contracts supply CR 109.5, 400.7 and 702.26b–d identity/context rules.
+API and rules-contract documents describe only the established additive shape.
+
+### Source repair and failing-first evidence
+
+ATQ.lines.ron:32 was the only Gaea's Avenger record. Both count filters used
+ControlledByAPlayer(SinglePlayer(You)). `data/ATQ.json` gives the Oracle text:
+“Gaea's Avenger's power and toughness are each equal to 1 plus the number of
+artifacts your opponents control.” Replaced both selectors with Opponent.
+There are no identical reprints to repair. The parser-derived vocabulary now
+has the current source hash, occurrence counts, example positions and loader
+report. It retains 604 tuple signatures and 51 top-level rule names.
+No other source defect was changed.
+
+Native tests failed first at compilation for the three absent engine APIs.
+After a test fixture API correction, the failure contained only the intended
+missing signatures. RON tests failed at unsupported characteristic count Plus.
+After lowering, the unchanged source failed asymmetric own/opponent count
+assertions (2/2 instead of 3/3 and 3/3 instead of 1/1). The justified source
+repair passed those assertions. Test setup corrections supplied the destroyed
+fixture's owner and used the existing Game.GrantAttr type-layer API. No assertion
+was weakened and no test was removed.
+
+### Card-to-test mapping and gameplay evidence
+
+- Complete Gaea's Avenger -> TestRONCharacteristicAdditiveAvenger: native
+  definition validation, asymmetric artifacts, real three-mana casting,
+  failed payment rollback, stack versus entry timing, pending clone resolution,
+  member phasing, member/source control changes, departure and source return.
+- Gaea's Avenger interactions -> TestRONCharacteristicAdditiveCopiesAndLKI:
+  current spell controller, copied spell controller, copied definitions,
+  counters, layer-6 removal/restoration, Giant Growth and Swords to Plowshares
+  with additive final power/controller LKI and independent cloned resolution.
+- Gaea's Avenger instance/membership interactions ->
+  TestRONCharacteristicAdditiveInstancesAndMembership: two fresh factories,
+  opposing source contexts, a creature gaining artifact type in layer 4,
+  expiry and clone-only phase changes. Sol Ring and Llanowar Elves use complete
+  RON fixture records; their implementations remain unchanged.
+- TestRONCharacteristicAdditiveDeclarations: strict subset loading and native
+  gameplay for all/controlled/opponent scopes, a negative offset and nested
+  characteristic-only disjunction. TestRONCharacteristicAdditiveInvalid:
+  malformed kinds/arities, unbound references, unsupported expressions,
+  controller disjunctions/conflicts, wrong context, duplicate/unequal axes,
+  single-axis declarations and noncreatures.
+- TestCharacteristicAdditiveScopesAndZones: all three constructors, query
+  purity, printed-value preservation, library/hand/graveyard/exile/battlefield
+  context, current control, member phasing and absent owner.
+- TestCharacteristicAdditiveLayersAndIdentity: CDA removal/restoration,
+  7b/7c/7d order and counters, repeat layer passes, phased source, returned
+  incarnation rejecting the old effect and independent cloned membership.
+- Existing TestCharacteristicPT* and TestRONCharacteristicCount* pass for
+  Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats and People of the
+  Woods, including the twenty reprint records. Their complete records were
+  read. These are regression mappings, not new gameplay or compilation gains.
+
+### Verification and measured gain
+
+Focused RON characteristic additive/count tests and native characteristic
+additive/PT tests with -count=1 pass. In required fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run 'RONCharacteristicAdditive|RONCharacteristicCount' -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed automatic-tool output, formatting
+  and final diffs; no unrelated file changed.
+  Post-lint focused native and RON tests, definition-plan reconstruction and
+  collection inventory tests with -count=1: pass.
+- `git diff --check`: pass, including final ledger changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,273 compiled /
+  172 rejected records; 899 accepted / 87 rejected unique names**.
+
+The exact diagnostic comparison removes only Gaea's Avenger's former Plus
+error. No new or changed rejection appears and no accepted record is lost.
+The vocabulary loader report and all 12 current source hashes match. Updated
+exact-count fixtures in inventory_test.go, definition_plan_test.go and
+numeric_consumers_test.go to 2,273/172. Atomic loading remains strict; no partial
+production registry is published. Estimated and actual gain match: one unique
+name and one record. One newly complete RON gameplay mapping is separate from
+collection compilation progress. Build, test and environment blockers: none.
+
+Changed files: cards/mtgish/ATQ.lines.ron; engine characteristic_additive.go,
+characteristic_additive_test.go, characteristic_pt.go and doc.go; RON
+characteristic_additive.go, characteristic_additive_test.go,
+characteristic_count.go and inventory.go; three collection-count test files;
+docs/dsl-reference.md, docs/engine-rules-contracts.md, vocabulary and this ledger.
+Commit title: `feat(ron): implement additive battlefield count CDAs`.
+No Go-card definition or broad DSL export was removed: complete loading,
+startup wiring and the removal gates are still unmet.
+
+### Ranked next candidates
+
+1. **Repeated resolving mana cost:** complete PayManaForEach for Cyclone.
+   Reuse its supported counter read, paid/unpaid branching and damage batch;
+   validate live count timing, colored payment, mana abilities and rollback.
+2. **Unbounded resolving mana payment and paid-amount prevention:** Power Leak.
+   Audit the symbol producer, payer frame, saved paid amount and reduction of
+   damage through prevention before selecting the complete supported shape.
+3. **Damage causation identity and prevention:** Silhouette. Require concrete
+   shared downstream value before selecting an isolated zero-unlock prerequisite.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after ADDITIVE-BATTLEFIELD-COUNT-CDA.

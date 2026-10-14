@@ -11,6 +11,8 @@ type countCharacteristicPT struct {
 	incarnation                  uuid.UUID
 	filter                       PermanentFilter
 	controlled, power, toughness bool
+	opponents                    bool
+	offset                       int
 	entrySacrifice               bool
 	entryLife                    bool
 }
@@ -53,7 +55,17 @@ func (e *countCharacteristicPT) count(g *Game, controller uuid.UUID, source *Per
 	if e.controlled {
 		filter = And(ControlledBy(controller), filter)
 	}
-	return g.CountBattlefield(filter)
+	if e.opponents {
+		if g.GetPlayer(controller) == nil {
+			return e.offset
+		}
+		opponent := g.GetOpponent(controller)
+		if opponent == nil {
+			return e.offset
+		}
+		filter = And(ControlledBy(opponent.PlayerID()), filter)
+	}
+	return e.offset + g.CountBattlefield(filter)
 }
 func (e *countCharacteristicPT) ApplyContinuous(ctx *EffectContext) error {
 	p := ctx.Game.MutablePermanent(e.SourceID())

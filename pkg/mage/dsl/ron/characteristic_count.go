@@ -34,6 +34,12 @@ func compileCharacteristicCounts(rules []Node, creature bool) (optionFactory, er
 		return nil, problem(*power, "power and toughness counts must use the same declaration")
 	}
 	value := toughness.Args[0]
+	if value.Name == "Plus" {
+		if power == nil {
+			return nil, unsupported(value, "toughness-only additive characteristic count")
+		}
+		return compileAdditiveCharacteristicCount(value)
+	}
 	if value.Name != "TheNumberOfPermanentsOnTheBattlefield" {
 		return nil, unsupported(value, "characteristic count value")
 	}

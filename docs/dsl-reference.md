@@ -7344,7 +7344,7 @@ Count filters accept nonempty `And`/`Or`, explicit card names through
 subtypes, colors and supertypes, including their existing negative forms.
 Controller restrictions must occur in conjunctions and use `You`; disjunctions
 cannot contain a controller restriction. Object references, current P/T,
-ability filters, arithmetic and entry/payment results remain unsupported.
+ability filters and entry/payment results remain unsupported in these count filters.
 The engine supplies owner/current spell controller context outside the
 battlefield, layer 7a execution, phasing, per-incarnation binding and copying.
 
@@ -7353,6 +7353,33 @@ Keldon Warlord, Nightmare, Plague Rats and People of the Woods records and check
 all twenty records, including reprints. The strict full collection still rejects
 remaining gaps. Compilation counts do not establish full collection gameplay.
 
+
+### RON additive battlefield count CDAs
+
+Paired creature declarations accept the identical expression
+`Plus(Integer(n), TheNumberOfPermanentsOnTheBattlefield(filter))` for both
+`CDA_Power` and `CDA_Toughness`. The integer can be negative. This shape lowers
+to one `PTEqualsCountPlus`, `PTEqualsControlledCountPlus`, or
+`PTEqualsOpponentCountPlus` declaration. These engine functions take
+`(PermanentFilter, int) ContinuousEffect`.
+
+The count uses the existing characteristic filter set. Conjunctive controller
+clauses accept `ControlledByAPlayer(SinglePlayer(You))` or
+`ControlledByAPlayer(Opponent)`. Nested conjunctions and characteristic-only
+disjunctions work. Mixed controller restrictions and controller disjunctions
+reject. This adapter does not extend other static filter contexts.
+Offset/count operand order is fixed; nested arithmetic, dynamic offsets,
+unequal axis expressions, single-axis additive declarations, noncreatures and
+resolving-action declarations reject at compilation.
+
+The count is live in every zone, using the source controller on the battlefield,
+the spell controller on the stack, and the owner elsewhere. Shared layers apply
+the value in 7a; ability removal, phasing, copies, clones and source visits retain
+the count-CDA contract. `TestRONCharacteristicAdditive*` executes complete
+Gaea's Avenger, including cast rollback, timing, membership, control, copied
+spells/definitions and departure LKI through Giant Growth and Swords to Plowshares.
+The ATQ record's two controller clauses now use `Opponent`, as required by its
+Oracle text in `data/ATQ.json`. No other RON record has this name.
 
 ## Live-object damage-source enumeration prerequisite
 

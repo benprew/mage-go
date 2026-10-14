@@ -8235,7 +8235,39 @@ bonuses, counters and original power/controller LKI for exile life gain.
 incompatible and unsupported declaration contexts. Inventory tests retain strict
 collection rejection. This adapter adds no new engine execution or payment rule;
 existing layer-set/switch and incarnation contracts remain covered by the engine
-tests above. RON arithmetic and entry-result CDAs remain unfinished.
+tests above. Other RON arithmetic shapes remain unfinished; additive counts are
+specified below.
+
+### Additive all-zone count CDAs
+
+`PTEqualsCountPlus(filter PermanentFilter, offset int) ContinuousEffect`,
+`PTEqualsControlledCountPlus(filter PermanentFilter, offset int) ContinuousEffect`
+and `PTEqualsOpponentCountPlus(filter PermanentFilter, offset int) ContinuousEffect`
+reuse the count-CDA declaration. They set both axes to the fixed offset plus
+the current matching battlefield count. Controlled and opposing counts use the
+current permanent controller, current spell controller or card owner as above.
+An absent controller supplies no opponent count; the fixed offset still applies.
+A zero filter retains the existing match-all policy. Negative offsets remain
+negative when no matching permanent contributes.
+
+The shared count service excludes phased members and reads layer-4 types and
+layer-2 control before layer 7a. The existing binding service saves the source
+incarnation. Ability removal restores printed P/T, return binds a new effect,
+and phased sources retain their prior values. Layer 7b settings, 7c bonuses and
+counters, and 7d switches retain their order. Card queries leave printed values
+and game state unchanged. Copies retain the offset and controller scope;
+factory instances and game clones retain separate bound effects. Departure
+snapshots retain the final additive P/T, while cards in public zones use their
+current count with owner context (CR 109.5, 208.2a, 400.7, 604.3, 613.4a–d,
+702.26b–d).
+
+Native evidence: `TestCharacteristicAdditiveScopesAndZones` and
+`TestCharacteristicAdditiveLayersAndIdentity`. RON evidence:
+`TestRONCharacteristicAdditiveAvenger`, `CopiesAndLKI`, `Declarations`,
+`Invalid`, and `InstancesAndMembership`. Existing `TestCharacteristicPT*` and
+`TestRONCharacteristicCount*` retain regression coverage for the five original
+count-CDA cards. No new cost, replacement, or simultaneous-operation contract
+is introduced.
 
 
 ## Live-object damage-source enumeration prerequisite

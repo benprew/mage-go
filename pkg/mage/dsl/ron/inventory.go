@@ -1614,6 +1614,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "characteristic_count_value":
+		if n.Name == "Plus" && len(n.Args) == 2 {
+			return role
+		}
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 		if n.Name == "TheNumberOfPermanentsSacrificedAsPermenantEnteredBattlefield" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "permanent_reference"}[index]
 		}
