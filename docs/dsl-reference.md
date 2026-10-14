@@ -4106,7 +4106,9 @@ comparison. The color condition is `IsColor(color)` or a nonempty
 `IsCreatureType` also requires the creature card type. It cannot match a
 noncreature with that subtype. `ToughnessIs` accepts `EqualTo(Integer(n))`,
 `LessThanOrEqualTo(Integer(n))`, or `GreaterThanOrEqualTo(Integer(n))` and reads
-current toughness at detection. Other type, history, numeric, controller and
+current toughness at detection. One strict `WasDealtDamageThisTurn` symbol
+can also occur in the conjunction. It reads positive damage to the exact
+opposing visit at detection. Other type, history, numeric, controller and
 nested conjunction forms remain unsupported. Duplicate conditions of one kind
 are errors.
 
@@ -16861,3 +16863,27 @@ Phyrexian Gremlins uses the declared target for both tap and restriction. It
 restricts an already-tapped artifact too. `ThePermanentTappedThisWay` is not an
 alias for a target and remains unsupported. This correction follows the Oracle
 text in `data/ATQ.json` and `data/catalog/ATQ.json` and CR 701.26a.
+
+## Received-damage combat-pair predicate
+
+Use `mage.WasDealtDamageThisTurn` for a pure permanent filter over actual
+positive damage to a present, unphased battlefield visit this turn. It keeps
+history after regeneration or other damage removal. Return starts a new visit;
+a phase cycle keeps the old visit. Final turn cleanup clears history. Copies
+and game clones use their own game state. The older numeric damage tracker is
+unchanged.
+
+RON accepts the strict symbol in an existing combat-pair creature conjunction:
+
+```ron
+And([IsCardtype(Creature), WasDealtDamageThisTurn])
+```
+
+Both block directions and their matching union use the same event-time filter.
+Permanent-source and Aura-host subjects retain their existing scopes. Tuple
+aliases, arguments, duplicates and missing creature constraints reject. Other
+RON filter contexts require separate adapters. The complete Giant Shark record
+now compiles. `TestRONReceivedDamageHistory*` covers casting, Island attack
+legality, both block directions, per-opponent boosts, trample, expiry, history,
+identity, copies, clones and invalid declarations. Its sacrifice rule also maps
+to `TestRONChosenStateAbsenceExistingCards` using the complete record.

@@ -6,20 +6,19 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **917 accepted / 69 rejected names**
-(986 total), **2,297 compiled / 148 rejected records** (2,445 total).
-The latest slice is **TAPPED-SOURCE-UNTAP-RULE**.
-`CreatePermanentRuleEffectUntil(ref, [DoesntUntapDuringControllersUntap],
-ForAsLongAsPermanentRemainsTapped(ThisPermanent))` now saves an exact subject
-and source visit in ordinary permanent-source resolving bodies. Source untap,
-departure or phasing ends the rule permanently. Subject phasing preserves it.
-Ability removal does not remove it. Shared untap decisions precede simultaneous
-untap; stun can keep the source tapped. Copies and clones keep separate rules.
-Phyrexian Gremlins now compiles and has complete RON gameplay coverage. Its RON
-subject was corrected to the declared target from both local Oracle datasets:
-an already-tapped artifact must also receive the restriction. No successful-tap
-result adapter is needed. Actual gain is **one name / one record**, matching
-the full-card estimate. Entry, replacement and other duration contexts reject.
+Latest measured result (2026-10-14): **918 accepted / 68 rejected names**
+(986 total), **2,298 compiled / 147 rejected records** (2,445 total).
+The latest slice is **RECEIVED-DAMAGE-COMBAT-FILTER**.
+The strict `WasDealtDamageThisTurn` symbol now works in creature combat-pair
+filters. The engine records actual positive damage to exact recipient visits,
+including damage from spells. Regeneration and other damage removal preserve
+history; return starts a new visit. Phasing hides the subject without erasing
+history. Final turn cleanup clears it. Simultaneous damage records all members
+before observations; clones keep separate maps. Detection reads history once.
+Giant Shark now compiles and has complete RON gameplay coverage, including
+casting, attack legality, both block directions, per-opponent boosts, trample,
+expiry and Island-absence sacrifice. Actual gain is **one name / one record**,
+matching the estimate. Other RON filter contexts remain unsupported.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -17303,3 +17302,154 @@ new `tapped_untap_rule_test.go`, `definition_plan_test.go`, `inventory_test.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, the vocabulary snapshot
 and this ledger. Commit title: `feat(ron): implement tapped-source untap rules`.
 This run stops after TAPPED-SOURCE-UNTAP-RULE.
+
+## 2026-10-14 — RECEIVED-DAMAGE-COMBAT-FILTER
+
+### Fresh environment and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The baseline loader
+returned valid JSON and expected exit 1: 917 accepted / 69 rejected names,
+2,297 compiled / 148 rejected records, 986 names / 2,445 records total. This
+was collection rejection, not a build or test failure. No unrelated files were
+changed. Selection began with the latest entry's ranked candidates.
+
+| Candidate | Distinct affected names; full-card estimate | Other blockers and downstream value | Complete effort |
+| --- | --- | --- | --- |
+| Strict received-damage symbol in combat-pair filters | Giant Shark; **1 name / 1 record** | No later blockers in the complete DRK record. Supplies a reusable source-independent, exact-recipient damage predicate for both pair directions and future adapters. Glyph of Delusion is not a consumer of this syntax. | Small compiler adapter plus native history contract and real-card lifecycle tests; one run. |
+| Dependent block-history target filter | Glyph of Delusion; **0 names** for the filter alone | Ref_TargetPermanent1 must participate in target 2 legality at selection and resolution. Later `CreatePermanentLayerEffect` has two `AddAbility` operations; `compileIndefiniteType` currently requires one modification, and its keyword path cannot lower the conditional rule and upkeep trigger. Enables dependent target declarations; existing collection history alone cannot establish target legality. | Medium for target binding; larger full-card work for retained conditional and triggered grants. |
+| Entry life loss | Lich; **0 names**, five identical records count once | Entry `LoseLife(LifeTotalOfPlayer(You))` needs shared entry ordering. Full records also contain life-gain replacement, amount-dependent mandatory sacrifice and lose-game behavior. Ordinary life-total support does not establish those contexts. Enables entry life operations; no second unique consumer of this exact entry form was found. | Small-to-medium entry adapter, with replacement-order and life-boundary tests; full card needs more slices. |
+
+Read the complete Giant Shark DRK record, Glyph of Delusion LEG record and all
+five Lich records. Inspected their nested operations, relevant compiler paths
+and the vocabulary entries for both history forms. Giant Shark is the largest
+credible complete-card gain among these bounded candidates. No compared
+multi-card prerequisite has a concrete larger gain at comparable effort.
+The shared predicate remains card-independent; no card-name branch was added.
+The selection contract and acceptance cases were stated before edits.
+
+### Exact shape, engine boundary and dependencies
+
+RON accepts one strict symbol in an existing combat-pair conjunction:
+
+```ron
+And([IsCardtype(Creature), WasDealtDamageThisTurn])
+```
+
+The existing required creature subtype can also supply the creature domain.
+Both `WhenACreatureBlocksACreature` and
+`WhenACreatureBecomesBlockedByACreature`, and their matching two-event union,
+reuse `compileCombatPairFilter`. Existing permanent-source and Aura-host
+subjects and event-local bindings stay unchanged. Tuple aliases, arguments,
+duplicate damage-history symbols and missing creature domains reject.
+Ordinary target and resolving collection contexts reject this symbol.
+
+Native API: `WasDealtDamageThisTurn PermanentFilter`. It requires a present,
+unphased exact visit and tests `DamageSystem.turnDamageRecipients`, keyed by
+`capturedPermanent`. The older `PermanentDamageReceivedThisTurn` numeric API
+and its callers remain unchanged. That ID-only tracker cannot safely supply
+this predicate after leave-and-return. Existing source-keyed damage histories
+also cannot supply spell recipients without a battlefield source incarnation.
+
+The shared final damage executor records positive actual damage to its exact
+recipient before damage observations. Prevention, redirection, source facts
+and batch ordering use the existing replacement and damage services. All
+simultaneous recipients are recorded before any batch observations. Regeneration,
+other damage removal and control changes preserve history. Phasing hides a
+subject; a phase cycle preserves its visit. Return cannot supply an old visit.
+Final turn cleanup clears the history, including phased recipients. Cleanup
+priority retains it. Clones copy the map, including independent later writes.
+
+Combat-pair detection reads the opposing visit once. Later damage does not
+create a missed trigger. Opponent departure after detection does not cancel a
+queued self-boost. Source return cannot receive an old self-boost. Existing
+source captures, pending trigger frames, stack copies, layers, ability removal
+and cleanup supply these behaviors. There is no new binding, decision, cost,
+replacement ordering, APNAP or LKI mechanism. No declaration panic, global
+last-action slot or production registry exception was added.
+
+Read CR 120.4/6/8, 400.7, 509.3b/d, 603.2, 514.2–3 and 702.26b/d.
+The local `data/DRK.json` Oracle text agrees with the RON record's three rules.
+No source-data defect or environment failure was found. No RON source changed,
+so the vocabulary source snapshot was not regenerated.
+
+### Failing-first and complete-card coverage
+
+Native tests first failed compilation at the missing
+`WasDealtDamageThisTurn` API. RON tests first failed at the existing
+`expected 1 positional arguments (WasDealtDamageThisTurn)` diagnostic for both
+combat directions. The adapter and history implementation make them pass.
+
+| Unique card | Complete source | RON gameplay mapping |
+| --- | --- | --- |
+| Giant Shark | DRK.lines.ron:46, one record | `TestRONReceivedDamageHistoryShark` checks both directions, undamaged/prevented damage, regeneration, return, phase cycles, detection versus later damage, opponent departure after detection, source return, ability removal, copies, clone isolation and boost/trample expiry. `Blocking` uses a native block declaration. `CastingAndCombat` pays the printed cost, checks unpaid rollback, subtype, defender-Island attack legality, two damaged plus one undamaged blocker, per-opponent boosts and later combat damage. `TestRONChosenStateAbsenceExistingCards` now uses the complete record for Island-absence sacrifice and pending suppression. |
+
+Native `TestReceivedDamageHistoryIdentity` checks regeneration, exact returns,
+phasing and control. `OutcomesAndClone` checks prevention, zero/negative and
+phased damage, clone writes and clone cleanup. `SpellAndBatch` uses a resolving
+spell with no battlefield source incarnation and verifies both recipients'
+history during each damage observation. `CleanupPriority` proves damage-mark
+removal does not prematurely erase history. `Redirection` checks the final
+recipient and prevention after redirection. RON `Invalid` rejects wrong forms,
+duplicates, missing creature domains and unsupported contexts; `Inventory`
+checks both symbol contexts and their permanent-filter role.
+
+Existing combat-pair, text-layer and definition reconstruction tests remain
+active. The prior unsupported-symbol fixture now rejects the tuple alias;
+valid-symbol gameplay coverage replaces its former rejection expectation.
+The former Giant Shark absence-only extraction was removed, so the existing
+regression now compiles its entire record. Exact collection assertions changed
+only after fresh loader evidence showed 2,298 compiled / 147 rejected records.
+
+### Validation and result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONReceivedDamageHistory' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestReceivedDamageHistory' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass, including accepted-definition
+  reconstruction, prior gameplay regressions and collection census.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: final pass, 0 issues. The first run found one preallocation
+  issue in the new three-blocker test. Fixed it and reran both focused suites
+  and the full lint command successfully. Reviewed automatic formatting;
+  production changes were field alignment only. No unrelated fix was made.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1. **918 accepted /
+  68 rejected names**, **2,298 compiled / 147 rejected records**. The only
+  removed diagnostic is Giant Shark's. Every remaining diagnostic object and
+  its order match the fresh baseline. Collection loading remains atomic.
+
+There is no remaining test, lint or environment blocker for this slice.
+
+Estimated and actual full-card gains match: **one unique name / one record**.
+This adds one complete-card RON gameplay mapping. Native contract coverage is
+separate from compilation coverage. Runtime loading, complete collection
+support, Go-card and generator removal, unused DSL cleanup and native startup
+remain unfinished. The removal gates remain closed. Existing Go definitions,
+production callers and DSL functions were preserved.
+
+### Ranked next candidates
+
+1. Glyph of Delusion's `WasBlockedByDefenderThisTurn(Ref_TargetPermanent1)` in
+   target 2. Reuse exact block history, but establish dependent selection and
+   resolution legality. Estimate zero full-card unlocks until the lasting
+   two-ability grant is implemented; do not count Glyph of Doom's already
+   supported resolving collection as another target consumer.
+2. Lasting conditional rule and upkeep-trigger grants for Glyph of Delusion.
+   Audit grant identity, counters, controller changes, phasing and return.
+   Depends on candidate 1 for a complete-card unlock; compare shared grant
+   consumers before selecting its full scope.
+3. Lich entry life loss through shared entry replacement ordering. Five
+   records are one consumer. Its later replacement, mandatory plural sacrifice
+   and lose-game clauses remain separate blockers; estimate zero immediate
+   full-card unlocks.
+
+Changed files: native `damage_system.go`, new `received_damage_history.go` and
+`received_damage_history_test.go`, `doc.go`; RON `combat_pair.go`, new
+`received_damage_history_test.go`, `chosen_state_absence_test.go`,
+`combat_pair_extended_test.go`, `definition_plan_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Commit title:
+`feat(ron): implement received-damage combat filters`.
+This run stops after RECEIVED-DAMAGE-COMBAT-FILTER.

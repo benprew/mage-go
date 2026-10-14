@@ -20,6 +20,7 @@ type DamageSystem struct {
 	turnDamageToCreatures              map[capturedPermanent]map[capturedPermanent]bool
 	turnDamageToPermanents             map[capturedPermanent]map[capturedPermanent]bool
 	turnDamageToPlayers                map[capturedPermanent]map[uuid.UUID]bool
+	turnDamageRecipients               map[capturedPermanent]bool
 	combatDamageThisStep               map[uuid.UUID]map[uuid.UUID]int
 	combatDamageSourcesThisStep        map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
 	combatDamageSourceStatesThisStep   map[uuid.UUID]map[uuid.UUID][]DamageSource
@@ -123,6 +124,7 @@ func NewDamageSystem() DamageSystem {
 func (ds *DamageSystem) Clone() DamageSystem {
 	clone := DamageSystem{
 		resolvingCombatDamage: ds.resolvingCombatDamage,
+		turnDamageRecipients:  maps.Clone(ds.turnDamageRecipients),
 	}
 	if len(ds.damageReflection) > 0 {
 		clone.damageReflection = make(map[uuid.UUID]damageReflectionEntry, len(ds.damageReflection))
@@ -219,6 +221,7 @@ func (ds *DamageSystem) ClearEndOfTurn() {
 	ds.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	ds.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool)
 	ds.turnDamageToCreatures = nil
+	ds.turnDamageRecipients = nil
 	ds.turnDamageToPlayers = make(map[capturedPermanent]map[uuid.UUID]bool)
 }
 
@@ -715,6 +718,10 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	}
 	amount := a.Amount()
 	sourceID := a.ActionSource()
+	if ds.turnDamageRecipients == nil {
+		ds.turnDamageRecipients = make(map[capturedPermanent]bool)
+	}
+	ds.turnDamageRecipients[capturedPermanent{perm.ID(), perm.incarnationID}] = true
 
 	if perm.HasType(TypePlaneswalker) {
 		perm.Counters[Loyalty] -= min(amount, perm.Counters[Loyalty])

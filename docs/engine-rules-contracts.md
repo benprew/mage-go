@@ -22392,3 +22392,36 @@ Evidence: native `TestTappedUntapRuleLifetime`, `Definition`,
 record is covered. Its subject was corrected from a successful-tap result to
 the declared target using both local ATQ Oracle datasets. Oracle applies the
 restriction even if the target was tapped before resolution.
+
+## Received damage in combat-pair filters
+
+`WasDealtDamageThisTurn PermanentFilter` is a pure query for a present,
+unphased battlefield visit that received positive damage this turn. It uses
+`DamageSystem.turnDamageRecipients`, keyed by permanent ID and incarnation.
+It does not use marked damage or the older ID-only numeric tracker. Damage
+removal, regeneration, ability removal and control changes keep this history.
+Departure and return cannot transfer it. Phasing hides the subject; phasing in
+restores the same visit. Final turn cleanup clears the map, while cleanup
+priority retains it. Clones copy the map independently.
+
+The existing damage replacement pipeline records only actual positive damage
+at its final recipient. Permanent sources, departed sources and resolving spell
+sources use the same path. All recipients of simultaneous damage enter history
+before damage observations. No replacement order or damage event is added.
+This follows CR 120.4, 120.6, 120.8, 400.7, 514.2 and 702.26b.
+
+RON accepts one strict `WasDealtDamageThisTurn` symbol in the existing creature
+combat-pair conjunction. It supports both directions and the matching union,
+source subjects and Aura host subjects through the existing event adapter.
+The filter reads the opposing creature at detection (CR 509.3b/d, 603.2).
+It does not recheck at trigger placement or resolution. Later damage cannot
+create a missed block trigger. Existing exact-source captures, ability removal,
+stack copies, layers and game cloning remain authoritative. Tuple aliases,
+arguments, duplicates and conjunctions without a creature domain reject.
+Ordinary target and resolving collection contexts remain unsupported.
+
+Evidence: native `TestReceivedDamageHistoryIdentity`, `OutcomesAndClone`,
+`SpellAndBatch`, `CleanupPriority` and `Redirection`; RON
+`TestRONReceivedDamageHistoryShark`, `Blocking`, `CastingAndCombat`, `Invalid`
+and `Inventory`. Giant Shark's full DRK record maps to these tests and
+`TestRONChosenStateAbsenceExistingCards` for its Island-absence sacrifice.

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WasDealtDamageThisTurn] tests positive damage to one present battlefield visit.
+// Prevention and redirection supply only the final damage recipient. Spell
+// and permanent sources use the same history. Damage removal and control
+// changes keep it. Phased subjects are absent; a phase cycle keeps the visit.
+// Return cannot supply an old visit. Final turn cleanup clears the history.
+// Simultaneous damage records all recipients before observations. Clones keep
+// separate maps. RON accepts the strict symbol in creature combat-pair filters.
+// Detection checks the opposing visit once. Later damage cannot add a trigger.
+// This completes Giant Shark. Other RON filter contexts need separate adapters.
+//
 // [PreventUntapWhileSourceTapped] saves one subject and source visit.
 // The source must be present and tapped when the rule starts. Source untap,
 // departure or phasing ends it permanently. Subject phasing keeps the rule.

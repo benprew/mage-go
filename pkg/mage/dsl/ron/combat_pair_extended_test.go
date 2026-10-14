@@ -161,7 +161,7 @@ func TestRONCombatPairExtendedInvalid(t *testing.T) {
 		strings.ReplaceAll(union, "IsNonCreatureType(Wall)", "Or([])"),
 		strings.ReplaceAll(union, "IsNonCreatureType(Wall)", "Or([IsColor(Green),IsNonColor(White)])"),
 		strings.ReplaceAll(union, "IsNonCreatureType(Wall)", "IsColor(Green),IsColor(White)"),
-		strings.ReplaceAll(union, "IsNonCreatureType(Wall)", "WasDealtDamageThisTurn"),
+		strings.ReplaceAll(union, "IsNonCreatureType(Wall)", "WasDealtDamageThisTurn()"),
 	} {
 		src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[Aura]),Rules:[EnchantPermanent(IsCardtype(Creature)),TriggerA(` + event + `,` + body + `)])`
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")

@@ -340,25 +340,6 @@ func TestRONChosenStateAbsenceExistingCards(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			record := repositoryRecord(t, tc.set, tc.name, tc.set+".lines.ron")
 			factory, err := Compile(record)
-			blocker := map[string]string{
-				"Giant Shark": "expected 1 positional arguments (WasDealtDamageThisTurn)",
-			}[tc.name]
-			if blocker != "" {
-				if err == nil || !strings.Contains(err.Error(), blocker) {
-					t.Fatalf("complete record blocker: %v", err)
-				}
-				var stateRules []Node
-				for _, rule := range record.Fields["Rules"].Args {
-					if rule.Name == "TriggerA" && rule.Args[0].Name == "WhenAPlayerControlsNoPermanents" {
-						stateRules = append(stateRules, rule)
-					}
-				}
-				if len(stateRules) != 1 {
-					t.Fatal("expected one exact absence subrule")
-				}
-				record.Fields["Rules"] = Node{Kind: List, Args: stateRules}
-				factory, err = Compile(record)
-			}
 			if err != nil {
 				t.Fatal(err)
 			}

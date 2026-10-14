@@ -80,8 +80,17 @@ func compileCombatPairFilter(n Node) (mage.PermanentFilter, error) {
 	excluded := ""
 	colors := false
 	toughness := false
+	damaged := false
 	var filters []mage.PermanentFilter
 	for _, part := range parts {
+		if part.Name == "WasDealtDamageThisTurn" {
+			if part.Kind != Symbol || damaged {
+				return mage.PermanentFilter{}, problem(part, "supply one strict damage-history symbol")
+			}
+			damaged = true
+			filters = append(filters, mage.WasDealtDamageThisTurn)
+			continue
+		}
 		if err := arity(part, 1); err != nil {
 			return mage.PermanentFilter{}, err
 		}
