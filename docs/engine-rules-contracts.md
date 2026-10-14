@@ -21513,3 +21513,46 @@ Evidence: `TestChosenManaPayment`, `ManaAbilitiesAndRollback`,
 interactive `TestHumanChosenManaPayment`; RON `TestRONChosenManaPayment*`.
 Power Leak gains complete-record gameplay evidence independently of its six
 newly compiling records.
+
+## Permanent mana-cost activation payment
+
+`PermanentManaCostPayment(subject PermanentRef) Cost` supplies one live mana
+component for an activated ability. Definition validation requires a non-nil,
+bound permanent reference and an activated ability context. RON lowers only
+source and Aura-host references in nonmana activation costs, including cost
+conjunctions. Mana-producing bodies need their separate solver metadata adapter.
+No casting, entry, grant or resolving-payment adapter is added.
+
+The source and subject must be present and unphased when the cost is read.
+`AttachedPermanent` checks the saved attachment visit. No LKI supplies payment;
+a returned permanent cannot replace an old attachment. Current copied
+characteristics supply the cost, including copies of permanent spells.
+Face-down objects and objects with no mana cost cannot supply a payment.
+An absent cost stays unpayable through reductions (CR 118.6–118.6a, 202.1b).
+Printed zero costs can be paid. Each X is zero (CR 107.3g–h).
+
+`ActionDefinition.CanActivate` and `prepareActionPaymentTransaction` lower the
+component through the same pure read. Queries aggregate all mana components
+before checking affordability; they cannot reuse one mana for two components.
+The payment path reads and locks the component before shared cost choices and
+mana abilities. The shared total applies activation increases and reductions
+once and owns mana planning, spending and rollback. Its owned hybrid array
+keeps the locked cost separate from later characteristic changes. Later host
+cost changes, reattachment or departure cannot change an already locked total
+(CR 601.2f–h, 602.2b). A later activation performs a fresh read.
+Stack copies repeat effects without payment. Game clones keep separate zones,
+resources and pending source snapshots. No mutable payment state is stored in
+the cost declaration. Existing callers and cost signatures remain in place.
+
+Evidence: native `TestPermanentManaCostPayment`, `AggregateAndLock`,
+`ModifiersAndRollback`, `SubjectsAndCostFreeze`, `CopiedHost`, `HybridFreeze`
+and `Invalid` cover colored/generic/zero/absent/X costs, aggregate affordability,
+modifiers, pure queries, automatic mana, rollback, present visits, phasing,
+copy characteristics, locked totals and validation. Complete RON Merseine tests
+cover casting and enchant legality through shared Aura targets, three entry
+counters, conditional untap prevention, host-controller permission, actual
+counter removal, zero-counter activations, reattachment, control changes,
+departure/return, phasing, ability removal, stack copies and clone isolation.
+`TestRONPermanentManaCostManaSources` pays with complete RON Forests.
+Declaration and strict-loading tests preserve rejection of invalid collections.
+No counter, untap, replacement-order or simultaneous-operation service changed.

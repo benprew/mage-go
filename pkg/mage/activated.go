@@ -347,8 +347,12 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 			}
 		}
 	}
+	costs, err := lockPermanentManaCosts(a.costs, a.source, controller, g)
+	if err != nil {
+		return false
+	}
 	var mana ManaCost
-	for _, c := range a.costs {
+	for _, c := range costs {
 		if payment, ok := c.(*ManaCostPayment); ok {
 			component := payment.MC
 			if component.HasX {

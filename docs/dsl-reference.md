@@ -16210,3 +16210,27 @@ Evidence: `TestRONChosenManaPaymentPowerLeak`, `PowerLeakLifecycle`,
 complete Power Leak record, its six reprints and reusable lexical contracts.
 Native `TestChosenManaPayment*`, `TestInstructionDamagePrevention*` and
 `TestHumanChosenManaPayment` cover payment, decision and replacement services.
+
+## RON permanent mana-cost activation payment
+
+Nonmana `Activated` and `ActivatedWithModifiers` costs accept
+`PayManaCostOfPermanent(ThisPermanent)` and, on an Aura,
+`PayManaCostOfPermanent(HostPermanent)`. The form can occur within a cost `And`.
+The compiler validates the typed source or attachment reference. Target, event,
+choice, plural, malformed and unbound subjects reject. Casting, entry, resolving
+payments, grants and mana-producing bodies require separate adapters.
+
+`mage.PermanentManaCostPayment(subject mage.PermanentRef) mage.Cost` reads the
+current subject's mana cost at total-cost determination. X is zero. No mana cost
+is unpayable; a printed `{0}` is payable. The source and subject must be present
+and unphased. A returned host cannot supply the former attachment's cost.
+The transaction locks the amount before mana abilities and payments, combines
+all mana components, then applies activation modifiers through the existing
+service. Later cost changes or departure cannot change the locked amount.
+Pure queries make no choices or payments. Failed total payments use shared
+rollback. Stack copies do not repeat payment; clones keep separate resources.
+
+Complete Merseine gameplay maps to `TestRONPermanentManaCostMerseine`,
+`Lifecycle` and `ManaSources`. `Contexts`, `Invalid` and
+`StrictLoadAndInventory` cover declaration boundaries and atomic loading.
+Native `TestPermanentManaCostPayment*` covers the reusable payment contract.

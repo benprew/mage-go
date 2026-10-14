@@ -210,6 +210,12 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
 		for i, cost := range e.costs {
+			if _, ok := cost.(*permanentManaCostPayment); ok {
+				if e.kind != ActionActivated {
+					n.problem = "permanent mana cost requires an activated ability"
+				}
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if _, ok := cost.(*pluralSacrificeCost); ok {
 				if e.kind != ActionActivated {
 					n.problem = "plural sacrifice results require an activated ability cost"

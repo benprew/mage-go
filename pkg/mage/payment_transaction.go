@@ -812,8 +812,12 @@ func (g *Game) prepareActionPaymentTransaction(spec actionPaymentSpec) (*costPay
 	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
+	costs, err := lockPermanentManaCosts(spec.Costs, spec.SourceID, spec.Controller, g)
+	if err != nil {
+		return nil, err
+	}
 	validation := cloneGameForCostPayment(g)
-	locked, outcomes, err := lockPaymentCostsWithManaPolicy(spec.Costs, spec.SourceID, spec.Controller, spec.Targets, spec.XValue, validation, player, spec.ApplyActivationReduction)
+	locked, outcomes, err := lockPaymentCostsWithManaPolicy(costs, spec.SourceID, spec.Controller, spec.Targets, spec.XValue, validation, player, spec.ApplyActivationReduction)
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentManaCostPayment] reads a present permanent's current mana cost.
+// The shared activation transaction locks this cost before mana abilities.
+// X is zero. An absent cost cannot be paid; a printed zero cost can be paid.
+// Source and subject must be present and unphased at the read. Attachment
+// references require the exact host visit. Payment does not use departure facts.
+// Later departure or cost changes keep the locked amount. Other mana components
+// join the same total before activation increases and reductions apply.
+// Queries do not spend resources. Copies do not pay again. Clones keep separate
+// zones, costs and resources. RON accepts PayManaCostOfPermanent(ThisPermanent)
+// and PayManaCostOfPermanent(HostPermanent) in nonmana activation costs.
+// The latter requires an Aura. Other payment contexts need separate adapters.
+// This completes Merseine, including its host-controller activation permission.
+//
 // [PayChosenManaInto] saves a chosen generic mana payment in a [NumberBinding].
 // Zero, invalid input, an absent payer and failed payment clear the result.
 // Shared transactions supply mana abilities, spending checks and rollback.

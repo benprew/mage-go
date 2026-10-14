@@ -135,6 +135,9 @@ func compileExilePaymentPlan(cost Node) (*exilePaymentPlan, error) {
 }
 
 func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, error) {
+	if n.Name == "PayManaCostOfPermanent" {
+		return compilePermanentManaCost(n, ctx)
+	}
 	if n.Name == "And" {
 		if err := arity(n, 1); err != nil {
 			return nil, false, err

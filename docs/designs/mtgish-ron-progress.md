@@ -6,19 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **901 accepted / 85 rejected names**
-(986 total), **2,280 compiled / 165 rejected records** (2,445 total).
-The latest slice is **CHOSEN-RESOLVING-MANA-AND-INSTRUCTION-PREVENTION**.
-Power Leak now executes its complete RON record. A local typed mana result
-feeds prevention for one damage instruction through shared replacement order.
-Shared transactions supply mana abilities, spending checks and rollback.
-Unbounded amount input uses direct numeric decisions or bounded digit menus.
-Native, interactive and RON tests cover timing, payer/source identity, LKI,
-phasing, return, reattachment, copies, clones, delay and replacement order.
-Estimated and actual gain: **one name / six records**. All earlier accepted
-records remain accepted. No RON source changed; the vocabulary loader baseline
-is refreshed. All required checks pass; lint reports 0 issues. Validation
-evidence and card mappings are in the latest entry.
+Latest measured result (2026-10-14): **902 accepted / 84 rejected names**
+(986 total), **2,281 compiled / 164 rejected records** (2,445 total).
+The latest slice is **PERMANENT-MANA-COST-ACTIVATION-PAYMENT**.
+Merseine now executes its complete RON record. A typed present source or Aura
+host supplies its current mana cost. X is zero; absent costs remain unpayable.
+Shared activation transactions lock the cost before mana abilities, aggregate
+mana components and apply modifiers once. Native and RON tests cover payment,
+rollback, copied costs, attachment visits, phasing, return, stack copies and
+clone isolation. Estimated and actual gain: **one name / one record**.
+All earlier accepted records remain accepted. No RON source changed; only the
+vocabulary loader baseline is refreshed. All required checks pass; lint reports
+0 issues. Validation results and card mappings are in the latest entry.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -14042,3 +14041,178 @@ Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL cleanup
 remain gated. No Go cards, generators or DSL exports were removed. The loader
 continues to reject the unsupported collection atomically. This run stops after
 CHOSEN-RESOLVING-MANA-AND-INSTRUCTION-PREVENTION.
+
+## 2026-10-14 — PERMANENT-MANA-COST-ACTIVATION-PAYMENT
+
+### Environment and candidate comparison
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The initial strict loader exited 1
+for collection rejection, with 2,280 compiled / 165 rejected records and
+901 accepted / 85 rejected unique names. This was an expected collection gap,
+not a build, test or environment failure. No unrelated files were changed.
+
+Evaluated all three candidates from the latest ranked list. Complete records
+were read at FEM:61, LEG:238 and DRK:85, including nested forms. Targeted
+vocabulary inspection confirms one PayManaCostOfPermanent occurrence.
+Reprints count once; these three records each occur once in the collection.
+
+| Candidate | Unique affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Printed permanent mana-cost activation payment | Merseine | 1 name / 1 record | Entry counters, conditional host untap and host-controller permission already have adapters. Supplies a reusable live cost component, exact attachment reads and shared aggregate payment. No other collection record uses this spelling. | Small: one adapter and one engine cost component, with payment/lifecycle tests. |
+| Damage causation identity and prevention | Silhouette | 1 name / 1 record after the complete cause contract | The causing spell/ability must keep its own targets separately from the damage source. Needs cause capture through resolution, copies and damage replacement. Enables cause-dependent prevention; no additional immediate collection unlock is claimed. | Medium: shared causal snapshots plus replacement matching and lifecycle tests. |
+| Typed spell-target announcement mana X | Reflecting Mirror | At most 1 name / 1 record | Needs target-dependent X announcement, single-target and player-target spell predicates, and player retargeting. The simultaneous ManaValueIs(EqualTo(ValueX)) and XIs(Twice(...)) declarations also need a source/binding audit. Enables other target-dependent costs and spell predicates. | Larger: announcement ordering, binding semantics, predicates and retargeting. |
+
+Candidate #1 is dependency-ready. All compared candidates offer one immediate
+unique-card unlock; #1 has the smallest complete implementation and reuses
+shared payment contracts. It is selected as ranked, without treating diagnostic
+frequency as full-card coverage. No concrete additional multi-card unlock was
+found among these three candidates. No second slice was started.
+
+### Contract, signatures and reuse boundary
+
+RON supports exactly `PayManaCostOfPermanent(ThisPermanent)` or, in an Aura,
+`PayManaCostOfPermanent(HostPermanent)` in ordinary nonmana `Activated` and
+`ActivatedWithModifiers` cost slots, directly or within a cost `And`.
+`compilePermanentManaCost(Node, scope)` uses `compilePermanentRef`, permits
+only source/host reference kinds, and builds a fresh engine cost per factory.
+Targets, event/choice/loop references, plural subjects, bad arity and tuple
+reference spellings reject. Casting, entry, resolving, grant and mana-producing
+contexts remain explicit adapter gaps. A new test first demonstrated that a
+mana-producing body was accepted; it now rejects before declaration lowering
+because its dynamic cost needs separate mana-solver metadata.
+
+Engine API: `PermanentManaCostPayment(subject PermanentRef) Cost`.
+`lockPermanentManaCosts([]Cost, sourceID, controller uuid.UUID, *Game)
+([]Cost, error)` converts dynamic components to fixed ManaCostPayment values
+for both ActionDefinition.CanActivate and prepareActionPaymentTransaction.
+The source and subject must be present and unphased at the read. Source
+incarnation and attachment incarnation use existing typed-reference services.
+Payment cannot use LKI. Copy characteristics, including permanent-spell copies,
+supply the cost. Face-down objects and absent costs are unpayable; `{0}` is
+payable. Every X is zero. The cost declaration has no mutable chosen state.
+
+Read and lock precede shared payment choices and mana production. Subsequent
+host departure, reattachment or cost changes cannot replace the locked total.
+The next activation reads again. All mana components join one total before
+activation increases/reductions and affordability checks. This prevents reuse
+of one mana for two components. Existing aggregation owns the hybrid array.
+No new mana solver, spending, zone, counter, untap or replacement service exists.
+Shared mana planning, total-cost validation and commit rollback remain owners.
+Stack copies do not repay; pending effects retain the exact source visit.
+Clones and factory instances keep separate zones, resources and counters.
+
+Dependencies reused: PermanentRef, This, AttachedPermanent, EffectContext source
+capture, ManaCostPayment, addActionManaCost, modifyActivationManaCost,
+CanAfford, prepareActionPaymentTransaction, lockPaymentCostsWithManaPolicy,
+prepareCostPaymentTransaction, mana planning, shared payment rollback and
+existing definition inspection. All current callers retain their signatures.
+No Go-card fallback, card-name executor, global action result, declaration panic
+or partial production registry was added. No DSL export was removed.
+
+Rules evidence: local CR 107.3g–h, 118.6–118.6a, 202.1b, 601.2f–h and 602.2b.
+Local `data/FEM.json` Oracle agrees with the complete Merseine RON record.
+No selected-card source defect or RON edit was needed; hashes and syntax
+occurrences remain unchanged. Only the vocabulary loader baseline changes.
+Reflecting Mirror remains a separate audit concern: local DRK Oracle defines X
+as twice the spell's mana value, but does not restrict the target's mana value
+to that doubled payment. Its RON ValueX binding and target filter must be
+resolved before claiming support. No semantics were invented or source changed
+for this deferred candidate.
+
+### Failing-first and card-to-test evidence
+
+New native tests first failed to compile for the missing
+PermanentManaCostPayment signature. After the engine implementation, the full
+RON Merseine test failed at unsupported PayManaCostOfPermanent. The later
+mana-producing context test failed because that unsupported context compiled;
+the explicit context guard now passes it. No assertion was weakened.
+Two fixture corrections were necessary: use an Aura for attachment tests, and
+select Merseine's activation after entry/static abilities. The real untap step
+clears floating mana; gameplay tests supply payment mana after that step.
+
+- Complete Merseine -> `TestRONPermanentManaCostMerseine`: unpaid/paid casting,
+  actual attachment, three entry counters, host-controller permission, failed
+  payment without spending, no early removal, three paid counter removals,
+  conditional untap prevention stopping at zero, and paid zero-counter activation.
+- Complete Merseine identity -> `TestRONPermanentManaCostLifecycle`: attachment
+  and control changes before/after activation, host/source phasing, phase cycle,
+  host return, source return/departure, ability removal, stack copies without
+  repayment, two factory instances and clone isolation.
+- Complete Merseine mana -> `TestRONPermanentManaCostManaSources`: complete RON
+  Forests pay the activation; an insufficient forest set stays untapped.
+- Declaration boundary -> `TestRONPermanentManaCostInvalid` and `Contexts`:
+  arity, tuple reference, unbound subjects, non-Aura host, casting/resolving/entry
+  contexts, mana-producing bodies and absent source costs.
+- Loading/inventory -> `TestRONPermanentManaCostStrictLoadAndInventory`:
+  typed permanent-reference inventory and atomic rejection preserving registry.
+- Native `TestPermanentManaCostPayment*`: colored/generic/X/zero/absent costs,
+  pure queries, aggregate affordability, activation taxes/reductions, mana
+  abilities, failed complete payment rollback, source/host present visits,
+  phasing, return, copied characteristics and permanent-spell copies, locked
+  totals after cost changes/departure, hybrid cost isolation and nil validation.
+- Existing counter-removal/static-counter tests now require complete Merseine
+  compilation. Only its obsolete expected-gap assertions changed. Existing
+  host-static-untap clause/lifecycle tests keep their shared rule coverage.
+
+Three collection-count fixtures now require the freshly measured 2,281/164.
+The only obsolete only-player activation gap removed is Merseine's payment;
+Personal Incarnation keeps its independent unsupported diagnostic.
+
+### Validation and actual gain
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run RONPermanentManaCost -count=1`: pass.
+  Focused native `go test ./pkg/mage -run PermanentManaCost -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, **0 issues**. Automatic changes were import formatting in
+  the new files. The final audit found no unrelated modification.
+- Post-lint RON payment, permission, counter-removal, static-counter,
+  host-static-untap, inventory, numeric and definition-plan checks: pass with
+  `-count=1`. Native payment, activation modifiers and total-cost checks: pass.
+  `make build` and `go vet ./...` were repeated after import formatting: pass.
+- `git diff --check`: pass after final documentation/ledger edits.
+- Final `go run ./cmd/loadcards -json`: expected exit **1** for strict
+  collection rejection, **2,281 compiled / 164 rejected records; 902 accepted /
+  84 rejected unique names**. This is a collection gap, not a native failure.
+  Fresh JSON equals the vocabulary loader baseline.
+
+Exact diagnostic comparison removes only Merseine's one former payment error.
+No diagnostic is added or changed and no previously accepted record is lost.
+Estimated and actual gain agree: **one unique name / one record**. Complete
+Merseine gameplay is a new mapping separate from compilation coverage.
+No additional full-card gain is claimed for the reusable engine API.
+The explicit nonmana-body guard adds a declaration boundary without changing
+scope or unlock estimates. Build, test and environment blockers: none.
+
+Commit title: `feat(ron): implement permanent mana cost activation payment`.
+
+Changed files: engine permanent_mana_cost.go/test, activated.go,
+payment_transaction.go, definition.go and doc.go; RON permanent_mana_cost.go/test,
+activation_timing.go, exile_payment.go and inventory.go; obsolete Merseine gap
+assertions in counter_removal, static_counter and only_player_activation tests;
+three measured collection-count fixtures; API/rules-contract documentation,
+vocabulary loader baseline and this ledger.
+
+### Ranked next candidates
+
+1. **Damage causation identity and prevention:** Silhouette. One unique name /
+   one record. Establish spell/ability cause independently of damage source,
+   saved targets, copies and replacement rechecks; use the complete source
+   record and existing damage-target snapshots before implementing.
+2. **Shared spell-target predicate contracts:** Reflecting Mirror and Wall of
+   Shadows. A prerequisite with zero immediate full-card unlocks unless paired
+   with their other blockers. Read exact targeting restrictions, source/ability
+   identities and saved spell-target visits; compare whether a shared service
+   credibly enables both before choosing a syntax adapter.
+3. **Typed target-dependent announcement X:** Reflecting Mirror. At most one
+   unique name / one record. Audit its ValueX equality filter against local
+   Oracle first, then implement announcement ordering, complete predicates and
+   player retargeting. Do not treat the first XIs diagnostic as full-card support.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL cleanup
+remain gated. No Go card, generator or DSL export was removed. The collection
+still rejects atomically. This run stops after
+PERMANENT-MANA-COST-ACTIVATION-PAYMENT.

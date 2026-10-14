@@ -15,6 +15,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	if err := arity(n, count); err != nil {
 		return nil, err
 	}
+	if containsDeclarationName(n.Args[0], "PayManaCostOfPermanent") && containsManaAction(n.Args[1]) {
+		return nil, problem(n, "permanent mana cost requires a nonmana activation body")
+	}
 	if build, matched, err := compileDeferredMana(n, ctx); matched {
 		return build, err
 	}
