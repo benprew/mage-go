@@ -359,23 +359,24 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 }
 
 type capturedDelayedBody struct {
-	body              ResolvingEffect
-	cards             map[*CardBinding]capturedCard
-	cardSets          map[*CardsBinding][]capturedCard
-	spells            map[*SpellBinding]uuid.UUID
-	spellSources      map[*SpellBinding]DamageSource
-	damageSources     map[*DamageSourceBinding]DamageSource
-	damageResults     map[*DamageResultsBinding][]damageOutcome
-	permanents        map[*PermanentBinding]capturedPermanent
-	createdTokens     map[*CreatedTokensBinding][]capturedPermanent
-	players           map[*PlayerBinding]uuid.UUID
-	words             map[*wordPairBinding]wordPairResult
-	names             map[*CardNameBinding]string
-	numbers           map[*NumberBinding]int
-	manaTypes         map[*ManaTypesBinding][]Color
-	targets           map[*targetDeclaration][]capturedPermanent
-	sourceIncarnation uuid.UUID
-	x                 int
+	body               ResolvingEffect
+	cards              map[*CardBinding]capturedCard
+	cardSets           map[*CardsBinding][]capturedCard
+	spells             map[*SpellBinding]uuid.UUID
+	spellSources       map[*SpellBinding]DamageSource
+	targetSpellSources map[uuid.UUID]DamageSource
+	damageSources      map[*DamageSourceBinding]DamageSource
+	damageResults      map[*DamageResultsBinding][]damageOutcome
+	permanents         map[*PermanentBinding]capturedPermanent
+	createdTokens      map[*CreatedTokensBinding][]capturedPermanent
+	players            map[*PlayerBinding]uuid.UUID
+	words              map[*wordPairBinding]wordPairResult
+	names              map[*CardNameBinding]string
+	numbers            map[*NumberBinding]int
+	manaTypes          map[*ManaTypesBinding][]Color
+	targets            map[*targetDeclaration][]capturedPermanent
+	sourceIncarnation  uuid.UUID
+	x                  int
 }
 
 func cloneDelayedTargets(targets map[*targetDeclaration][]capturedPermanent) map[*targetDeclaration][]capturedPermanent {
@@ -1295,23 +1296,24 @@ func (e *sequenceEffect) Apply(ctx *EffectContext) error {
 
 func captureDelayedBody(ctx *EffectContext, body ResolvingEffect) *capturedDelayedBody {
 	captured := &capturedDelayedBody{
-		body:              body,
-		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),
-		spells:            maps.Clone(ctx.Game.resolution.spellBindings),
-		spellSources:      ctx.Game.captureDelayedSpellSources(),
-		cards:             maps.Clone(ctx.Game.resolution.cardBindings),
-		cardSets:          cloneCardsBindings(ctx.Game.resolution.cardsBindings),
-		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
-		damageResults:     cloneDamageResultsBindings(ctx.Game.resolution.damageResultsBindings),
-		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
-		players:           maps.Clone(ctx.Game.resolution.playerBindings),
-		words:             maps.Clone(ctx.Game.resolution.wordPairBindings),
-		names:             maps.Clone(ctx.Game.resolution.cardNameBindings),
-		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
-		manaTypes:         cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),
-		targets:           cloneDelayedTargets(ctx.targetBindings),
-		sourceIncarnation: ctx.sourceIncarnation,
-		x:                 ctx.Game.resolution.X(),
+		body:               body,
+		permanents:         maps.Clone(ctx.Game.resolution.permanentBindings),
+		spells:             maps.Clone(ctx.Game.resolution.spellBindings),
+		spellSources:       ctx.Game.captureDelayedSpellSources(),
+		targetSpellSources: captureDelayedTargetSpellSources(ctx),
+		cards:              maps.Clone(ctx.Game.resolution.cardBindings),
+		cardSets:           cloneCardsBindings(ctx.Game.resolution.cardsBindings),
+		damageSources:      cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
+		damageResults:      cloneDamageResultsBindings(ctx.Game.resolution.damageResultsBindings),
+		createdTokens:      cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
+		players:            maps.Clone(ctx.Game.resolution.playerBindings),
+		words:              maps.Clone(ctx.Game.resolution.wordPairBindings),
+		names:              maps.Clone(ctx.Game.resolution.cardNameBindings),
+		numbers:            maps.Clone(ctx.Game.resolution.numberBindings),
+		manaTypes:          cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),
+		targets:            cloneDelayedTargets(ctx.targetBindings),
+		sourceIncarnation:  ctx.sourceIncarnation,
+		x:                  ctx.Game.resolution.X(),
 	}
 	if !ctx.sourceCaptured {
 		if source := ctx.Game.FindPermanentIncludingPhased(ctx.SourceID); source != nil {

@@ -20217,3 +20217,52 @@ of Life record is tested with native payment, target legality, delayed event
 placement, life gain, copies, clones, prevention and expiry. Its source filter
 was corrected using `data/LEG.json` Oracle text: damage must be dealt by an
 attacking creature, while the chosen target must be a Wall creature.
+
+
+## Next main phase and typed spell-value production
+
+`YourMainPhase` is a `TurnStepPattern` and `DelayedStepPattern`. It matches
+`EvtMainPhase` for the saved controller with either flag value. Unlike the
+existing first- and postcombat-only patterns, it permits either kind of main
+phase (CR 505.1 and 505.1a). `AtNext(YourMainPhase, body)` uses the existing
+one-shot delayed trigger service. Creation follows resolution, earlier events
+cannot trigger it, and the next actual matching boundary consumes it
+(CR 603.7a–b). Skipped phases emit no event; extra main phases can satisfy it.
+Cleanup does not expire it. Detection queues the body for priority rather than
+executing it. The controller is the creator's resolving controller; source
+phasing or departure cannot change the schedule (CR 603.7d–e). Trigger copies
+use their own controller and retained value frame. Clone schedules are separate.
+
+The RON fixed-color repeated-mana adapter now reuses
+`ManaValueOfSpellWithLKI(StackObjectRef) ResolutionValue` for singular typed
+spell references. Live reads use current stack information; departed reads use
+retained mana values keyed by stack ID, including announced X (CR 202.3e,
+608.2h). Departure information does not confer target legality or stack
+membership, and a recast card has a different stack identity. Target and event
+bindings remain separate per factory, pending body, copy and clone. The adapter
+uses `AddManaAmount` and the existing mana replacement service; no replacement
+ordering, payment transaction or simultaneous-operation contract changes.
+Countering failure does not prevent a later independent instruction
+(CR 608.2c). Failure of all targets prevents resolution (CR 608.2b).
+
+Evidence: `TestNextMainPhaseTiming` runs both native main phases and checks
+cleanup, opponent turns, cloning and one-shot consumption. `PendingAndController`
+checks detection/placement timing, phased sources and copied trigger control;
+`SkippedAndExtra` runs the turn schedule with skipped and extra main phases;
+`Definitions` rejects absent bodies and unbound reads. These share the
+`TestNextMainPhase` prefix. `TestRONNextMainPhase*` supplies complete Mana Drain
+casting, counter outcomes, returned spell visits, colorless and colored mana,
+independent pending spell values, event bindings, copies, clones, declaration
+rejection, semantic inventory and atomic loader evidence. Existing
+`TestSpellManaValue*` and `TestRONResolutionMana*` retain their prior contracts.
+
+Delayed frames now save typed spell-target source facts as well as spell-event
+facts. `WaitingDelayedSpellSources` and the existing waiting damage-source
+choice include these exact visits (CR 609.7a). No live membership is restored.
+Queries use current or stack departure information, deduplicate exact identities,
+return defensive copies and make no choices or mana. Pending bodies expose the
+same visits through `StackBoundSpellSources`; the reference ends when the last
+body resolves or is countered. `TestNextMainPhaseSavedSpellTargets` covers live,
+departed and recast spells, current color/control, defensive reads, clone
+isolation, filtered source choice and waiting/stack lifetime. Complete Mana Drain
+tests cover counter-before-capture, spell copies and independent cloned bodies.

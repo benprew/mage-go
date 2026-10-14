@@ -33,7 +33,16 @@ func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
 			}
 			return compileBoundRepeatedMana(n, ctx)
 		}
-		if value.Name == "ManaValueOfPermanent" {
+		if value.Name == "ManaValueOfSpell" {
+			if ctx.enteringSource || ctx.drawReplacementBody {
+				return nil, problem(value, "spell mana value production requires an ordinary resolving body")
+			}
+			var err error
+			dynamic, err = compileSpellManaValue(value, ctx)
+			if err != nil {
+				return nil, err
+			}
+		} else if value.Name == "ManaValueOfPermanent" {
 			var err error
 			dynamic, err = compileInstanceValue(value, ctx)
 			if err != nil {
@@ -57,7 +66,7 @@ func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
 		return nil, err
 	}
 	if dynamic != nil && (len(productions) != 1 || productions[0].Color == core.AnyColor) {
-		return nil, unsupported(n.Args[0], "fixed-color permanent mana-value production")
+		return nil, unsupported(n.Args[0], "fixed-color mana-value production")
 	}
 	var effects []effectFactory
 	for _, production := range productions {

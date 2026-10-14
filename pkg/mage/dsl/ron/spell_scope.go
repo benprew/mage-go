@@ -34,6 +34,19 @@ func (p spellReferencePlan) build(bindings instanceBindings) mage.StackObjectRef
 	return bindings.spells[p.target]
 }
 
+func compileSpellManaValue(n Node, ctx scope) (valueFactory, error) {
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	spell, err := compileSpellRef(n.Args[0], ctx)
+	if err != nil {
+		return nil, err
+	}
+	return func(bindings instanceBindings) mage.ResolutionValue {
+		return mage.ManaValueOfSpellWithLKI(spell.build(bindings))
+	}, nil
+}
+
 func compileSpellFilter(n Node) (mage.CardFilter, error) {
 	if n.Kind == Symbol && n.Name == "AnySpell" {
 		return mage.NewCardFilter("any spell", func(mage.Card) bool { return true }), nil

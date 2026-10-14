@@ -868,7 +868,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "delayed_step_event":
-		if n.Name == "AtTheBeginningOfPlayersNextUpkeep" && len(n.Args) == 1 {
+		if (n.Name == "AtTheBeginningOfPlayersNextUpkeep" || n.Name == "AtTheBeginningOfPlayersNextMainPhase") && len(n.Args) == 1 {
 			return "player_reference"
 		}
 	case "activation_history_condition":

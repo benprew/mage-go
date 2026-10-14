@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [YourMainPhase] matches each main phase on the controller's turn.
+// [AtNext] waits for the next actual boundary, including extra main phases.
+// Cleanup and skipped phases do not consume this schedule. The resolving
+// controller stays saved after source departure or phasing. Copies and clones
+// use the shared delayed frames. RON accepts CreateFutureTrigger with
+// AtTheBeginningOfPlayersNextMainPhase(You) and a nonempty ActionList.
+// Fixed-color AddManaRepeated accepts ManaValueOfSpell with a bound spell
+// target or event reference. [ManaValueOfSpellWithLKI] keeps stack departure
+// values by exact spell identity. A later cast cannot supply that value.
+// Counter failure does not stop the independent delayed instruction.
+// Waiting and pending bodies keep the referenced spell available to damage
+// source choices. Queries use current or departure facts without adding mana.
+//
 // [WhenReceivesDamageThisTurn] watches one saved battlefield visit until cleanup.
 // Each positive damage event saves its final amount before trigger placement.
 // The creator keeps control. Departure and return cannot supply the watched

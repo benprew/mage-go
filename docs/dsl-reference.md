@@ -15353,3 +15353,38 @@ supported permanent damage-source filter shapes. `Trigger_ThatMuch` reads the
 saved amount inside that delayed body, including nested saved delays; unrelated
 scopes reject it. Glyph of Life uses this shape and has complete RON gameplay
 coverage. See the turn-bounded damage contract in `engine-rules-contracts.md`.
+
+
+## RON next-main-phase delayed mana
+
+`CreateFutureTrigger(AtTheBeginningOfPlayersNextMainPhase(You),
+ActionList(actions))` accepts a nonempty resolving action list. The player
+argument is exactly the bare `You` symbol. The compiler lowers this event to
+`mage.AtNext(mage.YourMainPhase, body)`; target and event frames use the existing
+per-instance capture services. Other player arguments remain unsupported.
+
+`AddManaRepeated(production, ManaValueOfSpell(reference))` accepts one fixed-color
+production and a bound singular spell target or spell-event reference. The
+shared typed adapter also serves the existing `PayManaX` amount form. The
+production reads `mage.ManaValueOfSpellWithLKI(reference)` and uses
+`mage.AddManaAmount`. Choice-of-color and multiple productions for this amount,
+entry operations and draw-replacement bodies remain unsupported.
+
+The complete Mana Drain LEG record now has native casting and resolution tests.
+An uncounterable legal target still creates the schedule. An illegal sole target
+prevents the spell from resolving and creates no schedule. No new target is
+chosen for the delayed body. Spell mana value includes announced X, uses the
+exact stack visit after departure, and cannot follow a later cast of the card.
+Compilation and complete-card gameplay evidence each gain one unique card.
+
+Evidence: `TestRONNextMainPhaseManaDrain`, `SeparateSpellValues`, `SpellBindings`,
+`Invalid`, `InvalidBoundAmounts`, `Load` and `Inventory` (all share the
+`TestRONNextMainPhase` prefix). Engine timing and declaration evidence uses
+`TestNextMainPhase*`. No runtime registry cutover is included.
+
+Captured spell targets also remain available through
+`Game.WaitingDelayedSpellSources` while the delay waits, then through
+`Game.StackBoundSpellSources` when pending on the stack (CR 609.7a). Queries
+retain exact identity, read current or departure characteristics, and do not
+execute the mana body. `TestNextMainPhaseSavedSpellTargets` and the complete
+Mana Drain tests cover this transition, recasts, source choices and clones.

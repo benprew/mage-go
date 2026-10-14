@@ -520,16 +520,8 @@ func compileResolutionManaCost(n Node, ctx scope) (core.ManaCost, valueFactory, 
 	}
 	amount := n.Args[1]
 	if amount.Name == "ManaValueOfSpell" {
-		if err := arity(amount, 1); err != nil {
-			return core.ManaCost{}, nil, err
-		}
-		spell, err := compileSpellRef(amount.Args[0], ctx)
-		if err != nil {
-			return core.ManaCost{}, nil, err
-		}
-		return cost, func(bindings instanceBindings) mage.ResolutionValue {
-			return mage.ManaValueOfSpellWithLKI(spell.build(bindings))
-		}, nil
+		value, err := compileSpellManaValue(amount, ctx)
+		return cost, value, err
 	}
 	if amount.Name == "ValueX" && ctx.createdValue != nil {
 		value, err := compileInstanceValue(amount, ctx)

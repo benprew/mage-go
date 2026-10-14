@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2243,
+    "compiled": 2244,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1413,7 +1413,6 @@
       {"card": "Land Equilibrium", "source": {"File": "LEG.lines.ron", "Line": 158, "Column": 1}, "message": "LEG.lines.ron:158:162: unsupported rule (ReplaceWouldPutAPermanentOnTheBattlefield)"},
       {"card": "Land Tax", "source": {"File": "LEG.lines.ron", "Line": 159, "Column": 1}, "message": "LEG.lines.ron:159:292: unsupported optional action (SearchLibrary)"},
       {"card": "Land's Edge", "source": {"File": "LEG.lines.ron", "Line": 160, "Column": 1}, "message": "LEG.lines.ron:160:287: unsupported activation history condition (DiscardedCardPassesFilter)"},
-      {"card": "Mana Drain", "source": {"File": "LEG.lines.ron", "Line": 169, "Column": 1}, "message": "LEG.lines.ron:169:242: unsupported delayed step event (AtTheBeginningOfPlayersNextMainPhase)"},
       {"card": "Mirror Universe", "source": {"File": "LEG.lines.ron", "Line": 174, "Column": 1}, "message": "LEG.lines.ron:174:277: unsupported action (ExchangeLifeTotalWithPlayer)"},
       {"card": "North Star", "source": {"File": "LEG.lines.ron", "Line": 183, "Column": 1}, "message": "LEG.lines.ron:183:250: unsupported temporary player operation (MayActionOnce)"},
       {"card": "Nova Pentacle", "source": {"File": "LEG.lines.ron", "Line": 184, "Column": 1}, "message": "LEG.lines.ron:184:388: unbound or incompatible chosen damage source (TheChosenDamageSource)"},

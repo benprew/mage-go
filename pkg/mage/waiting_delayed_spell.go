@@ -34,10 +34,34 @@ func (g *Game) captureDelayedSpellSources() map[*SpellBinding]DamageSource {
 	return sources
 }
 
+func captureDelayedTargetSpellSources(ctx *EffectContext) map[uuid.UUID]DamageSource {
+	sources := make(map[uuid.UUID]DamageSource)
+	for _, values := range ctx.targetBindings {
+		for _, value := range values {
+			if value.incarnation != uuid.Nil {
+				continue
+			}
+			source := ctx.Game.CaptureSpellDamageSource(value.id)
+			if !source.Valid() {
+				source = ctx.Game.stack.spellSources[value.id]
+			}
+			if source.Valid() && source.StackID() == value.id && source.Incarnation() == uuid.Nil {
+				sources[value.id] = cloneDamageSource(source)
+			}
+		}
+	}
+	return sources
+}
+
 func (e *capturedDelayedBody) stackSpellBindings() []DamageSource {
 	var sources []DamageSource
 	for binding, saved := range e.spellSources {
 		if binding != nil && saved.Valid() && saved.StackID() != uuid.Nil && saved.Incarnation() == uuid.Nil && e.spells[binding] == saved.StackID() {
+			sources = append(sources, saved)
+		}
+	}
+	for id, saved := range e.targetSpellSources {
+		if saved.Valid() && saved.StackID() == id && saved.Incarnation() == uuid.Nil && !slices.ContainsFunc(sources, saved.SameObject) {
 			sources = append(sources, saved)
 		}
 	}

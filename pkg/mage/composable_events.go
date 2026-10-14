@@ -3260,6 +3260,9 @@ var YourBeginCombat = stepPattern{EvtBeginCombat, true}
 // YourUpkeep matches the beginning of the controller's upkeep.
 var YourUpkeep = stepPattern{EvtUpkeep, true}
 
+// YourMainPhase matches the start of each main phase on the controller's turn.
+var YourMainPhase = stepPattern{EvtMainPhase, true}
+
 // EachUpkeep matches the beginning of each upkeep.
 var EachUpkeep = stepPattern{EvtUpkeep, false}
 

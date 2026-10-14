@@ -6,33 +6,34 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **875 accepted / 111 rejected names**
-(986 total), **2,243 compiled / 202 rejected records** (2,445 total).
-The latest slice is **DELAYED-DAMAGE-CAPTURE**. Resolving CreateTriggerUntil
-watches one exact permanent visit until cleanup and captures each actual damage
-amount. Trigger_ThatMuch is local to the delayed body. Source filters reuse the
-shared damage/LKI service. The creator retains control; returned visits cannot
-inherit subscriptions. Prevention, final redirection, simultaneous events,
-phasing, waiting source queries, copies, nested delays and clones have tests.
-Glyph of Life's source filter is corrected to attacking creatures using local
-Oracle evidence. Estimated and actual gains are **one name / one record**.
-Complete-card RON gameplay coverage gains **Glyph of Life**.
+Latest measured result (2026-10-14): **876 accepted / 110 rejected names**
+(986 total), **2,244 compiled / 201 rejected records** (2,445 total).
+The latest slice is **NEXT-MAIN-PHASE-MANA**. Resolving CreateFutureTrigger
+accepts AtTheBeginningOfPlayersNextMainPhase(You). It waits for the next actual
+main phase of either kind on the resolving controller's turn. Fixed-color
+AddManaRepeated reads typed ManaValueOfSpell through the shared stack LKI
+service. Counter failure does not stop the independent delayed instruction;
+an illegal sole target prevents its creation. Copies, clones, returned spells,
+X, cleanup, skipped phases and extra main phases have tests. Estimated and
+actual gains are **one name / one record**. Complete-card RON gameplay coverage
+gains **Mana Drain**. Existing accepted records remain accepted.
 
-The loader still rejects the collection atomically. Only Glyph of Life's
-rejection is removed; all remaining diagnostics are unchanged. Runtime cutover,
-Go-card removal and DSL cleanup remain gated.
+The loader still rejects the collection atomically. Only Mana Drain's rejection
+is removed; all remaining diagnostics are unchanged. Runtime cutover, Go-card
+removal and DSL cleanup remain gated.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Player next-main delayed event and saved spell value — Mana Drain.**
-   One potential full-card unlock only with both timing and saved mana value.
+1. **Shared conditional static-rule bodies — Camel and Guardian Beast.**
+   Two downstream cards; no full unlock from the conditional dispatcher alone.
+   Include band membership or enchant/control protection prerequisites as needed.
 2. **Granted targeted activation prerequisite — Equinox.** Zero immediate
-   unlocks until destruction prediction is available. Reassess shared value.
-3. **Shared conditional static-rule bodies — Camel and Guardian Beast.**
-   Reassess full records and additional blockers before estimating unlocks;
-   prevention and noncreature artifact protection have different contracts.
+   unlocks until destruction prediction; prefer a demonstrable shared grant use.
+3. **Entry choice state — Primal Clay and Shapeshifter.** Compare finite copiable
+   variants with saved numeric entry/upkeep choices. Check Primal Clay's Wall
+   variant against Oracle before estimating full-card gains.
 
 ## Dependencies and source blockers
 
@@ -8731,3 +8732,186 @@ entries remain unchanged.
 
 Complete RON gameplay, runtime loading, Go-card deletion, obsolete generation
 removal and unused DSL cleanup remain incomplete. Stop after this slice.
+
+
+## 2026-10-14 — NEXT-MAIN-PHASE-MANA
+
+### Fresh baseline and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 for collection rejection:
+2,243 compiled / 202 rejected records; 875 accepted / 111 rejected names.
+This was not a build, test or environment failure. The complete execution design,
+current status, latest ledger entry, relevant API/rules contracts, engine event,
+stack value and delayed-capture code, and complete candidate RON records were
+read. CR 202.3e, 505.1–2, 603.7 and 608.2b–h establish the relevant contracts.
+Local data/LEG.json Oracle text agrees with Mana Drain's full RON record.
+
+Candidate comparison, counting each name once:
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: next-main-phase delayed mana | Mana Drain | 1 name / 1 record | Existing stack-ID mana-value LKI, delayed captures, countering and fixed-color mana production cover prerequisites. Adds a shared either-main-phase pattern and typed spell-value production. Event-only work would gain zero. | Small engine pattern, two compiler adapters, shared value lowering and timing/identity/legality tests. |
+| Ranked #2: granted targeted activation | Equinox | 0 from grant alone | Full nested body needs WouldDestroyAPermanent prediction for controller-owned lands. Targeted grants can serve later ability grants; no additional complete collection card identified for this exact form. | Medium grant/target lifecycle work; large prediction prerequisite for a complete card. |
+| Ranked #3: conditional static-rule bodies | Camel; Guardian Beast | 0 from shared dispatch alone; at most 2 after distinct prerequisites | Camel needs Desert-source damage prevention, attacking status and band membership. Guardian Beast needs untapped conditional noncreature artifact membership, Aura attachment protection without detaching existing Auras, control protection and indestructibility. Existing conditional layers and attributes cover portions, not both complete bodies. | Large: mixed rule/replacement dispatch plus band and protection contracts; unsuitable as one small complete slice here. |
+
+Ranked #1 was dependency-ready and selected. Its complete gain is credible for
+small effort; the apparent two-card candidate does not offer two immediate
+unlocks. No card-name branches, fallback factories or new scheduling subsystem
+are needed. The engine implement-engine skill supplied the rules-contract and
+engine TDD workflow; RON lowering remained in ron. No card skills were invoked.
+
+### Supported signatures, dependencies and reuse boundary
+
+- Engine: `YourMainPhase` implements existing `TurnStepPattern` and
+  `DelayedStepPattern` via `stepPattern{EvtMainPhase, true}`.
+  `AtNext(YourMainPhase, body)` consumes the next actual own main-phase event,
+  regardless of its precombat flag. Skipped phases do not emit events; extra
+  phases can satisfy it. Cleanup preserves this one-shot schedule. Creation is
+  during resolution, detection queues for priority, and later events do not
+  repeat it. The existing engine owns source/controller capture, pending
+  placement, phasing, copies, clones and schedule lifetime.
+- RON: `CreateFutureTrigger(AtTheBeginningOfPlayersNextMainPhase(You),
+  ActionList(nonempty-actions))` in existing resolving action contexts.
+  The exact bare You argument is required. Other players, targeted delayed
+  bodies and empty lists remain rejected. Scope and spelling stay in ron.
+- RON: `AddManaRepeated(single-fixed-color-production,
+  ManaValueOfSpell(bound-singular-spell-reference))` in ordinary resolving
+  bodies, including delayed bodies. Existing typed targets and spell-event
+  bindings supply the reference. Invalid or unbound references, choice of
+  color, multiple productions, entry and draw-replacement contexts reject.
+- `compileSpellManaValue(Node, scope) (valueFactory, error)` shares exact
+  reference validation and `ManaValueOfSpellWithLKI` lowering with existing
+  resolution PayManaX. In the collection, In the Eye of Chaos and Invoke
+  Prejudice use that existing payment form; their complete records and tests
+  remain supported. Reflecting Mirror's complete record was inspected but its
+  announcement XIs form remains unsupported and unchanged.
+- The engine stack service retains mana value separately from live membership,
+  keyed by the exact stack ID. Announced X counts. Recasting the same source
+  card cannot supply the saved visit. Live reads use current values; departed
+  reads use departure facts. No global last-action state was added. Delayed
+  target frames retain identity without making new targets at placement.
+- Counter failure on a legal uncounterable spell still creates the delayed
+  instruction. An illegal sole target prevents Mana Drain from resolving.
+  Shared counter, mana replacement and payment transactions retain their
+  contracts. No new simultaneous-operation or replacement-order policy is
+  required by this slice.
+
+Before editing, acceptance cases were stated: creation timing, either actual
+own main phase, counter failure, all-illegal targets, X, return/recast, copies,
+clones, cleanup persistence and invalid declarations. No Go definitions, RON
+records or production registry paths were changed. Removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+Engine tests first failed compilation for missing YourMainPhase. An initial
+fixture used the wrong phase enum type; after correction, the confirmed failure
+was only the missing new signature. The engine pattern then passed its tests.
+Complete Mana Drain gameplay/load tests failed on unsupported
+AtTheBeginningOfPlayersNextMainPhase. After that adapter, the same tests failed
+on unsupported ManaValueOfSpell in mana amounts. The shared value adapter
+resolved that second failure. Initial fixture API errors and an extra RON
+parenthesis were fixed; no behavior assertion or requirement was weakened.
+
+- **Mana Drain → TestRONNextMainPhaseManaDrain.** Complete LEG RON record,
+  paid native casting and failed-payment state preservation; two-X target cost,
+  zero value, both main event flags, wrong-player events, delayed creation,
+  counter success, uncounterable target, all-illegal target, recast with a
+  different X, original spell copy with a different controller, delayed trigger
+  copy with a different controller, countered delayed trigger, colorless mana,
+  cleanup survival and independent game clone resolution.
+- **Mana Drain → TestRONNextMainPhaseSeparateSpellValues.** Two complete RON
+  instances retain different target spell IDs and values, create independent
+  schedules at one boundary and resolve separately in both original and clone.
+- **Mana Drain → TestRONNextMainPhaseLoad.** Complete raw record loads into an
+  explicit registry. Fresh factories keep separate target declarations. Adding
+  an invalid record rejects atomically and preserves the previous registry.
+- **Compiler → TestRONNextMainPhaseInvalid, InvalidBoundAmounts, Inventory.**
+  Wrong arity/kind/player, empty bodies, unbound and incompatible spell reads,
+  malformed bound references, unsupported production shapes and descendant
+  semantic roles. The latter two names share the TestRONNextMainPhase prefix.
+- **Frames → TestRONNextMainPhaseSpellBindings.** Immediate and delayed colored
+  mana from departed spell-event bindings; fresh factories, distinct
+  controllers and captured event frames. Synthetic cards add no inventory gain.
+- **Engine → TestNextMainPhaseTiming, PendingAndController, SkippedAndExtra,
+  Definitions.** Native precombat/postcombat boundaries, prior events,
+  opponent turns, cleanup, one-shot consumption, cloning, detection/placement
+  timing, phased source, trigger-copy control, actual skipped and extra phases,
+  absent bodies and unbound reads. All share the TestNextMainPhase prefix.
+- **Preservation → TestSpellManaValue*, TestRONResolutionMana*,
+  TestRONWaitingDelayedMana*, compiler, engine and whole-repository suites.**
+  Existing departure LKI, mana payments and delayed mana paths keep working.
+
+Estimated and actual gains match: **1 unique name / 1 record**. Complete-card
+RON gameplay coverage gains **Mana Drain**. Compile acceptance and gameplay
+coverage remain separate. Synthetic timing/binding cases do not count as
+additional inventory cards.
+
+### Documentation, loader and validation
+
+API and rules-contract documentation describe only the behavior established by
+this slice. The semantic inventory marks You under the new event as a player
+reference. Collection and definition-plan count assertions advance by one.
+No RON source defect was found or corrected for this slice. Vocabulary syntax
+and source hashes are unchanged; only its loader_baseline is refreshed to
+remove Mana Drain and record 2,244 compiled records.
+
+Final review found a required CR 609.7a interaction: captured spell targets,
+unlike existing spell-event bindings, were absent from waiting source queries.
+A new complete Mana Drain assertion failed with an empty source list. The new
+engine TestNextMainPhaseSavedSpellTargets also failed on missing target facts.
+Delayed frames now retain target spell source facts by exact stack ID, separately
+from target membership. Existing WaitingDelayedSpellSources, filtered source
+choice and StackBoundSpellSources expose the facts through waiting and pending
+lifetimes. Tests cover live/current and departure color/control, recasts,
+deduplication, defensive query results, clone isolation and source choice without
+running the mana body. This is a necessary integration within the selected slice.
+
+Changed files: engine composable_events.go, composable_conditions.go,
+waiting_delayed_spell.go and new next_main_phase_test.go; RON delayed_step.go,
+mana_production.go, spell_scope.go, optional_payment.go, inventory.go and new
+next_main_phase_test.go; collection-count assertions in inventory_test.go,
+definition_plan_test.go and numeric_consumers_test.go; pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md, the vocabulary snapshot
+and this ledger. Earlier entries remain unchanged.
+
+Final verification ran in fast-fail order on the completed waiting-source
+integration: `go test ./pkg/mage/dsl/ron -run TestRONNextMainPhase -count=1`,
+engine `go test ./pkg/mage -run TestNextMainPhase -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1` and `make test` all
+passed. The skill's additional `go test ./... -short -count=1` passed.
+`make lint` passed with **0 issues**. Automatic formatting/fix output was reviewed;
+there were no further code changes. Focused RON and engine tests passed again
+after lint. `git diff --check` passed. No environment or pre-existing validation
+blocker remains. All required checks were repeated after the final integration;
+earlier passing runs are not used to claim validation of later code.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as required while unsupported
+records remain: **2,244 compiled / 201 rejected records**, **876 accepted / 110
+rejected unique names**, out of 2,445 records / 986 names. Exact diagnostic
+comparison against the fresh baseline removes only Mana Drain at LEG line 169,
+adds no issue and changes no remaining diagnostic. The final report equals the
+vocabulary snapshot's loader baseline. Accepted records remain accepted. Strict
+collection publication remains atomic and unavailable until all remaining
+records are supported.
+
+### Ranked next candidates
+
+1. **Shared conditional static-rule bodies — Camel and Guardian Beast.**
+   Two concrete downstream names; zero immediate full unlock from dispatch
+   alone. Reassess mixed rule/replacement bodies, band membership and current
+   untapped enchant/control protection. Do not count shared first errors as
+   complete-card gains.
+2. **Granted targeted activation prerequisite — Equinox.** Zero full unlocks
+   until destruction prediction. Prefer this only with concrete additional
+   grant users or a dependency-ready complete prediction contract.
+3. **Entry choice state — Primal Clay and Shapeshifter.** Complete ATQ records
+   show finite copiable variants versus saved numeric entry/upkeep choices.
+   Their shared choice infrastructure may help both, but nested rules differ.
+   Verify Primal Clay's RON Wall variant against Oracle before implementation;
+   no source correction or full-card unlock estimate is claimed here.
+
+Complete RON gameplay, native runtime loading, Go-card deletion, obsolete
+Go-set generation removal and unused DSL cleanup remain incomplete. No DSL
+function was removed; no cleanup caller audit is claimed. Stop after this slice.

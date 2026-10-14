@@ -17,7 +17,7 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 		if event.Name != "AtTheBeginningOfTheNextEndStep" {
 			pattern = mage.EachEndOfCombat
 		}
-	case "AtTheBeginningOfPlayersNextUpkeep":
+	case "AtTheBeginningOfPlayersNextUpkeep", "AtTheBeginningOfPlayersNextMainPhase":
 		if err := arity(event, 1); err != nil {
 			return nil, err
 		}
@@ -26,9 +26,12 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 			return nil, err
 		}
 		if player != "You" {
-			return nil, unsupported(event.Args[0], "delayed upkeep player")
+			return nil, unsupported(event.Args[0], "delayed step player")
 		}
 		pattern = mage.YourUpkeep
+		if event.Name == "AtTheBeginningOfPlayersNextMainPhase" {
+			pattern = mage.YourMainPhase
+		}
 	default:
 		return nil, unsupported(event, "delayed step event")
 	}
