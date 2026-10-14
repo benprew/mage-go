@@ -20589,3 +20589,39 @@ keep their existing contracts; this operation chooses one subject.
 `TestMatchingPermanentExileCostTransaction`, `StaleVisit`,
 `SourceAndDefinition` and `QueriesAndEvents` cover these contracts. RON owns
 spelling and scopes; the engine owns choices, visit identity and movement.
+
+
+## Source counter-count mana
+
+`NewSourceCounterManaAbility(color core.Color, counter core.CounterType) *ManaAbility`
+declares one source tap mana ability. A typed immutable plan reads the source's
+live counter array in `ManaAbility.currentProductions`. Definition validation
+requires a concrete mana type and a valid permanent counter kind. The plan has
+no chosen or saved game state. Queries return fresh production slices.
+
+The ability produces one mana of that type per matching counter without removing
+counters. A nonpositive count returns an empty production, because the legacy
+mana production service normalizes a zero production entry to one. Missing and
+phased sources supply no production; tapped status does not change what the
+ability could produce. No LKI is needed: this ability resolves immediately
+(CR 605.1a, 605.2, 605.3b). A returned permanent starts with new counters; a phase
+cycle keeps counters. Current control determines activation and payment rights.
+Cloned games query their own battlefield and mana pools.
+
+The existing manual activation, TapForMana, automatic payment, source discovery,
+replacement and mana-bonus paths share this production query. Affordability
+queries do not tap, add mana, emit events or choose. Insufficient casting payments
+leave resources and hand/stack state unchanged. Mana type replacement changes
+the produced type before matching bonuses. A three-counter source with Mana
+Flare adds four mana in total; its tapped-for-mana event reports the source's
+three mana, with the bonus supplied separately by the existing service. A zero
+production still permits manual activation and pays the tap cost, but emits no
+tapped-for-mana event and receives no bonus (CR 106.12a).
+
+Tests: `TestSourceCounterManaQueryAndActivation`, `TestSourceCounterManaDefinition`,
+`TestSourceCounterManaPaymentAndEvents`; RON-backed complete-card payment,
+replacement, rollback, ability-removal, control and cloning tests are
+`TestRONSourceCounterManaCity` and `TestRONSourceCounterManaPayment`.
+No new replacement ordering, zone movement, payment transaction or stack-copy
+service is introduced. A mana activation cannot be copied as a stack object;
+City's separate counter activation can be copied and retains its source visit.

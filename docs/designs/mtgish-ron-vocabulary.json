@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2251,
+    "compiled": 2252,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1327,7 +1327,6 @@
       {"card": "Vesuvan Doppelganger", "source": {"File": "CEI.lines.ron", "Line": 263, "Column": 1}, "message": "CEI.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
       {"card": "Word of Command", "source": {"File": "CEI.lines.ron", "Line": 289, "Column": 1}, "message": "CEI.lines.ron:289:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)"},
       {"card": "Blood of the Martyr", "source": {"File": "DRK.lines.ron", "Line": 9, "Column": 1}, "message": "DRK.lines.ron:9:211: unsupported temporary redirection event (DamageWouldBeDealtToARecipient)"},
-      {"card": "City of Shadows", "source": {"File": "DRK.lines.ron", "Line": 18, "Column": 1}, "message": "DRK.lines.ron:18:409: unsupported mana amount (TheTotalNumberOfCountersOfTypeAmongPermanents)"},
       {"card": "Dance of Many", "source": {"File": "DRK.lines.ron", "Line": 22, "Column": 1}, "message": "DRK.lines.ron:22:311: unsupported creature token definition (TokenCopyOfPermanent)"},
       {"card": "Frankenstein's Monster", "source": {"File": "DRK.lines.ron", "Line": 43, "Column": 1}, "message": "DRK.lines.ron:43:162: entry requires one entry operation (AsPermanentEnters)"},
       {"card": "Giant Shark", "source": {"File": "DRK.lines.ron", "Line": 46, "Column": 1}, "message": "DRK.lines.ron:46:384: expected 1 positional arguments (WasDealtDamageThisTurn)"},

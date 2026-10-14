@@ -15610,3 +15610,30 @@ rule with a synthetic resolving body. These are subrule tests: neither complete
 card is supported yet. `Records` and `StrictLoad` retain their complete-record
 rejection and atomic loading evidence. `Rollback` and `Invalid` cover payment
 legality and declaration errors.
+
+
+## RON source counter-count mana
+
+RON accepts this complete battlefield activation shape on a permanent:
+
+```ron
+Activated(TapPermanent(ThisPermanent), ActionList([
+    AddManaRepeated(ManaProduceC,
+        TheTotalNumberOfCountersOfTypeAmongPermanents(
+            StorageCounter, SinglePermanent(ThisPermanent)))
+]))
+```
+
+The production must be one fixed mana symbol (`ManaProduceW`, `ManaProduceU`,
+`ManaProduceB`, `ManaProduceR`, `ManaProduceG` or `ManaProduceC`). The counter
+uses the existing permanent-counter type adapter. The subject must be the
+source singleton. Other references, collections, additional actions or costs,
+activation modifiers and ordinary resolving counter-mana bodies reject.
+The compiler creates a fresh `mage.NewSourceCounterManaAbility` per factory.
+It does not lower this quantity to a generic resolving mana action: the shared
+solver must read the same quantity as immediate activation.
+
+Complete City of Shadows gameplay is covered by `TestRONSourceCounterManaCity`
+and `TestRONSourceCounterManaPayment`, plus the complete-record payment lifecycle
+cases in `TestRONMatchingPermanentExileCostCity`. Invalid declarations, atomic
+loading, factory isolation and semantic inventory have separate tests.

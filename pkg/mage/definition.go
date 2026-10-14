@@ -119,6 +119,9 @@ func describeDefinition(v any) definitionNode {
 	}
 	switch e := v.(type) {
 	case *ManaAbility:
+		if e.sourceCounters != nil {
+			n.children = append(n.children, definitionEdge{"sourceCounters", e.sourceCounters})
+		}
 		if e.conditional != nil {
 			n.children = append(n.children, definitionEdge{"conditional", e.conditional})
 		}

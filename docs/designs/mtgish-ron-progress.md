@@ -6,17 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **882 accepted / 104 rejected names**
-(986 total), **2,251 compiled / 194 rejected records** (2,445 total).
-The latest slice is **MATCHING-PERMANENT-EXILE-PAYMENT**. Activation and
-additional casting costs can exile one matching permanent controlled by the
-payer. Shared transactions lock exact visits and check total payment before
-commit. City of Shadows's first rule and Soul Exchange's casting payment have
-RON subrule gameplay evidence. Neither complete card is accepted: counter-count
-mana and saved exile/returned-permanent results remain independent blockers.
-Initial estimated gain was one name; corrected estimate and actual gain are
-**zero names / zero records**. Two rejection diagnostics advance. No RON source
-changed. Required checks pass; complete-card gameplay coverage is unchanged.
+Latest measured result (2026-10-14): **883 accepted / 103 rejected names**
+(986 total), **2,252 compiled / 193 rejected records** (2,445 total).
+The latest slice is **SOURCE-COUNTER-COUNT-MANA**. A source tap activation
+produces one fixed mana type per live matching source counter. Pure queries,
+manual activation and automatic payment share the typed engine production plan.
+Complete City of Shadows now compiles and has RON gameplay evidence for both
+abilities and their interaction, including copied/countered counter activations.
+Estimated and actual gain: **one unique name / one record**. Other loader
+diagnostics are unchanged. No RON source changed. Complete-card gameplay
+coverage adds City of Shadows. All required checks pass; lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,17 +24,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Dynamic counter-count mana.** City of Shadows now needs only its source
-   Storage-counter mana quantity. Reassess the shared quantity/solver contract
-   against multi-card prerequisites before choosing this one-card completion.
-2. **Saved permanent exile facts and returned-permanent results.** Soul Exchange
-   now pays its casting cost, but needs payment-time Thrull facts and the exact
-   permanent returned by its graveyard-entry instruction. These are distinct
-   result contracts; do not read a global history slot.
-3. **Entry payment/result prerequisites.** Nameless Race and Frankenstein's
-   Monster still need bounded life payment or exact X creature-card exile,
-   failed-entry behavior and counter combinations. Optional plural sacrifice
-   for Sword of the Ages also remains; its paid-card visits are not a graveyard.
+1. **Saved permanent exile facts / returned-permanent results.** Soul Exchange
+   needs payment-time Thrull facts and the exact successful graveyard entrant.
+   Keep the two producers distinct and compare reusable result prerequisites.
+2. **Entry payment/result prerequisites.** Compare bounded life entry for
+   Nameless Race with exact X graveyard creature payment for Frankenstein's
+   Monster. Each still needs its own consumer and failure/choice contracts.
+3. **Optional plural sacrifice results.** Sword of the Ages needs saved paid
+   visits, LKI total power and later exile of those exact graveyard visits.
+   Compare shared result infrastructure with the first two candidates.
 
 ## Dependencies and source blockers
 
@@ -10271,3 +10268,164 @@ changed. No DSL function was removed, so no removal caller audit was needed.
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation and unused DSL cleanup remain incomplete. Stop after this
 matching permanent exile payment slice.
+
+
+## 2026-10-14 — SOURCE-COUNTER-COUNT-MANA
+
+### Baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader JSON exited 1 for
+collection rejection: 2,251 compiled / 194 rejected records and 882 accepted /
+104 rejected names. This was not a build or test failure.
+Read the execution design, current status and latest ledger entry, engine API,
+targeted vocabulary keys, complete RON records and relevant mana contracts.
+The implement-engine skill supplied the reusable engine workflow; the requested
+vertical slice supplied authorization for compiler wiring. No agents were used.
+
+Compared the ranked candidates with complete records; reprints count once:
+
+| Candidate | Distinct affected cards | Estimated complete unlocks | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Source counter-count mana | City of Shadows (DRK) | 1 name / 1 record | No other blocker after the preceding matching exile payment. Establishes validated live counter quantity for the shared mana solver and activation paths. | Small: typed plan, bounded RON adapter, lifecycle and payment tests. |
+| Saved permanent exile facts / successful graveyard entrant | Soul Exchange (FEM) | 0 for either isolated prerequisite; 1 after both | Paid Thrull characteristics and returned-permanent identity are separate producers. Enables result-conditioned counter placement after graveyard entry. | Medium to large: transactional capture, typed lexical bindings, failed/replaced entry and copies. |
+| Entry payment/results | Nameless Race and Frankenstein's Monster (DRK) | 0 for shared entry scaffolding alone; up to 2 after distinct full contracts | Race needs bounded life choice, opponent battlefield/graveyard counts and saved P/T. Monster needs exact X creature-card exile, failure replacement and selectable counter combinations. Sword of the Ages (LEG) additionally needs optional plural sacrifice, total-power LKI and retained graveyard visits; it is not an entry payment. | Large for the combined family; each bounded producer needs separate choice and consumer tests. |
+
+Candidate #1 was dependency-ready and the only small complete slice among the
+ranked candidates. Selected it as requested. The alternatives do not offer a
+credible multi-card completion within one cohesive bounded implementation.
+No source defect or environment failure was found. CR 106.3, 106.12, 122 and
+605.1a, 605.2, 605.3b supply mana, counters, classification and timing contracts.
+No Oracle or RON transcription was changed.
+
+### Contract, exact shape and reuse boundary
+
+Engine signature:
+`NewSourceCounterManaAbility(color core.Color, counter core.CounterType) *ManaAbility`.
+One immutable typed plan is inspected by definition validation and consumed by
+`ManaAbility.currentProductions`. Requires one concrete mana type and valid
+permanent counter kind. Returns fresh production slices. Pure live source
+queries do not use LKI, choose, tap, add mana, emit events or spend counters.
+Missing/phased sources and nonpositive counts return no production. An explicit
+zero production entry would be incorrect because the legacy shared production
+service normalizes such entries to one mana. Tap status does not change the
+quantity an ability could produce. Manual zero activation still pays its tap
+cost and remains a mana ability, without a stack object or mana event.
+
+RON supported signature/context:
+`Activated(TapPermanent(ThisPermanent), ActionList([AddManaRepeated(<fixed mana symbol>, TheTotalNumberOfCountersOfTypeAmongPermanents(<permanent counter type>, SinglePermanent(ThisPermanent)))]))`
+on a battlefield permanent. Fixed symbols are ManaProduceW/U/B/R/G/C. Uses the
+existing counter spelling/type adapter. One source tap cost, one action and one
+source singleton only. Host/target/event references, plural subjects, colors of
+choice, mixed productions/actions/costs, modifiers and ordinary resolving
+counter-mana declarations reject. Existing source context checks apply. Semantic
+inventory already assigns value, permanent_counter_type, permanent_filter and
+permanent_reference correctly; tests confirm these roles.
+
+The fresh factory creates its own ability and typed plan. The plan contains no
+mutable game state; clones query their own counters and pools. Return supplies
+new counters, phasing keeps counters, and current control supplies activation
+and payment rights. Shared source discovery, solver, automatic payment,
+transactions, mana type replacements, bonuses and tapped-for-mana events are
+reused without parallel implementations. Three counters plus Mana Flare supply
+four mana; the existing event reports the source's three mana with its replaced
+type, and the bonus is separate. No new replacement ordering was introduced.
+
+No fallback, card-name branch, skipped rule, partial production registry,
+last-action slot, declaration panic or Go definition deletion was added.
+No DSL function was removed; no removal caller audit was needed. Cutover gates
+remain closed. All twelve RON sources and vocabulary source hashes are unchanged;
+only the vocabulary loader baseline changes.
+
+### Failing-first evidence and card-to-test mappings
+
+Initial engine compilation failed for absent `NewSourceCounterManaAbility`.
+Corrected a test UUID type assumption and reconfirmed only the missing signature.
+Initial RON test compilation exposed a test land API typo; after correction,
+complete City gameplay/payment/registry tests failed with the expected
+`unsupported mana amount (TheTotalNumberOfCountersOfTypeAmongPermanents)`.
+Implemented the typed engine plan and compiler adapter after these failures.
+Later test corrections used MutablePermanent for clone-safe mutations, set the
+active player for opponent sorcery casting, and matched the established source
+mana event amount separately from bonus mana. No engine semantics were changed
+for these test setup/expectation corrections.
+
+- **City of Shadows (DRK) → TestRONSourceCounterManaCity**: native land play;
+  mandatory creature exile precedes the stacked counter instruction; copied or
+  countered counter activation changes the later immediate mana count correctly;
+  no repeat exile payment, no counter spending, no mana stack object.
+- **City → TestRONSourceCounterManaPayment**: full record as automatic mana
+  source; exact/insufficient/zero quantity, phase out/cycle, removed abilities,
+  changed control, replaced mana types, payment rollback and cloned payments.
+- **City → TestRONMatchingPermanentExileCostCity**: upgraded its previous
+  first-rule fixture to the complete record; preserves payment/copy/counter,
+  departure/return/phasing and cloned pending-body assertions.
+- TestRONSourceCounterManaInvalid and SourceContext: malformed counter/reference
+  shape, unknown counters, unbound/host refs, plural subjects, arbitrary colors,
+  mixed productions/actions, wrong costs, invalid activation arity and
+  nonpermanent source rejection.
+- TestRONSourceCounterManaRegistry: complete-record strict loading, fresh factory
+  ability state, mana classification, semantic inventory and atomic invalid
+  collection rejection preserving the installed registry.
+- TestSourceCounterManaQueryAndActivation: pure fresh slices, zero manual
+  activation, live count changes, wrong counter exclusion, tapped production
+  query, clone isolation, phasing, departure/return and new controller.
+- TestSourceCounterManaDefinition: invalid colors and counter kinds reject.
+- TestSourceCounterManaPaymentAndEvents: repeated pure affordability, manual,
+  TapForMana and automatic paths, replaced types, matched bonus, exact event
+  identity/amount/type and no event/bonus for zero production.
+
+Updated old City rejection boundaries to acceptance and retained Soul Exchange's
+independent rejection. The engine short suite initially failed four stale
+collection count assertions; updated their exact expectations in
+definition_plan_test.go, inventory_test.go and numeric_consumers_test.go to
+2,252/193. No gameplay or strict-loading assertion was weakened.
+
+### Validation and measured outcome
+
+Passed in the required fast-fail sequence after correcting stale count assertions:
+
+- Focused RON source-counter tests and affected payment/inventory tests with
+  `-count=1`; engine `go test ./pkg/mage -run TestSourceCounterMana -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- Skill verification `go test ./... -short -count=1` also passed.
+- `make lint` passed with **0 issues**. Reviewed formatter changes and the final
+  source diff; no unrelated file changes. Focused engine and affected RON tests
+  were rerun after lint and passed. `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected for atomic
+  collection rejection: **2,252 compiled / 193 rejected records**,
+  **883 accepted / 103 rejected names**. Compared fresh JSON against the
+  2,251/194 baseline: only City of Shadows (DRK.lines.ron:18) was removed from
+  rejection; every remaining diagnostic is byte-for-byte unchanged. The
+  vocabulary loader baseline equals the final JSON. All 12 source hashes match.
+
+No environment, build, gameplay, vet or lint blocker remains.
+
+Estimated and actual gains match: one unique name / one DRK record. Complete-card
+RON gameplay coverage gains City of Shadows, with both rules and interaction
+mapped above. Compilation progress is separate from complete collection gameplay.
+No other loader diagnostics changed; no accepted record was lost. Collection
+loading remains atomic and rejects the remaining unsupported records.
+
+Changed files: mage source_counter_mana.go / _test.go, mana_ability.go,
+definition.go and doc.go; ron source_counter_mana.go / _test.go,
+activation_timing.go, counter_information_test.go,
+matching_permanent_exile_cost_test.go, definition_plan_test.go, inventory_test.go
+and numeric_consumers_test.go; dsl-reference.md, engine-rules-contracts.md,
+vocabulary loader baseline and this progress ledger.
+
+### Ranked next candidates
+
+1. **Saved permanent exile facts / returned-permanent results.** Soul Exchange
+   needs two distinct typed producers. Compare each against remaining shared
+   result consumers before selecting the next bounded prerequisite.
+2. **Entry payment/results.** Nameless Race and Frankenstein's Monster remain
+   distinct bounded contracts. Choose a full supported producer and consumer,
+   rather than enabling entry syntax without its replacement/choice behavior.
+3. **Optional plural sacrifice results.** Sword of the Ages needs exact paid
+   visits, LKI power and later graveyard exile. Compare shared result lifetimes
+   with Soul's payment facts; do not conflate permanent and card visits.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
+generation and unused DSL cleanup remain incomplete. Stop after this slice.

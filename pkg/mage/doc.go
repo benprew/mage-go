@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [NewSourceCounterManaAbility] adds one fixed mana type per source counter.
+// Queries and activation read the same live count without spending counters.
+// Zero counts have no production. Missing and phased sources have no production.
+// The ability resolves immediately. Return uses new counters; clones read their
+// own battlefield. Shared mana services supply payments, replacements and bonuses.
+// RON accepts one source tap cost and one AddManaRepeated action with a fixed
+// mana type and source SinglePermanent counter count. Other subjects, mixed
+// actions, modifiers and resolving counter-mana bodies need separate adapters.
+//
 // [ExileMatchingPermanentCost] requires one present matching permanent that the
 // payer controls. The source can pay. Queries make no choice. The shared cost
 // transaction locks the chosen visit and checks the total payment before commit.

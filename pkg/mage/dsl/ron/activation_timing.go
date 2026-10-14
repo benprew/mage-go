@@ -15,6 +15,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	if err := arity(n, count); err != nil {
 		return nil, err
 	}
+	if containsCounterMana(n.Args[1]) {
+		return compileSourceCounterMana(n)
+	}
 	if containsDeclarationName(n.Args[1], "AnyManaColorAPermanentCouldProduce") {
 		return compileDynamicManaColors(n)
 	}

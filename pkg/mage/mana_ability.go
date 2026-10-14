@@ -48,6 +48,7 @@ type ManaAbility struct {
 	dynamicProductions ManaProductionFunc
 	conditional        *conditionalManaPlan
 	permanentColors    *permanentManaColorsPlan
+	sourceCounters     *sourceCounterManaPlan
 	postProduction     []Effect
 }
 
@@ -160,6 +161,9 @@ func NewDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Ef
 }
 
 func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []ManaProduction {
+	if ma.sourceCounters != nil {
+		return ma.sourceCounters.productions(g, sourceID)
+	}
 	if ma.permanentColors != nil {
 		return ma.permanentColors.productions(g, sourceID)
 	}
