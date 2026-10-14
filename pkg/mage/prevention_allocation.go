@@ -126,7 +126,7 @@ func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Gam
 			redirect.redirectBatch(actions, applied, g)
 		} else {
 			applied[selected.index][selected.replacement] = true
-			actions[selected.index] = selected.replacement.Replace(actions[selected.index], g)
+			actions[selected.index] = keepDamageCause(actions[selected.index], selected.replacement.Replace(actions[selected.index], g))
 		}
 	}
 	return actions, outcomes

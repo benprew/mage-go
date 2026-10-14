@@ -21061,7 +21061,7 @@ including supported static If/Unless/IfElse bodies. It requires exactly one
 prevention operation. Host, event, resolving, payment, other filters and other
 recipient contexts reject. Spell/ability causation remains a separate contract:
 a spell that makes a permanent deal damage does not make that permanent a spell
-source. Silhouette's causation event still rejects.
+source. Silhouette uses the separate targeting-cause contract below.
 
 Evidence: engine `TestSpellTargetDamageFacts`, `Prevention`, `Invalid`,
 `CopySnapshots`, `Recheck`, `HostAndWaiting`; RON
@@ -21069,7 +21069,7 @@ Evidence: engine `TestSpellTargetDamageFacts`, `Prevention`, `Invalid`,
 `Combat`, `ActivatedAbility`, `Invalid`. Bronze Horse uses its complete unchanged repository record.
 Its casting payment, 4/4 artifact creature metadata, trample and full conditional
 prevention have gameplay evidence. Synthetic fixtures test the reusable service;
-they do not establish Silhouette gameplay support.
+Silhouette gameplay evidence is in the targeting-cause contract below.
 
 ## RON indefinite singular control
 
@@ -21556,3 +21556,51 @@ departure/return, phasing, ability removal, stack copies and clone isolation.
 `TestRONPermanentManaCostManaSources` pays with complete RON Forests.
 Declaration and strict-loading tests preserve rejection of invalid collections.
 No counter, untap, replacement-order or simultaneous-operation service changed.
+
+
+## Targeting-cause damage prevention
+
+`PreventDamageCausedByTargetingThisTurn(subject PermanentRef) ResolvingEffect`
+saves a present, unphased subject's exact battlefield visit until cleanup.
+Definition inspection requires a valid typed subject. A resolved rule survives
+source departure, control changes and ability removal. Phasing preserves the
+subject visit, but an absent or phased subject cannot take damage. Return starts
+a new visit and cannot inherit protection (CR 400.7, 702.26).
+
+`ResolutionState.Begin` captures the causing stack object's ID and permanent
+target visits for both spells and abilities. Target legality does not delete
+these announced references. Copies capture their own stack ID and target list;
+clones copy the target array. Clearing resolution clears the cause. A damage
+packet saves these cause facts before replacement choices. Combat and damage
+outside a resolving stack frame have no targeting cause. The damage source keeps
+its existing independent characteristics, visit, controller and LKI services.
+This separation follows CR 120.2b: a spell or ability specifies the object that
+deals damage. A different permanent can be that source.
+
+The common prevention matcher requires the saved subject in the cause's target
+visits, the same current recipient visit, and noncombat damage. It has no amount
+limit and applies to each matching event. Source-only damage target facts do not
+satisfy the cause predicate. Common single-packet and simultaneous replacement
+paths, including selected-source batch redirection, retain cause facts when a
+replacement changes damage amount or recipient. Candidates are checked again
+against the new recipient. Existing affected-player order, one application per
+rule and packet, prevention prohibitions and simultaneous event observations
+remain in the shared pipeline (CR 615.1, 615.6, 615.12, 616.1).
+
+RON accepts the same typed singular reference in `TargetsPermanent` and
+`Permanent`, the symbol `AnyDamageSource`, one symbol `PreventThatDamage` and
+`UntilEndOfTurn`, in resolving action lists. The compiler owns spelling, arity,
+matching reference plans and scope. The engine owns identity and damage rules.
+No new cost, zone, damage-source or replacement-order service is introduced.
+
+Evidence: native `TestDamageCausePrevention`, `TestDamageCauseSnapshots`,
+`TestDamageCauseReplacementRecheck`, `TestDamageCauseDefinitionAndWaiting`;
+complete repository Silhouette in `TestRONDamageCauseSilhouette`,
+`TestRONDamageCauseInstallationLegality`, `TestRONDamageCauseInvalid` and
+`TestRONDamageCauseStrictLoadAndInventory`. These cover paid casting, illegal
+announcement without spending, illegal resolution without installation, spell
+and activated-ability causes, another permanent as the damage source, untargeted
+effects, stack copies, snapshot independence, clones, source departure, subject
+return, phasing, cleanup, unpreventable damage, pure waiting queries, nil subject
+rejection, amount changes, redirection into and out of protection and packet
+rechecks after subject departure. No RON source correction was required.

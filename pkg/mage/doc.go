@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventDamageCausedByTargetingThisTurn] saves one permanent visit until cleanup.
+// A resolving spell or ability supplies its own stack identity and target visits.
+// These facts stay separate from the damage source. Another permanent can deal
+// the damage. Replacements keep the cause when they change amount or recipient.
+// Combat and damage outside a resolving stack frame supply no targeting cause.
+// Return cannot supply an old visit. Phasing keeps identity. Copies and clones
+// keep separate target facts. Shared prevention rules supply order and rechecks.
+// RON accepts one TargetsPermanent predicate, AnyDamageSource, the same singular
+// permanent recipient, PreventThatDamage and UntilEndOfTurn. This completes
+// Silhouette. Other cause predicates and recipients need separate adapters.
+//
 // [PermanentManaCostPayment] reads a present permanent's current mana cost.
 // The shared activation transaction locks this cost before mana abilities.
 // X is zero. An absent cost cannot be paid; a printed zero cost can be paid.
@@ -136,7 +147,7 @@
 // [PreventDamageFromSpellsTargetingIf] also checks a live condition each time.
 // The shared replacement process supplies rechecks and simultaneous packets.
 // RON accepts source TargetsPermanent in static spell-source prevention.
-// This completes Bronze Horse. Spell/ability causation needs a separate service.
+// This completes Bronze Horse. Prevention by cause uses a separate service.
 //
 // [PayLifeUpToAsEnters] reads a typed cap before entry. The entry controller
 // chooses zero through the cap and available life. Shared payment checks run

@@ -15,3 +15,7 @@ func (e *nextPermanentSourcePrevention) refersToSourcePermanent() bool {
 func (e *exactSourcePreventionInstallation) refersToSourcePermanent() bool {
 	return damageReadsSourcePermanent(e.source) || playerRefReadsSourcePermanent(e.recipient) || playerRefReadsSourcePermanent(e.gainLifeRecipient)
 }
+
+func (e *targetingCausePrevention) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}

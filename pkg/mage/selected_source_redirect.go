@@ -106,6 +106,6 @@ func (r *selectedSourceRedirectReplacement) redirectBatch(actions []Action, appl
 			continue
 		}
 		applied[i][r] = true
-		actions[i] = r.Replace(action, g)
+		actions[i] = keepDamageCause(action, r.Replace(action, g))
 	}
 }

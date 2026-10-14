@@ -434,6 +434,7 @@ func (ds *DamageSystem) dealDamageToPlayerFromSourceOutcome(g *Game, p Player, a
 		return damageOutcome{}
 	}
 	action := NewDamageToPlayerAction(source.ID(), p.PlayerID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
+	action.cause = g.currentDamageCause()
 	result, gains := g.effects.prepareReplacements(action, g, local...)
 	outcome := damageOutcome{}
 	if result != nil {
@@ -448,6 +449,7 @@ func (ds *DamageSystem) prepareDamageToPlayer(g *Game, request damageRequest) Ac
 		return nil
 	}
 	action := NewDamageToPlayerAction(request.sourceID, request.playerID, request.amount, ds.resolvingCombatDamage).withDamageSource(request.source)
+	action.cause = g.currentDamageCause()
 	return action
 }
 
@@ -635,6 +637,7 @@ func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest)
 		source = g.CaptureDamageSource(sourceID)
 	}
 	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
+	action.cause = g.currentDamageCause()
 	action.recipientIncarnation = perm.incarnationID
 	return action
 }

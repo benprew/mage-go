@@ -1093,7 +1093,7 @@ func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, cho
 				outcomes = append(outcomes, outcome)
 			}
 		} else {
-			action = r.Replace(action, g)
+			action = keepDamageCause(action, r.Replace(action, g))
 		}
 	}
 

@@ -15907,8 +15907,8 @@ replacement. It prevents actual spell-source damage with no shield limit.
 Permanent-source ability damage and combat cannot match. RON owns syntax and
 context checks; the engine owns identity and prevention.
 
-This completes Bronze Horse. Silhouette still requires a distinct spell/ability
-causation service. See [the engine contract](engine-rules-contracts.md#spell-source-target-facts-and-static-prevention).
+This completes Bronze Horse. Silhouette uses the separate resolving causation
+contract below. See [the engine contract](engine-rules-contracts.md#spell-source-target-facts-and-static-prevention).
 
 ### RON indefinite singular control
 
@@ -16234,3 +16234,36 @@ Complete Merseine gameplay maps to `TestRONPermanentManaCostMerseine`,
 `Lifecycle` and `ManaSources`. `Contexts`, `Invalid` and
 `StrictLoadAndInventory` cover declaration boundaries and atomic loading.
 Native `TestPermanentManaCostPayment*` covers the reusable payment contract.
+
+
+## RON targeting-cause damage prevention
+
+Resolving action lists accept:
+
+```text
+CreatePreventDamageUntil(
+  ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient(
+    TargetsPermanent(permanentRef), AnyDamageSource, Permanent(permanentRef)),
+  [PreventThatDamage], UntilEndOfTurn)
+```
+
+Both references must be the same typed singular permanent plan. Existing source,
+host, target and bound-reference scope checks apply. Other cause predicates,
+source filters, recipients, operations and durations reject. Entry and payment
+contexts do not acquire a new adapter. Inventory assigns `damage_cause_filter`
+to `TargetsPermanent` and `permanent_reference` to its argument.
+
+The engine API is `PreventDamageCausedByTargetingThisTurn(subject PermanentRef)
+ResolvingEffect`. Resolution saves the present subject visit. The causing spell
+or ability and the damage source are separate objects. A spell that makes a
+permanent deal damage can match. Combat, unrelated damage and untargeted effects
+cannot match. Copies use their own target lists. Replacements keep the cause
+while changing the recipient or amount, then check prevention again. Return
+cannot inherit protection. A phase cycle keeps it; cleanup ends it. Definition
+validation checks the typed subject. Waiting queries keep its exact visit.
+
+Complete Silhouette maps to `TestRONDamageCauseSilhouette` and
+`TestRONDamageCauseInstallationLegality`. Invalid declarations, strict loading,
+factory separation and inventory roles map to `TestRONDamageCauseInvalid` and
+`TestRONDamageCauseStrictLoadAndInventory`. Native `TestDamageCause*` supplies
+packet, snapshot, replacement and clone contracts.

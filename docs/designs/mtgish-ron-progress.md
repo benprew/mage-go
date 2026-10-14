@@ -6,18 +6,19 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **902 accepted / 84 rejected names**
-(986 total), **2,281 compiled / 164 rejected records** (2,445 total).
-The latest slice is **PERMANENT-MANA-COST-ACTIVATION-PAYMENT**.
-Merseine now executes its complete RON record. A typed present source or Aura
-host supplies its current mana cost. X is zero; absent costs remain unpayable.
-Shared activation transactions lock the cost before mana abilities, aggregate
-mana components and apply modifiers once. Native and RON tests cover payment,
-rollback, copied costs, attachment visits, phasing, return, stack copies and
-clone isolation. Estimated and actual gain: **one name / one record**.
+Latest measured result (2026-10-14): **903 accepted / 83 rejected names**
+(986 total), **2,282 compiled / 163 rejected records** (2,445 total).
+The latest slice is **TARGETING-CAUSE-DAMAGE-PREVENTION**.
+Silhouette now executes its complete RON record. The causing spell or ability
+keeps its own exact stack identity and target visits, separate from the damage
+source. Resolving protection saves one permanent visit until cleanup. Shared
+replacement paths retain the cause through amount and recipient changes.
+Native and RON tests cover spell/ability causes, a different damage source,
+copies, clones, illegal targets, phasing, return, replacement rechecks and
+unpreventable damage. Estimated and actual gain: **one name / one record**.
 All earlier accepted records remain accepted. No RON source changed; only the
-vocabulary loader baseline is refreshed. All required checks pass; lint reports
-0 issues. Validation results and card mappings are in the latest entry.
+vocabulary loader baseline is refreshed. Validation and mappings are in the
+latest entry.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,14 +27,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Printed permanent mana-cost activation payment:** Merseine. The complete
-   record needs live host mana cost, payer permission and source/host identity.
-2. **Damage causation identity and prevention:** Silhouette. Keep spell/ability
-   cause separate from the damage source; prove concrete reuse before a separate
-   zero-unlock prerequisite.
-3. **Resolution mana-X from a typed spell target:** Reflecting Mirror. Its XIs
-   expression reads twice the selected spell's mana value. Audit announcement
-   ordering and both target filters before choosing this slice.
+1. **Shared spell-target predicate contracts:** Wall of Shadows and Reflecting
+   Mirror. Inspect target declarations and saved spell/ability identities.
+2. **Typed target-dependent announcement X:** Reflecting Mirror. Audit the
+   ValueX equality filter against Oracle before announcement and retargeting work.
+3. **Unlimited source damage prevention:** Kry Shield. Its complete record also
+   needs a subject-scoped dynamic toughness modifier; compare that second blocker.
 
 ## Dependencies and source blockers
 
@@ -14216,3 +14215,187 @@ Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL cleanup
 remain gated. No Go card, generator or DSL export was removed. The collection
 still rejects atomically. This run stops after
 PERMANENT-MANA-COST-ACTIVATION-PAYMENT.
+
+
+## 2026-10-14 — TARGETING-CAUSE-DAMAGE-PREVENTION
+
+Status: complete vertical slice. Complete Silhouette now compiles and has RON
+engine gameplay evidence. The collection remains atomically rejected.
+
+### Environment, candidates and selection
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 for collection rejection: 2,281 compiled,
+164 rejected records, 902 accepted and 84 rejected names. No environment or
+pre-existing native failure was found. Complete RON records supplied requirements;
+no Go card definition was used as a requirement.
+
+The latest entry's ranked candidates were evaluated before editing. Reprints
+count once. All complete records and nested forms for these candidates were read.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Targeting-cause identity and prevention | Silhouette | 1 name / 1 record | No other blocker. Separates spell/ability cause from a different damage source; supplies exact packet facts for later cause-sensitive effects. | Small engine frame/packet contract, one resolving adapter, native and RON lifecycle tests. |
+| Shared target-declaration predicate contracts | Wall of Shadows; Reflecting Mirror | 0 alone | Wall needs `CanTargetOnly` for spells and abilities. Mirror needs single-target checks, target-dependent announcement X, player retargeting and a source-data audit. Target-schema inspection can serve both, but these are distinct predicates. | Medium to large shared target-schema work plus separate adapters and legality tests. |
+| Typed target-dependent announcement X | Reflecting Mirror | At most 1 name / 1 record with its other blockers | `XIs(Twice(ManaValueOfSpell(Ref_TargetSpell)))` must precede payment. The complete record also has both target filters and player retargeting. Its ValueX equality filter conflicts with the local Oracle payment relationship. | Larger announcement/payment/retargeting work and a source-data audit. |
+
+Selected candidate 1 because it is dependency-ready, has a credible complete
+unlock and establishes the missing reusable distinction without the larger
+announcement or target-schema prerequisites. Neither compared alternative has
+an immediate multi-card unlock. No zero-unlock prerequisite is claimed complete.
+The contract, reuse boundary and acceptance cases were stated before editing.
+
+### Contract, dependencies and reuse boundary
+
+Engine API:
+`PreventDamageCausedByTargetingThisTurn(subject PermanentRef) ResolvingEffect`.
+It saves the present, unphased subject visit and installs unlimited prevention
+until cleanup. Definition inspection validates its typed reference. The rule
+survives its installing source's departure and does not follow a returned subject.
+A phase cycle keeps the saved visit. Waiting prevention queries expose that visit
+without damage, choices or installation.
+
+RON resolving action lists accept exactly:
+
+```text
+CreatePreventDamageUntil(
+  ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient(
+    TargetsPermanent(permanentRef), AnyDamageSource, Permanent(permanentRef)),
+  [PreventThatDamage], UntilEndOfTurn)
+```
+
+Both references must lower to the same singular typed plan. Existing lexical
+source, host, target and event/result binding checks apply. Different plans,
+unbound references, other source/cause filters, recipient kinds, operations and
+durations reject. The compiler owns spelling, arity, scope and lowering.
+Inventory assigns a separate `damage_cause_filter` role. No entry or payment
+adapter was added.
+
+`ResolutionState.Begin` saves a typed internal `damageCause` with stack ID and
+exact permanent target visits for either a spell or ability. It does not change
+`DamageSource` identity, characteristics, controller or LKI. A spell can make a
+different permanent deal damage. All prepared single and simultaneous damage
+packets save their cause before replacement choices. Common replacement paths
+and selected-source batch redirection retain it when an action changes amount
+or recipient. The shared prevention matcher then rechecks both cause and current
+recipient. Combat and damage without a resolving stack frame supply no cause.
+Snapshots and clones copy target arrays; clearing the frame clears the cause.
+Copies keep separate stack identities and their own targets.
+
+Dependencies reused: PermanentRef plans and instance bindings, capturedPermanent,
+ResolutionState/StackObject target incarnation maps, existing damage assignments,
+DamageSystem, damagePreventionRuleReplacement, EffectManager replacement choice
+and rechecks, batch prevention, selected-source redirection, shared prevention
+prohibitions, cleanup, waiting-reference and delayed source-read services.
+No parallel damage, payment, zone, source-LKI or replacement-order service was
+added. Existing callers keep their signatures. No Go-card fallback, card-name
+branch, global last-action result, runtime declaration panic or partial registry
+was added. No DSL export or Go card definition was removed.
+
+Local `data/LEG.json` Oracle agrees with Silhouette's complete RON record.
+CR 120.1 and 120.2b distinguish source from instruction; CR 400.7 and 702.26
+supply visit and phasing rules; CR 615.1, 615.6, 615.12 and 616.1 supply prevention
+and replacement behavior. No source defect was found in this slice. No RON file
+or vocabulary syntax/hash changed. The loader baseline alone is refreshed.
+Reflecting Mirror's deferred ValueX equality concern remains: local DRK Oracle
+sets payment X to twice the target's mana value and does not impose that equality
+as an additional target restriction. No source correction was invented.
+
+### Failing-first tests and card mappings
+
+The first native test failed to compile because
+`PreventDamageCausedByTargetingThisTurn` did not exist. After engine support,
+complete Silhouette gameplay failed at the unsupported causation event. The
+adapter made it pass. One synthetic fixture was corrected to use the established
+numbered target spelling `Ref_TargetPermanent1`/`Ref_TargetPermanent2`.
+No production RON or assertion was weakened.
+
+- Complete Silhouette -> `TestRONDamageCauseSilhouette`: unpaid/paid casting,
+  spell and activated-ability causes, a departed ability source, another permanent
+  dealing the damage, untargeted damage, copies, clones, return, a phase cycle,
+  cleanup, prevention prohibition and unrelated damage after resolution.
+- Complete Silhouette legality -> `TestRONDamageCauseInstallationLegality`:
+  player/land/shrouded targets reject without spending; shroud, phasing and return
+  before resolution prevent installation.
+- Complete Silhouette saved facts -> `TestRONDamageCauseIllegalTargetFacts`:
+  a partially illegal targeted spell still resolves its global damage, retaining
+  the illegal creature target's announced visit for causation prevention.
+- Declaration/loading -> `TestRONDamageCauseInvalid` and
+  `TestRONDamageCauseStrictLoadAndInventory`: arity, strict symbols, scope,
+  recipient/reference agreement, operation/duration rejection, fresh factory
+  abilities, semantic roles and atomic collection rejection.
+- Native `TestDamageCausePrevention`: spell/ability/absent/untargeted/combat
+  causes, simultaneous packets, independent recipients, clones, return, phase
+  cycle and unpreventable damage with a different permanent damage source.
+- Native `TestDamageCauseSnapshots`: copy identities, target snapshot retention
+  after stack departure, target-list changes, deep clone isolation, clear and
+  invalid stack identities.
+- Native `TestDamageCauseReplacementRecheck`: single and batch amount changes,
+  redirects into/out of protection, subject return/phasing and source departure.
+- Native `TestDamageCauseDefinitionAndWaiting`: nil subject declaration rejection
+  and pure exact waiting prevention references.
+
+Obsolete live-static collection expectations now require Silhouette compilation.
+The unrelated exile-payment atomic-load test now uses the still-unsupported
+Wall of Shadows instead of Silhouette. It retains its rejection assertions.
+Three measured collection-count fixtures require 2,282 compiled / 163 rejected.
+Compilation coverage and the new complete-card gameplay mapping remain separate.
+
+### Validation and actual gain
+
+All required native checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONDamageCause' -count=1`: pass.
+  Native `go test ./pkg/mage -run '^TestDamageCause' -count=1`: pass.
+  Focused inventory, definition-plan, numeric, live-static and exile-payment
+  checks also passed after their measured fixture updates.
+- `make build`: pass. `go vet ./...`: pass with no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, **0 issues**. Its only automatic edits were import grouping
+  in the new test files. No unrelated file changed.
+- After lint formatting and the additional partially-illegal-target and departed
+  ability-source tests, `go test ./pkg/mage/dsl/ron -count=1` passed. Focused
+  native causation, spell-target damage, recipient prevention and source-redirection
+  checks passed with `-count=1`. `make build` and `go vet ./...` passed again.
+  Final focused RON tests and lint were repeated for the added tests.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,282 compiled /
+  163 rejected records; 903 accepted / 83 rejected unique names**. This is strict
+  collection rejection, not a build or test failure. JSON equals the vocabulary
+  loader baseline.
+
+The exact before/after diagnostic comparison removes only Silhouette's one
+unsupported causation-event error. No existing diagnostic changes and no new
+one appears. Estimated and actual gains agree: **one unique name / one record**.
+Complete Silhouette gameplay is newly mapped separately from compiler coverage.
+No additional full-card gain is claimed. Build, test and environment blockers:
+none. Full runtime loading, Go-card removal and DSL cleanup remain gated.
+
+Commit title: `feat(ron): implement targeting cause damage prevention`.
+
+Changed files: engine damage_cause.go/test, action_damage.go, damage_system.go,
+resolution_state.go, replacement.go, effect_manager.go, prevention_allocation.go,
+selected_source_redirect.go and waiting_delayed_prevention.go; RON
+damage_cause.go/test, combat_prevention.go, inventory.go, measured count fixtures,
+obsolete Silhouette gap expectations and the atomic exile-payment fixture;
+pkg/mage/doc.go, API/rules-contract docs, vocabulary baseline and this ledger.
+
+### Ranked next candidates
+
+1. **Shared spell-target predicate contracts:** Wall of Shadows and Reflecting
+   Mirror. Two affected names, zero immediate unlocks alone. Read targeting
+   schemas and source/ability identity before implementing `CanTargetOnly` and
+   single-target checks. Compare whether a coherent shared prerequisite can
+   complete in one run; do not conflate the two predicates.
+2. **Typed target-dependent announcement X:** Reflecting Mirror. At most one
+   full-card unlock with its other predicates, retargeting and audited source
+   correction. Use the complete record and local Oracle before editing.
+3. **Unlimited source damage prevention:** Kry Shield. One affected name. Its
+   full record also needs `AdjustPTX(Zero, PlusX,
+   ManaValueOfPermanent(ActionPermanent))`. Compare both blockers before claiming
+   an unlock; source prevention alone is not a complete-card gain.
+
+Complete RON gameplay, embedded runtime startup, Go-card deletion and unused DSL
+cleanup remain gated. The collection still rejects atomically. This run stops
+after TARGETING-CAUSE-DAMAGE-PREVENTION.

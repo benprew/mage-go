@@ -1060,7 +1060,8 @@ func (r *emptyLibraryDrawReplacement) Clone() ReplacementEffect {
 // ---------------------------------------------------------------------------
 
 type damagePreventionRuleReplacement struct {
-	recipientPermanent capturedPermanent
+	recipientPermanent    capturedPermanent
+	causeTargetsRecipient bool
 	replacementBase
 	from          PermanentFilter
 	to            PermanentFilter
@@ -1077,6 +1078,12 @@ type damagePreventionRuleReplacement struct {
 
 func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 	game := g.(*Game)
+	if r.causeTargetsRecipient {
+		cause := damageActionCause(a)
+		if cause.stackID == uuid.Nil || !slices.Contains(cause.targets, r.recipientPermanent) {
+			return false
+		}
+	}
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
 		// Player-targeted rules: a rule with toPlayerID set protects that

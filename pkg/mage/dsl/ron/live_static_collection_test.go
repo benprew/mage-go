@@ -203,8 +203,8 @@ func TestRONLiveStaticCollectionLoadAndScope(t *testing.T) {
 		t.Fatalf("supported Bronze Horse rejected: %v", err)
 	}
 	silhouette := repositoryRecord(t, "LEG", "Silhouette", "silhouette.ron")
-	if _, err := Compile(silhouette); err == nil || !strings.Contains(err.Error(), "ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient") {
-		t.Fatalf("wrong remaining Silhouette blocker: %v", err)
+	if _, err := Compile(silhouette); err != nil {
+		t.Fatalf("supported Silhouette rejected: %v", err)
 	}
 }
 
