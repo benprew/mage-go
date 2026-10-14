@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SacrificeAnyMatchingCostInto] saves one activation payment's total power
+// and new public-zone card visits. The payer chooses zero or more distinct
+// present matching permanents they control. The source can pay if it matches.
+// Shared payment checks save visits before commit. Return, phasing and control
+// changes cannot supply a saved choice. All subjects use one sacrifice batch.
+// Replacement and graveyard order choices precede movement. Saved facts precede
+// event observations. Tokens add power but supply no card. Exile replacements
+// keep successful payment. Cancellation fails the complete transaction.
+// Copies, clones and delays keep separate frames. Zero clears prior results.
+// RON accepts one SacrificeAnyNumberOfPermanents in an activation cost, with
+// one conjunctive ControlledByAPlayer(SinglePlayer(You)) filter. Result consumers,
+// entry payments and casting payments retain their separate adapters.
+//
 // [LimitAttackDeclarations] and [LimitBlockDeclarations] limit one declaration.
 // The lowest active limit applies. Zero permits no declaration.
 // Attack selection obeys the most requirements within the limit.

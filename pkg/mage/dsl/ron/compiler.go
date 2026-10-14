@@ -80,6 +80,7 @@ type scope struct {
 	targetNamespace   string
 	exilePayment      *exilePaymentPlan
 	counterPayment    *counterPaymentPlan
+	pluralSacrifice   *pluralSacrificePlan
 	sacrificeValue    *sacrificeValuePlan
 	target            string
 	x                 bool

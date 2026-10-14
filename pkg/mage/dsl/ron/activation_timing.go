@@ -31,6 +31,10 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	ctx.pluralSacrifice, err = compilePluralSacrificePlan(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
 	ctx.sacrificeValue = paid
 	ctx.sacrificeSubtype = activationSacrificeSubtypePlan(n.Args[0])
 	counters, err := compileCounterPaymentPlan(n.Args[0])
@@ -95,6 +99,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	return func() mage.CardOption {
 		bindings := instanceBindings{sacrificeSubtypes: make(map[*sacrificeSubtypePlan]*mage.NumberBinding), counters: make(map[*counterPaymentPlan]*mage.NumberBinding), sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+		if ctx.pluralSacrifice != nil {
+			bindings.pluralSacrifices = map[*pluralSacrificePlan]pluralSacrificeBindings{ctx.pluralSacrifice: {power: mage.BindNumber("plural sacrifice power"), cards: mage.BindCards("plural sacrifice cards")}}
+		}
 		if ctx.sourceCardPayment.used {
 			bindings.sourceCards = map[*sourceCardPaymentPlan]*mage.CardBinding{ctx.sourceCardPayment: mage.BindCard("paid source card")}
 		}

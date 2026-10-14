@@ -8,14 +8,16 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **897 accepted / 89 rejected names**
 (986 total), **2,271 compiled / 174 rejected records** (2,445 total).
-The latest slice is **COMBAT-DECLARATION-CARDINALITY**. Fixed global attack and
-block limits constrain the shared declaration planners. Requirements remain
-maximal within the cap; one multi-blocking creature consumes one block slot.
-Source lifecycle, clone isolation, weighted requirements, attack costs, evasion,
-menace and banding have native contract tests. Caverns of Despair has complete
-RON casting, gameplay, World lifecycle and copied-spell evidence.
-Estimated and actual gain: **one unique name / one record**. No RON source changed.
-All required checks pass; lint reports 0 issues. Final verification is below.
+The latest slice is **PLURAL-ACTIVATION-SACRIFICE-PRODUCER**. One optional-count
+activation payment saves exact choices, total power and resulting public-zone
+card visits through the shared transaction and simultaneous sacrifice service.
+Native tests cover rollback, replacements, tokens, source inclusion, departure
+facts, stack copies, repeated payments, delayed bodies and clone isolation.
+RON tests execute Sword of the Ages's entry/payment AST with a test-only body.
+The complete Sword still rejects at TotalPowerOfPermanents; its result consumers
+and artifact-exile source repair remain pending. Estimated and actual gain:
+**zero names / zero records**. No RON source changed. All required checks pass;
+lint reports 0 issues. Final verification is at the end of this file.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,12 +26,13 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Plural activation sacrifice payment producer.** Establish saved power and
-   exact zone visits before Sword of the Ages's consumers and Oracle repair.
-2. **Damage causation identity.** Silhouette needs distinct causing spell/ability
-   identity; compare shared multi-card work before selecting its prevention adapter.
-3. **Characteristic arithmetic.** Compare Gaea's Avenger's additive CDA with
-   broader numeric consumers; audit its controller filter against Oracle.
+1. **Saved plural sacrifice result consumers.** Lower total power and exact
+   graveyard-card reads for Sword of the Ages. Audit complete cost timing and
+   repair its artifact-exile omission before claiming a full-card unlock.
+2. **Characteristic arithmetic.** Gaea's Avenger needs additive all-zone CDA
+   operands and a justified opponent-controller source repair.
+3. **Damage causation identity.** Silhouette needs distinct causing spell/ability
+   facts before temporary prevention. Reassess shared multi-card uses.
 
 ## Dependencies and source blockers
 
@@ -12920,3 +12923,201 @@ Commit title: `feat(ron): implement combat declaration cardinality`.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after COMBAT-DECLARATION-CARDINALITY.
+
+
+## 2026-10-14 — PLURAL-ACTIVATION-SACRIFICE-PRODUCER
+
+### Candidate comparison and selection
+
+The initial worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict loading exited 1
+because the collection still has unsupported declarations: 2,271 compiled /
+174 rejected records and 897 accepted / 89 rejected unique names. This was
+collection rejection, not a build, test or environment failure.
+
+The latest ranked candidates were compared using their complete ATQ/LEG RON
+records and targeted vocabulary entries. The complete Wood Elemental record
+was also inspected: its two entry-sacrifice CDA reads already work and belong
+to a separate context. No Go card definitions supplied requirements. Counts
+below count each name once.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Plural activation sacrifice producer, ranked first | Sword of the Ages | 0 names / 0 records in this slice | Supplies bounded selection, saved total power and resulting card visits before damage and graveyard-card consumers. Sword also needs its documented artifact-exile source repair. Wood Elemental's existing entry context stays separate. | Medium: one cost, transaction integration, batch result capture, RON lowering and lifecycle tests |
+| Damage causation identity | Silhouette | 0 for identity alone; 1 after its prevention adapter | Needs distinct causing spell/ability identity plus temporary prevention matching and rechecks. The exact causation syntax occurs once; no additional new card unlock is established by this inventory. | Medium/large: new damage event facts and a separate replacement adapter |
+| Additive characteristic operands | Gaea's Avenger | 1 name / 1 record after a justified source repair | Its CDA operands use Plus and incorrectly count You's artifacts. Local ATQ Oracle data requires opponents' artifacts. Needs additive all-zone characteristic reads and layer tests; resolving Plus consumers already have separate adapters. | Small/medium: typed characteristic arithmetic, source repair and all-zone/layer tests |
+
+The first candidate is dependency-ready and is an unblocking prerequisite, so
+it was selected as instructed. None of these candidates establishes a new
+multi-name full-card gain in one cohesive slice. This run completes only the
+activation payment producer. Saved-result consumers are not partially accepted
+and no full Sword gameplay claim is made.
+
+### Exact contract, dependencies and reuse boundary
+
+Engine API:
+
+`SacrificeAnyMatchingCostInto(filter PermanentFilter, text string,
+power *NumberBinding, cards *CardsBinding) Cost`.
+
+RON supports one `SacrificeAnyNumberOfPermanents(filter)` producer in an ordinary
+`Activated` or `ActivatedWithModifiers` cost, including a nested `And` cost list.
+The filter has exactly one conjunctive
+`ControlledByAPlayer(SinglePlayer(You))` clause. Supported characteristic
+predicates supply other membership conditions. Missing, duplicate or alternative
+controller clauses, repeated plural producers and invalid filters reject.
+Casting, resolving and entry declarations retain their separate adapters.
+Native result declarations require named, non-nil bindings and distinct producers;
+unsupported native casting/resolution result contexts reject.
+
+RON owns syntax validation, the scoped producer plan and fresh per-factory
+`NumberBinding`/`CardsBinding` allocation. The engine owns selection, exact visit
+checks, payment rollback, replacement processing, simultaneous movement and
+saved facts. The ordinary action payment transaction locks a count and distinct
+legal subjects on its validation game. Its existing preflight checks the complete
+payment before live resources are spent. Zero is legal, including an empty
+candidate set. Invalid answers fail. Present matching controlled subjects can
+include the ability source. Return, phasing, changed control and changed
+membership cannot substitute for a locked choice. Cost-list siblings keep their
+existing payment order; the plural producer's subjects use one sacrifice batch.
+
+The existing controller-sacrifice service now has a private completed-result
+callback. Its former count and no-result callers retain their signatures and
+behavior. Replacements and owner graveyard-order choices precede movement.
+Token status and power are saved after those choices, from the complete
+pre-movement battlefield. Negative power remains negative. Each successful
+sacrifice saves its first resulting public-zone visit before deferred zone and
+sacrifice events. Tokens add power but supply no retained card. Replacement
+exile counts as payment; cancellation fails the whole transaction.
+
+Existing transaction result maps publish facts only on success. Existing stack,
+copy, clone and delayed frames transport them. `FromCards` enforces the captured
+zone visit, so return cannot supply a prior card. Zero choices save zero and an
+empty result. No new global last-action slot, mutable card-definition state,
+Go-card fallback or partial production registry was added. No DSL function or
+Go card definition was removed outside its cutover gate.
+
+Rules evidence: local CR 601.2h, 602.2b, 701.21a and 400.7j. Local `data/LEG.json`
+confirms Sword must exile the artifact as well as the creature cards; its RON
+omits the artifact. Local `data/ATQ.json` confirms Gaea's Avenger must count
+opponents' artifacts, whereas its RON uses You. Both source defects remain
+explicit future work. No RON source changed; vocabulary source hashes need no
+refresh. `inventory.go` now classifies the plural producer's filter in cost
+context; the entry role is unchanged.
+
+### Failing-first evidence and test mappings
+
+RON tests first failed on unsupported `SacrificeAnyNumberOfPermanents`.
+Native tests first failed on the missing `SacrificeAnyMatchingCostInto` signature.
+Initial test-helper API mistakes were corrected before confirming those expected
+failures. A definition test then failed because the new cost's result producer
+was not registered in the definition walker. The implementation now validates
+its declarations and exports bindings to later body reads.
+
+Review added `TestPluralSacrificeCostPowerAfterReplacementChoices`, which failed
+with power 3 instead of 7. The result hook now reads all power values after
+replacement and graveyard-order choices and before any movement. This is an
+implementation correction, not a weakened assertion. The stale-phase test uses
+`FindPermanentIncludingPhased` to check physical presence. Batch observer tests
+exercise the shared batch directly, since a closure over the live game cannot
+inspect a payment-validation clone. Separate transaction tests prove rollback
+and result publication.
+
+- Sword of the Ages payment/entry rules ->
+  `TestRONPluralSacrificeCostGameplay`: reads the real complete LEG record,
+  preserves its entry and cost AST, substitutes a test-only draw body, and
+  checks zero/one/two creature payments, source sacrifice, opponent exclusion,
+  activation-time payment and later body resolution. This is producer gameplay
+  evidence, not complete card coverage.
+- Sword of the Ages remaining rules ->
+  `TestRONPluralSacrificeCostSwordBoundary`: the unchanged complete record must
+  still reject after the payment adapter; full damage and exile remain gated.
+- RON declaration/factory contract -> `TestRONPluralSacrificeCostInvalid` and
+  `TestRONPluralSacrificeCostFactoryAndAtomicLoad`: malformed declarations,
+  filters, missing/wrong/alternative controllers, duplicate producers, independent
+  card/ability identities, definition validation, compiled cost inventory role
+  and failed collection loading that preserves a prior registry.
+- Native `TestPluralSacrificeCostResults`: zero/one/two choices, pure queries,
+  no movement during preparation, negative-power sums, exact card visits and
+  separate owners.
+- Native `TestPluralSacrificeCostRollback`: invalid counts/subjects, locked
+  phasing, returned visits and changed control preserve live mana and subjects
+  and publish no results.
+- Native `TestPluralSacrificeCostDefinition`: valid body reads, missing filter,
+  text or bindings, unnamed results, duplicate producers and invalid contexts.
+- Native `TestPluralSacrificeCostStackFrames`: current layered power, saved
+  card visits, later zero activation, stack copy, source departure, return and
+  clone isolation.
+- Native `TestPluralSacrificeCostReplacementBatch`: source inclusion, indestructible
+  and regeneration independence, owner destinations, tokens, exile replacements,
+  complete saved facts before observations and simultaneous departure LKI.
+- Native `TestPluralSacrificeCostCancellation`: a cancelled member fails the
+  complete transaction without live sacrifice or mana expenditure.
+- Native `TestPluralSacrificeCostDelayedAndFailureIsolation`: a later failed
+  activation cannot replace prior results; delayed bodies keep saved power
+  after return, changed characteristics, source departure and game cloning.
+- Native `TestPluralSacrificeCostPowerAfterReplacementChoices`: replacement
+  choices can change characteristics; both subjects use their final power from
+  the complete battlefield before the simultaneous sacrifice.
+
+### Verification and measured gain
+
+Final measured commands and loader comparison follow below.
+
+Final fresh loader: **2,271 compiled / 174 rejected records; 897 accepted /
+89 rejected names**, of 2,445 records / 986 names. Estimated and actual full-card
+gains match: **zero names / zero records**. No previously accepted name or record
+was lost. No rejection was added or removed. Exactly one first diagnostic moved:
+Sword of the Ages now rejects at `LEG.lines.ron:252:440`, unsupported value
+`TotalPowerOfPermanents`, instead of `LEG.lines.ron:252:267`, unsupported cost
+`SacrificeAnyNumberOfPermanents`. Strict collection loading still exits 1 and
+publishes no partial production registry. Producer gameplay and native result
+coverage increased; compilation counts and complete-card gameplay coverage did
+not. This difference is intentional prerequisite work.
+
+Required verification in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run PluralSacrificeCost -count=1`: pass.
+- `go test ./pkg/mage -run 'PluralSacrificeCost|ControllersSacrifice|SacrificeCountIncludingSource' -count=1`:
+  pass, including existing count and controller-sacrifice regressions.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- The first build/vet/short/full sequence passed. After the added failing
+  replacement-choice power test and timing fix, all checks above were repeated
+  in the required order and passed on the final implementation.
+- `make lint`: pass, 0 issues. Automatic changes were import grouping in the
+  new tests; reviewed the full repository diff. No unrelated file changed.
+- Post-lint focused RON/native and existing sacrifice regression tests: pass.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with the counts and
+  exact diagnostic comparison above. This is remaining collection rejection.
+
+Build, test and environment blockers: none. No RON data change, vocabulary hash
+refresh, Go-card removal, authoring cutover or DSL deletion was needed.
+
+Changed files: new mage `plural_sacrifice_cost.go` and its tests; shared
+`controllers_sacrifice.go`, `payment_transaction.go`, `definition.go` and
+`composable_costs.go`; new RON `plural_sacrifice_cost.go` and its tests,
+`activation_timing.go`, `compiler.go`, `player_scope.go`, `exile_payment.go` and
+`inventory.go`; `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement plural activation sacrifice payment`.
+
+### Ranked next candidates
+
+1. **Saved plural sacrifice result consumers.** Lower
+   `TotalPowerOfPermanents(ThePermanentsSacrificedThisWay)` to the saved number
+   and exact graveyard-card consumers to the saved visits. Audit complete
+   source-and-creature cost timing, result lifetime and artifact-exile behavior.
+   Repair Sword's omitted artifact exile with local Oracle evidence and prove
+   complete unchanged/corrected-record casting and gameplay before claiming it.
+2. **Characteristic arithmetic.** Gaea's Avenger needs Plus in all-zone CDAs
+   and the documented You-to-opponents filter correction; compare broader
+   characteristic consumers before selecting it.
+3. **Damage causation identity.** Silhouette needs a typed causing spell/ability
+   identity service and a later temporary prevention adapter. Reassess concrete
+   multi-card uses before selecting the service.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after
+PLURAL-ACTIVATION-SACRIFICE-PRODUCER.

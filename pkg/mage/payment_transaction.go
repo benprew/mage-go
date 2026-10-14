@@ -314,6 +314,13 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			tx.costs[i] = locked
 			validationCost = &locked.discard
 		}
+		if sacrifice, ok := cost.(*pluralSacrificeCost); ok {
+			locked := *sacrifice
+			locked.selected = append([]capturedPermanent(nil), sacrifice.selected...)
+			locked.results = nil
+			locked.chooser = tx.game.GetPlayer(tx.controller)
+			validationCost = &locked
+		}
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok {
 			sacCopy := *sacrifice
 			sacCopy.selected = make([]capturedPermanent, 0, sacCopy.count)
@@ -419,6 +426,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		if err := validationCost.Pay(tx.sourceID, tx.controller, validation); err != nil {
 			return fmt.Errorf("cannot pay total cost: %w", err)
 		}
+		if sacrifice, ok := validationCost.(*pluralSacrificeCost); ok {
+			sacrifice.locked = true
+			sacrifice.chooser = nil
+			tx.costs[i] = sacrifice
+		}
 		if sacrifice, ok := validationCost.(*sacrificeMatchingCost); ok {
 			sacrifice.locked = true
 			sacrifice.chooser = nil
@@ -450,11 +462,12 @@ func (tx *costPaymentTransaction) Commit() error {
 	for _, cost := range tx.costs {
 		_, random := cost.(*discardRandomCost)
 		_, isSacrifice := cost.(*sacrificeMatchingCost)
+		_, isPluralSacrifice := cost.(*pluralSacrificeCost)
 		_, isPlacement := cost.(*putCounterOnMatchingCost)
 		_, isAnte := cost.(*anteCost)
 		_, isSource := cost.(*sourceCardCost)
 		_, isExile := cost.(*matchingPermanentExileCost)
-		if random || isSacrifice || isPlacement || isAnte || isSource || isExile {
+		if random || isSacrifice || isPluralSacrifice || isPlacement || isAnte || isSource || isExile {
 			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)
@@ -616,6 +629,23 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			if sacrifice.captureManaValue {
 				paidManaValue = chosen.Card.ManaCost().CMC()
 			}
+		}
+		if sacrifice, ok := cost.(*pluralSacrificeCost); ok {
+			payment := *sacrifice
+			payment.selected = append([]capturedPermanent(nil), sacrifice.selected...)
+			payment.results = nil
+			if err := payment.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
+				return err
+			}
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			if tx.paidCardSets == nil {
+				tx.paidCardSets = make(map[*CardsBinding][]capturedCard)
+			}
+			tx.paidNumbers[payment.power] = payment.total
+			tx.paidCardSets[payment.cards] = append([]capturedCard(nil), payment.results...)
+			continue
 		}
 		if source, ok := cost.(*sourceCardCost); ok {
 			result, err := source.payCard(tx.sourceID, tx.controller, tx.game)

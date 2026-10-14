@@ -932,6 +932,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		n.problem = "supply an explicit Costs group"
 	}
 	for i, cost := range c.costs {
+		if _, ok := cost.(*pluralSacrificeCost); ok {
+			n.problem = "plural sacrifice results require an activated ability cost"
+		}
 		if _, ok := cost.(*sourceCardCost); ok {
 			n.problem = "paid source card requires an activated ability cost"
 		}

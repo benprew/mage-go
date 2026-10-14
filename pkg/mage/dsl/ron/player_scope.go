@@ -78,6 +78,7 @@ type instanceBindings struct {
 	graveyardControllers map[*graveyardEventPlan]*mage.PlayerBinding
 	graveyardOwners      map[*graveyardEventPlan]*mage.PlayerBinding
 	counters             map[*counterPaymentPlan]*mage.NumberBinding
+	pluralSacrifices     map[*pluralSacrificePlan]pluralSacrificeBindings
 	sacrifices           map[*sacrificeValuePlan]sacrificeValueBindings
 	events               map[*castEventPlan]castEventBindings
 	drawPlayers          map[*drawEventPlan]*mage.PlayerBinding

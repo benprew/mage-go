@@ -34,6 +34,10 @@ func (g *Game) controllersSacrificePermanents(subjects []*Permanent) {
 }
 
 func (g *Game) controllersSacrificePermanentsCount(subjects []*Permanent, eligible func(*Permanent) bool, counted PermanentFilter) int {
+	return g.controllersSacrificePermanentsResult(subjects, eligible, counted, nil)
+}
+
+func (g *Game) controllersSacrificePermanentsResult(subjects []*Permanent, eligible func(*Permanent) bool, counted PermanentFilter, completed func(*SacrificePermanentAction, bool, int)) int {
 	var selected []*Permanent
 	seen := make(map[uuid.UUID]bool, len(subjects))
 	for _, p := range subjects {
@@ -65,6 +69,10 @@ func (g *Game) controllersSacrificePermanentsCount(subjects []*Permanent, eligib
 		}
 		g.orderSacrificeGraveyards(prepared)
 		matches := make([]bool, len(prepared))
+		facts := make([]struct {
+			token bool
+			power int
+		}, len(prepared))
 		for index, result := range prepared {
 			p := g.FindPermanent(result.permanentID)
 			if p == nil || p.PhasedOut || p.incarnationID != result.incarnation || (eligible != nil && !eligible(p)) {
@@ -72,10 +80,19 @@ func (g *Game) controllersSacrificePermanentsCount(subjects []*Permanent, eligib
 				continue
 			}
 			matches[index] = counted.Match(p, g)
+			if completed != nil {
+				facts[index].token = p.IsToken
+				facts[index].power = p.CurrentPower(g)
+			}
 		}
 		for index, result := range prepared {
-			if g.performSacrifice(result) && matches[index] {
-				count++
+			if g.performSacrifice(result) {
+				if matches[index] {
+					count++
+				}
+				if completed != nil {
+					completed(result, facts[index].token, facts[index].power)
+				}
 			}
 		}
 	})

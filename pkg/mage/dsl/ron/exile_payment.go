@@ -204,6 +204,12 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 			return mage.ExileMatchingCardFromGraveyardCostInto(plan.filter, "Exile a matching card from your graveyard", bindings.exiles[ctx.exilePayment])
 		}}, false, nil
 	}
+	if n.Name == "SacrificeAnyNumberOfPermanents" && ctx.pluralSacrifice != nil {
+		return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
+			saved := bindings.pluralSacrifices[ctx.pluralSacrifice]
+			return mage.SacrificeAnyMatchingCostInto(ctx.pluralSacrifice.filter, "Sacrifice matching permanents you control", saved.power, saved.cards)
+		}}, false, nil
+	}
 	if n.Name == "SacrificeAPermanent" && ctx.sacrificeValue == nil {
 		cost, err := compileRequiredSacrificeCost(n, ctx)
 		if err != nil {

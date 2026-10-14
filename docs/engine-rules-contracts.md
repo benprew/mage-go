@@ -21275,3 +21275,39 @@ oracle checks 96 matrices with no limit and with limits zero through four.
 2RR casting, unpaid rollback, source lifecycle, pending spell copy and game
 clone. RON factory, inventory and atomic loading have separate tests. LKI and
 replacement order add no new contract in this slice.
+
+## Plural activation sacrifice payment
+
+`SacrificeAnyMatchingCostInto(filter PermanentFilter, text string,
+power *NumberBinding, cards *CardsBinding) Cost` permits zero or more distinct
+matching permanents controlled by the payer. The source can pay if it matches.
+Queries make no choices. Declaration validation requires a filter, text, named
+results and separate producers. This result-bearing declaration is supported
+as an activated ability cost; resolving and casting declarations reject.
+
+The shared payment transaction makes the count and subject choices on its
+validation game, using the live payer's decision interface. Invalid counts or
+subjects fail. Locked choices retain exact battlefield visits. Commit checks the
+complete payment on a separate game before spending live resources. Phasing,
+changed control, changed membership and return cannot substitute payment subjects.
+
+The shared sacrifice batch prepares replacements in active-player order and
+lets owners order graveyard arrivals before any movement. All moves precede
+zone and sacrifice observations; departure conditions retain the former
+battlefield. Each successful move saves its new public-zone visit before these
+observations. Tokens contribute their payment-time power but supply no card.
+Power is read after replacement and graveyard-order choices, before any subject
+leaves. Negative power remains negative. Replacement exile destinations count as paid.
+Cancellation makes the complete payment fail, with no live partial payment.
+
+The transaction publishes `NumberBinding` and `CardsBinding` results only on
+success. Existing stack, copy, clone and delayed frames carry these results.
+`FromCards` requires the saved current zone visit; departure and return cannot
+restore an earlier card result. Zero choices publish zero and an empty set.
+
+Rules: CR 601.2h, 602.2b, 701.21a and 400.7j. Native evidence:
+`TestPluralSacrificeCostResults`, `TestPluralSacrificeCostRollback`,
+`TestPluralSacrificeCostDefinition`, `TestPluralSacrificeCostStackFrames`,
+`TestPluralSacrificeCostReplacementBatch`, `TestPluralSacrificeCostCancellation`
+`TestPluralSacrificeCostDelayedAndFailureIsolation` and
+`TestPluralSacrificeCostPowerAfterReplacementChoices`.

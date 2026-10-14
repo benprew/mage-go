@@ -16046,3 +16046,28 @@ conditional static bodies and resolving actions.
 Caverns of Despair has complete RON gameplay evidence in
 `TestRONCombatCardinalityCaverns`. Declaration rejection, factory isolation,
 semantic inventory and atomic loading have separate contract tests.
+
+### RON plural activation sacrifice producer
+
+`Activated(SacrificeAnyNumberOfPermanents(filter), body)` and the same cost in
+an `And` activation cost list lower one optional-count sacrifice payment.
+`ActivatedWithModifiers` uses the same payment path. The filter must have one
+conjunctive `ControlledByAPlayer(SinglePlayer(You))` clause; supported permanent
+characteristic predicates can supply the remaining conditions. Repeated plural
+producers, missing or alternative controller clauses, unbound references and
+other declaration contexts reject. Each factory allocates separate typed power
+and card-result bindings.
+
+The engine saves payment-time total power and exact resulting public-zone visits.
+This slice establishes the producer only. `TotalPowerOfPermanents(
+ThePermanentsSacrificedThisWay)` and its graveyard-card consumer still need RON
+adapters. Sword of the Ages therefore remains rejected. Its complete record also
+omits exile of the artifact itself, which local `data/LEG.json` Oracle text
+requires. No source correction is part of this producer slice.
+
+`TestRONPluralSacrificeCostGameplay` executes the unchanged payment and entry
+rules from Sword's RON record with a test-only draw body. This proves the producer
+and activation timing, not the complete card. `TestRONPluralSacrificeCostInvalid`,
+`TestRONPluralSacrificeCostSwordBoundary` and
+`TestRONPluralSacrificeCostFactoryAndAtomicLoad` cover rejection, the remaining
+consumer boundary, factory identities, inventory roles and atomic loading.
