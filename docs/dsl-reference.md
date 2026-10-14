@@ -14775,3 +14775,44 @@ predicate and operations; `HasACounterOfType` is not supported on exile cards.
 Its complete record remains rejected. `TestRONSourceZoneConditionRecords`
 executes the unchanged Nether Shadow condition in all six reprints with a
 synthetic body. No complete-card unlock is claimed.
+
+## Restricted fixed mana production
+
+`mage.AddRestrictedMana(productions []mage.ManaProduction, restriction
+core.ManaRestriction) mage.ResolvingEffect` copies a nonempty fixed production
+batch and applies the supplied spending rule to every unit. Colors must be
+concrete; amounts must be positive. Any-combination production and a missing
+restriction fail definition validation. Caller and metadata slices cannot
+change the saved declaration.
+
+The batch passes through `addEffectMana` as one proposed event. Type replacements
+retain each unit's restriction (CR 106.6); production tracking and tapped-for-mana
+events use existing services. Fixed solver metadata retains the same restrictions
+as manual production. The shared spell payment context permits artifact-only or
+creature-only mana for matching spells, including artifact creatures, and rejects
+it for activation costs. Pure queries do not tap sources or spend resources.
+Failed casting payments retain live resources. Source departure does not remove
+mana already produced. Clones keep separate pools and payment state.
+
+RON supports `AddManaWithModifiers(fixedProduction,
+CanOnlySpendOnSpells(IsCardtype(Artifact|Creature)))` in resolving bodies.
+`fixedProduction` is a fixed mana symbol or nested nonempty `And([...])` lists.
+Any-color production, empty nested groups, unsupported filters and entry/layer
+contexts reject at compilation. `AddManaRepeatedWithModifiers(AnyManaColor,
+value, restriction)` reuses this restriction adapter, with its existing amount
+and one-color choice contracts. This adds Artifact as a permitted spell type
+there; Metamorphosis retains its existing Creature behavior. No X-spending or
+as-though color-spending contract is established.
+
+Evidence: `TestRestrictedFixedManaPaths`, `Declarations` and `Batch` cover native
+manual/solver parity, replacement batching, declaration isolation and clone
+payment. `TestRONRestrictedFixedManaWorkshop` executes the complete unchanged
+Mishra's Workshop record for manual production, artifact casting, artifact
+creatures, nonartifact rejection, activation rejection, insufficient payment,
+phasing and rollback. `Registry` uses a real RON registry and separate factory
+instances, tests retained restrictions after source departure, and checks
+inventory roles. `SpellCopies` covers mixed colors, nested production, both
+restrictions, repeated one-color production and spell copies under separate
+controllers and in cloned games. `Invalid` checks compiler contexts, malformed
+forms, nested empty groups and atomic registry rejection. Existing
+`TestRONSacrificeManaMetamorphosis` retains full Metamorphosis coverage.

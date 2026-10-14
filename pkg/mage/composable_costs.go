@@ -619,6 +619,8 @@ func canProduceMana(effects []Effect, targets []Target) bool {
 			return true
 		case *manaAnyOneColorEffect:
 			return true
+		case *restrictedFixedManaEffect:
+			return true
 		case *addManaEffect:
 			if e.amount > 0 {
 				return true

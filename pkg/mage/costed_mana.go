@@ -140,6 +140,8 @@ func sequentialManaProductions(effects []Effect) ([]ManaProduction, bool) {
 			} else {
 				onlyMana = false
 			}
+		case *restrictedFixedManaEffect:
+			productions = append(productions, add.productions...)
 		case *addManaEffect:
 			productions = append(productions, ManaProduction{Color: add.color, Amount: add.amount})
 		case *addAnyManaEffect:

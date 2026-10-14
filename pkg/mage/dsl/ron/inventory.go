@@ -1001,6 +1001,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "mana_production"
 			}
+		case "AddManaWithModifiers":
+			if len(n.Args) == 2 {
+				return []string{"mana_production", "mana_spending_restriction"}[index]
+			}
 		case "AddManaRepeatedWithModifiers":
 			if len(n.Args) == 3 {
 				return []string{"mana_production", "value", "mana_spending_restriction"}[index]

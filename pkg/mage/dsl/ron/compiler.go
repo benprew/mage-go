@@ -1799,6 +1799,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
+	case "AddManaWithModifiers":
+		return compileRestrictedFixedMana(n)
 	case "AddMana", "AddManaRepeated":
 		return compileResolvingMana(n, ctx)
 	case "CreateEachPermanentLayerEffect":

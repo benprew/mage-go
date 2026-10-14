@@ -6,22 +6,22 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **860 accepted / 126 rejected names**
-(986 total), **2,207 compiled / 238 rejected records** (2,445 total).
-The latest slice is **SOURCE-ZONE-INTERVENING-QUERIES**. Owner-upkeep TriggerI
-checks exact source-card visits at detection and resolution. Ordered graveyard
-queries count matching cards above the source without changing the live frame.
+Latest measured result (2026-10-13): **861 accepted / 125 rejected names**
+(986 total), **2,208 compiled / 237 rejected records** (2,445 total).
+The latest slice is **RESTRICTED-FIXED-MANA**. Fixed resolving productions use
+one replacement event and retain artifact-only or creature-only spending rules
+in both manual execution and automatic payment metadata.
 
-Estimated and actual full-card gains are **zero names / zero records**.
-Nether Shadow's unchanged condition has gameplay prerequisite tests in all six
-reprints. The shared frame also supports typed exile-card queries; All Hallow's
-Eve still needs exile counters and dependent operations. Copies, pending clones,
-instance isolation, identity, timing and invalid declarations have evidence.
-Complete-card gameplay coverage is unchanged. All accepted records stay accepted.
+Estimated and actual full-card gains are **one name / one record**.
+Mishra's Workshop now has complete unchanged-record gameplay tests.
+Metamorphosis retains full gameplay coverage through the shared restriction
+adapter. Native and RON evidence covers payment legality, rollback, phasing,
+replacement batching, immutable declarations, copies and game clones.
+All previously accepted records stay accepted; remaining diagnostics are unchanged.
 
-The loader still rejects the collection atomically. Optional source-card return,
-exile counters and other unsupported records remain gaps. Runtime cutover,
-Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. Restricted X payment,
+optional source-card return, exile counters and other unsupported records remain
+gaps. Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
@@ -5546,3 +5546,126 @@ docs/engine-rules-contracts.md and this progress ledger.
    eventual card. Simultaneous all-graveyard return remains another dependency.
 
 This run stops after source-zone intervening query support.
+
+
+## 2026-10-13 — RESTRICTED-FIXED-MANA
+
+### Candidate comparison and selection
+
+The tree was clean. Fresh `make build` and whole RON package tests passed.
+The baseline loader exited 1 for collection rejection, with 2,207 compiled /
+238 rejected records and 860 accepted / 126 rejected unique names.
+The latest ranked candidates were evaluated from complete unchanged RON records,
+nested forms and targeted vocabulary entries. Reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: restricted mana legality, selecting fixed production | Mishra's Workshop and Metamorphosis share spending restriction lowering. Workshop: one name/one record gain; Metamorphosis: already accepted. Drain Life and Sunglasses of Urza are distinct dependent contexts. | Pool and solver restrictions already exist. Fixed resolving batch production is missing. Drain Life's black-only X payment and clamped actual-damage life gain remain; Sunglasses needs as-though spending. Shared fixed production and Artifact/Creature restrictions serve both production forms without changing those contracts. | Low/medium for fixed context; medium/high for X payment. |
+| Ranked #2: optional exact graveyard source return | Nether Shadow: one name/six records. | Event and condition are ready; optional choice and exact source-card entry adapter are missing. Reuses zone-visit and entry services. | Medium. |
+| Ranked #3: exile-card counter storage | All Hallow's Eve: zero immediate gains, one eventual name/record. | Counter storage is a prerequisite; spell exile options, predicates/removal and simultaneous all-graveyard return also remain. | Medium/high. |
+
+Ranked #1 is dependency-ready. The fixed context wins on credible gain per effort
+and shares legality lowering with an already supported second unique card.
+This run implements one production capability, not black-only X payment or
+as-though color spending. The inspected records are ATQ:46 Workshop, ARN:53
+Metamorphosis, all six Drain Life/Sunglasses reprints, the complete LEA Nether Shadow
+record and LEG:12 All Hallow's Eve. No Go card supplied requirements.
+Local data/ATQ.json and data/ARN.json confirm both spending rules. CR 106.6
+keeps restrictions separate from mana type; CR 605.1a/3b requires immediate
+untargeted mana ability resolution. No source-data defect was found.
+
+### Contract, dependencies and reuse boundary
+
+Native signature: `mage.AddRestrictedMana(productions []mage.ManaProduction,
+restriction core.ManaRestriction) mage.ResolvingEffect`. It copies a nonempty
+batch with concrete colors and positive fixed amounts, applies one restriction
+to every unit and rejects missing restrictions or any-combination production.
+The shared `addEffectMana` pipeline receives the complete batch in one event.
+Caller and metadata slices cannot change the saved declaration. Manual and
+planned production retain identical spending rules. Replacements can change
+colors without losing restrictions. Declaration state has no per-game writes.
+
+RON signature: `AddManaWithModifiers(fixedProduction,
+CanOnlySpendOnSpells(IsCardtype(Artifact|Creature)))/2` in resolving bodies.
+Fixed production accepts the six concrete mana symbols and recursively nonempty
+`And([...])` groups. Any-color production, empty nested groups, other filters,
+wrong arities and entry/layer contexts reject before factory publication.
+`compileManaSpendingRestriction(Node)` serves fixed production and existing
+`AddManaRepeatedWithModifiers(AnyManaColor,value,restriction)/3`; the latter
+now also accepts Artifact and retains its one-color choice/value contracts.
+`compileFixedRestrictedProduction(Node)` validates only this fixed context.
+RON owns spelling and contexts; the engine owns production events and legality.
+
+Existing ability classification, sequential solver metadata, mana pool,
+spell payment contexts, type replacements, production history, transactions,
+stack copies and clones are reused. Costs stay atomic; restricted spell mana
+cannot pay artifact ability costs. Phasing stops source activation. Produced
+mana retains its rule after source departure. Copies use their own controllers.
+No source read or result binding is introduced: LKI and returned-visit reads are
+not needed for this production. Existing source identity/payment rechecks remain.
+No parallel payment/replacement service or runtime card-name branch is added.
+
+### Failing-first tests and card mappings
+
+Native tests first failed at undefined AddRestrictedMana after correcting test
+API mistakes. RON tests then failed at the expected unsupported
+AddManaWithModifiers action in every Workshop scenario. A later invalid nested
+empty-group test failed because it was accepted; recursive validation fixed it.
+The batch review replaced an interim per-production effect approach with one
+native event. A registry fixture needed its owner set before source destruction.
+
+- **Mishra's Workshop → TestRONRestrictedFixedManaWorkshop and Registry.**
+  Complete unchanged real record: immediate manual production; automatic artifact
+  and artifact-creature casting; nonartifact and activation-cost rejection;
+  insufficient payment, phasing, rollback, two registry factories and source
+  departure. Native Paths and Batch verify restrictions through replacements,
+  one simultaneous production event, query purity and declaration isolation.
+- **Metamorphosis → existing TestRONSacrificeManaMetamorphosis**, retained through
+  shared restriction lowering. SpellCopies adds synthetic coverage for both
+  restrictions, nested mixed colors, repeated one-color production, different
+  copy controllers and game clones. No additional full-card gain is counted.
+- Native Declarations and RON Invalid cover invalid signatures/contexts and
+  atomic collection rejection with a retained registry. Registry verifies
+  mana-production, spending-restriction and spell-filter inventory roles.
+
+### Verification and measured result
+
+Focused RON/native tests passed with -count=1. Build and vet passed. The first
+engine-short run failed four stale exact collection-count assertions; all other
+engine packages passed. Those assertions now require exactly 2,208/237, with an
+explicit Workshop nonrejection assertion. Their focused rerun passed.
+Fresh `make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`
+and `make test` all passed after that correction.
+`make lint` passed with 0 issues. Automatic formatting was reviewed; no unrelated
+file changed. Focused native/RON checks passed again after formatting.
+`git diff --check` passed. No environment failure remains.
+Final loader: **2,208 compiled / 237 rejected records**, **861 accepted /
+125 rejected names**, out of 2,445 records and 986 names. It exits 1 as expected
+and publishes no collection. Only Workshop's ATQ rejection disappeared; no
+accepted record became rejected and all 237 remaining diagnostics are unchanged.
+Estimated gains were one name/one record; actual gains match. Complete-card
+RON gameplay coverage adds Workshop. No RON source changed; vocabulary source
+hashes do not need refresh. API/rules documentation covers only this capability.
+
+Changed files: new pkg/mage/restricted_fixed_mana.go and native test; new
+pkg/mage/dsl/ron/restricted_fixed_mana_test.go; engine composable_costs.go,
+costed_mana.go and doc.go; RON compiler.go, restricted_mana.go and inventory.go;
+exact-count tests definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; docs/dsl-reference.md, engine-rules-contracts.md and
+this ledger. Existing callers remain. No Go definitions, generators or broad
+DSL functions were removed; the cutover/removal gates remain unmet.
+
+### Ranked next candidates
+
+1. **Optional exact source-card battlefield return — Nether Shadow.** Event and
+   condition are ready; add the optional resolution choice and shared exact-visit
+   entry operation. Potential one-name/six-record unlock; medium effort.
+2. **Restricted X payment — Drain Life.** Fixed spending restrictions do not
+   constrain X. Inspect announced cost decomposition and solver payment first.
+   Zero immediate unlocks until clamped damage gain also works; medium/high effort.
+3. **Exile-card counters — All Hallow's Eve.** Exact query frames are ready;
+   storage precedes counter predicates/removal, spell exile and batch returns.
+   Zero immediate gains; medium/high effort. As-though spending for Sunglasses
+   remains a separate comparison candidate.
+
+This run stops after restricted fixed mana production.

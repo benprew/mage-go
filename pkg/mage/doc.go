@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AddRestrictedMana] saves fixed productions with one spending rule.
+// All productions use one shared mana replacement event. Each mana unit
+// keeps its rule through type replacements, payment and game clones.
+// Fixed metadata uses the same rule as manual production. Queries do not
+// pay costs or change pools. RON accepts AddManaWithModifiers with fixed
+// mana symbols, nonempty And lists and artifact-only or creature-only spending.
+// The same spending adapter serves repeated one-color resolution production.
+// X payment and as-though color spending need separate contracts.
+//
 // [WithSourceCardInZone] saves a graveyard or face-up exile source visit.
 // Ordinary events use the owner as controller outside the battlefield.
 // Source departure does not stop queued bodies. Return cannot supply a read.
