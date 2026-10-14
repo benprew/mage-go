@@ -21109,6 +21109,34 @@ and Go callers remain available.
 Evidence: engine `TestTurnStartUntappedFacts`, `SkippedUntap`, `Definition` and
 `HistoricalTrigger`; RON `TestRONTurnStartUntappedPowerSurge`, `Intervening`,
 `Invalid` and `InventoryAndLoad`. Power Surge has full-record gameplay evidence.
-Rasputin's fixture exercises entry, both counter payments, mana, finite
-prevention and the history trigger with its independent counter-cap rule removed.
-The complete record still rejects; this is prerequisite evidence only.
+Rasputin's complete record now exercises entry, both counter payments, mana,
+finite prevention and the history trigger with its source counter-cap rule.
+
+
+## Source counter caps
+
+`SourceCounterCap(core.CounterType, int) ContinuousEffect` declares a cap in
+one source static ability. Definition validation rejects negative bounds and
+invalid counter kinds. Current runtime abilities supply the cap; shared layer
+ability removal and restoration therefore end and restore it. Cloned definitions
+and games retain separate ability and counter state.
+
+`Game.AddCountersWithReplacement`, entry counter placement (including extra
+counter types), and `Game.AddCountersTogether` limit the final counter amount
+after the existing affected-player replacement choices (CR 101.2, 122.6, 616.1).
+The cap does not take part in those choices. The lowest cap for that type wins.
+Other types are unaffected. Saved absent, phased or returned visits cannot use
+the single placement service. Batch placements retain their existing distinct
+visit checks and simultaneous preparation.
+
+At the existing state-based boundary, excess counters on an unphased permanent
+with a current cap are removed (CR 704.5r). This handles a gained or restored
+ability and a copied definition. Layer application itself does not remove
+counters. Phasing retains counters and suspends this check (CR 702.26b).
+Entry and return use the new object's own abilities and counters (CR 400.7).
+Low-level `Permanent.AddCounter` remains a bypass; state-based checks still
+remove excess counters once a live cap applies.
+
+Engine evidence: `TestSourceCounterCap`, `Definition`, `BatchAndMultipleRules`
+and `StateBased`. Complete Rasputin RON evidence and rejection cases are mapped
+in the API reference. No source-data correction or registry cutover is included.

@@ -95,10 +95,6 @@ func TestRONTurnStartUntappedIntervening(t *testing.T) {
 	for _, change := range []string{"untapped", "tapped-start", "tap-after", "return", "phase", "phase-cycle", "copy", "clone"} {
 		t.Run(change, func(t *testing.T) {
 			n := hostUntapRecord(t, "LEG", "Rasputin Dreamweaver")
-			rules := n.Fields["Rules"]
-			// The counter cap is a separate unsupported declaration.
-			rules.Args = rules.Args[:len(rules.Args)-1]
-			n.Fields["Rules"] = rules
 			factory, err := Compile(n)
 			if err != nil {
 				t.Fatal(err)
@@ -201,8 +197,8 @@ func TestRONTurnStartUntappedInvalid(t *testing.T) {
 	}
 
 	n := hostUntapRecord(t, "LEG", "Rasputin Dreamweaver")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "unsupported self untap operations") {
-		t.Fatal("independent cap must reject", err)
+	if _, err := Compile(n); err != nil {
+		t.Fatal("complete Rasputin record", err)
 	}
 }
 

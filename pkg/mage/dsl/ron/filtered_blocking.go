@@ -15,6 +15,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	operation := operations[0]
 	switch operation.Name {
+	case "CantHaveMoreThanNumberCountersOfType":
+		return compileSourceCounterCap(n, operation)
 	case "AllCreaturesMustBlockIt":
 		if err := arity(operation, 1); err != nil {
 			return nil, err

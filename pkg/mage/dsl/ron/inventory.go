@@ -1475,6 +1475,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantHaveMoreThanNumberCountersOfType" && len(n.Args) == 2 {
+			return []string{"value", "permanent_counter_type"}[index]
+		}
+
 		if n.Name == "CantBeTheTargetOfAbilities" && len(n.Args) == 1 {
 			return "ability_filter"
 		}

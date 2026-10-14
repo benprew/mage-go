@@ -15930,6 +15930,29 @@ The existing body compiler and intervening-if service perform their usual checks
 Other subjects and event families retain separate adapters.
 
 Power Surge uses its unchanged full RON in all six reprints. Rasputin Dreamweaver
-still rejects at `CantHaveMoreThanNumberCountersOfType(Integer(7), DreamCounter)`;
-its history tests remove that unsupported rule in a test-only prerequisite fixture.
-They do not establish complete Rasputin gameplay. No production loader accepts it.
+now uses its complete RON record in the history gameplay tests.
+
+
+## RON source counter cap
+
+`mage.SourceCounterCap(counter core.CounterType, limit int) mage.ContinuousEffect`
+declares a live source ability. Definition validation requires a valid counter
+kind and a nonnegative limit. Attach it with `mage.WithStaticAbility`.
+
+RON accepts `PermanentRuleEffect(ThisPermanent,
+[CantHaveMoreThanNumberCountersOfType(Integer(nonnegative), counterType)])`.
+The ordinary permanent counter adapter supplies the counter type. Exactly one
+operation is supported. Host, target, collection, dynamic-bound, conditional,
+entry-operation and resolving declarations retain separate adapters.
+
+The shared entry, single and simultaneous placement services enforce the cap
+after replacements. The lowest active cap wins. State-based actions remove any
+excess already present when the ability is gained or restored (CR 704.5r).
+The rule uses current runtime abilities; it has no retained registration.
+Direct low-level `Permanent.AddCounter` remains a pipeline bypass.
+
+Complete Rasputin gameplay: `TestRONSourceCounterCapRasputin`,
+`TestRONTurnStartUntappedIntervening`, and
+`TestRONCounterPointPreventionRasputinSourceCorrection`. The replacement order
+contract is `TestRONSourceCounterCapReplacementOrder`; invalid declarations
+are `TestRONSourceCounterCapInvalid`. Source RON is unchanged.

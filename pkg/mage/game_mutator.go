@@ -720,6 +720,13 @@ func (g *Game) addCountersWithReplacementLimit(perm *Permanent, ct CounterType, 
 	if perm == nil || n <= 0 {
 		return
 	}
+	live := g.FindPermanent(perm.ID())
+	if live == nil {
+		live = g.zones.EnteringPermanent()
+	}
+	if live == nil || live.ID() != perm.ID() || live.incarnationID != perm.incarnationID || live.PhasedOut {
+		return
+	}
 	action := NewAddCountersAction(sourceID, perm.ID(), ct, n, onEntry)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
@@ -731,17 +738,15 @@ func (g *Game) addCountersWithReplacementLimit(perm *Permanent, ct CounterType, 
 	}
 	target := g.MutablePermanent(aca.PermanentID())
 	if target == nil {
-		// During PutOnBattlefield the permanent isn't yet on the
-		// battlefield slice; fall back to the caller-supplied pointer when
-		// the IDs match (ETB additional/doubling for the same permanent).
-		if perm.ID() == aca.PermanentID() {
-			target = perm
+		entering := g.zones.EnteringPermanent()
+		if entering != nil && entering.ID() == aca.PermanentID() {
+			target = entering
 		}
 	}
-	if target == nil {
+	if target == nil || target.PhasedOut || (target.ID() == perm.ID() && target.incarnationID != perm.incarnationID) {
 		return
 	}
-	amount := aca.Amount()
+	amount := cappedCounterAmount(target, aca.CounterType(), aca.Amount())
 	if limit != nil && aca.PermanentID() == perm.ID() {
 		live := g.FindPermanent(perm.ID())
 		if live == nil || live.incarnationID != perm.incarnationID {
@@ -783,13 +788,14 @@ func (g *Game) AddCountersTogether(perms []*Permanent, ct CounterType, n int, so
 			continue
 		}
 		target := g.FindPermanent(result.PermanentID())
-		if target != nil {
+		if target != nil && (target.ID() != perm.ID() || target.incarnationID == perm.incarnationID) {
 			prepared = append(prepared, placement{target.ID(), target.incarnationID, result.Amount(), result.CounterType()})
 		}
 	}
 	for _, p := range prepared {
 		if target := g.FindPermanent(p.id); target != nil && target.incarnationID == p.incarnation {
-			g.MutablePermanent(p.id).AddCounter(p.counter, p.amount)
+			live := g.MutablePermanent(p.id)
+			live.AddCounter(p.counter, cappedCounterAmount(live, p.counter, p.amount))
 		}
 	}
 }

@@ -542,7 +542,7 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 		action := NewAddCountersAction(perm.ID(), perm.ID(), ct, 0, true)
 		result := g.effects.ApplyReplacements(action, g)
 		if aca, ok := result.(*AddCountersAction); ok && aca.Amount() > 0 {
-			perm.AddCounter(aca.CounterType(), aca.Amount())
+			perm.AddCounter(aca.CounterType(), cappedCounterAmount(perm, aca.CounterType(), aca.Amount()))
 		}
 	}
 

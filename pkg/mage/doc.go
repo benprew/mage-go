@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SourceCounterCap] limits one counter type on the source's current visit.
+// Shared entry, single and batch placement apply the cap after replacements.
+// Current abilities supply the rule. Ability removal stops it. Phasing stops
+// placement and state-based removal; return supplies a new visit and entry.
+// State-based checks remove excess counters when the ability becomes active.
+// Multiple caps use the lowest limit. Other counter types keep their counts.
+// Clones and factory instances keep separate abilities and counter arrays.
+// RON accepts source PermanentRuleEffect with one
+// CantHaveMoreThanNumberCountersOfType(Integer(nonnegative), counterType).
+// This completes Rasputin Dreamweaver. Other subjects and contexts need adapters.
+//
 // [UntappedLandCountAtTurnStart] reads a selected player's saved land count.
 // [PermanentStartedTurnUntapped] reads the source's exact saved visit.
 // [Game.BeginActiveTurn] captures both facts once, before phasing and untapping.
@@ -9,7 +20,7 @@
 // permanent actions still require their saved present visit. Clones keep separate
 // history. Extra turns capture again. RON accepts the untapped-land count with
 // one SinglePlayer controller filter and a source upkeep history condition.
-// This completes Power Surge. Rasputin Dreamweaver still needs its counter cap.
+// This completes Power Surge and the history rule for Rasputin Dreamweaver.
 //
 // [Until] accepts [ChangeController] with core.Indefinite. Resolution saves the
 // exact subject visit and selected player. Source departure and cleanup keep

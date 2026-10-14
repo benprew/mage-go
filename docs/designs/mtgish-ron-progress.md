@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **893 accepted / 93 rejected names**
-(986 total), **2,267 compiled / 178 rejected records** (2,445 total).
-The latest slice is **TURN-START-UNTAPPED-FACTS**. The shared turn boundary
-captures exact untapped visits and both players' untapped land counts once,
-before phasing and untapping, including skipped untap steps. Power Surge has
-complete RON gameplay evidence. Rasputin Dreamweaver's history prerequisite
-works; its complete record still rejects at its independent counter cap.
-Estimated and actual gain: **one unique name / six records**. Gameplay gains
-Power Surge. No RON source changed. All required checks pass; lint has 0 issues.
+Latest measured result (2026-10-14): **894 accepted / 92 rejected names**
+(986 total), **2,268 compiled / 177 rejected records** (2,445 total).
+The latest slice is **SOURCE-COUNTER-CAP**. Live static source abilities limit
+entry, ordinary and simultaneous counter placements after replacements.
+State-based actions remove excess counters when a cap becomes active.
+Ability removal, phasing, exact visits, copied entry and clones have contract tests.
+Rasputin Dreamweaver now has complete RON gameplay evidence.
+Estimated and actual gain: **one unique name / one record**. No RON source changed.
+All required checks pass after three local lint naming fixes; final lint has 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -23,13 +23,14 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Source counter cap for Rasputin Dreamweaver.** The turn-start prerequisite
-   is complete. Audit replacement ordering and the CR 122 cap contract before
-   lowering its seven-dream-counter rule.
-2. **Damage causation for Silhouette.** Spell-source target facts are complete;
-   distinct causing spell/ability identity is still a prerequisite.
-3. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
-   the full power/sacrifice/graveyard-exile chain and source/result fidelity audit.
+1. **Damage causation identity for Silhouette.** Distinct causing spell/ability
+   identity still needs an engine contract. Audit concrete downstream multi-card value.
+2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+   atomic paid visits, saved powers and exact graveyard consumers; audit its
+   sacrificed-artifact exile source defect before claiming full gameplay.
+3. **Static entry-replacement matching.** Kismet and Land Equilibrium share
+   entry-subject/player prerequisites. Land Equilibrium also needs its land-count
+   condition, retained entrant and mandatory sacrifice sequence.
 
 ## Dependencies and source blockers
 
@@ -12250,3 +12251,150 @@ sacrifice_value.go, storage_land.go, inventory.go and six affected test files;
 retained cards/limited/enchantments_test.go; API/rules docs and this ledger.
 No environment or pre-existing test blocker remains. Commit title:
 `feat(ron): implement turn-start untapped facts`.
+
+## 2026-10-14 — SOURCE-COUNTER-CAP
+
+Implemented one complete source static counter-cap slice. No next slice started.
+
+### Baseline and candidate comparison
+
+Working tree was clean at 459ac7fe. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader exited 1 for atomic
+collection rejection: 2,267 compiled / 178 rejected records, 893 accepted /
+93 rejected names. This was unsupported collection data, not a build failure.
+Read the execution design, engine reference, current status and latest ledger
+entry, targeted vocabulary signatures, local Oracle data, compiler/engine paths,
+and complete RON records for all three compared names. No Go card requirements
+were used. Applied the implement-engine skill to the engine contract work.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Source counter cap | Rasputin Dreamweaver | 1 name / 1 record | No independent blocker after the prior history slice. Reusable caps for entry, ordinary and batch placements; copied or restored abilities require CR 704.5r. | Small, one run: one lowering adapter, live ability reads, placement and SBA integration, contract and full-record tests. |
+| Damage causation identity | Silhouette | 0 for a mechanics-only prerequisite; 1 with the dependent temporary adapter | Requires distinct causing spell/ability and damage source identities, LKI, copy frames, propagation through damage operations, then shield lowering. No second full-card unlock was established. | Larger: identity propagation across spell/ability execution plus replacement and copy tests. |
+| Plural activation sacrifice facts | Sword of the Ages | 0 for payment alone; at most 1 after consumers and source audit | Requires paid visits, saved total power and exact graveyard exile. Complete RON exiles only ThePermanentsSacrificedThisWay from the plural creature payment; the sacrificed artifact's exile remains a suspected source defect to audit. No correction made. | Larger: transaction/result producer and two consumers, replacement/rollback and source-fidelity tests. |
+
+The first ranked candidate was dependency-ready and had the largest verified
+complete-record gain for this bounded run. The compared alternatives each have
+one direct collection consumer and no demonstrated larger immediate unlock.
+No reprint was counted as a separate card. The cap is a reusable engine rule,
+not a card-name branch or a parallel counter subsystem.
+
+### Contract, lowering and reuse boundary
+
+Engine API: `SourceCounterCap(counter core.CounterType, limit int)
+ContinuousEffect`, attached with `WithStaticAbility`. Definition validation
+requires a valid counter kind and nonnegative limit. Current runtime static
+abilities supply caps. No game-time declaration panic or saved registration.
+Multiple caps for one kind use the lowest limit; other kinds are unaffected.
+Shared layer removal/restoration, factory rebuilding and effect cloning preserve
+rule lifecycle and instance separation.
+
+RON accepts exactly `PermanentRuleEffect(ThisPermanent,
+[CantHaveMoreThanNumberCountersOfType(Integer(nonnegative), counterType)])`.
+The existing permanent-counter adapter supplies typed counters. Host, target,
+collection, dynamic-bound and multiple-operation forms remain unsupported.
+Inventory assigns the bound a value role and the counter a permanent-counter role.
+RON owns spelling and declaration shape; mage owns prohibition and state changes.
+
+CR 101.2 gives the prohibition precedence over permission. Counter placements
+use CR 122.6 and the existing affected-player replacement pipeline (CR 616.1).
+The cap limits the final amount after all replacements and adds no selectable
+replacement. Integrated shared single placement, batch commit and entry counters,
+including entry's synthesized extra-counter types. Exact-visit checks before
+and after replacement choices prevent departed, phased and returned visits
+from supplying the original placement. Batch preparation remains simultaneous.
+
+CR 704.5r removes excess counters at the existing state-based boundary when
+a cap becomes active on an object with too many counters. Current ability reads
+cover gained/restored and copied rules. Layer application does not remove them.
+Phasing suspends the check; phase-in restores it. Return supplies a new visit.
+The direct low-level AddCounter API remains a documented pipeline bypass.
+Reused current runtime abilities, layers, counter replacements/removal, entry
+copying, exact incarnations, copy-on-write game cloning and atomic loader services.
+
+Local `data/LEG.json` confirms the full Oracle counter-cap text. Local CR 101.2,
+122.6, 616.1 and 704.5r establish the rule contract. No RON source or vocabulary
+snapshot changed. No Go definition, old DSL export, authoring workflow or startup
+registry was removed; their completion gates remain closed.
+
+### Failing-first tests and mappings
+
+After fixing test-only parser/phase argument types, engine tests failed with
+undefined SourceCounterCap and RON failed on complete Rasputin's unsupported
+cap. New state-based tests then failed on excess counters. A final saved-visit
+replacement-choice test failed when the shared placement followed a returned
+card; single and batch guards now pass it. No assertion was removed or weakened.
+The phase-in test applies the existing layer pass before the explicit SBA check.
+Final review isolated the cap-only inventory shape. That test failed because the
+new role adapter was routed under rule instead of permanent_rule_operation.
+Moved it to the correct role; the independent cap-only inventory now passes.
+
+- Rasputin Dreamweaver -> TestRONSourceCounterCapRasputin: unchanged complete
+  record, unpaid cast rollback and successful colored payment, entry, upkeep at
+  cap and below cap, doubling, copied triggers, pending clones and opponent upkeep.
+- Rasputin -> TestRONTurnStartUntappedIntervening: upgraded to the complete record,
+  retaining both counter payments, immediate mana, finite prevention, history,
+  tapped start/later tap, departure/return, phasing, copies and clone isolation.
+  The earlier CounterPointPreventionRasputinSourceCorrection probe now also
+  requires successful compilation of the complete record.
+- Static cap -> TestRONSourceCounterCapReplacementOrder: affected player chooses
+  addition/doubling order; final amounts are seven or five, with no cap choice.
+- Invalid forms -> TestRONSourceCounterCapInvalid: wrong subject/kind, negative
+  or dynamic bound, unknown counter, excess arguments and constructor source.
+- Loader/inventory -> TestRONSourceCounterCapInventoryAndAtomicLoad: semantic
+  roles, fresh identities and definition validation, successful full record,
+  rejected negative-cap collection preserving the prior registry.
+- Engine -> TestSourceCounterCap, Definition, BatchAndMultipleRules, StateBased,
+  ReplacementReturn and CopiedEntry: zero/large bounds, entry doubling, ordinary
+  and duplicate batch visits, independent clones, other counter kinds, minimum
+  of multiple caps, removal/restoration, phased suspension, copied entry rules,
+  new visits and departure during replacement choice.
+
+Updated collection count assertions in definition_plan_test.go,
+inventory_test.go and numeric_consumers_test.go. Updated doc.go and the API and
+rules-contract references, including obsolete Rasputin prerequisite statements.
+
+### Measured gain and validation
+
+Fresh loader: **2,268 compiled / 177 rejected records; 894 accepted / 92 rejected
+names**, of 2,445 records / 986 names. Estimated and actual gains match:
+**one unique name / one record**, Rasputin Dreamweaver. Gameplay gains that one
+complete card; compilation and gameplay evidence are reported separately.
+Baseline comparison removes only Rasputin's unsupported counter-cap diagnostic;
+no issue was added or changed. Strict loading still rejects the collection
+atomically. No source-data correction or environment blocker remains.
+
+Required verification:
+
+- `go test ./pkg/mage/dsl/ron -run SourceCounterCap -count=1`: pass.
+  Engine `go test ./pkg/mage -run SourceCounterCap -count=1`: pass.
+  Expanded focused run includes TurnStartUntapped and retained Rasputin prevention.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- First `make lint` found three new built-in-shadowing names; renamed them.
+  Final `make lint`: pass, 0 issues. Automatic formatting added one blank line
+  in the inventory branch. Reviewed final diff and reran affected focused tests
+  after lint, plus required checks after the metadata/name and inventory fixes.
+- `git diff --check`: pass. Final `go run ./cmd/loadcards -json`: expected exit 1
+  with the collection counts above, preserving atomic rejection.
+
+Changed files: mage and ron source_counter_cap.go/tests; game.go,
+game_mutator.go, state_based_actions.go and doc.go; RON filtered_blocking.go,
+inventory.go and five prior count/prerequisite tests; API/rules docs and this
+ledger. Commit title: `feat(ron): implement source counter cap`.
+
+### Ranked next candidates
+
+1. **Damage causation identity for Silhouette.** Audit whether shared causing
+   spell/ability identity has concrete multi-card downstream value before choosing
+   its one-card temporary prevention adapter.
+2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+   atomic payment-time power facts and exact graveyard consumers; resolve the
+   sacrificed-artifact source defect with Oracle evidence before claiming gameplay.
+3. **Static entry-replacement matching.** Kismet has one filtered tapped-entry
+   operation. Land Equilibrium shares entry-subject/player prerequisites but still
+   needs its land-count condition, retained entrant and mandatory sacrifice sequence.
+   Compare complete records and shared entry services before implementation.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. Stop after this slice.

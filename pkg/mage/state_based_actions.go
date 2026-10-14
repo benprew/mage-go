@@ -55,6 +55,21 @@ func (g *Game) checkStateBasedActions() bool {
 			}
 		}
 
+		for _, p := range g.zones.battlefield {
+			if p.PhasedOut {
+				continue
+			}
+			for counter, count := range p.Counters {
+				if count == 0 {
+					continue
+				}
+				if limit, found := sourceCounterLimit(p, CounterType(counter)); found && count > limit {
+					g.MutablePermanent(p.ID()).RemoveCounter(CounterType(counter), count-limit)
+					actions = true
+				}
+			}
+		}
+
 		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
 		var aurasToDrop []*Permanent
 		for _, p := range g.zones.battlefield {
