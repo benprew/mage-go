@@ -16026,3 +16026,23 @@ payments and unbound references reject during compilation. Land Equilibrium's
 complete unchanged record has casting, gameplay, clone and copied-spell evidence
 in `TestRONRetainedEntry*`. The collection still rejects atomically while other
 unsupported records remain.
+
+### RON combat declaration cardinality
+
+Permanent rules accept top-level
+`NoMoreThanNumberCreaturesCanAttack(Integer(n))` and
+`NoMoreThanNumberCreaturesCanBlock(Integer(n))`, with fixed nonnegative `n`.
+They lower to `mage.LimitAttackDeclarations(n)` and
+`mage.LimitBlockDeclarations(n)` through fresh static abilities.
+
+Zero prohibits declarations. Multiple active rules use the lowest limit.
+The engine maximizes attack and block requirements within that limit. Block
+limits count distinct creatures, including creatures that block multiple
+attackers or an attacking band. Existing legality and attack payment services
+still apply. Phasing, ability removal and source departure stop the rules;
+return registers a new source visit. These forms reject dynamic values,
+conditional static bodies and resolving actions.
+
+Caverns of Despair has complete RON gameplay evidence in
+`TestRONCombatCardinalityCaverns`. Declaration rejection, factory isolation,
+semantic inventory and atomic loading have separate contract tests.

@@ -166,8 +166,19 @@ func TestBlockingRequirementsBand(t *testing.T) {
 }
 
 func TestBlockingRequirementsAgainstExhaustiveAssignments(t *testing.T) {
+	testBlockingRequirementsAgainstExhaustiveAssignments(t, -1)
+}
+
+func TestCombatCardinalityBlockingExhaustive(t *testing.T) {
+	for limit := range 5 {
+		testBlockingRequirementsAgainstExhaustiveAssignments(t, limit)
+	}
+}
+
+func testBlockingRequirementsAgainstExhaustiveAssignments(t *testing.T, limit int) {
+	t.Helper()
 	for seed := range 96 {
-		plan := &blockingPlan{groups: make([]*CombatGroup, 3), counts: make([]int, 3), directCounts: make([]int, 3), minimum: []int{1, 1 + seed%2, 1 + seed%3}, single: []int{seed % 2, seed % 3, 1}}
+		plan := &blockingPlan{limit: limit, limited: limit >= 0, groups: make([]*CombatGroup, 3), counts: make([]int, 3), directCounts: make([]int, 3), minimum: []int{1, 1 + seed%2, 1 + seed%3}, single: []int{seed % 2, seed % 3, 1}}
 		for rowIndex := range 4 {
 			row := blockingRow{capacity: 1 + (seed+rowIndex)%2}
 			for group := range 3 {
@@ -195,8 +206,11 @@ func TestBlockingRequirementsAgainstExhaustiveAssignments(t *testing.T) {
 		}
 		oracle := -1
 		counts := make([]int, 3)
-		var enumerate func(int, int)
-		enumerate = func(rowIndex, weight int) {
+		var enumerate func(int, int, int)
+		enumerate = func(rowIndex, weight, used int) {
+			if limit >= 0 && used > limit {
+				return
+			}
 			if rowIndex == 4 {
 				for group, count := range counts {
 					if count > 0 && count < plan.minimum[group] {
@@ -221,7 +235,11 @@ func TestBlockingRequirementsAgainstExhaustiveAssignments(t *testing.T) {
 						gained += choice.weight
 					}
 				}
-				enumerate(rowIndex+1, weight+gained)
+				nextUsed := used
+				if mask != 0 {
+					nextUsed++
+				}
+				enumerate(rowIndex+1, weight+gained, nextUsed)
 				for i, choice := range row.choices {
 					if mask&(1<<i) != 0 {
 						counts[choice.groups[0]]--
@@ -229,13 +247,15 @@ func TestBlockingRequirementsAgainstExhaustiveAssignments(t *testing.T) {
 				}
 			}
 		}
-		enumerate(0, 0)
+		enumerate(0, 0, 0)
 		chosen := plan.choose()
 		score := 0
+		selected := make(map[int]bool)
 		for _, assignment := range chosen {
-			for _, row := range plan.rows {
+			for rowIndex, row := range plan.rows {
 				for _, choice := range row.choices {
 					if assignment == choice.assignment {
+						selected[rowIndex] = true
 						counts[choice.groups[0]]++
 						score += choice.weight
 					}
@@ -249,6 +269,9 @@ func TestBlockingRequirementsAgainstExhaustiveAssignments(t *testing.T) {
 			if count > 0 && plan.single[group] > 0 {
 				score += plan.single[group]
 			}
+		}
+		if limit >= 0 && len(selected) > limit {
+			t.Fatal("distinct blocker cap exceeded")
 		}
 		if score != oracle {
 			t.Fatalf("seed %d: got %d, exhaustive maximum %d", seed, score, oracle)

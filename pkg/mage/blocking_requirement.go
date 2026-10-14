@@ -27,6 +27,7 @@ type blockingRow struct {
 	choices   []blockingChoice
 	preferred []int
 	capacity  int
+	existing  bool
 }
 
 type blockingPlan struct {
@@ -37,6 +38,9 @@ type blockingPlan struct {
 	directCounts []int
 	rows         []blockingRow
 	suffixWeight []int
+	limit        int
+	selectedRows int
+	limited      bool
 }
 
 func blockingAttributeCount(p *Permanent, attr Attr) int {
@@ -92,7 +96,17 @@ func (g *Game) combatDefender() uuid.UUID {
 }
 
 func (g *Game) newBlockingPlan(defender uuid.UUID, proposed []BlockAssignment) *blockingPlan {
-	plan := &blockingPlan{groups: g.combat.Groups}
+	plan := &blockingPlan{groups: g.combat.Groups, limit: g.combatDeclarationLimit(true)}
+	plan.limited = plan.limit >= 0
+	existingBlockers := make(map[uuid.UUID]bool)
+	for _, group := range plan.groups {
+		for _, id := range group.BlockerIDs {
+			existingBlockers[id] = true
+		}
+	}
+	if plan.limit >= 0 {
+		plan.limit = max(0, plan.limit-len(existingBlockers))
+	}
 	for _, group := range plan.groups {
 		p := g.liveCombatAttacker(group)
 		minimum := max(1, g.effects.MinBlockers(group.AttackerID))
@@ -108,7 +122,7 @@ func (g *Game) newBlockingPlan(defender uuid.UUID, proposed []BlockAssignment) *
 		if blocker.PhasedOut || !blocker.HasType(TypeCreature) || blocker.ControllerID() != defender || !blocker.CanDeclareAsBlocker(g) {
 			continue
 		}
-		row := blockingRow{}
+		row := blockingRow{existing: existingBlockers[blocker.ID()]}
 		usedBands := make(map[uuid.UUID]int)
 		existing := make(map[uuid.UUID]bool)
 		for _, group := range plan.groups {
@@ -219,6 +233,13 @@ func (p *blockingPlan) preferredLegal() (assignments []BlockAssignment, requirem
 	selected := make([][]int, len(p.rows))
 	for i, row := range p.rows {
 		selected[i] = slices.Clone(row.preferred)
+		if len(selected[i]) > 0 && !row.existing {
+			if p.limited && p.selectedRows == p.limit {
+				selected[i] = nil
+			} else {
+				p.selectedRows++
+			}
+		}
 		for _, index := range selected[i] {
 			p.directCounts[row.choices[index].direct]++
 			for _, group := range row.choices[index].groups {
@@ -258,6 +279,7 @@ func (p *blockingPlan) preferredLegal() (assignments []BlockAssignment, requirem
 		}
 	}
 	score, _ := p.score(weight)
+	p.selectedRows = 0
 	for i, row := range p.rows {
 		for _, index := range selected[i] {
 			p.directCounts[row.choices[index].direct]--
@@ -319,6 +341,10 @@ func (p *blockingPlan) choose() []BlockAssignment {
 		}
 		row := p.rows[rowIndex]
 		visit := func(option []int) bool {
+			usesSlot := len(option) > 0 && !row.existing
+			if usesSlot && p.limited && p.selectedRows == p.limit {
+				return true
+			}
 			if p.upperBound(rowIndex, weight) <= bestScore {
 				return false
 			}
@@ -333,7 +359,13 @@ func (p *blockingPlan) choose() []BlockAssignment {
 					p.counts[group]++
 				}
 			}
+			if usesSlot {
+				p.selectedRows++
+			}
 			search(rowIndex+1, weight+added)
+			if usesSlot {
+				p.selectedRows--
+			}
 			for _, index := range option {
 				p.directCounts[row.choices[index].direct]--
 				for _, group := range row.choices[index].groups {

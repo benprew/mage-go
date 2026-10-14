@@ -671,6 +671,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
 	}
 	switch n.Name {
+	case "NoMoreThanNumberCreaturesCanAttack", "NoMoreThanNumberCreaturesCanBlock":
+		return compileCombatCardinality(n)
 	case "FromStack":
 		return compileStackSelfCast(n, ctx)
 	case "ReplaceWouldPutAPermanentOnTheBattlefield":

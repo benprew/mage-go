@@ -163,6 +163,9 @@ func (g *Game) hasTurnAttackRule(p *Permanent, require bool) bool {
 	return false
 }
 func (g *Game) completeRequiredAttackers(player uuid.UUID, proposed []uuid.UUID, includePrinted bool) []uuid.UUID {
+	if limit := g.combatDeclarationLimit(false); limit >= 0 {
+		return g.cappedRequiredAttackers(player, proposed, limit)
+	}
 	result := append([]uuid.UUID(nil), proposed...)
 	declared := make(map[uuid.UUID]bool, len(result))
 	for _, id := range result {

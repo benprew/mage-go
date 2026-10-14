@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **896 accepted / 90 rejected names**
-(986 total), **2,270 compiled / 175 rejected records** (2,445 total).
-The latest slice is **RETAINED-ENTRY-SACRIFICE**. Live actor counts and projected
-entry types retain entry, then require a sacrifice in a saved actor frame.
-Source lifecycle, exact choice visits, copy priority, nesting, simultaneous
-entry, return actors and copy-on-write clone isolation have contract tests.
-Land Equilibrium has complete RON casting, gameplay and copied-spell evidence.
+Latest measured result (2026-10-14): **897 accepted / 89 rejected names**
+(986 total), **2,271 compiled / 174 rejected records** (2,445 total).
+The latest slice is **COMBAT-DECLARATION-CARDINALITY**. Fixed global attack and
+block limits constrain the shared declaration planners. Requirements remain
+maximal within the cap; one multi-blocking creature consumes one block slot.
+Source lifecycle, clone isolation, weighted requirements, attack costs, evasion,
+menace and banding have native contract tests. Caverns of Despair has complete
+RON casting, gameplay, World lifecycle and copied-spell evidence.
 Estimated and actual gain: **one unique name / one record**. No RON source changed.
-All required checks pass; lint reports 0 issues. The loader's only removed
-diagnostic is Land Equilibrium's unsupported retained-entry rule.
+All required checks pass; lint reports 0 issues. Final verification is below.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,12 +24,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
-   atomic saved powers and exact graveyard consumers. Its RON omits artifact exile.
+1. **Plural activation sacrifice payment producer.** Establish saved power and
+   exact zone visits before Sword of the Ages's consumers and Oracle repair.
 2. **Damage causation identity.** Silhouette needs distinct causing spell/ability
    identity; compare shared multi-card work before selecting its prevention adapter.
-3. **Combat declaration cardinality.** Caverns of Despair needs attack and block
-   caps; compare shared rule contracts and requirement interactions first.
+3. **Characteristic arithmetic.** Compare Gaea's Avenger's additive CDA with
+   broader numeric consumers; audit its controller filter against Oracle.
 
 ## Dependencies and source blockers
 
@@ -12760,3 +12760,163 @@ Commit title: `feat(ron): implement retained entry sacrifice`.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after RETAINED-ENTRY-SACRIFICE.
+
+
+## 2026-10-14 — COMBAT-DECLARATION-CARDINALITY
+
+### Environment, candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. Fresh loader exited 1
+for collection rejection, with 2,270 compiled / 175 rejected records and
+896 accepted / 90 rejected unique names. This was not a build or environment
+failure. Complete records inspected: Sword of the Ages, Silhouette and Caverns
+of Despair in LEG; targeted vocabulary signatures and nested forms were read.
+Additional diagnostic inspection found predominantly separate single-card
+contracts, rather than an immediately reusable multi-card adapter.
+
+| Candidate | Distinct cards / estimated full unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Plural activation sacrifice facts and visits | Sword of the Ages / 1 only after all contracts and source repair | No variable-count activation sacrifice producer with both saved power and exact resulting graveyard visits; needs atomic result publication and exact plural graveyard consumer. Source omits exiling the artifact. Downstream: plural payment history and zone-result consumers. | Large: payment selection, transaction, result bindings, movement and source repair; split prerequisites required to fit one run. |
+| Damage causation identity | Silhouette / 1 after causation and temporary adapter | Damage-source identity cannot identify a distinct causing spell or ability. Requires propagation through all relevant damage producers before TargetsPermanent can safely test the cause. Downstream: reusable cause predicates for prevention/replacements. | Large: producer audit, cause snapshots, copy/clone and prevention tests. |
+| Combat declaration cardinality | Caverns of Despair / 1 | No later unsupported form in the complete record; both top-level fixed caps and metadata are the complete requirement. Shared attack and block planners already supply most legality and requirements. Downstream: filtered combat cardinality and requirement planning under future shared caps. | Medium: one static rule family, compiler adapter, both planner boundaries and gameplay/contract tests. |
+
+Selected the third candidate because it can finish one complete supported shape
+in this run. Candidate one lacks its prerequisite producer/consumer contracts;
+its complete vertical implementation spans multiple independently testable
+payment and zone-result capabilities. All three compared records have one
+unique name; first-error counts were not treated as multi-card unlocks. No
+useful dependency-ready multi-card adapter was established in this comparison.
+This slice adds shared services, not a card-name branch.
+
+### Exact shape, engine ownership and dependencies
+
+RON accepts top-level permanent rules
+`NoMoreThanNumberCreaturesCanAttack(Integer(nonnegative))` and
+`NoMoreThanNumberCreaturesCanBlock(Integer(nonnegative))`. It rejects symbols,
+wrong arity, negative literals, raw literals, dynamic values, resolving actions
+and conditional bodies. Inventory assigns each argument the numeric value role.
+Factories construct fresh static declarations.
+
+Engine APIs: `LimitAttackDeclarations(int) StaticRule` and
+`LimitBlockDeclarations(int) StaticRule`. Definition validation requires a
+battlefield source and a nonnegative limit. Shared continuous-effect activity
+and exact printed declaration visits supply the source lifecycle. There is no
+new cached rule registry, LKI service, cost system or global last-action slot.
+The lowest active limit applies; zero permits no declarations. No limit removes
+creatures already in combat or governs entry into combat without a declaration.
+
+The capped attack planner counts independent printed and resolved requirements,
+then uses stable proposal preference among equal weights. Current creature type,
+control, phasing, tap status, summoning sickness, attack restrictions and Island
+Sanctuary constrain eligibility. Omitted taxed attackers are not forced to pay.
+Selected attackers retain existing payment and post-payment identity checks.
+Uncapped caller behavior is retained.
+
+The existing blocker planner bounds selected creature rows. Multi-blocking and
+attacking-band pairs use one creature slot. Existing pairs remain fixed and
+reserve distinct blocker slots. Evasion, capacity, minimum blocker counts and
+maximum requirements remain shared contracts. Completion queries do not mutate
+combat, player choices, RNG or source state. Shared lifecycle and effect cloning
+keep departure, return, ability removal/restoration and clones independent.
+
+Rules evidence: local CR 508.1a–d and 509.1a–c. Local `data/LEG.json`
+confirms Caverns of Despair's exact two Oracle clauses, 2RR cost and World
+Enchantment type. No source defect was found in Caverns of Despair. No RON source changed; vocabulary hashes need no refresh.
+Sword of the Ages's documented artifact-exile omission remains deferred.
+Go-card removal and unused DSL removal remain behind the existing cutover gate.
+
+### Failing-first evidence and card-to-test mapping
+
+RON gameplay tests first failed on unsupported
+`NoMoreThanNumberCreaturesCanAttack`. Native tests first failed on missing
+`LimitAttackDeclarations` and `LimitBlockDeclarations` APIs. Expanded attack
+legality evidence then failed because an Island Sanctuary-barred requirement
+could displace a legal flyer; the capped planner now checks that restriction
+before ranking requirements. An initial factory test expected both numeric
+inventory occurrences in one context; the inventory keeps the two rule contexts
+separate. The test now sums the two occurrences without losing the role check.
+A native restoration test initially used the effect-removal API with the wrong
+argument; it now uses shared end-of-turn expiry. No gameplay assertion was
+weakened to hide an implementation failure.
+
+- Caverns of Despair -> `TestRONCombatCardinalityCaverns`: complete unchanged
+  LEG record, 2RR casting, unpaid rollback, both caps, duplicate attacker input,
+  source phase cycle, departure, return, ability removal, game clone, pending
+  permanent spell copy and the World state-based lifecycle.
+- Caverns of Despair -> `TestRONCombatCardinalityFactoryAndAtomicLoad`: separate
+  card and ability IDs, compiled rule/value inventory roles, explicit loading
+  and invalid collection rejection that preserves the prior registry.
+- Declaration contract -> `TestRONCombatCardinalityInvalid`: unsupported shapes,
+  negative counts, unbound/dynamic values and invalid contexts reject.
+- Native `TestCombatCardinalityRequirements`: mandatory attack priority and an
+  impossible menace block under the cap.
+- Native `TestCombatCardinalityBothDeclarationPaths`: native and explicit
+  declarations, zero/one/two/nonbinding limits and duplicate inputs.
+- Native `TestCombatCardinalityDistinctBlockersAndRequirements`: multiple block
+  pairs, attacking bands, maximum requirements and query/clone isolation.
+- Native `TestCombatCardinalityAttackWeightsAndCosts`: duplicate independent
+  requirements, weighted maximum and optional attack costs on both paths.
+- Native `TestCombatCardinalityAttackLegality`: Island Sanctuary cannot let an
+  illegal high-weight requirement displace a legal attacker.
+- Native `TestCombatCardinalityLifecycleAndMinimum`: competing limits, source
+  phasing, departure, changed-controller return, removal/restoration and clones.
+- Native `TestCombatCardinalityDefinition`: negative limits and nonpermanent
+  static declarations fail definition validation.
+- Native `TestCombatCardinalityBlockingExhaustive`: independent exhaustive
+  assignment oracle for 96 matrices at limits 0–4. The original uncapped
+  exhaustive evidence is retained. The planner's zero-valued internal limit
+  must not restrict existing manually constructed uncapped test plans.
+
+### Measured gain and verification
+
+Final fresh loader: **2,271 compiled / 174 rejected records; 897 accepted /
+89 rejected names**, of 2,445 records / 986 names. Estimated and actual gains
+match: **one unique name / one record**, Caverns of Despair. Its full RON gameplay
+mapping is separate from collection-wide compilation coverage. Comparison of
+baseline and final diagnostics removes only Caverns of Despair. No diagnostic
+was added or changed. Strict collection loading still rejects atomically with
+exit 1 for the remaining unsupported records.
+
+Required checks in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run CombatCardinality -count=1`: pass.
+- `go test ./pkg/mage -run 'CombatCardinality|BlockingRequirements' -count=1`:
+  pass, including the uncapped and capped exhaustive oracles.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- First `make lint`: four issues (three test preallocations and a local variable
+  shadowing the built-in `cap`). Fixed all four, then reran focused RON/native
+  tests successfully. Final `make lint`: pass, 0 issues.
+- Reviewed automatic lint changes: import grouping only in new files. No
+  unrelated file changed. Post-lint focused RON/native tests: pass.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, with the counts above.
+  JSON diagnostic comparison removes exactly Caverns of Despair and adds none.
+
+Build/test/environment blockers: none. No source-data change, Go-card removal,
+obsolete authoring change or DSL deletion was made outside its completion gate.
+
+Changed files: new mage `combat_cardinality.go` and `combat_cardinality_test.go`;
+`attack_rule_turn.go`, `blocking_requirement.go` and its tests; new RON
+`combat_cardinality.go` and `combat_cardinality_test.go`, `compiler.go`,
+`inventory.go`, and exact collection snapshots in `definition_plan_test.go`,
+`inventory_test.go` and `numeric_consumers_test.go`; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement combat declaration cardinality`.
+
+
+### Ranked next candidates
+
+1. **Plural activation sacrifice payment producer.** Establish bounded optional
+   selection through the shared activation transaction, with per-instance saved
+   power and exact resulting zone visits. This is a prerequisite for Sword of
+   the Ages; its final consumer slice also needs the documented Oracle repair.
+2. **Damage causation identity.** Establish causing spell/ability facts before
+   Silhouette's temporary prevention adapter. Reassess concrete multi-card use.
+3. **Characteristic arithmetic.** Compare Gaea's Avenger's additive CDA operands
+   with broader numeric consumers; audit its controller filter against Oracle
+   before changing source or claiming full-card fidelity.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after COMBAT-DECLARATION-CARDINALITY.

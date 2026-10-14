@@ -21240,3 +21240,38 @@ Native evidence: `TestRetainedEntryCountsAndActor`,
 RON evidence: `TestRONRetainedEntryLandEquilibrium`, `CopiedSpell`, `Invalid`,
 and `FactoryAndAtomicLoad`. These tests cover the complete Land Equilibrium
 record. Other retained operations and player predicates remain unsupported.
+
+## Combat declaration cardinality
+
+`LimitAttackDeclarations(int) StaticRule` and `LimitBlockDeclarations(int)
+StaticRule` restrict declarations while their battlefield source ability is
+active. Limits must be nonnegative; zero permits no declarations. Multiple
+sources use the lowest limit. Phasing, departure and ability removal stop the
+rule. A returned source registers a new ability; copied and cloned sources keep
+independent source visits. The queries read active shared continuous effects.
+There is no second cached rule registry.
+
+Both native and explicit declaration paths obey the limits (CR 508.1c/d,
+509.1b/c). Attack selection maximizes independent printed and resolved attack
+requirements within the cap, with stable proposal preference on ties. Creature
+control, type, tap status, summoning sickness, source restrictions and Island
+Sanctuary remain legality checks. Omitted creatures with attack costs are not
+forced to pay. Selected creatures still use the shared payment and post-payment
+identity checks. Uncapped callers retain their existing behavior.
+
+The shared blocker search bounds selected creature rows, rather than blocking
+pairs. One creature can block several attackers or all members of an attacking
+band within one slot. Evasion, capacity and minimum blocker requirements remain
+mandatory. The search maximizes requirements within the cap. Existing pairs
+remain fixed and their distinct blockers reserve slots for additional proposed
+assignments. Neither limit removes creatures already in combat or changes the
+services that put a creature into combat without a declaration.
+
+Evidence: `TestCombatCardinalityRequirements`, `BothDeclarationPaths`,
+`DistinctBlockersAndRequirements`, `AttackWeightsAndCosts`, `AttackLegality`,
+`LifecycleAndMinimum`, `Definition`, and `BlockingExhaustive`. The exhaustive
+oracle checks 96 matrices with no limit and with limits zero through four.
+`TestRONCombatCardinalityCaverns` covers the complete unchanged RON card with
+2RR casting, unpaid rollback, source lifecycle, pending spell copy and game
+clone. RON factory, inventory and atomic loading have separate tests. LKI and
+replacement order add no new contract in this slice.

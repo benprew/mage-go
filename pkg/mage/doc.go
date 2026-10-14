@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [LimitAttackDeclarations] and [LimitBlockDeclarations] limit one declaration.
+// The lowest active limit applies. Zero permits no declaration.
+// Attack selection obeys the most requirements within the limit.
+// Attack costs stay optional. Block selection counts creatures once, even
+// when they block several attackers or an attacking band. Shared evasion,
+// capacity and minimum blocker checks still apply. Queries do not change combat.
+// Phasing, departure and ability removal stop the source rule. Return supplies
+// a new rule. Copies and clones keep separate source visits and combat state.
+// RON accepts top-level NoMoreThanNumberCreaturesCanAttack(Integer(n)) and
+// NoMoreThanNumberCreaturesCanBlock(Integer(n)) with fixed nonnegative n.
+// This completes Caverns of Despair. Filtered and temporary limits need adapters.
+//
 // [PutThenSacrificeFor] retains entry and saves a mandatory sacrifice.
 // The player who puts the permanent supplies the count before entry.
 // Current source control supplies You. Copies apply before type matching.
