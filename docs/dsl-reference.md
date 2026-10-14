@@ -15601,7 +15601,9 @@ The payer chooses a present matching permanent they control. The source can
 pay, and tapping does not make an exile payment illegal. Queries make no choices.
 The transaction saves the exact visit, validates the total payment on an isolated
 game, and checks stale choices before live resources are spent. Copies do not
-pay again. No saved result is produced. Resolving `APermanent` exile, entry
+pay again. The original constructor produces no saved result. Additional casting
+payments can save characteristic facts through the adapter described below.
+Resolving `APermanent` exile, entry
 payments and optional payment adapters remain unsupported.
 
 `TestRONMatchingPermanentExileCostCity` executes the unchanged first rule from
@@ -15663,3 +15665,27 @@ the earlier visit. LKI reads remain information reads. Graveyard Aura sources,
 dead-guest returns, exile returns and payment results require separate adapters.
 This prerequisite does not establish complete gameplay for Soul Exchange,
 Animate Dead, Takklemaggot or Tawnos's Coffin.
+
+### RON permanent exile payment facts
+
+`CastEffect(AdditionalCastingCost(Exile([APermanent(filter)], [])))` can supply
+`If(APermanentWasExiledThisWay(characteristics), [actions])` in a nonmodal
+instant or sorcery body. The payment filter retains its required conjunctive
+`ControlledByAPlayer(SinglePlayer(You))` restriction. The historical filter
+accepts card types and their negations, colors and their negations, creature,
+land and enchantment subtypes (with supported negations), `IsNonToken`, and
+nonempty nested `And`/`Or` lists. Subtypes must belong to their declared family.
+
+Each condition has a fresh per-factory `mage.NumberBinding`. The payment uses
+`mage.ExileMatchingPermanentCostWithFacts(filter, text, facts...)`, where each
+`mage.PermanentPaymentFact` contains a filter and result binding. A successful
+payment saves one for a match and zero otherwise, using the permanent's current
+characteristics immediately before departure. Later instructions and delayed
+bodies read that saved number through `IfPositive(FromNumber(result), body)`.
+Multiple conditions remain independent. Branch bodies must contain actions.
+
+An absent producer, unsupported filter, empty filter, invalid signature or
+modal body rejects at compilation. Activation, entry, resolving-payment,
+plural-result and `Unless`/`IfElse` forms are separate adapters. Soul Exchange's
+payment and return clauses have gameplay evidence; its complete record still
+rejects the separate `PTCounter(+2, +2)` adapter gap.

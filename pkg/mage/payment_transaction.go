@@ -629,6 +629,14 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 		} else if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
 		}
+		if exile, ok := cost.(*matchingPermanentExileCost); ok && len(exile.facts) != 0 {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			for i, fact := range exile.facts {
+				tx.paidNumbers[fact.Result] = exile.values[i]
+			}
+		}
 		if mill, ok := cost.(*millCost); ok && mill.capture {
 			if tx.paidNumbers == nil {
 				tx.paidNumbers = make(map[*NumberBinding]int)

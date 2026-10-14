@@ -165,7 +165,7 @@ func TestRONMatchingPermanentExileCostRollback(t *testing.T) {
 }
 
 func TestRONMatchingPermanentExileCostRecords(t *testing.T) {
-	for _, card := range []struct{ set, name, gap string }{{"FEM", "Soul Exchange", "activation history"}} {
+	for _, card := range []struct{ set, name, gap string }{{"FEM", "Soul Exchange", "permanent counter type"}} {
 		record := repositoryRecord(t, card.set, card.name, card.set+".ron")
 		if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), card.gap) {
 			t.Fatalf("complete %s must retain its independent gap: %v", card.name, err)

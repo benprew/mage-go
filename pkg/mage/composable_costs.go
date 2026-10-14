@@ -968,6 +968,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.capturePermanent || sacrifice.captureTotalPower) {
 			n.problem = "paid sacrifice value requires an activated ability cost or spell additional cost"
 		}
+		if exile, ok := cost.(*matchingPermanentExileCost); ok && len(exile.facts) != 0 {
+			n.problem = "paid permanent exile facts require an activated ability cost or spell additional cost"
+		}
 		if taps, ok := cost.(*tapNOtherMatchingCost); ok && taps.capture {
 			n.problem = "paid tap permanent requires an activated ability cost or spell additional cost"
 		}

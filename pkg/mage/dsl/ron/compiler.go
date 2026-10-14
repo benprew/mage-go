@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	exileFacts           *permanentExilePaymentPlan
 	returnedPermanent    *returnedPermanentPlan
 	discardCount         *discardCountPlan
 	sourceZone           *sourceZonePlan
@@ -440,6 +441,10 @@ func Compile(n Node) (mage.CardFactory, error) {
 				if err != nil {
 					return nil, err
 				}
+				ctx.exileFacts, err = compilePermanentExilePayment(*ctx.castingCost)
+				if err != nil {
+					return nil, err
+				}
 				continue
 			}
 			if rule.Kind == Tuple && len(rule.Args) == 1 && rule.Args[0].Name == "AdditionalCastingCostForEachTargetBeyondTheFirst" {
@@ -718,6 +723,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, unsupported(n.Args[0], "restricted X on a modal spell")
 		}
 		if n.Args[0].Name == "Targeted_Modal" {
+			if ctx.exileFacts != nil {
+				return nil, unsupported(n.Args[0], "permanent exile payment on a modal spell")
+			}
 			return compileObjectTargetBody(n.Args[0], ctx)
 		}
 		if n.Args[0].Name == "Modal_ChooseOne" {
@@ -737,7 +745,11 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, err
 		}
 		var costs []boundCostFactory
-		if ctx.castingCost != nil {
+		if ctx.exileFacts != nil {
+			costs = []boundCostFactory{func(bindings instanceBindings) mage.Cost {
+				return buildPermanentExileFactCost(ctx.exileFacts, bindings)
+			}}
+		} else if ctx.castingCost != nil {
 			costs, _, err = compileBoundCosts(*ctx.castingCost, ctx.sacrificeValue)
 			if err != nil {
 				return nil, err
@@ -745,6 +757,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		}
 		return func() mage.CardOption {
 			bindings := instanceBindings{sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+			bindings.permanentExileFacts = buildPermanentExileFacts(ctx.exileFacts)
 			if ctx.sacrificeValue != nil {
 				bindings.sacrifices[ctx.sacrificeValue] = sacrificeValueBindings{power: mage.BindNumber("paid sacrifice power"), value: mage.BindNumber("paid sacrifice value")}
 			}
@@ -1439,6 +1452,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "If":
+		if len(n.Args) > 0 && n.Args[0].Name == "APermanentWasExiledThisWay" {
+			build, err := compilePermanentExileFactBranch(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		if len(n.Args) > 0 && n.Args[0].Name == "ExiledCardPassesFilter" {
 			build, err := compileResolvingExileBranch(n, ctx)
 			if err != nil {

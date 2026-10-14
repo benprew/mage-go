@@ -162,8 +162,8 @@ func TestRONReturnedPermanentSourceClause(t *testing.T) {
 	if p := g.FindPermanent(guest.ID()); p == nil || !p.Tapped {
 		t.Fatal("source return clause did not supply its entrant")
 	}
-	if _, err := Compile(hostUntapRecord(t, "FEM", "Soul Exchange")); err == nil || !strings.Contains(err.Error(), "activation history requires") {
-		t.Fatal("complete Soul Exchange must retain its payment fact rejection", err)
+	if _, err := Compile(hostUntapRecord(t, "FEM", "Soul Exchange")); err == nil || !strings.Contains(err.Error(), "permanent counter type") {
+		t.Fatal("complete Soul Exchange must retain its counter type rejection", err)
 	}
 }
 

@@ -8,12 +8,12 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **883 accepted / 103 rejected names**
 (986 total), **2,252 compiled / 193 rejected records** (2,445 total).
-The latest slice is **SAVED-GRAVEYARD-ENTRY-PERMANENT**. Singular creature-target
-returns can supply ThePermanentPutOnTheBattlefieldThisWay to later resolving
-actions and delayed bodies. Typed engine results keep the exact successful
-entrant and clear failed returns. Scope, copies, clones, phasing, return and LKI
-have contract tests. This shared prerequisite serves Soul Exchange, Animate Dead,
-Takklemaggot and Tawnos's Coffin; their remaining producers/consumers still reject.
+The latest slice is **PERMANENT-EXILE-PAYMENT-FACTS**. A singular APermanent
+additional casting payment supplies APermanentWasExiledThisWay in resolving If
+branches, including delayed bodies. Each condition keeps a typed, independent
+payment-time match. Engine and RON tests cover current characteristics,
+identity, phasing, rollback, copies, clones and factory isolation.
+Soul Exchange now reaches its separate resolving PTCounter(+2, +2) gap.
 Estimated and actual gain: **zero unique names / zero records**. Complete-card
 gameplay coverage is unchanged; source-clause and synthetic coverage increased.
 No RON source changed. All required checks pass; lint reports 0 issues.
@@ -25,13 +25,17 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Saved permanent exile payment facts.** Soul Exchange still needs the
-   APermanentWasExiledThisWay condition and resolving +2/+2 counter support.
-   Reuse the new returned-permanent binding; do not conflate payment and entry.
-2. **Entry payment/results.** Compare Nameless Race with Frankenstein's Monster.
-   Each needs its own complete payment producer, consumer and failure contract.
-3. **Optional plural sacrifice results.** Sword of the Ages still needs saved
-   paid visits, LKI total power and exile of exact resulting graveyard visits.
+1. **Resolving +2/+2 counters.** Complete the engine counter kind, layer and
+   RON adapters required by Soul Exchange. Its payment facts and returned
+   permanent reference now work. Compare fresh shared counter demand first.
+2. **Saved combat event subjects and temporary rule references.** Compare
+   Infinite Authority and Wall of Dust; retain exact host/opponent visits through
+   delayed destruction, counters and next-turn restrictions. Wall of Caltrops
+   still has separate intervening combat-membership conditions.
+3. **Entry payment/results or optional plural sacrifice results.** Nameless
+   Race, Frankenstein's Monster and Sword of the Ages still need separate,
+   complete producer/consumer contracts. Reassess shared prerequisites before
+   choosing a single-card implementation.
 
 ## Dependencies and source blockers
 
@@ -10627,3 +10631,187 @@ was removed. This is one completed capability slice; no second slice was started
 
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
 creation and unused DSL cleanup remain gated. Stop after this slice.
+
+
+## 2026-10-14 — PERMANENT-EXILE-PAYMENT-FACTS
+
+### Baseline, candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Starting
+`go run ./cmd/loadcards -json` exited 1 for expected collection rejection:
+2,252 compiled / 193 rejected records; 883 accepted / 103 rejected unique
+names. This is collection rejection, not a build or test failure.
+
+Started with the latest ledger's three ranked candidates. Read complete RON
+records for Soul Exchange (FEM), Nameless Race and Frankenstein's Monster (DRK),
+and Sword of the Ages and Wood Elemental (LEG). Targeted vocabulary entries
+show one APermanentWasExiledThisWay, one PayAnyAmountOfLifeUpto, and two
+SacrificeAnyNumberOfPermanents occurrences. The latter spans two different
+contexts; Wood Elemental's entry form already works and is not an unlock.
+Reprints count once. Also inspected complete Infinite Authority, Wall of Dust
+and Wall of Caltrops records when checking shared alternatives for next work.
+
+| Candidate | Distinct affected names and estimated full unlocks | Other blockers and downstream behavior | Complete implementation/test effort |
+| --- | --- | --- | --- |
+| Saved singular permanent exile-payment facts | Soul Exchange; **0** names / records for this prerequisite | Returned-permanent result now exists. Resolving +2/+2 counter support remains independent. Saved payment-time creature/subtype facts unblock the conditional returned-entrant instruction; generic filter/result plumbing can be reused by future historical payment consumers, without claiming their separate producers work. | Small: extend existing locked cost, paid-number frame, and nonmodal casting adapter; test current characteristics, stale visits, rollback, copies, clones, delayed reads and independent predicates. |
+| Entry payment/results | Nameless Race and Frankenstein's Monster; **1** name for either separate complete shape, not 2 from one adapter | Nameless Race needs bounded opponent permanent/graveyard counts, life choice and saved P/T. Frankenstein's Monster needs exact X graveyard payment, failure destination, paid count and chosen counter distribution. Their records do not share a dependency-ready complete payment shape. | Medium to large per shape; entry replacements, choices, lifecycle, X and result consumers must be tested together. |
+| Optional plural sacrifice results | Sword of the Ages; **1** name if the whole chain is implemented. Wood Elemental adds **0**; already accepted. | Requires optional activation selection, simultaneous sacrifice, payment-time total power, exact resulting graveyard visits and later exile. Existing singular/fixed-count sacrifice services do not supply that complete plural contract. | Large relative to the selected prerequisite: bounded choices, transaction locks, replaced sacrifices, aggregate LKI and linked graveyard-result lifetime. |
+
+Selected ranked candidate #1 as the bounded, dependency-ready unblocking
+prerequisite. None of the compared alternatives supplies multiple new cards
+through a single ready shape. This selection claims one blocked consumer, not
+an immediate multi-card gain. The contract and acceptance cases were stated
+before implementation. No second slice was started.
+
+### Supported signatures, scope and reuse boundary
+
+Engine additions:
+
+- `PermanentPaymentFact { Filter PermanentFilter; Result *NumberBinding }`.
+- `ExileMatchingPermanentCostWithFacts(filter PermanentFilter, text string,
+  facts ...PermanentPaymentFact) Cost`.
+
+Each filter is evaluated on the exact selected permanent immediately before
+live exile. Current layered characteristics count. Each result saves one or
+zero. Definition checks require nonzero filters and distinct non-nil outputs.
+The existing constructor and callers retain their behavior. Engine activation
+and additional casting cost contexts use the same service; bare resolving
+payment results reject until their own contract exists.
+
+RON accepts one existing
+`CastEffect(AdditionalCastingCost(Exile([APermanent(filter)], [])))` on a
+nonmodal instant or sorcery, and
+`If(APermanentWasExiledThisWay(characteristics), [actions])` in its resolving
+body or supported delayed bodies. The payment still requires one conjunctive
+You-control clause. Historical filters accept card types/colors with negations,
+creature/land/enchantment subtypes with supported negations, IsNonToken, and
+nonempty nested And/Or lists. Subtype family validation prevents invalid names.
+Each predicate has its own immutable plan and fresh per-factory NumberBinding.
+No prior payment, source, branch or predicate can replace another predicate.
+
+RON owns spelling, signature/context validation and per-instance lowering.
+The engine extends the exact existing cost transaction and exile service.
+Validation chooses and locks the visit on an isolated game. Commit checks the
+full payment again and reevaluates characteristics before departure, then
+publishes facts through `paidNumbers`. Failed payment publishes no facts.
+Copies use the paid frame without another payment; cloned pending stack and
+delayed frames remain independent. Later return, type loss or source departure
+cannot change a saved result. Phasing makes a locked subject ineligible; a
+phase cycle preserves its visit.
+
+CR 118.10, 601.2h and 400.7 support payment separation, complete payment and
+object identity. No zone, replacement-ordering or simultaneous-operation
+service was replaced. APNAP behavior stays with existing services; this shape
+has one payer and one paid permanent. LKI consumers use the captured match,
+not the exiled card's printed characteristics. No global last-action slot,
+card-name dispatch, fallback or declaration-time gameplay was introduced.
+
+Activation, entry, optional, plural and resolving payment producers remain
+separate RON adapters. Unless/IfElse and non-characteristic historical filters
+are not accepted by this adapter. Full Soul Exchange remains rejected with its
+original +2/+2 instruction; the production record was not simplified.
+
+### Failing-first and card-to-test evidence
+
+Initial engine tests failed to compile only for the missing
+PermanentPaymentFact and ExileMatchingPermanentCostWithFacts API. The initial
+RON test had an incorrect test-helper name; replaced it with the existing
+RunStepWithPriority API, then confirmed all seven gameplay cases failed on the
+missing condition adapter (`activation history requires ... (If)`) before
+implementation. Two later test/rename setup errors (PayOrElse argument count
+and a renamed private type) were corrected without changing production scope.
+
+- **Soul Exchange -> TestRONPermanentExileFactSourceClause**: preserves the
+  complete record's payment, graveyard target, return and Thrull condition.
+  Substitutes a supported tap only for the independently unsupported counter
+  consumer. Native casting exiles complete RON Basal Thrull or Grizzly Bears
+  before resolution. Only a paid Thrull causes the returned Bears to be tapped.
+  This is source-clause evidence, not complete-card gameplay.
+- **Basal Thrull / Grizzly Bears -> TestRONPermanentExileFactSourceClause and
+  TestRONPermanentExileFactInstances**: complete records supply real gameplay
+  guests and contrasting payment characteristics. No new complete-card mapping
+  for their unrelated abilities is claimed.
+- **TestRONPermanentExileFactGameplay**: true/false subtype facts, gained and
+  lost current subtypes, independent creature facts, copied spells with another
+  controller, paid-card return, delayed execution and pending-game clones.
+- **TestRONPermanentExileFactInstances**: two builds from one retained factory,
+  different payments and repeated conditions resolve without overwriting earlier
+  facts; clone resolution remains independent.
+- **TestRONPermanentExileFactFilters**: type/color/subtype negations, token
+  restrictions and nested And/Or gameplay with complete RON Basal Thrull.
+- **TestRONPermanentExileFactInvalid**: missing producer, activation-context
+  escape, unsupported state filter, empty filters/bodies, invalid signatures
+  and invalid subtype families reject.
+- **TestPermanentExileFactPayment**: payment-time layered versus printed
+  subtypes, tokens, phased subjects, resource rollback, timing, source departure
+  and pending clone behavior.
+- **TestPermanentExileFactStaleAndCommitTime**: pure affordability queries,
+  locked visit return/phasing/control changes, phase cycles and characteristics
+  changed between validation and live commit. Failure keeps resources and no
+  paid-number results; success captures the final live match.
+- **TestPermanentExileFactDefinition**: nil/zero/duplicate outputs, missing
+  producers and unsupported resolving-payment context reject.
+- Existing matching permanent exile, returned permanent, strict collection and
+  source-clause regressions remain. Two complete-record assertions now require
+  the deeper counter-type gap instead of the resolved payment-condition gap.
+
+### Source defects, validation and measured outcome
+
+No source-data defect was found or corrected. All twelve RON source hashes
+still match the vocabulary snapshot; no vocabulary refresh is needed. The
+current loader report is measured separately from that historical snapshot.
+No Go card definition, caller, generator or DSL function was removed. Native
+runtime cutover and removal gates remain incomplete.
+
+Passed all required checks in fast-fail order, with the final run repeated after
+adding characteristic-filter and phase-cycle acceptance cases:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONPermanentExileFact -count=1`.
+- `go test ./pkg/mage -run TestPermanentExileFact -count=1`, plus focused
+  matching-permanent-exile and returned-permanent RON regressions.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- Skill verification `go test ./... -short -count=1`.
+- `make lint`: **0 issues**. Reviewed automatic formatting and source diffs;
+  no unrelated files changed. Final focused tests passed after formatter review.
+- `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: exited **1** for expected atomic
+  collection rejection. **2,252 compiled / 193 rejected records**, **883 accepted
+  / 103 rejected unique names**, unchanged from the fresh starting report.
+  No accepted record was lost. No diagnostic was added or removed. Exactly one
+  diagnostic advanced: Soul Exchange at FEM:78:466 (`activation history requires
+  ... (If)`) now reaches FEM:78:590 (`unsupported permanent counter type
+  (PTCounter)`). All other diagnostics are unchanged.
+
+Estimated and actual gain match: **zero full unique names / zero records**.
+Complete-card gameplay coverage is unchanged. Source-clause and synthetic
+contract coverage increased, including the actual payment/return/conditional
+chain for Soul Exchange. The remaining +2/+2 counter gap is both an absent engine
+counter kind and compiler adapter; it is not a source defect or environment
+failure. No build, test, lint or environment blocker remains.
+
+Changed files: engine matching_permanent_exile_cost.go, payment_transaction.go,
+composable_costs.go, doc.go and permanent_exile_fact_test.go; ron compiler.go,
+player_scope.go, permanent_exile_fact.go, permanent_exile_fact_test.go,
+matching_permanent_exile_cost_test.go and returned_permanent_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+No card source or old caller was removed. The completed slice will be committed
+as `feat(ron): implement permanent exile payment facts`.
+
+### Ranked next candidates
+
+1. **Resolving +2/+2 counters.** Soul Exchange's payment and return results are
+   ready; the missing counter kind/engine layer and adapter are now its exposed
+   gap. Confirm full nested records and compare fresh shared counter demand.
+2. **Saved combat watched-subject and temporary rule references.** Infinite
+   Authority needs the watched host's saved Trigger_ThatCreature through delayed
+   destruction and counter placement. Wall of Dust needs its saved opponent in
+   a next-turn combat restriction. Wall of Caltrops keeps separate intervening
+   combat-membership predicates. Compare shared identity plumbing before adapters.
+3. **Entry payment/results or optional plural sacrifice results.** Reassess
+   Nameless Race, Frankenstein's Monster and Sword of the Ages against other
+   multi-card work; keep each complete producer/consumer contract together.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set creation and unused DSL cleanup remain gated. Stop after this slice.

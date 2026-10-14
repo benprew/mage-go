@@ -12,6 +12,19 @@ type matchingPermanentExileCost struct {
 	locked   bool
 	selected capturedPermanent
 	chooser  Player
+	facts    []PermanentPaymentFact
+	values   []int
+}
+
+// PermanentPaymentFact saves a filter result before a paid permanent leaves.
+type PermanentPaymentFact struct {
+	Filter PermanentFilter
+	Result *NumberBinding
+}
+
+// ExileMatchingPermanentCostWithFacts keeps payment facts for later instructions.
+func ExileMatchingPermanentCostWithFacts(filter PermanentFilter, text string, facts ...PermanentPaymentFact) Cost {
+	return &matchingPermanentExileCost{filter: filter, text: text, facts: append([]PermanentPaymentFact(nil), facts...)}
 }
 
 // ExileMatchingPermanentCost exiles one matching permanent the payer controls.
@@ -28,6 +41,15 @@ func (c *matchingPermanentExileCost) inspectDefinition() definitionNode {
 		n.problem = "supply a permanent exile cost filter"
 	} else if c.text == "" {
 		n.problem = "supply permanent exile cost text"
+	}
+	seen := make(map[*NumberBinding]bool)
+	for _, fact := range c.facts {
+		if fact.Filter.IsZero() || fact.Result == nil || seen[fact.Result] {
+			n.problem = "supply distinct non-nil permanent payment fact bindings and filters"
+		}
+		seen[fact.Result] = true
+		n.bindingWrites = append(n.bindingWrites, fact.Result)
+		n.children = append(n.children, definitionEdge{"payment fact", fact.Result})
 	}
 	return n
 }
@@ -53,6 +75,7 @@ func (c *matchingPermanentExileCost) CanPay(_, controller uuid.UUID, g *Game) bo
 }
 
 func (c *matchingPermanentExileCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	c.values = nil
 	if !c.CanPay(sourceID, controller, g) {
 		return fmt.Errorf("cannot pay matching permanent exile cost")
 	}
@@ -89,6 +112,14 @@ func (c *matchingPermanentExileCost) Pay(sourceID, controller uuid.UUID, g *Game
 	if !locked.CanPay(sourceID, controller, g) {
 		return fmt.Errorf("cannot exile the chosen permanent visit")
 	}
-	g.exilePermanent(g.FindPermanent(c.selected.id), sourceID)
+	p := g.FindPermanent(c.selected.id)
+	values := make([]int, len(c.facts))
+	for i, fact := range c.facts {
+		if fact.Filter.Match(p, g) {
+			values[i] = 1
+		}
+	}
+	g.exilePermanent(p, sourceID)
+	c.values = values
 	return nil
 }

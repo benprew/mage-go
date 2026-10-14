@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ExileMatchingPermanentCostWithFacts] saves each [PermanentPaymentFact]
+// before the chosen permanent leaves. Current payment-time characteristics
+// supply each match. [NumberBinding] results contain one or zero. The shared
+// cost transaction publishes results only after success. Return, ability loss
+// and later type changes cannot change them. Copies and clones keep saved facts.
+// RON accepts APermanentWasExiledThisWay in resolving If branches after one
+// nonmodal additional casting payment of APermanent. Supported characteristic
+// filters and nonempty And/Or lists can read these facts in delayed bodies.
+// Activation, entry, plural and resolving payment producers need adapters.
+//
 // [ReturnCardToBattlefieldInto] saves the exact successful entrant in a
 // [PermanentBinding]. Failed entry clears the result. The shared entry service
 // supplies replacements, choices, tapped status and events. [From] requires
@@ -25,7 +35,8 @@
 // ownership and uses the shared departure events. Copies do not pay again.
 // RON accepts Exile with one APermanent filter and no modifiers in activation
 // and nonmodal additional casting costs. The filter requires one conjunctive
-// ControlledByAPlayer(SinglePlayer(You)). Saved exile results need an adapter.
+// ControlledByAPlayer(SinglePlayer(You)). Additional casting payments can
+// save characteristic facts with [ExileMatchingPermanentCostWithFacts].
 //
 // [ExileGraveyardFor] reads one player's current graveyard at resolution.
 // Saved visits cannot follow returned cards. All moves precede zone events.

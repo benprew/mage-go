@@ -37,6 +37,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	permanentExileFacts  map[*permanentExileFactPlan]*mage.NumberBinding
 	returnedPermanents   map[*returnedPermanentPlan]*mage.PermanentBinding
 	discardCounts        map[*discardCountPlan]*mage.NumberBinding
 	eventAbilities       map[*abilityEventPlan]*mage.AbilityBinding

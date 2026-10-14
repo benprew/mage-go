@@ -20662,3 +20662,41 @@ actual return clause and adds a supported tap consumer. It does not establish
 complete Soul Exchange gameplay. The existing complete Resurrection and typed
 return regression tests retain normal entry, owner, controller and trigger
 coverage. Exile-return and graveyard Aura producers need separate adapters.
+
+## Permanent exile payment facts
+
+`ExileMatchingPermanentCostWithFacts(filter PermanentFilter, text string,
+facts ...PermanentPaymentFact) Cost` extends the existing singular permanent
+exile payment. Each fact supplies `Filter PermanentFilter` and
+`Result *NumberBinding`. Definition validation requires nonzero filters,
+non-nil distinct outputs, and an activation or additional casting cost context.
+The original constructor retains its behavior and callers.
+
+The shared transaction chooses and locks the exact battlefield visit. Pure
+queries make no choices. After the full payment is validated, each fact matches
+the chosen permanent's current characteristics immediately before exile.
+Successful commit puts one or zero into the stack object's paid-number frame.
+The validation clone's results are not published. An intervening characteristic
+change is read again at commit; departure/return, phasing and lost control make
+an ineligible locked visit fail without spending resources or publishing facts.
+A phase cycle keeps the visit. CR 118.10 and 601.2h keep each payment separate;
+CR 400.7 prevents a returned object from replacing a saved visit.
+
+Payment uses the existing exile service, ownership, token departure and zone
+events. No replacement ordering or simultaneous movement behavior changes.
+Characteristics gained through current type effects count; printed subtypes
+removed before payment do not. Historical consumers read saved facts rather
+than the exiled card's printed values or a later battlefield visit. Copies keep
+the original facts without paying again, and use their own controller for later
+player actions. Pending stack and delayed frames remain separate in clones.
+
+Engine evidence: `TestPermanentExileFactPayment`,
+`TestPermanentExileFactDefinition`, and
+`TestPermanentExileFactStaleAndCommitTime`. RON evidence:
+`TestRONPermanentExileFactGameplay`, `TestRONPermanentExileFactInstances`,
+`TestRONPermanentExileFactInvalid`, `TestRONPermanentExileFactFilters`, and
+`TestRONPermanentExileFactSourceClause`.
+The source-clause test preserves Soul Exchange's real payment, target, return
+and condition and substitutes a supported tap for its unsupported counter
+consumer. Basal Thrull and Grizzly Bears use their complete RON records. This
+establishes clause evidence, not complete Soul Exchange gameplay.
