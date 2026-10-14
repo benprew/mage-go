@@ -21,6 +21,12 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 		return nil, problem(n, "entry requires one entry operation")
 	}
 	operation := operations[0]
+	if operation.Name == "ChooseAColor" {
+		if err := validateColorEntryOperation(operation); err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithAbility(mage.ChooseColorAsEnters()) }, nil
+	}
 	if operation.Name == "MayActions" {
 		if operation.Kind == Tuple && len(operation.Args) == 1 && operation.Args[0].Kind == List && len(operation.Args[0].Args) == 1 && operation.Args[0].Args[0].Name == "EnterAsACopyOfAPermanent" {
 			return compileEntryCopy(operation.Args[0].Args[0])

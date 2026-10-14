@@ -389,6 +389,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if characteristic != nil {
 			options = append(options, definitionAbilityGroupOption(0, characteristic))
 		}
+		if err := validateColorEntryDeclaration(rules, permanent); err != nil {
+			return nil, err
+		}
 		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
 		if err != nil {
 			return nil, err

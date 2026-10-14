@@ -8,16 +8,16 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **858 accepted / 128 rejected names**
 (986 total), **2,205 compiled / 240 rejected records** (2,445 total).
-The latest slice is **SINGLE-GRAVEYARD-EXILE-COST**. Night Soil executes its
-complete unchanged FEM record. Estimated and actual gains are one unique name /
-one record. The strict loader still rejects the collection and publishes no
-partial registry.
+The latest slice is **ENTRY-COLOR-CHOICE**. One source entry color choice now
+executes before battlefield registration. Estimated and actual full-card gains
+are zero; Psychic Allergy's exact entry declaration has gameplay coverage.
+The strict loader still rejects the collection and publishes no partial registry.
 
-Matching plural activation payments use the shared cost transaction and exact
-graveyard visits. All cards reach exile before zone events. Payer choices,
-rollback, copies and clones keep separate state. This supplies a selection/batch
-prerequisite for Frankenstein's Monster; its mandatory entry scope and result
-branches remain. Runtime cutover, Go-card removal and DSL cleanup stay gated.
+Entry controllers choose one of the five colors. Copies and returns choose
+again; phasing, control changes and clones keep their separate saved state.
+This prerequisite supports Psychic Allergy and Jihad. Typed chosen-color
+predicates and combined entry choices remain. Runtime cutover, Go-card removal
+and DSL cleanup stay gated. The latest entry below ranks the next slices.
 
 ## Ranked next candidates
 
@@ -4115,3 +4115,178 @@ Changed files: new engine `pkg/mage/single_graveyard_exile_cost.go` and its test
    effort. Recompare other shared capabilities before selecting.
 
 This run stops after matching plural single-graveyard activation exile payment.
+
+## 2026-10-13 — ENTRY-COLOR-CHOICE
+
+Status: implementation complete; final verification results are recorded below.
+This run implements one dependency-ready prerequisite and stops.
+
+### Candidate comparison and selection
+
+The working tree was clean before edits. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Fresh strict loading exited
+1 with **2,205 compiled / 240 rejected records**, **858 accepted / 128 rejected
+names** (2,445 records / 986 names). A reused temporary output initially showed
+older counts; a new task-specific loader output confirmed the current baseline.
+No build, test or environment failure was present.
+
+Complete unchanged RON records were inspected, including all nested forms:
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Entry color choice | Psychic Allergy, Jihad (2 names / 2 records) | 0 names / 0 records | Supplies a saved source color before dependent predicates. Psychic Allergy needs its `Opponent` upkeep selector and `IsColor(TheChosenColor)` in its upkeep count. Jihad needs combined color/opponent entry, chosen-color conditions, conditional global P/T and a chosen-player state event. | Small to medium: one entry service, lowering/validation and lifecycle tests. |
+| Mandatory entry exile payment with X | Frankenstein's Monster (1 name / 1 record) | 0 names / 0 records | Existing graveyard selection, exact visits and batch exile help, but entry payer/required transaction, payment-result scope, failed entry and chosen combination-counter distribution remain. Enables the full entry-payment consumer. | Medium to high: transaction integration, rollback and result-dependent entry. |
+| Restricted casting X | Drain Life (1 name / 6 records) | 0 names / 0 records | Requires X-only mana restrictions while preserving fixed symbols. Clamped actual damage life gain remains after casting support. Enables a shared restricted-X solver contract. | Medium: solver metadata, casting payments, copying and rollback tests. |
+
+Ledger candidate #1 is dependency-ready. It has two concrete downstream unique
+cards and a smaller complete contract than the payment candidates. The chosen
+slice is entry color choice alone; it does not begin chosen-color predicates or
+combined entry lowering. No full-card unlock was estimated. Reprints were
+counted once. `ChooseAColor/1`, `TheChosenColor/0` and their examples were read
+from the vocabulary snapshot using targeted searches. Alchor's Tomb uses the
+existing resolving choice adapter, not the selected entry context; its full
+record was inspected and is unaffected.
+
+### Established shape, ownership and dependencies
+
+RON accepts exactly
+`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor)])` on a permanent.
+`ChooseAColor` is a tuple with one bare `AnyColor` argument. There is one entry
+declaration and one operation. The declaration validator rejects nonpermanent
+sources, wrong arity, wrong source kinds, unsupported filters, duplicates,
+additional entry declarations and combined operations. Unbound/incompatible
+chosen-color consumers stay rejected. Source positions remain in diagnostics.
+The semantic inventory classifies the entry argument as `color_choice_filter`.
+
+The new reusable engine API is
+`ChooseColorAsEnters() AsEntersBattlefieldAbility`. It uses the same pre-entry
+service as `ChooseOpponentAsEnters` and `ChooseBasicLandTypeAsEnters`, not the
+legacy post-registration ETB color helper. The entry controller makes one
+`ChooseManaColor` choice before battlefield registration and entry events.
+Only the five Magic colors are legal; invalid answers or absent choosers use
+white. `Permanent.ChosenColor` stores a typed `core.Color` per exact visit.
+The factory makes fresh ability declarations; no mutable choice is captured
+by the compiler and no global result slot is added.
+
+Shared copy replacements run first; acquired entry rules then choose once.
+Copies do not inherit the donor's saved color. Shared entry batches prepare all
+choices before registration and events. Control changes and phasing keep the
+choice. Return starts a new visit and chooses again. Cloned games keep separate
+fields and pending entries choose independently. The operation makes no payment,
+adds no stack object and does not run at cast announcement or failed payment.
+Definition inspection marks the service as a battlefield-source entry ability.
+
+Dependencies reused: `AsEntersBattlefieldAbility`, shared battlefield entry,
+copy replacement order/provenance, definition plans and validation, permanent
+visit identity, controller lookup, phasing, native casting and game cloning.
+RON owns syntax, shape restrictions, diagnostics and inventory roles. The engine
+owns player decisions and permanent state. No engine reader/predicate or LKI
+consumer is added in this slice; those need a separate typed information
+contract. Existing Go callers and resolving color-choice adapters are retained.
+
+### Source and rules evidence
+
+`cards/mtgish/DRK.lines.ron:83` contains Psychic Allergy's single color entry
+operation. `cards/mtgish/ARN.lines.ron:44` contains Jihad's combined color/opponent
+entry operation. Retained `data/DRK.json` and `data/ARN.json` confirm the exact
+Oracle choice text. CR 105.1 and 105.4 require one of the five colors; CR 614.1c,
+614.12 and 614.12a require the choice before entry. CR 400.7 and 702.26 establish
+new-visit and phasing behavior. No source defect was found and no RON source
+changed. Vocabulary source hashes/spellings need no refresh.
+
+### Failing-first evidence and card-to-test mappings
+
+Test fixture API errors were corrected before recording semantic failures.
+`TestChooseColorAsEnters*` then failed to compile solely because
+`ChooseColorAsEnters` was absent. `TestRONColorEntryGameplay` and
+`TestRONColorEntryInventoryAndRealRequirements` failed because `ChooseAColor`
+was an unsupported entry operation. The new service and adapter passed these
+cases. Later fixture corrections used the existing owner/hand and printed-copy
+provenance contracts; no engine behavior or assertion was weakened.
+
+- **Psychic Allergy → `TestRONColorEntryInventoryAndRealRequirements`**:
+  inspects the complete unchanged record, executes its exact entry declaration
+  through the engine and keeps the complete record rejected at its unsupported
+  `Opponent` upkeep selector. The chosen-color predicate also remains. This is entry coverage, not complete card gameplay.
+- **Jihad → `TestRONColorEntryInventoryAndRealRequirements`**: inspects the
+  complete unchanged record and proves that combined entry remains rejected.
+  No Jihad gameplay gain is claimed.
+- `TestRONColorEntryGameplay`: strict fixture loading, native failed/paid casting,
+  announcement versus resolution timing, independently resolved pending clones,
+  phasing and fresh return choices.
+- `TestRONColorEntryInvalid`: malformed source/operation/filter, fixed and
+  colorless filters, duplicates, extra/combined entry declarations, nonpermanent
+  context and unsupported/incompatible reads.
+- `TestRONColorEntryInventoryAndRealRequirements`: entry semantic roles,
+  accepted synthetic shape, complete-record boundaries and atomic rejection
+  without replacing an existing registry.
+- `TestChooseColorAsEntersTimingAndIdentity`: all five legal colors, colorless,
+  wildcard, negative and out-of-range answers; controller versus owner,
+  pre-registration timing, no stack object, phasing, control, clone isolation
+  and a fresh returned incarnation.
+- `TestChooseColorAsEntersCopyAndMissingPlayer`: independent copied definitions,
+  fresh choice rather than donor color, missing chooser and nonpermanent
+  definition rejection.
+- `TestChooseColorAsEntersCopyReplacementAndBatch`: copy replacement before
+  acquired entry choice, one choice per copy, independent source state and all
+  batch choices/entries visible before each entry event.
+
+### Verification and measured outcome
+
+Required verification completed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONColorEntry -count=1` passed.
+  Native `go test ./pkg/mage -run TestChooseColorAsEnters -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's `go test ./... -short -count=1` passed.
+- `make lint` passed with **0 issues**. Automatic formatting was reviewed;
+  no behavior or assertions changed. Focused RON/native tests passed again.
+- `git diff --check` passed before final loading and after the ledger update.
+- Final `go run ./cmd/loadcards -json` exited **1**: **2,205 compiled / 240
+  rejected records**, **858 accepted / 128 rejected names**. This is required
+  collection rejection while unsupported records remain, not a native failure.
+
+Baseline/final comparison has no added or removed rejected card/file keys.
+Only two messages changed: Psychic Allergy moved from unsupported entry choice
+at DRK:83:195 to unsupported `Opponent` upkeep filter at DRK:83:261; Jihad's
+combined entry rejection now names the color-choice shape at ARN:44:142 instead
+of its opponent-choice shape. All other diagnostics are identical. The newly
+exposed Psychic Allergy event adapter is a separate blocker before its dynamic
+color predicate; it does not change this slice's zero-unlock estimate.
+
+Estimated and actual full-card gains match: **zero unique names / zero records**.
+Compilation coverage is unchanged. Gameplay contract coverage gains the entry
+choice service and Psychic Allergy's exact entry declaration, with no complete
+card gameplay gain claimed. The strict loader still publishes no partial
+registry. No RON sources, Go card definitions, generators or DSL exports changed.
+Runtime cutover and the complete migration criteria remain open.
+
+Changed files: new `pkg/mage/color_entry_choice.go` and its native tests;
+`pkg/mage/doc.go`; new `pkg/mage/dsl/ron/color_entry.go` and its tests;
+`compiler.go`, `entry_tapped.go`, `inventory.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. **Typed chosen-color predicates — Psychic Allergy and Jihad.** The single
+   color entry prerequisite is now available. Establish exact source-color
+   information reads for contextual counts/conditions, including departure,
+   phasing and pending-trigger facts. Estimate zero immediate unlocks: Psychic Allergy also needs the
+   opponent-upkeep selector exposed by final loader diagnostics. Jihad still
+   needs combined entry, conditional layer and state-event support. Both names
+   gain a concrete shared predicate prerequisite.
+   Medium effort; inspect full records again before selecting.
+2. **Combined color/opponent entry choice — Jihad prerequisite.** Establish a
+   complete joint entry declaration and independent stored choices through
+   copy order and new visits. Zero immediate full-card unlocks until its color
+   condition/layer/state consumers work. Small to medium effort; prefer the
+   shared predicate work first.
+3. **Mandatory entry exile payment with X — Frankenstein's Monster.** Reuse
+   matching graveyard selection and batch exile; add mandatory entry transaction,
+   result scope and failed entry. Zero immediate unlocks before combination
+   counters. Medium to high effort. Recompare other shared capabilities before
+   selecting this single-card prerequisite.
+
+This run stops after entry color choice. Runtime cutover, complete RON gameplay,
+Go-card deletion and unused DSL removal remain gated.

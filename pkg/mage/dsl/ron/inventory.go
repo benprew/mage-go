@@ -1241,6 +1241,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "entry_operation":
+		if n.Name == "ChooseAColor" && len(n.Args) == 1 {
+			return "color_choice_filter"
+		}
 		if n.Name == "EnterAsACopyOfAPermanent" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "copy_modification"}[index]
 		}

@@ -1,5 +1,12 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ChooseColorAsEnters] saves the entry controller's choice before entry.
+// Only the five colors are legal. Invalid answers use white.
+// Copies choose again. Phasing and control changes keep the saved choice.
+// Return starts a new visit and a new choice. Clones keep separate storage.
+// RON accepts one ChooseAColor(AnyColor) operation in one source entry rule.
+// Chosen-color predicates and combined entry rules need separate adapters.
+//
 // [PreventDamageToSourceByRemovingCounters] removes one matching counter for
 // each damage point and prevents that point. Unpreventable damage still removes
 // counters, but it keeps its amount and does not consume finite shields.

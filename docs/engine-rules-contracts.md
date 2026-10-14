@@ -19089,3 +19089,35 @@ Evidence: native `TestSingleGraveyardExileCostSelection`, `Rollback`, `Batch`,
 `Invalid`, `Inventory`. The adapter supports fixed counts with AnyPlayer only.
 Entry transactions, dynamic counts, entry results and failed-entry continuations
 remain separate contracts. No complete Frankenstein's Monster claim is made.
+
+## Entry color choice
+
+`ChooseColorAsEnters() AsEntersBattlefieldAbility` saves a color on the entering
+permanent before battlefield registration (CR 614.1c, 614.12, 614.12a). It uses
+the entry controller, including when the owner is another player. The choice
+uses `ChooseManaColor` once. Only white, blue, black, red and green are legal
+(CR 105.1, 105.4); invalid answers and absent choosers use white. The typed
+`core.Color` field belongs to the permanent visit, not the card definition.
+
+The shared entry pipeline applies copy replacements first. Acquired color
+choice declarations run once and choose independently of the donor's saved
+color. Shared batches prepare all choices before battlefield registration and
+zone events. This operation creates no stack object and makes no payment.
+Unpaid casting and announcement do not run it. Definition validation rejects
+this battlefield-source ability on an instant or sorcery.
+
+Control changes and phasing do not repeat entry (CR 702.26). Return creates a
+new visit and repeats the choice (CR 400.7). Game clones keep separate fields.
+`TestChooseColorAsEntersTimingAndIdentity` covers all five colors, illegal
+answers, pre-registration timing, controller versus owner, phasing, control,
+clone isolation and return. `TestChooseColorAsEntersCopyAndMissingPlayer`
+covers independent copied definitions, absent choosers and invalid source zones.
+`TestChooseColorAsEntersCopyReplacementAndBatch` covers copy replacement
+priority, acquired declarations and complete-batch visibility to entry events.
+
+RON `TestRONColorEntry*` covers strict lowering, invalid declarations, native
+casting, failed payment, pending clones, phasing, return, semantic inventory,
+atomic collection rejection and Psychic Allergy's unchanged entry declaration.
+No chosen-color information read or predicate contract is added. LKI consumers,
+combined entry choices and Jihad's dependent rules require separate slices.
+Legacy ETB color helpers retain their current callers and behavior.

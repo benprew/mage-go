@@ -14534,3 +14534,30 @@ shape. The singular `TheCardExiledThisWay` value cannot read this plural payment
 Night Soil uses its complete unchanged FEM record. Evidence:
 `TestRONSingleGraveyardExileCostNightSoil`, `Rollback`, `IndependentActivations`,
 `Invalid`, `Inventory`; native `TestSingleGraveyardExileCost*`.
+
+## RON entry color choice
+
+`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor)])` lowers to
+`mage.ChooseColorAsEnters() AsEntersBattlefieldAbility`. The entry controller
+chooses one of white, blue, black, red or green through `ChooseManaColor`.
+The permanent saves a `core.Color` in `ChosenColor` before battlefield
+registration and entry events. Invalid answers or an absent chooser use white.
+
+This shape permits one color choice in one entry declaration on a permanent.
+Wrong arity, non-symbol `AnyColor`, other color filters, duplicate declarations,
+additional entry declarations and combined entry operations are errors. The
+inventory marks `AnyColor` as `color_choice_filter` in the entry context.
+
+Copies make their own entry choices. Control changes and phasing keep the saved
+choice; return makes a new choice for a new visit. Game clones keep separate
+choice storage. Failed casts make no entry choice, and announcement does not
+choose a color. Copy entry replacements precede the choice. All choices in a
+shared entry batch precede its battlefield registration and entry events.
+
+Psychic Allergy's unchanged entry declaration has direct gameplay evidence.
+Its complete record still requires the opponent-upkeep selector and chosen-color
+predicates. Jihad's combined
+color/opponent entry declaration, chosen-color predicates, conditional layer
+and state trigger remain rejected. This slice supplies no `TheChosenColor`
+consumer and claims no complete gameplay coverage for either card. Resolving
+color choices retain their existing separate adapter and result lifetime.
