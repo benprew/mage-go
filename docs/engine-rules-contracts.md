@@ -21311,3 +21311,47 @@ Rules: CR 601.2h, 602.2b, 701.21a and 400.7j. Native evidence:
 `TestPluralSacrificeCostReplacementBatch`, `TestPluralSacrificeCostCancellation`
 `TestPluralSacrificeCostDelayedAndFailureIsolation` and
 `TestPluralSacrificeCostPowerAfterReplacementChoices`.
+
+## Combined source and optional-subset sacrifice payment
+
+`SacrificeSourceAndAnyMatchingCostInto(filter PermanentFilter, text string,
+power *NumberBinding, cards *CardsBinding, source *CardBinding) Cost` pays one
+mandatory source and zero or more distinct matching permanents controlled by the
+payer in one simultaneous sacrifice batch. The source need not match the filter
+and cannot enter the optional subset. The source's power and card visit remain
+separate from the optional-subset results. All three result declarations must
+have names and separate producers. This contract applies to activated costs;
+spell additional costs and resolving payment groups reject.
+
+The shared transaction locks the mandatory source visit before mana payment.
+The payer chooses the optional count and subjects while the source is present.
+The same source and subset visits must remain present, unphased and controlled
+by the payer for payment. Invalid counts, duplicate/source choices, returned
+visits, changed control and cancelled sacrifices fail the complete transaction
+without live resource expenditure or result publication.
+
+The shared sacrifice service prepares replacement and graveyard-order choices
+before movement. Optional power is read from the complete battlefield after
+those choices. All members leave before any departure observation; LKI contains
+all members. The source's resulting public-zone visit is saved in the separate
+card binding before observations. Each optional nontoken card supplies its own
+new visit. Tokens add optional power but supply no card; a token source supplies
+an empty source card result. Indestructible and regeneration do not stop
+sacrifice. Exile replacements keep successful payment and save exile visits.
+Zero optional choices still sacrifice the source, with zero power and an empty
+optional card set.
+
+Payment publishes the number, card-set and source-card results through existing
+stack frames. Copies do not pay again. Clones and delayed bodies retain separate
+frames. Later activations, changed characteristics and returned cards cannot
+replace previous results. Existing `FromNumber`, `FromCards` and `FromCard`
+consumers keep their exact visit contracts.
+
+Rules: CR 601.2h, 602.2b, 701.21a, 400.7j and 608.2h. Native evidence:
+`TestSourcePluralSacrificeCostBatch`, `Observations`, `Rollback`, `Definition`,
+`ReplacementAndTokens`, `Frames` and `DuplicateSourceResult` with the same
+`TestSourcePluralSacrificeCost` prefix. These tests also exercise a source's
+static power bonus, separate owners, animated source exclusion from the optional
+subset, nonactive-player activation, saved visits, cancellation of either group,
+replacements, source/subject return and phasing, stack copies and game clones.
+RON evidence and the complete-card boundary are documented in dsl-reference.md.

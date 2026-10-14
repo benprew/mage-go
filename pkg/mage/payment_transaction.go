@@ -120,6 +120,16 @@ func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *G
 		resetDrainedBeforeMana: spec.ResetDrainedBeforeMana,
 	}
 	for i, cost := range tx.costs {
+		if sacrifice, ok := cost.(*pluralSacrificeCost); ok && sacrifice.mandatorySource {
+			p := g.FindPermanent(tx.sourceID)
+			if p == nil || p.PhasedOut {
+				return nil, ErrSourceNotFound
+			}
+			locked := *sacrifice
+			locked.sourceVisit = capturedPermanent{p.ID(), p.incarnationID}
+			tx.costs[i] = &locked
+			continue
+		}
 		source, ok := cost.(*sourceCardCost)
 		if !ok {
 			continue
@@ -645,6 +655,12 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			}
 			tx.paidNumbers[payment.power] = payment.total
 			tx.paidCardSets[payment.cards] = append([]capturedCard(nil), payment.results...)
+			if payment.mandatorySource {
+				if tx.paidCards == nil {
+					tx.paidCards = make(map[*CardBinding]capturedCard)
+				}
+				tx.paidCards[payment.sourceBinding] = payment.sourceResult
+			}
 			continue
 		}
 		if source, ok := cost.(*sourceCardCost); ok {

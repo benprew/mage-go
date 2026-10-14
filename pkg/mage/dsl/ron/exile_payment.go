@@ -169,6 +169,12 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 			return nil, false, err
 		}
 		ctx.sourceCardPayment.producers++
+		if ctx.pluralSacrifice != nil && ctx.pluralSacrifice.source {
+			return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
+				saved := bindings.pluralSacrifices[ctx.pluralSacrifice]
+				return mage.SacrificeSourceAndAnyMatchingCostInto(ctx.pluralSacrifice.filter, "Sacrifice the source and matching permanents you control", saved.power, saved.cards, bindings.sourceCards[ctx.sourceCardPayment])
+			}}, false, nil
+		}
 		return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
 			if ctx.sourceCardPayment.used {
 				return mage.SacrificeSourceCostWithCard(bindings.sourceCards[ctx.sourceCardPayment])
@@ -205,6 +211,9 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 		}}, false, nil
 	}
 	if n.Name == "SacrificeAnyNumberOfPermanents" && ctx.pluralSacrifice != nil {
+		if ctx.pluralSacrifice.source {
+			return nil, false, nil
+		}
 		return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
 			saved := bindings.pluralSacrifices[ctx.pluralSacrifice]
 			return mage.SacrificeAnyMatchingCostInto(ctx.pluralSacrifice.filter, "Sacrifice matching permanents you control", saved.power, saved.cards)

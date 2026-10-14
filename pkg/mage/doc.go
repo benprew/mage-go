@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SacrificeSourceAndAnyMatchingCostInto] pays the source and a chosen subset
+// in one sacrifice batch. Choices and power reads precede all movement.
+// The mandatory source cannot enter the subset. A separate [CardBinding]
+// saves its new public-zone visit. Tokens supply no card. The transaction
+// locks the source before mana payment and rechecks all visits before commit.
+// Return, phasing and changed control cannot replace a payment subject.
+// Source and subset results use the existing copy, clone and delay frames.
+// RON groups one source sacrifice and one optional-count matching sacrifice
+// in an activation cost. Saved power and graveyard consumers need adapters.
+//
 // [SacrificeAnyMatchingCostInto] saves one activation payment's total power
 // and new public-zone card visits. The payer chooses zero or more distinct
 // present matching permanents they control. The source can pay if it matches.

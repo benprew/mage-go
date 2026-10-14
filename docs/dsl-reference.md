@@ -16071,3 +16071,32 @@ and activation timing, not the complete card. `TestRONPluralSacrificeCostInvalid
 `TestRONPluralSacrificeCostSwordBoundary` and
 `TestRONPluralSacrificeCostFactoryAndAtomicLoad` cover rejection, the remaining
 consumer boundary, factory identities, inventory roles and atomic loading.
+
+### RON combined source and plural sacrifice payment
+
+One `SacrificePermanent(ThisPermanent)` and one
+`SacrificeAnyNumberOfPermanents(filter)` in an `And` activation cost list now
+lower to one `mage.SacrificeSourceAndAnyMatchingCostInto` payment. Nested `And`
+lists use the same rule. The optional filter retains the producer's required
+conjunctive `ControlledByAPlayer(SinglePlayer(You))` clause. Duplicate source
+sacrifices, other source references and `ThisPermanent()` reject. Standalone
+optional-count payments keep their existing behavior.
+
+The source stays present while the payer chooses the optional subset. The
+mandatory source cannot be selected again as an optional subject. One batch
+saves optional-subset power before any movement, then moves the source and
+subset before observations. A separate per-instance card binding saves the
+source's resulting public-zone visit; the optional power and card bindings do
+not include the mandatory source. The transaction locks all visits and prevents
+partial live payment on failure. Existing source-card operands can read the
+separate binding; this change adds no new consumer spelling.
+
+Sword of the Ages uses this combined payment. Its complete RON record still
+rejects at `TotalPowerOfPermanents`; the saved power and graveyard consumers and
+artifact-exile source correction remain pending. Tests use its real entry and
+payment AST with a test-only draw body. This is payment gameplay evidence, not
+complete-card gameplay coverage. `TestRONSourcePluralSacrificeCostGameplay`,
+`TestRONSourcePluralSacrificeCostInvalid` and
+`TestRONSourcePluralSacrificeCostFactoryAndNestedCosts` cover choice timing,
+entry timing, declaration rejection, zero choices, nested lists, fresh factories
+and clone isolation.

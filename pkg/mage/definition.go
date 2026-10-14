@@ -589,7 +589,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			if spell {
 				fail("plural sacrifice results require an activated ability cost")
 			}
-			if assigned[sacrifice.power] || assigned[sacrifice.cards] {
+			if assigned[sacrifice.power] || assigned[sacrifice.cards] || (sacrifice.mandatorySource && assigned[sacrifice.sourceBinding]) {
 				fail("duplicate plural sacrifice result producer")
 			}
 		}

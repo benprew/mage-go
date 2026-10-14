@@ -48,6 +48,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	ctx.exilePayment = exile
 	ctx.sourceCardPayment = &sourceCardPaymentPlan{}
+	if ctx.pluralSacrifice != nil && ctx.pluralSacrifice.source {
+		ctx.sourceCardPayment.used = true
+	}
 	costs, hasX, err := compileExileActivationCosts(n.Args[0], ctx)
 	if err != nil {
 		return nil, err

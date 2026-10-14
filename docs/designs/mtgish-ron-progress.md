@@ -8,14 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **897 accepted / 89 rejected names**
 (986 total), **2,271 compiled / 174 rejected records** (2,445 total).
-The latest slice is **PLURAL-ACTIVATION-SACRIFICE-PRODUCER**. One optional-count
-activation payment saves exact choices, total power and resulting public-zone
-card visits through the shared transaction and simultaneous sacrifice service.
-Native tests cover rollback, replacements, tokens, source inclusion, departure
-facts, stack copies, repeated payments, delayed bodies and clone isolation.
+The latest slice is **COMBINED-SOURCE-PLURAL-SACRIFICE-PAYMENT**. One source
+sacrifice and one optional-count matching sacrifice now use one payment batch.
+Choices and power reads precede movement. Separate typed results retain the
+mandatory source card and optional group's power and public-zone card visits.
+Native tests cover simultaneous LKI, source bonuses, rollback, replacements,
+tokens, source exclusion, repeated payments, copies, clones and delayed frames.
 RON tests execute Sword of the Ages's entry/payment AST with a test-only body.
-The complete Sword still rejects at TotalPowerOfPermanents; its result consumers
-and artifact-exile source repair remain pending. Estimated and actual gain:
+Sword still rejects at TotalPowerOfPermanents; its result consumers and
+artifact-exile source repair remain pending. Estimated and actual gain:
 **zero names / zero records**. No RON source changed. All required checks pass;
 lint reports 0 issues. Final verification is at the end of this file.
 
@@ -13121,3 +13122,200 @@ Commit title: `feat(ron): implement plural activation sacrifice payment`.
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after
 PLURAL-ACTIVATION-SACRIFICE-PRODUCER.
+
+
+## 2026-10-14 — COMBINED-SOURCE-PLURAL-SACRIFICE-PAYMENT
+
+### Environment and baseline
+
+The working tree was clean, with no unrelated tracked or untracked changes.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Fresh `go run ./cmd/loadcards -json` exited 1 with **2,271 compiled / 174
+rejected records; 897 accepted / 89 rejected names**, of 2,445 records / 986
+names. This was collection rejection, not a build, test or environment failure.
+The design, current ledger status/latest entry, relevant engine reference,
+compiler/payment services and contract documents supplied the requirements.
+Complete RON records for Sword of the Ages, Gaea's Avenger and Silhouette were
+read. Targeted vocabulary inspection covered TotalPowerOfPermanents,
+ThePermanentsSacrificedThisWay, EachCardInGraveyards, Plus and the causing
+spell/ability prevention event. Reprints count once.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Saved plural sacrifice result consumers | Sword of the Ages | 1 after all prerequisites and the source repair; 0 from the prerequisite selected here | TotalPowerOfPermanents, exact saved graveyard-card collections, artifact exile and grouped exile syntax. Inspection found that the existing source cost left before optional choices and power reads. A combined payment is required before complete result-consuming gameplay can be claimed. | Medium for consumers/repair/gameplay; small bounded engine/compiler prerequisite with seven native and three RON test functions. |
+| Additive all-zone characteristic counts | Gaea's Avenger | 1 after justified opponent-filter repair | Plus is missing in count CDAs; the source says You but local Oracle says opponents. Other complete Plus records were inspected: Metamorphosis, Angry Mob, Nameless Race, Farrel's Mantle, Hellfire, Sentinel and Wall of Tombstones already compile through separate resolving/static adapters. Blazing Effigy additionally needs dead-source damage and named-source damage history. No credible second immediate unlock follows from the CDA adapter. | Medium: all-zone CDA arithmetic, filter context, layer/zone/copy tests and a source repair. |
+| Damage causation identity | Silhouette | 0 for the identity prerequisite; 1 only with the later temporary prevention adapter | The full record needs a causing spell/ability target identity distinct from the damage source, then a temporary replacement adapter. Bronze Horse's separate static spell-source targeting behavior already compiles and is not a new unlock. No second rejected record uses the exact causing event. | High relative to this run: engine identity/capture, event adapter and prevention tests. |
+
+Candidate 1 was not dependency-ready as a consumer slice: the source and optional
+subjects did not share a payment batch. Select its required prerequisite as one
+complete activation-payment capability. All three ranked candidates have one
+direct rejected-card use; broad Plus occurrence counts do not establish new
+unlocks. This is the required-prerequisite exception to deferring single-card
+work, not a claimed multi-card gain. Do not combine the consumer adapters or
+source-data correction into this run.
+
+Before edits, the stated contract required a present source through choices,
+source exclusion from the optional set, pre-movement power, simultaneous
+observations, exact visit locks, rollback, replacements and independent saved
+frames. Reuse the shared transaction, sacrifice batch and binding services.
+There are no card-name branches, Go-card fallbacks or source edits.
+
+### Exact supported shape and reusable boundary
+
+Native API:
+
+`SacrificeSourceAndAnyMatchingCostInto(filter PermanentFilter, text string,
+power *NumberBinding, cards *CardsBinding, source *CardBinding) Cost`.
+
+RON groups one `SacrificePermanent(ThisPermanent)` with one
+`SacrificeAnyNumberOfPermanents(filter)` in an `And` activation cost list,
+including nested And lists. ActivatedWithModifiers uses the same cost path.
+The optional filter keeps one conjunctive
+`ControlledByAPlayer(SinglePlayer(You))` restriction and existing supported
+characteristic predicates. Multiple source sacrifices, nonsource references,
+ThisPermanent(), duplicate optional producers and malformed filters reject.
+The mandatory source is a separate subject, not a member of the optional group.
+Standalone plural costs retain their original source-inclusion behavior.
+
+Each factory builds independent number, card-set and source-card bindings.
+The RON plan owns syntax, filter validation and grouping. The engine owns the
+mandatory source lock, choice bounds, distinct optional visits, movement and
+result publication. Source identity is locked before mana payment. Current
+control, presence, phasing and matching optional characteristics are checked
+through the shared total payment. Zero optional subjects still sacrifice the
+source, with zero power and an empty optional card set.
+
+`controllersSacrificePermanentsResult` prepares all replacement and owner
+ordering choices before movement, reads power from the complete battlefield,
+and moves all members before observations with simultaneous departure LKI.
+The source can supply a live static power bonus until the batch moves. Optional
+power excludes the mandatory source. Nontokens save new graveyard or exile
+visits; token subjects contribute optional power only. A token source saves no
+card. Cancellation of either member fails the transaction without live partial
+payment. Indestructible and regeneration do not stop sacrifice.
+
+The existing payment transaction now publishes the separate source CardBinding
+alongside optional NumberBinding/CardsBinding results. Existing FromNumber,
+FromCards, FromCard, stack copies, game clones and delayed frames carry them.
+Later payments, returned objects and characteristic changes cannot overwrite a
+prior frame. Definition validation rejects duplicate source-result producers,
+including a prior standalone source result followed by a combined producer.
+Spell additional costs and resolving payment groups remain rejected contexts.
+No new zone, replacement, layer, event or result-storage subsystem was added.
+
+Rules evidence: local CR 601.2h, 602.2b, 701.21a, 400.7j and 608.2h. These
+establish whole payment, activation timing, control/owner sacrifice movement,
+public-zone continuation and object information. The native API deliberately
+keeps mandatory and optional results separate; full Sword result interpretation
+belongs to the pending consumer slice.
+
+### Source defects and preserved gates
+
+Local `data/LEG.json` confirms that Sword's Oracle instruction exiles both the
+artifact and the sacrificed creature cards; LEG.lines.ron:252 omits artifact
+exile. No data repair was made because its consumer adapters remain outside
+this slice. The ATQ Gaea's Avenger You/opponents defect is also unchanged.
+No RON source changed, so vocabulary source hashes need no refresh.
+Runtime loading, Go-card deletion, authoring cutover and unused DSL removal
+remain gated by complete support and startup validation. No DSL function was
+removed and no Go production card was modified.
+
+### Failing-first evidence and card-to-test mapping
+
+The native tests failed first on the missing exported combined-payment API.
+An initial RON helper signature error was corrected before confirming its
+expected assertion failures: optional choices could not see the source, and
+duplicate source costs compiled. A later native definition test failed because
+two producers could share the source-card binding; the definition walker now
+checks that result as well as optional power/cards. No assertion was weakened.
+
+- Sword of the Ages entry/payment AST ->
+  `TestRONSourcePluralSacrificeCostGameplay`: reads the complete real record,
+  retains its entry and cost AST, substitutes a test-only draw body, then checks
+  tapped entry, source presence through choices, optional source exclusion,
+  payment-before-resolution and clone isolation. This is prerequisite gameplay
+  evidence, not complete-card coverage.
+- Complete unchanged Sword boundary -> existing
+  `TestRONPluralSacrificeCostSwordBoundary`: still rejects at the consumer.
+- RON declarations -> `TestRONSourcePluralSacrificeCostInvalid`: duplicate
+  source producers, HostPermanent and tuple source references reject.
+- RON instances -> `TestRONSourcePluralSacrificeCostFactoryAndNestedCosts`:
+  distinct card/ability factories, engine definition validation, nested And
+  grouping, reversed source/optional syntax order, zero choices and independent
+  battlefield instances.
+- Native `TestSourcePluralSacrificeCostBatch`: zero/one/two optional subjects,
+  pure queries, no preparation movement, source static power bonuses, separate
+  owners and distinct source/public-zone results.
+- Native `TestSourcePluralSacrificeCostObservations`: animated mandatory source
+  cannot enter the optional group; both subjects leave before observations and
+  both retain simultaneous departure LKI and complete optional results.
+- Native `TestSourcePluralSacrificeCostRollback`: source/subject phasing,
+  departure/return and control changes; invalid counts; source choice; cancelled
+  source or optional sacrifice; no live mana/subject expenditure or publication.
+- Native `TestSourcePluralSacrificeCostDefinition`: missing filter, text and
+  result bindings, unnamed source result and invalid resolving context.
+- Native `TestSourcePluralSacrificeCostReplacementAndTokens`: nonactive payer,
+  source owner destinations, source/optional tokens, exile replacements,
+  regeneration and indestructible independence.
+- Native `TestSourcePluralSacrificeCostFrames`: real ability payment, separate
+  captured results, copied stack bodies, later zero payment, departed/returned
+  source and subject, changed power, delayed resolution and game clones.
+- Native `TestSourcePluralSacrificeCostDuplicateSourceResult`: duplicate source
+  result producers reject, including mixed standalone/combined payments.
+
+### Verification and measured gain
+
+Fresh final loader: **2,271 compiled / 174 rejected records; 897 accepted /
+89 rejected names**, of 2,445 records / 986 names. The complete JSON report is
+identical to the fresh baseline: no accepted name/record was lost, no diagnostic
+was added or removed, and no first diagnostic moved. Sword still rejects at
+`LEG.lines.ron:252:440`, unsupported value `TotalPowerOfPermanents`. Strict
+collection loading exits 1 and publishes no partial production registry.
+Estimated and actual gain match: **zero names / zero records** for this required
+payment prerequisite. Native contract and RON payment gameplay coverage grew;
+complete-card gameplay coverage and compilation counts did not.
+
+Required validation, in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run 'SourcePluralSacrificeCost|PluralSacrificeCost' -count=1`:
+  pass, including the unchanged complete-card rejection boundary.
+- `go test ./pkg/mage -run 'SourcePluralSacrificeCost|PluralSacrificeCost|SourceCardPayment|ControllersSacrifice|SacrificeCountIncludingSource' -count=1`:
+  pass, including prior payment and simultaneous-sacrifice regressions.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, 0 issues. It changed only import grouping in the two new
+  test files. The complete automatic diff and working tree were reviewed.
+- Post-lint focused RON/native and existing sacrifice regression tests: pass.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with unchanged counts
+  and diagnostics above. This is unsupported collection rejection.
+
+Build, test and environment blockers: none. No RON source, vocabulary snapshot,
+Go-card definition or unrelated file changed.
+
+Changed files: engine plural_sacrifice_cost.go, payment_transaction.go,
+definition.go, source_plural_sacrifice_cost_test.go and doc.go; RON
+plural_sacrifice_cost.go, activation_timing.go, exile_payment.go and
+source_plural_sacrifice_cost_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement combined source and plural sacrifice payment`.
+
+### Ranked next candidates
+
+1. **Saved plural sacrifice result consumers.** The combined source payment is
+   now established. Add the saved TotalPowerOfPermanents read, exact saved
+   graveyard-card consumers and grouped source/card exile. Correct the omitted
+   artifact exile with local Oracle evidence and prove complete Sword casting,
+   damage, illegality and exile gameplay before claiming its one-name unlock.
+2. **Characteristic arithmetic.** Gaea's Avenger needs additive all-zone CDAs
+   and its justified opponent-controller source repair. Reassess broader
+   characteristic expressions before selecting it.
+3. **Damage causation identity.** Silhouette needs typed causing spell/ability
+   identity plus a later temporary prevention adapter. Require concrete shared
+   downstream value before selecting a zero-unlock identity prerequisite.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after
+COMBINED-SOURCE-PLURAL-SACRIFICE-PAYMENT.

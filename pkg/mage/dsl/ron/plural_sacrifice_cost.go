@@ -2,7 +2,10 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-type pluralSacrificePlan struct{ filter mage.PermanentFilter }
+type pluralSacrificePlan struct {
+	filter mage.PermanentFilter
+	source bool
+}
 type pluralSacrificeBindings struct {
 	power *mage.NumberBinding
 	cards *mage.CardsBinding
@@ -10,6 +13,7 @@ type pluralSacrificeBindings struct {
 
 func compilePluralSacrificePlan(cost Node) (*pluralSacrificePlan, error) {
 	var result *pluralSacrificePlan
+	var sources []Node
 	var walk func(Node) error
 	walk = func(n Node) error {
 		if n.Name == "And" {
@@ -25,6 +29,9 @@ func compilePluralSacrificePlan(cost Node) (*pluralSacrificePlan, error) {
 					return err
 				}
 			}
+		}
+		if n.Name == "SacrificePermanent" {
+			sources = append(sources, n)
 		}
 		if n.Name != "SacrificeAnyNumberOfPermanents" {
 			return nil
@@ -48,6 +55,19 @@ func compilePluralSacrificePlan(cost Node) (*pluralSacrificePlan, error) {
 	}
 	if err := walk(cost); err != nil {
 		return nil, err
+	}
+	if result != nil && len(sources) > 0 {
+		if len(sources) != 1 {
+			return nil, problem(cost, "combined sacrifice requires one source sacrifice")
+		}
+		source := sources[0]
+		if err := arity(source, 1); err != nil {
+			return nil, err
+		}
+		if source.Args[0].Kind != Symbol || source.Args[0].Name != "ThisPermanent" {
+			return nil, problem(source, "combined sacrifice requires the source permanent symbol")
+		}
+		result.source = true
 	}
 	return result, nil
 }
