@@ -14701,3 +14701,47 @@ all previously accepted no-permanent state-event cards.
 for seven other complete records. Giant Shark and Seasinger retain rejection
 checks for unrelated full-record gaps and test-only exact absence subrule
 projections. Those projections establish no full-card gameplay coverage.
+
+
+## RON source-card upkeep declarations
+
+Supported shape:
+
+```ron
+FromGraveyard(TriggerA(
+    AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+    ActionList([PutGraveyardCardIntoHand(ThisGraveyardCard)])
+))
+FromExile(TriggerA(
+    AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+    ActionList([PutExiledCardIntoOwnersGraveyard(ThisExiledCard)])
+))
+```
+
+These wrappers accept one ordinary `TriggerA`, one owner-upkeep selector and an
+`ActionList`. The compiler builds fresh typed source-card and upkeep-player
+bindings for each factory instance. `ThisGraveyardCard` and `ThisExiledCard` are
+singular card references local to the matching wrapper. `Trigger_ThatPlayer`
+is the saved upkeep player; `You` is the trigger controller. Copies may give
+these players different identities. Source departure preserves queued effects,
+but source reads require the saved visit. Return cannot restore that visit.
+Supported delayed action lists keep these bindings in their existing frames.
+
+The compiler creates a separate zone scope. Spell X, entry choices, Aura hosts,
+`ThisSpell` damage sources and `ThisPermanent` cannot enter that scope.
+Targets, modes, other step/player selectors, nested zone wrappers and `TriggerI`
+remain declaration errors. The engine option also rejects target declarations,
+modes, state/intervening-if contexts and battlefield source reads.
+
+An instant or sorcery may declare this zone rule beside its required single
+`SpellActions`. A zone rule does not replace its spell body. Loading still
+validates every rule and publishes only a complete valid collection.
+
+Nether Shadow's six records still require ordered graveyard intervening-if and
+optional exact-source battlefield return adapters. All Hallow's Eve still
+requires spell exile with counters, exile counter predicates/removal and the
+simultaneous all-graveyard return. `TestRONSourceZoneUpkeepRecordPrerequisites`
+projects the unchanged source wrapper and upkeep event into an ordinary event.
+For Nether Shadow it uses a synthetic player probe. For All Hallow's Eve it
+executes the unchanged singular exile-to-graveyard instruction. These tests
+establish prerequisite coverage, not complete-card gameplay.

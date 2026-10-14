@@ -47,6 +47,8 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // or use [WhileInZoneTrigger]. The zone list defaults to [ZoneBattlefield] so
 // existing behavior is preserved.
 type GenericTriggered struct {
+	sourceCardBinding      *CardBinding
+	sourceCardZoneOptions  int
 	deathNotSacrificed     bool
 	duplicateDeathCause    bool
 	upkeepTextRevision     bool

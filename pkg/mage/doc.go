@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WithSourceCardInZone] saves a graveyard or face-up exile source visit.
+// Ordinary events use the owner as controller outside the battlefield.
+// Source departure does not stop queued bodies. Return cannot supply a read.
+// Source actions use [FromCard]; [ExiledCardFrom] uses the shared exile moves.
+// Detection keeps separate event frames and does not change card declarations.
+// Copies, clones and delayed bodies keep the saved card and player facts.
+// RON accepts FromGraveyard or FromExile around an ordinary owner-upkeep
+// TriggerA with ActionList. State events, intervening-if, targets and modes
+// need separate contracts. Source damage and battlefield source reads reject.
+//
 // [PlayerControlsChosenColor] checks live subjects against the source entry color.
 // [PlayerControls] also accepts ChosenPlayerOf(This) for the entry player.
 // Both choices stay with the source visit through control changes and phasing.

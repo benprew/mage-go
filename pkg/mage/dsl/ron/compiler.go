@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	sourceZone           *sourceZonePlan
 	resolving            bool
 	colorEntryChoice     bool
 	controlExchange      *controlExchangePlan
@@ -618,7 +619,7 @@ func manaCost(n Node) (string, error) {
 }
 
 func compileRule(n Node, ctx scope) (optionFactory, error) {
-	if !ctx.permanent && n.Name != "SpellActions" {
+	if !ctx.permanent && n.Name != "SpellActions" && n.Name != "FromGraveyard" && n.Name != "FromExile" {
 		return nil, unsupported(n, "non-spell rule on an instant or sorcery")
 	}
 	if n.Kind == Symbol {
@@ -663,6 +664,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compilePermanentEntry(n)
 	case "TriggerA":
 		return compileTriggerRule(n, ctx)
+	case "FromGraveyard", "FromExile":
+		return compileSourceZoneUpkeep(n)
 	case "TriggerI":
 		return compileTappedUpkeep(n, ctx)
 	case "EachPermanentRuleEffect":

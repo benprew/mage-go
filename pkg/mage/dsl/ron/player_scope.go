@@ -37,6 +37,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	sourceZones          map[*sourceZonePlan]*mage.CardBinding
 	controlExchanges     map[*controlExchangePlan]*mage.ControlExchangeResultBinding
 	damageOutcomes       map[*damageOutcomePlan]damageOutcomeBindings
 	permanentPayments    map[*permanentPaymentPlan]*mage.PermanentSetBinding

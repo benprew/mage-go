@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 type cardTargetPlan struct {
@@ -15,6 +16,7 @@ type cardTargetPlan struct {
 type deathCardPlan struct{ name string }
 
 type cardReferencePlan struct {
+	sourceZone *sourceZonePlan
 	exile      *groupedExilePlan
 	exileGroup int
 	target     *cardTargetPlan
@@ -22,6 +24,9 @@ type cardReferencePlan struct {
 }
 
 func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
+	if n.Kind == Symbol && ctx.sourceZone != nil && n.Name == ctx.sourceZone.name {
+		return cardReferencePlan{sourceZone: ctx.sourceZone}, nil
+	}
 	switch n.Name {
 	case "TheFirstCardExiledThisWay", "TheSecondCardExiledThisWay", "TheSinglePermanentExiledThisWay", "ThisExiledCard":
 		index, err := groupedExileIndex(n, ctx)
@@ -44,6 +49,9 @@ func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
 }
 
 func (p cardReferencePlan) build(bindings instanceBindings) mage.CardRef {
+	if p.sourceZone != nil {
+		return mage.FromCard(bindings.sourceZones[p.sourceZone])
+	}
 	if p.exile != nil {
 		return mage.SingleExiledCardFrom(bindings.groupedExiles[p.exile][p.exileGroup])
 	}
@@ -134,7 +142,7 @@ func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if card.exile != nil || (card.target != nil && card.target.ante) {
+	if card.exile != nil || (card.sourceZone != nil && card.sourceZone.zone != core.ZoneGraveyard) || (card.target != nil && card.target.ante) {
 		return nil, problem(n.Args[0], "graveyard return requires a graveyard card reference")
 	}
 	if count == 1 {

@@ -19284,3 +19284,42 @@ Complete Jihad gameplay includes actual casting, separate entry choices for spel
 copies, global white P/T and queued sacrifice after membership returns. Existing
 `TestRONChosenStatic*` and `TestRONCombinedEntryChoice*` retain their subrule tests.
 No new payment, replacement-order or simultaneous-operation contract is added.
+
+
+## Source-card zone event lifetimes
+
+`WithSourceCardInZone(zone core.Zone, source *CardBinding) TriggerOption`
+selects one graveyard or face-up exile source zone. Use it with `WhenEvent`.
+The ordinary event has no targets, modes or intervening-if. Definition validation
+rejects invalid/nil bindings, other zones, duplicate zone options, added active
+zones, state events, intervening-if, target declarations, modes and battlefield
+source reads. Conditions and effects cannot treat this source as a permanent.
+
+The graveyard holder controls graveyard triggers; the card owner controls exile
+triggers. Valid game zones place cards in their owners' graveyards (CR 400.3).
+Event detection makes a separate ability context instead of changing card-level
+source/controller fields. The shared graveyard scan retains existing callers;
+the exile scan ignores face-down cards, including cards visible to one player
+(CR 603.2f). Ordinary upkeep events use the same pending queue and APNAP stack
+placement as battlefield triggers. Distinct occurrences queue distinct bodies.
+
+Detection saves the source's exact zone visit in a typed `CardBinding`.
+`FromCard(source)` reads that visit while present. Departure does not stop a
+queued body; return cannot replace the saved visit (CR 400.7, 113.7a).
+The trigger controller and event player stay separate through pending placement,
+stack copying and game cloning (CR 603.3a). Independent later effects still run
+when a source action cannot read its departed visit. These source actions do not
+use battlefield LKI. Delayed bodies save the existing resolution frame.
+
+`ExiledCardFrom(card CardRef) ExiledCardSet` adapts one current typed card
+reference to the shared exile collection service. It supplies no subject for a
+missing, stale or non-exiled read. `PutExiledCardsInOwnersGraveyards` supplies
+owner destinations, graveyard ordering and zone events. Graveyard-to-hand reads
+use `ReturnCardToHand` and the shared graveyard movement service.
+
+`TestSourceZoneUpkeepVisit`, `Declarations` and `Detection` cover exact visits,
+owner/player separation, pre-resolution timing, wrong zones, source phasing,
+hidden exile, source departure/return, immutable detection contexts, separate
+copies/events, pending clones, definition rejection and APNAP order.
+RON `TestRONSourceZoneUpkeep*` adds explicit registry execution, lexical scope,
+atomic rejection, delayed frames and real-record prerequisite projections.

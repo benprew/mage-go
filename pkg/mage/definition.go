@@ -286,6 +286,12 @@ func describeDefinition(v any) definitionNode {
 			n.problem = "text revision requires a valid fixed, attached or produced-type mana bonus"
 		}
 	case *GenericTriggered:
+		if e.sourceCardZoneOptions > 0 {
+			if e.sourceCardZoneOptions != 1 || len(e.zones) != 0 || e.IsStateTrigger() || e.interveningDefinition != nil || len(e.targets) != 0 || len(e.modes) != 0 {
+				n.problem = "source card event requires one zone and an ordinary event without targets or modes"
+			}
+			n.children = append(n.children, definitionEdge{"source-card", sourceCardZoneOption{e.sourceZone, e.sourceCardBinding}})
+		}
 		if (e.upkeepTextRevision || e.upkeepTextLayer) && (!e.upkeepTextRevision || !e.supportsUpkeepTextRevision()) {
 			n.problem = "text revision requires a typed ordinary battlefield upkeep trigger"
 		}
@@ -450,8 +456,14 @@ func ValidateCardDefinition(name string, card Card) error {
 	var names map[string]any
 	var targets map[*targetDeclaration]bool
 	var castBody bool
+	var sourceCardBody bool
 	var visit func(any, string, bool, map[any]bool, bool)
 	visit = func(value any, path string, spell bool, active map[any]bool, allocationAllowed bool) {
+		previousSourceCardBody := sourceCardBody
+		if trigger, ok := value.(*GenericTriggered); ok && trigger.sourceCardZoneOptions > 0 {
+			sourceCardBody = true
+		}
+		defer func() { sourceCardBody = previousSourceCardBody }()
 		previousCastBody := castBody
 		switch value.(type) {
 		case grantedTriggerDefinition, tokenAbilityDefinition, acquiredStaticDefinition:
@@ -590,6 +602,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if spell && n.battlefieldSource {
 			fail("battlefield source action requires a permanent ability")
 		}
+		if sourceCardBody && n.battlefieldSource {
+			fail("source card event cannot read a battlefield source")
+		}
 		if _, cast := value.(*castBranch); cast && !castBody {
 			fail("cast condition requires a spell ability")
 		}
@@ -636,7 +651,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
 			mill, paidMill := edge.value.(*millCost)
-			if !definitionSequential(value) && (!eventTrigger || (edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !paidCost && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
+			if !definitionSequential(value) && (!eventTrigger || (edge.name != "source-card" && edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !paidCost && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
 				assigned = before
 			}
 		}

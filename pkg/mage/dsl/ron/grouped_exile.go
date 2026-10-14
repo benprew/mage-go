@@ -5,6 +5,7 @@ import (
 	"maps"
 
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 type groupedExilePlan struct {
@@ -127,6 +128,15 @@ func groupedExileIndex(n Node, ctx scope) (int, error) {
 func compileGroupedExileGraveyard(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
+	}
+	if ctx.sourceZone != nil && ctx.sourceZone.zone == core.ZoneExile && n.Args[0].Name == ctx.sourceZone.name {
+		card, err := compileCardRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.PutExiledCardsInOwnersGraveyards(mage.ExiledCardFrom(card.build(bindings)))
+		}, nil
 	}
 	index, err := groupedExileIndex(n.Args[0], ctx)
 	if err != nil {

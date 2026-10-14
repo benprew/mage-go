@@ -1875,38 +1875,14 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 		}
 	}
 
-	// Scan card-level abilities that function while the source is in a
-	// non-battlefield zone (CR 113.6) — currently graveyard, for cards like
-	// Pia Nalaar, Consul of Revival and Nether Shadow. Card.Abilities() returns
-	// the immutable card-level ability list (not Permanent.RuntimeAbilities);
-	// we set source/controller transiently so condition predicates see the
-	// right IDs while the trigger is queued.
 	for _, pl := range g.players {
-		ownerID := pl.PlayerID()
 		for _, c := range pl.Graveyard() {
-			for _, a := range c.Abilities() {
-				gt, ok := UnwrapAbility(a).(*GenericTriggered)
-				if !ok {
-					continue
-				}
-				if !gt.FunctionsInZone(ZoneGraveyard) {
-					continue
-				}
-				if !gt.CheckEventType(evt.Type) {
-					continue
-				}
-				gt.SetSource(c.ID())
-				gt.SetController(ownerID)
-				if !gt.CheckTrigger(&evt, g) {
-					continue
-				}
-				g.queuePendingTrigger(&pendingTrigger{
-					ability:    gt,
-					event:      &evt,
-					sourceID:   c.ID(),
-					controller: ownerID,
-				})
-			}
+			g.detectCardZoneTriggers(&evt, c, pl.PlayerID(), ZoneGraveyard)
+		}
+	}
+	for _, object := range g.zones.exile {
+		if !object.FaceDown && g.GetPlayer(object.Card.Owner()) != nil {
+			g.detectCardZoneTriggers(&evt, object.Card, object.Card.Owner(), ZoneExile)
 		}
 	}
 
@@ -3530,6 +3506,10 @@ func (g *Game) stateTriggerActive(key stateTriggerKey) bool {
 }
 
 func (g *Game) queuePendingTrigger(pt *pendingTrigger) {
+	if trigger, ok := pt.ability.(*GenericTriggered); ok && trigger.sourceCardZoneOptions > 0 {
+		g.triggers.AddPending(pt)
+		return
+	}
 	if p := g.FindPermanent(pt.sourceID); p != nil {
 		pt.sourceIncarnation = p.incarnationID
 	} else if lki := g.LKI(pt.sourceID); lki != nil && lki.Snapshot != nil {

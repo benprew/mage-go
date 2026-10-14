@@ -14,7 +14,7 @@ func compileSelfDamageSource(n Node, ctx scope, permanent bool) (damageSourceFac
 			return mage.DamageSourceOf(ref.build(bindings))
 		}, nil
 	}
-	if n.Kind != Symbol || n.Name != "ThisSpell" || ctx.permanent {
+	if n.Kind != Symbol || n.Name != "ThisSpell" || ctx.permanent || ctx.sourceZone != nil {
 		return nil, unsupported(n, "damage source")
 	}
 	return func(instanceBindings) mage.DamageSourceRef { return mage.This }, nil
