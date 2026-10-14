@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -21,6 +23,7 @@ func TestWaitingDelayedPlayerValueReferences(t *testing.T) {
 				"counter-payer":            PayCountersOrElse(ref, AttachedPermanent, core.Charge, 0, true, GainLifeFor(You, Fixed(0)), nil),
 				"sacrifice-payer":          IfSacrificePaid(ref, AttachedPermanent, GainLifeFor(You, Fixed(0))),
 				"life-subject":             GainLifeFor(ref, Fixed(0)),
+				"saved-life-subject":       savedLifeSubjectEffect(ref),
 				"life-total":               LoseLifeFor(You, MultiplyValues(Fixed(0), LifeTotalOf(ref))),
 				"life-gained":              GainLifeFor(You, LifeGainedThisTurn(ref)),
 				"damage-history":           GainLifeFor(You, DamageTakenThisTurn(ref)),
@@ -137,5 +140,48 @@ func TestWaitingDelayedPlayerValuePurity(t *testing.T) {
 	g.ResolveStack()
 	if calls != 1 {
 		t.Fatal("resolution did not read the amount once")
+	}
+}
+
+func savedLifeSubjectEffect(subject PlayerRef) ResolvingEffect {
+	player := BindPlayer("life action subject")
+	return Sequence(SnapshotPlayer(subject, player), LoseLifeFor(FromPlayer(player), LifeTotalOf(FromPlayer(player))))
+}
+
+type lifeSubjectProbe struct {
+	PlayerRef
+	reads  *int
+	absent *bool
+}
+
+func (r lifeSubjectProbe) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
+	*r.reads++
+	if *r.absent {
+		return uuid.Nil, false
+	}
+	return r.PlayerRef.resolvePlayer(ctx)
+}
+
+func TestLifeTotalBoundSubjectReadAndClear(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	reads := 0
+	absent := false
+	effect := savedLifeSubjectEffect(lifeSubjectProbe{PlayerRef: You, reads: &reads, absent: &absent})
+	ctx := &EffectContext{Game: g, Controller: a.PlayerID()}
+	a.SetLife(13)
+	if err := effect.Apply(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if reads != 1 || a.Life() != 0 || b.Life() != 20 {
+		t.Fatal("subject was not saved once")
+	}
+	a.SetLife(9)
+	absent = true
+	if err := effect.Apply(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if reads != 2 || a.Life() != 9 || b.Life() != 20 {
+		t.Fatal("absent subject retained an earlier binding")
 	}
 }

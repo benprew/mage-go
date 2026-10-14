@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	lifeSubject         *lifeSubjectPlan
 	highestLife         bool
 	active              bool
 	drawReplacement     *drawReplacementPlan
@@ -38,6 +39,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	lifeSubjects         map[*lifeSubjectPlan]*mage.PlayerBinding
 	permanentLoops       map[*permanentLoopPlan]*mage.PermanentBinding
 	chosenMana           map[*chosenManaPlan]*mage.NumberBinding
 	permanentExileFacts  map[*permanentExileFactPlan]*mage.NumberBinding
@@ -130,6 +132,11 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "LoseLife_ThatPlayer":
+			if ctx.lifeSubject != nil {
+				ctx.lifeSubject.referenced = true
+				return playerReferencePlan{lifeSubject: ctx.lifeSubject}, nil
+			}
 		case "ThePlayerWithTheMostLife":
 			return playerReferencePlan{highestLife: true}, nil
 		case "TheActivePlayer":
@@ -207,6 +214,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.lifeSubject != nil {
+		return mage.FromPlayer(bindings.lifeSubjects[p.lifeSubject])
+	}
 	if p.highestLife {
 		return mage.PlayerWithUniqueHighestLife()
 	}

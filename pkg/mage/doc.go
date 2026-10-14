@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON accepts LifeTotalOfPlayer(playerRef) in ordinary resolving bodies.
+// [LifeTotalOf] reads current life at each instruction. Negative life remains
+// available to arithmetic. Nonpositive life changes do nothing.
+// LoseLife_ThatPlayer is local to one LoseLife amount. [SnapshotPlayer] saves
+// its explicit subject once. [LoseLifeFor] uses that same player. Factories,
+// copies and clones keep separate bindings. Later actions cannot read it.
+// Source reads use the existing exact visit, LKI and waiting-query services.
+// Entry, replacement, cost and static-value contexts need separate adapters.
+//
 // [ForEachInTurnOrder] saves exact member visits in turn order.
 // The resolving controller chooses the order within each control group.
 // Later entries do not join. Return cannot supply an old visit.

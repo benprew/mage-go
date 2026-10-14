@@ -1740,6 +1740,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "LifeTotalOfPlayer" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "TotalPowerOfPermanents" && len(n.Args) == 1 {
 			return "sacrifice_payment_reference"
 		}

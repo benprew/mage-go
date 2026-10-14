@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	lifeSubject          *lifeSubjectPlan
 	permanentLoop        *permanentLoopPlan
 	createdTokenLink     *mage.CreatedTokenLink
 	chosenMana           *chosenManaPlan
@@ -2156,6 +2157,9 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
+	if n.Name == "LoseLife" {
+		ctx.lifeSubject = &lifeSubjectPlan{name: "life subject " + n.Position.String()}
+	}
 	amount, err := compileInstanceValue(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
@@ -2179,7 +2183,16 @@ func compileLifeEffect(n Node, ctx scope, amount valueFactory) ([]effectFactory,
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
 		player := ctx.player.build(bindings)
 		if n.Name == "LoseLife" {
-			return mage.LoseLifeFor(player, amount(bindings))
+			if ctx.lifeSubject == nil || !ctx.lifeSubject.referenced {
+				return mage.LoseLifeFor(player, amount(bindings))
+			}
+			binding := mage.BindPlayer(ctx.lifeSubject.name)
+			bindings.lifeSubjects = maps.Clone(bindings.lifeSubjects)
+			if bindings.lifeSubjects == nil {
+				bindings.lifeSubjects = make(map[*lifeSubjectPlan]*mage.PlayerBinding)
+			}
+			bindings.lifeSubjects[ctx.lifeSubject] = binding
+			return mage.Sequence(mage.SnapshotPlayer(player, binding), mage.LoseLifeFor(mage.FromPlayer(binding), amount(bindings)))
 		}
 		return mage.GainLifeFor(player, amount(bindings))
 	}}, nil

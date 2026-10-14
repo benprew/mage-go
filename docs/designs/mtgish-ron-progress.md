@@ -8,17 +8,17 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **915 accepted / 71 rejected names**
 (986 total), **2,295 compiled / 150 rejected records** (2,445 total).
-The latest slice is **SCOPED-PERMANENT-ITERATION**.
-`ActionForEachPermanent` now binds `EachablePermanent` in an ordinary resolving
-body. Mage saves exact visits in APNAP control groups, with controller-selected
-order within each group. Nested loops, payments and delayed member captures use
-separate frames. The shared loop now isolates all typed binding maps and declares
-source reads without query execution. Existing battlefield-order callers remain.
-The complete Tidal Flats record now compiles and has RON gameplay coverage.
-Actual gain is **one name / one record**. The initial zero-unlock estimate missed
-existing combat-pair and keyword adapters; the final expected gain was one.
-Raging River still needs its attack event and named-pile services. Required checks
-and remaining diagnostics are recorded in the latest entry below.
+The latest slice is **RESOLVING-LIFE-TOTALS**.
+`LifeTotalOfPlayer` now reads a typed player's current life in an ordinary
+resolving body. `LoseLife_ThatPlayer` binds only the subject of its own loss
+amount. Each referenced subject is saved once with a fresh typed player binding.
+Shared mage snapshot, life, rounding, LKI and clone services supply execution.
+Entry, replacement, cost and static value contexts remain separate adapters.
+All six Personal Incarnation loss fragments and Shahrazad's loss fragment have
+RON execution tests with synthetic producers. Their complete records still
+reject. Lich remains blocked at its entry life loss. Actual full-card gain is
+**zero names / zero records**, as estimated; new coverage is prerequisite and
+fragment coverage. Required checks and unchanged diagnostics are below.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -16825,3 +16825,166 @@ its tests, `compiler.go`, `permanent_scope.go`, `player_scope.go`, `inventory.go
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement scoped permanent iteration`.
 This run stops after SCOPED-PERMANENT-ITERATION.
+
+## 2026-10-14 — RESOLVING-LIFE-TOTALS
+
+### Baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 with
+valid JSON: 915 accepted / 71 rejected names, 2,295 compiled / 150 rejected
+records, from 986 names / 2,445 records. This is collection rejection, not a
+build or environment failure. No user changes or unrelated files were removed.
+
+The latest entry ranked typed life totals first. Complete records were read for
+all its affected names, including every identical reprint. The vocabulary has
+12 `LifeTotalOfPlayer` occurrences and six `LoseLife_ThatPlayer` occurrences.
+The comparison also read complete Phyrexian Gremlins, Vodalian War Machine,
+Giant Shark and Glyph of Delusion records, including nested abilities.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks in one cohesive slice | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Typed resolving life totals and local life-loss subject | Personal Incarnation, Lich, Shahrazad | 0 | Personal Incarnation needs bounded redirection, its death-owner adapter and rounding repair. Lich needs an entry life-loss adapter, gain-to-draw replacement, life-loss immunity and required sacrifice/lose-game behavior. Shahrazad needs a complete subgame and loser-set service. The typed value is reusable by both ordinary resolution cards and a future entry adapter. | Low; exact native value, rounding, snapshot and life services already exist. One run. |
+| Saved tap facts and payment histories | Phyrexian Gremlins, Vodalian War Machine | 0 for a shared producer prerequisite; later consumers can complete both | Gremlins needs `ThePermanentTappedThisWay` and its untap prohibition with a source-tapped duration. War Machine's matching-tap payments already work, but `WasTappedToPayForAbilitiesOfPermanent` needs declaration/source/payment identity and retained histories. The result and history consumers are separate contexts. | Medium to high; source visits, failed taps, paid histories, rollback, copies and duration consumers. |
+| Combat-history adapters | Giant Shark, Glyph of Delusion | 1 estimated for the damage-history symbol alone (Giant Shark); no Glyph unlock from that shape | Shark's land-dependence rules and temporary P/T/trample adapters already exist. Glyph instead needs a dependent block-history target and proof for its counter-dependent granted rules. Reuse the existing contextual block-history collection. These are separate target/filter shapes, not one shared two-card adapter. | Low for the single Shark symbol; medium for dependent targets and retained grants. |
+
+Selected the first-ranked dependency-ready prerequisite. It has concrete
+multi-card downstream value, uses exact shared mechanics, and fits one run.
+The ordinary resolving context is complete. Entry, replacement, cost and static
+values have separate timing contracts and were not included. The single-card
+Shark adapter was deferred while this shared prerequisite remained useful.
+Acceptance cases were stated before edits: current instruction-time life,
+explicit subject binding, invalid/out-of-scope reads, factories, copies, clones,
+source LKI and phasing. The initial and final full-card unlock estimate is zero.
+
+### Supported shape and reuse boundary
+
+`LifeTotalOfPlayer(playerRef)` takes exactly one typed player reference in an
+ordinary resolving spell, activation, trigger or delayed body. It lowers to
+`LifeTotalOf(subject PlayerRef) ResolutionValue`. Each instruction reads current
+life; negative totals remain available to arithmetic. `HalfRoundedDown` and
+`HalfRoundedUp` use the existing integer rounding services.
+
+`LoseLife_ThatPlayer` is a strict symbol available only within the amount of its
+own `LoseLife` instruction. A fresh plan and `PlayerBinding` identify that
+instruction. When the amount uses the symbol, the factory lowers to:
+
+`Sequence(SnapshotPlayer(explicitSubject, binding),
+LoseLifeFor(FromPlayer(binding), amount))`.
+
+Existing exact signatures are `SnapshotPlayer(PlayerRef, *PlayerBinding)
+ResolvingEffect`, `FromPlayer(*PlayerBinding) PlayerRef`,
+`LoseLifeFor(PlayerRef, ResolutionValue) ResolvingEffect` and
+`GainLifeFor(PlayerRef, ResolutionValue) ResolvingEffect`. No native API was
+added or changed. `SnapshotPlayer` selects the subject once and clears absent
+subjects. Life actions use shared restrictions, replacements, history and
+events. Nonpositive amounts do nothing; this is not damage, life payment, or
+setting a life total. Unchanged life instructions retain their original lowering.
+
+The compiler owns RON spelling, arity, ordinary-value context and local scope.
+The engine supplies player snapshots, life totals, rounding, source identity,
+LKI, phasing and copy/clone frames. Each factory gets separate target and local
+subject bindings. Later actions cannot read the life-loss subject. Typed player
+references can read enclosing targets and `ActionPlayer` only with their
+existing producers. Entry, draw replacement, payment and static contexts reject;
+existing event-player life-action restrictions are preserved.
+
+Initial inspection missed `playerSnapshot.refersToSourcePermanent` in
+`waiting_delayed_branch.go`. Fresh native tests showed that this contract already
+works. It was reused, not reimplemented. The engine change in this slice is
+contract coverage, not a duplicate production rule. Waiting queries retain exact
+source visits without choosing a player or reading life. The native test checks
+absent-subject clearing in the same resolution frame, so a fresh frame cannot
+hide a stale value. API and rules docs describe only this established context.
+Rules consulted: CR 107.1a–b, 119.3–10 and 608.2c/h.
+
+### Source evidence and gameplay mapping
+
+Local `data/LEA.json` confirms that Personal Incarnation's death loss rounds up.
+All six RON records still use `HalfRoundedDown`. This pre-existing defect remains
+explicit; the fragment tests preserve the declaration instead of silently
+repairing semantics. Its unsupported activation and death-owner context prevent
+full-card acceptance. A future evidenced correction must change all six reprints.
+`data/LEA.json` confirms Lich's entry life loss and later rules. `data/ARN.json`
+confirms Shahrazad's subgame and rounded-up loser loss. No RON source changed;
+the vocabulary snapshot therefore needs no source-hash refresh.
+
+| Unique card | Complete source records | Evidence and limit |
+| --- | --- | --- |
+| Personal Incarnation | LEA:180; LEB/2ED/CED/CEI:181; 3ED:185 | `TestRONLifeTotalSourceFragments` executes the exact loss-action subtree from every record with a synthetic explicit subject, including its declared rounding. Each full record is asserted to remain rejected. No full-card gameplay claim. |
+| Lich | LEA:140; LEB/2ED/CED/CEI:141 | Complete records inspected. Shared typed life-value prerequisite only; entry context and later unsupported rules remain. No gameplay claim. |
+| Shahrazad | ARN:70 | `TestRONLifeTotalScopedSubgameFragment` executes its exact loss-action subtree with a synthetic action-player producer and rounded-up loss. Complete record remains rejected. No subgame or full-card gameplay claim. |
+
+`TestRONLifeTotalTimingAndSubject` covers dynamic life between announcement and
+resolution, sequential reads, both rounding directions, prevention independence,
+explicit targets and local subject identity, plus divergent cloned totals.
+`CopiesAndInstances` covers two factory instances and an ability/spell copy.
+`SourceLifetime` covers live source control, departed LKI, return with a different
+controller, phasing and foreign copies in original and cloned games.
+`NonpositiveAndMissing` covers negative, zero and positive life, gain/loss
+amounts and an absent highest-life subject. `PlayerActions` covers nested action
+subjects and invalid-target announcement without mutation. `Invalid` covers
+wrong arity, tuple aliases, wrong reference types, escaped local/action-player
+bindings and unsupported entry/cost/static contexts. `Inventory` verifies that
+the nested life subject is reported as a player reference.
+
+Native `TestLifeTotalBoundSubjectReadAndClear` checks one subject read and clears
+an old binding on absence in the same frame. The saved-life-subject extension to
+`TestWaitingDelayedPlayerValueReferences` covers pure waiting queries through
+source departure, return, phasing, current control, rule cycles and independent
+clones. These tests passed against existing engine contracts. Failing-first RON
+tests failed with `unsupported value (LifeTotalOfPlayer)` before lowering was
+implemented. No tests or loader rules were weakened.
+
+### Validation and loader result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONLifeTotal' -count=1`: pass.
+- `go test ./pkg/mage -run '^Test(LifeTotalBoundSubject|WaitingDelayedPlayerValue)' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass after initial lowering.
+- `make build`: pass. `go vet ./...`: pass, including final test additions.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Automatic changes only regrouped imports in
+  the new RON test file; reviewed. Both focused suites passed again after lint.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1. **915 accepted /
+  71 rejected names**, **2,295 compiled / 150 rejected records**. Totals remain
+  986 names / 2,445 records. The complete final JSON object equals the baseline,
+  including every diagnostic object and its order. No accepted record regressed.
+  The collection remains rejected atomically.
+
+Representative remaining diagnostics: Personal Incarnation rejects at
+`NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient`; Lich at its entry
+`LoseLife`; Shahrazad at `PlayAMagicSubgame`.
+
+Actual gain matches the zero-unlock estimate: zero full names or records and
+zero new complete-card gameplay mappings. The completed shared resolving-value
+and local-subject contract has native and RON execution evidence. Compilation
+coverage and fragment coverage remain separate. No environment failure blocks
+validation or commit.
+
+### Ranked next candidates
+
+1. Saved tap facts and paid-tap histories for Phyrexian Gremlins and Vodalian
+   War Machine. Keep the result, source-tapped rule duration and paid-history
+   contexts distinct; inspect producer and exact source visits before choosing
+   the next cohesive prerequisite.
+2. Entry life-loss instructions for Lich, using this typed value with a separate
+   entry context and shared replacement order. Compare multi-card replacement
+   prerequisites before selecting this one-card consumer.
+3. Combat-history filters/targets: Giant Shark's damage-history symbol and
+   Glyph of Delusion's dependent block-history target. Reuse existing history
+   services; do not infer two unlocks from a single signature.
+
+Personal Incarnation still needs bounded redirection and a death-owner adapter,
+plus its documented source repair. Shahrazad still needs subgames. Full RON
+gameplay, embedded runtime loading, Go-card/generator deletion, unused DSL cleanup
+and native startup proof remain unfinished. Removal gates stay closed; no Go
+card definitions or DSL functions were removed.
+
+Changed files: RON `compiler.go`, `player_scope.go`, `sacrifice_value.go`,
+`inventory.go`, new `life_total.go` and `life_total_test.go`; native
+`waiting_delayed_player_value_test.go` and `doc.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement resolving life totals`.
+This run stops after RESOLVING-LIFE-TOTALS.

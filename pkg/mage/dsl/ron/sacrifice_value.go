@@ -15,6 +15,9 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "LifeTotalOfPlayer" {
+		return compileLifeTotal(n, ctx)
+	}
 	if n.Name == "AmountOfManaPaidThisWay" {
 		if n.Kind != Symbol || ctx.chosenMana == nil || ctx.enteringSource || ctx.drawReplacementBody {
 			return nil, problem(n, "unbound or incompatible paid mana amount")

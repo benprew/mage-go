@@ -22286,3 +22286,39 @@ clones, inventory and complete Tidal Flats gameplay. Tidal Flats covers failed
 activation, paid/declined/unaffordable member offers, mana abilities, live combat
 filters, multiple attackers and blockers, source departure/control, own/foreign
 copies, grant cleanup, returned blockers and pending/installed clones.
+
+## Typed resolving life totals and local loss subjects
+
+RON accepts `LifeTotalOfPlayer(playerRef)` in ordinary resolving spell,
+activation, trigger and delayed bodies. It lowers to `LifeTotalOf(PlayerRef)
+ResolutionValue`. The reference uses the existing typed player grammar. Each
+instruction reads current life; arithmetic retains negative values. The shared
+life service ignores nonpositive gain or loss amounts (CR 107.1b, 119.3).
+This does not set life totals or pay life.
+
+`LoseLife_ThatPlayer` must be a symbol inside one `LoseLife` amount. The compiler
+creates a fresh `PlayerBinding` for that instruction when the amount reads the
+symbol. `SnapshotPlayer(PlayerRef, *PlayerBinding) ResolvingEffect` selects the
+explicit action subject once immediately before the life instruction.
+`LoseLifeFor(FromPlayer(binding), amount)` uses the same subject. The snapshot
+clears an absent subject. Later actions, gain amounts and other declarations
+cannot read this binding. Independent actions and factory calls keep distinct
+plans and bindings. Copies and clones use separate resolution frames.
+
+Existing engine mechanics supply rounding, source visits, current controller
+and exact LKI, phasing, target legality, life events, restrictions and
+replacements. Waiting-source inspection recognizes the snapshot without
+selecting its subject or reading life. Entry, replacement, payment and static
+value contexts remain unsupported by this adapter. Existing event-player life
+action restrictions remain. No engine API or life-rule behavior was duplicated.
+
+Evidence: `TestRONLifeTotalTimingAndSubject`, `CopiesAndInstances`,
+`SourceLifetime`, `NonpositiveAndMissing`, `Invalid` and `Inventory` cover
+synthetic RON gameplay and declaration contracts. `SourceFragments` executes
+the loss action from all six Personal Incarnation records with an explicit
+synthetic subject. `ScopedSubgameFragment` executes Shahrazad's action with a
+synthetic action-player producer. These are fragment tests; the complete cards
+still reject. Native `TestLifeTotalBoundSubjectReadAndClear` checks one subject
+read and absent-subject clearing; `TestWaitingDelayedPlayerValueReferences`
+adds saved life-subject coverage across source visits, control, phasing and
+clones. Information is read when each instruction applies (CR 608.2c, 608.2h).
