@@ -19,9 +19,11 @@ const (
 	permanentDamageTarget
 	permanentPlayerChoice
 	permanentReturned
+	permanentLoopMember
 )
 
 type permanentReferencePlan struct {
+	loop         *permanentLoopPlan
 	returned     *returnedPermanentPlan
 	kind         permanentReferenceKind
 	target       *permanentTargetPlan
@@ -65,6 +67,10 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.combatOpponent}, nil
 		}
 		switch n.Name {
+		case "EachablePermanent":
+			if ctx.permanentLoop != nil {
+				return permanentReferencePlan{kind: permanentLoopMember, loop: ctx.permanentLoop}, nil
+			}
 		case "ThePermanentPutOnTheBattlefieldThisWay":
 			if ctx.returnedPermanent != nil && !ctx.enteringSource && !ctx.drawReplacementBody {
 				return permanentReferencePlan{kind: permanentReturned, returned: ctx.returnedPermanent}, nil
@@ -132,6 +138,8 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 
 func (p permanentReferencePlan) build(bindings instanceBindings) mage.PermanentRef {
 	switch p.kind {
+	case permanentLoopMember:
+		return mage.From(bindings.permanentLoops[p.loop])
 	case permanentReturned:
 		return mage.From(bindings.returnedPermanents[p.returned])
 	case permanentDamageTarget:

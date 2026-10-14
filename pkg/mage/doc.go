@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ForEachInTurnOrder] saves exact member visits in turn order.
+// The resolving controller chooses the order within each control group.
+// Later entries do not join. Return cannot supply an old visit.
+// Each sequential body has separate bindings. Errors restore outer bindings.
+// Damage results, sources, plural cards, spells and mana types stay local.
+// Delayed bodies save their member. Copies and clones keep separate frames.
+// Waiting source queries inspect the collection and body without execution.
+// RON accepts ActionForEachPermanent(collection, [actions]) in ordinary
+// resolving bodies. EachablePermanent is local to the body. Nested loops
+// shadow it and restore the outer member. Entry and draw replacements reject.
+// This completes Tidal Flats through existing payment and combat-pair services.
+//
 // [AddSpellDamageToNextSelectedSourceEvent] saves one selected-source event.
 // The original damage remains. The saved spell deals the proposed amount to
 // that source's controller in the same event. Replacement choices and rechecks

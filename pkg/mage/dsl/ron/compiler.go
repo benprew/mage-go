@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	permanentLoop        *permanentLoopPlan
 	createdTokenLink     *mage.CreatedTokenLink
 	chosenMana           *chosenManaPlan
 	exileFacts           *permanentExilePaymentPlan
@@ -1400,6 +1401,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "ActionForEachPermanent":
+		build, err := compilePermanentLoop(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield":
 		build, err := compileGraveyardBatchEntry(n, ctx)
 		if err != nil {

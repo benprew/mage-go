@@ -6,17 +6,19 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **914 accepted / 72 rejected names**
-(986 total), **2,294 compiled / 151 rejected records** (2,445 total).
-The latest slice is **CONTINUED-PROPOSED-DAMAGE**.
-A selected-source next-time damage replacement can keep the original damage and
-add spell damage to that source's controller in the same event. This completes
-Eye for an Eye. The shared batch pipeline retains replacement uses on new packets,
-separate sources/causes and independent prevention. Instruction-local prevention
-stays with the original instruction; added damage does not enter its saved result.
-Both complete records have RON gameplay mappings. Actual gain is **one name /
-two records**, as estimated. Required checks and remaining diagnostics are in the
-latest entry below. No RON source or vocabulary changed.
+Latest measured result (2026-10-14): **915 accepted / 71 rejected names**
+(986 total), **2,295 compiled / 150 rejected records** (2,445 total).
+The latest slice is **SCOPED-PERMANENT-ITERATION**.
+`ActionForEachPermanent` now binds `EachablePermanent` in an ordinary resolving
+body. Mage saves exact visits in APNAP control groups, with controller-selected
+order within each group. Nested loops, payments and delayed member captures use
+separate frames. The shared loop now isolates all typed binding maps and declares
+source reads without query execution. Existing battlefield-order callers remain.
+The complete Tidal Flats record now compiles and has RON gameplay coverage.
+Actual gain is **one name / one record**. The initial zero-unlock estimate missed
+existing combat-pair and keyword adapters; the final expected gain was one.
+Raging River still needs its attack event and named-pile services. Required checks
+and remaining diagnostics are recorded in the latest entry below.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,16 +27,21 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Bounded recipient redirection:** Personal Incarnation still needs its finite
-   recipient budget. The shared damage expansion pipeline is now available;
-   allocation and returned-result membership still need their own contract.
-2. **Replacement-time optional payments:** Heroism needs a proposed source
-   controller, payment choices and unpaid prevention. Compare shared payment
-   operations with Tidal Flats, whose permanent loop and combat-pair grants remain
-   separate prerequisites. Do not count two immediate unlocks.
-3. **Live history filters:** Giant Shark needs a damage-history combat-pair
-   predicate. Glyph of Delusion needs dependent block-history target legality,
-   dynamic counter amounts and conditional/triggered indefinite grants.
+1. **Typed life-total values:** Personal Incarnation, Lich and Shahrazad share
+   `LifeTotalOfPlayer`. Ordinary resolution, entry and action-player contexts need
+   explicit contracts. No immediate full-card gain is assumed. Personal
+   Incarnation also needs bounded redirection and its rounding correction below.
+2. **Saved tap facts:** Phyrexian Gremlins and Vodalian War Machine need action
+   results and paid-tap histories. Inspect their complete records before choosing
+   a shared exact-visit prerequisite; they are different producers.
+3. **Combat history:** Giant Shark needs the zero-argument damage-history filter.
+   Glyph of Delusion needs a dependent block-history target predicate; Glyph of
+   Reincarnation already has a block-history collection adapter but still needs
+   casting timing, death-result iteration and former-block controller facts.
+
+Heroism's payment-time source defect is recorded below. Do not implement its
+current replacement-time payment as an Oracle-faithful full-card adapter.
+Raging River can reuse permanent iteration after attack-event and pile services.
 
 ## Dependencies and source blockers
 
@@ -16679,3 +16686,142 @@ tests; RON `selected_source_redirect.go`, `inventory.go`, `inventory_test.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement continued proposed damage`.
 This run stops after CONTINUED-PROPOSED-DAMAGE.
+
+## 2026-10-14 — SCOPED-PERMANENT-ITERATION
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and uncached RON tests passed.
+The baseline loader returned valid JSON and expected exit 1: 914 accepted / 72
+rejected names, 2,294 compiled / 151 rejected records. This was collection
+rejection, not a build or test failure. Complete records and nested forms were
+read for Personal Incarnation (all six printings), Heroism, Tidal Flats, Raging
+River (all five printings), Giant Shark, Glyph of Delusion and Glyph of Reincarnation.
+Targeted vocabulary signatures and the existing adapters were inspected.
+
+| Candidate | Distinct affected cards; estimated complete-card gain | Other blockers; downstream value | Effort |
+| --- | --- | --- | --- |
+| Bounded recipient redirection, latest rank 1 | Personal Incarnation; 0 until nested life operands work | `LifeTotalOfPlayer(LoseLife_ThatPlayer)` is missing; its rounding is wrong. Needs finite allocation and redirected-descendant result membership. Enables shared partial-damage splitting, but no second immediate card was established. | High engine, adapter and result-contract effort |
+| Optional-payment family: scoped permanent iteration, selected prerequisite | Tidal Flats, Raging River; initially 0, ultimately 1 | Tidal Flats' contextual blocking-pair collection and keyword grants already work. Raging River needs attack-event, named-pile and restriction services. Corrected Heroism could also reuse per-member resolution payments. | Moderate scoped lowering, ordering and frame-contract tests |
+| Live combat histories | Giant Shark, Glyph of Delusion, Glyph of Reincarnation; 1 for the damage-history operand, 0 for block-history target work alone | Giant Shark's other complete-record forms already work. Delusion still needs dynamic counters and indefinite conditional/triggered grants. Reincarnation needs after-combat casting, death-result iteration and former-block controller facts; its block-history collection already works. | Low/moderate for the Shark operand; high for complete dependent Glyph behavior |
+
+Rank 1 was not a dependency-complete full-card opportunity. The selected shared
+prerequisite enables two distinct cards and reuses exact engine contracts. The
+initial zero estimate incorrectly treated Tidal Flats' blocking-pair grant as
+missing. Inspection of `contextual_collection.go` and `temporary_collection.go`
+found both existing adapters; no second capability was added to complete it.
+Actual gain is one unique card / one record. Giant Shark remains a smaller,
+single-card adapter while useful shared prerequisites remain.
+
+### Supported contract, boundaries and source evidence
+
+RON accepts `ActionForEachPermanent(collection, [actions])` in ordinary resolving
+spell, activation, trigger and delayed bodies. `EachablePermanent` is a strict
+symbol bound only inside the body. The collection uses the enclosing scope;
+nested bodies shadow and restore the member. Malformed forms, missing bindings,
+escaped choices, member reads in new ability declarations, entry operations and
+draw replacements reject. Existing contextual collection and action grammars
+remain responsible for their nested declarations. Each factory gets fresh bindings.
+
+Native API: `ForEachInTurnOrder(PermanentSet, *PermanentBinding, ResolvingEffect)
+ResolvingEffect`. Mage captures distinct present, unphased visits once in APNAP
+control groups. The resolving controller chooses order within each group before
+body execution. Invalid choices use the first remaining member. Sequential body
+actions keep their normal payment, replacement and observation contracts; this
+is not a simultaneous batch. `ForEach` retains its existing battlefield order.
+
+The shared executor now isolates plural-card, spell, mana-type, damage-source,
+plural-damage-result and singular-damage-result maps, in addition to its existing
+maps. Deep copies and deferred restoration preserve outer values on success or
+error. Later entries do not join; return cannot supply a saved incarnation.
+Phasing suspends permanent actions; changed control does not remove a member.
+Exact LKI supplies departed-member information. Delayed effects save each member.
+Both loop constructors declare source reads in collections and bodies without
+running selectors, values, decisions or actions. Copies and clones remain separate.
+
+Reuse: `controlledPermanentGroups`, `PermanentBinding`, `ForEach`, contextual
+collections, shared optional-payment transactions/mana abilities, combat-pair
+collections, temporary keyword layers, delayed capture and source-read services.
+RON owns syntax, scope, inventory roles and lowering; mage owns rules and state.
+No Go fallback, card-name dispatch, partial registry or global last-action slot.
+API/rules docs were updated only for this contract. Rules consulted: CR 400.7,
+608.2c–h and existing phasing, binding, payment and delayed-source contracts.
+
+Source defects found during comparison: all six Personal Incarnation records use
+`HalfRoundedDown` for death life loss; `data/LEA.json` says rounded up. Heroism
+(FEM:41) places `PlayerMayCost` inside future damage prevention, but `data/FEM.json`
+requires a payment for each attacking red creature during ability resolution.
+CR 608.2c–g distinguishes that timing. Both remain rejected; neither defect was
+changed as part of this iteration slice. A later correction must handle identical
+reprints together. Tidal Flats agrees with local Oracle data. No RON source or
+vocabulary snapshot changed. No definitions or DSL functions were removed; the
+collection and native-startup removal gates remain closed.
+
+### Failing-first evidence and gameplay mapping
+
+RON payment/nested-loop tests first failed with unsupported ActionForEachPermanent.
+Native frame tests first failed because damage source/results leaked between
+iterations; source-query tests first failed because the loop lost source reads.
+The turn-order test first failed compilation for the new API. All now pass.
+A clone-payment fixture initially inherited SearchPlayer's decline decisions;
+explicit cloned-player choice wrappers corrected the fixture without changing
+production behavior or weakening its assertions.
+
+| Unique card | Complete records | Gameplay mapping |
+| --- | --- | --- |
+| Tidal Flats | FEM.lines.ron:94 | `TestRONPermanentLoopTidalFlats`: failed activation rollback, no announcement-time offers, payment/decline/short mana/mana abilities, flying/attack/phasing filters, source departure/control, own/foreign copies, grant cleanup, returned blockers and pending/installed clones. `TestRONPermanentLoopTidalFlatsMultiple`: independent attacker payments and multiple matching blockers. |
+| Raging River | LEA:196; LEB/2ED/CED/CEI:197 | Prerequisite only; complete records still reject at WhenAnyNumberOfCreaturesAttack. No complete-card gameplay claim. |
+
+Other `TestRONPermanentLoop*` tests cover ordinary and nested payments, member
+shadowing, wrong-color payment rollback, exact departed-controller LKI, delayed
+member capture across return/clones, invalid contexts/escapes and inventory roles.
+Native `TestPermanentLoopFrameIsolation`, `SourceQuery`, `TurnOrder` and
+`CapturedVisits` cover frame separation, pure source inspection, controller-chosen
+APNAP order, fixed membership, return, phasing and changed control. Existing
+`TestComposableLoop*` retains error restoration, definition scope and incarnation
+regressions. Compilation counts and full-card gameplay mappings are separate.
+
+### Validation and final measurement
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONPermanentLoop' -count=1`: pass.
+- `go test ./pkg/mage -run '^Test(PermanentLoop|ComposableLoop)' -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `go test ./... -short -count=1`, required by implement-engine: pass.
+- `make lint`: pass, 0 issues. Automatic changes only regrouped imports in the
+  new test files; reviewed. Both focused suites were rerun after lint.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1; **915 accepted /
+  71 rejected names**, **2,295 compiled / 150 rejected records**. Totals remain
+  986 names / 2,445 records. Removing only Tidal Flats from the baseline issue
+  array gives the final array exactly, including diagnostic objects and order.
+  No accepted record regressed. Full collection publication remains rejected.
+
+Actual gain: one unique name, one record and one complete-card RON gameplay
+mapping. The initial zero estimate missed reusable adapters; the implementation
+adds only scoped iteration and its engine contracts. Complete collection gameplay,
+runtime cutover, Go-card/generator removal, unused DSL cleanup and native startup
+proof remain unfinished. No environment blocker prevents validation or commit.
+
+### Ranked next candidates
+
+1. Typed `LifeTotalOfPlayer` values and explicit life-action payer scope: shared
+   by Personal Incarnation, Lich and Shahrazad. Entry and ordinary resolution need
+   distinct contexts; do not count three complete-card unlocks. Personal
+   Incarnation also needs bounded redirection and the documented rounding repair.
+2. Saved tap results and paid-tap histories for Phyrexian Gremlins and Vodalian
+   War Machine. Audit producer identity, retained facts and duration consumers.
+3. Combat history operands/targets: Giant Shark's damage-history symbol and
+   Glyph of Delusion's dependent block-history target. Reuse Reincarnation's
+   existing contextual block-history collection rather than recreating it.
+
+Raging River's attack-event and named piles remain downstream of this slice.
+Heroism needs an evidenced source repair before implementing payment timing.
+Changed files: native `composable_actions.go`, `waiting_delayed_source.go`,
+`doc.go` and new `permanent_loop_frame_test.go`; RON new `permanent_loop.go` and
+its tests, `compiler.go`, `permanent_scope.go`, `player_scope.go`, `inventory.go`,
+`inventory_test.go`, `numeric_consumers_test.go`, `definition_plan_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement scoped permanent iteration`.
+This run stops after SCOPED-PERMANENT-ITERATION.

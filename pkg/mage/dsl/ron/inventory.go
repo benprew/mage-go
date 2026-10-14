@@ -1130,6 +1130,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"delayed_step_event", "actions"}[index]
 			}
+		case "ActionForEachPermanent":
+			if len(n.Args) == 2 {
+				return []string{"permanent_collection", "action"}[index]
+			}
 		case "RepeatableActions":
 			if len(n.Args) == 1 {
 				return "action"

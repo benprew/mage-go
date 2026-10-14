@@ -2987,16 +2987,24 @@ func (e *libraryChoiceEffect) Apply(ctx *EffectContext) error {
 
 // --- from composable_loop.go ---
 type permanentLoop struct {
-	subjects PermanentSet
-	member   *PermanentBinding
-	body     ResolvingEffect
+	turnOrder bool
+	subjects  PermanentSet
+	member    *PermanentBinding
+	body      ResolvingEffect
 }
 
 // ForEach saves the member list once and runs the body in battlefield order.
 // Each iteration has its own saved values. The actions are not simultaneous.
 func ForEach(subjects PermanentSet, member *PermanentBinding, body ResolvingEffect) ResolvingEffect {
-	return &permanentLoop{subjects, member, body}
+	return &permanentLoop{subjects: subjects, member: member, body: body}
 }
+
+// ForEachInTurnOrder saves visits in turn order before it runs the body.
+// The effect controller chooses the order of visits within each control group.
+func ForEachInTurnOrder(subjects PermanentSet, member *PermanentBinding, body ResolvingEffect) ResolvingEffect {
+	return &permanentLoop{subjects: subjects, member: member, body: body, turnOrder: true}
+}
+
 func (*permanentLoop) Text() string { return "for each permanent" }
 func (e *permanentLoop) Properties() EffectProperties {
 	var props EffectProperties
@@ -3007,10 +3015,29 @@ func (e *permanentLoop) Properties() EffectProperties {
 	return props
 }
 func (e *permanentLoop) Apply(ctx *EffectContext) error {
-	subjects := e.subjects.resolvePermanents(ctx)
-	members := make([]capturedPermanent, 0, len(subjects))
-	for _, permanent := range subjects {
-		members = append(members, capturedPermanent{permanent.ID(), permanent.incarnationID})
+	var members []capturedPermanent
+	if e.turnOrder {
+		groups := controlledPermanentGroups(ctx, EachPlayer, e.subjects)
+		chooser := ctx.Game.GetPlayer(ctx.Controller)
+		for _, group := range groups {
+			remaining := slices.Clone(group.members)
+			for len(remaining) > 0 {
+				index := 0
+				if len(remaining) > 1 && chooser != nil {
+					chosen := chooser.ChoosePermanent(slices.Clone(remaining), "Choose the next permanent for iteration", ctx.Game)
+					index = max(0, slices.IndexFunc(remaining, func(p *Permanent) bool {
+						return chosen != nil && p.ID() == chosen.ID() && p.incarnationID == chosen.incarnationID
+					}))
+				}
+				p := remaining[index]
+				members = append(members, capturedPermanent{p.ID(), p.incarnationID})
+				remaining = slices.Delete(remaining, index, index+1)
+			}
+		}
+	} else {
+		for _, p := range e.subjects.resolvePermanents(ctx) {
+			members = append(members, capturedPermanent{p.ID(), p.incarnationID})
+		}
 	}
 	outerWords := ctx.Game.resolution.wordPairBindings
 	defer func() { ctx.Game.resolution.wordPairBindings = outerWords }()
@@ -3026,7 +3053,31 @@ func (e *permanentLoop) Apply(ctx *EffectContext) error {
 	defer func() { ctx.Game.resolution.permanentBindings = outer }()
 	outerCreated := ctx.Game.resolution.createdTokenBindings
 	defer func() { ctx.Game.resolution.createdTokenBindings = outerCreated }()
+	outerCardSets := ctx.Game.resolution.cardsBindings
+	outerSpells := ctx.Game.resolution.spellBindings
+	outerManaTypes := ctx.Game.resolution.manaTypesBindings
+	outerDamageSources := ctx.Game.resolution.damageSourceBindings
+	outerDamageResults := ctx.Game.resolution.damageResultsBindings
+	outerDamageResult := ctx.Game.resolution.damageResultBindings
+	defer func() {
+		ctx.Game.resolution.cardsBindings = outerCardSets
+		ctx.Game.resolution.spellBindings = outerSpells
+		ctx.Game.resolution.manaTypesBindings = outerManaTypes
+		ctx.Game.resolution.damageSourceBindings = outerDamageSources
+		ctx.Game.resolution.damageResultsBindings = outerDamageResults
+		ctx.Game.resolution.damageResultBindings = outerDamageResult
+	}()
 	for _, member := range members {
+		ctx.Game.resolution.cardsBindings = cloneCardsBindings(outerCardSets)
+		ctx.Game.resolution.spellBindings = maps.Clone(outerSpells)
+		ctx.Game.resolution.manaTypesBindings = cloneManaTypesBindings(outerManaTypes)
+		ctx.Game.resolution.damageSourceBindings = cloneDamageSourceBindings(outerDamageSources)
+		ctx.Game.resolution.damageResultsBindings = cloneDamageResultsBindings(outerDamageResults)
+		ctx.Game.resolution.damageResultBindings = maps.Clone(outerDamageResult)
+		for binding, result := range ctx.Game.resolution.damageResultBindings {
+			ctx.Game.resolution.damageResultBindings[binding] = cloneDamageOutcome(result)
+		}
+
 		ctx.Game.resolution.cardBindings = maps.Clone(outerCards)
 		ctx.Game.resolution.createdTokenBindings = cloneCreatedTokenBindings(outerCreated)
 		ctx.Game.resolution.wordPairBindings = maps.Clone(outerWords)

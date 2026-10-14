@@ -22239,3 +22239,50 @@ Evidence: native `TestContinuedDamageEvent`, `Lifecycle`, `Ordering`,
 `InheritedUses`, `IdentityAndWaiting`, `SpellContinuity`, `Invalid`,
 `CauseAndCombat` and `InstructionPrevention`. RON mapping and exact declaration
 limits are in the DSL reference and migration ledger.
+
+## Scoped permanent iteration in turn order (2026-10-14)
+
+`ForEachInTurnOrder(subjects PermanentSet, member *PermanentBinding,
+body ResolvingEffect) ResolvingEffect` uses the existing permanent-loop executor.
+It captures distinct present, unphased visits through `controlledPermanentGroups`
+once. APNAP control groups determine primary order. The resolving controller
+chooses the next member within each group before any body runs (CR 608.2f).
+The existing `ForEach` constructor retains battlefield order for current callers.
+Both constructors use sequential body execution, not a simultaneous batch.
+
+Membership is fixed before execution (CR 608.2h). Later entries do not join.
+Each bound visit has its own incarnation (CR 400.7); return cannot supply it.
+A member's later control change does not remove it from the captured list.
+Permanent actions use current presence and phasing checks. Information references
+can read exact LKI after departure through the existing information service.
+No zone or replacement service is duplicated. Each member action retains its
+ordinary target, payment, replacement and event contracts.
+
+The shared loop now isolates all typed resolution-binding maps, including plural
+card visits, spells, mana types, damage sources, plural damage outcomes and
+singular damage outcomes. Nested loops and member bodies cannot mutate outer
+maps or a prior iteration's values. Deep copies retain independent saved card
+and damage information. Deferred restoration also runs on an error. Game-state
+changes made by completed actions remain. Optional member payments use shared
+transactions, including mana abilities, affordability and rollback (CR 608.2g).
+Delayed effects capture each member's frame before the loop restores its caller.
+Clones and stack copies retain existing independent-resolution behavior.
+
+Both loop constructors declare explicit source reads from the collection and
+body to waiting delayed-source queries. These queries run neither the collection
+selector nor the body. Empty collections retain explicit source reads.
+
+RON owns `ActionForEachPermanent/2`, the list body, ordinary resolving context,
+lexical `EachablePermanent`, nested shadowing and fresh per-factory bindings.
+Its adapter reuses this executor and existing contextual permanent collections.
+Entry and draw replacements reject; unbound members, malformed declarations,
+escaped choices and member reads in new ability declarations reject.
+
+Evidence: native `TestPermanentLoopFrameIsolation`, `SourceQuery`, `TurnOrder`
+and `CapturedVisits`, plus existing `TestComposableLoop*` error, scope and
+incarnation regressions. `TestRONPermanentLoop*` covers declaration rejection,
+independent and nested payments, rollback, LKI, phasing, delayed member capture,
+clones, inventory and complete Tidal Flats gameplay. Tidal Flats covers failed
+activation, paid/declined/unaffordable member offers, mana abilities, live combat
+filters, multiple attackers and blockers, source departure/control, own/foreign
+copies, grant cleanup, returned blockers and pending/installed clones.

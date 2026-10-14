@@ -473,3 +473,7 @@ func (e *libraryRecycleEffect) refersToSourcePermanent() bool {
 func (e *randomPlayerChoice) refersToSourcePermanent() bool {
 	return playerSetReadsSourcePermanent(e.subjects)
 }
+
+func (e *permanentLoop) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects) || effectReadsSourcePermanent(e.body)
+}

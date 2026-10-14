@@ -16721,3 +16721,38 @@ prevention. `Invalid` covers malformed declarations and scope/context rejection.
 `Inventory` retains semantic roles for proposed operands. Native contracts cover
 combat status, separate causes, source-spell continuity, inherited replacement
 uses, waiting source references and instruction-local prevention.
+
+## RON scoped permanent iteration
+
+`ActionForEachPermanent(collection, [actions])` accepts the existing contextual
+permanent collection grammar in ordinary resolving spell, activation, trigger
+and delayed bodies. `EachablePermanent` is a strict symbol for the current
+member's exact battlefield visit. It is available only inside that loop body.
+Nested loops shadow the member and restore the enclosing scope. The collection
+is compiled in the enclosing scope, so it can refer to an outer loop member.
+Entry and draw-replacement bodies reject this form. Unsupported actions still
+reject the complete declaration. Loop-local choices and payment results cannot
+escape into later outer actions or newly granted ability declarations.
+
+The adapter builds a fresh `PermanentBinding` for each factory instance and
+lowers to `ForEachInTurnOrder(PermanentSet, *PermanentBinding, ResolvingEffect)`.
+Mage captures the member visits once, in APNAP control groups. The resolving
+controller chooses the order within each group before body execution. Invalid
+order choices select the first remaining member. Actions run sequentially;
+this operation does not turn member actions into a simultaneous batch.
+Later entries do not join the list. Return cannot replace a saved visit.
+Current references suspend actions on phased members. Controller and owner
+information reads retain their existing exact-visit LKI contract.
+
+Each iteration receives separate binding maps, including payment numbers,
+plural cards, spell references, mana types, damage sources and damage results.
+The outer maps are restored on success and error. Delayed effects created in a
+body save their own member. Pending copies and game clones keep separate frames.
+Waiting source queries inspect both the collection and the body without
+selecting members, making choices, reading values or running actions.
+The existing `ForEach` API keeps its battlefield-order behavior.
+
+Complete FEM Tidal Flats now uses these services with the existing optional
+mana payment, combat-pair collections and temporary keyword layers.
+`TestRONPermanentLoopTidalFlats` and `TidalFlatsMultiple` cover its full record.
+Raging River still needs attack-event, named-pile and pile-restriction support.
