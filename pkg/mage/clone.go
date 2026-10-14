@@ -214,6 +214,8 @@ func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
 		Card:                        src.Card, // shared
 		incarnationID:               src.incarnationID,
+		createdTokenLink:            src.createdTokenLink,
+		createdTokenSource:          src.createdTokenSource,
 		attachedIncarnation:         src.attachedIncarnation,
 		computedController:          src.computedController,
 		baseController:              src.baseController,

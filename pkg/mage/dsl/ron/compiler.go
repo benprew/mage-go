@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	createdTokenLink     *mage.CreatedTokenLink
 	chosenMana           *chosenManaPlan
 	exileFacts           *permanentExilePaymentPlan
 	returnedPermanent    *returnedPermanentPlan
@@ -391,6 +392,10 @@ func Compile(n Node) (mage.CardFactory, error) {
 		protectionPTSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && protectionPTTextRules(rules)
 		intrinsicCastSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && intrinsicCastSpellTextRules(rules)
 		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)
+		ctx.createdTokenLink, err = compileCreatedTokenAssociation(rules, permanent)
+		if err != nil {
+			return nil, err
+		}
 		ctx.exileLink, err = compileExileAssociation(rules, permanent)
 		if err != nil {
 			return nil, err

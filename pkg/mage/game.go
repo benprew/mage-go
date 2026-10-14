@@ -419,9 +419,15 @@ func (g *Game) putOnBattlefieldWithEntry(card Card, controller, actor uuid.UUID,
 }
 
 func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID) []*Permanent {
+	return g.putTokensOnBattlefieldTogetherWithLink(cards, controller, nil, capturedPermanent{})
+}
+
+func (g *Game) putTokensOnBattlefieldTogetherWithLink(cards []Card, controller uuid.UUID, link *CreatedTokenLink, source capturedPermanent) []*Permanent {
 	permanents := make([]*Permanent, 0, len(cards))
 	for _, card := range cards {
 		if perm := g.prepareBattlefieldEntry(card, controller, nil, 0, false); perm != nil {
+			perm.createdTokenLink = link
+			perm.createdTokenSource = source
 			permanents = append(permanents, perm)
 		}
 	}

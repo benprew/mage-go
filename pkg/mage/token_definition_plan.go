@@ -64,20 +64,32 @@ func tokenDeclarationCard(d *tokenDefinition) *BaseCard {
 }
 
 func createDefinitionTokenBatch(g *Game, player uuid.UUID, count int, d *tokenDefinition) ([]*Permanent, error) {
+	return createDefinitionTokenBatchLinked(g, player, count, d, nil, capturedPermanent{})
+}
+
+func createDefinitionTokenBatchLinked(g *Game, player uuid.UUID, count int, d *tokenDefinition, link *CreatedTokenLink, source capturedPermanent) ([]*Permanent, error) {
 	if d.problem != "" {
 		return nil, fmt.Errorf("token definition: %s", d.problem)
 	}
-	if d.plan == nil {
-		return createTokenBatchWithResult(g, player, count, d.name, d.power, d.toughness, d.types, d.subtypes, d.colors, d.keywords, d.abilities), nil
-	}
 	cards := make([]Card, 0, count)
 	for range count {
-		card, err := d.plan.Build()
+		var card Card
+		var err error
+		if d.plan != nil {
+			card, err = d.plan.Build()
+		} else {
+			token := NewToken(d.name, d.power, d.toughness, d.types, d.subtypes, d.keywords...)
+			token.colorOverride = slices.Clone(d.colors)
+			for _, ability := range d.abilities {
+				token.AddAbility(cloneTokenAbility(ability))
+			}
+			card = token
+		}
 		if err != nil {
 			return nil, fmt.Errorf("token definition: %w", err)
 		}
 		card.SetOwner(player)
 		cards = append(cards, card)
 	}
-	return g.putTokensOnBattlefieldTogether(cards, player), nil
+	return g.putTokensOnBattlefieldTogetherWithLink(cards, player, link, source), nil
 }

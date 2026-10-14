@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CreatedTokenLink] separates one token producer from other producers.
+// [CreateTokenCopiesLinked] saves the declaration and source visit on accepted
+// tokens before entry observations. Repeated creation adds members. Zero adds
+// none. [TokensCreatedWith] selects present, unphased members of that group.
+// Source departure, control changes and ability removal do not erase the link.
+// Return starts a new source visit. Copies of token cards have no creation link.
+// Game clones retain links in separate permanent state. Waiting queries declare
+// source reads without creating tokens or selecting members.
+// RON accepts one permanent-source CreateTokens producer and TheCreatedTokens
+// in later resolving collections. Ambiguous producers and spell sources reject.
+// This supplies a shared prerequisite for Dance of Many and Tetravus. Token
+// copies, linked leave events and linked exile payments need separate adapters.
+//
 // [CanTargetOnlySubtypeFilter] reads every applicable target declaration.
 // [TargetSourceCanTargetOnlySubtype] requires a nonempty complete list and
 // subtype proof for each group. Unknown and contradictory domains give no proof.

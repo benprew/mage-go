@@ -8,13 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **904 accepted / 82 rejected names**
 (986 total), **2,283 compiled / 162 rejected records** (2,445 total).
-The latest slice is **CAN-TARGET-ONLY-SUBTYPE-CONSUMERS**.
-Static spell and selected-ability restrictions now consume subtype domain proof.
-Complete applicable groups retain modes, Aura declarations and zero choices.
-Unknown or contradictory domains and unrelated sources supply no proof.
-Wall of Shadows now compiles and has complete RON gameplay evidence.
-Estimated and actual gain: **one name / one record**; five names have new mappings.
-All required checks pass. Every prior accepted record and other diagnostic remains.
+The latest slice is **PERSISTENT-CREATED-TOKEN-COLLECTIONS**.
+One permanent-source token producer can supply `TheCreatedTokens` across rules.
+Accepted tokens retain the producer declaration and exact source visit before
+entry observations. Copies, delays, phasing and game clones keep separate facts.
+This is a shared prerequisite for Dance of Many and Tetravus, with **zero new
+full-card unlocks**, as estimated. Both complete blocked records still reject.
+The Hive's real producer has new integration evidence with a synthetic consumer.
+All required checks pass; loader counts and diagnostics are unchanged.
 No RON source or vocabulary baseline changed. Validation and mappings follow.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -24,14 +25,17 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Persistent created-token links/results:** Dance of Many and Tetravus.
-   Compare the shared per-source, cross-trigger prerequisite with other fresh
-   multi-card work. Existing lexical CreatedTokensBinding is a reuse candidate;
-   both cards retain additional blockers, so this prerequisite alone unlocks zero.
-2. **Source prevention and live mana-value toughness:** Kry Shield. Both parts
-   must execute before the complete record unlocks; compare shared alternatives.
-3. **Target-derived X and player retargeting:** Reflecting Mirror. Audit the
-   source and complete target-derived-X/player-predicate/retargeting chain.
+1. **Linked token leave-event selectors:** compare Dance of Many's persistent
+   token group with Stangg's lexical `TheTokensCreatedThisWay` delayed events.
+   Shared exact departure identity is the next link consumer prerequisite.
+   Dance still needs token copying; Stangg needs legendary token syntax and
+   lexical token-result lowering. Neither complete card unlocks from events alone.
+2. **Token copying:** Dance of Many's `TokenCopyOfPermanent` with no modifications.
+   Reuse the existing copy/entry services and persistent producer link. One name,
+   zero unlocks until its linked token leave event is also available.
+3. **Linked optional exile payment/count:** Tetravus. Reuse the persistent
+   collection and existing payment transactions; token `CantBeEnchanted` still
+   needs its own token-rule adapter. Compare fresh shared work before selection.
 
 ## Dependencies and source blockers
 
@@ -15324,3 +15328,183 @@ prior restriction, blocked-prevention, subtype/ability, exile-payment and
 collection-count tests; API/rules-contract docs and this ledger.
 Commit title: `feat(ron): implement can-target-only subtype consumers`.
 This run stops after CAN-TARGET-ONLY-SUBTYPE-CONSUMERS.
+
+## 2026-10-14 — PERSISTENT-CREATED-TOKEN-COLLECTIONS
+
+### Environment and fresh baseline
+
+The working tree was clean. Read AGENTS.md, the engine API reference, execution
+design, current status and latest ledger entry. Applied the implement-engine
+skill for reusable engine behavior; no removed card/set skill or generator was
+used. Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed (RON:
+8.971s). Fresh `go run ./cmd/loadcards -json` exited 1 as expected: **2,283 compiled /
+162 rejected records, 904 accepted / 82 rejected unique names**. This was atomic
+collection rejection, not a build failure. Existing Go callers remain intact.
+
+### Candidate comparison and selection
+
+Read complete records for all compared names, including all nested forms:
+`DRK.lines.ron:22` Dance of Many, `ATQ.lines.ron:70` Tetravus,
+`LEG.lines.ron:154` Kry Shield and `DRK.lines.ron:85` Reflecting Mirror.
+Targeted vocabulary lookups covered `TheCreatedTokens`, `CreateTokens`,
+`TokenCopyOfPermanent` and `DamageWouldBeDealtByPermanent`. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete-card unlocks | Other blockers | Downstream capability | Estimated effort |
+| --- | --- | ---: | --- | --- | --- |
+| Persistent created-token group | Dance of Many; Tetravus | 0 | Dance: token copying and linked token leave event. Tetravus: token CantBeEnchanted, optional linked exile and saved count | Cross-trigger token consumers for two names | Moderate: typed link, shared entry integration, identity/clone/delay tests and association lowering |
+| Source prevention plus live mana-value toughness | Kry Shield | 1 only after both parts; prevention alone 0 | Both complete resolving instructions must lower | General exact source-damage prevention and dynamic toughness | Moderate, two adapters/contracts for one name |
+| Target-derived X and player retargeting | Reflecting Mirror | 0 for X alone; at most 1 after the chain | TargetsPlayer(You), player retargeting and derived-X announcement contract | Spell-derived activation X and player target changes | Large, multiple announcement and resolution contracts |
+
+Selected candidate 1. It is dependency-ready and supplies concrete shared value
+to two names; the other ranked candidates are one-card chains. This run completes
+one producer/collection shape. It does not claim completion of either downstream
+card. Read local Oracle text in `data/DRK.json` and `data/ATQ.json` to confirm the
+link requirements. No RON data defect was found or corrected. Later ranking also
+inspected Stangg's complete `LEG.lines.ron:247` record; its delayed lexical result
+is a distinct scope, not an alias for the new persistent collection.
+
+### Contract, boundaries and engine reuse
+
+New engine API:
+
+```go
+func NewCreatedTokenLink() *CreatedTokenLink
+func CreateTokenCopiesLinked(player PlayerRef, count ResolutionValue,
+    token TokenDefinition, link *CreatedTokenLink) ResolvingEffect
+func TokensCreatedWith(link *CreatedTokenLink, source PermanentRef) PermanentSet
+```
+
+One immutable declaration identifies the producing ability group. Each accepted
+token saves that declaration and the source's exact captured battlefield visit
+before entry observations. Repeated creation accumulates members; zero adds none
+and does not clear previous members. A different declaration or source visit
+selects a different group. Current collections exclude phased and departed tokens.
+Source departure, phasing and controller changes do not clear the saved group.
+Return supplies a new source visit. Pending and delayed resolutions can still
+create/read tokens for the old visit. Copied activations use their own resolving
+controller for token ownership but retain the original source group. Card copies
+of tokens do not inherit creation history. Scalar history fields are copied by
+`clonePermanentInto`, including copy-on-write mutations in either game branch.
+
+RON scans the source's rules for one `CreateTokens/2` producer and a strict symbol
+`TheCreatedTokens`. It stops at token instructions because token abilities have
+their own source scope. Missing/ambiguous producers and spell sources reject.
+Existing supported creature-token syntax and modifiers remain strict. A linked
+producer lowers to `CreateTokenCopiesLinked`; resolving contextual collections
+lower to `TokensCreatedWith(link, This)`, including
+`Exile([EachPermanent(TheCreatedTokens)], [])`. Entry, static and replacement-body
+collections remain rejected. Native link declarations reject nil/zero links and
+missing operands during definition validation. Runtime data stays in the game,
+not in the immutable declaration or compiler plan.
+
+Reused shared definition factories, ability cloning, token construction, entry
+replacement and batch observation, source information identities, stack/copy
+frames, contextual collections, simultaneous exile and waiting-source services.
+Added source-read integration for linked producers and collection consumers.
+`CreatedByFilter`/`Permanent.CreatedBy` cannot distinguish source visits or two
+producer declarations, so they cannot implement this contract. Existing callers
+and lexical `CreatedTokensBinding`/`PermanentSetBinding` behavior are unchanged.
+No global result slot, card-name executor, production fallback, partial registry,
+new payment subsystem or target legality rule was added.
+
+CR 111.2/111.3/111.6, 400.7, 603.6, 607.1/607.2c, 608.2c and 702.26b/d support
+ownership, linked objects, departure and phasing. Linked-token leave events need
+separate departure facts: a live collection alone cannot match a departed token.
+Token copying and linked exile payment/count remain separate adapters. API and
+rules-contract documentation now describe only this producer/collection behavior.
+
+### Failing-first evidence and tests
+
+Native tests first failed compilation for missing `CreatedTokenLink`,
+`NewCreatedTokenLink`, `CreateTokenCopiesLinked` and `TokensCreatedWith`.
+The RON gameplay test first failed at `unsupported permanent filter
+(TheCreatedTokens)`. Routine fixture setup was corrected to use the existing
+cost, filter and plural PhaseIn signatures. The lifecycle assertion then caught
+loss of token link fields during copy-on-write reconstruction; both fields are
+now explicitly retained by `clonePermanentInto`. The assertion was preserved.
+
+Native `TestCreatedTokenLink` cases:
+
+- `Lifecycle`: all batch members linked before entry observations, two producer
+  declarations, repeated/zero creation, token and source phasing, source return,
+  creation after source departure, changed token control, token departure,
+  token-card copying and clone isolation across later continuous-effect updates.
+- `Invalid`: nil/zero link, nil player/count/token, nil collection source and link
+  fail definition validation.
+- `EntryProhibition`: rejected land-token entries create no group members or
+  battlefield tokens, for both planned and native unplanned definitions.
+- `Waiting`: producer and consumer source enumeration is pure; phasing, departure,
+  return and independently cloned delayed resolutions retain exact source visits.
+
+RON `TestRONCreatedTokenLink` cases:
+
+- `Gameplay`: reads The Hive's complete LEB record, preserves every original rule
+  and adds one synthetic source-leave consumer. Two real paid producers, failed
+  payment, source return before cleanup, repeated and copied activations with
+  another controller, independent clone resolution and grouped exile all execute.
+- `DepartedCreation`: paid and copied activations resolve after source departure
+  and return, create for the correct players, retain the old link, and survive a
+  later returned-source cleanup in independently resolved game clones.
+- `Invalid`: missing/multiple producers, a proper Sorcery source and tuple spelling
+  reject atomically. Both complete Dance of Many and Tetravus records still reject;
+  tests do not remove or simplify any unsupported production instruction.
+
+| Unique real card | Record scope | Evidence and limits |
+| --- | --- | --- |
+| The Hive | 6 reprints; complete LEB record used | New producer integration with a synthetic linked cleanup; previous complete token/copiable-value mappings remain |
+| Dance of Many | 1 DRK record | Requirements and unchanged atomic rejection; no new full gameplay mapping |
+| Tetravus | 1 ATQ record | Requirements and unchanged atomic rejection; no new full gameplay mapping |
+
+This is a completed shared prerequisite, with **zero newly complete cards and
+zero newly accepted records**, exactly as estimated. Synthetic linkage evidence
+is separate from full-card gameplay coverage.
+
+### Validation and actual gain
+
+Required fast-fail checks:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONCreatedTokenLink' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestCreatedTokenLink' -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass with no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass across the repository.
+- `go test ./... -short -count=1`: pass, including native repository checks
+  required by implement-engine.
+- `make lint`: pass, **0 issues**. The first run found two builtin-name
+  shadowing variables and one redundant type annotation. Corrected these style
+  issues and reran focused tests, build, vet, engine short tests, full tests and
+  lint in order. Automatic changes were import formatting and `SplitSeq` loop
+  modernization in the new tests; no unrelated file changed.
+- Post-lint `go test ./pkg/mage -run '^TestCreatedTokenLink' -count=1`: pass
+  (0.478s). `go test ./pkg/mage/dsl/ron -count=1`: pass (8.987s).
+- `git diff --check`: pass before the final loader and after ledger updates.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,283 compiled /
+  162 rejected records; 904 accepted / 82 rejected names**. Parsed baseline and
+  final JSON are identical, including every diagnostic. Tetravus still reports
+  `unsupported token keyword (PermanentRuleEffect)` at ATQ:70:596; Dance of Many
+  still reports `unsupported creature token definition (TokenCopyOfPermanent)`
+  at DRK:22:311. Collection rejection remains atomic. It is not a test failure.
+
+No RON source changed, so no vocabulary snapshot refresh was required. No unused
+DSL API was removed: cutover and cleanup gates remain closed. No unrelated user
+work was present or changed. Environment blockers: none found.
+
+### Ranked next candidates
+
+1. Evaluate linked token leave-event selectors for Dance of Many and Stangg.
+   Persistent and lexical groups need exact departure facts and distinct scopes.
+   This is shared event infrastructure for two names, with zero immediate full
+   unlocks: Dance still needs token copying; Stangg needs legendary token syntax
+   and lexical created-token result lowering. Compare fresh shared candidates.
+2. Dance of Many's `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` producer. Reuse
+   shared copiable values and entry mechanics plus the new persistent token link.
+   One name, zero unlocks until its linked leave event also executes.
+3. Tetravus's optional linked-token exile payment and saved count. Reuse this
+   collection and payment transactions; token CantBeEnchanted remains another
+   blocker. Compare multi-card alternatives before selecting a single-card chain.
+
+Changed files: new native and RON created_token_link.go/test files; card.go,
+clone.go, game.go, token_definition_plan.go, waiting_delayed_source.go and doc.go;
+RON compiler.go, contextual_collection.go and token_creation.go; API/rules docs
+and this ledger. Commit title: `feat(ron): implement persistent created-token collections`.
+This run stops after PERSISTENT-CREATED-TOKEN-COLLECTIONS.

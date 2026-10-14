@@ -206,6 +206,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 
 func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 	switch s := subjects.(type) {
+	case linkedCreatedTokenSet:
+		return permanentRefReadsSourcePermanent(s.source)
 	case grantRecipientSet:
 		return permanentRefReadsSourcePermanent(s.subject)
 	case attachedAurasSet:

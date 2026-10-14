@@ -7,6 +7,13 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "TheCreatedTokens":
+		if n.Kind != Symbol || ctx.createdTokenLink == nil || !ctx.permanent || !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "created tokens require a linked permanent-source resolving collection")
+		}
+		return func(instanceBindings) mage.PermanentSet {
+			return mage.TokensCreatedWith(ctx.createdTokenLink, mage.This)
+		}, nil
 	case "IsColor":
 		if err := arity(n, 1); err != nil {
 			return nil, err

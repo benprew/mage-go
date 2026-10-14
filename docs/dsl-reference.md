@@ -16478,3 +16478,32 @@ RON `TestRONTargetOnlySubtypeWall`, `AbilityLifecycle`, `ResolutionRecheck`,
 `ZeroGroups`, `Triggered`, `Host`, `Modes` and `Invalid`. Existing strict inventory
 and atomic-loader tests now require the complete Wall of Shadows record to load
 and reject a malformed targeting predicate without replacing the prior registry.
+
+## Persistent created-token collections
+
+`mage.NewCreatedTokenLink() *mage.CreatedTokenLink` declares an immutable group.
+`mage.CreateTokenCopiesLinked(player mage.PlayerRef, count mage.ResolutionValue,
+token mage.TokenDefinition, link *mage.CreatedTokenLink) mage.ResolvingEffect`
+creates a shared token batch and associates accepted members with this declaration
+and the source's exact battlefield visit. `mage.TokensCreatedWith(link
+*mage.CreatedTokenLink, source mage.PermanentRef) mage.PermanentSet` selects
+surviving, unphased members. Repeated resolutions accumulate members; zero creates
+none and does not clear prior members. The link uses the resolving source visit,
+including after departure, rather than a returned source with the same card ID.
+
+RON associates one permanent-source `CreateTokens/2` occurrence with symbol
+`TheCreatedTokens` across that source's rules. The symbol is supported in resolving
+contextual permanent collections, including `Exile([EachPermanent(TheCreatedTokens)],
+[])`. This requires one unambiguous producer and existing supported token syntax;
+it does not accept token copying, linked-token leave events or optional linked
+exile payment. Token ability bodies have a separate scope. Spell sources, missing
+or multiple producers, tuple spelling, static and entry collections reject.
+Existing `CreatedTokensBinding` remains a lexical result with dominance checks.
+`CreatedByFilter` remains available to existing callers; its UUID-only contract
+cannot identify a source visit or distinguish two producing declarations.
+
+Tests: native `TestCreatedTokenLink{Lifecycle,Invalid,EntryProhibition,Waiting}`
+and RON `TestRONCreatedTokenLink{Gameplay,DepartedCreation,Invalid}`. The RON gameplay fixture uses
+The Hive's unchanged complete record plus a synthetic source-leave consumer;
+this is producer integration evidence, not full coverage of Dance of Many or
+Tetravus. Both complete blocked records continue to reject atomically.

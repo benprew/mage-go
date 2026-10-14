@@ -21861,3 +21861,51 @@ selected spell/ability modes, pending triggers, host reattachment, factory
 isolation, malformed declarations and atomic loading. Existing primitive tests
 retain APNAP trigger placement, replacement ordering and simultaneous damage
 coverage; this consumer adds no new timing or payment transaction.
+
+## Persistent token creation links
+
+`NewCreatedTokenLink() *CreatedTokenLink` declares one producer/consumer group.
+`CreateTokenCopiesLinked(player PlayerRef, count ResolutionValue, token
+TokenDefinition, link *CreatedTokenLink) ResolvingEffect` uses shared token
+construction, entry replacements and simultaneous entry. Accepted tokens retain
+the declaration and exact source visit before entry observations. Prohibited
+entrants supply no members. Repeated resolutions accumulate members; zero does
+not clear earlier members. Each copy of an ability uses the original source visit
+and its own resolving controller for the token player. No payment occurs again.
+
+`TokensCreatedWith(link *CreatedTokenLink, source PermanentRef) PermanentSet`
+reads present, unphased tokens with matching declaration and source visit. Source
+departure, source phasing, control changes and ability removal do not clear links.
+Returned sources cannot select earlier members. Token departure removes membership;
+a copy of a token's card does not inherit its creation history. The declaration
+is immutable, and the token's scalar history is preserved by copy-on-write game
+cloning. Waiting producer/consumer queries report source reads without executing
+the effect. Delays retain their exact saved source visit.
+
+Nil/zero link declarations, missing operands and nil collection sources fail
+engine definition validation. RON requires one unambiguous permanent producer and
+a strict `TheCreatedTokens` symbol in resolving contextual collections. Native
+entry services retain replacement order, event order and existing transaction
+semantics. No new payment or target contract is introduced. Linked-token leave
+matching needs a separate event adapter with departure facts; a live collection
+cannot supply a departed member.
+
+CR 111.2/111.3/111.6, 400.7, 603.6, 607.1/607.2c, 608.2c and 702.26b/d govern
+creator ownership, permanent identity, source departure, linked ability groups,
+resolution and phasing. Local Oracle data in `data/DRK.json` and `data/ATQ.json`
+confirms the downstream Dance of Many and Tetravus linkage requirements. No source
+record was corrected or simplified.
+
+Evidence: `TestCreatedTokenLinkLifecycle` covers entry visibility, two declarations,
+repeated/zero creation, token/source phasing, source return, departure creation,
+control, token departure, token copies and clone isolation. `Invalid` covers
+factory rejection; `EntryProhibition` covers planned and unplanned tokens;
+`Waiting` covers pure queries and independent cloned delayed resolutions.
+`TestRONCreatedTokenLinkGameplay` covers a real Hive producer with a synthetic
+source-leave consumer, failed payment, two instances, source return, copied paid
+activations and cloned cleanup. The full Dance of Many and Tetravus records stay
+rejected in `TestRONCreatedTokenLinkInvalid`; neither is a new full-card mapping.
+
+`TestRONCreatedTokenLinkDepartedCreation` also proves that paid and copied
+activations create tokens for the old source visit after departure and return;
+the returned source cannot select those tokens in either cloned game branch.

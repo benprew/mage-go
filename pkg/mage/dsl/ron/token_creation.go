@@ -43,6 +43,9 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if ctx.createdTokenLink != nil {
+			return mage.CreateTokenCopiesLinked(ctx.player.build(bindings), count(bindings), token(), ctx.createdTokenLink)
+		}
 		return mage.CreateTokenCopies(ctx.player.build(bindings), count(bindings), token())
 	}, nil
 }
