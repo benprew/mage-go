@@ -67,9 +67,13 @@ func TestRONPluralSacrificeCostInvalid(t *testing.T) {
 }
 
 func TestRONPluralSacrificeCostSwordBoundary(t *testing.T) {
-	_, err := Compile(repositoryRecord(t, "LEG", "Sword of the Ages", "LEG.lines.ron"))
-	if err == nil || strings.Contains(err.Error(), "unsupported cost") {
-		t.Fatal("payment did not lower or incomplete card accepted", err)
+	factory, err := Compile(repositoryRecord(t, "LEG", "Sword of the Ages", "LEG.lines.ron"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	card := factory()
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
 	}
 }
 

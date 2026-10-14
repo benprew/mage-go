@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SingletonCard] adapts a typed card reference to a [CardSet].
+// [ExileGraveyardCards] selects all groups before one shared exile batch.
+// Only current graveyard visits move. All owners' cards leave before events.
+// Duplicate subjects move once. Return cannot supply a saved visit.
+// RON accepts saved plural sacrifice power and graveyard card consumers.
+// A grouped exile can include the separate paid source card. Tokens supply
+// power but no cards. Copies, clones and delays keep separate payment frames.
+// This completes Sword of the Ages, including its source-card exile repair.
+//
 // [SacrificeSourceAndAnyMatchingCostInto] pays the source and a chosen subset
 // in one sacrifice batch. Choices and power reads precede all movement.
 // The mandatory source cannot enter the subset. A separate [CardBinding]
@@ -8,7 +17,7 @@
 // Return, phasing and changed control cannot replace a payment subject.
 // Source and subset results use the existing copy, clone and delay frames.
 // RON groups one source sacrifice and one optional-count matching sacrifice
-// in an activation cost. Saved power and graveyard consumers need adapters.
+// in an activation cost. Saved result consumers use separate typed bindings.
 //
 // [SacrificeAnyMatchingCostInto] saves one activation payment's total power
 // and new public-zone card visits. The payer chooses zero or more distinct
@@ -20,8 +29,8 @@
 // keep successful payment. Cancellation fails the complete transaction.
 // Copies, clones and delays keep separate frames. Zero clears prior results.
 // RON accepts one SacrificeAnyNumberOfPermanents in an activation cost, with
-// one conjunctive ControlledByAPlayer(SinglePlayer(You)) filter. Result consumers,
-// entry payments and casting payments retain their separate adapters.
+// one conjunctive ControlledByAPlayer(SinglePlayer(You)) filter.
+// Entry payments and casting payments need separate adapters.
 //
 // [LimitAttackDeclarations] and [LimitBlockDeclarations] limit one declaration.
 // The lowest active limit applies. Zero permits no declaration.
@@ -200,8 +209,8 @@
 // exile payments use the same movement service. Copies and clones keep their
 // player frames and zones separate. Waiting queries retain explicit source reads
 // without movement. RON accepts EachCardInGraveyards with one InAPlayersGraveyard
-// and SinglePlayer reference in resolving Exile with no modifiers. Saved plural
-// sacrifice results, entry payments and multi-graveyard sets need adapters.
+// and SinglePlayer reference in resolving Exile with no modifiers. Entry payments
+// and multi-graveyard player sets need adapters.
 //
 // [SacrificeAnyNumberAsEnters] offers a bounded permanent choice before entry.
 // The controller can sacrifice only present matching visits they control.

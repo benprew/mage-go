@@ -22,6 +22,27 @@ func compileGroupedExile(n Node, remaining []Node, ctx scope) (effectFactory, er
 	if err != nil {
 		return nil, err
 	}
+	for _, subject := range subjects {
+		if !savedGraveyardExileSubject(subject) {
+			continue
+		}
+		first, err := compileSavedGraveyardExile(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		body, err := compileActionSequence(remaining, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			effects := make([]mage.Effect, 0, 1+len(body))
+			effects = append(effects, first(bindings))
+			for _, build := range body {
+				effects = append(effects, build(bindings))
+			}
+			return mage.Sequence(effects...)
+		}, nil
+	}
 	if len(subjects) < 2 {
 		return nil, problem(n, "grouped exile requires at least two subject groups")
 	}

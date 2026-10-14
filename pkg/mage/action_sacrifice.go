@@ -77,7 +77,7 @@ func (g *Game) performSacrifice(result *SacrificePermanentAction) bool {
 	g.RemoveFromBattlefield(perm)
 	selfTriggers := g.LKIAbilities(permID)
 
-	if result.destination == ZoneExile {
+	if result.destination == ZoneExile && !isToken {
 		g.ExileCard(card, result.exileSource)
 	} else if !isToken {
 		if p := g.GetPlayer(owner); p != nil {

@@ -927,6 +927,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 		if n.Name == "EachCardInGraveyards" && len(n.Args) == 1 {
+			if n.Args[0].Name == "ThePermanentsSacrificedThisWay" {
+				return "sacrifice_payment_reference"
+			}
 			return "graveyard_card_filter"
 		}
 		if n.Name == "Spell" && len(n.Args) == 1 {
@@ -1634,6 +1637,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "TotalPowerOfPermanents" && len(n.Args) == 1 {
+			return "sacrifice_payment_reference"
+		}
 		if n.Name == "TheLowestNumberOfCardsInHandAmongPlayers" && len(n.Args) == 1 {
 			return "player_filter"
 		}

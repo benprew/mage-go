@@ -5141,8 +5141,9 @@ source when it targets its owner's graveyard. See `TestRONGraveyardBatchExile*`
 and `TestGraveyardBatchExile*`.
 
 Multiple graveyard players, characteristic filters, exile modifiers, entry and
-payment contexts, `NumberCardsInGraveyards`, and saved plural sacrifice subjects
-require separate adapters. Existing singular graveyard exile stays supported.
+payment contexts and `NumberCardsInGraveyards` require separate adapters.
+Saved plural sacrifice subjects have the separate consumer contract below.
+Existing singular graveyard exile stays supported.
 
 ## RON singular graveyard exile and source-death cards
 
@@ -16059,18 +16060,16 @@ other declaration contexts reject. Each factory allocates separate typed power
 and card-result bindings.
 
 The engine saves payment-time total power and exact resulting public-zone visits.
-This slice establishes the producer only. `TotalPowerOfPermanents(
-ThePermanentsSacrificedThisWay)` and its graveyard-card consumer still need RON
-adapters. Sword of the Ages therefore remains rejected. Its complete record also
-omits exile of the artifact itself, which local `data/LEG.json` Oracle text
-requires. No source correction is part of this producer slice.
+The saved plural sacrifice consumer contract below now supplies the power and
+card consumers. Sword of the Ages has its omitted artifact exile corrected
+against local `data/LEG.json` Oracle text and has complete RON gameplay tests.
 
 `TestRONPluralSacrificeCostGameplay` executes the unchanged payment and entry
 rules from Sword's RON record with a test-only draw body. This proves the producer
 and activation timing, not the complete card. `TestRONPluralSacrificeCostInvalid`,
 `TestRONPluralSacrificeCostSwordBoundary` and
-`TestRONPluralSacrificeCostFactoryAndAtomicLoad` cover rejection, the remaining
-consumer boundary, factory identities, inventory roles and atomic loading.
+`TestRONPluralSacrificeCostFactoryAndAtomicLoad` cover rejection, complete-card
+compilation, factory identities, inventory roles and atomic loading.
 
 ### RON combined source and plural sacrifice payment
 
@@ -16091,12 +16090,34 @@ not include the mandatory source. The transaction locks all visits and prevents
 partial live payment on failure. Existing source-card operands can read the
 separate binding; this change adds no new consumer spelling.
 
-Sword of the Ages uses this combined payment. Its complete RON record still
-rejects at `TotalPowerOfPermanents`; the saved power and graveyard consumers and
-artifact-exile source correction remain pending. Tests use its real entry and
-payment AST with a test-only draw body. This is payment gameplay evidence, not
-complete-card gameplay coverage. `TestRONSourcePluralSacrificeCostGameplay`,
+Sword of the Ages uses this combined payment and the saved consumers below.
+The producer tests use its real entry and payment AST with a test-only draw body.
+Complete-card gameplay has separate coverage in `TestRONPluralSacrificeResult*`.
+`TestRONSourcePluralSacrificeCostGameplay`,
 `TestRONSourcePluralSacrificeCostInvalid` and
 `TestRONSourcePluralSacrificeCostFactoryAndNestedCosts` cover choice timing,
 entry timing, declaration rejection, zero choices, nested lists, fresh factories
 and clone isolation.
+
+### RON saved plural sacrifice consumers
+
+`TotalPowerOfPermanents(ThePermanentsSacrificedThisWay)` reads the optional
+activation sacrifice group's saved total power. It excludes a separately paid
+source. Power includes tokens and payment-time continuous effects. Later
+characteristic changes, movement and other activations do not change the result.
+The existing resolving numeric consumers can use this value, including damage.
+
+`Exile([EachCardInGraveyards(ThePermanentsSacrificedThisWay)], [])` selects only
+that group's saved current graveyard visits. A grouped instruction can also
+include `CardInGraveyards(ThisPermanent)` after exactly one source payment.
+The source reference uses its separate paid card binding. These forms accept
+no exile modifiers. Unbound, malformed, entry and replacement-body result reads
+reject. Spell and entry payment producers remain separate unsupported forms.
+
+Lowering uses `FromNumber`, `FromCards`, `FromCard`, `SingletonCard(CardRef)`
+and `ExileGraveyardCards(...CardSet)`. The latter selects all groups before
+movement, removes duplicate subjects and moves all owners' cards before events.
+Returned cards cannot supply an old visit. Already exiled replacement results
+are unchanged. Tokens supply power but no cards. Copies, clones and delayed
+bodies retain separate payment frames. Sword of the Ages now uses the grouped
+source and creature exile form, as required by its Oracle text.

@@ -21355,3 +21355,38 @@ static power bonus, separate owners, animated source exclusion from the optional
 subset, nonactive-player activation, saved visits, cancellation of either group,
 replacements, source/subject return and phasing, stack copies and game clones.
 RON evidence and the complete-card boundary are documented in dsl-reference.md.
+
+## Saved graveyard-card exile groups
+
+`SingletonCard(card CardRef) CardSet` adapts a typed singular card reference.
+`ExileGraveyardCards(subjects ...CardSet) ResolvingEffect` selects the valid
+current card references, retains only graveyard visits, and uses one shared
+movement batch across all owners. All selected cards move to face-up exile
+before any zone event. Duplicate groups move a card once. Each affected
+player's graveyard departure event contains that player's completed count.
+Cards added by event observations cannot enter the saved batch. Attribution
+uses the resolving source. Ownership stays unchanged.
+
+Existing `ExileGraveyardFor` and its payment callers use the same movement
+service while retaining their explicit single-player boundary. Saved references
+cannot follow departure and return. Saved exile visits have no graveyard move.
+Definition validation rejects missing subjects, nil references and unbound
+results. The effect has no choices and creates no new result storage.
+
+RON lowers optional sacrifice power through the existing NumberBinding and
+saved card groups through CardsBinding. A separately paid source uses
+CardBinding. Costs save these facts before observations; resolution, copies,
+clones and delayed bodies use their own existing frames. The mandatory source
+never adds power to the optional group. Tokens add power but supply no cards.
+
+Rules: CR 400.7j permits an effect to find its payment's first public-zone
+objects; CR 400.7 ends that identity on later movement. CR 608.2b stops the
+entire instruction when its only target is illegal. CR 608.2c and 608.2f require
+ordered instructions and simultaneous plural movement. CR 608.2h–i supplies
+source LKI and saved information about the prior sacrifice.
+
+Evidence: `TestSavedGraveyardExileBatch`, `Definition`,
+`PaymentReplacement`; RON `TestRONPluralSacrificeResultSword`,
+`IdentityAndLegality`, `Frames`, `Invalid`. Existing graveyard-batch and plural
+payment suites retain rollback, phasing, replacement ordering and simultaneous
+sacrifice LKI coverage.

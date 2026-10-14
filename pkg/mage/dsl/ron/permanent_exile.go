@@ -14,6 +14,9 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n.Args[0], "exile requires one subject")
 	}
 	subject := subjects[0]
+	if savedGraveyardExileSubject(subject) {
+		return compileSavedGraveyardExile(n, ctx)
+	}
 	if subject.Name == "EachCardInGraveyards" {
 		return compileGraveyardBatchExile(subject, n.Args[1], ctx)
 	}

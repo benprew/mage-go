@@ -46,22 +46,14 @@ func (g *Game) exileGraveyardVisitsTogether(playerID uuid.UUID, selected []captu
 	if player == nil {
 		return
 	}
-	removed := make([]Card, 0, len(selected))
+	var owned []capturedCard
 	for _, subject := range selected {
-		if subject.zone != core.ZoneGraveyard || subject.visit == uuid.Nil || g.graveyardVisit(subject.id) != subject.visit {
-			continue
+		for _, card := range player.Graveyard() {
+			if card.ID() == subject.id {
+				owned = append(owned, subject)
+				break
+			}
 		}
-		if card, ok := player.RemoveFromGraveyard(subject.id); ok {
-			removed = append(removed, card)
-		}
 	}
-	for _, card := range removed {
-		g.ExileCard(card, sourceID)
-	}
-	for _, card := range removed {
-		g.FireEvent(core.GameEvent{Type: core.EvtZoneChange, SourceID: card.ID(), PlayerID: playerID, FromZone: core.ZoneGraveyard, ToZone: core.ZoneExile})
-	}
-	if len(removed) > 0 {
-		g.FireEvent(core.GameEvent{Type: core.EvtCardsLeftGraveyard, PlayerID: playerID, Amount: len(removed)})
-	}
+	g.exileSelectedGraveyardVisitsTogether(owned, sourceID)
 }

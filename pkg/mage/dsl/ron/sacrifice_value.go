@@ -15,6 +15,17 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "TotalPowerOfPermanents" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if err := validatePluralSacrificeResult(n.Args[0], ctx); err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.pluralSacrifices[ctx.pluralSacrifice].power)
+		}, nil
+	}
 	if n.Name == "TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn" {
 		return compileTurnStartUntappedCount(n, ctx)
 	}
