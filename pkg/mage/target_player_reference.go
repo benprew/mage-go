@@ -23,11 +23,6 @@ func (o targetControlledByOption) inspectDefinition() definitionNode {
 	return n
 }
 
-func capturedTriggerTargetPlayers(pt *pendingTrigger) map[*PlayerBinding]uuid.UUID {
-	players, _ := capturedTriggerTargetFacts(pt)
-	return players
-}
-
 func capturedTriggerTargetFacts(pt *pendingTrigger) (players map[*PlayerBinding]uuid.UUID, permanents map[*PermanentBinding]capturedPermanent) {
 	// Use the event snapshots without running the ability or its payment.
 	obj := &StackObject{}

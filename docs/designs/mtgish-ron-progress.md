@@ -6,17 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **886 accepted / 100 rejected names**
-(986 total), **2,255 compiled / 190 rejected records** (2,445 total).
-The latest slice is **NEXT-TURN-ATTACK-WINDOW**. CantAttackDuringNextTurn saves
-one exact subject and one player at resolution. Shared turn entry starts the
-rule before that player's next actual turn; cleanup ends it. Skipped turns do
-not consume the window; extra turns do. Return cannot supply the saved subject.
-RON accepts one CantAttack with DuringPlayersNextTurn and typed references.
-Wall of Dust now compiles unchanged and has complete RON gameplay evidence.
-Tests cover timing, native combat, control, return, phasing, source loss, waiting
-LKI, rollback, copies, independent bindings and clones. Estimated and actual
-gain: **one unique name / one record**. Complete-card gameplay gains Wall of Dust.
+Latest measured result (2026-10-14): **887 accepted / 99 rejected names**
+(986 total), **2,256 compiled / 189 rejected records** (2,445 total).
+The latest slice is **COMBAT-PAIR-SET-CONDITION**. Combat-pair TriggerI checks
+fixed minimum counts and absence over live blocking sets at detection and
+resolution. Separate event facts supply each saved subject and opponent.
+Wall of Caltrops compiles unchanged and has complete RON gameplay evidence.
+Tests cover native combat, both checks, current subtypes, exact visits, phasing,
+source loss/control, copies, independent pending events, factories and clones.
+Estimated and actual gain: **one unique name / one record**. Gameplay gains
+Wall of Caltrops; existing Banding damage-allocation contracts remain in use.
 No RON source changed. All required checks pass; final lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -26,15 +25,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Intervening combat-pair conditions and live blocking sets.** Wall of
-   Caltrops needs event-time/resolution checks and blocker count/absence predicates.
-   Compare shared condition demand before selecting the complete contract.
-2. **Plural activation sacrifice with saved facts and card visits.** Sword of the
-   Ages needs total power, exact completed sacrifice visits and graveyard exile.
+1. **Plural activation sacrifice with saved facts and card visits.** Sword of
+   the Ages needs total power, exact completed sacrifice visits and graveyard exile.
    Compare shared plural payment/result demand and keep the complete chain together.
-3. **Entry payments and saved results.** Compare Nameless Race's bounded life
+2. **Entry payments and saved results.** Compare Nameless Race's bounded life
    payment with Frankenstein's Monster's X graveyard payment and counter choices.
    Keep their different producers separate and select a ready prerequisite.
+3. **Optional bounded basic-land library search.** Reassess Land Tax's existing
+   upkeep condition and search service before adding its resolving MayAction body.
+   Keep more complex search/payment/result procedures separate.
 
 ## Dependencies and source blockers
 
@@ -11330,3 +11329,137 @@ docs/engine-rules-contracts.md and this ledger.
    Keep different producers separate and implement a dependency-ready contract.
 
 Stop after this completed slice. All migration completion gates remain unfinished.
+
+## 2026-10-14 — COMBAT-PAIR-SET-CONDITION
+
+### Selection and baseline
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 for
+expected collection rejection: 2,255 compiled / 190 rejected records,
+886 accepted / 100 rejected names. No build, test or environment failure.
+Read the design, engine reference, targeted vocabulary entries and complete
+records for Wall of Caltrops, Sword of the Ages, Wood Elemental, Nameless Race
+and Frankenstein's Monster. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Intervening combat-pair set conditions, ranked #1 | Wall of Caltrops | 1 name / 1 record | Existing pair bindings and live combat sets are ready. Pure count/absence conditions extend shared set services to event-time and resolution checks | Small |
+| Plural activation sacrifice facts, ranked #2 | Sword of the Ages; Wood Elemental already supported in entry context | 0 for payment alone; 1 after the complete chain | Needs completed sacrifice results, payment-time total power, exact graveyard visits and exile consumption. Shared plural results can support later payment procedures | Large |
+| Entry payments/results, ranked #3 | Nameless Race; Frankenstein's Monster | 1 per separate complete producer; 0 for a generic result scaffold | Life bounds/retained P/T and X graveyard payment/counter combinations are different contracts. Shared entry transactions help both, but their producers cannot be merged | Large |
+
+Selected dependency-ready candidate #1. It finishes one unchanged card with the
+largest credible full-card gain for this bounded effort. The other ranked
+candidates each need several independent contracts; neither supplies a ready
+multi-card unlock from one small payment adapter. This is one shared condition
+slice, with no subsequent slice started.
+
+### Contract and reuse boundary
+
+RON supports battlefield `TriggerI(event, condition, body)` for the existing
+source/host singular block, becomes-blocked-by and exact two-direction union.
+Conditions accept nonempty nested And/Or and these exact leaves:
+`NumPermanentsPassFilter(GreaterThanOrEqualTo(Integer(n)), properties, relation)`
+with fixed n >= 0, and `NoPermanentsPassFilter(properties, relation)`.
+Relations are IsBlockingAttacker(permanentRef) and
+IsBlockedByDefender(permanentRef). Property collections accept supported resolving
+property filters, nonempty And/Or and Other(permanentRef). Creature subtype
+families are checked. Unbound operands, other comparisons, empty groups and
+unsupported contexts remain declaration errors.
+
+Engine signatures:
+`PermanentSetCountAtLeast(subjects PermanentSet, minimum int) StateCondition`;
+`PermanentSetIsEmpty(subjects PermanentSet) StateCondition`.
+Definition checks reject nil sets, negative minima and unbound saved operands.
+Queries read current membership without choices or mutation. StateContext now
+carries permanent event facts. WithInterveningIf supplies detection snapshots;
+IfState supplies the resolving frame. A separate query view cannot replace or
+inherit the live permanent-binding frame. Copies and clones keep their own facts.
+Waiting delayed queries retain explicit source operands without evaluating them.
+
+Reused pair event snapshots/aliases, typed refs, WithInterveningIf, pending/stack
+lifecycle, BlockersOf/BlockedAttackersOf, set union/intersection/difference,
+property filters, temporary keyword layers and shared clone/copy services.
+RON owns spelling, declaration validation and per-factory binding allocation;
+mage owns pure queries and event/resolution mechanics. CR 603.4, 509.1g–i,
+509.2a, 400.7 and 702.26 supply timing/identity boundaries. LKI cannot supply
+combat membership or an actionable returned source. Source loss does not cancel
+a pending condition. New current blockers can satisfy its resolution check.
+No new cost, replacement-order, APNAP or simultaneous-movement service.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial engine tests failed on the undefined count/absence APIs. Corrected one
+test's existing AddAttackerIncarnation call signature, then reconfirmed the
+expected undefined-signature failure before implementation. The real RON test
+failed at LEG:290:171 on the unsupported intervening combat event. Expanded
+invalid/inventory tests exposed missing subtype-family and nested role checks;
+both were fixed without weakening assertions.
+
+- **Wall of Caltrops -> TestRONCombatPairConditionNative**: complete unchanged
+  record, native blockers, required other Wall, no non-Wall blockers, unrelated
+  Walls, printed Defender/2/1, untargeted shrouded attacker, damage and expiry.
+  Existing TestBandIncomingDamage* covers Banding damage assignment.
+- **Wall of Caltrops -> Rechecks**: event-time and resolution conditions,
+  departure before placement, current subtype changes, new/removed blockers,
+  returned attacker/blocker/source, phase cycles, source control/loss, ability
+  removal, copied stack abilities and pending clones.
+- **Wall of Caltrops -> IndependentInstances**: separate factory/event subjects
+  and independent clone membership changes.
+- **Wall of Caltrops -> CastingLoadAndInventory**: printed 1W payment, failed
+  cast rollback, successful entry, strict reprints, atomic invalid load rejection,
+  factory validation and count/relation inventory roles.
+- **Invalid / DirectionsAndHost**: invalid shapes, scopes and creature families;
+  synthetic both directions, union, nested Or and saved host after reattachment.
+- **TestPermanentSetConditionIntervening / Declarations / QueryFrame**:
+  engine snapshots, membership/subtype changes, return, phase cycles, source
+  departure, copies/clones, nil/negative/unbound definitions, count boundaries,
+  empty/nonempty sets and isolated pure query frames.
+- **WaitingSource / IndependentEvents**: waiting source LKI without actionable
+  membership and two pending events from one source with separate combat groups.
+
+### Validation and measured result
+
+Final checks passed in required fast-fail order:
+`go test ./pkg/mage/dsl/ron -run TestRONCombatPairCondition -count=1`;
+focused engine set-condition, pair-subject and intervening regressions;
+`make build`; `go vet ./...`; `go test ./pkg/mage/... -short -count=1`;
+`make test`; `make lint` (0 issues); `git diff --check`.
+The first lint run found a test parameter shadowing copy and an unused private
+player-only snapshot wrapper. Renamed the parameter; audited the whole repository
+for capturedTriggerTargetPlayers and removed its definition. Only historical
+ledger references remain; the shared capturedTriggerTargetFacts service remains.
+Reviewed formatting and changes; no unrelated file changed. Reran all preceding
+checks and lint after these fixes. Post-lint `go test ./... -short -count=1` passed.
+
+Final loader exit 1 remains expected atomic collection rejection:
+**2,256 compiled / 189 rejected records; 887 accepted / 99 rejected names**.
+Only Wall of Caltrops' LEG.lines.ron:290:171 diagnostic disappeared. No diagnostic
+was added or changed, and no accepted record was lost. Estimated and actual
+compilation gain match: **one unique name / one record**. Complete-card RON
+behavior separately gains Wall of Caltrops.
+
+Local data/LEG.json Oracle text agrees with this complete record. No source defect
+was corrected; all twelve RON SHA-256 values still match the vocabulary snapshot.
+No snapshot refresh is needed. Runtime cutover, Go-card deletion and unused DSL
+removal remain gated. No DSL function or production card definition was removed.
+The implement-engine skill supplied engine contract/test guidance; user scope
+supplied RON lowering, gameplay, ledger and the authorized single commit.
+
+Changed files: mage/permanent_set_condition.go and its tests, composable_conditions.go,
+composable_events.go, target_player_reference.go, waiting_delayed_branch.go, doc.go;
+ron/combat_pair_condition.go and its tests, combat_pair.go, storage_land.go,
+inventory.go and its tests, definition_plan_test.go, numeric_consumers_test.go,
+matching_permanent_exile_cost_test.go (unsupported fixture now Sword of the Ages);
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+
+### Ranked next candidates
+
+1. **Plural activation sacrifice facts and visits**: Sword of the Ages needs the
+   complete saved power, sacrifice and graveyard-exile chain; reassess shared demand.
+2. **Entry payments/results**: compare Nameless Race and Frankenstein's Monster,
+   keeping their different producers separate and checking entry dependencies.
+3. **Optional bounded basic-land search**: Land Tax's existing upkeep condition
+   and search service may support a small resolving MayAction adapter.
+
+Stop after this slice. All migration completion gates remain unfinished.

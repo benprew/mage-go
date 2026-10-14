@@ -3349,8 +3349,12 @@ func (o interveningIfOption) applyTrigger(t *GenericTriggered) {
 		if before != nil && !before(evt, g, source, controller) {
 			return false
 		}
-		players := capturedTriggerTargetPlayers(&pendingTrigger{ability: t, event: evt, sourceID: source, controller: controller})
-		state := StateContext{SourceID: source, ControllerID: controller, players: players}
+		pending := &pendingTrigger{ability: t, event: evt, sourceID: source, controller: controller}
+		if game, ok := g.(*Game); ok {
+			pending.eventCaptures = captureDetectedTriggerEvent(t, evt, g, game, source)
+		}
+		players, permanents := capturedTriggerTargetFacts(pending)
+		state := StateContext{SourceID: source, ControllerID: controller, players: players, permanents: permanents}
 		if game, ok := g.(*Game); ok {
 			state.cards = game.sourceZoneCardFacts(t, source)
 		}

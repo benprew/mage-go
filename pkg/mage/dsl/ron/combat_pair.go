@@ -3,7 +3,11 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error) {
-	if event.Name == "Or" && len(event.Args) == 1 && event.Args[0].Kind == List && len(event.Args[0].Args) == 2 {
+	return compileCombatPairTriggerWithCondition(event, body, ctx, nil)
+}
+
+func compileCombatPairTriggerWithCondition(event, body Node, ctx scope, conditionNode *Node) (optionFactory, error) {
+	if conditionNode == nil && event.Name == "Or" && len(event.Args) == 1 && event.Args[0].Kind == List && len(event.Args[0].Args) == 2 {
 		first, second := event.Args[0].Args[0], event.Args[0].Args[1]
 		if first.Name == "WhenACreatureAttacks" || second.Name == "WhenACreatureAttacks" {
 			return compileHostCombatTrigger(event, body, ctx)
@@ -19,6 +23,13 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 	name, ref, filter, union := pair.name, pair.subject, pair.filter, pair.union
 	ctx.combatOpponent = &permanentEventPlan{name: name}
 	ctx.combatSubject = &permanentEventPlan{name: "CombatSubject@" + event.Position.String()}
+	var condition func(instanceBindings) mage.StateCondition
+	if conditionNode != nil {
+		condition, err = compileCombatPairCondition(*conditionNode, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
 		return nil, err
@@ -26,7 +37,8 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 	return func() mage.CardOption {
 		opponent := mage.BindPermanent(name)
 		savedSubject := mage.BindPermanent(ctx.combatSubject.name)
-		actions := plan.buildWithBindings(instanceBindings{tapped: map[*permanentEventPlan]*mage.PermanentBinding{ctx.combatOpponent: opponent, ctx.combatSubject: savedSubject}})
+		bindings := instanceBindings{tapped: map[*permanentEventPlan]*mage.PermanentBinding{ctx.combatOpponent: opponent, ctx.combatSubject: savedSubject}}
+		actions := plan.buildWithBindings(bindings)
 		subject := ref.build(instanceBindings{})
 		pattern := mage.BlocksOrBecomesBlockedByCreatureMatching(subject, filter)
 		if !union {
@@ -40,7 +52,11 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 		if ctx.combatSubject.referenced {
 			pattern = pattern.WithSubject(savedSubject)
 		}
-		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		var options []mage.TriggerOption
+		if condition != nil {
+			options = append(options, mage.WithInterveningIf(condition(bindings)))
+		}
+		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
 		trigger.WithLayeredCombatPairTextRevision()
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))

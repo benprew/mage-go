@@ -15737,3 +15737,31 @@ This window is distinct from `UntilPlayersNextTurn`, which ends at turn entry.
 Other operations with this duration and other declaration contexts reject.
 See `TestNextTurnAttackWindow*` and `TestRONNextTurnAttackWindow*` for the contract
 and complete Wall of Dust gameplay mapping.
+
+## RON intervening combat-pair set conditions
+
+Battlefield `TriggerI(event, condition, body)` accepts the existing singular
+source/host `WhenACreatureBlocksACreature`,
+`WhenACreatureBecomesBlockedByACreature`, and their exact two-direction union.
+The event saves the watched subject and opponent in separate instance bindings.
+`Trigger_ThatCreature`/`Trigger_ThatPermanent` name the watched visit; the
+opponent uses the existing direction-specific reference.
+
+Conditions accept nonempty nested `And`/`Or` lists and these leaves:
+
+- `NumPermanentsPassFilter(GreaterThanOrEqualTo(Integer(n)), properties, relation)`,
+  with a fixed nonnegative integer.
+- `NoPermanentsPassFilter(properties, relation)`.
+
+`relation` is `IsBlockingAttacker(permanentRef)` or
+`IsBlockedByDefender(permanentRef)`. `properties` accepts supported resolving
+permanent property filters, nonempty `And`/`Or`, and `Other(permanentRef)`.
+References must be bound in this event context. Creature subtype declarations
+must use the creature family. Other comparisons, battlefield-zone count leaves
+in this context, and unbound target/payment/choice references remain rejected.
+
+The engine APIs are `PermanentSetCountAtLeast(subjects PermanentSet, minimum int)
+StateCondition` and `PermanentSetIsEmpty(subjects PermanentSet) StateCondition`.
+Both read current membership without choices or mutation. Detection supplies
+the event's saved permanent facts in a separate query frame. Resolution uses the
+pending ability's own facts. `WithInterveningIf` checks at both times.

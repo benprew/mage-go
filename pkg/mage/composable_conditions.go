@@ -772,6 +772,7 @@ type StateCondition interface {
 
 // StateContext identifies the source and controller for a condition check.
 type StateContext struct {
+	permanents        map[*PermanentBinding]capturedPermanent
 	cards             map[*CardBinding]capturedCard
 	players           map[*PlayerBinding]uuid.UUID
 	SourceID          uuid.UUID
@@ -1267,7 +1268,7 @@ func (e *stateBranch) Text() string {
 }
 func (e *stateBranch) Properties() EffectProperties { return e.effect.Properties() }
 func (e *stateBranch) Apply(ctx *EffectContext) error {
-	if e.condition.checkState(ctx.Game, StateContext{SourceID: ctx.SourceID, ControllerID: ctx.Controller, SourceIncarnation: ctx.sourceIncarnation, players: ctx.Game.resolution.playerBindings, cards: ctx.Game.resolution.cardBindings}) {
+	if e.condition.checkState(ctx.Game, StateContext{SourceID: ctx.SourceID, ControllerID: ctx.Controller, SourceIncarnation: ctx.sourceIncarnation, players: ctx.Game.resolution.playerBindings, cards: ctx.Game.resolution.cardBindings, permanents: ctx.Game.resolution.permanentBindings}) {
 		return e.effect.Apply(ctx)
 	}
 	return nil

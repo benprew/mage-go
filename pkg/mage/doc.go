@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentSetCountAtLeast] and [PermanentSetIsEmpty] read current membership.
+// Intervening conditions receive event permanent facts before detection and
+// separate saved facts at resolution. Queries keep the live frame unchanged.
+// Combat sets require present visits; departure information cannot supply them.
+// RON combat-pair TriggerI accepts nonempty And/Or conditions, fixed nonnegative
+// GreaterThanOrEqualTo counts and absence checks over either blocking relation.
+// Property collections accept Other with a typed source, host or event reference.
+// Copies, clones and factory instances keep separate saved event subjects.
+// This completes Wall of Caltrops. Other comparisons and event families require
+// separate adapters.
+//
 // Combat-pair patterns accept WithSubject to save the watched battlefield visit.
 // WithOpponent can save the opposing visit in a separate binding. Detection
 // precedes trigger placement. Reattachment cannot change either saved subject.
@@ -7,7 +18,7 @@
 // Pending events, copies, clones and nested delays keep separate saved frames.
 // RON ordinary combat-pair TriggerA bodies accept Trigger_ThatCreature and
 // Trigger_ThatPermanent for the watched visit. Shared destruction results and
-// delayed counters complete Infinite Authority. Intervening pair conditions,
+// delayed counters complete Infinite Authority. Other intervening conditions,
 // temporary rule references and subscription subjects need separate adapters.
 //
 // [core.P2P2] is one +2/+2 counter. Each counter adds two to power and

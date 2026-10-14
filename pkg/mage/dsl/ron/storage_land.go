@@ -74,6 +74,9 @@ func compileTappedUpkeep(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "WhenACreatureBlocksACreature" || event.Name == "WhenACreatureBecomesBlockedByACreature" || event.Name == "Or" {
+		return compileCombatPairTriggerWithCondition(event, n.Args[2], ctx, &n.Args[1])
+	}
 	if event.Name == "WhenAPermanentEntersTheBattlefield" || event.Name == "WhenAPermanentIsPutIntoAPlayersGraveyard" {
 		return compileZoneIntervening(n, ctx)
 	}

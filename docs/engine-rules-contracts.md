@@ -20757,7 +20757,8 @@ unused subjects do not add entries to stack source queries. Existing cards keep
 their previous explicit source lists. Ordinary battlefield combat-pair `TriggerA` bodies expose
 `Trigger_ThatCreature` and `Trigger_ThatPermanent` for this producer. Existing
 opponent aliases remain distinct. Supported nested delayed step bodies keep the
-same subject. Intervening pair events, watched subjects of temporary subscriptions,
+same subject. Intervening pair conditions now use the set-count adapter below.
+Other event conditions, watched subjects of temporary subscriptions,
 and temporary combat-rule references require their separate adapters.
 New pair subscriptions clear the enclosing pair subject before body lowering.
 Existing nested unblocked and death producers take precedence for their local
@@ -20835,3 +20836,50 @@ independent factories and pending events, strict atomic loading, invalid syntax
 and inventory roles. Synthetic resolving source, host and target consumers
 retain the same typed reference services. Compilation and full-card gameplay
 each gain Wall of Dust, one unique name and one record.
+
+## Intervening combat-pair set conditions
+
+`PermanentSetCountAtLeast(PermanentSet, int) StateCondition` checks a fixed
+nonnegative minimum; `PermanentSetIsEmpty(PermanentSet) StateCondition` checks
+zero members. Definition validation rejects absent sets, negative minima and
+unbound saved operands. Typed sets retain their own identity, membership and
+phasing contracts. Set difference excludes an exact present visit; current
+characteristics supply property filters. There is no LKI combat membership.
+
+`WithInterveningIf` now supplies detected permanent facts alongside player/card
+facts. The condition query uses a shallow game view with a separate permanent
+binding frame. It cannot overwrite or inherit another resolving event's frame.
+Pending/copy resolution passes its own permanent facts to `IfState`. The shared
+event service supplies source and opposing visits before trigger placement.
+CR 603.4 requires checks at detection and resolution. CR 509.1g–i and 509.2a require
+the complete declared blocker set before detection. CR 400.7 and 702.26 retain
+existing departure and phasing boundaries. Return cannot supply a saved attacker;
+new current blockers can satisfy a live count after a successful detection.
+Source departure does not cancel the pending condition. Actions still require
+the saved source visit. Phase cycles remove combat membership.
+
+RON supports ordinary battlefield combat-pair `TriggerI` with fixed
+GreaterThanOrEqualTo counts, absence leaves, and nonempty And/Or conditions.
+Property collections accept supported property filters, And/Or, and Other with
+a typed source/host/event reference. Other contexts remain separate adapters.
+The existing temporary keyword service applies Banding through cleanup.
+Payments, APNAP ordering, replacement ordering and simultaneous movements keep
+their existing contracts; this slice introduces no new payment or movement.
+Waiting delayed source inspection includes explicit operands of these conditions
+without evaluating membership or granting an actionable departure subject.
+
+Evidence: `TestPermanentSetConditionIntervening`, `Declarations`, `QueryFrame`
+and `WaitingSource` cover saved event facts, minimum/empty boundaries, invalid
+operands, live membership changes, exact visits, phasing, source departure,
+copies, clone isolation and pure queries. `IndependentEvents` checks two
+pending events from one source against separate current combat groups.
+`TestRONCombatPairConditionNative`
+covers complete Wall of Caltrops, native blockers, printed Defender/P/T, untargeted
+shrouded attackers, required other Walls, excluded non-Walls, combat damage and
+cleanup expiry. `Rechecks` covers detection/resolution changes, departure before
+placement, returned attackers/blockers/source, phasing, control, ability loss,
+copies and pending clones. `IndependentInstances` keeps separate event and
+factory bindings. `DirectionsAndHost` covers both directions, union, nested
+conditions and attachment changes. `Invalid` and `CastingLoadAndInventory` cover
+source diagnostics, typed scopes, printed casting payment/rollback, factory
+validation, strict reprint loading and atomic rejection, and semantic roles.

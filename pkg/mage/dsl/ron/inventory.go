@@ -453,6 +453,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "combat_history_filter"
 		}
 	case "trigger_condition":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "NumPermanentsPassFilter" && len(n.Args) == 3 {
+			return []string{"value_comparison", "permanent_filter", "permanent_filter"}[index]
+		}
 		if n.Name == "CardIsInPlayersGraveyardWithANumberOfCardsAboveIt" && len(n.Args) == 4 {
 			return []string{"card_reference", "player_reference", "value_comparison", "card_filter"}[index]
 		}
@@ -475,6 +481,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_reference", "combat_history_filter"}[index]
 		}
 		if n.Name == "NoPermanentsPassFilter" && len(n.Args) == 2 {
+			if n.Args[1].Name == "IsBlockingAttacker" || n.Args[1].Name == "IsBlockedByDefender" {
+				return "permanent_filter"
+			}
 			return []string{"permanent_filter", "zone"}[index]
 		}
 		if n.Name == "PermanentPassesFilter" && len(n.Args) == 2 {

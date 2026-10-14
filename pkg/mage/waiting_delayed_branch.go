@@ -45,6 +45,8 @@ func stateConditionReadsSourcePermanent(condition StateCondition) bool {
 		sourceAttackedOrBlockedThisCombatCondition, sourceAttackHistoryCondition,
 		sourceDamagedOpponentThisTurnCondition, sourceCounterCondition:
 		return true
+	case permanentSetCountCondition:
+		return permanentSetReadsSourcePermanent(c.subjects)
 	case permanentTappedCondition:
 		return permanentRefReadsSourcePermanent(c.subject)
 	case permanentAttackingCondition:
