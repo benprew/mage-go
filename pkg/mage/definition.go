@@ -287,7 +287,7 @@ func describeDefinition(v any) definitionNode {
 		}
 	case *GenericTriggered:
 		if e.sourceCardZoneOptions > 0 {
-			if e.sourceCardZoneOptions != 1 || len(e.zones) != 0 || e.IsStateTrigger() || e.interveningDefinition != nil || len(e.targets) != 0 || len(e.modes) != 0 {
+			if e.sourceCardZoneOptions != 1 || len(e.zones) != 0 || e.IsStateTrigger() || len(e.targets) != 0 || len(e.modes) != 0 {
 				n.problem = "source card event requires one zone and an ordinary event without targets or modes"
 			}
 			n.children = append(n.children, definitionEdge{"source-card", sourceCardZoneOption{e.sourceZone, e.sourceCardBinding}})

@@ -19290,9 +19290,9 @@ No new payment, replacement-order or simultaneous-operation contract is added.
 
 `WithSourceCardInZone(zone core.Zone, source *CardBinding) TriggerOption`
 selects one graveyard or face-up exile source zone. Use it with `WhenEvent`.
-The ordinary event has no targets, modes or intervening-if. Definition validation
+The event has no targets or modes. Definition validation
 rejects invalid/nil bindings, other zones, duplicate zone options, added active
-zones, state events, intervening-if, target declarations, modes and battlefield
+zones, state events, target declarations, modes and battlefield
 source reads. Conditions and effects cannot treat this source as a permanent.
 
 The graveyard holder controls graveyard triggers; the card owner controls exile
@@ -19323,3 +19323,45 @@ hidden exile, source departure/return, immutable detection contexts, separate
 copies/events, pending clones, definition rejection and APNAP order.
 RON `TestRONSourceZoneUpkeep*` adds explicit registry execution, lexical scope,
 atomic rejection, delayed frames and real-record prerequisite projections.
+
+
+## Source-card intervening conditions and ordered graveyard reads
+
+`WithSourceCardInZone` now supports `WithInterveningIf(StateCondition)` on a
+non-state event without targets or modes. CR 603.4 requires a true condition
+at detection and again at resolution. Detection supplies the source card's
+current zone visit and the event player in a separate query frame. It does not
+change the active resolution frame or the ability declaration. Resolution uses
+the queued binding. A departed or returned source cannot supply that visit;
+these conditions do not use LKI (CR 400.7). A false resolution condition stops
+the whole body. Existing unguarded zone events keep their independent effects.
+
+`GraveyardCardHasAtLeastAbove(card CardRef, player PlayerRef, minimum int,
+filter CardFilter) StateCondition` requires a saved `FromCard` reference and a
+nonnegative minimum. It first checks the exact saved visit and player, then
+counts matching cards after that card in the existing graveyard slice. New
+arrivals append at the top (CR 404.1); the source and cards below it do not count.
+A minimum of zero still requires membership in the selected player's graveyard.
+The shared graveyard service owns ordering and simultaneous arrival choices
+(CR 404.2/3). This query does not reorder or move cards.
+
+`CardMatchesFilter(card CardRef, filter CardFilter) StateCondition` checks the
+current card at a saved visit. Both APIs reject target references because these
+condition queries have no target-selection frame. Missing or unwritten bindings
+fail definition validation. Source-zone declarations still reject battlefield
+source reads. Face-down exile cannot arm a trigger, even when its owner can
+inspect the card (CR 603.2f). Exile counter storage is outside this contract.
+
+The existing event captures, pending queue, stack copies and clone services keep
+separate visits and players. `You` remains the effect controller; a copy under
+another controller checks that controller's graveyard. The event player stays
+captured separately. No payment, replacement or simultaneous-movement service
+changes in this slice.
+
+Native `TestSourceZoneCondition*` covers event/resolution checks, exact returns,
+zero counts, mixed card types, hidden exile, both trigger-option orders,
+unchanged query frames and declarations, copied controllers, pending clones and
+invalid definitions. RON `TestRONSourceZoneCondition*` adds factory isolation,
+strict atomic loading, syntax rejection and six Nether Shadow condition tests.
+Those record projections replace only the unsupported body with a life probe;
+they do not establish complete-card gameplay.

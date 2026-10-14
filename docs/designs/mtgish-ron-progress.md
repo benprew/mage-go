@@ -8,20 +8,20 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **860 accepted / 126 rejected names**
 (986 total), **2,207 compiled / 238 rejected records** (2,445 total).
-The latest slice is **SOURCE-ZONE-UPKEEP-LIFETIMES**. Ordinary graveyard/exile
-owner-upkeep events capture exact source-card visits in local resolution frames.
-Engine detection keeps separate ability contexts and now scans public exile.
+The latest slice is **SOURCE-ZONE-INTERVENING-QUERIES**. Owner-upkeep TriggerI
+checks exact source-card visits at detection and resolution. Ordered graveyard
+queries count matching cards above the source without changing the live frame.
 
 Estimated and actual full-card gains are **zero names / zero records**.
-Nether Shadow (six records) and All Hallow's Eve (one record) have source-zone
-prerequisite tests; their complete unchanged records still reject. Queued source
-reads, return identity, copies, pending clones, delayed frames, hidden exile,
-APNAP and declaration boundaries have contract evidence. This is distinct from
-complete-card gameplay. All previously accepted records remain accepted.
+Nether Shadow's unchanged condition has gameplay prerequisite tests in all six
+reprints. The shared frame also supports typed exile-card queries; All Hallow's
+Eve still needs exile counters and dependent operations. Copies, pending clones,
+instance isolation, identity, timing and invalid declarations have evidence.
+Complete-card gameplay coverage is unchanged. All accepted records stay accepted.
 
-The loader still rejects the collection atomically. Source-zone intervening-if,
-ordered graveyard predicates and exile counter operations remain gaps.
-Runtime cutover, Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. Optional source-card return,
+exile counters and other unsupported records remain gaps. Runtime cutover,
+Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
@@ -5362,3 +5362,187 @@ inventory.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and this led
    after all three contexts; medium/high effort.
 
 This run stops after ordinary source-zone upkeep lifetimes.
+
+
+## 2026-10-13 — SOURCE-ZONE-INTERVENING-QUERIES
+
+### Candidate comparison and selection
+
+The working tree was clean at the start. Fresh `make build` and whole RON package
+tests passed. Baseline `go run ./cmd/loadcards -json` exited 1 with 2,207 compiled
+and 238 rejected records: collection rejection, not a build or test failure.
+The baseline JSON was saved outside the repository for diagnostic comparison.
+
+All three latest ranked candidates were evaluated from complete records and
+nested forms, counting reprints once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Source-zone intervening-if query frame and ordered graveyard predicate | Nether Shadow; All Hallow's Eve | 0 from this prerequisite | Nether Shadow needs MayAction exact-source battlefield return. All Hallow's Eve needs spell exile with counters, exile-counter reads/removal and simultaneous graveyard return. One pure exact-visit condition frame enables both source-zone conditions. | Medium |
+| Mandatory entry exile payment/results | Frankenstein's Monster | 0 from payment alone | MustCost transaction, entry result/failure routing, NumberOfCardsOfTypeExiledThisWay and combination-counter choice all need contracts. Entry X and ordered entry operations are ready. Enables one complete entry procedure. | Medium/high |
+| Persistent number choice | Shapeshifter | 1 only after all contexts | ChooseANumberBetween at entry, optional upkeep replacement of that number, and live SetPower/SetToughness reads share per-visit storage. All three need implementation and lifecycle tests. | Medium/high |
+
+Candidate 1 is dependency-ready through the previous exact source-zone visit
+slice. It wins as the shared condition-query prerequisite for two concrete
+names. This run completes one supported context: source-zone owner-upkeep
+intervening conditions with pure current card facts and ordered graveyard reads.
+It does not bundle optional returns or exile counter storage into the slice.
+The exile card-type predicate is a synthetic test of the shared frame; it is
+not an inventory-card unlock or a substitute for the counter predicate.
+
+Full Nether Shadow records were read in LEA, LEB, 2ED, 3ED, CED and CEI.
+All Hallow's Eve (LEG), Frankenstein's Monster (DRK) and Shapeshifter (ATQ)
+were read in full. Targeted vocabulary entries show six ordered graveyard
+condition occurrences and two ExiledCardPassesFilter occurrences on All Hallow's
+Eve, including its nested resolving condition. The latter counter shapes stay
+unsupported. No requirements came from Go card definitions.
+
+### Exact supported shapes, dependencies and engine boundary
+
+RON now accepts either TriggerA(event, ActionList) or
+TriggerI(event, condition, ActionList) within one FromGraveyard or FromExile
+wrapper. The only event remains
+AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)). Supported conditions:
+
+- FromGraveyard: CardIsInPlayersGraveyardWithANumberOfCardsAboveIt(
+  ThisGraveyardCard, You, GreaterThanOrEqualTo(Integer(N)), IsCardtype(T)).
+  N is a fixed nonnegative integer and T is one supported valid card type.
+- FromExile: ExiledCardPassesFilter(ThisExiledCard, IsCardtype(T)).
+  This shape exercises typed current card queries. Counter predicates reject.
+
+Wrong-zone, unbound or tuple-spelled source references, negative/dynamic amounts,
+other comparisons, other filters, other upkeep players, targeted bodies and
+battlefield source reads reject at declaration time. Source-card and upkeep
+player bindings are fresh per factory and local to that wrapper. Instant/sorcery
+zone rules still require a supported complete SpellActions body.
+
+New engine APIs:
+
+- GraveyardCardHasAtLeastAbove(card CardRef, player PlayerRef, minimum int,
+  filter CardFilter) StateCondition.
+- CardMatchesFilter(card CardRef, filter CardFilter) StateCondition.
+
+Both require a saved FromCard reference; targets do not have a detection query
+frame and fail native definition validation. The ordered condition requires
+present exact membership even for minimum zero. Only matching cards after the
+source in the graveyard slice count. Below-source cards and the source itself
+never count. Current card facts, not LKI, supply both queries.
+
+StateContext now carries typed card facts. WithInterveningIf obtains source
+facts in a separate detection frame; IfState supplies captured resolution facts.
+Card queries use a shallow read context with its own binding maps, leaving the
+active resolution frame and source/controller declarations unchanged. Either
+trigger-option order works. The existing FromCard visit service checks identity;
+source departure and return make the old condition false. Shared pending,
+stack-copy and game-clone services retain captured facts. You is the effect
+controller; copies under another controller check that controller's graveyard.
+Event-player bindings retain their separate captured identity.
+
+No parallel zone/order/event service was added. CR 603.4 establishes both checks;
+CR 404.1/2/3 establishes graveyard top order and existing arrival ordering;
+CR 400.7 rejects returned visits; CR 603.2f keeps private exile from arming events.
+Native source-zone definition validation now permits intervening conditions,
+while retaining state/target/mode and battlefield-source rejection. The older
+invalid-context test now uses an invalid battlefield condition instead of the
+newly valid pure player condition. No payment, replacement-order, phasing or
+simultaneous-movement behavior changes. Existing tests retain those services.
+
+### Failing-first tests and card mappings
+
+Native TestSourceZoneConditionTiming and Exile first failed compilation at the
+two new undefined APIs. A fixture used lowercase clone instead of Clone; this
+was corrected before confirming the intended undefined-API failure. RON positive
+fixtures and all six record projections then failed at unsupported TriggerI.
+A later native target-condition rejection test failed with "target condition
+without a detection frame accepted" before saved-reference validation was added.
+The declaration purity fixture initially used nonexistent SourceID/ControllerID
+methods; it was corrected to existing native fields before the check passed.
+
+TestSourceZoneConditionTiming covers false detection, false resolution, source
+departure/return with otherwise sufficient cards above it, unrelated live-frame
+sentinels, immutable declarations, copies under both controllers and pending
+clones. OrderedQuery covers mixed card types and zero-minimum exact membership.
+Declarations covers targets, missing/unwritten bindings and negative amounts.
+Exile covers either option order and present/returned visits; HiddenExile covers
+face-down cards visible to their owner.
+
+TestRONSourceZoneConditionGameplay covers real RON registry execution, below-only
+failure, success, removal before resolution, source return, owner-only upkeep,
+two independent factories and exile current-card facts. Invalid covers spelling,
+scope, filters, values, contexts and atomic LoadInto rejection. Inventory retains
+explicit trigger-condition/card-reference/comparison/card-filter roles and
+unverified gameplay status.
+
+**Nether Shadow → TestRONSourceZoneConditionRecords (all six reprints).**
+These test-only projections retain metadata, Haste, source wrapper, event and
+complete unchanged condition. Only the unsupported optional-return body becomes
+a life probe. Each production record is separately required to keep rejecting.
+This establishes condition gameplay and no complete-card coverage.
+
+**All Hallow's Eve → shared native/RON exile-frame contract only.** The complete
+record remains rejected at spell exile. Its inspected counter predicates and
+operations remain unsupported, with explicit RON rejection evidence. Earlier
+source-zone wrapper/action prerequisite tests remain. The synthetic card-type
+predicate does not claim its counter condition works.
+
+Frankenstein's Monster and Shapeshifter are comparison candidates only.
+
+### Verification and measured result
+
+- Fresh baseline build and whole RON package tests passed; loader exited 1.
+- go test ./pkg/mage/dsl/ron -run TestRONSourceZoneCondition -count=1 passed.
+- go test ./pkg/mage -run 'TestSourceZone(Condition|Upkeep)' -count=1 passed.
+- make build and go vet ./... passed.
+- go test ./pkg/mage/... -short -count=1 passed.
+- make test passed. Whole RON tests also passed independently after implementation.
+- First make lint found one prealloc issue in a new native test. The slice
+  allocation was corrected; focused native tests passed again. Final make lint
+  passed with 0 issues. Formatting/fix output was reviewed; no unrelated file
+  changed. Focused RON tests also passed again. git diff --check passed.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **2,207 compiled /
+  238 rejected records**, **860 accepted / 126 rejected names**, out of 2,445
+  records and 986 names. The baseline/final issue sets are identical. No accepted
+  record became rejected. Six Nether Shadow diagnostics advance from column 163
+  unsupported source-zone TriggerI to column 376 unsupported optional action
+  PutGraveyardCardOntoBattlefield. All Hallow's Eve remains rejected at unchanged
+  LEG:12:190 unsupported exile subject Spell. Production loading remains atomic.
+
+Estimated full-card gains were zero; actual gains are zero names / zero records.
+Prerequisite gameplay evidence grows for Nether Shadow's complete unchanged
+condition and for the shared source-zone query context. Complete-card coverage
+is unchanged. Previously accepted records remain accepted. No source-data defect
+or environment failure was found. No RON source changed, so vocabulary source
+hashes do not need refresh. Semantic inventory roles were updated in code.
+
+Runtime cutover, Go-card deletion and unused DSL removal remain gated. No Go
+card, generator or broad DSL function was removed, and no unused-function
+removal was attempted. API/rules documentation describes only this slice.
+
+Changed files: new pkg/mage/source_zone_condition.go and
+source_zone_condition_test.go; new pkg/mage/dsl/ron/source_zone_condition.go and
+source_zone_condition_test.go; updated composable_conditions.go,
+composable_events.go, definition.go, doc.go, source_zone_upkeep_test.go;
+RON source_zone_upkeep.go and inventory.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this progress ledger.
+
+### Ranked next candidates
+
+1. **Restricted mana legality adapters — Drain Life and Mishra's Workshop.**
+   Compare SpendOnlyColorManaOnX with fixed AddManaWithModifiers and
+   CanOnlySpendOnSpells(IsCardtype(Artifact)). Reuse shared payment and mana
+   solver metadata; inspect whether a shared legality prerequisite is missing
+   before choosing one context. Workshop has a potential one-name/one-record
+   unlock; Drain Life also needs clamped actual-damage life gain. Medium/high
+   effort. Sunglasses of Urza's as-though spending is another distinct dependent
+   contract. Their complete records were inspected; no implementation starts.
+2. **Optional exact source-card battlefield return — Nether Shadow.** Its
+   event and condition are ready. Add a resolution-time optional choice and
+   exact source visit return through shared entry services; one potential
+   name/six-record unlock. Medium effort. Preserve source identity, entry rules,
+   decline and copied-controller semantics.
+3. **Exile-card counters — All Hallow's Eve.** The source-zone query frame is
+   ready; add per-exile-visit counter storage before predicates/removal and spell
+   exile options. Zero immediate gains from storage; medium/high effort for one
+   eventual card. Simultaneous all-graveyard return remains another dependency.
+
+This run stops after source-zone intervening query support.

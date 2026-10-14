@@ -3312,7 +3312,11 @@ func (o interveningIfOption) applyTrigger(t *GenericTriggered) {
 			return false
 		}
 		players := capturedTriggerTargetPlayers(&pendingTrigger{ability: t, event: evt, sourceID: source, controller: controller})
-		return o.condition.checkState(g, StateContext{SourceID: source, ControllerID: controller, players: players})
+		state := StateContext{SourceID: source, ControllerID: controller, players: players}
+		if game, ok := g.(*Game); ok {
+			state.cards = game.sourceZoneCardFacts(t, source)
+		}
+		return o.condition.checkState(g, state)
 	}
 	t.effects = []Effect{IfState(o.condition, Sequence(t.effects...))}
 }

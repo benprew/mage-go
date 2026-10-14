@@ -447,6 +447,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "combat_history_filter"
 		}
 	case "trigger_condition":
+		if n.Name == "CardIsInPlayersGraveyardWithANumberOfCardsAboveIt" && len(n.Args) == 4 {
+			return []string{"card_reference", "player_reference", "value_comparison", "card_filter"}[index]
+		}
+		if n.Name == "ExiledCardPassesFilter" && len(n.Args) == 2 {
+			return []string{"card_reference", "card_filter"}[index]
+		}
 		if n.Name == "PermanentPutInGraveyardPassesFilter" && len(n.Args) == 1 {
 			return "death_cause_filter"
 		}
@@ -1661,6 +1667,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "static_counter_comparison":
 		if (n.Name == "EqualTo" || n.Name == "GreaterThanOrEqualTo") && len(n.Args) == 1 {
 			return "static_counter_value"
+		}
+	case "value_comparison":
+		if n.Name == "GreaterThanOrEqualTo" && len(n.Args) == 1 {
+			return "value"
 		}
 	case "static_counter_value":
 		if n.Name == "Integer" && len(n.Args) == 1 {

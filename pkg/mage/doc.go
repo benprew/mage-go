@@ -7,8 +7,16 @@
 // Detection keeps separate event frames and does not change card declarations.
 // Copies, clones and delayed bodies keep the saved card and player facts.
 // RON accepts FromGraveyard or FromExile around an ordinary owner-upkeep
-// TriggerA with ActionList. State events, intervening-if, targets and modes
-// need separate contracts. Source damage and battlefield source reads reject.
+// TriggerA or TriggerI with ActionList. State events, targets and modes need
+// separate contracts. Source damage and battlefield source reads reject.
+// [WithInterveningIf] reads source-card facts in a separate query frame.
+// [GraveyardCardHasAtLeastAbove] counts matching cards above a saved visit.
+// [CardMatchesFilter] checks the current card at a saved visit.
+// Both conditions require [FromCard]. Departure and return cannot supply reads.
+// Detection and resolution use current facts without changes to game state.
+// RON accepts a fixed nonnegative minimum and one card type for the ordered
+// graveyard condition. Exile conditions accept one card type. Exile counters
+// and optional source returns need separate adapters.
 //
 // [PlayerControlsChosenColor] checks live subjects against the source entry color.
 // [PlayerControls] also accepts ChosenPlayerOf(This) for the entry player.

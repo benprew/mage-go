@@ -132,7 +132,7 @@ func TestSourceZoneUpkeepDeclarations(t *testing.T) {
 			case "state":
 				trigger.AsStateTrigger()
 			case "intervening":
-				WithInterveningIf(PlayerControls(You, IsCreature)).applyTrigger(trigger)
+				WithInterveningIf(PermanentMatchesFilter(This, IsCreature)).applyTrigger(trigger)
 			case "target":
 				trigger.WithTargets(DeclarePlayerTarget("target"))
 			}

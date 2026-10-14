@@ -14729,19 +14729,49 @@ Supported delayed action lists keep these bindings in their existing frames.
 
 The compiler creates a separate zone scope. Spell X, entry choices, Aura hosts,
 `ThisSpell` damage sources and `ThisPermanent` cannot enter that scope.
-Targets, modes, other step/player selectors, nested zone wrappers and `TriggerI`
-remain declaration errors. The engine option also rejects target declarations,
-modes, state/intervening-if contexts and battlefield source reads.
+Targets, modes, other step/player selectors and nested zone wrappers remain
+declaration errors. The engine option also rejects target declarations, modes,
+state contexts and battlefield source reads.
 
 An instant or sorcery may declare this zone rule beside its required single
 `SpellActions`. A zone rule does not replace its spell body. Loading still
 validates every rule and publishes only a complete valid collection.
 
-Nether Shadow's six records still require ordered graveyard intervening-if and
-optional exact-source battlefield return adapters. All Hallow's Eve still
-requires spell exile with counters, exile counter predicates/removal and the
+Nether Shadow's six records still require an optional exact-source battlefield
+return adapter. Its ordered graveyard condition now has prerequisite tests.
+All Hallow's Eve still requires spell exile with counters, exile counter predicates/removal and the
 simultaneous all-graveyard return. `TestRONSourceZoneUpkeepRecordPrerequisites`
 projects the unchanged source wrapper and upkeep event into an ordinary event.
 For Nether Shadow it uses a synthetic player probe. For All Hallow's Eve it
 executes the unchanged singular exile-to-graveyard instruction. These tests
 establish prerequisite coverage, not complete-card gameplay.
+
+
+## RON source-card intervening upkeep conditions
+
+The existing source-zone wrappers also accept `TriggerI(event, condition,
+ActionList(...))` with the same owner-upkeep event and local bindings.
+Supported conditions are:
+
+```ron
+CardIsInPlayersGraveyardWithANumberOfCardsAboveIt(
+    ThisGraveyardCard, You,
+    GreaterThanOrEqualTo(Integer(3)), IsCardtype(Creature)
+)
+ExiledCardPassesFilter(ThisExiledCard, IsCardtype(Artifact))
+```
+
+The graveyard form requires `FromGraveyard`, a nonnegative fixed integer, `You`,
+and one valid card type. The exile form requires `FromExile` and one valid card
+type. RON rejects wrong-zone references, other comparisons, dynamic amounts,
+other filters and unbound source names. Both conditions check the saved source
+visit at detection and resolution. Cards above the graveyard source are read
+in the stored order; only matching cards count. Departure or return makes the
+condition false. Queries do not make choices or change the live frame.
+
+Each factory builds its own source-card and event-player bindings. Copies and
+clones retain captured visits. All Hallow's Eve still requires its counter
+predicate and operations; `HasACounterOfType` is not supported on exile cards.
+Its complete record remains rejected. `TestRONSourceZoneConditionRecords`
+executes the unchanged Nether Shadow condition in all six reprints with a
+synthetic body. No complete-card unlock is claimed.
