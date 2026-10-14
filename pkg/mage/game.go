@@ -1933,6 +1933,10 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	var remaining []*DelayedTrigger
 	for _, dt := range g.triggers.Delayed() {
 		if dt.EventType == evt.Type {
+			if dt.damageReceived != nil && !dt.damageReceived.matches(&evt, g) {
+				remaining = append(remaining, dt)
+				continue
+			}
 			if dt.combatPair != nil && !dt.combatPair.matchesSubject(&evt, g, g.FindPermanent(dt.MatchEventID)) {
 				remaining = append(remaining, dt)
 				continue
@@ -1994,6 +1998,9 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				continue
 			}
 			var captures []Effect
+			if dt.damageReceived != nil {
+				captures = append(captures, &eventAmountCapture{binding: dt.damageReceived.amount, amount: evt.Amount})
+			}
 			if dt.combatPair != nil {
 				captures = dt.combatPair.captureDetectedEvent(&evt, g, dt.SourceID)
 			}

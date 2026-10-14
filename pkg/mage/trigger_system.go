@@ -16,6 +16,7 @@ type DelayedTrigger struct {
 	eventPlayerBinding   *PlayerBinding
 	deathCapture         *creatureDiesPattern
 	combatPair           *filteredCombatPairPattern
+	damageReceived       *delayedDamageMatcher
 	expiresAtCombatEnd   bool
 	matchFlagFalse       bool
 	expiresAtCleanup     bool

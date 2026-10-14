@@ -98,8 +98,8 @@ func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
 			return mage.DivideRoundUp(value(bindings), mage.Fixed(2))
 		}, nil
 	}
-	if n.Name == "Trigger_AmountOfDamageDealt" {
-		if n.Kind != Symbol || ctx.damageAmount == nil {
+	if n.Name == "Trigger_AmountOfDamageDealt" || n.Name == "Trigger_ThatMuch" {
+		if n.Kind != Symbol || ctx.damageAmount == nil || n.Name != ctx.damageAmount.name {
 			return nil, problem(n, "unbound or incompatible damage event amount")
 		}
 		return func(bindings instanceBindings) mage.ResolutionValue {

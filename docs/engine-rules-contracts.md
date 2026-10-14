@@ -20170,3 +20170,50 @@ RON evidence: `TestRONDiscardCountReturnRecall`, `Invalid`, `StrictLoad`,
 `InstancesAndDelayed`. Recall has complete-record native payment, X=0, short
 hand, copy, clone, factory, resolving return and exile evidence. Bazaar of
 Baghdad, Mindstab Thrull and Mind Bomb retain their existing discard paths.
+
+## Turn-bounded delayed permanent damage capture
+
+`WhenReceivesDamageThisTurn(PermanentRef, PermanentFilter, *NumberBinding,
+ResolvingEffect)` saves one present, unphased battlefield incarnation during
+resolution. It watches actual positive damage from matching permanent sources
+until cleanup. A zero filter permits any permanent source. Recipient matching
+uses both object and incarnation identity. Current recipient characteristics
+and control cannot alter the saved visit. Departure and return cannot supply
+it; a phase cycle preserves it. Missing or phased installation subjects do not
+create subscriptions.
+
+Detection follows shared prevention, redirection and damage batches. The final
+recipient and actual amount determine each event; full prevention and zero
+damage produce no trigger. Source filtering uses `damageFilterSource`, including
+its exact source incarnation and LKI behavior; `DamageSourceIsAttacking` uses
+current combat status or saved departure information. Spell sources cannot
+match this permanent-source contract. Each simultaneous packet has its own
+amount. No replacement order or damage execution path is changed.
+
+The creator's source and controller remain captured under CR 603.7d–e. Each
+matching event queues a separate pending body. Trigger placement copies its
+amount into a fresh saved resolution frame. Pending bodies survive cleanup and
+source or recipient departure. Stack copies use their own controllers and keep
+the saved amount; game clones keep independent waiting, pending and resolving
+state. `WaitingDelayedPermanentSources` includes the exact watched visit;
+phasing, departure and return cannot replace it. Nested delayed installations
+declare source reads without running the installation. Definition validation
+requires a subject, named amount binding and body,
+and checks producer dominance within an isolated delayed scope.
+
+RON supports `CreateTriggerUntil(WhenAPermanentDealsDamageToAPermanent(filter,
+SinglePermanent(ref)), ActionList(nonempty_actions), UntilEndOfTurn)` in ordinary
+resolving bodies. It reuses the supported prevention source-filter adapter,
+including `And([IsAttacking, IsCardtype(Creature)])`, and typed permanent refs.
+`Trigger_ThatMuch` is a symbol available only in this body's value scope and
+nested captured bodies. It cannot escape the body or replace unrelated event
+aliases. Other subjects, durations and event forms remain rejected.
+
+Evidence: engine `TestDelayedDamageCaptureFrames`, `Identity`, `Definition`,
+`SimultaneousAndRedirection` and `WaitingSources`; RON
+`TestRONDelayedDamageCaptureGlyph`, `Invalid`, `Load` and `InstancesAndNested`.
+Rules: CR 120.4, 120.8, 400.7, 603.7a–e and 702.26b,d. The complete Glyph
+of Life record is tested with native payment, target legality, delayed event
+placement, life gain, copies, clones, prevention and expiry. Its source filter
+was corrected using `data/LEG.json` Oracle text: damage must be dealt by an
+attacking creature, while the chosen target must be a Wall creature.

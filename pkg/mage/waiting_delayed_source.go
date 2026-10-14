@@ -17,6 +17,9 @@ func (g *Game) WaitingDelayedPermanentSources() []DamageSource {
 			}
 		}
 		identities = append(identities, capturedPermanent{delayed.MatchEventID, delayed.matchIncarnation})
+		if delayed.damageReceived != nil {
+			identities = append(identities, delayed.damageReceived.recipient)
+		}
 		if delayed.sourceCaptured && stateConditionReadsSourcePermanent(delayed.interveningCondition) {
 			identities = append(identities, capturedPermanent{delayed.SourceID, delayed.sourceIncarnation})
 		}

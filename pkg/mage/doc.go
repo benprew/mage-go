@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WhenReceivesDamageThisTurn] watches one saved battlefield visit until cleanup.
+// Each positive damage event saves its final amount before trigger placement.
+// The creator keeps control. Departure and return cannot supply the watched
+// visit. Phasing stops damage; a phase cycle keeps the subscription. Source
+// filters use the shared damage source service and its departure information.
+// Copies, clones and pending bodies keep separate amounts and saved frames.
+// RON accepts CreateTriggerUntil with WhenAPermanentDealsDamageToAPermanent,
+// a supported damage source filter, SinglePermanent, ActionList and
+// UntilEndOfTurn. Trigger_ThatMuch is local to that delayed body's value scope.
+// Other event subjects and durations need separate adapters.
+//
 // [DiscardCountInto] saves completed discards after one shared replacement batch.
 // Required choices use distinct saved hand visits. Short hands supply only their
 // available cards. Library replacements count; cancellation and returned visits

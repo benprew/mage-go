@@ -24,6 +24,9 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 	if event.Name == "WhenAPlayerTapsAPermanentForMana" {
 		return compileSubtypeManaBonusUntil(n)
 	}
+	if event.Name == "WhenAPermanentDealsDamageToAPermanent" {
+		return compileDelayedDamageCapture(n, ctx)
+	}
 	if event.Name == "WhenACreatureAttacksAndIsntBlocked" {
 		return compileUnblockedDelay(n, ctx)
 	}

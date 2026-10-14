@@ -6,33 +6,33 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **874 accepted / 112 rejected names**
-(986 total), **2,242 compiled / 203 rejected records** (2,445 total).
-The latest slice is **DISCARD-COUNT-GRAVEYARD-HAND**. Direct resolving discard
-instructions bind NumCardsDiscardedThisWay; DiscardNumberCards accepts bound X.
-Completed replacement-batch outcomes supply the count. Required selections
-keep distinct exact hand visits. Resolving graveyard choices save distinct visits
-before movement and return cards to their owners' hands before zone observations.
-Short hands, replacement destinations, cancellation and returned visits keep
-actual counts. Factory instances, copies, clones and delayed captures keep
-separate frames. Estimated and actual gains are **one name / one record**.
-Recall gains complete unchanged-record payment, discard, return and exile tests.
+Latest measured result (2026-10-14): **875 accepted / 111 rejected names**
+(986 total), **2,243 compiled / 202 rejected records** (2,445 total).
+The latest slice is **DELAYED-DAMAGE-CAPTURE**. Resolving CreateTriggerUntil
+watches one exact permanent visit until cleanup and captures each actual damage
+amount. Trigger_ThatMuch is local to the delayed body. Source filters reuse the
+shared damage/LKI service. The creator retains control; returned visits cannot
+inherit subscriptions. Prevention, final redirection, simultaneous events,
+phasing, waiting source queries, copies, nested delays and clones have tests.
+Glyph of Life's source filter is corrected to attacking creatures using local
+Oracle evidence. Estimated and actual gains are **one name / one record**.
+Complete-card RON gameplay coverage gains **Glyph of Life**.
 
-The loader still rejects the collection atomically. Only Recall's rejection is
-removed; no remaining diagnostic changed or new rejection appeared.
-Runtime cutover, Go-card removal and DSL cleanup remain gated.
+The loader still rejects the collection atomically. Only Glyph of Life's
+rejection is removed; all remaining diagnostics are unchanged. Runtime cutover,
+Go-card removal and DSL cleanup remain gated.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Delayed damage-event capture — Glyph of Life.** One potential full-card
-   unlock after correcting the source predicate to attacking creatures.
+1. **Player next-main delayed event and saved spell value — Mana Drain.**
+   One potential full-card unlock only with both timing and saved mana value.
 2. **Granted targeted activation prerequisite — Equinox.** Zero immediate
    unlocks until destruction prediction is available. Reassess shared value.
-3. **Player next-main delayed event and saved spell value — Mana Drain.**
-   Inspect both the event and general resolving-value adapter before estimating
-   a complete-card gain.
+3. **Shared conditional static-rule bodies — Camel and Guardian Beast.**
+   Reassess full records and additional blockers before estimating unlocks;
+   prevention and noncreature artifact protection have different contracts.
 
 ## Dependencies and source blockers
 
@@ -8533,6 +8533,201 @@ remain unchanged. No RON source changed.
    payment adapter, not a general resolving-value adapter. Event lowering alone
    gives zero immediate unlocks; reassess a cohesive delayed-value slice before
    claiming a full-card gain. Keep saved departure facts separate from targets.
+
+Complete RON gameplay, runtime loading, Go-card deletion, obsolete generation
+removal and unused DSL cleanup remain incomplete. Stop after this slice.
+
+## 2026-10-14 — DELAYED-DAMAGE-CAPTURE
+
+### Fresh baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The fresh loader exited 1 for
+collection rejection, with **2,242 compiled / 203 rejected records**, and
+**874 accepted / 112 rejected names**. This was not a build or test failure.
+Complete records at LEG lines 77, 103 and 169 and their nested forms were read;
+source requirements came from RON and local Oracle data, not Go definitions.
+Targeted vocabulary entries confirmed one occurrence of the damage event,
+Trigger_ThatMuch and player next-main event. Reprints count once.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Delayed damage-event capture | Glyph of Life | 1 name / 1 record | Missing exact-recipient delayed subscription and amount capture; source predicate defect. Adds reusable permanent-damage subscription and captured-number integration, including nested delays and waiting source queries. No further blocker in the full record. | Medium: one engine mechanism, one adapter, identity/event/filter tests and source correction. |
+| Granted targeted activation prerequisite | Equinox | 0 names / 0 records | Targeted spell grant needs an adapter; WouldDestroyAPermanent also needs destruction prediction. Other activated-grant consumers are already supported. Enables Equinox's later prediction work, with no demonstrated additional inventory unlock. | Medium for grant alone; high for complete prediction and legality contract. |
+| Player next-main delay and saved spell value | Mana Drain | 0 for event alone; potentially 1 name / 1 record for complete slice | CounterSpell already lowers. Next-main event and general resolving ManaValueOfSpell adapter remain missing. Saved mana value must survive countering or target departure; existing payment-value support is not general resolution support. Enables delayed colorless mana, but neither individual adapter unlocks the full card. | Medium to high: player timing plus saved spell facts and mana-value adapter. |
+
+Candidate #1 is dependency-ready after one bounded engine prerequisite. The
+three compared candidates each affect only one unique inventory card; no
+multi-card gain is claimed. Equinox's adapter alone has zero immediate gain,
+and Mana Drain needs two distinct missing contracts. Glyph gives the largest
+credible complete gain for this bounded run. The reusable service is independent
+of card names. Larger shared remaining families require separate subsystem
+work; this run does not add incomplete adapters for them.
+
+Before editing, the stated contract covered exact watched visits, actual damage
+amounts, saved creator control, repeated events until cleanup, prevention,
+redirection, simultaneous packets, LKI, phasing, copies and clones. The engine
+owns those mechanics; RON owns syntax, scopes, validation and fresh bindings.
+The implement-engine skill supplied the engine-contract workflow and additional
+whole-repository short test requirement. User-authorized RON source correction
+and wiring remain part of this vertical slice.
+
+### Exact supported signatures, contexts and dependencies
+
+Engine API:
+`WhenReceivesDamageThisTurn(PermanentRef, PermanentFilter, *NumberBinding,
+ResolvingEffect) ResolvingEffect`. The subject must be present and unphased at
+installation. Its exact incarnation is saved. A matching permanent damage source
+and positive actual event amount produce one pending body per event until
+cleanup. The creator's source and controller remain saved. Current recipient
+control or characteristics cannot retarget the subscription. Departure/return
+cannot supply it; a phase cycle preserves it. Queued bodies survive expiry and
+departure. Each stack body receives its own saved amount inside the captured
+frame. Copies and clones keep independent frames; copy controllers retain the
+ordinary shared stack-copy behavior.
+
+RON shape:
+`CreateTriggerUntil(WhenAPermanentDealsDamageToAPermanent(filter,
+SinglePermanent(ref)), ActionList(nonempty_actions), UntilEndOfTurn)` in ordinary
+resolving bodies. Supported singular permanent refs and the existing permanent
+damage-source filter adapter are reused. The inventory record uses
+`And([IsAttacking, IsCardtype(Creature)])`. `Trigger_ThatMuch` is a symbol bound
+only to this body's damage amount, including nested saved bodies. Unbound,
+malformed, escaped and unrelated event aliases reject. Other subjects,
+durations and event contexts remain unsupported.
+
+Engine reuse: `captureDelayedBody`, exact permanent refs, `damageFilterSource`,
+`DamageSourceIsAttacking`, native damage/replacement batches, pending trigger
+placement, `eventAmountCapture`, saved-number maps, stack copies, game clones,
+cleanup and waiting source categories. No parallel damage system, custom payment
+path, global last-action state, fallback or partial production registry was
+introduced. Existing cost rollback and replacement ordering remain owned by
+those shared services. Inventory roles now identify the delayed damage event,
+source filter and exact recipient ref. Waiting queries preserve the watched
+visit and nested installation source reads without running actions.
+
+Rules evidence: CR 120.4 and 120.8 (actual damage after prevention/replacement;
+zero damage), 400.7 (new objects after zone movement), 603.7a–e (installation,
+stated duration, identities and creator control), and 702.26b,d (phasing).
+
+### Failing-first evidence and card-to-test mapping
+
+Engine tests first failed compilation for the new missing signature. Fixture
+API mistakes were corrected, then the failure was confirmed to contain only
+`WhenReceivesDamageThisTurn` missing. Complete-record and synthetic RON tests
+failed for the unsupported WhenAPermanentDealsDamageToAPermanent event. After
+lowering and engine implementation, real Glyph tests still failed because the
+old RON source predicate excluded ordinary attackers. Correction fixed those
+assertions without changing the required behavior. Final review added a waiting
+source test; its `live: watched visit missing` assertion failed before the query
+integration was added.
+
+- **Glyph of Life → TestRONDelayedDamageCaptureGlyph.** Complete corrected LEG
+  record, native white payment and target legality; ordinary attacking creatures,
+  attacking Walls and idle Walls; partial prevention, spell-copy controller,
+  clone isolation, illegal target, returned visit, phasing, phase cycle and
+  cleanup expiry. Gameplay goes through native casting and damage services.
+- **Glyph of Life → TestRONDelayedDamageCaptureLoad.** Complete raw record loads
+  into an explicit registry. Adding an invalid record rejects atomically and
+  preserves the prior registry.
+- **Compiler → TestRONDelayedDamageCaptureInvalid.** Wrong durations, recipient
+  shapes/arity, empty bodies, malformed and unbound aliases, incompatible
+  references, malformed filters and scope escape reject before gameplay.
+- **Frames → TestRONDelayedDamageCaptureInstancesAndNested.** Separate factory
+  instances and controllers, multiple pending event amounts, nested future
+  triggers, source/recipient departure and independent clone execution.
+  Synthetic cards add no inventory coverage.
+- **Engine → TestDelayedDamageCaptureFrames and Identity.** Creation timing,
+  repeated actual amounts, partial/full prevention, creator control, source LKI,
+  nonmatching sources, exact recipient visits, phasing, returned visits,
+  pending cleanup, departed subjects, stack copies and cloned resolution.
+- **Engine → TestDelayedDamageCaptureDefinition.** Nil or unbound subjects,
+  missing/unnamed amount bindings, absent bodies, producer dominance and
+  absent-subject installation.
+- **Engine → TestDelayedDamageCaptureSimultaneousAndRedirection.** Independent
+  simultaneous packet amounts, unrelated recipients, clone frames, and actual
+  damage to the final redirected recipient after prevention.
+- **Engine → TestDelayedDamageCaptureWaitingSources.** Exact watched visit
+  through phasing, departure and return, expiry and clone isolation; nested
+  installation source reads remain visible without executing the body.
+- **Preservation → compiler, engine and whole-repository suites.** Existing
+  accepted records and their paths remain supported. Only measured inventory
+  and definition-plan count assertions change.
+
+Estimated and actual gains are **1 unique name / 1 record**. Complete-card RON
+native gameplay coverage gains **Glyph of Life**. Compilation and gameplay
+coverage remain separate; synthetic tests do not increase inventory coverage.
+
+### Source correction, documentation and removal gates
+
+`cards/mtgish/LEG.lines.ron:103` previously selected damaging sources with
+`And([IsCreatureType(Wall), IsCardtype(Creature)])`. Local `data/LEG.json`
+Oracle text requires damage by an attacking creature. The source filter is now
+`And([IsAttacking, IsCardtype(Creature)])`; the chosen target still requires a
+Wall creature. There is one record and no identical reprint to correct.
+Idle-Wall and ordinary-attacker tests distinguish the corrected semantics.
+No global predicate was inverted.
+
+The vocabulary snapshot was refreshed from parser AST walks: source hashes,
+changed occurrences and positions, and current loader diagnostics. API and
+rules-contract docs now describe only this supported behavior. Go production
+card definitions, legacy DSL APIs and generation remain untouched because the
+complete-loading, gameplay and runtime cutover gates are still unmet. No cleanup
+caller audit or removal is claimed for this slice.
+
+### Validation and loader evidence
+
+Final checks ran in fast-fail order after the waiting-source integration and
+nested-frame tests: `go test ./pkg/mage/dsl/ron -run
+TestRONDelayedDamageCapture -count=1`, engine `TestDelayedDamageCapture`,
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1` and
+`make test` all passed. The skill's additional
+`go test ./... -short -count=1` passed. Final `make lint` passed with **0 issues**.
+`git diff --check` passed. Formatting changes were limited to the new files'
+import layout; all diffs were reviewed. Focused RON and engine tests passed again
+after lint. No unrelated file changed.
+
+The first lint attempt reported a test fixture type error while the waiting
+source test was being added: PhaseIn needs a UUID slice. That fixture was fixed;
+the expected waiting-source assertion failure was then confirmed before adding
+the integration. All required checks were rerun on the final implementation.
+The initial copy fixture also assumed a different stack-peek ordering; its
+expected copied amount now follows the actual selected stack object. The
+separate pending amounts, changed-controller copy and clone assertions remain.
+No gameplay requirement or test was removed or weakened. No environment or
+pre-existing build/test blocker remains.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as required while unsupported
+records remain: **2,243 compiled / 202 rejected records**, **875 accepted / 111
+rejected names**. A keyed comparison removes exactly Glyph of Life at LEG line
+103, adds no rejection and changes no remaining diagnostic. The final report
+matches the refreshed vocabulary snapshot. All previously accepted records
+remain accepted. Collection publication remains atomic and unavailable until
+the remaining records are supported.
+
+Changed files: new engine delayed_damage_capture.go and tests; game.go,
+trigger_system.go, composable_events.go and waiting_delayed_source.go; new RON
+delayed_damage_capture.go and tests; departure_delay.go, sacrifice_value.go,
+inventory.go, definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; Glyph's LEG.lines.ron record; pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md, vocabulary snapshot and
+this ledger. The current summary and ranked candidates are updated. Earlier
+entries remain unchanged.
+
+### Ranked next candidates
+
+1. **Player next-main event and saved spell mana value — Mana Drain.** Estimate
+   one complete-card unlock only after both contracts are established. Save
+   departure facts separately from the target; test counter failure and exact
+   player main-phase timing. An event-only adapter has zero full-card gain.
+2. **Granted targeted activation prerequisite — Equinox.** Zero immediate
+   unlocks until destruction prediction. Reassess whether the grant alone has
+   sufficient shared value before selecting it.
+3. **Shared conditional static-rule bodies — Camel and Guardian Beast.** The
+   complete ARN records show static conditional prevention versus noncreature
+   artifact protection. Camel also needs band membership filtering; Guardian
+   Beast needs enchant/control protection with current untapped status. Compare
+   supported engine services and nested blockers before estimating full gains.
 
 Complete RON gameplay, runtime loading, Go-card deletion, obsolete generation
 removal and unused DSL cleanup remain incomplete. Stop after this slice.

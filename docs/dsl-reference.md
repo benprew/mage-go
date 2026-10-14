@@ -15334,3 +15334,22 @@ filters and discard producer forms require adapters.
 Evidence: `TestDiscardCountReturn*` and `TestRONDiscardCountReturn*`. Recall's
 complete unchanged LEG record executes X payment, discard, chosen return and
 spell exile through the native stack. Compilation and gameplay gain one card.
+
+### Turn-bounded received damage
+
+`mage.WhenReceivesDamageThisTurn(subject PermanentRef, from PermanentFilter,
+amount *NumberBinding, body ResolvingEffect)` creates a repeating delayed ability
+for one exact battlefield visit until cleanup. Each actual positive damage event
+from a matching permanent saves its amount for the body. It uses the shared
+damage, LKI, prevention and delayed-frame services. Waiting source queries keep
+the exact watched visit. The creator retains control;
+returned visits cannot inherit the subscription. Copies and clones keep separate
+frames. Nil subjects, unnamed amounts, unbound reads and absent bodies fail
+validation. A zero filter accepts any permanent source.
+
+RON lowers `CreateTriggerUntil(WhenAPermanentDealsDamageToAPermanent(filter,
+SinglePermanent(ref)), ActionList([...]), UntilEndOfTurn)`. The filter uses the
+supported permanent damage-source filter shapes. `Trigger_ThatMuch` reads the
+saved amount inside that delayed body, including nested saved delays; unrelated
+scopes reject it. Glyph of Life uses this shape and has complete RON gameplay
+coverage. See the turn-bounded damage contract in `engine-rules-contracts.md`.

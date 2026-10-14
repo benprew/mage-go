@@ -1049,7 +1049,7 @@ func captureTriggerEventEffects(pt *pendingTrigger, obj *StackObject) {
 		}
 	}
 	if len(pt.eventCaptures) != 0 {
-		if pt.delayed != nil && (pt.delayed.deathCapture != nil || pt.delayed.combatPair != nil) {
+		if pt.delayed != nil && (pt.delayed.deathCapture != nil || pt.delayed.combatPair != nil || pt.delayed.damageReceived != nil) {
 			for i, effect := range obj.Effects {
 				captured, ok := effect.(*capturedDelayedBody)
 				if !ok {
@@ -1064,8 +1064,14 @@ func captureTriggerEventEffects(pt *pendingTrigger, obj *StackObject) {
 				if body.players == nil {
 					body.players = make(map[*PlayerBinding]uuid.UUID)
 				}
+				body.numbers = maps.Clone(captured.numbers)
+				if body.numbers == nil {
+					body.numbers = make(map[*NumberBinding]int)
+				}
 				for _, capture := range pt.eventCaptures {
 					switch fact := capture.(type) {
+					case *eventAmountCapture:
+						body.numbers[fact.binding] = fact.amount
 					case *eventPermanentCapture:
 						body.permanents[fact.binding] = fact.value
 					case *eventPlayerCapture:
