@@ -14237,8 +14237,16 @@ existing LKI rules. The engine API is `IfDamageDealtToPlayer` with
 Factories create separate result declarations. Nested producers replace the
 local read but cannot export a result from a branch. Delayed bodies retain saved
 results. Invalid arity, unbound reads and entry/replacement contexts are rejected.
-`TheClampedAmountOfDamageDealtThisWay` remains unsupported; Drain Life still needs
-its restricted X payment and clamping contract.
+`TheClampedAmountOfDamageDealtThisWay` reads one singular producer through
+`ClampedDamageAmount(*DamageResultsBinding) ResolutionValue`. It limits actual
+damage by the final recipient's pre-damage life or loyalty. Creature toughness
+uses the exact visit when the value resolves, with departure or phase information
+if needed. Marked damage does not reduce this cap. Nonpositive caps yield zero.
+Collections, malformed symbols, entry and replacement contexts reject.
+Drain Life's complete LEA/LEB/2ED/3ED/CED/CEI records now execute restricted X,
+any-target damage and clamped gain in `TestRONClampedDamageDrainLife` and
+`TestRONRestrictedXGameplay`. `TestRONClampedDamageScopes` covers lexical results,
+delays and separate factories.
 
 Complete unchanged records: Syphon Soul (LEG) and Mishra's War Machine
 (ATQ/3ED), mapped to `TestRONDamageOutcomeSyphonSoul` and
@@ -14941,11 +14949,9 @@ Evidence: `TestRestrictedXPayment`, `Planning`, `AutomaticAndPermissions`,
 cover the native contract, costs, exact color allocation, X zero, hybrid
 allocation, source phasing, replacements, automatic conversions,
 clone/copy isolation and rejection without resource changes.
-`TestRONRestrictedXGameplay` checks all six complete Drain Life records still
-reject at `TheClampedAmountOfDamageDealtThisWay`. Test-only fixtures omit that
-unsupported gain action and execute the unchanged casting restriction, metadata,
-target and X damage through the engine. These are prerequisite tests, not
-complete Drain Life gameplay coverage. `TestRONRestrictedXColors`, `Invalid`
-and `StrictLoadAndInventory` cover the five colors, declaration contexts, atomic
-loading and inventory color roles. No collection record becomes accepted in
-this slice; clamped damage gain remains the full-card blocker.
+`TestRONRestrictedXGameplay` now executes all six complete Drain Life records,
+including their clamped life gain. It checks sufficient and insufficient black
+mana for X, resource preservation on failed payment, targets and resolved damage.
+`TestRONRestrictedXColors`, `Invalid` and `StrictLoadAndInventory` cover the five
+colors, declaration contexts, atomic loading and inventory color roles.
+The singular clamped-damage contract completes Drain Life gameplay support.

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ClampedDamageAmount] reads one saved singular damage outcome.
+// Actual damage follows replacements and prevention. The final recipient supplies
+// player life and loyalty before damage. Creature toughness uses the exact visit
+// at the read, including departure and phase information. Return cannot replace
+// that visit. Negative caps supply zero. Marked damage does not reduce toughness.
+// RON accepts TheClampedAmountOfDamageDealtThisWay after one ordinary singular
+// damage instruction. Results stay local to branches and factory instances.
+// Delayed bodies and clones keep separate saved outcomes. Collections, entry
+// operations and replacement bodies need separate adapters.
+//
 // [MayReturnNonAuraCardToBattlefield] offers normal entry for one exact
 // non-Aura graveyard card.
 // The selected player chooses at resolution and controls the returned card.
@@ -25,7 +35,7 @@
 // Copies do not pay again. Clones keep separate pools and announced values.
 // RON accepts CastEffect(SpendOnlyColorManaOnX(color)) on one ordinary
 // instant or sorcery with printed X. Modal and text-revision contexts need
-// separate adapters. Drain Life still needs its clamped damage gain.
+// separate adapters. [ClampedDamageAmount] supplies Drain Life's life gain.
 //
 // [ControllerManaSpending] permits the source controller to pay with one
 // mana color as another color. Active permissions combine, including chains.
@@ -197,8 +207,8 @@
 // Existing result frames keep delayed reads, copies and clones separate.
 // RON reads TheAmountOfDamageDealtThisWay from its latest local damage producer.
 // PermanentDealtDamageToPlayerThisWay checks that producer's saved outcomes.
-// Branch-local producers cannot supply outer reads. Entry, replacement and
-// clamped damage values retain separate contracts.
+// Branch-local producers cannot supply outer reads. Entry and replacement
+// operations retain separate contracts.
 //
 // [PreventLandEntry] stops land entry through shared preparation.
 // [Game.IsLandEntryProhibited] reads active source rules without changes.

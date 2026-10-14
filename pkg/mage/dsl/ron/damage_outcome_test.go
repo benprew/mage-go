@@ -243,7 +243,7 @@ func TestRONDamageOutcomeInvalid(t *testing.T) {
 	for _, body := range []string{
 		`GainLife(TheAmountOfDamageDealtThisWay)`,
 		`PermanentDealsDamage(ThisPermanent,Integer(1),Player(You)),GainLife(TheAmountOfDamageDealtThisWay())`,
-		`PermanentDealsDamage(ThisPermanent,Integer(1),Player(You)),GainLife(TheClampedAmountOfDamageDealtThisWay)`,
+		`PermanentDealsDamage(ThisPermanent,Integer(1),Player(You)),GainLife(TheClampedAmountOfDamageDealtThisWay())`,
 		`If(PermanentPassesFilter(ThisPermanent,IsCardtype(Artifact)),[PermanentDealsDamage(ThisPermanent,Integer(1),Player(You))]),GainLife(TheAmountOfDamageDealtThisWay)`,
 		`If(PermanentDealtDamageToPlayerThisWay(ThisPermanent,You),[TapPermanent(ThisPermanent)])`,
 		`PermanentDealsDamage(ThisPermanent,Integer(1),Player(You)),If(PermanentDealtDamageToPlayerThisWay(ThisPermanent),[TapPermanent(ThisPermanent)])`,

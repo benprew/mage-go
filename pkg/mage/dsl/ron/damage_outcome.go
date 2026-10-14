@@ -7,7 +7,10 @@ import (
 	"github.com/benprew/mage-go/pkg/mage"
 )
 
-type damageOutcomePlan struct{ label string }
+type damageOutcomePlan struct {
+	label  string
+	plural bool
+}
 type damageOutcomeBindings struct {
 	total   *mage.NumberBinding
 	results *mage.DamageResultsBinding
@@ -15,7 +18,7 @@ type damageOutcomeBindings struct {
 
 func hasDamageOutcomeRead(nodes []Node) bool {
 	return slices.ContainsFunc(nodes, func(n Node) bool {
-		return n.Name == "TheAmountOfDamageDealtThisWay" || n.Name == "PermanentDealtDamageToPlayerThisWay" || hasDamageOutcomeRead(n.Args)
+		return n.Name == "TheAmountOfDamageDealtThisWay" || n.Name == "TheClampedAmountOfDamageDealtThisWay" || n.Name == "PermanentDealtDamageToPlayerThisWay" || hasDamageOutcomeRead(n.Args)
 	})
 }
 
@@ -73,7 +76,7 @@ func compileDamageOutcomeProducer(n Node, continuation []Node, ctx scope) (effec
 			return nil, err
 		}
 	}
-	plan := &damageOutcomePlan{label: "damage at " + n.Position.String()}
+	plan := &damageOutcomePlan{label: "damage at " + n.Position.String(), plural: many != nil}
 	ctx.damageOutcome = plan
 	body, err := compileActionSequence(continuation, ctx)
 	if err != nil {

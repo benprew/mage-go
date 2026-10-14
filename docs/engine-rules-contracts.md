@@ -19550,11 +19550,44 @@ Evidence: `TestRestrictedXPayment`, `Planning`, `AutomaticAndPermissions`,
 cover the native contract, costs, exact color allocation, X zero, hybrid
 allocation, source phasing, replacements, automatic conversions,
 clone/copy isolation and rejection without resource changes.
-`TestRONRestrictedXGameplay` checks all six complete Drain Life records still
-reject at `TheClampedAmountOfDamageDealtThisWay`. Test-only fixtures omit that
-unsupported gain action and execute the unchanged casting restriction, metadata,
-target and X damage through the engine. These are prerequisite tests, not
-complete Drain Life gameplay coverage. `TestRONRestrictedXColors`, `Invalid`
-and `StrictLoadAndInventory` cover the five colors, declaration contexts, atomic
-loading and inventory color roles. No collection record becomes accepted in
-this slice; clamped damage gain remains the full-card blocker.
+`TestRONRestrictedXGameplay` now executes all six complete Drain Life records,
+including their clamped life gain. It checks sufficient and insufficient black
+mana for X, resource preservation on failed payment, targets and resolved damage.
+`TestRONRestrictedXColors`, `Invalid` and `StrictLoadAndInventory` cover the five
+colors, declaration contexts, atomic loading and inventory color roles.
+The singular clamped-damage contract completes Drain Life gameplay support.
+
+## Singular clamped damage values (RON execution)
+
+`ClampedDamageAmount(results *DamageResultsBinding) ResolutionValue` reads one
+positive saved outcome from `DealDamageFrom` with `DamageOutcomesInto`. Missing
+or nonsingular results supply zero. Nil and unbound declarations fail definition
+validation. The value never changes the damage amount.
+
+The shared executor saves the final recipient after replacement and prevention.
+It records the player's life or the planeswalker's loyalty immediately before
+damage results occur (CR 120.4b–d). Actual damage, rather than life lost or
+loyalty removed, supplies the upper bound. A creature's toughness is read at
+value resolution from its exact current visit, departure LKI or phase snapshot
+(CR 608.2h–i). Marked damage is not subtracted. A creature planeswalker applies
+both limits; a negative limit supplies zero. A returned visit cannot replace the
+saved recipient. This follows the local Oracle text in `data/LEA.json`: player
+life and loyalty explicitly say before damage; creature toughness does not.
+
+Existing resolution maps and outcome cloning retain independent result frames.
+Both step-delayed and permanent-event-delayed bodies now save and restore the
+damage-results map as well as their other bindings. Waiting queries do not run
+the value. Shared damage replacement ordering, costs and simultaneous damage
+execution remain unchanged; no plural RON clamping contract is introduced.
+
+RON supports the symbol `TheClampedAmountOfDamageDealtThisWay` after the latest
+local singular ordinary `SpellDealsDamage` or `PermanentDealsDamage` producer.
+Typed singular recipients and union targets use the existing adapters. Branch
+producers cannot export results; delays retain their producer. Collection,
+entry, replacement, malformed and unbound declarations reject during compilation.
+
+Evidence: `TestClampedDamageAmount`, `TestClampedDamageDefinition`,
+`TestClampedDamageDelayed`,
+`TestRONClampedDamageDrainLife`, `TestRONClampedDamageInvalid`,
+`TestRONClampedDamageScopes`, `TestRONClampedDamageAtomicLoad` and the upgraded
+full-record `TestRONRestrictedXGameplay`. No RON source correction was needed.

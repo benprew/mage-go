@@ -338,6 +338,7 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 		cards:             maps.Clone(ctx.Game.resolution.cardBindings),
 		cardSets:          cloneCardsBindings(ctx.Game.resolution.cardsBindings),
 		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
+		damageResults:     cloneDamageResultsBindings(ctx.Game.resolution.damageResultsBindings),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		words:             maps.Clone(ctx.Game.resolution.wordPairBindings),
@@ -387,6 +388,7 @@ type capturedDelayedBody struct {
 	spells            map[*SpellBinding]uuid.UUID
 	spellSources      map[*SpellBinding]DamageSource
 	damageSources     map[*DamageSourceBinding]DamageSource
+	damageResults     map[*DamageResultsBinding][]damageOutcome
 	permanents        map[*PermanentBinding]capturedPermanent
 	createdTokens     map[*CreatedTokensBinding][]capturedPermanent
 	players           map[*PlayerBinding]uuid.UUID
@@ -414,6 +416,9 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	state.cardBindings = maps.Clone(e.cards)
 	state.cardsBindings = cloneCardsBindings(e.cardSets)
 	defer func() { state.cardBindings = outerCards; state.cardsBindings = outerCardSets }()
+	outerResults := state.damageResultsBindings
+	state.damageResultsBindings = cloneDamageResultsBindings(e.damageResults)
+	defer func() { state.damageResultsBindings = outerResults }()
 	outerDamageSources := state.damageSourceBindings
 	state.damageSourceBindings = cloneDamageSourceBindings(e.damageSources)
 	defer func() { state.damageSourceBindings = outerDamageSources }()
@@ -532,6 +537,7 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 		cards:             maps.Clone(ctx.Game.resolution.cardBindings),
 		cardSets:          cloneCardsBindings(ctx.Game.resolution.cardsBindings),
 		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
+		damageResults:     cloneDamageResultsBindings(ctx.Game.resolution.damageResultsBindings),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		words:             maps.Clone(ctx.Game.resolution.wordPairBindings),

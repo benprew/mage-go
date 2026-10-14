@@ -387,17 +387,29 @@ func (ds *DamageSystem) dealDamageToPlayerFromSource(g *Game, p Player, amount i
 }
 
 type damageOutcome struct {
-	amount    int
-	playerID  uuid.UUID
-	permanent capturedPermanent
-	source    DamageSource
+	gainLimit         int
+	creatureRecipient bool
+	amount            int
+	playerID          uuid.UUID
+	permanent         capturedPermanent
+	source            DamageSource
 }
 
 func executeDamageOutcome(g *Game, action Action) damageOutcome {
 	result := damageOutcome{}
+	if playerAction, ok := action.(*DamageToPlayerAction); ok {
+		if player := g.GetPlayer(playerAction.PlayerID()); player != nil {
+			result.gainLimit = max(0, player.Life())
+		}
+	}
 	if permanentAction, ok := action.(*DamageToCreatureAction); ok {
 		if permanent := g.FindPermanent(permanentAction.PermanentID()); permanent != nil && !permanent.PhasedOut {
 			result.permanent = capturedPermanent{permanent.ID(), permanent.incarnationID}
+			result.gainLimit = permanentAction.Amount()
+			result.creatureRecipient = permanent.HasType(TypeCreature)
+			if permanent.HasType(TypePlaneswalker) {
+				result.gainLimit = max(0, permanent.Counters[Loyalty])
+			}
 		}
 	}
 	dealt := g.executeDamageAction(action)

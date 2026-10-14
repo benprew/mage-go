@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **863 accepted / 123 rejected names**
-(986 total), **2,220 compiled / 225 rejected records** (2,445 total).
-The latest slice is **RESTRICTED-X-PAYMENT**. Ordinary spell X restrictions now
-share total-cost locking, mana allocation, solver demand and automatic payment.
-Estimated and actual full-card gains are **zero names / zero records**.
-All six Drain Life diagnostics advance to clamped actual-damage gain.
-Native and RON prerequisite tests cover color spending, modifiers, alternative
-costs, rollback, production, permissions, copies, clones and declaration errors.
-Complete-card gameplay coverage is unchanged; all accepted records stay accepted.
+Latest measured result (2026-10-13): **864 accepted / 122 rejected names**
+(986 total), **2,226 compiled / 219 rejected records** (2,445 total).
+The latest slice is **CLAMPED-DAMAGE-GAIN**. Singular actual-damage results now
+supply pre-damage life/loyalty limits and exact-visit creature toughness reads.
+Estimated and actual full-card gains are **one name / six records**.
+All six unchanged Drain Life records now compile and execute all their rules.
+Native and RON tests cover caps, prevention, redirection, LKI, phasing, payment,
+legality, scopes, copies, clones, delayed frames and declaration errors.
+Complete-card gameplay coverage gains Drain Life; all accepted records stay accepted.
 
-The loader still rejects the collection atomically. Clamped damage gain,
-exile counters and other unsupported records remain gaps. Runtime cutover,
+The loader still rejects the collection atomically. Exile counters, exact
+last-drawn costs and other unsupported records remain gaps. Runtime cutover,
 Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
@@ -25,12 +25,10 @@ Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Clamped actual-damage gain — Drain Life.** Restricted X is now ready;
-   estimated one name/six records. Save pre-damage life, toughness or loyalty
-   caps and compose them with saved actual damage outcomes.
-2. **Exact last-drawn hand-card discard cost — Jandor's Ring.** Estimated one
-   name/two records. Recheck the last draw's exact hand visit through the shared
-   cost transaction; fixed mana, tap and draw actions already have adapters.
+1. **Exact last-drawn discard cost — Jandor's Ring.** Estimated one name/two
+   records. Recheck the last draw's exact hand visit through shared transactions.
+2. **Color-modified spell copying — Fork.** Estimated one name/six records.
+   Copiable red exceptions and optional retargeting need contract assessment.
 3. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
    precedes predicates/removal, spell exile and all-graveyard batch returns.
 
@@ -6064,3 +6062,129 @@ user work was present or changed. This slice is ready for its descriptive commit
    and simultaneous each-graveyard return still block one eventual name/record.
 
 This run stops after restricted X payment.
+
+## 2026-10-13 — CLAMPED-DAMAGE-GAIN (complete)
+
+### Baseline, candidates and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict loader exit 1 was
+collection rejection, not a build failure: 2,220 compiled / 225 rejected
+records and 863 accepted / 123 rejected names, out of 2,445 records / 986 names.
+The top status and latest ledger entry supplied the candidates. Complete RON
+records, nested forms and targeted vocabulary evidence were inspected.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Clamped actual-damage gain | Drain Life | 1 name / 6 records | Restricted X, singular any-target damage and life gain are ready. Saved recipient caps complete the actual-damage result contract. | Small engine/result adapter; medium interaction testing. |
+| Exact last-drawn discard cost | Jandor's Ring | 1 name / 2 records | Needs turn-local last-draw hand-visit history and exact transactional discard. Fixed mana, tap and draw forms are ready. Reusable exact-card payment prerequisite. | Medium history/payment work and rollback testing. |
+| Exact exile-card counters | All Hallow's Eve | 0 immediate names / records | Visit storage precedes counter predicates/removal. Spell exile with counters and simultaneous each-graveyard returns also remain. Reusable source-zone counter prerequisite. | Medium storage/lifecycle work; later slices still needed. |
+
+The first ranked candidate was dependency-ready and had the largest immediate
+record gain of these candidates for the least engine work. It was selected as
+one complete singular result capability. Reprints count once. This selection
+does not claim multi-card gameplay gain from first-error frequency.
+
+### Established contract and boundaries
+
+Engine: `ClampedDamageAmount(results *DamageResultsBinding) ResolutionValue`
+reads one positive saved singular outcome. Missing or nonsingular results return
+zero. Nil and unbound declarations reject during definition validation. The
+shared damage executor saves final recipient identity and pre-damage life or
+loyalty after replacement/prevention. The value limits actual damage, not damage
+requested, life lost or loyalty removed. Damage itself is not clamped.
+
+Creature toughness uses current exact-visit information at the value read,
+including departure LKI or phase information. Existing marked damage does not
+reduce the cap. Return cannot replace the former visit. A creature planeswalker
+uses both limits; negative limits yield zero. Local Oracle evidence in
+`data/LEA.json` explicitly requires pre-damage life and loyalty, but does not
+require pre-damage toughness. CR 120.4b–d and 608.2h–i establish timing and reads.
+There was no RON source defect or source correction.
+
+RON: symbol `TheClampedAmountOfDamageDealtThisWay` after the latest local
+singular ordinary `SpellDealsDamage` or `PermanentDealsDamage`. Existing typed
+player/permanent recipients and singular any-target bindings are reused.
+Collections, malformed tuple forms, unbound reads, branch escapes, entry and
+draw-replacement bodies reject at compilation. Plans retain singular/plural
+information. Each factory creates its own existing damage-result declarations.
+No global last-action slot, card-name branch or Go-card fallback was added.
+
+Reuse: `DamageOutcomesInto`, `DealDamageFrom`, existing damage replacements and
+prevention, exact permanent information, result cloning, lexical continuation
+lowering, definition validation and strict atomic loading. A failing delayed
+read exposed missing outcome capture in `capturedDelayedBody`; step and
+permanent-event delayed bodies now clone/save/restore the damage-results map.
+This supplies the same capability through delays, without a new damage service.
+No plural clamping or simultaneous-operation adapter was introduced; existing
+batch damage and replacement ordering remain unchanged. Costs keep their shared
+restricted-X and transactional contracts.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests failed first at undefined `ClampedDamageAmount` after correcting
+test counter names. RON gameplay tests failed at the unsupported clamped symbol
+in all six complete records. The delayed RON assertion then failed because its
+saved outcome was absent; shared frame capture fixed that failure. Later short
+suite failures were four fixed inventory counts, now updated to the measured
+2,226/219 and strengthened with an explicit Drain Life acceptance assertion.
+No gameplay assertion was weakened.
+
+- **Drain Life (LEA, LEB, 2ED, 3ED, CED, CEI) →
+  TestRONClampedDamageDrainLife and TestRONRestrictedXGameplay.** Complete
+  unchanged records execute payment, X, any target, damage and gain. Cases cover
+  player life, creature toughness, planeswalker loyalty, prevention, X zero,
+  returned illegal targets, phasing, timing, copied spells and game clones.
+  The previous payment-only AST fixture now uses the entire record and checks
+  gain as well as successful/failed payments and rollback.
+- **TestClampedDamageAmount / Definition.** Actual final recipient after
+  redirection, replacement increases, marked damage, pre-damage life/loyalty,
+  negative caps, creature planeswalkers, current toughness, exact departure,
+  return, phase snapshots, zero-output clearing, clone isolation and declaration
+  errors. These are shared engine contract tests.
+- **TestClampedDamageDelayed / TestRONClampedDamageScopes.** Step and departure
+  delays, waiting-query purity, cloned delayed frames, latest local producers,
+  branch-local producers and separate factory instances.
+- **TestRONClampedDamageInvalid / AtomicLoad.** Invalid symbols/arity,
+  collection and context rejection, absent/out-of-scope producers, complete
+  real-record isolated loading, atomic failed-load registry preservation and
+  the existing value inventory role.
+
+### Validation and measured result
+
+Final focused checks passed:
+`go test ./pkg/mage/dsl/ron -run TestRONClampedDamage -count=1` and
+`go test ./pkg/mage -run TestClampedDamage -count=1`.
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1` and
+`make test` passed after the inventory assertions were updated.
+`make lint` passed with 0 issues after removal of one redundant test variable
+type. Automatic changes only regrouped imports in the new tests. Both focused
+commands and the existing restricted-X/damage-outcome tests passed again after
+formatting. `git diff --check` passed. No environment or validation blocker remains.
+
+Final strict loader exit 1 remains expected atomic collection rejection:
+**2,226 compiled / 219 rejected records**, **864 accepted / 122 rejected names**.
+Exactly six Drain Life diagnostics disappear; there are no added rejections or
+changed remaining diagnostics. Every previously accepted record stays accepted.
+Estimated one-name/six-record gains match actual gains. Complete-card gameplay
+coverage gains Drain Life (one unique name), backed by all six complete records.
+
+Changed files: native clamped_damage.go/test, damage_system.go,
+composable_conditions.go and doc.go; RON clamped_damage_test.go, damage_outcome.go,
+sacrifice_value.go, damage_outcome_test.go, restricted_x_test.go,
+definition_plan_test.go, inventory_test.go and numeric_consumers_test.go;
+dsl-reference.md, engine-rules-contracts.md and this ledger. No RON source changed,
+so vocabulary source hashes need no refresh. No Go definitions, generator or DSL
+exports were removed; complete collection loading and runtime removal gates remain.
+
+### Ranked next candidates
+
+1. **Exact last-drawn discard cost — Jandor's Ring.** One name/two records;
+   exact turn-local hand visits and transactional discard precede its adapter.
+2. **Color-modified spell copying — Fork.** One name/six records estimated;
+   complete records require a copiable red exception and optional retargeting.
+   Assess the shared spell-copy and copiable-value contracts before selecting.
+3. **Exact exile-card counters — All Hallow's Eve.** Zero immediate gains;
+   counter storage precedes queries/removal, spell exile and batch return.
+
+This run stops after clamped damage gain.

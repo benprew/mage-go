@@ -2,7 +2,6 @@ package ron
 
 import (
 	"errors"
-	"maps"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -17,22 +16,6 @@ func TestRONRestrictedXGameplay(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			record := repositoryRecord(t, set, "Drain Life", set+".ron")
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "TheClampedAmountOfDamageDealtThisWay") {
-				t.Fatalf("remaining complete-record gap: %v", err)
-			}
-			// The fixture tests payment and damage until the gain adapter is available.
-			rules := record.Fields["Rules"]
-			spell := rules.Args[1]
-			sequence := spell.Args[0].Args[1]
-			sequence.Args = append([]Node(nil), sequence.Args...)
-			sequence.Args[0].Args = append([]Node(nil), sequence.Args[0].Args[:1]...)
-			spell.Args = append([]Node(nil), spell.Args...)
-			spell.Args[0].Args = append([]Node(nil), spell.Args[0].Args...)
-			spell.Args[0].Args[1] = sequence
-			rules.Args = append([]Node(nil), rules.Args...)
-			rules.Args[1] = spell
-			record.Fields = maps.Clone(record.Fields)
-			record.Fields["Rules"] = rules
 			factory, err := Compile(record)
 			if err != nil {
 				t.Fatal(err)
@@ -63,8 +46,8 @@ func TestRONRestrictedXGameplay(t *testing.T) {
 					continue
 				}
 				g.ResolveStack()
-				if b.Life() != 18 || a.Life() != 20 {
-					t.Fatal("damage prerequisite or omitted gain fixture")
+				if b.Life() != 18 || a.Life() != 22 {
+					t.Fatal("damage or life gain")
 				}
 			}
 		})
