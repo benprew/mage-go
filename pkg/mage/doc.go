@@ -12,6 +12,21 @@
 // ThisGraveyardCard and one EntersNormally in non-Aura graveyard source lists.
 // Other references, entry options and player-action contexts need adapters.
 //
+// [WithXSpendingColor] limits mana spent on a spell's announced X.
+// [SpellContextForCard] keeps the declaration in a fresh payment context.
+// Shared total-cost locking saves the remaining restricted generic amount.
+// Reductions remove restricted X first. Taxes and other generic costs remain
+// unrestricted. Announced X does not change. Channel cannot replace this
+// remaining amount with life. As-though permissions can supply its color;
+// each mana unit keeps its actual color and spending restriction.
+// Pool payment, automatic production and solver demand use the same rule.
+// [Game.MaxXValue] applies it to the supplied cost without changing the context.
+// It retains its existing supplied-cost contract for taxes and reductions.
+// Copies do not pay again. Clones keep separate pools and announced values.
+// RON accepts CastEffect(SpendOnlyColorManaOnX(color)) on one ordinary
+// instant or sorcery with printed X. Modal and text-revision contexts need
+// separate adapters. Drain Life still needs its clamped damage gain.
+//
 // [ControllerManaSpending] permits the source controller to pay with one
 // mana color as another color. Active permissions combine, including chains.
 // The payment planner and live payment keep actual colors and spending rules.
@@ -20,7 +35,7 @@
 // separate rules and pools. Queries do not spend mana or make choices.
 // RON accepts PlayerEffect(You, [MaySpendColoredManaAsThoughItWereAnotherColor
 // (color, color)]) with one operation and two of the five mana colors.
-// Other players, temporary permissions and restricted X need separate adapters.
+// Other players and temporary permissions need separate adapters.
 //
 // [AddRestrictedMana] saves fixed productions with one spending rule.
 // All productions use one shared mana replacement event. Each mana unit
@@ -29,7 +44,7 @@
 // pay costs or change pools. RON accepts AddManaWithModifiers with fixed
 // mana symbols, nonempty And lists and artifact-only or creature-only spending.
 // The same spending adapter serves repeated one-color resolution production.
-// Restricted X payment needs a separate contract.
+// Restricted X payment uses the separate spell spending contract.
 //
 // [WithSourceCardInZone] saves a graveyard or face-up exile source visit.
 // Ordinary events use the owner as controller outside the battlefield.

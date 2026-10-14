@@ -41,11 +41,15 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
+	spellCtx := SpellContextForCard(spec.Card)
+	if spellCtx.XSpendingRestricted && (spec.XValue < 0 || (!spec.Mana.HasX && spec.XValue != 0)) {
+		return nil, fmt.Errorf("restricted spell X requires a nonnegative value and an X casting cost")
+	}
 	if extraMana, direct := directSpellManaCosts(spec.Costs, spec.XValue); direct {
 		totalMana := resolvedSpellManaCost(spec.Mana, spec.XValue)
 		addActionManaCost(&totalMana, extraMana)
-		totalMana, lifeLoss := g.modifySpellTotalCost(spec, totalMana)
-		spellCtx := SpellContextForCard(spec.Card)
+		spellCtx.RestrictedGeneric = spellRestrictedXUnits(spec.Mana, spec.Costs, spec.XValue)
+		totalMana, lifeLoss := g.modifySpellTotalCostWithContext(spec, totalMana, spellCtx)
 		payment, err := g.prepareCostPaymentTransaction(costPaymentSpec{
 			Controller:             spec.Controller,
 			SourceID:               spec.Card.ID(),
@@ -89,9 +93,8 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 			nonMana = append(nonMana, cost)
 		}
 	}
-	totalMana, lifeLoss := g.modifySpellTotalCost(spec, totalMana)
-
-	spellCtx := SpellContextForCard(spec.Card)
+	spellCtx.RestrictedGeneric = spellRestrictedXUnits(spec.Mana, lockedCosts, spec.XValue)
+	totalMana, lifeLoss := g.modifySpellTotalCostWithContext(spec, totalMana, spellCtx)
 	payment, err := g.prepareCostPaymentTransaction(costPaymentSpec{
 		Controller:             spec.Controller,
 		SourceID:               spec.Card.ID(),
@@ -118,6 +121,10 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 
 // Cost changes use the complete mana total so reductions can cover added mana.
 func (g *Game) modifySpellTotalCost(spec spellPaymentSpec, total ManaCost) (modified ManaCost, lifeLoss int) {
+	return g.modifySpellTotalCostWithContext(spec, total, nil)
+}
+
+func (g *Game) modifySpellTotalCostWithContext(spec spellPaymentSpec, total ManaCost, ctx *SpellPaymentContext) (modified ManaCost, lifeLoss int) {
 	for _, color := range cardColors(spec.Card) {
 		if increase := g.effects.Rules.SpellCostIncrease(color); increase > 0 {
 			total.Generic += increase
@@ -129,6 +136,7 @@ func (g *Game) modifySpellTotalCost(spec spellPaymentSpec, total ManaCost) (modi
 			addActionManaCost(&total, tax.increase)
 		}
 	}
+	beforeReduction := total.Generic
 	for _, color := range cardColors(spec.Card) {
 		if reduction := g.effects.Rules.SpellCostReduction(color); reduction > 0 {
 			total.Generic = max(0, total.Generic-reduction)
@@ -141,12 +149,21 @@ func (g *Game) modifySpellTotalCost(spec spellPaymentSpec, total ManaCost) (modi
 		}
 	}
 	total.Generic -= computeConditionalCostReduction(g, spec.Controller, spec.Card, total.Generic, spec.Targets)
+	restricted := 0
+	if ctx != nil && ctx.XSpendingRestricted {
+		ctx.RestrictedGeneric = max(0, ctx.RestrictedGeneric-(beforeReduction-total.Generic))
+		restricted = ctx.RestrictedGeneric
+	}
 	lifeLoss = spec.LifeLoss
 	if spec.ChannelGeneric {
-		lifeLoss += total.Generic
-		total.Generic = 0
+		lifeLoss += total.Generic - restricted
+		total.Generic = restricted
 	}
 	if spec.AnyColor {
+		if ctx != nil {
+			ctx.XSpendingRestricted = false
+			ctx.RestrictedGeneric = 0
+		}
 		total = flattenManaCost(total)
 	}
 	return total, lifeLoss

@@ -161,6 +161,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
+		if e.xSpendingOptions > 0 && (e.kind != ActionSpell || e.xSpendingOptions != 1 || e.xSpendingColor < White || e.xSpendingColor > Green) {
+			n.problem = "supply one colored X spending rule on a spell action"
+		}
 		if e.spellTextContinuation && !e.supportsSpellTextContinuation() {
 			n.problem = "spell text continuation requires an ordinary spell without casting bindings"
 		}
@@ -450,6 +453,9 @@ func ValidateCardDefinition(name string, card Card) error {
 	var problems []error
 	if nilDefinition(card) {
 		return fmt.Errorf("%s: card: supply a card definition", name)
+	}
+	if err := validateXSpendingCard(card); err != nil {
+		return fmt.Errorf("%s: %w", name, err)
 	}
 	historyOwners := make(map[*ActivationHistoryBinding]bool)
 	var assigned map[savedBinding]bool

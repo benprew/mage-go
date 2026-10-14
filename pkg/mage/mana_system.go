@@ -300,13 +300,19 @@ func (ms *ManaSystem) MaxXValue(g *Game, playerID uuid.UUID, mc ManaCost, spellC
 			Green:   mc.Green,
 			Hybrid:  mc.Hybrid,
 		}
+		queryContext := spellCtx
+		if spellCtx != nil && spellCtx.XSpendingRestricted {
+			copied := *spellCtx
+			copied.RestrictedGeneric = x * mc.XCount
+			queryContext = &copied
+		}
 		_, err := SolveMana(ManaSolverInputs{
 			Pool:         pool,
 			Cost:         cost,
 			Sources:      sources,
 			Scores:       scores,
 			Conversions:  conv,
-			SpellContext: spellCtx,
+			SpellContext: queryContext,
 		})
 		return err == nil
 	}

@@ -530,6 +530,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "casting_restriction":
+		if n.Name == "SpendOnlyColorManaOnX" && len(n.Args) == 1 {
+			return "color"
+		}
 		if (n.Name == "AdditionalCastingCost" || n.Name == "AdditionalCastingCostForEachTargetBeyondTheFirst") && len(n.Args) == 1 {
 			return "cost"
 		}

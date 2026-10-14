@@ -8,17 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **863 accepted / 123 rejected names**
 (986 total), **2,220 compiled / 225 rejected records** (2,445 total).
-The latest slice is **CONTROLLER-COLORED-MANA-SPENDING**. Active controller-only
-permissions share payment legality, planning and actual mana consumption.
+The latest slice is **RESTRICTED-X-PAYMENT**. Ordinary spell X restrictions now
+share total-cost locking, mana allocation, solver demand and automatic payment.
+Estimated and actual full-card gains are **zero names / zero records**.
+All six Drain Life diagnostics advance to clamped actual-damage gain.
+Native and RON prerequisite tests cover color spending, modifiers, alternative
+costs, rollback, production, permissions, copies, clones and declaration errors.
+Complete-card gameplay coverage is unchanged; all accepted records stay accepted.
 
-Estimated and actual full-card gains are **one name / six records**.
-Sunglasses of Urza now has complete unchanged-record gameplay tests for all reprints.
-Native and RON evidence covers actual spent colors, restricted mana, combined
-permissions, automatic mana activation payments, hybrid costs, X bounds,
-control, phasing, ability removal/restoration, return, copies and clones.
-All previously accepted records stay accepted; remaining diagnostics are unchanged.
-
-The loader still rejects the collection atomically. Restricted X payment,
+The loader still rejects the collection atomically. Clamped damage gain,
 exile counters and other unsupported records remain gaps. Runtime cutover,
 Go-card removal and DSL cleanup stay gated.
 
@@ -27,10 +25,12 @@ Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **As-though colored mana spending — Sunglasses of Urza.** One name/six records;
-   compare shared payment/solver support and restriction preservation first.
-2. **Restricted X payment — Drain Life.** Zero immediate gains until clamped
-   damage life gain also works; payment decomposition is a shared prerequisite.
+1. **Clamped actual-damage gain — Drain Life.** Restricted X is now ready;
+   estimated one name/six records. Save pre-damage life, toughness or loyalty
+   caps and compose them with saved actual damage outcomes.
+2. **Exact last-drawn hand-card discard cost — Jandor's Ring.** Estimated one
+   name/two records. Recheck the last draw's exact hand visit through the shared
+   cost transaction; fixed mana, tap and draw actions already have adapters.
 3. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
    precedes predicates/removal, spell exile and all-graveyard batch returns.
 
@@ -5912,3 +5912,155 @@ unmet. No unrelated user work was present or changed.
    those outcomes. Zero immediate gains until restricted X is complete.
 
 This run stops after controller colored mana spending.
+
+## 2026-10-13 — RESTRICTED-X-PAYMENT
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 for collection rejection:
+2,220 compiled / 225 rejected records, 863 accepted / 123 rejected names.
+This was not a build or test failure.
+
+| Candidate | Distinct affected names; estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Latest ranked #1: restricted X payment | Drain Life; zero immediate names/records, one eventual name/six records | Clamped actual-damage gain remains. Shared announced-cost decomposition, allocation and solver demand unblock its final gain slice and support restricted additional X costs. | Medium; engine, compiler, payment/production/modifier and rejection tests |
+| Latest ranked #2: exact exile-card counters | All Hallow's Eve; zero immediate names/records, one eventual name/record | Exact visit storage must precede predicates/removal. Spell-exile entry counters and simultaneous all-graveyard returns also remain. | Medium/high; storage, identity, replacement and source-zone integration |
+| Latest ranked #3: clamped actual-damage gain | Drain Life; zero immediate names/records before restricted X, one eventual name/six records | Saved damage outcomes are ready, but its complete record first needs restricted payment. Recipient pre-damage life, toughness and planeswalker loyalty caps need capture. | Medium; typed producer facts, replacement and damage-result tests |
+
+The first candidate was dependency-ready and an unblocking prerequisite, so it
+was selected. It completes one payment contract without combining the later
+life-gain capability. There is no immediate multi-card gain among these ranked
+candidates; this run claims no such gain. All six complete Drain Life records and
+the complete All Hallow's Eve record, including their nested forms, were inspected.
+Reprints count once. Go card definitions did not supply requirements.
+Local LEA Oracle text agrees with the black-only X restriction. No source defect
+was found. CR 107.3a/b, 601.2f/g/h, 106.6 and 609.4a/b supply announced X,
+alternative-cost limits, total-cost locking, complete payment, retained mana
+restrictions and as-though spending. The reusable engine work used the
+`implement-engine` skill; no removed card/set skill or generator was invoked.
+
+### Signatures, supported context and reuse boundary
+
+Native: `mage.WithXSpendingColor(core.Color) mage.ActionOption` on a spell action
+with a printed X mana cost. Definition validation rejects duplicate rules,
+invalid colors, non-spell actions, missing printed X and the unsupported ordinary
+spell text-continuation marker. `SpellContextForCard` builds a fresh value context
+with `XSpendingRestricted`, `XSpendingColor` and `RestrictedGeneric`.
+
+RON: exactly `CastEffect(SpendOnlyColorManaOnX(color))` on an ordinary instant or
+sorcery with printed X. One of the five color symbols is required. Duplicate
+CastEffect rules, malformed arities, tuple colors, colorless/any-color arguments,
+permanents, modal bodies and resolving declarations reject. The ordinary spell
+factory applies a fresh option; it does not install a text-continuation marker.
+`compileXSpendingColor(Node, bool) (*core.Color, error)` owns spelling and validation.
+Inventory assigns the argument the `color` role. No card-name branch or production
+fallback was added. The complete Drain Life records remain rejected.
+
+The engine retains the generic total cost and records which generic units came
+from announced X in the selected mana cost and additional costs. Increases remain
+unrestricted; reductions remove restricted X first. Announced X stays unchanged.
+Channel's existing life shortcut can cover only unrestricted generic payment.
+An alternative mana cost without X requires X zero. Negative X rejects before
+payment. The cast-from-zone any-color permission and ordinary as-though graphs
+can supply the restricted color while preserving actual spent colors.
+
+`paymentCostForContext` supplies a color-demand allocation view to the existing
+pool planner, solver bounds and production caps. This is not a change to the
+mana cost. Existing per-unit spending restrictions, mana replacements, exact
+mana-ability activation payments and shared cost transactions remain in use.
+Activation costs do not inherit the spell restriction. Failed planning/payment
+keeps live resources, zones, events and stack unchanged. Copies retain announced
+X without paying again. Clones keep separate pools and stack state. Phasing can
+suspend a supplying permission; queries do not produce mana or modify contexts.
+
+`MaxXValue` counts every X symbol in its supplied cost using a copied trial
+context. It retains its existing supplied-cost query boundary: it does not add
+spell taxes, reductions or additional costs. A resolved-cost query supplies the
+remaining amount in `RestrictedGeneric`. No battlefield source reference, LKI,
+trigger timing, new replacement ordering or simultaneous-operation service is
+needed for this spell declaration. Existing callers and broad DSL exports remain
+intact. Only the established contract is documented in doc.go, dsl-reference.md
+and engine-rules-contracts.md.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests first failed at undefined `WithXSpendingColor` and
+`SpellPaymentContext.RestrictedGeneric`. RON tests separately failed at the
+unsupported casting restriction in all six complete Drain Life records and in
+five-color declaration fixtures. Existing test API names were corrected without
+weakening assertions. Later failing-first checks exposed the cast-from-zone
+any-color interaction, unsupported text-continuation admission and nonzero X
+with an alternative cost without X. All were corrected in the shared contracts.
+
+- **Drain Life → TestRONRestrictedXGameplay.** All complete unchanged
+  LEA/LEB/2ED/3ED/CED/CEI records reject at the separate clamped gain diagnostic.
+  Test-only AST fixtures omit that unsupported gain instruction, retain the
+  unchanged metadata, casting restriction, target and damage instruction, and
+  execute successful and rejected payments plus X damage. These are payment
+  prerequisite tests, not complete-card gameplay coverage.
+- **TestRONRestrictedXColors / Invalid / StrictLoadAndInventory.** Five supported
+  colors, invalid forms/contexts, missing X, duplicate declarations, atomic
+  rejection preserving a supplied registry, isolated successful loading and
+  inventory roles. Factories are rebuilt separately for gameplay runs.
+- **TestRestrictedXPayment / Planning.** Hand and alternate-zone payments,
+  insufficient color despite sufficient total mana, exact allocation, eligible
+  and ineligible restricted mana, invalid decomposition, query purity, X bounds,
+  spell copies and game clones.
+- **TestRestrictedXAutomaticAndPermissions / AnyColorProduction /
+  AlternateAnyColor / ReplacementsAndConversion.** Automatic land production,
+  permission phasing, actual spent colors, variable-color demand, zone-casting
+  permission, mana-type replacements and repeated converters preserving final
+  color demand. AutomaticRollback checks untouched sources after rejection.
+- **TestRestrictedXModifiers / MultipleSymbolsAndCosts / HybridAllocation /
+  AlternateWithoutX / Declarations.** X zero, taxes then reductions, retained
+  announced X, Channel, nonmana-cost rollback, repeated X symbols, additional X,
+  hybrid allocation, zero/illegal alternative-cost X and definition rejection.
+
+### Validation and measured result
+
+The final focused commands passed with fresh counts:
+`go test ./pkg/mage/dsl/ron -run TestRONRestrictedX -count=1` and
+`go test ./pkg/mage -run TestRestrictedX -count=1`.
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1` and
+`make test` passed after the final semantic change. `make lint` passed with
+0 issues. Automatic formatting only changed import grouping in the new tests;
+no unrelated file changed. Both focused commands passed again after formatting.
+`git diff --check` passed. No environment or validation blocker remains.
+
+Final `go run ./cmd/loadcards -json` exits 1 for expected atomic collection
+rejection: **2,220 compiled / 225 rejected records**, **863 accepted / 123 rejected
+names**, out of 2,445 records / 986 names. The baseline/final diagnostic comparison
+has zero added or removed rejected positions. Exactly six Drain Life messages
+change from `unsupported casting restriction (SpendOnlyColorManaOnX)` at column
+163 to `unsupported value (TheClampedAmountOfDamageDealtThisWay)` at column 302.
+All other diagnostics are identical; every previously accepted record stays
+accepted. Estimated zero-name/zero-record gains match actual gains. Full-card
+RON gameplay coverage is unchanged; the payment prerequisite adds native and
+RON fragment evidence separately from collection compilation.
+
+Changed files: new native and RON restricted_x.go/test files; activated.go,
+core/mana_restriction.go, definition.go, mana.go, mana_solver.go, mana_system.go,
+spell_payment.go, text_spell_continuation.go and doc.go; RON compiler.go and
+inventory.go; dsl-reference.md, engine-rules-contracts.md and this ledger.
+No RON source changed, so vocabulary source hashes need no refresh. No Go card
+definition, generator or broad DSL function was removed: complete collection
+loading, gameplay migration and startup removal gates remain unmet. No unrelated
+user work was present or changed. This slice is ready for its descriptive commit.
+
+### Ranked next candidates
+
+1. **Clamped actual-damage gain — Drain Life.** One immediate name/six records
+   estimated now that restricted X works. Reuse saved actual-damage results and
+   add recipient pre-damage life, creature toughness and planeswalker loyalty
+   caps. Keep prevention, redirection, departure and instance frames exact.
+2. **Exact last-drawn hand-card discard cost — Jandor's Ring.** One name/two
+   records estimated. Complete ARN and 3ED records use one exact-card discard,
+   fixed mana/tap costs and DrawACard. The last-draw hand visit and transactional
+   discard adapter need assessment; a returned card cannot supply that visit.
+3. **Exact exile-card counters — All Hallow's Eve.** Zero immediate gains;
+   shared visit storage precedes counter queries/removal. Spell-exile counters
+   and simultaneous each-graveyard return still block one eventual name/record.
+
+This run stops after restricted X payment.

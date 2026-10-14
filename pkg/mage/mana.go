@@ -59,11 +59,18 @@ func SpellContextForCard(c Card) *SpellPaymentContext {
 	if c == nil {
 		return nil
 	}
-	return &SpellPaymentContext{
+	ctx := &SpellPaymentContext{
 		IsArtifact: c.HasType(TypeArtifact),
 		IsCreature: c.HasType(TypeCreature),
 		CardName:   c.Name(),
 	}
+	for _, ability := range c.Abilities() {
+		if action, ok := UnwrapAbility(ability).(*ActionDefinition); ok && action.kind == ActionSpell && action.xSpendingOptions == 1 {
+			ctx.XSpendingRestricted = true
+			ctx.XSpendingColor = action.xSpendingColor
+		}
+	}
+	return ctx
 }
 
 // AddRestricted adds mana that may only be spent on spells satisfying r
@@ -177,6 +184,11 @@ type manaPaymentState struct {
 }
 
 func (mp *ManaPool) paymentPlan(mc ManaCost, spellCtx *SpellPaymentContext) ([AnyColor + 1]int, bool) {
+	var ok bool
+	mc, ok = paymentCostForContext(mc, spellCtx)
+	if !ok {
+		return [AnyColor + 1]int{}, false
+	}
 	var available [AnyColor + 1]int
 	total := 0
 	for _, mana := range mp.pool {

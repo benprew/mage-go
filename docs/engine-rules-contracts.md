@@ -19476,7 +19476,7 @@ its color and restriction. A white unit spent for a red cost is recorded as whit
 No mana production or replacement event occurs for this permission. Queries make
 no choices and spend no resources. Failed payment retains the existing shared
 transaction contract. Existing global `ManaConversion` callers and
-`ManaSolverInputs.Conversions` remain supported. Restricted X is a separate gap.
+`ManaSolverInputs.Conversions` remain supported. Restricted X uses the separate spell spending contract below.
 
 CR 106.6 preserves spending restrictions; CR 609.4a permits combined as-though
 conditions; CR 609.4b preserves costs and actual spent mana; CR 613.11 applies
@@ -19492,3 +19492,69 @@ actual spent colors, resolution and failed payment resource preservation.
 `TestColoredManaSpending`, `ActivationAndHybrid` and `Declarations` cover
 competing/chained permissions, restricted mana, clone isolation, automatic mana
 activation payments, hybrid costs, X bounds, separate players and invalid colors.
+
+
+## Restricted X spell spending
+
+`mage.WithXSpendingColor(color core.Color) mage.ActionOption` declares one
+spending color on a spell action. Native definition validation rejects duplicate
+rules, invalid colors, non-spell actions and cards without printed X.
+RON accepts exactly `CastEffect(SpendOnlyColorManaOnX(color))` on an ordinary
+instant or sorcery with printed X. The argument is one of the five color symbols.
+Other arities, tuple-shaped colors, colorless/any-color arguments, duplicate
+CastEffect declarations, permanents, modal spells and resolving declarations
+reject before publication. Restricted spells do not acquire the ordinary
+spell text-continuation marker; color-word revision needs a separate adapter.
+
+`SpellContextForCard` returns a fresh context with `XSpendingRestricted` and
+`XSpendingColor`. `RestrictedGeneric` saves the restricted part of a resolved
+payment, not a change to the mana cost. The shared spell transaction counts
+announced X in its selected mana cost and additional costs. It applies taxes,
+then reductions. Reductions remove restricted X first, so the resulting payment
+can use the least restrictive legal allocation. Other generic mana remains
+unrestricted. Announced X and printed mana symbols retain their values.
+Channel can substitute life only for the remaining unrestricted generic amount.
+An alternative mana cost without X requires announced X zero and supplies no
+restricted X payment. Negative X rejects before payment.
+
+The pool planner converts the saved restricted amount into color demand only
+for allocation. Solver bounds and variable production demand use that same
+allocation view. The actual total cost remains generic. Existing as-though
+permissions can supply the declared color, including the cast-from-zone
+any-color permission. Actual spent colors and per-unit mana restrictions remain.
+Mana replacements run through the existing production pipeline. Mana-ability
+activation costs use their own context and do not inherit the spell restriction.
+The shared transaction proves payment before changes to live resources.
+
+`Game.MaxXValue` copies the context for each trial and counts every X symbol in
+the supplied cost. It retains the existing contract: the supplied cost is the
+query input; the query does not apply spell taxes, reductions or additional
+costs. A caller querying a resolved cost through `CanAfford` or pool payment
+supplies its remaining amount in `RestrictedGeneric`. Queries do not make
+choices, produce mana or modify the supplied context. Copies retain announced X
+without another payment. Separate factories and game clones retain separate
+payments and pools. This declaration requires no battlefield source, LKI,
+trigger timing or new simultaneous-operation contract.
+
+Local LEA Oracle text and all six complete Drain Life records agree on its
+black-only X restriction. CR 107.3a keeps announced X; CR 601.2f locks the
+combined cost after increases and reductions; CR 601.2g/h supplies mana abilities
+and complete payment. CR 106.6 preserves per-unit restrictions and CR 609.4a/b
+supplies as-though payment without changing mana costs or actual colors.
+No RON source defect or source change was needed.
+
+Evidence: `TestRestrictedXPayment`, `Planning`, `AutomaticAndPermissions`,
+`Modifiers`, `Declarations`, `AlternateAnyColor`, `MultipleSymbolsAndCosts`,
+`AutomaticRollback`, `AnyColorProduction`, `AlternateWithoutX`,
+`HybridAllocation` and `ReplacementsAndConversion`
+cover the native contract, costs, exact color allocation, X zero, hybrid
+allocation, source phasing, replacements, automatic conversions,
+clone/copy isolation and rejection without resource changes.
+`TestRONRestrictedXGameplay` checks all six complete Drain Life records still
+reject at `TheClampedAmountOfDamageDealtThisWay`. Test-only fixtures omit that
+unsupported gain action and execute the unchanged casting restriction, metadata,
+target and X damage through the engine. These are prerequisite tests, not
+complete Drain Life gameplay coverage. `TestRONRestrictedXColors`, `Invalid`
+and `StrictLoadAndInventory` cover the five colors, declaration contexts, atomic
+loading and inventory color roles. No collection record becomes accepted in
+this slice; clamped damage gain remains the full-card blocker.

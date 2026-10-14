@@ -3,10 +3,16 @@ package core
 // SpellPaymentContext describes the spell currently being paid for, so
 // individual mana entries with spending restrictions can decide whether
 // they may be spent. Built once at each spell-cast entry point.
+// XSpendingRestricted and XSpendingColor retain a spell declaration.
+// RestrictedGeneric saves the remaining X payment after cost reductions.
+// A separate payment context prevents one query from changing another payment.
 type SpellPaymentContext struct {
-	IsArtifact bool
-	IsCreature bool
-	CardName   string
+	IsArtifact          bool
+	IsCreature          bool
+	CardName            string
+	XSpendingRestricted bool
+	XSpendingColor      Color
+	RestrictedGeneric   int
 }
 
 // ManaRestriction is a predicate over SpellPaymentContext that decides

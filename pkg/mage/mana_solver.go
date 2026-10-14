@@ -261,6 +261,10 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 }
 
 func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
+	demand, valid := paymentCostForContext(in.Cost, in.SpellContext)
+	if !valid {
+		return false
+	}
 	maxUsableMana := usableManaCount(node.pool, in.SpellContext)
 	for sourceIndex, source := range in.Sources {
 		if manaSourceSetContains(node.used, sourceIndex) {
@@ -332,17 +336,17 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		color Color
 		count int
 	}{
-		{White, in.Cost.White},
-		{Blue, in.Cost.Blue},
-		{Black, in.Cost.Black},
-		{Red, in.Cost.Red},
-		{Green, in.Cost.Green},
+		{White, demand.White},
+		{Blue, demand.Blue},
+		{Black, demand.Black},
+		{Red, demand.Red},
+		{Green, demand.Green},
 	} {
 		if relaxedManaAvailableForColor(available, requirement.color, in.effectiveSpendingPermissions()) < requirement.count {
 			return false
 		}
 	}
-	for _, hybrid := range in.Cost.Hybrid {
+	for _, hybrid := range demand.Hybrid {
 		if relaxedManaAvailableForColor(available, hybrid.A, in.effectiveSpendingPermissions())+
 			relaxedManaAvailableForColor(available, hybrid.B, in.effectiveSpendingPermissions()) == 0 {
 			return false
@@ -556,7 +560,8 @@ func manaSearchStateKey(pool *ManaPool, used string, spellCtx *SpellPaymentConte
 }
 
 func manaChoiceCapsForInputs(in ManaSolverInputs) manaChoiceCaps {
-	caps := manaChoiceCapsForPermissions(in.Cost, in.effectiveSpendingPermissions())
+	demand, _ := paymentCostForContext(in.Cost, in.SpellContext)
+	caps := manaChoiceCapsForPermissions(demand, in.effectiveSpendingPermissions())
 	for _, source := range in.Sources {
 		var sourceCaps manaChoiceCaps
 		for _, ability := range source.Abilities {

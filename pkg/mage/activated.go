@@ -210,6 +210,8 @@ type ActionDefinition struct {
 	staticGrant         bool
 	activationConds     []ActivationCondition
 	castingConditions   []StateCondition
+	xSpendingColor      Color
+	xSpendingOptions    int
 	dslRestrictions     []activationRestriction
 	dslCaptures         []activationCapture
 	aiHints             []AIHint
