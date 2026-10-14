@@ -491,11 +491,11 @@ func returnGraveyardCardToBattlefield(g *Game, cardID, controller uuid.UUID) {
 	returnGraveyardCardToBattlefieldWithEntry(g, cardID, controller, false)
 }
 
-func returnGraveyardCardToBattlefieldWithEntry(g *Game, cardID, controller uuid.UUID, tapped bool) {
-	returnGraveyardCardToBattlefieldWithActor(g, cardID, controller, controller, tapped)
+func returnGraveyardCardToBattlefieldWithEntry(g *Game, cardID, controller uuid.UUID, tapped bool) *Permanent {
+	return returnGraveyardCardToBattlefieldWithActor(g, cardID, controller, controller, tapped)
 }
 
-func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, actor uuid.UUID, tapped bool) {
+func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, actor uuid.UUID, tapped bool) *Permanent {
 	for _, player := range g.players {
 		for _, card := range player.Graveyard() {
 			if card.ID() != cardID {
@@ -504,23 +504,24 @@ func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, acto
 			visit := g.graveyardVisit(cardID)
 			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, controller, nil, battlefieldEntryContext{}, tapped)
 			if visit == uuid.Nil || g.graveyardVisit(cardID) != visit {
-				return
+				return nil
 			}
 			if perm == nil && failed == nil {
-				return
+				return nil
 			}
 			if _, ok := g.MoveFromGraveyard(player.PlayerID(), cardID, ZoneBattlefield); !ok {
-				return
+				return nil
 			}
 			if perm == nil {
 				player.AddToGraveyard(failed)
-				return
+				return nil
 			}
 			g.registerBattlefieldEntry(perm, nil, uuid.Nil)
 			g.completeBattlefieldEntry(perm, controller, actor, 0)
-			return
+			return perm
 		}
 	}
+	return nil
 }
 
 func (*exileTargetCardFromGraveyardEffect) Apply(ctx *EffectContext) error {

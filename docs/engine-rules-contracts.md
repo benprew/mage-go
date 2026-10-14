@@ -20625,3 +20625,40 @@ replacement, rollback, ability-removal, control and cloning tests are
 No new replacement ordering, zone movement, payment transaction or stack-copy
 service is introduced. A mana activation cannot be copied as a stack object;
 City's separate counter activation can be copied and retains its source visit.
+
+## Saved singular graveyard-entry permanent
+
+`ReturnCardToBattlefieldInto(card CardRef, controller PlayerRef,
+result *PermanentBinding, options ...BattlefieldEntryOption) ResolvingEffect`
+uses the same entry operation as `ReturnCardToBattlefield`. Existing callers
+retain their signatures and event timing. The internal shared service returns
+its actual prepared entrant after successful registration and entry completion;
+the result is not inferred from a physical card ID lookup after movement.
+The binding saves the entrant's ID and battlefield incarnation. Failed card or
+controller reads, prohibited entry, and graveyard-visit changes during entry
+choices clear the prior result. Definition checks require a named non-nil
+binding and a producer before each read on every path.
+
+CR 400.7j permits later parts of an effect to find the public-zone object that
+the effect moved. CR 400.7 prevents a later returned object from supplying that
+visit. Entry preparation and choices retain the shared CR 603.6d, 614.12 and
+614.12a behavior. This result adds no replacement or simultaneous-operation
+order. It introduces no payment, refund or additional cost behavior.
+
+Existing `From` actions require the present, unphased saved incarnation.
+Existing information readers can use its exact departure or phase facts.
+Resolution maps, copied bodies, delayed capture and clone services keep results
+separate. Waiting source queries read the saved permanent frame without entry,
+choice or movement. Each lexical RON producer has its own binding; a failed
+later producer cannot reuse an earlier producer's result. A branch keeps its
+producer local. A delayed body retains the binding in its creation scope.
+
+Tests: `TestReturnedPermanentEntryResult`, `TestReturnedPermanentDefinition`,
+`TestReturnedPermanentEntryChoiceVisit`, `TestReturnedPermanentLKIAndWaiting`,
+`TestRONReturnedPermanentGameplay`, `TestRONReturnedPermanentSavedFrames`,
+`TestRONReturnedPermanentInstances`, `TestRONReturnedPermanentInvalid` and
+`TestRONReturnedPermanentSourceClause`. The last test extracts Soul Exchange's
+actual return clause and adds a supported tap consumer. It does not establish
+complete Soul Exchange gameplay. The existing complete Resurrection and typed
+return regression tests retain normal entry, owner, controller and trigger
+coverage. Exile-return and graveyard Aura producers need separate adapters.

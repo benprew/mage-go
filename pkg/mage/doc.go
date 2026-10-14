@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ReturnCardToBattlefieldInto] saves the exact successful entrant in a
+// [PermanentBinding]. Failed entry clears the result. The shared entry service
+// supplies replacements, choices, tapped status and events. [From] requires
+// the saved present, unphased visit for actions. Information reads can use LKI.
+// Copies, clones and delayed bodies keep separate result frames. RON accepts
+// ThePermanentPutOnTheBattlefieldThisWay after a singular creature-target
+// graveyard return in a resolving action list. Entry, payment, exile-return
+// and graveyard Aura producers need separate adapters.
+//
 // [NewSourceCounterManaAbility] adds one fixed mana type per source counter.
 // Queries and activation read the same live count without spending counters.
 // Zero counts have no production. Missing and phased sources have no production.

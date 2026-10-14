@@ -15637,3 +15637,29 @@ Complete City of Shadows gameplay is covered by `TestRONSourceCounterManaCity`
 and `TestRONSourceCounterManaPayment`, plus the complete-record payment lifecycle
 cases in `TestRONMatchingPermanentExileCostCity`. Invalid declarations, atomic
 loading, factory isolation and semantic inventory have separate tests.
+
+### Saved singular graveyard-entry results in RON
+
+An ordinary resolving action list can use
+`ThePermanentPutOnTheBattlefieldThisWay` after
+`PutGraveyardCardOntoBattlefield(Ref_TargetGraveyardCard, [EntersNormally])`.
+The existing singular creature-target requirement applies. One
+`EntersUnderPlayersControl(playerRef)` operation is also supported, with the
+existing player reference rules. The result is a permanent reference, so existing
+singular actions and information reads can consume it.
+
+The compiler creates a separate `mage.PermanentBinding` for each lexical
+producer and factory instance. It lowers the producer through
+`mage.ReturnCardToBattlefieldInto(card, controller, result, options...)`.
+A failed return supplies no permanent; it cannot reuse an earlier result.
+A later producer shadows earlier results in its continuation. Branch-local
+producers do not replace outer results. Delayed bodies retain the result that
+was in scope when they were created. Forward, unbound and tuple-form result
+references reject. Entry and draw-replacement bodies reject this result form.
+
+The engine uses its existing entry and saved-visit services. Phasing prevents
+live actions; a phase cycle keeps the visit. Departure and return cannot supply
+the earlier visit. LKI reads remain information reads. Graveyard Aura sources,
+dead-guest returns, exile returns and payment results require separate adapters.
+This prerequisite does not establish complete gameplay for Soul Exchange,
+Animate Dead, Takklemaggot or Tawnos's Coffin.

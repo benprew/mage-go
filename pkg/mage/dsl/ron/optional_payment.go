@@ -14,6 +14,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "PutGraveyardCardOntoBattlefield" && hasReturnedPermanentRead(parts[i+1:]) {
+			build, err := compileReturnedPermanentProducer(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if (part.Name == "DiscardNumberCards" || part.Name == "DiscardACard") && hasDiscardCountRead(parts[i+1:]) {
 			build, err := compileDiscardCountProducer(part, parts[i+1:], ctx)
 			if err != nil {

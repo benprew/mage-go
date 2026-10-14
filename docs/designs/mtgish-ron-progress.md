@@ -8,14 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **883 accepted / 103 rejected names**
 (986 total), **2,252 compiled / 193 rejected records** (2,445 total).
-The latest slice is **SOURCE-COUNTER-COUNT-MANA**. A source tap activation
-produces one fixed mana type per live matching source counter. Pure queries,
-manual activation and automatic payment share the typed engine production plan.
-Complete City of Shadows now compiles and has RON gameplay evidence for both
-abilities and their interaction, including copied/countered counter activations.
-Estimated and actual gain: **one unique name / one record**. Other loader
-diagnostics are unchanged. No RON source changed. Complete-card gameplay
-coverage adds City of Shadows. All required checks pass; lint reports 0 issues.
+The latest slice is **SAVED-GRAVEYARD-ENTRY-PERMANENT**. Singular creature-target
+returns can supply ThePermanentPutOnTheBattlefieldThisWay to later resolving
+actions and delayed bodies. Typed engine results keep the exact successful
+entrant and clear failed returns. Scope, copies, clones, phasing, return and LKI
+have contract tests. This shared prerequisite serves Soul Exchange, Animate Dead,
+Takklemaggot and Tawnos's Coffin; their remaining producers/consumers still reject.
+Estimated and actual gain: **zero unique names / zero records**. Complete-card
+gameplay coverage is unchanged; source-clause and synthetic coverage increased.
+No RON source changed. All required checks pass; lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,15 +25,13 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Saved permanent exile facts / returned-permanent results.** Soul Exchange
-   needs payment-time Thrull facts and the exact successful graveyard entrant.
-   Keep the two producers distinct and compare reusable result prerequisites.
-2. **Entry payment/result prerequisites.** Compare bounded life entry for
-   Nameless Race with exact X graveyard creature payment for Frankenstein's
-   Monster. Each still needs its own consumer and failure/choice contracts.
-3. **Optional plural sacrifice results.** Sword of the Ages needs saved paid
-   visits, LKI total power and later exile of those exact graveyard visits.
-   Compare shared result infrastructure with the first two candidates.
+1. **Saved permanent exile payment facts.** Soul Exchange still needs the
+   APermanentWasExiledThisWay condition and resolving +2/+2 counter support.
+   Reuse the new returned-permanent binding; do not conflate payment and entry.
+2. **Entry payment/results.** Compare Nameless Race with Frankenstein's Monster.
+   Each needs its own complete payment producer, consumer and failure contract.
+3. **Optional plural sacrifice results.** Sword of the Ages still needs saved
+   paid visits, LKI total power and exile of exact resulting graveyard visits.
 
 ## Dependencies and source blockers
 
@@ -10429,3 +10428,202 @@ vocabulary loader baseline and this progress ledger.
 
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
 generation and unused DSL cleanup remain incomplete. Stop after this slice.
+
+## 2026-10-14 — SAVED-GRAVEYARD-ENTRY-PERMANENT
+
+### Baseline and candidate selection
+
+The starting tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader collection validation
+exited 1 with 2,252 compiled / 193 rejected records and 883 accepted / 103 rejected
+unique names. This was expected collection rejection, not a build or test error.
+Read the design, engine API, current status and latest ledger entry, targeted
+vocabulary entry, relevant entry/binding contracts, and complete RON records.
+No Go card definition supplied requirements. The implement-engine skill guided
+the reusable engine work; its no-card-wiring boundary did not prevent the RON
+adapter explicitly requested for this run. No agents were used.
+
+Compared the latest ranked candidates before editing, counting reprints once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Saved returned-permanent result, part of ranked candidate 1 | Soul Exchange; Animate Dead; Takklemaggot; Tawnos's Coffin | 0 | Soul needs payment-time exile facts and a +2/+2 counter adapter. Animate needs graveyard enchantment, entry attachment and linked sacrifice. Takklemaggot needs dead-guest return and dynamic rule changes. Coffin needs exact exile return, noted counters and entry attachments. One typed result reference can serve all four as their producers arrive. | Small engine entry-result extension, lexical adapter, focused lifecycle and scope tests; one run. |
+| Entry payments/results | Nameless Race; Frankenstein's Monster | 1 per complete independent contract, at most 2 across both | Nameless needs bounded life payment, opponent white-card counts and saved-life P/T. Monster needs exact X graveyard creature payment, paid/unpaid entry and counter distribution. The producers and consumers differ; generic entry syntax alone unlocks neither. | Larger, separate payment and consumer slices; not one cohesive implementation. |
+| Optional plural sacrifice results | Sword of the Ages | 1 | Requires saved payment visits, LKI total power and later exile of the exact resulting graveyard visits. Reuses sacrifice transactions and batch services, but needs a plural cross-zone result contract. | Medium-to-large payment/result/lifecycle slice. |
+
+Selected the dependency-ready returned-permanent prerequisite from candidate 1.
+Its concrete downstream benefit covers four unique cards and avoids making the
+one-card payment adapters the next unit of work. This run implements only the
+singular creature-target graveyard-return producer and its permanent-reference
+consumer. It does not claim other producers are supported because they use the
+same result spelling. Estimated full-card gain was zero and actual gain is zero.
+
+### Contract, supported shape and reuse boundary
+
+Engine API:
+
+`ReturnCardToBattlefieldInto(card CardRef, controller PlayerRef, result *PermanentBinding, options ...BattlefieldEntryOption) ResolvingEffect`
+
+The existing `ReturnCardToBattlefield` and its callers keep their signatures.
+Both constructors use the same effect and entry-option builder. The shared
+internal graveyard-entry service now returns its actual successful entrant;
+it does not recover a result by looking up a physical card ID after movement.
+Blocked entry, missing operands and changed graveyard visits save no result.
+Every execution clears an older value first. Normal replacement preparation,
+entry choices, owner/control, tapped options and event ordering stay in mage.
+
+RON exact producer/context:
+
+`PutGraveyardCardOntoBattlefield(Ref_TargetGraveyardCard, [EntersNormally])`
+
+or one `EntersUnderPlayersControl(<existing supported player reference>)`,
+with an existing singular creature-only graveyard target, in an ordinary
+resolving action list. A later symbol
+`ThePermanentPutOnTheBattlefieldThisWay` is a typed permanent reference.
+Existing permanent actions, conditions and information readers consume it.
+A fresh plan and PermanentBinding belong to each lexical producer and factory
+instance. Later producers shadow earlier results only in their continuation.
+Branch-local producers cannot export a result. A delayed body retains the
+producer in scope at creation even if a later return fails. Forward, missing,
+malformed and incompatible references reject during compilation. Entry and
+draw-replacement result contexts reject. Unsupported entry modifiers still reject.
+
+Reused PermanentBinding/From, exact incarnation information and LKI, existing
+resolution maps, clone and stack-copy services, delayed frame capture, and
+waiting permanent-source enumeration. No new mutable subsystem state or global
+last-result slot. Live actions require the saved present, unphased visit.
+A phase cycle preserves it; a later returned card cannot replace it. LKI reads
+keep original facts without permitting an action on an absent object.
+CR 400.7/400.7j, 603.6d and 614.12/614.12a supply the identity and entry contracts.
+No payment/refund or simultaneous-operation ordering was added by this slice.
+
+The complete affected records were inspected in FEM (Soul Exchange), LEG
+(Takklemaggot), ATQ (Tawnos's Coffin), and all six Animate Dead reprints
+(LEA, LEB, 2ED, 3ED, CED, CEI; six records, counted as one name). Animate Dead
+has two result reads per record. The vocabulary reports 15 result occurrences
+across all four names. No source record or vocabulary snapshot was changed.
+
+### Failing-first evidence and card-to-test mappings
+
+The initial engine tests failed to compile for missing
+`ReturnCardToBattlefieldInto`. Corrected test-only event namespaces and a phasing
+API assumption, then reconfirmed that only the missing constructor failed.
+The initial RON gameplay tests failed on the unbound result symbol after
+correcting the test power-query API. An initial +2/+2 counter fixture also
+exposed an independent unsupported counter kind. Changed the synthetic binding
+probe to the existing +1/+1 kind, and confirmed the expected unbound-reference
+failure before implementing the adapter. This does not simplify a production
+record: Soul Exchange remains rejected with its original text.
+
+- **Soul Exchange return clause → TestRONReturnedPermanentSourceClause**:
+  extracts its actual producer from the complete FEM AST, removes the unsupported
+  payment and condition for this fixture, and adds a supported tap consumer.
+  Native cast and resolution return the targeted real RON Grizzly Bears and
+  act on that entrant. The complete source still rejects with its existing
+  `activation history requires the resolving activated ability (If)` diagnostic.
+  This is clause evidence, not complete Soul Exchange gameplay.
+- **Resurrection / Grizzly Bears → TestRONGraveyardReturnNormalEntry** (existing)
+  and the new RON tests: complete Resurrection regression retains ordinary entry,
+  tapped entry, controller, owner, ETB timing and copied return coverage. New
+  tests use complete Grizzly Bears records as guests. No new complete-card
+  gameplay mapping is claimed for the four blocked result consumers.
+- **Animate Dead, Takklemaggot, Tawnos's Coffin**: downstream mapping only.
+  Their distinct producer/attachment/link blockers remain; no complete gameplay
+  or new acceptance claim is made.
+- **TestRONReturnedPermanentGameplay**: resolving counters and conditions,
+  explicit You entry control, copies, cloned pending spells, stale graveyard
+  targets, repeated failed producers and delayed execution.
+- **TestRONReturnedPermanentSavedFrames**: source departure, cloned delayed
+  frames, phasing/cycle, leave-and-return, historical delayed reads after a later
+  failure, and branch-local shadowing without outer result replacement.
+- **TestRONReturnedPermanentInstances**: two builds of one retained factory keep
+  their own delayed entrant results.
+- **TestRONReturnedPermanentInvalid**: missing/forward/branch-escaped and
+  delayed-body-escaped results, tuple-form references, empty entry options and
+  unsupported entry modifiers reject.
+- **TestReturnedPermanentEntryResult**: exact owner/controller, tapped entry
+  options, land-entry prohibition, failed return clearing, phasing/cycle,
+  departure/return and clone isolation through delayed live actions.
+- **TestReturnedPermanentEntryChoiceVisit**: an entry choice moves the graveyard
+  card away and back; the original saved visit cannot enter or supply a result.
+- **TestReturnedPermanentLKIAndWaiting**: repeated pure waiting queries retain
+  the exact entry visit through phasing and departure. A later returned card
+  with changed power cannot supply old LKI or receive a saved live action.
+- **TestReturnedPermanentDefinition**: nil result and read-before-producer fail
+  engine definition checks. Existing typed/tapped graveyard-return and waiting
+  return tests passed with their original assertions.
+
+One engine test initially counted only the returned guest in its controller's
+graveyard, although the resolved test sorcery also enters that graveyard.
+Corrected the expected count to include both cards. No production behavior or
+existing test was changed to accommodate that setup error.
+
+### Source defects, remaining boundaries and removal gates
+
+No source-data defect was found or corrected. The resolving +2/+2 counter gap is
+an adapter gap: compilePermanentCounterType supports several P/T counter kinds,
+but not this one. It is separate from the APermanentWasExiledThisWay payment
+facts needed by Soul Exchange. The loader's current first diagnostic masks both.
+The new binding supplies neither a historical exile predicate nor a payment
+producer. Dead-guest, enchanted-graveyard-card and exiled-card return producers
+remain distinct adapters. Optional return results are not added here.
+
+No DSL function or Go card definition was removed. No removal audit or authoring
+cutover was attempted because complete loading and native startup remain gated.
+No fallback, partial production registry, card-name branch or declaration panic
+was introduced. Accepted records and unsupported collection rejection remain
+subject to the final checks below.
+
+### Validation and measured outcome
+
+Passed the required fast-fail checks:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONReturnedPermanent -count=1`.
+- Focused engine `TestReturnedPermanent` tests and existing typed/tapped,
+  normal-entry RON, and waiting graveyard-return regression tests with `-count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- Skill verification `go test ./... -short -count=1` also passed.
+- Initial `make lint` found two prealloc issues in the new producer effect slice
+  and factory-instance test. Added the requested capacities, reran focused RON,
+  build/vet, engine short and full suites, then reran `make lint`: **0 issues**.
+  Reviewed the formatter and final source diffs; no unrelated changes.
+  Focused engine/RON and affected return regressions passed again after lint.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1** for expected atomic collection
+  rejection: **2,252 compiled / 193 rejected records**, **883 accepted / 103 rejected
+  unique names**. The full report is byte-for-byte identical to the fresh starting
+  report. No accepted record was lost and every remaining diagnostic is unchanged.
+  The vocabulary loader baseline equals the final report. All twelve RON source
+  hashes match the vocabulary snapshot, so no snapshot refresh was needed.
+
+No build, test, lint or environment blocker remains. Estimated and actual gains
+match: **zero full unique cards / zero records**. Complete-card gameplay coverage
+is unchanged. New coverage establishes the shared singular return-result contract,
+source-clause execution and synthetic engine/RON lifecycle cases. The four blocked
+consumer cards still need their remaining adapters. Full collection loading,
+runtime cutover, native startup, Go-card removal and DSL cleanup remain incomplete.
+
+Changed files: engine composable_actions.go, effect_cards.go, doc.go and
+returned_permanent_test.go; ron compiler.go, graveyard_return.go,
+optional_payment.go, permanent_scope.go, player_scope.go, returned_permanent.go
+and returned_permanent_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. No card source or old caller
+was removed. This is one completed capability slice; no second slice was started.
+
+### Ranked next candidates
+
+1. **Saved permanent exile payment facts.** Soul Exchange needs a typed
+   APermanentWasExiledThisWay condition using payment-time types/subtypes.
+   Its later entrant now has a reusable binding. Resolving +2/+2 counters remain
+   a separate bounded adapter/engine-counter prerequisite. Reassess shared
+   historical payment consumers before choosing the next slice.
+2. **Entry payment/results.** Compare bounded life entry for Nameless Race with
+   exact X graveyard creature payment and counter distribution for Frankenstein's
+   Monster. Select a complete producer/consumer contract, not entry syntax alone.
+3. **Optional plural sacrifice results.** Sword of the Ages needs exact paid
+   visits, saved total power and later exile of the resulting graveyard visits.
+   Compare shared result lifetimes with the remaining exile payment facts.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
+creation and unused DSL cleanup remain gated. Stop after this slice.

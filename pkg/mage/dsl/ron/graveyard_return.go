@@ -131,6 +131,10 @@ func compileGraveyardTargetFilter(n Node) ([]mage.CardFilter, bool, error) {
 }
 
 func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
+	return compileGraveyardReturnInto(n, ctx, nil)
+}
+
+func compileGraveyardReturnInto(n Node, ctx scope, result *returnedPermanentPlan) (effectFactory, error) {
 	count := 1
 	if n.Name == "PutGraveyardCardOntoBattlefield" {
 		count = 2
@@ -177,6 +181,9 @@ func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(entry, "graveyard battlefield entry")
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if result != nil {
+			return mage.ReturnCardToBattlefieldInto(card.build(bindings), controller.build(bindings), bindings.returnedPermanents[result])
+		}
 		return mage.ReturnCardToBattlefield(card.build(bindings), controller.build(bindings))
 	}, nil
 }
