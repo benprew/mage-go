@@ -241,14 +241,11 @@ func TestRONHostCombatInvalid(t *testing.T) {
 	}
 }
 
-func TestRONHostCombatImprisonClause(t *testing.T) {
+func TestRONHostActivationCombat(t *testing.T) {
 	for _, attacking := range []bool{false, true} {
 		for _, payment := range []string{"paid", "declined", "short"} {
 			t.Run(fmt.Sprintf("%t/%s", attacking, payment), func(t *testing.T) {
 				record := repositoryRecord(t, "LEG", "Imprison", "LEG.lines.ron")
-				rules := record.Fields["Rules"]
-				rules.Args = []Node{rules.Args[0], rules.Args[2]}
-				record.Fields["Rules"] = rules
 				factory, err := Compile(record)
 				if err != nil {
 					t.Fatal(err)
@@ -291,6 +288,17 @@ func TestRONHostCombatImprisonClause(t *testing.T) {
 				if payment == "declined" && a.ManaPool().TotalMana() != 1 {
 					t.Fatal("decline spent mana")
 				}
+				g.ExecuteCombatDamage()
+				wantA, wantB := 20, 20
+				if attacking && !paid {
+					wantA = 18
+				}
+				if !attacking && paid {
+					wantB = 18
+				}
+				if a.Life() != wantA || b.Life() != wantB {
+					t.Fatalf("combat life=%d,%d want=%d,%d", a.Life(), b.Life(), wantA, wantB)
+				}
 			})
 		}
 	}
@@ -331,10 +339,7 @@ func TestRONHostCombatDelayedAndFactories(t *testing.T) {
 }
 
 func TestRONHostCombatCompleteRecordsStayRejected(t *testing.T) {
-	for _, tc := range []struct{ set, name, blocker string }{{"LEG", "Imprison", "supply one artifact source"}} {
-		_, err := Compile(repositoryRecord(t, tc.set, tc.name, tc.set+".lines.ron"))
-		if err == nil || !strings.Contains(err.Error(), tc.blocker) {
-			t.Fatalf("%s: %v", tc.name, err)
-		}
+	if _, err := Compile(repositoryRecord(t, "FEM", "Goblin Flotilla", "FEM.lines.ron")); err == nil || !strings.Contains(err.Error(), "delayed departure duration") {
+		t.Fatalf("Goblin Flotilla: %v", err)
 	}
 }

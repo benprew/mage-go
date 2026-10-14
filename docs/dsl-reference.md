@@ -6559,8 +6559,8 @@ The engine API is `DeclareActivatedAbilityTarget(name string, sourceType
 core.CardType) *AbilityTargetBinding`, `ControllerOfAbility(AbilityRef) PlayerRef`,
 and `CounterAbility(AbilityRef) ResolvingEffect`. The compiler imports these
 services directly from `mage`; no legacy DSL export is required. Rust and Ayesha
-Tanaka use their complete LEG RON records. Trigger-event ability references,
-including Imprison's `Trigger_ThatActivatedAbility`, remain unsupported.
+Tanaka use their complete LEG RON records. Event-bound ability references use
+the separate contract below.
 
 ## RON source departure events and live exile collections
 
@@ -15243,3 +15243,38 @@ activation filters remain unsupported. Saved event target exclusion now uses
 `TargetOtherThanSavedPermanent`; Farrel's Mantle has complete-record gameplay
 evidence in `TestRONEventTargetExclusionMantle` and `NativeCombat`. Imprison
 still rejects its activation filter. Its combat-clause tests prove only that clause.
+
+
+## RON host tap-cost nonmana activation events
+
+`TriggerA(WhenAPlayerActivatesAnAbility(AnyPlayer,
+And([AbilityOfPermanent(HostPermanent), HasTapSelfInCost, NonManaAbility])),
+ActionList([...]))` accepts exactly these three filters in any order, once each,
+in a battlefield Aura rule. Each factory and each rule creates a fresh event
+binding. `HostPermanent` requires the existing Aura scope. Tuple spellings for
+bare symbols, missing/duplicate operands, non-host subjects, other player
+filters, and disjunctions reject during compilation.
+
+`Trigger_ThatActivatedAbility` reads that event's exact stack ability in the
+same resolving body, including optional payment branches. It can supply
+`CounterAbility` or `ControllerOfAbility`. A counter removes only that ability;
+an absent ability causes no counter and later actions continue. Controller reads
+require that ability to remain on the stack. Spell/permanent/player aliases,
+unbound or cross-rule reads, and delayed RON reads reject. The declaration does
+not bind `Trigger_ThatPlayer` or an event permanent.
+
+The engine adds `BindAbility(name string) *AbilityBinding` and
+`FromAbility(binding *AbilityBinding) AbilityRef`. `ActivatedAbilityEvent()` adds
+`FromAttachedPermanent()`, `WithTapCost()`, `NonMana()`, and
+`WithAbility(*AbilityBinding)` options. `GameEvent.ActivatedAbilityID` identifies
+only a completed stack activation. Mana activations keep that field empty.
+Existing event filters and callers retain their behavior. The binding uses the
+shared stack-identity resolution frame with a typed ability interface; it adds
+no parallel stack, payment, or trigger service.
+
+Imprison maps to `TestRONHostActivationImprison`, `Combat`, and `StrictLoad` for
+the complete unchanged LEG record. `Bindings` covers reordered filters, typed
+controller reads and independent factory instances. `Invalid` covers the
+supported declaration boundary. Existing artifact activation and ability-target
+suites preserve Artifact Possession, Haunting Wind, Powerleech, Rust, and Ayesha
+Tanaka. Complete collection loading and runtime cutover remain gated.

@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [BindAbility] and [FromAbility] keep an activated ability's exact stack identity.
+// [ActivatedAbilityEvent] can require an attached source, a tap symbol and a
+// nonmana ability. [GameEvent.ActivatedAbilityID] is empty for mana activations.
+// Detection saves the identity before trigger placement. Missing or departed
+// abilities supply no subject. Source departure, return, control and phasing
+// cannot change the saved ability. Copies and clones keep separate frames.
+// [CounterAbility] uses the shared counter service without a cost refund.
+// RON accepts the host, tap and nonmana conjunction in battlefield TriggerA.
+// Trigger_ThatActivatedAbility supplies CounterAbility and ControllerOfAbility
+// in that body. Other event filters and delayed RON reads need adapters.
+//
 // [TargetOtherThanSavedPermanent] excludes one saved battlefield visit.
 // Target placement, copy choices and resolution use separate event query frames.
 // Missing bindings supply no targets. Departure and phasing keep the saved
@@ -20,7 +31,7 @@
 // RON accepts these host events in battlefield TriggerA bodies. The attack/block
 // Or list requires both events with SinglePermanent(HostPermanent).
 // Trigger_ThatCreature and Trigger_ThatPermanent read the same saved host.
-// Defending-player capture, host becomes-blocked events and activation filters
+// Defending-player capture and host becomes-blocked events
 // need separate adapters. Saved event target exclusion uses the shared query.
 //
 // [SwitchPowerToughness] uses layer 7d after base values, bonuses and counters.

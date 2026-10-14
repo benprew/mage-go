@@ -20029,3 +20029,45 @@ payment and removal from combat. Its activation clause remains unsupported.
 Farrel's Mantle's native test uses its original event and a synthetic observable
 body. Its complete target/payment rule now has separate evidence in
 `TestRONEventTargetExclusionMantle` and `TestRONEventTargetExclusionNativeCombat`.
+
+
+## Saved activation abilities and attached tap-cost nonmana events
+
+A completed nonmana battlefield activation now emits its stack identity in
+`GameEvent.ActivatedAbilityID` after the shared payment transaction commits and
+the ability is placed on the stack (CR 602.2a–b). Manual and automatic mana
+activations keep that field empty (CR 605.1a, 605.3b). A targeted ability that
+produces mana still uses the stack and supplies an identity (CR 605.5a). Copies
+neither activate nor pay again. Failed payments and illegal tap activations
+emit no completed activation and keep live resources unchanged.
+
+`ActivatedAbilityEvent().FromAttachedPermanent().WithTapCost().NonMana()`
+requires the observer's current exact attachment, the event source's matching
+battlefield visit, a tap symbol in the cost, and a stack activation identity.
+Host phasing and observer ability removal stop new detection. The existing
+trigger service supplies APNAP placement and saves the detected controller.
+`WithAbility(BindAbility(name))` saves the event identity at detection. Binding
+validation rejects empty or absent declarations, repeated captures, conflicting
+tap filters, repeated filters, and undominated reads.
+
+`FromAbility` uses the existing stack-identity resolution frames through a
+private storage key. It returns only a present activated ability with that exact
+identity. Missing facts, spells, and departed abilities cannot supply subjects.
+Empty captures replace earlier facts. Reattachment, source or host departure,
+return, control changes, and phasing cannot transfer the reference to another
+ability. Source LKI is not needed to counter a still-present ability.
+`ControllerOfAbility` uses that ability's controller rather than its source's
+current controller. `CounterAbility` uses the shared counter operation and
+refunds no costs (CR 701.6a–b). Later instructions still run when the ability is
+absent. Factories, pending events, stack copies, delayed bodies, and game clones
+keep separate frames and saved identities. No replacement-order or simultaneous
+operation contract changes.
+
+Engine evidence: `TestActivationAbilityCaptureIdentity`, `FiltersAndRollback`,
+`Definition`, `MissingAndExactEvent`, and `DelayedFrame`. RON evidence:
+`TestRONHostActivationImprison`, `Combat`, `Bindings`, `Invalid`, and `StrictLoad`.
+The complete Imprison record casts and attaches, offers payment at resolution,
+counters the saved activation on payment, destroys its exact source when unpaid,
+and preserves its separate native attack/block payment behavior. Blocking removal
+also makes an attacker blocked only by that creature unblocked; damage follows
+the shared combat service. RON delayed ability reads remain outside this adapter.

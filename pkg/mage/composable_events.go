@@ -13,6 +13,14 @@ import (
 
 // --- from composable_ability_activation_event.go ---
 type abilityActivatedPattern struct {
+	ability            *AbilityBinding
+	captureAbility     bool
+	duplicateAbility   bool
+	attachedOnly       bool
+	duplicateAttached  bool
+	withTapCost        bool
+	nonMana            bool
+	duplicateNonMana   bool
 	activator          *PlayerBinding
 	captureActivator   bool
 	duplicateActivator bool
@@ -79,6 +87,15 @@ func (abilityActivatedPattern) eventPattern() {}
 
 func (p abilityActivatedPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
 	t := NewTriggered(EvtAbilityActivated, false, effect)
+	if p.attachedOnly {
+		t.AndConditionData(activationFromAttachedPermanent{})
+	}
+	if p.withTapCost {
+		t.AndConditionData(activationHasTapCost{})
+	}
+	if p.nonMana {
+		t.AndConditionData(activationUsesStack{})
+	}
 	if p.artifactOnly {
 		t.AndConditionData(activatedSourceIsArtifact{})
 	}
@@ -107,8 +124,16 @@ func (activatedSourceIsArtifact) CheckTriggerCond(event *GameEvent, reader GameR
 
 func (p abilityActivatedPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "an ability is activated", battlefieldSource: true}
-	if p.duplicateArtifact || p.duplicateOpponent || p.duplicateTapFilter {
+	if p.duplicateArtifact || p.duplicateOpponent || p.duplicateTapFilter || p.duplicateAttached || p.duplicateNonMana || (p.withTapCost && p.withoutTapCost) {
 		n.problem = "ability activation event: supply each filter once"
+	}
+	if p.captureAbility {
+		if p.ability == nil || p.duplicateAbility {
+			n.problem = "ability activation event: supply one ability binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.ability)
+			n.children = append(n.children, definitionEdge{"ability", &eventAbilityCapture{binding: p.ability}})
+		}
 	}
 	if p.captureActivator {
 		if p.activator == nil || p.duplicateActivator {
@@ -130,12 +155,16 @@ func (p abilityActivatedPattern) inspectDefinition() definitionNode {
 }
 
 func (p abilityActivatedPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
+	var captures []Effect
+	if p.captureAbility && p.ability != nil {
+		captures = append(captures, &eventAbilityCapture{binding: p.ability, id: event.ActivatedAbilityID})
+	}
 	if !p.captureSource || p.source == nil || event.SourceIncarnation == uuid.Nil {
-		return nil
+		return captures
 	}
 	game, ok := observer.(*Game)
 	if !ok {
-		return nil
+		return captures
 	}
 	var source DamageSource
 	if permanent := game.FindPermanentIncludingPhased(event.SourceID); permanent != nil && permanent.incarnationID == event.SourceIncarnation {
@@ -143,7 +172,7 @@ func (p abilityActivatedPattern) captureDetectedEvent(event *GameEvent, observer
 	} else if lki := game.zones.LKIByIncarnation(event.SourceIncarnation); lki != nil && lki.ID == event.SourceID {
 		source = damageSourceFromLKI(lki)
 	}
-	return []Effect{&eventDamageSourceCapture{binding: p.source, source: source}}
+	return append(captures, &eventDamageSourceCapture{binding: p.source, source: source})
 }
 
 type eventDamageSourceCapture struct {

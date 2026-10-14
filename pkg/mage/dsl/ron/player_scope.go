@@ -10,7 +10,7 @@ type playerReferencePlan struct {
 	active              bool
 	drawReplacement     *drawReplacementPlan
 	choice              *playerChoicePlan
-	ability             *abilityTargetPlan
+	ability             *abilityReferencePlan
 	landEntry           *landEntryEventPlan
 	defender            *sourceCombatPlayerPlan
 	action              *playerActionsPlan
@@ -37,6 +37,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	eventAbilities       map[*abilityEventPlan]*mage.AbilityBinding
 	sourceZones          map[*sourceZonePlan]*mage.CardBinding
 	controlExchanges     map[*controlExchangePlan]*mage.ControlExchangeResultBinding
 	damageOutcomes       map[*damageOutcomePlan]damageOutcomeBindings
@@ -207,7 +208,7 @@ func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
 		return mage.FromPlayer(bindings.chosenPlayers[p.choice])
 	}
 	if p.ability != nil {
-		return mage.ControllerOfAbility(bindings.abilities[p.ability])
+		return mage.ControllerOfAbility(p.ability.build(bindings))
 	}
 	if p.hostDeathController != nil {
 		return mage.FromPlayer(bindings.hostDeaths[p.hostDeathController].controller)

@@ -58,12 +58,27 @@ func compileAbilityTarget(n Node, ctx scope) (targetFactory, string, error) {
 	}, "Ref_TargetAbility", nil
 }
 
-func compileAbilityRef(n Node, ctx scope) (*abilityTargetPlan, error) {
+type abilityReferencePlan struct {
+	target *abilityTargetPlan
+	event  *abilityEventPlan
+}
+
+func (p abilityReferencePlan) build(bindings instanceBindings) mage.AbilityRef {
+	if p.event != nil {
+		return mage.FromAbility(bindings.eventAbilities[p.event])
+	}
+	return bindings.abilities[p.target]
+}
+
+func compileAbilityRef(n Node, ctx scope) (*abilityReferencePlan, error) {
 	if ctx.delayedStep {
 		return nil, unsupported(n, "delayed ability reference")
+	}
+	if n.Kind == Symbol && ctx.abilityEvent != nil && n.Name == ctx.abilityEvent.name {
+		return &abilityReferencePlan{event: ctx.abilityEvent}, nil
 	}
 	if n.Kind != Symbol || ctx.abilityTarget == nil || n.Name != ctx.abilityTarget.name {
 		return nil, problem(n, "unbound or incompatible ability reference")
 	}
-	return ctx.abilityTarget, nil
+	return &abilityReferencePlan{target: ctx.abilityTarget}, nil
 }

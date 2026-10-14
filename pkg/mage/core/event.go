@@ -57,9 +57,10 @@ const (
 // ZoneLibrary's zero value and should be ignored — match on the EventType
 // first.
 type GameEvent struct {
-	Type              EventType
-	SourceID          uuid.UUID
-	SourceIncarnation uuid.UUID
+	Type               EventType
+	ActivatedAbilityID uuid.UUID
+	SourceID           uuid.UUID
+	SourceIncarnation  uuid.UUID
 	// SourceControllerID keeps the damage source controller after the source leaves.
 	SourceControllerID uuid.UUID
 	CastManaSpent      int

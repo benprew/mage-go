@@ -88,6 +88,7 @@ type scope struct {
 	permanentTargets  *permanentTargetsPlan
 	spellTarget       *spellTargetPlan
 	abilityTarget     *abilityTargetPlan
+	abilityEvent      *abilityEventPlan
 	cardTarget        *cardTargetPlan
 	deathCard         *deathCardPlan
 	hostDeath         *hostDeathPlan
@@ -1335,7 +1336,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		return []effectFactory{func(bindings instanceBindings) mage.Effect { return mage.CounterAbility(bindings.abilities[ref]) }}, nil
+		return []effectFactory{func(bindings instanceBindings) mage.Effect { return mage.CounterAbility(ref.build(bindings)) }}, nil
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {

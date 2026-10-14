@@ -3447,11 +3447,12 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	g.pushStack(obj)
 
 	g.FireEvent(GameEvent{
-		Type:              EvtAbilityActivated,
-		SourceID:          perm.ID(),
-		SourceIncarnation: perm.incarnationID,
-		PlayerID:          playerID,
-		Flag:              hasTapCost,
+		Type:               EvtAbilityActivated,
+		ActivatedAbilityID: obj.ID,
+		SourceID:           perm.ID(),
+		SourceIncarnation:  perm.incarnationID,
+		PlayerID:           playerID,
+		Flag:               hasTapCost,
 	})
 
 	g.fireBecomesTargetEvents(obj, true)

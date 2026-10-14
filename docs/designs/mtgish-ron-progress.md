@@ -6,22 +6,23 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **871 accepted / 115 rejected names**
-(986 total), **2,239 compiled / 206 rejected records** (2,445 total).
-The latest slice is **EVENT-TARGET-EXCLUSION**. Singular permanent targets
-accept Other over saved event permanent bindings, including And filters and
-numbered groups. Engine placement, mode availability, copy retargeting and
-resolution queries keep exact event visits separate from live resolution state.
-Returned visits do not inherit exclusions. Factories, pending events, copies
-and clones keep separate bindings and saved facts.
+Latest measured result (2026-10-14): **872 accepted / 114 rejected names**
+(986 total), **2,240 compiled / 205 rejected records** (2,445 total).
+The latest slice is **HOST-TAP-NONMANA-ACTIVATION**. Battlefield Aura triggers
+accept the exact host/tap-symbol/nonmana conjunction and save the activated
+ability's stack identity. CounterAbility and ControllerOfAbility read that
+scoped identity. Source departure, return, control changes and phasing cannot
+transfer it to another activation. Factories, pending events, copies, delays
+and clones keep separate engine frames; delayed RON reads remain unsupported.
 Estimated and actual full-card gains are **one name / one record**.
-Farrel's Mantle gains complete-record RON gameplay evidence for Aura casting,
-attachment, target legality, optional damage payment and combat-damage suppression.
-Native combat, prevention, LKI, phasing, control, copies and cleanup are covered.
+Imprison gains complete-record RON gameplay evidence for Aura casting,
+activation payment/countering, source destruction, and native attack/block
+payment with combat removal and unblocking. Declaration, identity, mana
+classification, legality, failed payment, phasing, control and clones are covered.
 
-The loader still rejects the collection atomically. Farrel's Mantle's sole
-rejection is removed; every remaining diagnostic is unchanged. No accepted
-record regressed. Runtime cutover, Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. Imprison's sole rejection
+is removed; every remaining diagnostic is unchanged. No accepted record
+regressed. Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
@@ -7990,6 +7991,199 @@ API/rules documentation `doc.go`, `docs/dsl-reference.md`,
 3. **Variable discard payment/result — Recall.** Estimated one unlock after
    announced X, distinct hand visits, rollback and saved result cardinality are
    established. Reassess shared multi-card prerequisites before single-card work.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
+generation removal and unused DSL cleanup remain gated. This run stops after
+this one complete capability slice.
+
+## 2026-10-14 — HOST-TAP-NONMANA-ACTIVATION
+
+### Baseline, candidate comparison and selection
+
+The working tree was clean before this slice. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loading exited 1 with
+**2,239 compiled / 206 rejected records** and **871 accepted / 115 rejected
+names**. That exit is collection rejection, not a build or environment failure.
+No user changes or unrelated untracked files were removed.
+
+The latest entry's first candidate was evaluated first. Complete unchanged
+records were read for Imprison (LEG:129), Goblin Flotilla (FEM:34), and Recall
+(LEG:213), including all nested clauses. Targeted vocabulary queries covered
+WhenAPlayerActivatesAnAbility, HasTapSelfInCost, CounterAbility, CreateTriggerUntil,
+DiscardNumberCards, NumCardsDiscardedThisWay and the saved-count graveyard return.
+Reprints are counted once. Complete records were also read for the three accepted
+artifact activation callers: Artifact Possession, Haunting Wind and Powerleech.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and dependencies | Downstream value and effort |
+| --- | --- | --- | --- | --- |
+| Host tap-cost nonmana activation with exact ability capture | Imprison; preserve Artifact Possession, Haunting Wind and Powerleech | 1 name / 1 record | Aura casting, ordinary host combat union, optional mana payment, counter service, tap and combat removal already exist. Filter lowering alone would leave the ability alias unsupported. | A reusable event-bound AbilityRef serves counter/controller consumers without target declarations. Small to medium: one event identity field, typed binding, three event options, scoped adapter and identity/payment tests. |
+| Combat-bounded paired delayed trigger | Goblin Flotilla | 1 name / 1 record after the complete contract | Islandwalk, begin-combat payment, pair filters and first-strike layers exist. Creator control, exact visits, arming and actual UntilEndOfCombat expiry remain required. | Shared bounded event subscription can extend temporary triggers. Medium to high: native phase boundaries, extra combat, multiple pairs, source departure and turn-long grant isolation. |
+| Variable discard effect and saved-count graveyard return | Recall | 1 name / 1 record only after both producer and consumer | X announcement and self-exile are ready. DiscardNumberCards(ValueX), actual discard cardinality, and ReturnNumberCardsFromPlayersGraveyardToHand need complete adapters. The record declares a resolving discard effect, not a discard payment. | Shared variable discard/result service extends the two already accepted fixed-discard cards. Medium to high: distinct hand visits, replacements, partial discard, saved count, ordered graveyard choices and copy isolation. |
+
+Select Imprison's cohesive activation contract: it has the smallest remaining
+end-to-end work among the compared one-name gains and closes the first ranked
+candidate's shared exact-ability prerequisite. No multi-card unlock is claimed.
+The other two complete gains require larger independent contracts. The selected
+slice stops after this one capability.
+
+Before editing, the contract and acceptance cases were stated: exact completed
+host/tap/nonmana activation capture; paid/unpaid branches; independent pending
+activations; departure, return, control, phasing, copies and clones; native
+attack/block branches; invalid declarations and strict atomic loading.
+
+### Supported signatures, boundaries and engine reuse
+
+RON accepts one battlefield Aura `TriggerA` with:
+
+`WhenAPlayerActivatesAnAbility(AnyPlayer,
+And([AbilityOfPermanent(HostPermanent), HasTapSelfInCost, NonManaAbility]))`.
+
+The three operands can appear in any order, exactly once. HostPermanent needs
+the existing Aura scope. `Trigger_ThatActivatedAbility` binds one exact activated
+stack object and supplies CounterAbility or ControllerOfAbility in the same
+resolving body, including optional payment branches. Other player/source/filter
+forms, disjunctions, tuple symbols, absent/duplicate operands, incompatible
+aliases, cross-rule reads and delayed RON ability reads reject at compilation.
+The event does not manufacture player or permanent event aliases.
+
+New engine API:
+
+- `BindAbility(name string) *AbilityBinding`.
+- `FromAbility(binding *AbilityBinding) AbilityRef`.
+- `ActivatedAbilityEvent().FromAttachedPermanent().WithTapCost().NonMana()`.
+- `ActivatedAbilityEvent().WithAbility(binding *AbilityBinding)`.
+- `core.GameEvent.ActivatedAbilityID uuid.UUID` for completed stack activations.
+
+`ron` owns spelling, operand validation and the lexical ability event plan.
+The existing target-ability plan remains intact; a typed reference plan selects
+its target or event producer. Every factory call builds a fresh event binding.
+`mage` owns exact activation identity, matching and typed reads. The new binding
+uses a private key in existing stack-identity resolution frames. Existing
+snapshot, delay, cloning, APNAP, counter, cost transaction and combat services
+remain the only execution paths. No parallel event/payment/stack service,
+card-name branch, Go-card fallback, live ability grant, skipped rule or partial
+production registry was introduced.
+
+Mana activations emit no stack identity. A targeted mana-producing ability is
+nonmana and emits one. Tap filtering reads the existing written tap-symbol
+cost flag. Failed payments and illegal tap activations emit no completed event.
+The host filter checks the Aura's exact current attachment and event incarnation.
+Capture occurs at detection, before trigger placement. A copied activation
+creates no new activation event. A copied trigger retains the saved ability,
+while its controller pays its own optional cost. Pending source control changes
+do not change the original trigger's payer. Countering never refunds the tap cost.
+
+CR 602.2a–b supplies stack identity and payment timing; CR 603.3a/b supplies
+controller capture and APNAP placement; CR 605.1a/3b/5a supplies mana classification;
+CR 701.6a–b supplies countering without refunds; CR 400.7 and 702.26b/d supply
+return identity and phasing. Source LKI is not required to counter a still-present
+ability; source departure cannot erase the saved stack object. Missing or departed
+abilities supply no subject, and later instructions continue. Clones and delayed
+engine bodies keep their own frames. No replacement-order or simultaneous-operation
+contract changed.
+
+### Failing-first evidence and card-to-test mapping
+
+New engine tests first failed to compile because BindAbility, FromAbility and
+the event filter/capture methods did not exist. Existing-API test fixture calls
+were corrected (CounterStackObject, UntapPermanent, ManaPayment, AddManaAmount,
+UUIDs and Aura construction). The complete unchanged Imprison test then failed
+with `LEG.ron:129:217: supply one artifact source and one non-tap cost filter (And)`.
+Implementation supplied the engine contract and scoped lowering. Further fixture
+corrections set the main phase before Aura casting and used explicit opponent IDs.
+No production rule was simplified or failed assertion removed to hide a gap.
+
+- **Imprison → `TestRONHostActivationImprison`.** Complete unchanged LEG record
+  validates, casts and attaches as an Aura. Native tap activation offers payment
+  only at resolution. Paid, declined and insufficient-mana branches; two pending
+  activations; reattachment; source departure/control; host return/phasing and
+  phase cycles; missing ability; trigger copy with another payer; indestructible
+  unpaid Aura; clone payment/resource isolation all have explicit outcomes.
+- **Imprison → `TestRONHostActivationCombat`.** Former extracted combat-clause
+  fixtures now compile the complete record. Native attack and block declaration
+  cover paid, declined and short payments, tap and combat removal, source
+  destruction and resulting combat damage. Removing the sole blocker unblocks
+  its attacker. Shared `TestCombatExitSoleBlockerHistory`, `MultipleGroupsAndCloneHistory`
+  and `DepartureKeepsHistory` retain the harder blocker-history contract.
+- **Imprison → `TestRONHostActivationStrictLoad`.** The complete raw repository
+  line loads into a test registry. A spell alias in the ability role rejects
+  atomically and preserves the existing registry; no Go definition is used.
+- **Shared compiler → `TestRONHostActivationBindings`.** Reordered conjunction,
+  two fresh factory instances, opposing observers, multiple pending captures and
+  typed ControllerOfAbility reads use the matching stack object.
+- **Boundaries → `TestRONHostActivationInvalid`.** Unsupported players/sources,
+  malformed arity/symbols, missing/duplicate operands, disjunctions, non-Aura
+  host scopes, incompatible roles, unbound/cross-event reads and delayed aliases
+  reject before factory execution.
+- **Engine → `TestActivationAbilityCaptureIdentity`, `FiltersAndRollback`,
+  `Definition`, `MissingAndExactEvent`, `DelayedFrame`.** Independent activations,
+  exact source/host visits, controller capture, ability versus trigger copies,
+  absent ability and continued actions, phasing, clone isolation, true mana
+  versus targeted production, summoning sickness, failed mana payment, ability
+  removal, declaration dominance and empty bindings, spell-role exclusion,
+  stale incarnation events, and saved delayed frames are covered.
+- **Preserved callers → `TestRONArtifactEvent*` and `TestRONAbilityTarget*`.**
+  Artifact Possession, Haunting Wind, Powerleech, Rust and Ayesha Tanaka retain
+  their existing event, target, gameplay and rejection evidence. The former
+  complete-record rejection assertion now retains Goblin Flotilla.
+
+Estimated and actual gains are **1 unique name / 1 record**. Complete-card
+RON gameplay coverage gains **Imprison**. Shared synthetic contracts do not count
+as additional inventory coverage. All previously accepted records remain accepted.
+
+### Validation and loader evidence
+
+All required checks passed in the requested fast-fail order:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONHostActivation -count=1`
+   and `go test ./pkg/mage -run TestActivationAbilityCapture -count=1` passed.
+   The focused preservation check for TestRONArtifactEvent, TestRONAbilityTarget
+   and the retained Goblin Flotilla rejection also passed.
+2. `make build` and `go vet ./...` passed.
+3. `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+   The implement-engine skill's `go test ./... -short -count=1` also passed.
+4. `make lint` passed with **0 issues**; `git diff --check` passed.
+   Automatic formatting and final diffs were reviewed; no unrelated changes
+   were introduced. Both focused suites passed again after lint.
+5. Final `go run ./cmd/loadcards -json` exited **1** with atomic collection
+   rejection: **2,240 compiled / 205 rejected records**, **872 accepted / 114
+   rejected names**. A baseline comparison keyed by card/file/line removed
+   exactly Imprison at LEG.lines.ron:129. No rejection was added and no remaining
+   diagnostic changed. No accepted record regressed. Complete collection
+   publication still requires the remaining unsupported records.
+
+There is no environment, build, test, vet or lint blocker for this slice.
+
+No source-data defect was found or corrected. Local `data/LEG.json` Oracle text
+agrees with the complete Imprison RON record. Known Gaea's Liege and Fastbond
+investigations remain separate. RON files and hashes are unchanged; no vocabulary
+snapshot refresh is needed. No Go definition, startup registry, generator or
+broad DSL function was removed; their cutover/removal gates remain unmet.
+
+Changed files: compiler `host_activation.go`, `ability_target.go`,
+`artifact_event.go`, `compiler.go`, `player_scope.go`; engine
+`activation_ability_capture.go`, `composable_events.go`, `game.go`,
+`core/event.go`; new tests `activation_ability_capture_test.go`,
+`host_activation_test.go`; complete-record combat and collection assertions in
+`host_combat_test.go`, `definition_plan_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; API/rules documentation `doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`; this progress ledger.
+
+### Ranked next candidates
+
+1. **Combat-bounded paired delayed trigger — Goblin Flotilla.** Estimated one
+   full-card unlock. Complete creator control, exact source/opponent visits,
+   arming and actual combat-phase expiry using the shared temporary trigger
+   service. Independent first-strike grants last until turn end.
+2. **Variable discard effect/result and saved-count return — Recall.** Estimated
+   one full-card unlock. Use announced X and actual discard outcomes, including
+   replacements and partial discard; save cardinality before graveyard choices.
+   The RON instruction is an effect, not a mandatory payment.
+3. **Granted targeted activation — Equinox.** Reassess the complete record and
+   rules contract before estimating gains. Its first diagnostic is the targeted
+   body in an untargeted grant; predicting destruction of a land is a separate
+   dependency. Recheck shared multi-card grant prerequisites before committing
+   to this single-name capability.
 
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
 generation removal and unused DSL cleanup remain gated. This run stops after

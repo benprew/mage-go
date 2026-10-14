@@ -69,6 +69,13 @@ func compileArtifactActivationTrigger(event, body Node, ctx scope) (optionFactor
 		return nil, err
 	}
 	player, filter := event.Args[0], event.Args[1]
+	if filter.Name == "And" && len(filter.Args) == 1 && filter.Args[0].Kind == List {
+		for _, part := range filter.Args[0].Args {
+			if part.Name == "HasTapSelfInCost" || part.Name == "NonManaAbility" {
+				return compileHostActivationTrigger(event, body, ctx)
+			}
+		}
+	}
 	if player.Kind != Symbol || (player.Name != "AnyPlayer" && player.Name != "Opponent") {
 		return nil, unsupported(player, "artifact activation player filter")
 	}
