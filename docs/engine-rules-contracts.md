@@ -21462,3 +21462,54 @@ departure, return, phasing, control, stack copies and independent clones;
 branch polarity, adjacent payments, delayed execution, strict atomic loading,
 inventory roles and invalid declarations. One unique card gains compilation
 and complete-record gameplay evidence.
+
+## Chosen resolving mana payment and local damage prevention
+
+`PayChosenManaInto(player PlayerRef, result *NumberBinding) ResolvingEffect`
+clears the output before resolving its payer. An absent player makes no choice.
+The amount choice permits zero through the engine's maximum integer, without a
+bound derived from damage or the current pool. `NonnegativeNumberChooser` can
+supply direct input. Existing players use `ChooseMode` to finish or append a
+digit, then bounded `ChooseNumber` for that digit. The last digit limit prevents
+integer overflow. This keeps the existing human player's option allocation
+bounded. Invalid direct input or invalid digits supply zero.
+
+The amount is fixed before shared `tryResolutionCostPayment` and the action
+payment transaction. Choosing an amount is the optional decision; there is no
+second payment offer. Complete generic payment permits mana abilities, checks
+spending restrictions, ignores activation reductions and retains rollback.
+Failure supplies zero. Successful payment publishes the amount in the current
+number frame. Definition inspection declares the output and validates the payer;
+waiting queries inspect its typed source dependency without making choices.
+
+`DealDamageWithPreventionFrom(source DamageSourceRef, recipient
+DamageRecipientRef, amount ResolutionValue, prevention ResolutionValue)
+ResolvingEffect` extends the existing singular damage service. Source,
+recipient, damage and prevention use their normal resolution timing. One local
+`instructionDamagePrevention` candidate enters the shared replacement pipeline,
+with ordinary prevention priority. The affected player can order it against
+other replacements. The candidate remains available after redirection, applies
+once to the event, obeys prevention restrictions and never enters global or
+cycle replacement storage. It cannot leave a shield for later damage.
+Nonpositive damage causes no event; negative prevention supplies zero.
+
+Exact source information uses existing current, departure and phase reads.
+Return cannot substitute another source visit. Existing trigger player captures
+retain the payer after host control changes or reattachment. Number bindings,
+stack copies, game clones and delayed captures keep separate frames. There is
+no global last-payment slot and no new zone, mana or damage subsystem. Existing
+callers of replacement preparation and singular damage services are preserved.
+
+Rules: CR 118.2–3 and 118.5 cover complete payment and zero acknowledgment;
+605.3a–b permits immediate mana abilities during resolution. CR 615.1a, 615.4,
+615.6 and 615.12 cover prevention, actual damage and prohibitions. CR 616.1e–f
+supplies affected-player order and rechecks. CR 400.7 and 608.2h retain the exact
+source information contract. Local `data/LEA.json` Oracle text agrees with all
+six complete Power Leak RON records; no source correction is needed.
+
+Evidence: `TestChosenManaPayment`, `ManaAbilitiesAndRollback`,
+`BindingsAndClones`, `Definition`, `DigitDecision` and `LimitsAndRestrictions`;
+`TestInstructionDamagePrevention`, `Ordering` and `RedirectAndProhibition`;
+interactive `TestHumanChosenManaPayment`; RON `TestRONChosenManaPayment*`.
+Power Leak gains complete-record gameplay evidence independently of its six
+newly compiling records.

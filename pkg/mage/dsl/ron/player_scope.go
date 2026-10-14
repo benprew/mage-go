@@ -38,6 +38,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	chosenMana           map[*chosenManaPlan]*mage.NumberBinding
 	permanentExileFacts  map[*permanentExileFactPlan]*mage.NumberBinding
 	returnedPermanents   map[*returnedPermanentPlan]*mage.PermanentBinding
 	discardCounts        map[*discardCountPlan]*mage.NumberBinding

@@ -6,18 +6,19 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **900 accepted / 86 rejected names**
-(986 total), **2,274 compiled / 171 rejected records** (2,445 total).
-The latest slice is **REPEATED-RESOLVING-MANA-PAYMENT**. PayManaForEach
-repeats fixed generic/colored mana by a typed count read before the offer.
-Shared payment transactions supply mana abilities, full payment and rollback.
-Cyclone now executes its complete RON record, including its upkeep counter,
-paid damage batch and unpaid sacrifice. Native and RON tests cover timing,
-colors, zero payment, rollback, LKI, phasing, return, copies and clones.
-Estimated and actual gain: **one name / one record**. All earlier accepted
+Latest measured result (2026-10-14): **901 accepted / 85 rejected names**
+(986 total), **2,280 compiled / 165 rejected records** (2,445 total).
+The latest slice is **CHOSEN-RESOLVING-MANA-AND-INSTRUCTION-PREVENTION**.
+Power Leak now executes its complete RON record. A local typed mana result
+feeds prevention for one damage instruction through shared replacement order.
+Shared transactions supply mana abilities, spending checks and rollback.
+Unbounded amount input uses direct numeric decisions or bounded digit menus.
+Native, interactive and RON tests cover timing, payer/source identity, LKI,
+phasing, return, reattachment, copies, clones, delay and replacement order.
+Estimated and actual gain: **one name / six records**. All earlier accepted
 records remain accepted. No RON source changed; the vocabulary loader baseline
-is current. All required checks pass; lint reports 0 issues. Final validation
-evidence and card-to-test mappings are in the latest entry below.
+is refreshed. All required checks pass; lint reports 0 issues. Validation
+evidence and card mappings are in the latest entry.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,12 +27,14 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Unbounded resolving mana payment and paid-amount prevention:** Power Leak;
-   implement its symbol producer, saved paid amount and prevention consumer together.
-2. **Damage causation identity and prevention:** Silhouette; establish concrete
-   shared downstream value before selecting an isolated identity prerequisite.
-3. **Printed permanent mana-cost activation payment:** Merseine; audit the live
-   host's mana cost, payer permission and source/host identity before lowering.
+1. **Printed permanent mana-cost activation payment:** Merseine. The complete
+   record needs live host mana cost, payer permission and source/host identity.
+2. **Damage causation identity and prevention:** Silhouette. Keep spell/ability
+   cause separate from the damage source; prove concrete reuse before a separate
+   zero-unlock prerequisite.
+3. **Resolution mana-X from a typed spell target:** Reflecting Mirror. Its XIs
+   expression reads twice the selected spell's mana value. Audit announcement
+   ordering and both target filters before choosing this slice.
 
 ## Dependencies and source blockers
 
@@ -13850,3 +13853,192 @@ The production loader still rejects the entire unsupported collection atomically
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after REPEATED-RESOLVING-MANA-PAYMENT.
+
+## 2026-10-14 — CHOSEN-RESOLVING-MANA-AND-INSTRUCTION-PREVENTION
+
+### Baseline and candidate comparison
+
+Working tree was clean at the start. Read AGENTS.md, engine API reference,
+execution design, current status and the latest ledger entry. Inspected the
+fresh unique rejection inventory, selected compiler/engine services, targeted
+vocabulary entries and every complete candidate RON record. Fresh baseline
+`go test ./pkg/mage/dsl/ron -count=1` and `make build` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, with
+**2,274 compiled / 171 rejected records; 900 accepted / 86 rejected names**.
+There was no build, test or environment failure.
+
+The latest ranked candidates were compared by complete nested records, not
+first-error frequency. Reprints count once for unique-card value:
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers and downstream use | Estimated implementation and tests |
+| --- | --- | --- | --- |
+| Chosen resolving mana and paid-amount prevention | Power Leak / 1 name, 6 records (LEA, LEB, 2ED, 3ED, CED, CEI) | Needs both symbol producer and four-argument damage/prevention consumer. Typed host upkeep event, enchantment targeting, source information and trigger player capture already work. Enables reusable chosen generic payments, local saved amount reads and instruction-local prevention. No second collection card uses these exact forms. | Small to medium: two engine primitives, one lexical producer/consumer adapter, rollback, replacement order and complete Aura upkeep gameplay. |
+| Damage causation identity/prevention | Silhouette / 1 name, 1 LEG record | Its targeted instant uses ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient(TargetsPermanent(target), AnyDamageSource, Permanent(target)). Damage source is not necessarily the causing spell/ability. Needs a causation service and temporary prevention adapter together. Enables causal queries and prevention; no additional complete collection unlock is proved. Equinox's would-destroy query and Wall of Shadows' target legality remain separate capabilities. | Larger: causal snapshots across resolving damage, copies, source LKI and replacement order, followed by full targeted gameplay. |
+| Printed permanent mana-cost activation payment | Merseine / 1 name, 1 FEM record | Entry net counters, counter-conditioned host untap restriction, counter removal and OnlyPlayerMayActivate(host controller) already work. Missing PayManaCostOfPermanent(host), with live host cost, printed X-as-zero, no-cost/zero-cost distinctions and saved payment visit. Enables reusable permanent-cost payments; no second exact inventory use. | Medium: typed host cost adapter and transaction contract; source/host return and phasing, changed host/controller, counters and clone gameplay. |
+
+Candidate 1 was dependency-ready and had the smallest credible complete gain.
+All three current ranked candidates affect one unique card; no smaller shared
+multi-card adapter was identified in the fresh remaining rejection inventory.
+Selected the complete payment/result/prevention pair, not a zero-unlock fragment.
+Selection, contract, reuse boundary and acceptance cases were stated before edits.
+The initial effort estimate omitted the human player's range enumeration; its
+bounded decision dependency was completed within this same slice.
+
+### Established signatures and contexts
+
+Engine APIs:
+
+- `PayChosenManaInto(player PlayerRef, result *NumberBinding) ResolvingEffect`.
+  Resolves the specified player, chooses nonnegative generic mana, and publishes
+  the actual successful payment. Zero, absent payer, invalid input and failed
+  payment clear the result. Amount choice is the optional decision; there is no
+  second may-pay offer. Shared transactions keep complete payment, mana abilities,
+  spending restrictions and rollback. Activation reductions do not apply.
+- `NonnegativeNumberChooser` with `ChooseNonnegativeNumber(reason string) int` is
+  an optional typed direct-input interface. Existing Player callers are preserved.
+  Without direct input, shared bounded choices select finish or append a digit.
+  Digit limits prevent integer overflow. The supported range is the engine's
+  nonnegative integer representation, with no damage or current-pool bound.
+- `DealDamageWithPreventionFrom(source DamageSourceRef, recipient
+  DamageRecipientRef, amount ResolutionValue, prevention ResolutionValue)
+  ResolvingEffect`. Extends the existing singular damage effect. One local
+  prevention candidate participates in shared affected-player ordering, rechecks
+  and redirection. It applies once and leaves no shield or global replacement.
+  Nonpositive damage has no event; nonpositive prevention changes nothing.
+  Prevention prohibitions use the existing engine service.
+
+RON shapes in ordinary resolving ActionList sequences:
+
+- bare symbol `PayAnyAmountOfMana`, or direct
+  `PlayerAction(playerRef, PayAnyAmountOfMana)`;
+- bare `AmountOfManaPaidThisWay` after a local producer;
+- `PermanentDealsDamageAndPreventSomeOfIt(permanentRef, value,
+  singularRecipient, preventionValue)`, using existing typed permanent,
+  recipient and instance-value adapters.
+
+Every producer owns a fresh per-factory NumberBinding and exports it only to
+its lexical continuation. The latest local producer supplies subsequent reads;
+branch-local producers cannot escape. Copies, cloned resolutions and delayed
+captures use existing number frames. Entry, replacement, casting/activation
+payment contexts and PlayerActions list adapters stay separate. Malformed tuple
+spellings, unbound reads, invalid player/permanent references and plural recipients
+reject at compilation/definition validation. No game-time declaration panic,
+card-name branch, Go-card fallback or partial production registry was introduced.
+
+Shared services reused: compilePlayerRef, compilePermanentRef,
+compileDamagePacketRecipient, compileInstanceValue, compileActionSequence;
+NumberBinding, existing frame capture/clone services; tryResolutionCostPayment,
+action payment transactions, mana solver and spending policies; damageFromEffect,
+singular damage outcomes, replacementCandidates and shared prevention ordering.
+Private replacement/damage methods accept optional local candidates and retain
+all current callers. Waiting delayed declarations include payer, damage source,
+recipient and both values without making choices or reading amounts.
+
+Local CR 118.2–3, 118.5, 605.3a–b, 615.1–12 and 616.1–2 were read. Existing
+CR 400.7/608.2h exact source-information contracts supply LKI and phase behavior.
+`data/LEA.json` Oracle agrees with all six complete Power Leak records. There
+was no source defect or RON edit. Vocabulary forms, hashes and occurrence counts
+are unchanged; only its measured loader baseline is refreshed.
+
+### Failing-first and card-to-test evidence
+
+Native tests first failed at compilation for the absent PayChosenManaInto and
+DealDamageWithPreventionFrom signatures. After fixture signature repairs, the
+real RON test failed at unsupported PayAnyAmountOfMana. The human player audit
+found that ChooseNumber enumerates the full range; a bounded-menu test first
+failed with "number menu is too large" against the initial maximal-range call.
+Implemented the digit decision contract and confirmed its native and real human
+channel gameplay. No test assertion was weakened.
+
+Card-to-test mappings:
+
+- Complete Power Leak -> `TestRONChosenManaPaymentPowerLeak`: paid/unpaid
+  casting, correct enchantment attachment, correct upkeep player, no early choice,
+  zero/one/two/three mana, amount above available mana, full payment and actual
+  prevented damage. Payment above the damage amount is accepted and spent.
+- Complete Power Leak identity -> `PowerLeakLifecycle`: host controller changes
+  before/after detection, reattachment, source control, source departure/return,
+  phasing and phase cycles, copies retaining the event payer, and clones choosing
+  separate amounts. Damage still names the original Aura after departure.
+- Complete Power Leak legality/detection -> `PowerLeakDetectionAndLegality`:
+  creature host rejection without spending, enchantment host success, source
+  phasing, ability removal and reattachment stopping old host upkeep detection.
+- Complete Power Leak mana -> `PowerLeakManaSources`: three real RON Forests
+  pay during resolution; overpayment leaves no shield for later damage.
+- Reprint/loader mapping -> `StrictLoad`: all six complete records compile and
+  deduplicate to one factory; result role inventory is typed value; adding an
+  unbound result rejects the collection atomically.
+- Shared lexical results -> `BindingsAndDelay`: adjacent payments keep distinct
+  successful/failed results, delay retains the first amount, waiting inspection
+  is pure, and delayed payer information uses exact departure LKI.
+- Invalid RON -> `Invalid`: result-before-producer, tuple spellings, unbound
+  player/permanent, malformed amount, plural recipient and branch escape.
+- Native `TestChosenManaPayment*`: complete generic payment, zero/invalid input,
+  affordability, mana abilities, choice-time resource changes and rollback,
+  distinct outputs/overwrite, clones, declaration validation, absent payer,
+  restricted mana, maximum integer and bounded-digit input.
+- Native `TestInstructionDamagePrevention*`: zero/partial/full/excess prevention,
+  no retained shield, affected-player ordering against multiplication, redirected
+  damage, prevention prohibition and nonpositive damage.
+- Interactive `TestHumanChosenManaPayment`: actual human channel requests use
+  menus of at most ten choices and successfully pay 123 mana.
+
+The first broader RON regression run exposed only three stale collection-count
+fixtures (four test assertions); updated them to the freshly measured 2,280/165.
+Ordinary-upkeep text inventory counts did not change: host-controller upkeep is
+outside that inventory's selected text-revision context. Its existing tests pass.
+
+### Validation and actual gain
+
+All required checks pass after the two preallocation fixes, in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run RONChosenManaPayment -count=1`: pass.
+  Focused native chosen-payment/prevention and real human decision tests: pass.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, **0 issues**. The first lint run reported two prealloc
+  findings in the new adapter/test; fixed capacities and reran the complete
+  required check sequence. Automatic changes were import formatting only,
+  confined to this slice's new files. No unrelated work was changed.
+- Post-lint focused RON gameplay, accepted-collection definition reconstruction
+  and inventory; native chosen/repeated/X payment and prevention; interactive
+  human payment: all pass with `-count=1`.
+- `git diff --check`: pass, including final ledger edits.
+- Final `go run ./cmd/loadcards -json`: expected exit **1** for collection
+  rejection, **2,280 compiled / 165 rejected records; 901 accepted / 85 rejected
+  unique names**. Its JSON equals the refreshed vocabulary loader baseline.
+
+Exact diagnostic comparison removes only Power Leak's six former symbol-payment
+errors. No diagnostic is added or changed, and no accepted record is lost.
+Estimated and actual full-card gain agree: **one unique name / six records**.
+Complete Power Leak gameplay is a new mapping separate from compilation counts.
+The decision-interface dependency added some implementation effort but no scope
+or unlock change. Build, test and environment blockers: none.
+
+Commit title: `feat(ron): implement chosen resolving mana and instruction prevention`.
+
+Changed files: engine chosen_mana_payment.go/test, nonnegative_number_choice.go,
+instruction_damage_prevention.go, composable_actions.go, damage_system.go,
+effect_manager.go, waiting_delayed_source.go and doc.go; interactive human payment
+test; RON chosen_mana_payment.go/test, compiler.go, optional_payment.go,
+player_scope.go, sacrifice_value.go, inventory.go and three collection-count
+fixtures; API/rules-contract documentation, vocabulary loader baseline and ledger.
+
+### Ranked next candidates
+
+1. **Printed permanent mana-cost activation payment:** Merseine. Live host cost,
+   X-as-zero/no-cost distinctions, activation payer, source and host identity.
+   Estimated one name/one record; audit the full supported contract first.
+2. **Damage causation identity and prevention:** Silhouette. One name/one record.
+   Keep cause separate from source and prove reuse before choosing an isolated
+   identity prerequisite.
+3. **Typed spell-target announcement mana X:** Reflecting Mirror. Its complete
+   record fixes X to twice the targeted spell's mana value, tests TargetsOnlyASingleTarget
+   and TargetsPlayer(You), then retargets to a player. Needs the target-dependent
+   X declaration, full spell predicates and announcement ordering. Compare effort
+   and immediate gain before selecting; a first XIs error alone is insufficient.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL cleanup
+remain gated. No Go cards, generators or DSL exports were removed. The loader
+continues to reject the unsupported collection atomically. This run stops after
+CHOSEN-RESOLVING-MANA-AND-INSTRUCTION-PREVENTION.

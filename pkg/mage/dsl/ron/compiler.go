@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	chosenMana           *chosenManaPlan
 	exileFacts           *permanentExilePaymentPlan
 	returnedPermanent    *returnedPermanentPlan
 	discardCount         *discardCountPlan
@@ -1680,6 +1681,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "SpellDealsMultipleDamage", "PermanentDealsMultipleDamage":
 		build, err := compileDamagePackets(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "PermanentDealsDamageAndPreventSomeOfIt":
+		build, err := compileInstructionPrevention(n, ctx)
 		if err != nil {
 			return nil, err
 		}

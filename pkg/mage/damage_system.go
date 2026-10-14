@@ -429,12 +429,12 @@ func executeDamageOutcome(g *Game, action Action) damageOutcome {
 	return result
 }
 
-func (ds *DamageSystem) dealDamageToPlayerFromSourceOutcome(g *Game, p Player, amount int, source DamageSource) damageOutcome {
+func (ds *DamageSystem) dealDamageToPlayerFromSourceOutcome(g *Game, p Player, amount int, source DamageSource, local ...ReplacementEffect) damageOutcome {
 	if amount <= 0 {
 		return damageOutcome{}
 	}
 	action := NewDamageToPlayerAction(source.ID(), p.PlayerID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
-	result, gains := g.effects.prepareReplacements(action, g)
+	result, gains := g.effects.prepareReplacements(action, g, local...)
 	outcome := damageOutcome{}
 	if result != nil {
 		outcome = executeDamageOutcome(g, result)
@@ -609,8 +609,8 @@ func (ds *DamageSystem) dealDamageToPermanentFromSource(g *Game, perm *Permanent
 	return ds.dealDamageToPermanentFromSourceOutcome(g, perm, amount, source).amount
 }
 
-func (ds *DamageSystem) dealDamageToPermanentFromSourceOutcome(g *Game, perm *Permanent, amount int, source DamageSource) damageOutcome {
-	action, gains := g.effects.prepareReplacements(ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}), g)
+func (ds *DamageSystem) dealDamageToPermanentFromSourceOutcome(g *Game, perm *Permanent, amount int, source DamageSource, local ...ReplacementEffect) damageOutcome {
+	action, gains := g.effects.prepareReplacements(ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}), g, local...)
 	outcome := damageOutcome{}
 	if action != nil {
 		outcome = executeDamageOutcome(g, action)

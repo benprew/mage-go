@@ -1332,6 +1332,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "spell_reference"
 			}
+		case "PermanentDealsDamageAndPreventSomeOfIt":
+			if len(n.Args) == 4 {
+				return []string{"permanent_reference", "value", "recipient", "value"}[index]
+			}
 		case "PermanentDealsDamage":
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "value", "recipient"}[index]

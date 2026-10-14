@@ -16174,3 +16174,39 @@ Evidence: `TestRONRepeatedManaPaymentCyclone`, `CycloneLifecycle`, `Identity`,
 `Branches`, `Delayed`, `StrictLoad` and `Invalid`; native
 `TestRepeatedManaPayment*`. The shape does not add optional paid-amount results
 or expand Power Leak, Silhouette or other unsupported records.
+
+## Chosen resolving mana and instruction prevention
+
+Ordinary resolving action lists accept the symbol `PayAnyAmountOfMana` for the
+current action player, or `PlayerAction(playerRef, PayAnyAmountOfMana)` for an
+explicit typed player. `AmountOfManaPaidThisWay` reads the latest preceding
+payment in that lexical action list. Each producer has a fresh `NumberBinding`.
+Independent producers, factory instances, copies, clones and delayed frames keep
+separate results. A branch-local producer cannot supply an outer read. Tuple
+spellings, unbound reads, entry operations, replacement bodies and casting or
+activation cost declarations reject. `PlayerActions` lists retain their separate
+adapter boundary.
+
+The player chooses a nonnegative generic mana amount, including zero and amounts
+above the damage or current pool. Shared mana abilities can produce payment.
+Only a complete successful payment supplies a positive result; failure and
+invalid input supply zero without partial spending. Resolution payments do not
+use activation cost reductions. The optional choice is the amount choice itself.
+`NonnegativeNumberChooser` permits direct numeric input; existing players use a
+bounded digit menu with a finish choice. No menu enumerates the unbounded range.
+Amounts remain within the engine's integer representation.
+
+`PermanentDealsDamageAndPreventSomeOfIt(permanentRef, value, singularRecipient,
+preventionValue)` reads typed source information, amount, recipient and prevention
+at resolution. It uses `DealDamageWithPreventionFrom` to propose damage and a
+local prevention candidate together. Shared affected-player order, rechecks,
+redirection and prevention restrictions apply. The prevention remains local to
+this instruction and cannot protect later damage. Nonpositive damage produces
+no event; nonpositive prevention changes nothing. Other damage sources and plural
+recipients require their separate adapters.
+
+Evidence: `TestRONChosenManaPaymentPowerLeak`, `PowerLeakLifecycle`,
+`PowerLeakManaSources`, `BindingsAndDelay`, `StrictLoad` and `Invalid` cover the
+complete Power Leak record, its six reprints and reusable lexical contracts.
+Native `TestChosenManaPayment*`, `TestInstructionDamagePrevention*` and
+`TestHumanChosenManaPayment` cover payment, decision and replacement services.

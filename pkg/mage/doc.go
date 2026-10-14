@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PayChosenManaInto] saves a chosen generic mana payment in a [NumberBinding].
+// Zero, invalid input, an absent payer and failed payment clear the result.
+// Shared transactions supply mana abilities, spending checks and rollback.
+// [NonnegativeNumberChooser] permits direct input. Other players enter digits
+// through bounded choices. The amount has no pool or damage bound.
+// [DealDamageWithPreventionFrom] prevents part of one damage instruction.
+// Its local rule uses shared replacement order and follows redirected damage.
+// It leaves no shield. Prevention restrictions still apply. Saved information,
+// copies, clones and delays use their separate frames and exact source visits.
+// RON accepts resolving PayAnyAmountOfMana, directly or in PlayerAction,
+// AmountOfManaPaidThisWay and singular PermanentDealsDamageAndPreventSomeOfIt.
+// This completes Power Leak. Entry, replacement and casting payments need
+// separate adapters. Branch results cannot supply outer reads.
+//
 // [SingletonCard] adapts a typed card reference to a [CardSet].
 // [ExileGraveyardCards] selects all groups before one shared exile batch.
 // Only current graveyard visits move. All owners' cards leave before events.

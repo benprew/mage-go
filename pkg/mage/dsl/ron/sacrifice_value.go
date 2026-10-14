@@ -15,6 +15,14 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "AmountOfManaPaidThisWay" {
+		if n.Kind != Symbol || ctx.chosenMana == nil || ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "unbound or incompatible paid mana amount")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.chosenMana[ctx.chosenMana])
+		}, nil
+	}
 	if n.Name == "TotalPowerOfPermanents" {
 		if err := arity(n, 1); err != nil {
 			return nil, err

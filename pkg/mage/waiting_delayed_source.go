@@ -82,7 +82,7 @@ func (e *permanentChoice) refersToSourcePermanent() bool {
 }
 
 func (e *damageFromEffect) refersToSourcePermanent() bool {
-	return damageReadsSourcePermanent(e.source) || damageRecipientReadsSourcePermanent(e.recipient) || resolutionValueReadsSourcePermanent(e.amount)
+	return damageReadsSourcePermanent(e.source) || damageRecipientReadsSourcePermanent(e.recipient) || resolutionValueReadsSourcePermanent(e.amount) || (e.withPrevention && resolutionValueReadsSourcePermanent(e.prevention))
 }
 
 func (e *damageEachEffect) refersToSourcePermanent() bool {

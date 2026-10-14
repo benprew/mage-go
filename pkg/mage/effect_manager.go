@@ -1058,11 +1058,11 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 	return result
 }
 
-func (em *EffectManager) prepareReplacements(action Action, g *Game) (Action, []preventionLifeGain) {
-	return em.prepareReplacementsChoosing(action, g, chooseReplacement)
+func (em *EffectManager) prepareReplacements(action Action, g *Game, local ...ReplacementEffect) (Action, []preventionLifeGain) {
+	return em.prepareReplacementsChoosing(action, g, chooseReplacement, local...)
 }
 
-func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, choose func([]ReplacementEffect, Action, *Game) int) (Action, []preventionLifeGain) {
+func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, choose func([]ReplacementEffect, Action, *Game) int, local ...ReplacementEffect) (Action, []preventionLifeGain) {
 	var outcomes []preventionLifeGain
 	applied := make(map[ReplacementEffect]bool)
 	for action != nil {
@@ -1079,7 +1079,7 @@ func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, cho
 				return nil, outcomes
 			}
 		}
-		candidates := em.replacementCandidates(action, g, applied)
+		candidates := em.replacementCandidates(action, g, applied, local...)
 		if len(candidates) == 0 {
 			break
 		}
@@ -1100,10 +1100,10 @@ func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, cho
 	return action, outcomes
 }
 
-func (em *EffectManager) replacementCandidates(action Action, g *Game, applied map[ReplacementEffect]bool) []ReplacementEffect {
+func (em *EffectManager) replacementCandidates(action Action, g *Game, applied map[ReplacementEffect]bool, local ...ReplacementEffect) []ReplacementEffect {
 	var candidates []ReplacementEffect
 	seen := make(map[ReplacementEffect]bool)
-	for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
+	for _, list := range [3][]ReplacementEffect{em.replacements, em.cycleReplacements, local} {
 		for _, r := range list {
 			if damageReplacementBlocked(action, g) {
 				additional, ok := r.(interface{ appliesToUnpreventableDamage() bool })

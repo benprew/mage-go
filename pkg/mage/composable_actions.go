@@ -1583,6 +1583,8 @@ func (r permanentDamageSource) inspectDefinition() definitionNode {
 }
 
 type damageFromEffect struct {
+	prevention           ResolutionValue
+	withPrevention       bool
 	source               DamageSourceRef
 	recipient            DamageRecipientRef
 	amount               ResolutionValue
@@ -1707,6 +1709,9 @@ func (*damageFromEffect) Properties() EffectProperties {
 }
 func (e *damageFromEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"source", damageSourceDefinition{e.source}}, {"recipient", e.recipient}, {"amount", e.amount}}}
+	if e.withPrevention {
+		n.children = append(n.children, definitionEdge{"prevention", e.prevention})
+	}
 	if e.invalidOption {
 		n.problem = "supply a damage result binding"
 	} else if e.amountOptionCount > 1 || e.playerOptionCount > 1 || e.permanentOptionCount > 1 || e.sourceOptionCount > 1 || e.outcomesOptionCount > 1 {
@@ -1769,10 +1774,14 @@ func (e *damageFromEffect) Apply(ctx *EffectContext) error {
 	if amount <= 0 {
 		return nil
 	}
+	var local []ReplacementEffect
+	if e.withPrevention {
+		local = append(local, &instructionDamagePrevention{replacementBase: replacementBase{sourceID: source.ID()}, amount: max(0, e.prevention.resolveValue(ctx))})
+	}
 	if player := ctx.Game.GetPlayer(id); player != nil {
-		outcome = ctx.Game.damage.dealDamageToPlayerFromSourceOutcome(ctx.Game, player, amount, source)
+		outcome = ctx.Game.damage.dealDamageToPlayerFromSourceOutcome(ctx.Game, player, amount, source, local...)
 	} else if permanent := ctx.Game.FindPermanent(id); permanent != nil {
-		outcome = ctx.Game.damage.dealDamageToPermanentFromSourceOutcome(ctx.Game, permanent, amount, source)
+		outcome = ctx.Game.damage.dealDamageToPermanentFromSourceOutcome(ctx.Game, permanent, amount, source, local...)
 	}
 	if e.result != nil {
 		ctx.Game.resolution.numberBindings[e.result] = outcome.amount
