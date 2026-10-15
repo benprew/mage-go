@@ -58,8 +58,8 @@ func TestRONDepartedAuraCardRecordPrerequisites(t *testing.T) {
 	for _, name := range []string{"Puppet Master", "Takklemaggot"} {
 		t.Run(name, func(t *testing.T) {
 			record := repositoryRecord(t, "LEG", name, "guest.ron")
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete card accepted")
+			if _, err := Compile(record); (err == nil) != (name == "Puppet Master") {
+				t.Fatalf("unexpected complete-record result: %v", err)
 			}
 			rules := record.Fields["Rules"]
 			death := rules.Args[len(rules.Args)-1]

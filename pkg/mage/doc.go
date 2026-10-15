@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ReturnCardToHandOrElse] moves one exact graveyard visit to its owner's hand.
+// Success selects one branch after the move. Stale visits and tokens cannot move.
+// Each call keeps its own result. Copies and clones use separate saved frames.
+// Waiting queries retain source reads in both branches without moving a card.
+// RON accepts required PutGraveyardCardIntoHand with adjacent If, Unless or
+// IfElse payment-result branches in ordinary resolving bodies. Entry and draw
+// replacements reject. This completes Puppet Master's LEG record. Exile entry
+// continuations need a separate adapter and an exact entrant result.
+//
 // [EnterAttachedTo] saves one exact host before card entry replacements.
 // Shared attachment rules read the entrant after copy changes. Shroud and
 // hexproof do not prohibit this entry. An illegal host keeps an Aura in its

@@ -2838,18 +2838,7 @@ func (e *returnCardToHandEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}}}
 }
 func (e *returnCardToHandEffect) Apply(ctx *EffectContext) error {
-	card, ok := e.card.resolveCard(ctx)
-	if !ok {
-		return nil
-	}
-	owner := ctx.Game.GetPlayer(card.Owner())
-	if owner == nil {
-		return nil
-	}
-	moved, _, ok := ctx.Game.MoveFromAnyGraveyard(card.ID(), ZoneHand)
-	if ok {
-		owner.AddToHand(moved)
-	}
+	returnGraveyardCardToHand(ctx, e.card)
 	return nil
 }
 

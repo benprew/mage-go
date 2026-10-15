@@ -6,17 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **921 accepted / 65 rejected names**
-(986 total), **2,305 compiled / 140 rejected records** (2,445 total).
-The latest slice is **EXPLICIT-ENTRY-ATTACHMENT**.
-RON lowers EntersAttachedToPermanent in departed-Aura graveyard returns and
-existing grouped/linked plural exile returns. Native entry options save exact
-host visits, use shared legality after copy replacements, and attach before
-entry observations. Copies, clones and delayed frames retain separate state.
-Takklemaggot and Tawnos's Coffin have entry-clause gameplay evidence; their
-complete records still reject at earlier blockers. Coverage gain is zero,
-as estimated. The final loader report is identical to the completed baseline.
-No RON source changed. Build, vet, short/full tests and lint pass.
+Latest measured result (2026-10-15): **922 accepted / 64 rejected names**
+(986 total), **2,306 compiled / 139 rejected records** (2,445 total).
+The latest slice is **GRAVEYARD-HAND-SUCCESS**.
+RON lowers required PutGraveyardCardIntoHand with adjacent If, Unless or IfElse
+payment-result branches in ordinary resolving bodies. Native movement selects
+one branch only after the exact graveyard card reaches its owner's hand.
+Nested instructions, waiting frames, stack copies and clones keep local results.
+Puppet Master's complete LEG record now executes, including its successful-return
+payment gate and exact departed-Aura visit. Estimated and actual gain: one name
+and one record. No accepted record regressed. No RON source changed.
+Build, vet, short/full tests, focused tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,17 +25,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Required zone-move success continuations:** compare Puppet Master's
-   graveyard-to-hand return with Coffin's single-card exile entry. Estimate one
-   immediate name / one record for Puppet Master; Coffin retains counters and
-   lifecycle blockers. Keep successful destination visits and local results.
-2. **Required legal attachment choice:** Takklemaggot can now use native explicit
-   entry attachment and departed-Aura capture. Its legal-choice filter, required
-   choice result and non-Aura return/player-grant branch still need adapters.
-   Estimate zero immediate gains for the choice prerequisite; eventual one name.
+1. **Required legal attachment choice:** Takklemaggot has native explicit
+   attachment and departed-Aura capture. Still needs CanBeEnchantedByDeadGuest,
+   required choice success/failure, non-Aura entry and a retained-player grant.
+   Estimate zero immediate gains for choice alone; eventual one name / one record.
+2. **Counter snapshots and exact exile-entry continuations:** Tawnos's Coffin
+   needs saved counters, a successful single-card entrant and source lifecycle
+   lowering. Estimate zero immediate gains for either prerequisite; eventual one name.
 3. **Copy-effect ability grants:** Vesuvan Doppelganger still needs copiable
-   upkeep grants, recursive resolving copies and ThisAbility retention. Estimate
-   zero immediate gains; eventual gain is one name / six records.
+   upkeep grants, recursive resolving copies and ThisAbility retention.
+   Estimate zero immediate gains; eventual one name / six records.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -19263,3 +19262,122 @@ The commit title is `feat(ron): implement explicit entry attachment`.
 Signing is disabled for this invocation because the prior entry records an
 interactive signing-key requirement. Repository signing configuration is
 unchanged. This run stops after EXPLICIT-ENTRY-ATTACHMENT.
+
+## 2026-10-15 — GRAVEYARD-HAND-SUCCESS
+
+### Selection and dependencies
+
+The tree was clean. Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 for collection rejection, with
+921 accepted / 65 rejected names and 2,305 compiled / 140 rejected records.
+This was an unsupported-collection result, not a build or environment failure.
+The complete records and nested forms were read for all three candidates.
+
+| Candidate | Distinct cards | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Required zone-move continuations | Puppet Master; Tawnos's Coffin | 1 name / 1 record for the graveyard-to-hand shape | Coffin also needs counter snapshots, exact single exile entry and source lifecycle lowering. Establishes success-local continuation rules; battlefield entry must additionally publish an exact entrant. | Small for hand movement; larger for Coffin's entry/counter/lifecycle contract |
+| Required legal attachment choice | Takklemaggot | 0 immediately; eventual 1 name / 1 record | Requires CanBeEnchantedByDeadGuest, required choice success/failure, non-Aura entry and retained-player ability grant. Reuses explicit attachment and departed-Aura capture. | Medium for choice alone; larger for full card |
+| Copy-effect ability grants | Vesuvan Doppelganger | 0 immediately; eventual 1 name / 6 records | Requires copiable upkeep grants, recursive resolving copies and ThisAbility retention. Enables copiable ability identity and independent repeated grants. | Large |
+
+Candidate #1 was dependency-ready and provided the only immediate complete-card
+unlock among these candidates. This run implements its complete graveyard-to-hand
+shape only. The Coffin exile-entry context is a separate capability, since it must
+retain an exact battlefield destination and support entry preparation. No useful
+multi-card completion was found among the compared dependency-ready shapes.
+
+Puppet Master's complete wotc ruling requires the creature card to reach its
+owner's hand before the mana offer. Its complete LEG:200 record supplies the
+requirements. Coffin's six wotc rulings, Takklemaggot's four wotc rulings and
+Vesuvan Doppelganger's complete ruling file were read for comparison. No scryfall
+notes were substituted for wotc rulings. `fetchset -check` passed for Puppet Master
+and Tawnos's Coffin. Rules read: CR 108.2b, 111.7–8, 400.3, 400.7e–f and 608.2.
+No source defect was found or corrected. No RON source changed; no vocabulary snapshot refresh is needed. The implement-engine skill supplied the native workflow.
+
+### Contract and reuse boundary
+
+- Native signature: `ReturnCardToHandOrElse(card CardRef, moved, notMoved ResolvingEffect) ResolvingEffect`.
+- RON shape: `MustCost(PutGraveyardCardIntoHand(cardRef))` followed immediately
+  by `If` / `Unless` / `IfElse` with strict `CostWasPaid` or `CostWasntPaid`.
+  Written branches must be nonempty. Existing typed graveyard card references
+  supply the subject. Only ordinary resolving bodies are supported. Entry,
+  draw replacement, optional movement, exile/ante reads and unbound results reject.
+- Mage owns the actual move and branch selection. `ReturnCardToHand` shares the
+  movement helper and preserves its signature. Exact card bindings, owner-hand
+  insertion, graveyard departure events, definition validation, source queries,
+  pending frames and cloning use existing engine services.
+- Missing/stale visits, tokens and absent owners cannot succeed. A returned card
+  cannot supply an old visit. The branch begins after owner-hand insertion.
+  Each call keeps its result on the call stack; nested calls, copies and clones
+  cannot inherit a prior success. Waiting queries inspect branch source reads
+  without moving cards. No hidden-zone destination binding is published.
+- RON owns syntax, scope and factory lowering. No Go-card fallback, name branch,
+  global action-result slot, new replacement policy or partial registry was added.
+  A later optional mana payment cannot undo the completed independent move.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests failed compilation at the missing `ReturnCardToHandOrElse` signature.
+After fixture API corrections, those were the only compile errors. RON tests then
+failed at Puppet Master's unsupported mandatory PutGraveyardCardIntoHand cost.
+Native tests passed after implementation. An initial
+synthetic RON fixture used a general creature-death event, which does not declare
+an event card; it was corrected to the supported exact-source death event.
+A clone fixture was corrected to install an explicit search-player mana chooser.
+No engine scope or choice policy was expanded to accommodate either fixture.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Puppet Master LEG:200, complete record | `TestRONGraveyardHandContinuationPuppetMaster` | Successful return before mana offer, independent Aura/host owner and controller, decline, unavailable mana, absent/returned host and Aura visits, token, phasing, simultaneous host/Aura destruction, stack copy and clone isolation |
+| Puppet Master casting and enchant restriction | `TestRONGraveyardHandContinuationPuppetCast` | Pays UUU, attaches to a creature; artifact and shroud targets reject without spending resources |
+| Native move result | `TestGraveyardHandContinuation` | Exact visit, owner destination, missing/returned/unbound card, hand reference, token, repeated calls cannot reuse success |
+| Native validation and waiting frames | `TestGraveyardHandContinuationInvalid`, `TestGraveyardHandContinuationWaiting` | Nil/unbound references and absent branches reject; pure waiting card/source queries, copied delayed trigger and independently resolved clone |
+| RON local branch contract | `TestRONGraveyardHandContinuationBranches`, `TestRONGraveyardHandContinuationNested`, `TestRONGraveyardHandContinuationInvalid` | Branch polarity, nested success/failure, independent adjacent results, invalid arity/symbols/subjects, nonadjacent or escaped result, empty branches and unsupported contexts |
+| Prior departed-Aura prerequisite | `TestRONDepartedAuraCardRecordPrerequisites` | Now requires Puppet Master acceptance while preserving Takklemaggot rejection and existing real-record fragment evidence |
+
+Compilation progress and gameplay evidence both increase by Puppet Master only.
+Coffin's complete record still rejects at NoteCountersOnPermanent. Takklemaggot
+and Vesuvan Doppelganger retain their prior diagnostics. No Go definitions, generators or DSL functions were removed; cutover/removal gates remain closed.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONGraveyardHandContinuation' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestGraveyardHandContinuation' -count=1`: pass.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. The first run found four exact
+  collection-count assertions with the old totals. Fresh loader comparison proved
+  Puppet Master was the only changed diagnostic; assertions now require 2,306/139.
+- `make test`: pass for the full repository.
+- `make lint`: pass, 0 issues. Automatic import formatting was reviewed.
+- `git diff --check`: pass, including the ledger update.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 for atomic
+  collection rejection; 922 accepted / 64 rejected names, 2,306 compiled / 139
+  rejected records. A parsed full-report comparison asserts that the only change
+  from baseline is Puppet Master acceptance. No previously accepted record regressed.
+
+Actual gain: **1 name / 1 record**, equal to the estimate. There is no outstanding
+validation or environment blocker. Complete collection gameplay, runtime loading,
+native embedded startup, Go-card/generator deletion and unused DSL cleanup remain
+incomplete.
+
+Changed files: `pkg/mage/graveyard_hand_continuation.go` and its tests,
+`composable_actions.go`, `doc.go`; `pkg/mage/dsl/ron/graveyard_hand_continuation.go`
+and its tests, `optional_payment.go`, `departed_aura_card_test.go`,
+`definition_plan_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Required legal attachment choice for Takklemaggot. Explicit attachment and
+   departed-Aura capture exist. Implement exact legal choices and branch-local
+   success before the non-Aura return and retained-player ability grant. Estimate
+   zero immediate gains for the prerequisite, eventual one name / one record.
+2. Coffin's saved counter snapshots and exact single exile entry continuation.
+   Keep the successful entrant visit in mage; do not reuse the hidden hand-move
+   result as a battlefield reference. Counter and lifecycle adapters remain.
+   Estimate zero immediate gains for either prerequisite, eventual one name.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Recursive resolving copies
+   and ThisAbility retention remain. Estimate zero immediate gains for grants
+   alone, eventual one name / six records. Reassess shared work before selection.
+
+Commit title: `feat(ron): implement graveyard hand success continuations`.
+Signing is disabled for this invocation because the preceding ledger records an interactive signing-key requirement. Repository signing configuration is unchanged.
+This run stops after GRAVEYARD-HAND-SUCCESS.

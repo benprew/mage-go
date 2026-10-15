@@ -1,5 +1,36 @@
 # Engine rules contracts
 
+## Graveyard-to-hand success continuations
+
+`ReturnCardToHandOrElse(card CardRef, moved, notMoved ResolvingEffect)` moves
+one exact graveyard visit to its owner's hand, then runs the matching branch.
+An absent or stale visit, a token, or a missing owner selects `notMoved`.
+At least one branch and a bound card reference are required. Each instruction
+keeps its result on the call stack. Nested calls and repeated resolution cannot
+reuse a previous success. Copies and clones use their own resolution frames.
+Waiting queries retain explicit source reads in either branch without moving a
+card. `ReturnCardToHand` shares the same movement helper and keeps its API.
+This uses existing graveyard movement and its departure events; it adds no
+replacement type or combined payment transaction. A later optional payment
+cannot reverse the completed move. CR 108.2b, 111.7–8, 400.3, 400.7e–f and 608.2c apply.
+
+RON accepts `MustCost(PutGraveyardCardIntoHand(cardRef))` with an adjacent
+`If`, `Unless`, or `IfElse` using strict `CostWasPaid` or `CostWasntPaid`.
+Each written branch must contain actions. Only ordinary resolving contexts and
+existing graveyard card references are supported. Entry and draw replacements,
+exile and ante references, optional move payments and unbound results reject.
+The result is local to the adjacent continuation. No destination reference is
+published for a hidden-zone move. Exile-to-battlefield continuations need a
+separate adapter with an exact entrant result.
+
+Puppet Master's complete LEG record now executes. Its creature card reaches its
+owner's hand before the ability offers {U}{U}{U} to the trigger controller.
+The departed Aura returns only if that payment succeeds and its saved graveyard
+visit remains current. The 2008-05-01 wotc ruling requires the successful move.
+`TestGraveyardHandContinuation*` covers native identity, invalid declarations,
+waiting queries, copies and clones. `TestRONGraveyardHandContinuation*` covers
+complete Puppet Master gameplay, branch polarity, nested results and rejection.
+
 ## Explicit attachment during card entry
 
 `EnterAttachedTo(host PermanentRef) BattlefieldEntryOption` supplies one exact

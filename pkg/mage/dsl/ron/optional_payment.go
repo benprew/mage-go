@@ -357,6 +357,9 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "SacrificeNumberPermanents" {
 		return compileRequiredSacrificeNumber(payment, continuation, ctx)
 	}
+	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "PutGraveyardCardIntoHand" {
+		return compileGraveyardHandContinuation(payment, continuation, ctx)
+	}
 	if continuation.Name == "IfElse" {
 		return compilePaymentBranches(payment, continuation, ctx)
 	}
