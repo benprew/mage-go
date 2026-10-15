@@ -2710,6 +2710,8 @@ func (p creatureEntersPattern) captureDetectedEvent(event *GameEvent, observer G
 }
 
 type creatureDiesPattern struct {
+	sourceOnly         bool
+	duplicateSource    bool
 	creatureOnly       bool
 	permanentType      CardType
 	filterType         bool
@@ -2755,6 +2757,15 @@ func CreatureDies() creatureDiesPattern { return creatureDiesPattern{creatureOnl
 
 // PermanentDies matches a permanent moving from the battlefield to a graveyard.
 func PermanentDies() creatureDiesPattern { return creatureDiesPattern{} }
+
+// SourceOnly limits the event to the source permanent's death.
+func (p creatureDiesPattern) SourceOnly() creatureDiesPattern {
+	if p.sourceOnly {
+		p.duplicateSource = true
+	}
+	p.sourceOnly = true
+	return p
+}
 
 // YouControlled limits a death pattern to a permanent you controlled before it died.
 func (p creatureDiesPattern) YouControlled() creatureDiesPattern {
@@ -2920,6 +2931,9 @@ func (creatureDiesPattern) eventPattern() {}
 func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
 	t := NewTriggered(EvtZoneChange, false, effect).
 		SetConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard})
+	if p.sourceOnly {
+		t.AndConditionData(EventSourceIsSelf{})
+	}
 	if p.creatureOnly {
 		t.AndConditionData(EventSourceWasOfType{Type: TypeCreature})
 	}
@@ -3046,6 +3060,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	if p.filterSubtype {
 		text = strings.Replace(text, subject, p.subtype+" "+subject, 1)
 	}
+	if p.sourceOnly {
+		text = "this " + subject + " dies"
+	}
 	if p.filterColor {
 		text = strings.Replace(text, subject, "non"+strings.ToLower(p.excludedColor.String())+" "+subject, 1)
 	}
@@ -3059,6 +3076,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 		text += " after damage by this source this turn"
 	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
+	if p.duplicateSource || (p.sourceOnly && p.otherOnly) {
+		n.problem = "death event: supply one compatible source restriction"
+	}
 	if p.filterColor && (p.excludedColor < White || p.excludedColor > Green || p.duplicateColor) {
 		n.problem = "death event: supply one valid color"
 	}

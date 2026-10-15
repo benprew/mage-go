@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -15,8 +14,10 @@ func TestRONLoseGameLich(t *testing.T) {
 		for _, paid := range []bool{true, false} {
 			t.Run(set+map[bool]string{true: "/paid", false: "/unpaid"}[paid], func(t *testing.T) {
 				record := staticBaseRecord(t, set, "Lich")
-				rules := record.Fields["Rules"].Args
-				factory := staticBaseSubrule(t, record, rules[:4]...)
+				factory, err := Compile(record)
+				if err != nil {
+					t.Fatal(err)
+				}
 				a := &requiredNumberPlayer{&optionalSacrificePlayer{ronSacrificeChooser: &ronSacrificeChooser{BasePlayer: mage.NewBasePlayer("A")}}}
 				b := mage.NewBasePlayer("B")
 				g := mage.NewGame(a, b)
@@ -43,7 +44,7 @@ func TestRONLoseGameLich(t *testing.T) {
 				if clone.GetPlayer(a.PlayerID()).IsAlive() != paid {
 					t.Fatal("clone lost payment branch")
 				}
-				if _, err := Compile(staticBaseRecord(t, set, "Lich")); err == nil || !strings.Contains(err.Error(), "unsupported graveyard event permanent filter (SinglePermanent)") {
+				if _, err := Compile(staticBaseRecord(t, set, "Lich")); err != nil {
 					t.Fatalf("full record: %v", err)
 				}
 			})

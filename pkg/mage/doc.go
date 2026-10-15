@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentDies] with SourceOnly matches the source's move to a graveyard.
+// It permits noncreatures and retains departure owner and controller bindings.
+// Duplicate and conflicting source restrictions fail definition validation.
+// Departure snapshots supply abilities and controller before the move.
+// Return cannot change a queued event. Phasing and other destinations do not
+// match. Copies and clones retain separate captured facts.
+// RON accepts WhenAPermanentIsPutIntoAPlayersGraveyard with
+// SinglePermanent(ThisPermanent) and the strict AnyPlayer symbol.
+// The shared graveyard body supplies Trigger_ThatPlayer and
+// ControllerOfDeadPermanent. Lich's complete records now execute.
+//
 // [LoseGameFor] records immediate game loss for one typed player.
 // Life-total loss exemptions cannot prevent it. Life and poison do not change.
 // An absent subject does nothing. Copies use their own resolving controller.
@@ -9,7 +20,7 @@
 // RON accepts the strict LoseTheGame symbol in ordinary resolving bodies,
 // including explicit player action scopes. Entry and replacement bodies reject.
 // Lich's unpaid damage-payment branch now executes in all five reprints.
-// Its exact-source graveyard event still needs an adapter.
+// Its exact-source graveyard event uses the shared death pattern.
 //
 // [RequiredSacrificeNumberOrElse] reads one count at resolution and requires
 // that many matching permanents controlled by its typed payer. The shared

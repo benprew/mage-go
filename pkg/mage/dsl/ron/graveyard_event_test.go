@@ -235,7 +235,6 @@ func TestRONGraveyardEventDeclarations(t *testing.T) {
 		`WhenAPermanentIsPutIntoAPlayersGraveyard(IsCardtype(Land), SinglePlayer(You))`,
 		`WhenAPermanentIsPutIntoAPlayersGraveyard(IsCardtype(Land), AnyPlayer())`,
 		`WhenAPermanentIsPutIntoAPlayersGraveyard(IsCardtype(Instant), AnyPlayer)`,
-		`WhenAPermanentIsPutIntoAPlayersGraveyard(SinglePermanent(ThisPermanent), AnyPlayer)`,
 		`WhenAPermanentIsPutIntoAPlayersGraveyard(And([]), AnyPlayer)`,
 		`WhenAPermanentIsPutIntoAPlayersGraveyard(And([IsCardtype(Land), IsCardtype(Artifact)]), AnyPlayer)`,
 		`WhenAPermanentIsPutIntoAPlayersGraveyard(And([IsCardtype(Land), ControlledByAPlayer(Opponent)]), AnyPlayer)`,

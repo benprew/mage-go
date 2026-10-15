@@ -17128,8 +17128,46 @@ executing loss. A returned source cannot replace departure controller LKI.
 
 Evidence: native `TestLoseGameFor` and `TestLoseGameForDefinition`; RON
 `TestRONLoseGameLich`, `Scopes`, `Invalid`, `QueuedIdentity`, `Waiting` and
-`Spell`. Lich's first four unchanged rules execute together from LEA, LEB, 2ED,
+`Spell`. Lich's complete unchanged rules execute together from LEA, LEB, 2ED,
 CED and CEI. Sufficient simultaneous payment preserves life at -2 and avoids
 explicit loss; insufficient payment makes no partial sacrifices and records
-loss despite the life-total exemption. This is clause coverage. Complete Lich
-records still reject the exact-source graveyard event filter.
+loss despite the life-total exemption. The exact-source graveyard event below
+completes these records.
+
+## Exact-source graveyard events
+
+`PermanentDies().SourceOnly()` restricts the shared permanent-death pattern to
+its source. It permits any permanent type. It preserves `WithOwner`,
+`WithController`, `WithCard` and `WithPermanent` captures. Duplicate source
+restrictions and `SourceOnly` with `AnotherCreatureDies` fail definition
+validation. Existing departure snapshots supply abilities, identity and the
+controller before the move (CR 603.6c, 603.10a and 700.4). Other destinations and
+phasing do not match. A later return cannot change a queued trigger. Copies
+and clones retain separate captured facts. No zone or replacement pipeline is
+added. Existing RON `WhenAPermanentDies` source bodies use this typed restriction.
+
+RON accepts `WhenAPermanentIsPutIntoAPlayersGraveyard(
+SinglePermanent(ThisPermanent), AnyPlayer)` on permanent cards. The reference
+and destination must use those exact shapes. Hosts, targets, callable reference
+symbols and restricted destination players reject. The existing graveyard
+body bindings remain: `Trigger_ThatPlayer` is the owner and
+`ControllerOfDeadPermanent` is the controller before departure. Each factory
+builds fresh bindings. `TriggerA` and the existing `TriggerI` condition
+`PermanentPutInGraveyardPassesFilter(WasntSacrificed)` use the same adapter.
+This is a battlefield departure event, not a move from any zone.
+
+Lich's five unchanged records now compile and execute all five rules. Entry
+life loss, the life-total loss exemption and gain-to-draw replacement use their
+existing services. Damage payments remain simultaneous. A successful payment
+that includes Lich queues its separate loss trigger. At positive life this loss
+waits for resolution; at nonpositive life the ordinary state-based loss can
+happen first after the exemption ends. Explicit loss bypasses a life-total loss
+exemption. No general loss prohibition is introduced.
+
+Evidence: `TestSourceOnlyDeath`, `TestSourceOnlyDeathInvalid`,
+`TestRONSourceGraveyardLich`, `LichPayment`, `Bindings`, `Invalid`, `Intervening`,
+and the full-record paid/unpaid `TestRONLoseGameLich`. Lich cases cover all five
+reprints, control changes, owner/controller distinction, departure and return,
+ability removal, phasing, graveyard replacement, copies, clones, gain-to-draw
+and simultaneous source/payment departure. Existing graveyard-card source
+trigger tests retain their capture contract.

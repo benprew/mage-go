@@ -18,9 +18,23 @@ func compileGraveyardTriggerWithOptions(event, body Node, ctx scope, options ...
 	if event.Args[1].Kind != Symbol || event.Args[1].Name != "AnyPlayer" {
 		return nil, unsupported(event.Args[1], "graveyard destination player filter")
 	}
-	cardType, controlled, err := compileGraveyardEventFilter(event.Args[0])
-	if err != nil {
-		return nil, err
+	sourceOnly := event.Args[0].Name == "SinglePermanent"
+	var cardType core.CardType
+	var controlled bool
+	var err error
+	if sourceOnly {
+		subject := event.Args[0]
+		if err := arity(subject, 1); err != nil {
+			return nil, err
+		}
+		if !ctx.permanent || subject.Args[0].Kind != Symbol || subject.Args[0].Name != "ThisPermanent" {
+			return nil, unsupported(subject.Args[0], "graveyard source reference")
+		}
+	} else {
+		cardType, controlled, err = compileGraveyardEventFilter(event.Args[0])
+		if err != nil {
+			return nil, err
+		}
 	}
 	ctx.graveyardEvent = &graveyardEventPlan{ownerName: "Trigger_ThatPlayer", controllerName: "ControllerOfDeadPermanent"}
 	plan, err := compileActions(body, ctx)
@@ -35,7 +49,12 @@ func compileGraveyardTriggerWithOptions(event, body Node, ctx scope, options ...
 			graveyardControllers: map[*graveyardEventPlan]*mage.PlayerBinding{ctx.graveyardEvent: controller},
 		}
 		actions := plan.buildWithBindings(bindings)
-		pattern := mage.PermanentDies().OfType(cardType).WithOwner(owner).WithController(controller)
+		pattern := mage.PermanentDies().WithOwner(owner).WithController(controller)
+		if sourceOnly {
+			pattern = pattern.SourceOnly()
+		} else {
+			pattern = pattern.OfType(cardType)
+		}
 		if controlled {
 			pattern = pattern.YouControlled()
 		}

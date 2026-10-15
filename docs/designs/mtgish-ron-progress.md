@@ -6,18 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **919 accepted / 67 rejected names**
-(986 total), **2,299 compiled / 146 rejected records** (2,445 total).
-The latest slice is **EXPLICIT-RESOLVING-GAME-LOSS**.
-RON lowers the strict LoseTheGame symbol in ordinary resolving player scopes.
-LoseGameFor resolves a typed player and reuses Player.SetLost. It records loss
-without changing life and bypasses the life-total loss exemption.
-Lich's first four unchanged rules now execute together in all five reprints,
-including paid survival and unpaid loss. Queued controllers, copies, clones,
-source LKI, waiting queries and invalid declarations have test evidence.
-Actual gain is **zero names / zero records**, matching the estimate; complete-card
-coverage is unchanged. Five diagnostics advance to the exact-source graveyard
-filter. No RON source changed. Build, vet, short/full tests and lint pass.
+Latest measured result (2026-10-15): **920 accepted / 66 rejected names**
+(986 total), **2,304 compiled / 141 rejected records** (2,445 total).
+The latest slice is **EXACT-SOURCE-GRAVEYARD-EVENT**.
+RON lowers SinglePermanent(ThisPermanent) in the graveyard event adapter.
+PermanentDies().SourceOnly() reuses departure snapshots and event captures.
+All five unchanged Lich reprints now compile and execute all five rules.
+Tests cover gain-to-draw, paid survival, unpaid loss, simultaneous source
+payment, former controller, owner bindings, return, phasing, ability removal,
+destination replacement, copies and clones. Invalid declarations reject.
+Actual gain is **one name / five records**, matching the estimate.
+No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,16 +25,14 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Lich loss exemption:** `PlayerEffect(You,
-   [DoesntLoseTheGameForHaving0OrLessLife])` needs a live source adapter.
-   Entry loss is complete. Gain-to-draw replacement, mandatory plural sacrifice
-   result and game-loss clauses remain; estimate zero immediate full-card gains.
-2. **Death-result iteration:** Glyph of Reincarnation needs exact death members
+1. **Death-result iteration:** Glyph of Reincarnation needs exact death members
    and per-member result frames. Block history and former controller services
    exist; IsAfterCombat still blocks a complete-card gain.
-3. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
+2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
    grants, recursive resolving copy changes and ThisAbility retention. The
    upkeep parser is reusable; estimate zero immediate full-card gains.
+3. **Postcombat casting predicate:** Glyph of Reincarnation needs IsAfterCombat.
+   Exact death-result iteration still blocks its complete record.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -18488,3 +18485,144 @@ player_actions.go and required_sacrifice_number_test.go; pkg/mage/doc.go;
 docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
 Commit title: `feat(ron): implement explicit resolving game loss`.
 This run stops after EXPLICIT-RESOLVING-GAME-LOSS.
+
+
+## 2026-10-15 — EXACT-SOURCE-GRAVEYARD-EVENT
+
+### Candidate comparison and selection
+
+The working tree was clean. Baseline `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Baseline loader JSON
+reported 2,299 compiled / 146 rejected records and 919 accepted / 67 rejected
+unique names. Its exit 1 was collection rejection, not a build failure.
+The design, top status, latest ledger entry, complete candidate RON records
+(including reprints), and targeted vocabulary signatures were read.
+
+| Candidate | Distinct affected names | Estimated complete gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Exact-source graveyard event, latest rank 1 | Lich | 1 name / 5 records | No later blocker; completes all five rules through existing payment and loss actions; reusable source-event restriction retains existing typed captures | Small: typed event restriction, adapter, lifecycle and full-record tests |
+| Death-result iteration, latest rank 2 | Glyph of Reincarnation | 0 | IsAfterCombat still rejects; enables exact simultaneous destruction members, historical blocking controller and isolated iteration frames | Large: result producer, scoped iteration and history reads |
+| Copy-effect ability grants, latest rank 3 | Vesuvan Doppelganger | 0 | Recursive resolving copy changes and ThisAbility retention remain; enables copiable upkeep declarations and recursive copy retention | Large: copiable ability identity, exceptions and lifecycle |
+
+Candidate 1 is dependency-ready and the prompt directs its selection. These
+ranked consumers each have one distinct name; reprints do not inflate value.
+It has the only immediate complete gain and the smallest credible effort.
+No additional capability slice was started.
+
+### Contract, dependencies and reuse
+
+Engine method: `func (p creatureDiesPattern) SourceOnly() creatureDiesPattern`.
+It restricts `PermanentDies` or `CreatureDies` to the source. Existing owner,
+controller, card and permanent captures remain available. Duplicate source
+restrictions and a conflicting other-source restriction fail definition
+validation. The method lowers to the existing `EventSourceIsSelf`; shared
+zone events and departure snapshots supply the event-time source visit,
+abilities and controller. No new event, payment or replacement pipeline exists.
+The old RON source-death card adapter now uses this method instead of adding
+its condition after constructing the typed pattern.
+
+RON accepts `WhenAPermanentIsPutIntoAPlayersGraveyard(
+SinglePermanent(ThisPermanent), AnyPlayer)` on permanent cards. The source
+reference and AnyPlayer must be strict symbols in the required tuple shape.
+Hosts, targets, callable references, wrong arities and destination restrictions
+reject. Existing graveyard event bodies retain fresh per-factory
+`Trigger_ThatPlayer` owner and `ControllerOfDeadPermanent` controller bindings.
+`TriggerA` and the existing `TriggerI` WasntSacrificed condition share this path.
+Other new filters and source-zone contexts are outside this slice.
+
+A noncreature source can trigger for its own graveyard move. Unrelated deaths
+cannot trigger it. Control before departure supplies the queued controller;
+owner and controller remain distinct. Return cannot rewrite pending facts.
+Phasing, bounce, exile, ability removal before departure and a replaced
+graveyard destination produce no source-death trigger. A phase cycle keeps the
+source event active. Copies use their resolving controller; clones isolate
+captured facts and recorded loss. Waiting queries need no new service because
+this event installs no delayed subscription or action. Existing transactional
+payment supplies rollback and simultaneous movement; no new cost is added.
+
+CR 603.6c and 603.10a establish departure look-back; CR 700.4 establishes the
+graveyard event and CR 702.26b excludes phased sources. Complete local Lich
+rulings and the local LEA Oracle text were read. All rulings have wotc source;
+no scryfall note was substituted for a ruling. The exact Oracle final clause
+specifies graveyard from battlefield, despite an older ruling's broader
+informal "leaves" wording. `go run ./cmd/fetchset -check -card Lich` passed.
+No source defect or missing ruling was found. No RON changed, so the vocabulary
+snapshot needs no refresh. The implement-engine skill supplied the typed engine
+workflow. Runtime cutover and deletion gates remain closed; no Go card,
+generator, or unused DSL function was removed.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests first failed with undefined SourceOnly. RON tests then failed at
+Lich's exact unsupported SinglePermanent graveyard filter in all five reprints.
+Production changes followed these failures. Test fixture fixes supplied owners
+for destroyed synthetic cards and used the actual ability-removal and phasing
+APIs. The first short-suite run found stale collection totals and earlier Lich
+rejection assertions. Those now require successful full-record compilation;
+all their isolated rule regressions remain. Full-record payment tests extend
+rather than replace those regressions.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Lich; LEA:140, LEB/2ED/CED/CEI:141 | TestRONSourceGraveyardLich | Full unchanged records; entry and exemption, unrelated death exclusion, own destruction, changed controller, return, phasing cycle, bounce, exile, replaced destination, removed abilities, copied trigger and clone isolation |
+| Lich, all five reprints | TestRONSourceGraveyardLichPayment | Gain becomes two draws at zero life; damage payment sacrifices source and another permanent together; paid branch stays alive at positive life until separate loss trigger resolves |
+| Lich, all five reprints | TestRONLoseGameLich | Full unchanged records replace former four-rule fixture; sufficient payment preserves source and survives at negative life; insufficient payment moves nothing and explicitly loses; clone isolation |
+| Native source-event contract | TestSourceOnlyDeath, TestSourceOnlyDeathInvalid | Noncreature, owner versus controller, unrelated death, queued return and independent clone; duplicate and conflicting restrictions reject |
+| RON bindings / instances | TestRONSourceGraveyardBindings | Two factory instances retain distinct owner and former-controller captures |
+| RON declarations and condition | TestRONSourceGraveyardInvalid, TestRONSourceGraveyardIntervening | Invalid subject declarations reject; existing nonsacrifice condition distinguishes destruction from sacrifice |
+| Existing source-death captures | Existing graveyard exile/death tests; whole short/full suite | Typed SourceOnly replaces the previous manual self condition without losing card/permanent captures |
+
+Actual gain is one complete unique card / five records, matching the estimate.
+Compilation acceptance and complete-card gameplay evidence both gain Lich.
+No completeness claim is made for any other rejected card.
+
+### Ranked next candidates
+
+1. Death-result iteration for Glyph of Reincarnation. Estimated zero complete
+   gains until IsAfterCombat also lowers. Reuse simultaneous destruction results
+   and blocking history; retain exact visits and separate member frames.
+2. Copy-effect ability grants for Vesuvan Doppelganger. Estimated zero complete
+   gains until recursive resolving copy changes and ThisAbility retention work.
+3. Postcombat casting predicate for Glyph of Reincarnation. Estimated zero
+   complete gains until death-result iteration works. Establish phase timing and
+   current-turn combat history before adding the casting adapter.
+
+Reassess against fresh multi-card opportunities on the next run.
+
+
+### Validation and collection result
+
+- Baseline `make build`: pass; baseline
+  `go test ./pkg/mage/dsl/ron -short -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -run '^TestRONSourceGraveyard' -count=1`: pass.
+  Extended focused checks also pass for full-record payment and earlier Lich
+  clauses, accepted-definition inventory and numeric-consumer inventory.
+- `go test ./pkg/mage -run '^TestSourceOnlyDeath' -count=1`: pass, including
+  the final returned-card fixture correction that removes its old graveyard entry.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass after updating stale
+  acceptance assertions. `make test`: pass.
+- `make lint`: pass, 0 issues. Automatic formatting was reviewed; no unrelated
+  file changed. Post-lint `go test ./... -short -count=1`: pass.
+- `git diff --check`: pass before and after final documentation edits.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 from
+  collection rejection; **920 accepted / 66 rejected names**, **2,304 compiled /
+  141 rejected records**. Exactly Lich's five rejected keys disappear.
+  No rejected key was added, no remaining diagnostic changed and no accepted
+  record regressed. Counts improve by the estimated one name / five records.
+
+No environment or validation blocker remains. Complete collection gameplay,
+runtime loading, native embedded startup, Go-card/generator removal and DSL
+cleanup remain incomplete. The next run must reassess the ranked candidates;
+this run stops after EXACT-SOURCE-GRAVEYARD-EVENT.
+
+Changed files: pkg/mage/composable_events.go, source_death_test.go and doc.go;
+pkg/mage/dsl/ron/graveyard_event.go, triggers.go, source_graveyard_test.go,
+graveyard_event_test.go, lose_game_test.go, required_sacrifice_number_test.go,
+entry_life_loss_test.go, life_gain_draw_test.go, life_total_loss_test.go,
+definition_plan_test.go, inventory_test.go and numeric_consumers_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Only this slice is staged. Git signing is disabled for this commit only because
+the configured key requires an interactive prompt, as recorded in the prior
+entry; repository configuration is unchanged.
+Commit title: `feat(ron): implement exact-source graveyard events`.

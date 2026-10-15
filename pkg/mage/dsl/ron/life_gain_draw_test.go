@@ -16,8 +16,8 @@ func TestRONLifeGainDrawLich(t *testing.T) {
 		t.Run(set, func(t *testing.T) {
 			record := staticBaseRecord(t, set, "Lich")
 			rules := record.Fields["Rules"].Args
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete Lich accepted")
+			if _, err := Compile(record); err != nil {
+				t.Fatalf("complete Lich rejected: %v", err)
 			}
 			factory := staticBaseSubrule(t, record, rules[0], rules[1], rules[2])
 			g, a, b := ronGame()

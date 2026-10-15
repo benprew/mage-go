@@ -206,12 +206,11 @@ func compileSourceDeathCardTrigger(body Node, ctx scope) (optionFactory, error) 
 			deathCards: map[*deathCardPlan]*mage.CardBinding{ctx.deathCard: card},
 			tapped:     map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: permanent},
 		})
-		pattern := mage.PermanentDies().WithCard(card)
+		pattern := mage.PermanentDies().SourceOnly().WithCard(card)
 		if ctx.permanentEvent.referenced {
 			pattern = pattern.WithPermanent(permanent)
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
-		trigger.AndConditionData(mage.EventSourceIsSelf{})
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

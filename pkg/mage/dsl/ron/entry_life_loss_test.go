@@ -16,8 +16,8 @@ func TestRONEntryLifeLossLich(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			record := staticBaseRecord(t, set, "Lich")
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete Lich accepted")
+			if _, err := Compile(record); err != nil {
+				t.Fatalf("complete Lich rejected: %v", err)
 			}
 			entry := record.Fields["Rules"].Args[0]
 			factory := staticBaseSubrule(t, record, entry)
