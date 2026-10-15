@@ -1755,39 +1755,54 @@ func auraHostIsLegalForController(auraCard Card, host *Permanent, g *Game, contr
 		return false
 	}
 	targets := auraCard.CastTargets()
-	if aura := g.FindPermanent(auraCard.ID()); aura != nil && aura.creatureEnchantRemoved {
-		targets = targetsWithoutCreatureEnchant(targets)
+	if aura := g.FindPermanent(auraCard.ID()); aura != nil {
+		kept := make([]Target, 0, len(targets))
+		for _, target := range targets {
+			if aura.printedAbilitiesSuppressed || aura.creatureEnchantRemoved && isFixedCreatureEnchant(target) || aura.graveyardEnchantRemoved && isGraveyardCreatureEnchant(target) {
+				continue
+			}
+			kept = append(kept, target)
+		}
+		targets = kept
+		ctx := &EffectContext{Game: g, SourceID: aura.ID(), Controller: controller, sourceCaptured: true, sourceIncarnation: aura.incarnationID}
+		for _, hosts := range aura.grantedEnchants {
+			matched := false
+			for _, member := range hosts.resolvePermanents(ctx) {
+				if member.ID() == host.ID() && member.incarnationID == host.incarnationID {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				return false
+			}
+		}
 	}
-	if len(targets) == 0 {
+	for _, target := range targets {
+		if !enchantTargetMatchesHost(target, host, g, controller) {
+			return false
+		}
+	}
+	return true
+}
+
+func enchantTargetMatchesHost(target Target, host *Permanent, g *Game, controller uuid.UUID) bool {
+	if binding, ok := target.(TargetBinding); ok {
+		target = binding.targetSpec()
+	}
+	switch t := UnwrapTarget(target).(type) {
+	case *AnyGraveyardCardTarget:
+		return !t.graveyardEnchant
+	case *CreatureTarget:
+		return host.HasType(TypeCreature) && filtersMatch(t.Filters, host, g)
+	case *PermanentTarget:
+		if t.controllerOnly && host.ControllerID() != controller || t.opponentOnly && host.ControllerID() == controller {
+			return false
+		}
+		return t.Filter().Match(host, g)
+	default:
 		return true
 	}
-	for _, t := range targets {
-		if binding, ok := t.(TargetBinding); ok {
-			t = binding.targetSpec()
-		}
-		t = UnwrapTarget(t)
-		switch tt := t.(type) {
-		case *AnyGraveyardCardTarget:
-			return !tt.graveyardEnchant
-		case *CreatureTarget:
-			if !host.HasType(TypeCreature) {
-				continue
-			}
-			if filtersMatch(tt.Filters, host, g) {
-				return true
-			}
-		case *PermanentTarget:
-			if tt.controllerOnly && host.ControllerID() != controller || tt.opponentOnly && host.ControllerID() == controller {
-				continue
-			}
-			if tt.Filter().Match(host, g) {
-				return true
-			}
-		default:
-			return true
-		}
-	}
-	return false
 }
 
 func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {

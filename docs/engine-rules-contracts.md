@@ -23248,9 +23248,9 @@ RON supports ordinary resolving
 removal with the existing acquired conditional-untap and upkeep-trigger forms.
 `Creature` must be a strict symbol. The compiler owns syntax and scope checks;
 mage owns exact visits, layer state and attachment legality. Entry and draw
-replacement bodies reject this form. Graveyard enchant declarations, other
-filters, acquired enchant declarations and other mixed layer forms remain
-unsupported. This service does not implement Animate Dead's graveyard attachment.
+replacement bodies reject this form. Other filters and other mixed layer forms remain unsupported by this adapter.
+The exact graveyard-enchant replacement pair is supported by the lasting
+permanent enchant grant contract below. This service does not implement Animate Dead's graveyard attachment.
 
 Evidence: native `TestCreatureEnchantRemoval`, `Declarations`,
 `AttachmentLegality`, `WaitingLKI`; RON `TestRONCreatureEnchantRemoval`,
@@ -23498,3 +23498,66 @@ clause tests, not complete-card gameplay evidence. `TestRONEntryHistoryDelayed`
 installs the query before the return and executes it after Aura departure and
 cleanup. `Invalid` and `ContextsAndInventory` cover strict syntax, unsupported
 contexts and operand roles. Every full Animate Dead record still rejects.
+
+## Lasting permanent enchant grants
+
+`GrantPermanentEnchant(subject PermanentRef, hosts PermanentSet)
+ContinuousModification` installs a live enchant restriction in layer 6.
+`Until` captures the exact recipient visit at resolution. The query retains
+its declaration, rather than its current members. At attachment and state-action
+checks it uses the recipient as `This` and its current controller as `You`.
+The granted declaration has its own binding scope. Donor targets and saved
+bindings cannot enter it. Nil hosts, nil subjects and unbound references fail
+native definition validation. This service does not change printed cast targets
+or copiable values, and does not create a new targeting operation.
+
+`RemoveGraveyardCreatureEnchant(subject PermanentRef) ContinuousModification`
+removes the fixed declaration made with `GraveyardCreatureEnchantTarget` in
+layer 6. It preserves the exact saved graveyard attachment for later resolving
+instructions, including `EnchantedGraveyardCard`. The acquired permanent-only enchant restriction makes the existing graveyard
+attachment illegal at the next state action unless another instruction has moved
+the Aura to a legal host first. Removal alone preserves the saved graveyard host
+without its fixed creature-card restriction. Expiry restores
+the printed restriction.
+
+All printed and acquired enchant abilities must permit a permanent host
+(CR 702.5c); multiple enchant declarations intersect. Existing protection,
+attachment restrictions and state actions apply (CR 303.4c/j). Shroud and
+hexproof do not restrict attachment. `RemoveAbilities` removes earlier grants;
+a later grant can restore an enchant ability. Fixed creature-enchant removal
+preserves acquired enchant abilities. Cleanup does not end an indefinite grant.
+Recipient phasing suspends attachment use and preserves identity. Recipient
+return cannot inherit a captured grant. Donor departure does not end an ordinary
+`Until` effect. Game clones copy computed enchant state and the exact saved
+graveyard attachment; later recomputation and expiry stay separate.
+
+RON accepts exactly the following paired modification in an ordinary resolving
+source graveyard-Aura body, including a source entry trigger:
+
+```ron
+CreatePermanentLayerEffect(ThisPermanent, [
+    LosesAbility(Enchant(IsCardtype(Creature))),
+    AddAbility([EnchantPermanent(And([
+        IsCardtype(Creature),
+        PutOntoBattlefieldByPermanent(ThisPermanent)
+    ]))])
+])
+```
+
+The pair uses one indefinite layer effect. The linked query can be empty when
+the grant starts, then select a later entrant recorded by `RecordEntryFrom` in
+the same resolution (CR 608.2c, 611.2a/c, 613.1f). RON checks the exact shape,
+strict symbols, recipient and lexical context. The existing contextual collection
+compiler builds the query. Mage owns layer installation, exact visits, live query
+execution, cloning, removal and attachment legality. Other host filters, recipients,
+unpaired graveyard removal, mixed modification lists, costs, entry replacements
+and draw replacements remain unsupported by this adapter.
+
+Evidence: native `TestPermanentEnchantGrantForwardLink`, `Declarations`,
+`Lifecycle`, `Intersections`, `RecipientContext`, `GraveyardRemovalAndExpiry`;
+RON `TestRONPermanentEnchantGrantAnimateDead` and `Invalid`. All six Animate Dead
+records supply their real modification and return instructions. Projected records
+compile; the instructions execute through mage before shared attachment checks.
+These are clause tests. The complete record still rejects at its source-presence
+condition, and still needs attachment-result and departure-player adapters.
+No complete-card gameplay or compilation gain is claimed.

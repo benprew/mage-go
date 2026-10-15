@@ -33,6 +33,9 @@ func graveyardEnchantTarget(card Card) *AnyGraveyardCardTarget {
 }
 
 func (g *Game) graveyardEnchantHost(perm *Permanent) (Card, bool) {
+	if len(perm.grantedEnchants) > 0 {
+		return nil, false
+	}
 	saved := perm.enchantedCard
 	if saved.id == uuid.Nil || saved.visit == uuid.Nil || g.graveyardVisit(saved.id) != saved.visit || perm.HasType(core.TypeCreature) {
 		return nil, false
@@ -45,6 +48,9 @@ func (g *Game) graveyardEnchantHost(perm *Permanent) (Card, bool) {
 		for _, card := range player.Graveyard() {
 			if card.ID() == saved.id {
 				for _, filter := range target.Filters {
+					if perm.graveyardEnchantRemoved || perm.printedAbilitiesSuppressed {
+						break
+					}
 					if !filter.Match(card) {
 						return nil, false
 					}

@@ -709,6 +709,8 @@ type Permanent struct {
 	SubTypeAdditions            []string  // additive subtypes granted by continuous effects (CR 613 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
 	printedAbilitiesSuppressed  bool
 	creatureEnchantRemoved      bool
+	graveyardEnchantRemoved     bool
+	grantedEnchants             []PermanentSet
 	revisedPrintedActions       map[uuid.UUID]*ActionDefinition
 	layeredActivatedOrigins     map[uuid.UUID]*ActionDefinition
 	revisedPrintedTriggers      map[uuid.UUID]*GenericTriggered

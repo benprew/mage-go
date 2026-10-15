@@ -1,5 +1,21 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [GrantPermanentEnchant] gives one exact recipient a live enchant restriction.
+// [Until] saves the recipient. The host query uses that recipient as This and
+// its current controller as You. Donor bindings cannot enter the query.
+// [RemoveGraveyardCreatureEnchant] removes the fixed graveyard enchant rule.
+// The saved attachment stays available to later resolving instructions.
+// All current enchant restrictions must permit a permanent host. Protection
+// still applies. Shroud and hexproof do not restrict attachment.
+// Layer 6 orders grants and removal. Expiry restores printed restrictions.
+// Phasing preserves the visit. Return cannot inherit a grant. Clones keep
+// separate grant state and saved graveyard attachments. Copiable rules stay
+// unchanged. A host query can precede a later linked entry in one resolution.
+// RON accepts the paired graveyard-enchant removal and exact linked-creature
+// enchant grant in resolving source-Aura bodies, including source entry triggers.
+// Entry and draw replacement bodies reject. Animate Dead still needs source
+// presence, attachment-result and departure-player adapters for its full record.
+//
 // [RecordEntryFrom] saves an exact source before graveyard or exile entry choices.
 // Successful entries record both visits before entry observations. Failed entries
 // record nothing. [PermanentsEnteredWithSource] reads the current matching visits.

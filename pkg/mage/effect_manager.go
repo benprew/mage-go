@@ -685,7 +685,7 @@ func (em *EffectManager) Apply(g *Game) {
 		needsReset := p.cardTypeOverride != nil || len(p.SubTypeOverride) > 0 ||
 			len(p.SubTypeAdditions) > 0 ||
 			p.hasSubtypeFamilyEffects() ||
-			p.printedAbilitiesSuppressed || p.creatureEnchantRemoved ||
+			p.printedAbilitiesSuppressed || p.creatureEnchantRemoved || p.graveyardEnchantRemoved || len(p.grantedEnchants) > 0 ||
 			p.ptSwitched ||
 			p.cdaPower != nil ||
 			p.cdaToughness != nil ||
@@ -749,6 +749,8 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		p.RuntimeAbilities = base
 		p.creatureEnchantRemoved = false
+		p.graveyardEnchantRemoved = false
+		p.grantedEnchants = nil
 		p.cardTypeOverride = nil
 		p.SubTypeOverride = nil
 		p.SubTypeAdditions = nil

@@ -17631,9 +17631,9 @@ RON supports ordinary resolving
 removal with the existing acquired conditional-untap and upkeep-trigger forms.
 `Creature` must be a strict symbol. The compiler owns syntax and scope checks;
 mage owns exact visits, layer state and attachment legality. Entry and draw
-replacement bodies reject this form. Graveyard enchant declarations, other
-filters, acquired enchant declarations and other mixed layer forms remain
-unsupported. This service does not implement Animate Dead's graveyard attachment.
+replacement bodies reject this form. Other filters and other mixed layer forms remain unsupported by this adapter.
+The exact graveyard-enchant replacement pair is supported by the lasting
+permanent enchant grant contract below. This service does not implement Animate Dead's graveyard attachment.
 
 Evidence: native `TestCreatureEnchantRemoval`, `Declarations`,
 `AttachmentLegality`, `WaitingLKI`; RON `TestRONCreatureEnchantRemoval`,
@@ -17830,3 +17830,25 @@ clause tests, not complete-card gameplay evidence. `TestRONEntryHistoryDelayed`
 installs the query before the return and executes it after Aura departure and
 cleanup. `Invalid` and `ContextsAndInventory` cover strict syntax, unsupported
 contexts and operand roles. Every full Animate Dead record still rejects.
+
+### Lasting enchant replacement on a graveyard Aura
+
+Use `GrantPermanentEnchant(subject, hosts)` with `Until` to capture one recipient
+and give it a live permanent-host enchant restriction. The query uses the
+recipient's `This` and current `You`; it cannot read donor bindings.
+`RemoveGraveyardCreatureEnchant(subject)` removes the fixed graveyard enchant
+ability while retaining the saved attachment for subsequent resolving reads.
+Layer 6 orders grants and removals. Multiple enchant abilities all apply.
+Printed declarations and copiable values stay unchanged. Shared attachment
+rules apply protection, visit identity, phasing and state actions.
+
+RON accepts the exact paired
+`CreatePermanentLayerEffect(ThisPermanent,
+[LosesAbility(Enchant(IsCardtype(Creature))),
+AddAbility([EnchantPermanent(And([IsCardtype(Creature),
+PutOntoBattlefieldByPermanent(ThisPermanent)]))])])`
+in resolving source graveyard-Aura bodies, including source entry triggers.
+The query can find a linked creature that enters later in that resolution.
+Entry and draw replacements, other recipients and other grant shapes reject.
+This is clause support for Animate Dead; its full record still needs adapters.
+See the lasting permanent enchant contract in `engine-rules-contracts.md`.

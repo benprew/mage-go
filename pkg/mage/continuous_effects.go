@@ -852,6 +852,7 @@ func permanentHasManaAbilityColor(target *Permanent, color Color) bool {
 func removeAllAbilitiesAtCurrentLayer(g *Game, target *Permanent) {
 	target.RuntimeAbilities = nil
 	target.printedAbilitiesSuppressed = true
+	target.grantedEnchants = nil
 	for attr := Attr(1); attr < NumAttrs; attr++ {
 		if IsAbilityAttr(attr) {
 			g.effects.RevokeAttr(target.ID(), attr)

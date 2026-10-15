@@ -512,7 +512,7 @@ func ValidateCardDefinition(name string, card Card) error {
 		defer func() { sourceCardBody = previousSourceCardBody }()
 		previousCastBody := castBody
 		switch value.(type) {
-		case grantedTriggerDefinition, tokenAbilityDefinition, acquiredStaticDefinition:
+		case grantedTriggerDefinition, tokenAbilityDefinition, acquiredStaticDefinition, grantedEnchantDefinition:
 			spell, castBody = false, false
 		}
 		if action, ok := value.(*ActionDefinition); ok {

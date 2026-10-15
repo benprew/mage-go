@@ -16,42 +16,45 @@ type ContinuousModification interface {
 	modification() *layerModification
 }
 type layerModification struct {
-	subject               PermanentRef
-	subjects              PermanentSet
-	controller            PlayerRef
-	power, toughness      ResolutionValue
-	keyword               Attr
-	bandsQuality          *PermanentFilter
-	protectionColors      []Color
-	protectionGrant       bool
-	removeKeyword         bool
-	removeLandwalk        bool
-	removeCreatureEnchant bool
-	removeBandsWithOther  bool
-	removeAbilities       bool
-	cantBeBlocked         bool
-	cantBlock             bool
-	assignsNoCombatDamage bool
-	blockerFilter         *PermanentFilter
-	requiredBlockerFilter *PermanentFilter
-	blockEachAttacker     bool
-	blockAnyNumber        bool
-	setBasePT             bool
-	setPowerOnly          bool
-	setToughnessOnly      bool
-	isSwitch              bool
-	layer                 Layer
-	colors                []Color
-	family                SubtypeFamily
-	subtypes              []string
-	addSubtypes           bool
-	addType               Attr
-	typeAddition          bool
-	ability               *ActionDefinition
-	trigger               *GenericTriggered
-	triggerGrant          bool
-	triggerPlayer         PlayerRef
-	retainTriggerPlayer   bool
+	subject                PermanentRef
+	subjects               PermanentSet
+	controller             PlayerRef
+	power, toughness       ResolutionValue
+	keyword                Attr
+	bandsQuality           *PermanentFilter
+	protectionColors       []Color
+	protectionGrant        bool
+	removeKeyword          bool
+	removeLandwalk         bool
+	removeCreatureEnchant  bool
+	removeGraveyardEnchant bool
+	enchantHosts           PermanentSet
+	enchantGrant           bool
+	removeBandsWithOther   bool
+	removeAbilities        bool
+	cantBeBlocked          bool
+	cantBlock              bool
+	assignsNoCombatDamage  bool
+	blockerFilter          *PermanentFilter
+	requiredBlockerFilter  *PermanentFilter
+	blockEachAttacker      bool
+	blockAnyNumber         bool
+	setBasePT              bool
+	setPowerOnly           bool
+	setToughnessOnly       bool
+	isSwitch               bool
+	layer                  Layer
+	colors                 []Color
+	family                 SubtypeFamily
+	subtypes               []string
+	addSubtypes            bool
+	addType                Attr
+	typeAddition           bool
+	ability                *ActionDefinition
+	trigger                *GenericTriggered
+	triggerGrant           bool
+	triggerPlayer          PlayerRef
+	retainTriggerPlayer    bool
 }
 
 func (*layerModification) continuousModification()            {}
@@ -292,6 +295,9 @@ func (m *layerModification) inspectDefinition() definitionNode {
 	if m.typeAddition && m.addType == 0 {
 		n.problem = "supply a supported permanent card type"
 	}
+	if m.enchantGrant {
+		n.children = append(n.children, definitionEdge{"enchant", grantedEnchantDefinition{m.enchantHosts}})
+	}
 	if m.triggerGrant {
 		n.children = append(n.children, definitionEdge{"trigger", grantedTriggerDefinition{m.trigger}})
 	}
@@ -360,6 +366,12 @@ func (m *layerModification) description() string {
 		if m.ability != nil {
 			return "grant activated ability"
 		}
+		if m.enchantHosts != nil {
+			return "grant enchant permanent"
+		}
+		if m.removeGraveyardEnchant {
+			return "remove enchant graveyard creature card"
+		}
 		if m.removeCreatureEnchant {
 			return "remove enchant creature"
 		}
@@ -398,37 +410,39 @@ func (m *layerModification) members(ctx *EffectContext) []*Permanent {
 }
 
 type capturedModification struct {
-	permanent             capturedPermanent
-	controller            uuid.UUID
-	power, toughness      int
-	keyword               Attr
-	bandsQuality          *PermanentFilter
-	protectionColors      []Color
-	protectionGrant       bool
-	removeKeyword         bool
-	removeLandwalk        bool
-	removeCreatureEnchant bool
-	removeBandsWithOther  bool
-	removeAbilities       bool
-	cantBeBlocked         bool
-	cantBlock             bool
-	assignsNoCombatDamage bool
-	blockerFilter         *PermanentFilter
-	requiredBlockerFilter *PermanentFilter
-	blockEachAttacker     bool
-	blockAnyNumber        bool
-	setBasePT             bool
-	setPowerOnly          bool
-	setToughnessOnly      bool
-	isSwitch              bool
-	colors                []Color
-	family                SubtypeFamily
-	subtypes              []string
-	addSubtypes           bool
-	addType               Attr
-	ability               *ActionDefinition
-	trigger               *GenericTriggered
-	grantID               uuid.UUID
+	permanent              capturedPermanent
+	controller             uuid.UUID
+	power, toughness       int
+	keyword                Attr
+	bandsQuality           *PermanentFilter
+	protectionColors       []Color
+	protectionGrant        bool
+	removeKeyword          bool
+	removeLandwalk         bool
+	removeCreatureEnchant  bool
+	removeGraveyardEnchant bool
+	enchantHosts           PermanentSet
+	removeBandsWithOther   bool
+	removeAbilities        bool
+	cantBeBlocked          bool
+	cantBlock              bool
+	assignsNoCombatDamage  bool
+	blockerFilter          *PermanentFilter
+	requiredBlockerFilter  *PermanentFilter
+	blockEachAttacker      bool
+	blockAnyNumber         bool
+	setBasePT              bool
+	setPowerOnly           bool
+	setToughnessOnly       bool
+	isSwitch               bool
+	colors                 []Color
+	family                 SubtypeFamily
+	subtypes               []string
+	addSubtypes            bool
+	addType                Attr
+	ability                *ActionDefinition
+	trigger                *GenericTriggered
+	grantID                uuid.UUID
 }
 
 func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
@@ -438,7 +452,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 func (m *layerModification) captureMembers(ctx *EffectContext, members []*Permanent) []capturedModification {
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, bandsQuality: m.bandsQuality, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeCreatureEnchant: m.removeCreatureEnchant, removeBandsWithOther: m.removeBandsWithOther, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, bandsQuality: m.bandsQuality, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeCreatureEnchant: m.removeCreatureEnchant, removeGraveyardEnchant: m.removeGraveyardEnchant, enchantHosts: m.enchantHosts, removeBandsWithOther: m.removeBandsWithOther, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -543,6 +557,10 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			installGrantedTrigger(p, v.trigger, v.grantID)
 		} else if v.ability != nil {
 			installGrantedActivation(p, v.ability, v.grantID)
+		} else if v.enchantHosts != nil {
+			p.grantedEnchants = append(p.grantedEnchants, v.enchantHosts)
+		} else if v.removeGraveyardEnchant {
+			p.graveyardEnchantRemoved = true
 		} else if v.removeCreatureEnchant {
 			p.creatureEnchantRemoved = true
 		} else if v.removeLandwalk {
@@ -921,7 +939,7 @@ func propertiesFromModifications(modifications []*layerModification) EffectPrope
 		if v, ok := m.toughness.(fixedValue); ok && !m.setBasePT {
 			p.ToughnessBoost += v.n
 		}
-		if m.removeKeyword || m.removeLandwalk || m.removeAbilities || m.removeCreatureEnchant {
+		if m.removeKeyword || m.removeLandwalk || m.removeAbilities || m.removeCreatureEnchant || m.removeGraveyardEnchant {
 			p.Outcome = OutcomeDetriment
 		} else if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword

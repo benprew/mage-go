@@ -8,33 +8,32 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **925 accepted / 61 rejected names**
 (986 total), **2,313 compiled / 132 rejected records** (2,445 total).
-The latest slice is **FORWARD-ENTRY-LINKAGE**.
-RON lowers PutOntoBattlefieldByPermanent(ThisPermanent) in resolving graveyard
-Aura collections. Typed graveyard returns in that scope record exact source and
-entrant visits before entry observations. Queries can precede the return.
-Mage supplies an explicit entry option and a pure query for graveyard and exile
-entry, with separate history for clones and payment trials.
-All six Animate Dead records have new linked-filter clause evidence. Full-card
-compilation and gameplay gains are zero, as estimated; other adapters remain.
-No RON source changed. Loader counts and diagnostics remain unchanged.
-The collection still rejects atomically. Runtime cutover, Go-card removal and
-DSL cleanup remain gated by complete support and native startup.
+The latest slice is **LASTING-LINKED-ENCHANT-GRANT**.
+RON lowers the exact paired graveyard-enchant removal and linked creature-enchant
+grant in resolving source-Aura bodies, including source entry triggers.
+Mage captures one recipient visit and retains a live host query in layer 6.
+Shared attachment checks intersect all enchant restrictions. Grants, removal,
+expiry, phasing and game clones use the shared layer and identity services.
+All six Animate Dead records have new grant-and-return clause evidence.
+Full-card compiler and gameplay gains are zero, as estimated. Its source-presence,
+attachment-result and departure-player adapters remain unsupported.
+No RON source changed. The collection still rejects atomically; runtime cutover,
+Go-card removal and DSL cleanup remain gated by complete support and startup.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Lasting linked enchant grant:** Animate Dead can now query exact returned
-   hosts. It still needs graveyard-enchant removal and a lasting linked enchant
-   grant in its entry trigger, then source presence, attachment/result-context
-   and departure-player adapters. Zero immediate gains; eventual one / six.
+1. **Source-presence entry condition:** Animate Dead needs exact-visit presence
+   for `EnteringPermanentPassesFilter(OnTheBattlefield)` at detection and
+   resolution. Zero immediate gains; attachment-result and departure-player
+   adapters would still block its one name / six records.
 2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
    recursive resolving copies and ThisAbility retention. One prerequisite
    estimates zero immediate gains, eventual one name / six records.
 3. **Counter-removal event:** Divine Intervention needs an actual attributed
-   last-counter removal event with its player binding, plus DrawTheGame. The new removal service
-   can supply observations, but does not yet emit that event. Compare its effort
-   and shared event value with other remaining multi-card prerequisites first.
+   last-counter removal event with its player binding, plus DrawTheGame.
+   One eventual name / one record; retain attribution and payment isolation.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -21418,3 +21417,179 @@ waiting_delayed_source.go, zone_system.go and doc.go; RON entry_history.go and
 entry_history_test.go, contextual_collection.go, graveyard_return.go and
 inventory.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
 This run stops after FORWARD-ENTRY-LINKAGE.
+
+## 2026-10-15 — LASTING-LINKED-ENCHANT-GRANT
+
+### Baseline, candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader JSON exited 1 for
+collection rejection: 2,313 compiled / 132 rejected records, 925 accepted /
+61 rejected names. No build, test or environment failure caused that exit.
+The latest ledger's ranked candidates were evaluated first. Complete records
+and all nested forms were read for these candidates. Exact-name comparisons
+found six identical Animate Dead records, six identical Vesuvan Doppelganger
+records and one Divine Intervention record. Reprints count once.
+
+| Candidate | Distinct affected cards | Estimated immediate full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Lasting linked enchant grant | Animate Dead (one name / six records) | 0 | Reuses the completed forward-entry query. Supplies the grant before the return. Source-presence condition, returned-permanent attachment/result scope and departure-controller capture remain. Native live enchant restrictions can be reused independently. | Small native layer extension, strict adapter, lifecycle and clause tests; one run. |
+| Copiable upkeep grant | Vesuvan Doppelganger (one name / six records) | 0 | Copiable grant is followed by recursive resolving copy, KeepColor and retained ThisAbility identity. Completes repeated targeted form changes only after those contracts exist. | Larger copy-plan and ability-definition work; several dependent slices. |
+| Attributed last-counter removal event | Divine Intervention (one name / one record) | 0 | Removal history is not an event. Needs event snapshots, actual removal-player identity, last-counter detection and payment isolation, followed by DrawTheGame. | Medium event pipeline work plus an independent terminal-result service. |
+
+Candidate 1 was dependency-ready and was selected as instructed. None of the
+ranked prerequisites offers an immediate multi-card unlock. This one reuses the
+preceding slice and has the smallest credible complete implementation. It is
+one paired layer capability; it does not implement the remaining card adapters.
+Acceptance cases and the syntax/engine boundary were stated before edits.
+The implement-engine skill supplied the native contract workflow. No agents
+were delegated, and no removed card/set skill or Go card requirement was used.
+
+### Contract, dependencies and exact supported context
+
+Native APIs:
+
+- `GrantPermanentEnchant(subject PermanentRef, hosts PermanentSet) ContinuousModification`
+- `RemoveGraveyardCreatureEnchant(subject PermanentRef) ContinuousModification`
+
+`Until` captures each exact recipient visit. The grant retains a live host query,
+not its current result. Host queries read the recipient as `This` and its current
+controller as `You`, in a separate declaration binding scope. Donor targets and
+saved bindings cannot enter that scope. Nil hosts, nil/unbound subjects and
+unbound host references fail native validation. A query can be empty when the
+grant starts, then find a later linked entrant in the same resolution.
+
+Layer 6 applies the paired removal and grant in declared order. The graveyard
+removal preserves the saved exact attachment so a later return instruction can
+still read `EnchantedGraveyardCard`. The grant does not change printed cast
+targets, copiable rules or source metadata, and makes no targeting operation.
+All current enchant restrictions intersect, including printed and acquired
+restrictions. The former printed-target loop accepted any matching declaration;
+it now requires every enchant ability, as CR 702.5c specifies. Protection,
+attachment restrictions, shroud/hexproof handling and state actions reuse the
+shared attachment service. Permanent-only grants cannot enchant a graveyard
+card. Removal alone preserves that saved host without its fixed creature filter.
+
+Removal of all abilities clears earlier acquired enchant declarations; later
+grants restore them in timestamp order. Fixed creature-enchant removal does not
+remove acquired enchant abilities. Expiry restores printed restrictions. A
+phase cycle preserves the exact grant; a returned recipient cannot inherit it.
+Donor departure does not end an ordinary Until effect. Clones keep separate
+computed state, expiry and saved graveyard attachments. A failing clone/expiry
+test exposed an existing omission in `clonePermanentInto`: it did not copy
+`enchantedCard`. That exact attachment and the relevant enchant state are now
+copied there. The shared `targetsWithoutCreatureEnchant` helper became unused;
+a repository Go-caller search found only its definition, which was removed.
+No broad DSL function or Go card definition was removed.
+
+RON accepts exactly:
+
+```ron
+CreatePermanentLayerEffect(ThisPermanent, [
+    LosesAbility(Enchant(IsCardtype(Creature))),
+    AddAbility([EnchantPermanent(And([
+        IsCardtype(Creature),
+        PutOntoBattlefieldByPermanent(ThisPermanent)
+    ]))])
+])
+```
+
+The recipient must be the source in a resolving graveyard-Aura scope. That scope
+identifies the fixed graveyard enchant declaration removed by this paired form.
+The entry-trigger `enteringSource` flag does not make its resolving action list
+an entry replacement. This adapter permits that resolving context, without
+loosening the guards on other lasting ability grants. It requires both clauses
+in the listed order, one acquired enchant ability, and the exact two-member
+linked-creature filter with strict symbols. The existing contextual collection
+compiler supplies the host query and existing graveyard returns supply entry
+history. Other filters, recipients, unpaired graveyard removal, extra/mixed layer
+parts, costs, entry replacements and draw replacements reject.
+
+RON owns syntax, shape and lexical context. Mage owns live query execution,
+layer state, exact visits, clone isolation and attachment legality. There are no
+card-name branches, runtime declaration games, global action-result slots or
+partial production registries. Counter events, costs, replacement ordering and
+simultaneous entry retain their existing services; this pair introduces no new
+payment or replacement procedure.
+
+CR 303.4c/j, 400.7, 608.2c, 611.2a/c, 613.1f and 702.5a/c establish the contract.
+All local Animate Dead rulings were read; they are WotC rulings, not Scryfall
+notes. The 2016-06-08 rulings establish the new creature object, protection and
+shroud behavior, and restriction to a creature this Aura put onto the battlefield.
+`go run ./cmd/fetchset -check -card "Animate Dead"` passed. The other candidate
+rulings were also read. No source defect was found. No RON source or vocabulary
+snapshot changed. API and rules-contract docs describe only this capability.
+
+### Failing-first evidence and card-to-test mappings
+
+The first native run failed to compile because both public signatures were
+absent. It also exposed one test fixture's incorrect filter helper name, which
+was corrected to the existing IsCreature filter. The first RON run rejected the
+real clause in all six projections at the entry-trigger scope guard. The later
+clone/expiry assertion exposed the missing saved-attachment copy and passed
+after that integration fix. A test fixture also used a nonexistent player helper;
+it now uses the existing typed You reference with the explicit resolving player.
+No assertion was weakened to accept an unsupported card.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Animate Dead, LEA/LEB/2ED/3ED/CED/CEI | `TestRONPermanentEnchantGrantAnimateDead` | Full records remain rejected. Projections compile the real grant and return instructions, execute both through mage, reject an unrelated creature, and allow the exact returned host through shared attachment and state actions. |
+| Resolving entry trigger, copies and pending clone | `TestRONPermanentEnchantGrantStack` | LEA projection runs grant, return and a linked tap probe through the stack; copies and a pending clone keep separate state. The projection omits attachment and therefore correctly loses its Aura to state actions. |
+| Invalid syntax and context | `TestRONPermanentEnchantGrantInvalid` | Wrong recipient/source/type, tuple symbols, arity, missing or extra clauses, mixed abilities, non-graveyard scope and entry/draw contexts reject. |
+| Forward linkage and host legality | `TestPermanentEnchantGrantForwardLink` | Empty initial query, later linked entry, shroud/hexproof attachment, unrelated host refusal, phasing, returned-host identity and clone isolation. |
+| Layer lifecycle | `TestPermanentEnchantGrantLifecycle` | Expiry, recipient and donor return, phase cycle, clone expiry, all-ability removal before/after a grant, remaining printed restrictions and protection. |
+| Enchant conjunction and binding scope | `TestPermanentEnchantGrantIntersections`, `Declarations`, `BindingIsolation` | Printed/acquired and acquired/acquired restrictions intersect. Fixed removal preserves acquired grants. Invalid inputs and a declared donor target in a grant reject. |
+| Recipient context and saved graveyard host | `TestPermanentEnchantGrantRecipientContext`, `GraveyardRemovalAndExpiry` | Live controller reads, grant controller independence, retained attachment reads, expiry restoration and clone state actions. |
+
+These tests add clause evidence for one unique name / six records. They do not
+establish complete Animate Dead gameplay. Estimated and actual full-card compiler
+gains are zero; complete-card gameplay gains are zero. The source-presence
+condition still rejects first; attachment-result and departure-player adapters
+remain nested blockers. Existing accepted-card evidence remains separate.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONPermanentEnchantGrant' -count=1`
+  and `go test ./pkg/mage -run '^TestPermanentEnchantGrant' -count=1`: pass.
+- Final `make build` and `go vet ./...`: pass.
+- Final `go test ./pkg/mage/... -short -count=1` and `make test`: pass.
+- The engine skill's additional `go test ./... -short -count=1`: pass.
+- `make lint`: pass, 0 issues. Hash comparison found one automatic change:
+  import grouping in permanent_enchant_grant_test.go. It was reviewed; the
+  affected native focused tests passed again after lint. No other file changed.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON and
+  **2,313 compiled / 132 rejected records**, **925 accepted / 61 rejected names**.
+  Parsed assertions prove the entire report equals the fresh baseline,
+  including every diagnostic. There is no accepted-record regression. The
+  collection still rejects atomically and publishes no partial registry.
+
+Estimated and actual complete-card gains are both zero. New clause evidence
+covers one name / six records; complete-card gameplay counts do not change.
+No source-data, validation or environment blocker remains for this slice.
+All required checks passed before commit. The commit uses a per-command
+`commit.gpgsign=false` override, consistent with the prior slice's pinentry
+workaround; repository signing configuration remains unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Exact source-presence entry-trigger condition for Animate Dead,
+   `EnteringPermanentPassesFilter(OnTheBattlefield)`. Reuse exact event identity
+   and shared intervening-if checks; departure, return and phasing must not
+   bypass the gate. Zero immediate full-card gains, eventual one name / six
+   records after attachment-result and departure-controller adapters.
+2. Copiable upkeep grants for Vesuvan Doppelganger, then retained ThisAbility
+   and recursive resolving copies. Zero immediate gains; eventual one / six.
+3. Attributed actual last-counter removal event for Divine Intervention, then
+   DrawTheGame. Zero immediate prerequisite gains; eventual one / one. Preserve
+   removal-player identity, actual removal semantics and payment isolation.
+
+Runtime cutover, native complete-collection startup, Go-card/generator deletion
+and broad DSL cleanup remain gated. No RON source, Go card or broad DSL authoring
+API changed. Changed files: native permanent_enchant_grant.go and tests,
+card.go, clone.go, composable_continuous.go, continuous_effects.go,
+creature_enchant_removal.go, definition.go, effect_manager.go, game.go,
+graveyard_enchant.go and doc.go; RON linked_enchant_grant.go,
+permanent_enchant_grant_test.go and indefinite_type.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+This run stops after LASTING-LINKED-ENCHANT-GRANT.

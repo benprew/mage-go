@@ -18,13 +18,3 @@ func isFixedCreatureEnchant(target Target) bool {
 	declaration, ok := UnwrapTarget(target).(*PermanentTarget)
 	return ok && declaration.fixedCreatureEnchant
 }
-
-func targetsWithoutCreatureEnchant(targets []Target) []Target {
-	kept := make([]Target, 0, len(targets))
-	for _, target := range targets {
-		if !isFixedCreatureEnchant(target) {
-			kept = append(kept, target)
-		}
-	}
-	return kept
-}
