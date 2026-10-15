@@ -166,11 +166,16 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	obj.DamageDistribution = maps.Clone(opts.DamageDistribution)
 	g.pushStack(obj)
 	g.recordSpellCast(card, opts.Controller)
+	instantOrdinal := 0
+	if card.HasType(TypeInstant) {
+		instantOrdinal = g.trackers.Turn.InstantsCast(opts.Controller)
+	}
 	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: sourceID,
-		TargetID: obj.ID,
-		PlayerID: opts.Controller,
+		CastInstantOrdinal: instantOrdinal,
+		Type:               EvtSpellCast,
+		SourceID:           sourceID,
+		TargetID:           obj.ID,
+		PlayerID:           opts.Controller,
 	})
 	g.fireBecomesTargetEvents(obj, false)
 	return obj, nil

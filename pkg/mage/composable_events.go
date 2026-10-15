@@ -1875,6 +1875,8 @@ func (sourceTargetedBySpellPattern) inspectDefinition() definitionNode {
 
 // --- from composable_spell_cast_event.go ---
 type spellCastPattern struct {
+	afterFirstInstant           bool
+	duplicateInstantOrdinal     bool
 	sourceSpell                 bool
 	contextualFilter            *SpellFilter
 	filterCount                 int
@@ -2081,6 +2083,9 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 	if p.sourceSpell {
 		t.AndConditionData(EventSourceIsSelf{})
 	}
+	if p.afterFirstInstant {
+		t.AndConditionData(spellCastAfterFirstInstant{})
+	}
 	if p.filterColor {
 		t.AndConditionData(spellCastHasEffectiveColor{color: p.color})
 	}
@@ -2113,6 +2118,9 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 
 func (p spellCastPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "a spell is cast", battlefieldSource: !p.sourceSpell}
+	if p.duplicateInstantOrdinal {
+		n.problem = "spell cast event: supply the instant ordinal filter once"
+	}
 	if p.filterCount > 0 {
 		n.children = append(n.children, definitionEdge{"filter", p.contextualFilter})
 	}
@@ -2180,6 +2188,9 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 		if p.duplicateOwnership {
 			n.problem = "spell cast event: supply the ownership filter once"
 		}
+	}
+	if p.afterFirstInstant {
+		n.Text += " after the caster's first instant this turn"
 	}
 	if p.caster != nil {
 		n.bindingWrite = p.caster

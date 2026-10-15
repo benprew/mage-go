@@ -24093,3 +24093,35 @@ No new cost, replacement-order or simultaneous-operation service is introduced.
 Evidence: `TestLandPlayEventSnapshot`, `Matching`, `IndependentPending`,
 `LibraryAndFailure`, `Invalid`; `TestRONLandPlayEventFastbond`, `Bindings`,
 `Lifecycle`, `Invalid`, `AtomicLoadAndInventory`.
+
+## Instant cast ordinal event contract
+
+`SpellCast().AfterFirstInstant()` matches a successful instant cast with saved
+`GameEvent.CastInstantOrdinal > 1`. The successful cast path updates the existing
+per-player instant tracker, then saves the count in the emitted event. Other
+spell types publish zero. It does not introduce a second history or a mutable
+last-cast slot. Matching reads the event snapshot, so later casts and turn-history
+reset cannot change the event. Duplicate modifiers fail definition validation.
+
+CR 601.2 and 601.2i place the cast event after successful announcement and
+payment. Failed casts leave the instant count unchanged. CR 707.10 distinguishes
+copying a spell onto the stack from casting a spell; the former neither counts
+nor emits a cast event. The count includes casts before the observer entered,
+and uses the existing turn-start reset for each player independently. Source
+phasing or ability removal can suppress detection without suspending history.
+
+CR 603.2 and 603.3a govern detection and the saved trigger controller. Existing
+`WithCaster` and `WithSpell` captures retain the event's player and exact stack
+object for each pending body. Later control changes, source departure/return,
+phasing or removal of the cast spell cannot cancel an already pending trigger.
+Copies and game clones retain separate frames. CR 113.7a and 608.2h supply source
+LKI for damage; existing prevention services apply normally. No new payment,
+replacement-order or simultaneous-operation rule is established.
+
+RON supports the opponent `NotEqualTo(Integer(1))` instant event only, in a
+permanent's `TriggerA`. Other shapes reject. Ichneumon Druid's complete LEG record
+uses that event and four damage to the saved player. Its local WotC ruling says
+to track each player's instant count separately; no source correction is needed.
+Evidence: `TestSpellCastOrdinalHistory`, `FailedCast`, `Pending`, `Snapshot`,
+`Invalid`, `CloneHistoryAndControl`, and RON `TestRONSpellCastOrdinalDruid`,
+`Lifecycle`, `Bindings`, `Phasing`, `Invalid`, `Inventory`.

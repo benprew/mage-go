@@ -6,15 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **931 accepted / 55 rejected names**
-(986 total), **2,344 compiled / 101 rejected records** (2,445 total).
-The latest slice is **CONTROLLER-LAND-PLAY-ORDINAL-EVENT**.
-RON lowers the controller land-play TriggerI and the negated first-play
-predicate to a native historical event filter with typed player, exact land
-visit and ordinal captures. All six Fastbond records now have complete RON
-cast-and-play gameplay evidence. Their inverted source predicate is corrected
-against local Oracle text and WotC rulings. Estimated and actual gains match:
-one unique name and six records. Final validation is recorded in the new entry.
+Latest measured result (2026-10-15): **932 accepted / 54 rejected names**
+(986 total), **2,345 compiled / 100 rejected records** (2,445 total).
+The latest slice is **INSTANT-CAST-ORDINAL-EVENT**.
+RON lowers the opponent nonfirst-instant TriggerA through shared cast-event
+bindings and a native historical ordinal filter. Ichneumon Druid's complete
+LEG record now has paid-cast and damage gameplay evidence. Cast history before
+entry counts; failed casts and stack copies do not. Pending bodies and clones
+keep separate event facts. Estimated and actual gain: one name / one record.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -28,9 +27,9 @@ Reassess with fresh loader and complete-record evidence. Count reprints once.
 2. **Sticky animation and ability removal:** Titania's Song; capture the correct
    evolving layer membership and retain effects until cleanup after source exit.
    Eventual one name / two records; needs a shared sticky layer contract.
-3. **Nth-spell event predicate:** Ichneumon Druid; assess the existing spell-cast
-   event snapshots and turn history before adding its third-spell condition.
-   Eventual one name / one record; complete-record blockers need fresh review.
+3. **Saved exile results:** Martyr's Cry; capture actual exiled creature visits
+   and their former controllers for per-player draw counts. Eventual one name /
+   one record; reuse simultaneous exile and per-player result services.
 
 ## Dependencies and source blockers
 
@@ -23619,3 +23618,175 @@ generator or broad DSL function was removed. Removal gates remain unmet.
 55 unique names / 101 records still reject. Complete RON gameplay, runtime
 loading and cutover, Go-card/generator removal and unused DSL cleanup remain
 incomplete. Stop after CONTROLLER-LAND-PLAY-ORDINAL-EVENT.
+
+## 2026-10-15 — INSTANT-CAST-ORDINAL-EVENT
+
+### Fresh environment and candidate comparison
+
+The working tree was clean before this slice. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with valid collection diagnostics:
+2,344 compiled / 101 rejected records; 931 accepted / 55 rejected names.
+That exit was collection rejection, not a build or test failure. No unrelated
+tracked or untracked files were changed.
+
+Evaluated the previous entry's three ranked candidates in order. Read every
+complete record for each compared name, including all nested forms and all
+identical reprints. The vocabulary's targeted signatures confirm six forced
+mana actions/results, two sticky layer rules and one ordinal event.
+
+| Candidate and distinct affected cards | Estimated full-card unlocks | Missing prerequisites and other blockers | Downstream benefit and estimated effort |
+| --- | --- | --- | --- |
+| Forced mana activation and saved mana — Drain Power | One name / six records, after both contracts | The conjunctive ActionPlayer land filter is only the first diagnostic. Required mana-ability choice, variable production, arbitrary legal activation costs, execution during resolution, exact removed mana and typed result consumption all need a complete contract. Current planning and tap services cover narrower shapes. | Reusable forced activation/decision machinery can support later controlled play in Word of Command, which also has hand inspection and play lifecycle blockers. At least two substantial contracts; high effort, unsuitable as one complete small slice. |
+| Sticky global animation — Titania's Song | One name / two records | A noncreature-artifact membership predicate must remain valid across its own type, ability and P/T layers; effects must remain through cleanup after source exit. The shared sticky membership and source-exit lifetime contract is absent. Mana-value reads and individual modifications already exist. | Reusable multipart global-layer membership and post-source lifetime. Medium to high effort, with layer dependency, copy, phasing and cleanup tests; one large slice or prerequisite plus adapter. |
+| Historical nonfirst-instant event — Ichneumon Druid | One name / one record | Existing damage body, explicit event player, ordinary cast captures and per-player instant tracker are ready. Missing only successful-cast ordinal publication, its native event predicate and strict lowering. | Extends the shared cast-event service without adding history state; later ordinal adapters can use the event fact. One small slice, about 100 lines of new production logic/adapters plus two focused test files. |
+
+Candidate 1 is not dependency-ready as a single complete capability: legal
+forced activation and removed-mana results are separate missing contracts.
+Neither it nor candidate 2 supplies an immediate multi-name unlock. Candidate 3
+has the smallest complete dependency boundary and existing exact engine support
+for all its other instructions. Selected **INSTANT-CAST-ORDINAL-EVENT**, with
+one estimated full-card unlock. No Go card definition supplied requirements.
+No second slice was started.
+
+Before editing, stated the reuse boundary and acceptance cases: RON owns strict
+spelling, shape and lexical bindings; mage owns event facts and history. Cover
+successful/failed casts, first/second/later instants, other spell types, stack
+copies, history before source entry, separate players and turns, typed caster
+and stack identity, source lifecycle, independent pending events and clones.
+The native implement-engine skill supplied the contract/TDD workflow; the user's
+explicit RON implementation scope authorizes the compiler adapter as well.
+
+### Contract, exact shapes and engine reuse
+
+- Native API: `func (p spellCastPattern) AfterFirstInstant() spellCastPattern`.
+  Compose with `SpellCast()`, `ByOpponent`, existing contextual filters and
+  `WithCaster`/`WithSpell`. Duplicate ordinal modifiers fail definition validation.
+- `core.GameEvent.CastInstantOrdinal int` is the successful caster's current
+  instant count, including this cast. Other spell types publish zero. The sole
+  production spell-cast publisher, `pushCastSpellObject`, updates the existing
+  `TurnTrackers` history before saving this event fact. No new tracker, global
+  last-action slot, mutable factory state or parallel cast pipeline exists.
+- Native matching requires `EvtSpellCast` and saved ordinal greater than one.
+  It does not query mutable current history. Stack copies use the existing copy
+  path and neither publish a cast event nor update the count. Failed casts do
+  neither. Real casts of copied cards still use the ordinary cast path.
+- Exact RON permanent rule:
+  `TriggerA(WhenAPlayerCastsTheirNthSpellInATurn(Opponent,
+  NotEqualTo(Integer(1)), IsCardtype(Instant)), actions)`.
+  Only this player/filter/comparison/count shape is supported. Other filters,
+  comparisons, integer values, symbols used as tuples, malformed arities,
+  TriggerI and nonpermanent rule contexts reject through strict compilation.
+  No general numeric or filtered-spell ordinal adapter is claimed.
+- Factored the existing ordinary spell-cast lowering into
+  `compileSpellCastTrigger`; both event forms build the same fresh per-instance
+  typed spell/caster captures and action scope. Existing callers retain their
+  behavior and text-layer declaration marker. The ordinal adapter adds only
+  `AfterFirstInstant`; it does not extend body actions. Event-player life gain
+  remains outside the existing RON body contract.
+- `Trigger_ThatPlayer` saves the caster and `Trigger_ThatSpell` saves the exact
+  stack identity. Neither adds a target. Separate pending events, source
+  instances, spell/trigger copies and game clones keep their own captures.
+  Source departure/return, phasing and control changes do not cancel pending
+  damage. Normal event detection still excludes phased or abilityless sources.
+- Existing turn tracking/reset, cast payment, trigger placement, typed captures,
+  source LKI, damage, prevention, copying and cloning services execute the rule.
+  No cost, replacement-order or simultaneous-operation contract changed.
+- Inventory assigns `cast_ordinal_comparison` and `cast_ordinal_value` roles to
+  the nested comparison/value, and existing player/spell-filter roles to the
+  event operands. Strict collection loading remains atomic.
+- CR 601.2/601.2i establishes a cast after successful payment; CR 603.2/603.3a
+  establishes detection and saved trigger control. CR 707.10 excludes stack
+  copies from casting. CR 113.7a/608.2h supplies pending source damage and LKI.
+  Read these local sections and relevant API/rules-contract documentation.
+- `go run ./cmd/fetchset -check -card "Ichneumon Druid"` passed before editing.
+  Read its complete local ruling file. Its one WotC ruling requires a separate
+  instant count for each player. Candidate ruling files were also read; WotC
+  rulings were not conflated with Scryfall notes.
+
+Source defects: none found or changed for this slice. Local LEG Oracle text
+requires each opposing instant after that player's first instant each turn,
+matching `NotEqualTo(Integer(1))` over the instant filter. The prior ledger's
+short phrase “third-spell condition” was not used as the requirement. No RON
+source changed, so no vocabulary source/hash refresh is required. The vocabulary
+snapshot retains its dated loader snapshot; fresh counts are recorded here.
+
+### Failing-first tests and card-to-test mapping
+
+Initial native tests failed compilation on missing `AfterFirstInstant` and
+`CastInstantOrdinal`. Test-authoring method names for tracker reset and printed
+stats were corrected before recording the isolated failures. RON tests then
+failed on unsupported `WhenAPlayerCastsTheirNthSpellInATurn`. No production stub
+or weakened assertion hid a missing implementation. Synthetic event-player life
+fixtures encountered the existing unsupported RON life-action context; they
+were changed to already-supported damage to test the event independently.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Ichneumon Druid, complete LEG record | `TestRONSpellCastOrdinalDruid` | Unpaid/paid cast, printed 1/1 entry, intervening sorcery, first three opposing instants, no damage for first, four damage for each later instant, stack-copy exclusion and no damage for its controller's casts |
+| Pending real-card damage | `TestRONSpellCastOrdinalLifecycle` | Earlier instant before source entry; source departure, return, phase and control; removed cast spell, copied trigger, prevention, two factory instances and independent game clones |
+| Exact cast and caster bindings | `TestRONSpellCastOrdinalBindings` | Two pending cast events counter their own stack spell and damage the saved caster; no declared targets; third event cannot consume second event's binding |
+| Phased real source | `TestRONSpellCastOrdinalPhasing` | Cast history continues while source is phased; no trigger during absence; next instant after phase-in deals four |
+| Historical counts | `TestSpellCastOrdinalHistory` | Other spells before and after instants, stack-copy exclusion, source entry after first cast, second and third instants, own casts, phase cycle and turn reset |
+| Failed payments | `TestSpellCastOrdinalFailedCast` | Unpaid instant preserves hand, empty stack and zero count; next successful cast is still first |
+| Pending native captures | `TestSpellCastOrdinalPending` | Source and spell departure, returned source, phasing, controller changes, trigger copies, multiple sources, history reset and independent clones |
+| Fixed event facts | `TestSpellCastOrdinalSnapshot` | Saved zero/first/second/third ordinals match independently of current turn history |
+| Separate game/player history | `TestSpellCastOrdinalCloneHistoryAndControl` | Clone casts do not change original history; control change uses the newly opposing player's full history; ability removal suppresses detection without erasing history |
+| Declarations and strict loading | `TestSpellCastOrdinalInvalid`, `TestRONSpellCastOrdinalInvalid`, `TestRONSpellCastOrdinalInventory` | Duplicate/native nil bindings, invalid filters and counts, arities, operand types, body scope leakage, inventory roles and failed-load registry preservation |
+
+### Verification and loader comparison
+
+- Focused native and RON ordinal tests passed with `-count=1`.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` passed.
+- `make test` passed across the repository, including cards and retained DSL
+  callers. A final test addition checks a sorcery cast after several instants;
+  the focused/build/vet/engine/full sequence was repeated for the final state.
+- Exact loader comparison removed only Ichneumon Druid's LEG issue. No issue was
+  added, and every other diagnostic was unchanged. Updated four pinned count
+  assertions in three test files from 2,344/101 to 2,345/100 without weakening
+  collection validation.
+- `make lint`: passed, zero issues. Reviewed the final source diff and new files;
+  no unrelated automatic changes were made. Repeated both focused test groups
+  after lint: passed.
+- The implement-engine skill's additional `go test ./... -short -count=1` passed.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON,
+  **2,345 compiled / 100 rejected records**, **932 accepted / 54 rejected names**.
+  Parsed final comparison confirms only Ichneumon Druid's issue disappeared;
+  every remaining diagnostic is unchanged. Example: Drain Power,
+  `2ED.lines.ron:69:279: unsupported value (And)`.
+
+Actual gain equals the estimate: one unique card / one record compiled, plus
+one complete RON gameplay mapping for Ichneumon Druid. Compilation and gameplay
+remain separate measures. All required checks passed; there is no environmental
+or pre-existing test blocker. The existing interactive GPG signer previously
+failed with a pinentry timeout, as recorded in the prior entry. Use the same
+command-local `commit.gpgsign=false` override for this slice's requested commit;
+repository/global configuration stays unchanged.
+
+Changed files: `pkg/mage/spell_cast_ordinal.go` and its native tests;
+`composable_events.go`, `core/event.go`, `spell_cast_stack.go` and `doc.go`;
+RON `spell_cast_event.go`, `spell_cast_ordinal.go`, `spell_cast_ordinal_test.go`,
+`triggers.go`, `inventory.go`, `inventory_test.go`, `definition_plan_test.go` and
+`numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this progress ledger. No RON data, Go card
+definitions, generators or broad DSL functions were changed or removed.
+Removal gates remain unmet.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation for Drain Power, followed by typed removed-mana
+   results. One name / six records after both capabilities. Isolate legal choices
+   and activation execution before attempting the full result-producing action;
+   arbitrary activation costs and variable production cannot be simplified.
+2. Sticky layer membership and post-source duration for Titania's Song.
+   One name / two records. `EachPermanentStickyLayerEffect` still rejects.
+3. Saved actual exile visits and former-controller results for Martyr's Cry.
+   One name / one record. Its complete record exiles white creatures, then draws
+   each player's matching actual count. Replacement-aware shared batch results
+   must precede the adapter; a raw pre-exile permanent count is insufficient.
+
+54 unique names / 100 records still reject. Complete RON gameplay, runtime
+loading and application cutover, Go-card/generator removal and unused DSL
+cleanup remain incomplete. Stop after INSTANT-CAST-ORDINAL-EVENT.

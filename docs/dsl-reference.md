@@ -18237,3 +18237,36 @@ supported only in this exact historical-condition context; it is not a general
 filter-negation adapter. The six complete Fastbond records use this form, with
 the first-land predicate corrected against local Oracle text and WotC rulings.
 `TestRONLandPlayEvent*` supplies full-record gameplay and declaration evidence.
+
+## RON instant cast ordinal event
+
+On a permanent, this exact event is supported in `TriggerA(event, actions)`:
+
+```ron
+WhenAPlayerCastsTheirNthSpellInATurn(
+    Opponent, NotEqualTo(Integer(1)), IsCardtype(Instant))
+```
+
+The count is the caster's instant count each turn, including the current cast
+and casts before the source entered. Sorceries, other spells, failed casts and
+copies placed directly on the stack do not increase the instant count. A copy
+of a card that is actually cast still counts through the normal casting path.
+Only the opponent, instant and nonfirst shape above is supported. Other player
+filters, spell filters, comparisons, counts, arities and contexts reject.
+
+The compiler reuses the ordinary cast-event action scope and fresh per-factory
+spell/caster bindings. `Trigger_ThatSpell` keeps its stack identity and
+`Trigger_ThatPlayer` keeps its caster. These references add no targets. Body
+actions retain their existing supported shapes; this event does not extend them.
+The engine's `SpellCast().AfterFirstInstant()` uses `GameEvent.CastInstantOrdinal`,
+which the successful cast path saves after updating the shared turn tracker.
+The pattern composes with existing caster, spell-filter and capture methods.
+Duplicate ordinal modifiers fail definition validation.
+
+`TestRONSpellCastOrdinalDruid` covers the complete LEG record, unpaid and paid
+casting, printed stats, sorcery exclusion, the first three opposing instants,
+spell copies and the controller's own spells. `Lifecycle`, `Bindings`, `Phasing`,
+`Invalid` and `Inventory` cover damage, source and spell identity, independent
+pending events, copies, clones, scopes, strict declarations and atomic loading.
+Native `TestSpellCastOrdinal*` covers history before entry, turn reset, failed
+casting, source ability removal, controller changes and clone history isolation.

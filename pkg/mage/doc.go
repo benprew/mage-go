@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SpellCast] with AfterFirstInstant matches a caster's second and later instants.
+// Successful casts save CastInstantOrdinal from the shared turn tracker.
+// Casts before source entry count. Other spell types and stack copies do not.
+// Failed casts keep history. Turn start resets each player's count.
+// The event filter reads saved facts. Pending triggers keep their typed caster
+// and spell through later casts, control changes, source exit and phasing.
+// Clones keep separate turn history and pending bodies. Damage uses shared LKI
+// and prevention services. RON accepts the opponent instant ordinal TriggerA
+// with NotEqualTo(Integer(1)). Other ordinal comparisons and filters reject.
+// The complete Ichneumon Druid record has RON cast-and-damage evidence.
+//
 // [ControllerPlaysLand] saves the player, land visit and turn ordinal.
 // Its AfterFirst filter reads the historical play, not current turn history.
 // Shared event frames keep pending facts through control, zone and phase changes.

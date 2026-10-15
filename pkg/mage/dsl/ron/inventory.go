@@ -2175,7 +2175,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}
+	case "cast_ordinal_comparison":
+		if n.Name == "NotEqualTo" && len(n.Args) == 1 {
+			return "cast_ordinal_value"
+		}
+	case "cast_ordinal_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 	case "event":
+		if n.Name == "WhenAPlayerCastsTheirNthSpellInATurn" && len(n.Args) == 3 {
+			return []string{"player_filter", "cast_ordinal_comparison", "spell_filter"}[index]
+		}
 		if n.Name == "WhenAPermanentHasNumberCountersOfType" && len(n.Args) == 3 {
 			return []string{"permanent_filter", "counter_state_comparison", "permanent_counter_type"}[index]
 		}

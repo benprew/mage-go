@@ -67,6 +67,8 @@ type GameEvent struct {
 	CastManaSpent      int
 	CastColorsSpent    int
 	CastAnnouncedX     int
+	// Later casts must not change this event's instant ordinal.
+	CastInstantOrdinal int
 	ManaTypes          []Color
 	TargetID           uuid.UUID
 	TargetIncarnation  uuid.UUID
