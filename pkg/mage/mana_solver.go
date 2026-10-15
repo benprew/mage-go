@@ -11,27 +11,29 @@ import (
 )
 
 // ManaSolverInputs is the complete state needed to plan a mana payment. Each
-// source contains the exact abilities available on one permanent; the solver
-// chooses an ability, its mana-production choices, and an activation order.
+// source contains the exact abilities from one permanent or player permission.
+// All life payments share one budget. The solver saves each activation order.
 type ManaSolverInputs struct {
-	Pool         *ManaPool
-	Cost         ManaCost
-	Sources      []manaSourceInfo
-	Scores       []int
-	Conversions  map[Color]Color
-	SpellContext *SpellPaymentContext
+	AvailableLife int
+	Pool          *ManaPool
+	Cost          ManaCost
+	Sources       []manaSourceInfo
+	Scores        []int
+	Conversions   map[Color]Color
+	SpellContext  *SpellPaymentContext
 }
 
 // ManaTap describes one exact mana-ability activation selected by the solver.
 // Productions and BonusColors are concrete, so AnyColor and AnyCombination
 // choices are preserved through execution.
 type ManaTap struct {
-	SourceIncarnation uuid.UUID
-	ActivationPayment *ManaActivationPayment
-	PermanentID       uuid.UUID
-	AbilityIndex      int
-	Productions       []ManaProduction
-	BonusColors       []Color
+	PlayerManaAbilityID uuid.UUID
+	SourceIncarnation   uuid.UUID
+	ActivationPayment   *ManaActivationPayment
+	PermanentID         uuid.UUID
+	AbilityIndex        int
+	Productions         []ManaProduction
+	BonusColors         []Color
 }
 
 // ManaSolution is an ordered list of mana-ability activations.
@@ -45,17 +47,19 @@ type manaProductionChoice struct {
 }
 
 type manaSearchNode struct {
-	pool     *ManaPool
-	used     string
-	parent   *manaSearchNode
-	action   ManaTap
-	score    int
-	depth    int
-	priority int
-	seq      int
+	lifeSpent int
+	pool      *ManaPool
+	used      string
+	parent    *manaSearchNode
+	action    ManaTap
+	score     int
+	depth     int
+	priority  int
+	seq       int
 }
 
 type manaSearchKey struct {
+	lifeSpent     int
 	total         [AnyColor + 1]int
 	abilityUsable [AnyColor + 1]int
 	spellUsable   [AnyColor + 1]int
@@ -80,14 +84,17 @@ type manaSearchStats struct {
 	ExpandedNodes int
 }
 
-type manaSearchCost struct{ score, depth int }
+type manaSearchCost struct{ life, score, depth int }
 
 func (c manaSearchCost) less(other manaSearchCost) bool {
-	return c.score < other.score || (c.score == other.score && c.depth < other.depth)
+	return c.life < other.life || (c.life == other.life && (c.score < other.score || (c.score == other.score && c.depth < other.depth)))
 }
 
 func (q manaSearchQueue) Len() int { return len(q) }
 func (q manaSearchQueue) Less(i, j int) bool {
+	if q[i].lifeSpent != q[j].lifeSpent {
+		return q[i].lifeSpent < q[j].lifeSpent
+	}
 	if q[i].score != q[j].score {
 		return q[i].score < q[j].score
 	}
@@ -110,8 +117,8 @@ func (q *manaSearchQueue) Pop() any {
 }
 
 // SolveMana finds the best executable activation plan for Cost. Search is
-// ordered by preservation score, then number of taps. Because complete plans
-// are searched, preservation preferences cannot make an affordable cost fail.
+// ordered by life payment, preservation score, then number of actions. Complete plans
+// keep preservation preferences from making an affordable cost fail.
 func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 	plan, ok := searchMana(in)
 	if !ok {
@@ -141,7 +148,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 	for _, source := range in.Sources {
 		for _, ability := range source.Abilities {
 			// A bounded pool permits repeated conversions without a search limit.
-			if ability.Repeatable && (ability.ManaCost.HasX || manaCostUnits(ability.ManaCost) < productionsTotalAmount(ability.Productions)) {
+			if ability.LifeCost < 0 || (ability.Repeatable && ability.LifeCost == 0 && (ability.ManaCost.HasX || manaCostUnits(ability.ManaCost) < productionsTotalAmount(ability.Productions))) {
 				return nil, false
 			}
 		}
@@ -153,7 +160,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 	root.priority = manaSearchLowerBound(root, in)
 	queue := manaSearchQueue{root}
 	heap.Init(&queue)
-	bestCost := map[manaSearchKey]manaSearchCost{manaSearchStateKey(rootPool, root.used, in.SpellContext): {}}
+	bestCost := map[manaSearchKey]manaSearchCost{manaSearchStateKey(rootPool, root.used, in.SpellContext, 0): {}}
 	choiceCaps := manaChoiceCapsForInputs(in)
 	productionChoices := make([][][]manaProductionChoice, len(in.Sources))
 	choicesComputed := make([][]bool, len(in.Sources))
@@ -168,8 +175,8 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 
 	for queue.Len() > 0 {
 		node := heap.Pop(&queue).(*manaSearchNode)
-		key := manaSearchStateKey(node.pool, node.used, in.SpellContext)
-		if known, ok := bestCost[key]; ok && known.less(manaSearchCost{node.score, node.depth}) {
+		key := manaSearchStateKey(node.pool, node.used, in.SpellContext, node.lifeSpent)
+		if known, ok := bestCost[key]; ok && known.less(manaSearchCost{node.lifeSpent, node.score, node.depth}) {
 			continue
 		}
 		if stats != nil {
@@ -200,7 +207,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 				if !ability.Repeatable && manaSourceSetContains(node.used, sourceIndex) {
 					continue
 				}
-				if !node.pool.CanPay(ability.ManaCost, nil) {
+				if ability.LifeCost > max(0, in.AvailableLife-node.lifeSpent) || !node.pool.CanPay(ability.ManaCost, nil) {
 					continue
 				}
 				if !choicesComputed[sourceIndex][abilityIndex] {
@@ -225,30 +232,33 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 						}
 						savedPayment := payment
 						nextAction := ManaTap{
-							SourceIncarnation: source.Incarnation,
-							ActivationPayment: &savedPayment,
-							PermanentID:       source.PermanentID,
-							AbilityIndex:      ability.AbilityIndex,
-							Productions:       choice.Productions,
-							BonusColors:       choice.BonusColors,
+							PlayerManaAbilityID: source.PlayerManaAbilityID,
+							SourceIncarnation:   source.Incarnation,
+							ActivationPayment:   &savedPayment,
+							PermanentID:         source.PermanentID,
+							AbilityIndex:        ability.AbilityIndex,
+							Productions:         choice.Productions,
+							BonusColors:         choice.BonusColors,
 						}
 						nextScore := node.score + max(scoreAt(in.Scores, sourceIndex), 0)
 						nextDepth := node.depth + 1
-						nextCost := manaSearchCost{nextScore, nextDepth}
-						nextKey := manaSearchStateKey(nextPool, nextUsed, in.SpellContext)
+						nextLife := node.lifeSpent + ability.LifeCost
+						nextCost := manaSearchCost{nextLife, nextScore, nextDepth}
+						nextKey := manaSearchStateKey(nextPool, nextUsed, in.SpellContext, nextLife)
 						if known, ok := bestCost[nextKey]; ok && !nextCost.less(known) {
 							continue
 						}
 						bestCost[nextKey] = nextCost
 						seq++
 						next := &manaSearchNode{
-							pool:   nextPool,
-							used:   nextUsed,
-							parent: node,
-							action: nextAction,
-							score:  nextScore,
-							depth:  nextDepth,
-							seq:    seq,
+							lifeSpent: nextLife,
+							pool:      nextPool,
+							used:      nextUsed,
+							parent:    node,
+							action:    nextAction,
+							score:     nextScore,
+							depth:     nextDepth,
+							seq:       seq,
 						}
 						next.priority = nextDepth + manaSearchLowerBound(next, in)
 						heap.Push(&queue, next)
@@ -272,7 +282,7 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		}
 		bestAbility := 0
 		for _, ability := range source.Abilities {
-			if ability.Repeatable {
+			if ability.Repeatable && ability.LifeCost == 0 {
 				continue
 			}
 			usable := 0
@@ -280,6 +290,9 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 				if productionRestrictionUsable(production.Restriction, in.SpellContext) {
 					usable += normalizedManaAmount(production.Amount)
 				}
+			}
+			if ability.LifeCost > 0 {
+				usable *= max(0, in.AvailableLife-node.lifeSpent) / ability.LifeCost
 			}
 			bestAbility = max(bestAbility, usable+len(source.Bonuses))
 		}
@@ -545,8 +558,8 @@ func usableManaCount(pool *ManaPool, spellCtx *SpellPaymentContext) int {
 	return total
 }
 
-func manaSearchStateKey(pool *ManaPool, used string, spellCtx *SpellPaymentContext) manaSearchKey {
-	key := manaSearchKey{used: used}
+func manaSearchStateKey(pool *ManaPool, used string, spellCtx *SpellPaymentContext, lifeSpent int) manaSearchKey {
+	key := manaSearchKey{used: used, lifeSpent: lifeSpent}
 	for _, mana := range pool.pool {
 		key.total[mana.Color]++
 		if manaUsable(mana, nil) {

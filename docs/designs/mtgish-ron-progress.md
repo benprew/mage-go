@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **928 accepted / 58 rejected names**
-(986 total), **2,326 compiled / 119 rejected records** (2,445 total).
-The latest slice is **OPTIONAL-PLAYER-ATTACHMENT**.
-RON lowers PlayerMayAction with a legal attachment choice in resolving bodies.
-Mage saves the chooser before its optional offer and checks exact visits and
-attachment legality again. A current legal host is a valid no-op choice.
-All six complete Kudzu records execute. Their bodies now read the saved tapping
-land, so pending reattachment cannot redirect destruction or the chooser.
+Latest measured result (2026-10-15): **929 accepted / 57 rejected names**
+(986 total), **2,332 compiled / 113 rejected records** (2,445 total).
+The latest slice is **TEMPORARY-PLAYER-LIFE-MANA**.
+RON lowers fixed positive life payments for fixed mana types until cleanup.
+Mage saves the payer and supplies explicit priority actions and shared mana
+payment windows. The solver tracks a shared life budget across permissions.
+Total-cost trials and stale-plan checks prevent partial failed payments.
+All six complete Channel records execute without source changes.
 Estimated and actual full-card gains are one name / six records.
 All required checks pass; no accepted record regressed.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
@@ -23,14 +23,13 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Life payment for temporary mana abilities:** Channel; establish actual
-   player mana activation and production with shared solver/payment contracts.
-   The current generic spell-cost substitution does not supply the full ability.
-   Eventual one name / six records.
-2. **Resolving copiable rule replacement:** Vesuvan Doppelganger; first establish
+1. **Resolving copiable rule replacement:** Vesuvan Doppelganger; establish
    tracked runtime rule/static replacement and continued text, then ThisAbility
-   retention and optional copy lowering. Prerequisite alone gives zero; eventual
-   one name / six records. Preserve independent repeated ability instances.
+   retention and optional copying. Prerequisite alone gives zero; eventual one
+   name / six records. Preserve independent repeated ability instances.
+2. **Forced mana activation and saved mana:** Drain Power; use contextual land
+   selection, each land's legal mana choices, exact mana removal and typed results.
+   Eventual one name / six records. Reuse shared planning/production services.
 
 ## Dependencies and source blockers
 
@@ -22653,3 +22652,165 @@ reprints; doc.go, API/rules contracts, vocabulary snapshot and this ledger.
 The remaining loader diagnostics are the fresh inventory for further comparison.
 Complete RON gameplay, runtime cutover, Go-card/generator deletion and unused DSL
 cleanup remain incomplete. This run stops after OPTIONAL-PLAYER-ATTACHMENT.
+
+
+## 2026-10-15 — TEMPORARY-PLAYER-LIFE-MANA
+
+### Candidate comparison and selection
+
+The working tree was clean. Baseline make build and uncached RON package tests
+passed. Fresh loadcards JSON rejected the collection as expected: 2,326 compiled
+and 119 rejected records, 928 accepted and 58 rejected names. Rejection was a
+collection-support result, not a build failure. All six complete Channel records,
+the complete nested Vesuvan Doppelganger record and all six complete Drain Power
+records were read. Targeted vocabulary inspection found six fixed life-mana
+operations. Local ruling files for all three compared names were read; these
+contain WotC rulings, with no Scryfall notes.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Temporary life-paid player mana permission, ranked #1 | Channel | 1 name / 6 records | No later syntax gap in complete records. Needs actual mana production and one shared solver life budget; enables future player-owned mana permissions and life-backed payments across casting, activation and resolution. | Medium: new engine permission, shared planning resource, payment integration and compiler adapter with lifecycle/rollback tests. |
+| Resolving copiable rule replacement, ranked #2 | Vesuvan Doppelganger | 0 for engine prerequisite; eventual 1 name / 6 records | Full record also needs optional targeted copying, KeepColor, retained ThisAbility and independent repeated ability instances. Runtime rules/statics and continued text must be replaced together. | Large, several contracts; a prerequisite slice can fit but does not finish the card. |
+| Forced mana activation and typed lost-mana result | Drain Power | Eventual 1 name / 6 records | Complete records require a contextual And land set, one legal activation per land with the target player's choices, variable production, real mana loss and TheManaLostThisWay. Enables forced activation and saved mana consumers. | Larger than Channel: decision and result contracts plus the adapter. |
+
+The first ranked candidate is dependency-ready and gives a complete bounded
+slice. Fresh diagnostics identify no multi-name full-card unlock among these
+three candidates. The larger alternatives do not supply a concrete shared
+multi-name prerequisite that outweighs the complete Channel gain. Channel wins
+on credible gain for effort. No second slice was started.
+
+Before editing, the stated contract covered fixed positive life, one fixed mana
+type, explicit saved player, mana-ability timing, real production, shared solver
+budget, affordability, spending restrictions, rollback, cleanup and copy/clone
+isolation. RON owns spelling and scope; mage owns state, payments and production.
+No missing compiler adapter was treated as missing engine behavior. Existing
+Channel generic spell-cost substitution was identified as a separate legacy
+service and preserved for its current callers.
+
+### Exact signatures, contexts and engine reuse
+
+RON accepts `CreatePlayerEffectUntil(playerRef,
+[MayPayLifeToProduceManaAsManaAbility(Integer(positive), fixedManaType), ...],
+UntilEndOfTurn)`. Each operation produces one mana. Fixed mana symbols are
+ManaProduceW/U/B/R/G/C. The wrapper can contain separate supported operations.
+Ordinary resolving spell, activation, trigger, scoped and delayed bodies use
+existing player-reference lowering. Costs, static rules, entry/draw replacements,
+wrong roles/kinds/arities, missing references, zero/negative/dynamic life,
+color choices and other durations reject during declaration.
+
+Native `PlayerLifeManaThisTurn(player PlayerRef, life int, color core.Color)
+ResolvingEffect` validates fixed positive life and saves the player at resolution.
+`GetPlayerManaAbilities(player uuid.UUID) []PlayerManaAbilityInfo` reports
+current affordable permissions. `ActivatePlayerManaAbility(player, id uuid.UUID)
+error` pays and produces immediately, with no stack object. Direct callers must
+supply priority; `PriorityActivatePlayerManaAbility` with PlayerManaAbilityID
+integrates the priority handler. Shared payment planning supplies legitimate
+mana windows while casting, activating or resolving a mana payment. The direct
+API rejects arbitrary use during resolution. Player permissions do not tap a
+permanent or emit permanent-activation events.
+
+ManaSolverInputs adds AvailableLife. Each mana search state saves life spent,
+with one shared budget across permissions; source plans have a distinct
+PlayerManaAbilityID instead of a fake permanent identity. Life is minimized
+before preservation score and activation count. Affordability, maximum X and
+hypothetical mana read the same permissions without mutation. Total-cost trials
+and commit preflight use the existing game clone and cost transaction. Commit
+checks the complete remaining life budget and permission IDs before mutation,
+including additional life costs. Multiple grants cannot duplicate available life.
+
+Shared LifePayCost and life-loss events, mana production/replacements, pool
+spending/X restrictions, resolution payment services, definition validation,
+source/LKI reads, delayed-source inspection, priority, game cloning and cleanup
+are reused. A permission saves no mutable target or result frame: only its
+resolved player, source identity, positive cost, fixed color and unique ID.
+Source departure, return, phasing or control changes do not revoke it or change
+the payer. Clones hold separate permission lists. Cleanup expires each game alone.
+
+### Rules and source evidence
+
+`go run ./cmd/fetchset -check -card Channel` passed before implementation.
+The complete local WotC ruling (2017-11-17) prohibits more positive life payments
+at zero even if a player has not lost. Local data/LEA.json Oracle matches all
+six complete RON records: a life payment at mana-ability timing adds actual
+colorless mana until end of turn. No source defect or correction was needed.
+CR 117.1d, 118.2 and 605.3a-b establish priority/payment windows and immediate
+resolution. CR 118.3b and 119.4 permit exact-life payment and reject insufficient
+positive payments. CR 611.2a and 514.2 establish saved permissions and cleanup.
+Tapped-permanent mana replacements and bonuses cannot apply to this untapped
+player action. Shared restrictions continue to check the actual mana type.
+
+No RON source or syntax signature changed. Vocabulary file hashes and constructor
+inventory remain unchanged; only its loader baseline was refreshed. The new
+inventory operand roles are value and mana_production. No Go card, generator or
+unused broad DSL function was removed; their cutover/removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+The first native and RON tests failed compilation for the new permission APIs.
+After the engine existed, all six real Channel tests failed on unsupported
+MayPayLifeToProduceManaAsManaAbility. After lowering, they passed. Added stale
+payment tests failed because a commit spent a partial life budget; a second
+case proved that additional life costs could exceed a changed budget. Both pass
+after aggregate prechecks and clone preflight. Fixture method names, player
+acceptance and a source-bearing declaration context were corrected; no rule
+assertion was weakened.
+
+| Card or contract | Test mapping | Evidence |
+| --- | --- | --- |
+| Channel, LEA/LEB/2ED/3ED/CED/CEI | TestRONPlayerLifeManaChannel | Complete paid cast/resolution, unpaid rejection, saved player, explicit real colorless production, spell-cost payment from pool plus life-backed mana, immediate action and later spell resolution. |
+| Channel copies and cleanup | TestRONPlayerLifeManaCopiesAndExpiry | Opposing spell copy, pending game clone, independent payers and mana, per-game expiry. |
+| Typed player references and supported contexts | TestRONPlayerLifeManaScopes, Invalid, Inventory | Target player from an activation, saved permission after source departure, forbidden replacement contexts, invalid signatures and lexical roles. |
+| Native activation and lifecycle | TestPlayerLifeManaActivation, SourceAndPlayer, Declarations | Exact-life payment, zero boundary, wrong payer, unique saved permission, clone/cleanup isolation, leave/return/phase/control, valid and invalid declarations. |
+| Payment totals and rollback | TestPlayerLifeManaPayment, StalePayment | Multiple grants share life, insufficient total/color, additional life costs, pure preparation, successful commit, changed-budget failure before partial payment. |
+| Payment windows and queries | TestPlayerLifeManaWindowsAndQueries | Pure affordability, maximum X, hypothetical mana, forbidden ordinary resolution activation, allowed resolving payment, ability payment and explicit priority action. |
+| Solver restrictions and reuse | TestPlayerLifeManaPlannerResources | Distinct costs/colors share life, ordinary available mana precedes life, restricted black X rejects colorless output. |
+| Delayed source reads and replacement boundary | TestPlayerLifeManaWaitingAndReplacements | Waiting queries cannot install or pay; phase/departure LKI supplies the saved payer; tapped-permanent mana replacement cannot change this player action. |
+
+Compilation advances from 928 to 929 accepted names and 2,326 to 2,332 records.
+Channel adds complete RON gameplay evidence for one unique card. Compilation
+counts and gameplay evidence remain separate. Estimated one-name/six-record gain
+matches actual results. A parsed before/after comparison finds only six removed
+Channel diagnostics, with all 113 remaining diagnostics identical and no new
+errors. The loader continues to reject atomically; no partial registry is used.
+
+### Verification
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: pass.
+- Before implementation, `go run ./cmd/fetchset -check -card Channel`: pass.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONPlayerLifeMana -count=1`: pass.
+- Native `go test ./pkg/mage -run 'TestPlayerLifeMana|TestManaSolver|TestLifePayment' -count=1`: pass.
+- `make build`: pass.
+- `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass, including all card packages and engine consumers.
+- `make lint`: pass, zero issues. Automatic changes only formatted imports in
+  the new files. No unrelated file changed and no semantic lint fix was needed.
+- Post-format `go test ./pkg/mage -run TestPlayerLifeMana -count=1` and
+  `go test ./... -short -count=1`: pass.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON; 2,332
+  compiled / 113 rejected records, 929 accepted / 57 rejected names. Parsed
+  comparison confirms exactly six removed Channel diagnostics, all remaining
+  diagnostics unchanged and the vocabulary loader baseline identical.
+
+No environment or required-check blocker remains. The commit uses the existing
+ledger's per-command `commit.gpgsign=false` workaround, without changing config.
+Changed files: mage player_life_mana.go and its tests; game.go, clone.go,
+costed_mana.go, mana_solver.go, mana_system.go, payment_transaction.go, priority.go
+and turn_execution.go; RON player_payment.go, inventory.go, new player_life_mana
+tests and three collection assertion files; doc.go, API/rules contracts,
+vocabulary loader baseline and this ledger.
+
+### Remaining work and ranked next candidates
+
+1. Tracked resolving copiable rule replacement for Vesuvan Doppelganger. First
+   establish full runtime rule/static replacement and continued text, then retain
+   ThisAbility and lower optional targeted copying. Prerequisite alone gives zero;
+   eventual one name / six records. Preserve independent ability instances.
+2. Forced mana activation and saved mana for Drain Power. Establish each land's
+   legal activation/production choices and exact removed-mana results before
+   lowering the contextual land collection and TheManaLostThisWay consumer.
+   Eventual one name / six records; reuse shared mana services.
+
+Complete RON gameplay, runtime cutover, Go-card/generator deletion and unused DSL
+cleanup remain incomplete. This run stops after TEMPORARY-PLAYER-LIFE-MANA.

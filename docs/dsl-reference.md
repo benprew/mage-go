@@ -11832,7 +11832,8 @@ Priority handlers return `PriorityAction{Type: PriorityTakePlayerPayment,
 PlayerPaymentID: id}`. Direct callers supply a legal instant-timing opportunity;
 queries and execution reject use during stack resolution. Fixed nonnegative
 ordinary mana and nonempty operation/body lists are supported. X, hybrid mana,
-other durations, life-to-mana and one-use casting are separate capabilities.
+other durations and one-use casting are separate capabilities. Life-to-mana
+uses the separate player mana permission described below.
 Guardian Angel is the complete collection card covered by this adapter.
 
 ## RON source-card references after payment
@@ -18058,3 +18059,42 @@ targets, and checks both visits and attachment legality after the choice.
 RON supports `PlayerMayAction(playerRef, AttachPermanentToAPermanent(ref, filter))`
 in ordinary resolving bodies. See the optional attachment contract in
 `docs/engine-rules-contracts.md` for timing and Kudzu's saved event host.
+
+
+## RON temporary life-to-mana permission
+
+`CreatePlayerEffectUntil(playerRef,
+[MayPayLifeToProduceManaAsManaAbility(Integer(positive), manaType), ...],
+UntilEndOfTurn)` installs a repeatable permission during ordinary resolution.
+Each operation adds one mana of its fixed `ManaProduceW/U/B/R/G/C` type for the
+positive fixed life payment. Dynamic/zero/negative life, color choices, other
+production shapes, unbound players, costs and entry/draw replacements reject.
+The player is saved at installation. Trigger, activation, spell, scoped and
+delayed resolving bodies use the same typed reference compiler.
+
+`mage.PlayerLifeManaThisTurn(player PlayerRef, life int, color core.Color)
+ResolvingEffect` supplies the engine operation. `Game.GetPlayerManaAbilities`
+returns affordable permissions. `Game.ActivatePlayerManaAbility(player, id)`
+requires a priority opportunity from its caller and pays life immediately,
+adding real unrestricted mana without a stack object. The priority handler uses
+`PriorityActivatePlayerManaAbility` and `PriorityAction.PlayerManaAbilityID`.
+Shared mana services also use these permissions while paying spell, activation
+or resolving mana costs. Arbitrary instructions during resolution cannot use
+the direct activation API. This player permission does not tap a permanent or
+supply a permanent ability-activation event.
+
+Mana planning shares life across every permission, prefers plans that spend less
+life, preserves color/X restrictions, and includes life-backed output in maximum
+X and hypothetical mana queries. Queries spend no resources. Total-cost trials
+and stale-plan checks include all life payments. Exact life is payable; positive
+payments at zero or negative life reject. Source departure, return, phasing and
+control changes cannot change the saved player. Cleanup expires the permission;
+spell copies and game clones retain independent permissions.
+
+Complete Channel records in LEA/LEB/2ED/3ED/CED/CEI execute in
+`TestRONPlayerLifeManaChannel`. Copies, expiry, typed player scopes, declaration
+rejections and inventory roles have separate `TestRONPlayerLifeMana*` tests.
+Native `TestPlayerLifeMana*` tests cover payment windows, life budgets, rollback,
+LKI, phasing, source control, restrictions and replacement boundaries. The old
+Channel spell-cost substitution remains for existing callers; RON uses only
+the new permission. No RON source correction is required.

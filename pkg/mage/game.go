@@ -58,22 +58,23 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 
 // Game is the central game state and engine.
 type Game struct {
-	drawn             bool
-	players           []Player
-	playerPayments    []installedPlayerPayment
-	publicReveals     []PublicCardReveal
-	libraryLooks      map[uuid.UUID][]PublicCardReveal
-	handLooks         map[uuid.UUID][]PublicCardReveal
-	anteEnabled       bool
-	originalOwners    map[uuid.UUID]uuid.UUID
-	anteResult        []OwnershipChange
-	anteSettled       bool
-	zones             ZoneSystem
-	stack             *Stack
-	combat            *Combat
-	effects           *EffectManager
-	layer2Controllers map[uuid.UUID]uuid.UUID
-	mana              ManaSystem
+	drawn               bool
+	players             []Player
+	playerManaAbilities []installedPlayerManaAbility
+	playerPayments      []installedPlayerPayment
+	publicReveals       []PublicCardReveal
+	libraryLooks        map[uuid.UUID][]PublicCardReveal
+	handLooks           map[uuid.UUID][]PublicCardReveal
+	anteEnabled         bool
+	originalOwners      map[uuid.UUID]uuid.UUID
+	anteResult          []OwnershipChange
+	anteSettled         bool
+	zones               ZoneSystem
+	stack               *Stack
+	combat              *Combat
+	effects             *EffectManager
+	layer2Controllers   map[uuid.UUID]uuid.UUID
+	mana                ManaSystem
 
 	// TurnSystem owns turn, step, active player, extra turns, scheduling, and untap skips.
 	turns TurnSystem
@@ -3003,15 +3004,16 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 	return productions
 }
 
-// manaSourceInfo describes one untapped permanent and each exact mana ability
-// it can currently activate. Colors is the union used only by preservation
+// manaSourceInfo describes one permanent or player mana permission.
+// Colors is the union used only by preservation
 // scoring; payment planning operates on Abilities without merging their output.
 type manaSourceInfo struct {
-	Incarnation uuid.UUID
-	PermanentID uuid.UUID
-	Colors      []Color
-	Abilities   []manaSourceAbility
-	Bonuses     []ManaBonusColor
+	PlayerManaAbilityID uuid.UUID
+	Incarnation         uuid.UUID
+	PermanentID         uuid.UUID
+	Colors              []Color
+	Abilities           []manaSourceAbility
+	Bonuses             []ManaBonusColor
 }
 
 // AutoTapHint informs the smart auto-tap algorithm about the action being paid

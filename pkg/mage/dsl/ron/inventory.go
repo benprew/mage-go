@@ -1079,6 +1079,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "temporary_player_operation":
+		if n.Name == "MayPayLifeToProduceManaAsManaAbility" && len(n.Args) == 2 {
+			return []string{"value", "mana_production"}[index]
+		}
 		if n.Name == "CantBeAttackedExceptBy" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

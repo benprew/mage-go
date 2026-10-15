@@ -22,17 +22,19 @@ const (
 	PriorityActivateAbility
 	PriorityPlayLand
 	PriorityTakePlayerPayment
+	PriorityActivatePlayerManaAbility
 )
 
 // PriorityAction is what a player wants to do when they have priority.
 type PriorityAction struct {
-	Type            PriorityActionType
-	CardID          uuid.UUID
-	Targets         []uuid.UUID
-	PermanentID     uuid.UUID
-	AbilityIdx      int
-	XValue          int
-	PlayerPaymentID uuid.UUID
+	Type                PriorityActionType
+	CardID              uuid.UUID
+	Targets             []uuid.UUID
+	PermanentID         uuid.UUID
+	AbilityIdx          int
+	XValue              int
+	PlayerPaymentID     uuid.UUID
+	PlayerManaAbilityID uuid.UUID
 }
 
 // PriorityHandler is called by the engine whenever a player receives priority.
@@ -47,6 +49,8 @@ type PriorityHandler func(g *Game, playerIdx int, mainPhase bool) PriorityAction
 func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool {
 	playerID := g.players[playerIdx].PlayerID()
 	switch action.Type {
+	case PriorityActivatePlayerManaAbility:
+		return g.ActivatePlayerManaAbility(playerID, action.PlayerManaAbilityID) == nil
 	case PriorityTakePlayerPayment:
 		return g.TakePlayerPayment(playerID, action.PlayerPaymentID) == nil
 	case PriorityPlayLand:
@@ -162,6 +166,8 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 					actionName := "unknown"
 					cardName := ""
 					switch action.Type {
+					case PriorityActivatePlayerManaAbility:
+						actionName = "PlayerManaAbility"
 					case PriorityTakePlayerPayment:
 						actionName = "PlayerPayment"
 					case PriorityPlayLand:

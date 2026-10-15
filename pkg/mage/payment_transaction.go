@@ -465,6 +465,19 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 }
 
 func (tx *costPaymentTransaction) Commit() error {
+	if tx.manaSolution != nil {
+		for _, action := range tx.manaSolution.SourcesToTap {
+			if action.PlayerManaAbilityID != uuid.Nil {
+				preflight := *tx
+				preflight.game = cloneGameForCostPayment(tx.game)
+				if err := preflight.commit(); err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
+
 	tx.paidNumbers = nil
 	tx.paidCards = nil
 	tx.revealedHandCards = nil
@@ -512,6 +525,45 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 	player := tx.game.GetPlayer(tx.controller)
 	if player == nil {
 		return ErrPlayerNotFound
+	}
+
+	if tx.manaSolution != nil {
+		budget := player.Life()
+		hasLifeMana := false
+		for _, action := range tx.manaSolution.SourcesToTap {
+			if action.PlayerManaAbilityID == uuid.Nil {
+				continue
+			}
+			hasLifeMana = true
+			found := false
+			for _, ability := range tx.game.playerManaAbilities {
+				if ability.id == action.PlayerManaAbilityID && ability.player == tx.controller {
+					if budget < ability.life {
+						return fmt.Errorf("cannot pay total life cost")
+					}
+					budget -= ability.life
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("planned player mana permission is absent or expired")
+			}
+		}
+		if hasLifeMana {
+			if tx.lifeLoss > 0 && budget < tx.lifeLoss {
+				return fmt.Errorf("cannot pay total life cost")
+			}
+			budget -= tx.lifeLoss
+			for _, cost := range tx.costs {
+				if life, ok := cost.(*lifePayCost); ok && life.amount > 0 {
+					if budget < life.amount {
+						return fmt.Errorf("cannot pay total life cost")
+					}
+					budget -= life.amount
+				}
+			}
+		}
 	}
 	millTotal := 0
 	counterTotals := make(map[CounterType]int)

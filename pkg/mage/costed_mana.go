@@ -9,6 +9,7 @@ import (
 type manaSourceAbility struct {
 	replacementOrder    []uuid.UUID
 	originalProductions []ManaProduction
+	LifeCost            int
 	AbilityIndex        int
 	Productions         []ManaProduction
 	ManaCost            ManaCost

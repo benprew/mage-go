@@ -23835,3 +23835,49 @@ destruction, decline, no host, source departure, copied/countered triggers and
 pending clones. `TestRONOptionalAttachmentInstances` separates two instances and
 their choosers. `TestRONOptionalAttachmentInvalid` covers declaration rejection.
 The existing host-tap suites retain event, layer-6 removal and transition tests.
+
+
+## Temporary player life-to-mana permissions
+
+`PlayerLifeManaThisTurn(player PlayerRef, life int, color core.Color)
+ResolvingEffect` saves one player when its resolving instruction executes.
+Definition validation requires a bound player, positive fixed life and one
+fixed mana type. An absent player installs nothing. Each installation has its
+own ID. Source presence, control, phasing and return do not affect that saved
+player (CR 611.2a). Cleanup removes the permissions (CR 514.2). Game clones
+retain immutable permission values in separate lists; copied installers save
+their own players.
+
+`GetPlayerManaAbilities(player uuid.UUID) []PlayerManaAbilityInfo` lists the
+current affordable permissions with ID, source ID, life cost and color. It
+makes no choices or payments. `ActivatePlayerManaAbility(player, id uuid.UUID)
+error` requires priority from direct callers. It pays through `LifePayCost`,
+then adds actual unrestricted mana through shared mana production. The action
+resolves immediately with no stack object. It does not tap a permanent, receive
+tapped-for-mana bonuses/replacements or emit a permanent activation event.
+`PriorityActivatePlayerManaAbility` retains the acting player's priority.
+The direct API rejects during stack resolution. Internal shared payment
+services permit use while a spell, ability or resolving effect asks for mana
+(CR 117.1d, 118.2, 605.3a-b). Waiting queries cannot execute the installer.
+
+The unified mana solver stores life spent in each search state and gives all
+player permissions one `AvailableLife` budget. Every planned action retains
+its separate `PlayerManaAbilityID`; no fake permanent supplies the source.
+Plans minimize life before preservation score and action count. Life-backed
+output contributes to affordability, maximum X and hypothetical mana. Actual
+productions preserve the normal pool's color, spending and restricted-X rules.
+Repeated grants cannot multiply the life budget. Cost-payment clones validate
+the complete total, including additional life costs. Commit rechecks the locked
+permissions and aggregate life budget before mutation, and preflights the full
+payment on a clone. Failed or stale totals leave life, mana, zones and events
+unchanged. CR 118.3b and 119.4 permit payment equal to life and prohibit positive
+payment when life is insufficient. Channel's local WotC ruling (2017-11-17)
+confirms that zero life cannot fund another positive payment.
+
+RON owns the exact temporary-operation spelling and scope checks. It accepts
+fixed positive `Integer` life and one fixed `ManaProduce*` symbol under
+`CreatePlayerEffectUntil(..., UntilEndOfTurn)` in ordinary resolving bodies;
+entry/draw replacements and other durations reject. The six Channel records
+match local Oracle and require no source change. Existing `SetChannelActive`
+and generic-cost substitution callers remain until migration removal gates.
+Evidence: `TestPlayerLifeMana*` and `TestRONPlayerLifeMana*`.

@@ -140,13 +140,16 @@ func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sou
 			Bonuses:     ms.ManaBonuses(g, perm.ID()),
 		})
 	}
-	return sources
+	return g.appendPlayerManaSources(playerID, sources)
 }
 
 // PreservationScore returns the score for a mana source under the smart-tap
 // heuristic. Higher = prefer to keep untapped (tap last). See AutoTapHint.
 func (ms *ManaSystem) PreservationScore(g *Game, src manaSourceInfo, hint AutoTapHint, handDemand [AnyColor + 1]int) int {
 	score := 0
+	if src.PlayerManaAbilityID != uuid.Nil {
+		return 0
+	}
 	if hint.ActivationSource != uuid.Nil && src.PermanentID == hint.ActivationSource {
 		score += 1000
 	}
@@ -251,7 +254,7 @@ func (ms *ManaSystem) HypotheticalMana(g *Game, playerID uuid.UUID) int {
 	for _, src := range sources {
 		total += maxManaSourceOutput(src)
 	}
-	return total
+	return total + g.playerLifeManaCapacity(playerID)
 }
 
 // CanAfford reports whether a player has enough mana to pay a cost.
@@ -263,11 +266,12 @@ func (ms *ManaSystem) CanAfford(g *Game, playerID uuid.UUID, mc ManaCost, spellC
 	sources := ms.AppendUntappedManaSources(g, playerID, ms.scratch[:0])
 	ms.scratch = sources
 	return CanSolveMana(ManaSolverInputs{
-		Pool:         p.ManaPool(),
-		Cost:         mc,
-		Sources:      sources,
-		Conversions:  p.ManaPool().ManaConversions,
-		SpellContext: spellCtx,
+		AvailableLife: p.Life(),
+		Pool:          p.ManaPool(),
+		Cost:          mc,
+		Sources:       sources,
+		Conversions:   p.ManaPool().ManaConversions,
+		SpellContext:  spellCtx,
 	})
 }
 
@@ -307,19 +311,20 @@ func (ms *ManaSystem) MaxXValue(g *Game, playerID uuid.UUID, mc ManaCost, spellC
 			queryContext = &copied
 		}
 		_, err := SolveMana(ManaSolverInputs{
-			Pool:         pool,
-			Cost:         cost,
-			Sources:      sources,
-			Scores:       scores,
-			Conversions:  conv,
-			SpellContext: queryContext,
+			AvailableLife: p.Life(),
+			Pool:          pool,
+			Cost:          cost,
+			Sources:       sources,
+			Scores:        scores,
+			Conversions:   conv,
+			SpellContext:  queryContext,
 		})
 		return err == nil
 	}
 	if !tryX(0) {
 		return 0
 	}
-	hi := upperMana / mc.XCount
+	hi := (upperMana + g.playerLifeManaCapacity(playerID)) / mc.XCount
 	if hi == 0 {
 		return 0
 	}
@@ -369,12 +374,13 @@ func (ms *ManaSystem) PlanManaForCost(g *Game, playerID uuid.UUID, mc ManaCost, 
 	}
 
 	solverInputs := ManaSolverInputs{
-		Pool:         p.ManaPool(),
-		Cost:         mc,
-		Sources:      sources,
-		Scores:       scores,
-		Conversions:  p.ManaPool().ManaConversions,
-		SpellContext: spellCtx,
+		AvailableLife: p.Life(),
+		Pool:          p.ManaPool(),
+		Cost:          mc,
+		Sources:       sources,
+		Scores:        scores,
+		Conversions:   p.ManaPool().ManaConversions,
+		SpellContext:  spellCtx,
 	}
 	return SolveMana(solverInputs)
 }
@@ -401,8 +407,11 @@ func (ms *ManaSystem) ApplyManaSolution(g *Game, playerID uuid.UUID, solution *M
 	return nil
 }
 
-// ActivatePlannedManaSource activates a specific planned mana ability on a permanent.
+// ActivatePlannedManaSource executes one saved permanent or player mana action.
 func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, action ManaTap) error {
+	if action.PlayerManaAbilityID != uuid.Nil {
+		return g.activatePlayerManaAbility(playerID, action.PlayerManaAbilityID)
+	}
 	perm := g.FindPermanent(action.PermanentID)
 	if perm == nil || action.AbilityIndex < 0 || action.AbilityIndex >= len(perm.RuntimeAbilities) {
 		return ErrPermanentNotFound

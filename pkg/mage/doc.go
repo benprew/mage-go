@@ -1,5 +1,22 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PlayerLifeManaThisTurn] saves a player permission until cleanup.
+// Positive fixed life payments add one fixed mana at mana-ability timing.
+// [Game.ActivatePlayerManaAbility] resolves the payment without a stack object.
+// [Game.GetPlayerManaAbilities] lists affordable permissions without payment.
+// Direct callers supply priority. Shared mana payment services supply payment
+// windows, including resolution. Other resolution instructions cannot activate it.
+// All permissions share one life budget in the solver. Plans prefer less life
+// payment before source preservation. Exact life is payable; zero life is not.
+// Total-cost trials and stale-plan checks prevent partial payment on failure.
+// Source departure, return, phasing and control changes keep the saved payer.
+// Copies and clones keep separate permissions. Cleanup expires each game alone.
+// RON accepts CreatePlayerEffectUntil(playerRef,
+// [MayPayLifeToProduceManaAsManaAbility(Integer(positive), fixedManaType)],
+// UntilEndOfTurn) in ordinary resolving bodies. Replacement bodies reject.
+// All six complete Channel records have gameplay evidence. Legacy Channel
+// spell-cost substitution remains available for current callers.
+//
 // [MayAttachPermanentToChoice] lets one saved player accept a legal host choice.
 // Shared attachment and choice services check both exact visits before the move.
 // The choice does not target. Protection and enchant limits still apply.
@@ -2220,7 +2237,8 @@
 // Source departure and phasing do not end the permission. Cleanup ends it.
 // [PriorityTakePlayerPayment] permits use through the priority handler.
 // RON supports fixed mana payments and UntilEndOfTurn in resolving bodies.
-// Life-to-mana, one-use casting and other durations need separate adapters.
+// Life-to-mana uses [PlayerLifeManaThisTurn]. Other durations and one-use casting
+// need separate adapters.
 //
 // Use [ExilePermanentGroupsInto] with distinct [PermanentExileGroup] results.
 // All groups select their current subjects before one simultaneous exile batch.

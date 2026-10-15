@@ -28,6 +28,31 @@ func compilePlayerPayment(n Node, ctx scope) (effectFactory, error) {
 	}
 	var payments []effectFactory
 	for _, operation := range operations {
+
+		if operation.Name == "MayPayLifeToProduceManaAsManaAbility" {
+			if !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+				return nil, unsupported(operation, "life mana installation context")
+			}
+			if err := arity(operation, 2); err != nil {
+				return nil, err
+			}
+			amount := operation.Args[0]
+			if amount.Name != "Integer" || amount.Kind != Tuple || len(amount.Args) != 1 || amount.Args[0].Kind != IntegerNode || amount.Args[0].Integer <= 0 {
+				return nil, problem(amount, "life mana requires a fixed positive life cost")
+			}
+			production, err := compileMana(operation.Args[1])
+			if err != nil {
+				return nil, err
+			}
+			if len(production) != 1 || operation.Args[1].Kind != Symbol || production[0].Color == core.AnyColor {
+				return nil, problem(operation.Args[1], "life mana requires one fixed mana type")
+			}
+			life, color := amount.Args[0].Integer, production[0].Color
+			payments = append(payments, func(bindings instanceBindings) mage.Effect {
+				return mage.PlayerLifeManaThisTurn(player.build(bindings), life, color)
+			})
+			continue
+		}
 		if operation.Name != "MayPayManaAnyTimeTheyCouldCastAnInstant" {
 			return nil, unsupported(operation, "temporary player operation")
 		}
