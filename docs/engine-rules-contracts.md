@@ -24264,8 +24264,8 @@ loss shadows an earlier one, including an empty loss. `PlayerActions` permits
 these sequences inside its local player scope; its local result cannot escape
 to an outer sequence. Optional producers cannot dominate an outer read.
 Entry/draw replacements, costs, layers, unbound reads, argument-bearing result
-symbols and repeated-mana variants reject. Forced mana activation is separate:
-Drain Power's complete six records still reject until that contract exists.
+symbols and repeated-mana variants reject. The forced mana activation contract
+below also supplies this result for all six complete Drain Power records.
 
 The result lives in resolution state. Shared effect frames clear and restore
 it; permanent/card/damage loops isolate each member. Delayed bodies copy saved
@@ -24604,3 +24604,56 @@ source lacked that producer. Its sole record now includes the existing generic
 choice instruction. The target remains a creature chosen by the opponent at
 announcement, and need not be controlled by that opponent. There are no local
 Scryfall notes. This establishes full-card RON gameplay for one name/record.
+
+### Forced mana activation and saved mana loss
+
+`ActivateManaAbilityOfEach(player PlayerRef, filter PermanentFilter)
+ResolvingEffect` saves the exact visits of matching permanents controlled by
+the resolved player. That player chooses the order and ability. Each saved
+visit supplies at most one successful activation. The engine reevaluates the
+remaining abilities after each activation, so earlier production can pay a
+later cost. Sources that cannot activate do nothing (CR 101.3). This operation
+does not activate player permissions or nonmana abilities.
+
+`IsActivatedManaAbility`, ordinary activation permission checks and
+`ActivateAbilityByIndex` supply classification, timing, payment and immediate
+resolution (CR 602.2, 605.1a–3). Output can be zero. Mana colors, variable counter
+payments, sacrifice, life, mana costs, production replacements, bonuses and
+events use the ordinary activation services. Failed total payments leave no
+partial cost or stack object. A failed option cannot prevent another option
+or source from being processed. A successful activation permits fresh checks
+of options that previously failed. This adds no parallel payment solver.
+
+Ability identity, permanent visit and control are checked after the ordering
+choice and after an X choice. Phasing makes a source absent; a returned visit
+cannot replace a saved visit. The selection is made once, before activation.
+Each activation starts with its own X, announces an X cost when needed, and
+preserves the enclosing instruction's X (CR 107.3a, k). An unaffordable chosen X
+uses zero after the ordinary transaction rejects it without partial payment.
+Source-defined X remains under the existing activation contract. Invalid menu
+answers use the first current option. All working state is local to Apply;
+copies, game clones and payment trials cannot share consumption state.
+
+RON supports `PlayerAction(playerRef,
+ActivateAManaAbilityOfEachPermanentAndLoseUnspentMana(And([IsCardtype(Land),
+ControlledByAPlayer(SinglePlayer(ActionPlayer))])))` in ordinary resolving
+bodies. The two filter clauses can be reversed. Other filters, extra clauses,
+unbound players, malformed arguments, entry and draw replacement contexts
+reject. The compiler snapshots the typed player once, then activates, loses
+mana and produces the lexical `LostManaBinding`. A following
+`AddMana(TheManaLostThisWay)` transfers the actual remaining values under the
+existing CR 106.13 contract. The result can remain local in `PlayerActions`;
+an optional producer cannot supply an outer read. The instruction also works
+without a later result consumer. Inventory assigns its operand a permanent
+filter role. No source spelling or card definition changed.
+
+All six complete Drain Power records have paid-cast and resolution evidence.
+The complete RON records, local Oracle text and all four local WotC rulings
+were read; there are no local Scryfall notes. The rulings require the affected
+player to choose among mana abilities and variable outputs at resolution.
+Native `TestForcedManaCostsAndOrder`, `Rechecks`, `RollbackAndBoundaries`,
+`VariableOutputAndReplacement`, `IndependentX`, `NonmanaX` and
+`WaitingSourceAndClone` cover the reusable contract. RON
+`TestRONForcedManaRecords`, `Invalid`, `CopiesAndInstances` and `PendingSource`
+cover complete records, strict declarations, per-instance results, self targets,
+copies, clones, source departure, phasing and control changes.

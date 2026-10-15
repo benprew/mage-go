@@ -2009,6 +2009,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err := arity(n, 2); err != nil {
 			return nil, err
 		}
+		if n.Args[1].Name == forcedManaAction {
+			return compileForcedMana(n, ctx)
+		}
 		who, err := compilePlayerRef(n.Args[0], ctx)
 		if err != nil {
 			return nil, err

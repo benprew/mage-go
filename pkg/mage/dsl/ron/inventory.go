@@ -1930,6 +1930,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == forcedManaAction && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "GainControlOfPermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

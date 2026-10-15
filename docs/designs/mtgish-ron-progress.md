@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **943 accepted / 43 rejected names**
-(986 total), **2,362 compiled / 83 rejected records** (2,445 total).
-The latest slice is **SELECTED-SOURCE-PERMANENT-REDIRECT**.
-RON lowers the chosen-source next-damage event from a player to a saved permanent.
-Native selected-source replacements now support both redirection directions.
-The corrected complete Nova Pentacle record has paid-cast and activation evidence,
-including opponent target choice and source choice at resolution.
-Estimated and actual gain: one name / one record. Collection loading still
+Latest measured result (2026-10-15): **944 accepted / 42 rejected names**
+(986 total), **2,368 compiled / 77 rejected records** (2,445 total).
+The latest slice is **FORCED-MANA-ACTIVATION**.
+RON lowers forced land mana activation, pool loss and the saved mana result.
+Native activation keeps exact visits and one successful activation per source.
+The affected player chooses order, ability, colors and variable output.
+All six complete Drain Power records have paid-cast and resolution evidence.
+Estimated and actual gain: one name / six records. Collection loading still
 rejects atomically. Runtime cutover, Go-card removal and unused DSL cleanup
 remain gated by complete support and startup.
 
@@ -21,12 +21,12 @@ remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Forced mana activation and saved mana:** Drain Power, eventual one name /
-   six records. Saved lost-mana results are complete. Isolate legal activation
-   offers, arbitrary costs, variable output choices and transactional rechecks.
-2. **Finite damage redirection:** Personal Incarnation, eventual one name / six
+1. **Finite damage redirection:** Personal Incarnation, eventual one name / six
    records. Needs finite packet splitting, owner references and all six death-loss
    rounding defects repaired. Nova Pentacle is complete.
+2. **Temporary source damage prevention:** Kry Shield and Heroism, eventual two
+   names / two records. Compare exact-source prevention with filtered combat
+   prevention and its source-controller payment gate; these need separate shapes.
 
 ## Dependencies and source blockers
 
@@ -25706,3 +25706,131 @@ and this ledger. No unrelated work was changed.
 Forty-three names and 83 records still reject. Complete collection gameplay,
 runtime loading/cutover, Go-card and obsolete Go-set generator removal, and
 unused DSL cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-15 — FORCED-MANA-ACTIVATION
+
+### Baseline, candidate comparison and selection
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with valid collection diagnostics:
+2,362 compiled / 83 rejected records, 943 accepted / 43 rejected names.
+This was expected atomic collection rejection, not a build or environment failure.
+
+| Candidate | Distinct names and estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, forced mana activation | Drain Power; 1 name / 6 records | Saved mana transfer, targets and casting already exist. Needs exact source selection, order, arbitrary activation costs and variable output. A reusable native instruction completes the remaining activation prerequisite. | One run; high native interaction and RON test effort |
+| Ranked #2, finite redirection | Personal Incarnation; eventual 1 name / 6 records | Needs shared finite packet splitting, owner references and six rounding corrections. Splitting must preserve damage causes, replacement order and simultaneous outcomes. | High; more than an adapter |
+| Source prevention family | Kry Shield and Heroism; eventual 2 names / 2 records | Complete records show different events: an exact source versus a filtered attacking red creature set with a source-controller mana payment. One adapter cannot claim two unlocks. Shared prevention exists, but both source selection and conditional payment contexts need contracts. | High; separate supported shapes |
+
+Read the complete Drain Power records in LEA, LEB, 2ED, 3ED, CED and CEI,
+and the complete comparison records, including their nested operations.
+Reprints count once. Selected ranked #1: its activation and saved-result
+dependencies were ready, and the other apparent multi-card family needs
+distinct contracts. No smaller ready shared slice credibly completes both
+prevention cards. Estimated gain was one unique name and six records.
+
+### Contract, dependencies and reuse boundary
+
+Native `ActivateManaAbilityOfEach(player PlayerRef, filter PermanentFilter)
+ResolvingEffect` selects matching present visits controlled by the resolved
+player. That player chooses order, ability, colors and variable output.
+Each visit supplies at most one successful activation. Remaining options are
+reevaluated after each success. Exact visit, ability identity and control are
+checked after choices. Phasing suspends a source; return cannot replace it.
+Zero output remains a mana ability. Failed payments publish no partial costs
+or stack object and do not block other options. X belongs to each activation;
+the enclosing X is restored. An unaffordable chosen X falls back to zero after
+the ordinary transaction rejects it. Working state is local to Apply.
+
+`IsActivatedManaAbility`, ordinary `CanActivate`, mana cost planning with a
+reserved tap source and `ActivateAbilityByIndex` supply the existing rules.
+Shared payment transactions handle mana, life, counter and sacrifice costs,
+rollback, immediate resolution, replacements, bonuses and mana events.
+There is no second payment solver or RON execution logic in the engine.
+
+RON accepts `PlayerAction(playerRef,
+ActivateAManaAbilityOfEachPermanentAndLoseUnspentMana(And([IsCardtype(Land),
+ControlledByAPlayer(SinglePlayer(ActionPlayer))])))` in ordinary resolving
+bodies. The two clauses can be reversed. Other filters, extra clauses,
+malformed arguments, unbound players, entry and draw replacement bodies reject.
+`compileForcedManaPlayer(Node, scope) (playerReferencePlan, error)` validates
+that shape; `compileForcedMana(Node, scope) ([]effectFactory, error)` lowers
+instructions without a consumer. The saved-mana producer also recognizes it.
+Each factory snapshots one typed player for both activation and loss, then
+uses existing `LostManaBinding`, `LoseUnspentManaInto` and `AddLostManaFor`.
+`TheManaLostThisWay` retains lexical dominance and local PlayerActions scope.
+Inventory assigns the operand a permanent-filter role.
+
+No Go definitions, broad DSL APIs or production registry paths were removed.
+Cutover and removal gates remain unmet. No card-name branch, fallback registry,
+global action result, game-time declaration panic or source-data change was added.
+The vocabulary snapshot needs no source refresh: all RON source bytes are unchanged.
+
+### Rules, failing-first tests and card mappings
+
+Read the local Oracle text and all four local WotC rulings for Drain Power;
+there are no Scryfall notes. `go run ./cmd/fetchset -check -card "Drain Power"`
+passed before implementation. CR 101.3–4, 106.13, 107.3a/k, 118.3, 400.7,
+602.2, 605.1–3 and 608.2 establish choice, payment, identity and timing rules.
+No source defect or fetch failure was found. Personal Incarnation's six
+rounding defects remain deferred with its implementation.
+
+Before production edits, all six `TestRONForcedManaRecords` cases failed on
+the unsupported And operand. After test-fixture signature fixes, native tests
+failed solely because `ActivateManaAbilityOfEach` was undefined. The later
+independent-X test failed for an unaffordable X=99 before the zero fallback
+was implemented. Fixture timing and missing-owner errors were fixed without
+weakening gameplay assertions.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Drain Power, all six complete records | `TestRONForcedManaRecords`: failed/paid cast, resolution choices by the target, multiple abilities, chosen color, tapped/other-player/nonland exclusion, actual pool transfer, retained restrictions, no new production and pending clone isolation |
+| Copies and distinct factories | `TestRONForcedManaCopiesAndInstances`: complete LEA/LEB spells, opponent and self targets, copied spell with a different controller, separate pool results and production history |
+| Pending source and scopes | `TestRONForcedManaPendingSource`, `ResultScope`: source departure/phasing/control change, no-land loss, no-consumer instruction, local PlayerActions transfer, rejected optional/before-producer/escaped result reads |
+| Declarations | `TestRONForcedManaInvalid`, native `RollbackAndBoundaries`: malformed filters/arguments, missing players, replacement contexts and nil native player reject |
+| Native cost and timing | `TestForcedManaCostsAndOrder`, `RollbackAndBoundaries`: activation order, mana conversion costs, zero output, sacrifice, one activation per visit, combined-cost rollback, summoning sickness, phased/absent sources and no stack publication |
+| Native identity and output | `TestForcedManaRechecks`, `VariableOutputAndReplacement`: return, phasing, control/ability/cost/tap changes; pure permission queries; variable counter payments, mana type replacement and mana event amount |
+| X, LKI and clones | `TestForcedManaIndependentX`, `NonmanaX`, `WaitingSourceAndClone`: chosen mana/life/counter X, invalid-X fallback, outer-X preservation, exact waiting references, query purity, departure LKI and separate delayed clones |
+
+### Verification and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONForcedMana -count=1`
+  and `go test ./pkg/mage -run TestForcedMana -count=1`: passed, also after lint.
+- Complete `go test ./pkg/mage/dsl/ron -count=1`: passed.
+- `make build` and `go vet ./...`: passed, including final post-lint runs.
+- `go test ./pkg/mage/... -short -count=1`: passed, also after lint.
+- `make test`: passed for the full repository, also after lint.
+- `make lint`: passed, **0 issues**. Automatic edits only sorted imports in
+  the new files and replaced the cost-alternative loop with equivalent
+  `slices.ContainsFunc`. Reviewed both; all affected checks passed afterward.
+- `git diff --check`: passed, including after this ledger update.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,368 compiled / 77 rejected records**, **944 accepted / 42 rejected names**.
+  Only the six Drain Power diagnostics disappeared from the fresh baseline;
+  all other diagnostics remain identical and in order. The collection still
+  rejects atomically. No environment or validation blocker remains.
+
+Estimated and actual gains agree: **one name / six records**. Compilation
+progress and complete RON gameplay evidence remain separate measurements.
+Coverage expectations in definition-plan, inventory and numeric collection
+regressions advance by six; no gameplay assertion was weakened.
+
+Changed files: native `pkg/mage/forced_mana.go`, `forced_mana_test.go` and
+`doc.go`; RON `forced_mana.go`, `forced_mana_test.go`, `compiler.go`,
+`lost_mana.go`, `inventory.go`, `definition_plan_test.go`, `inventory_test.go`
+and `numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No unrelated work changed.
+The commit uses command-local `commit.gpgsign=false`; repository signing
+configuration remains unchanged.
+
+### Remaining gaps and ranked next candidates
+
+1. Finite damage redirection for Personal Incarnation: eventual 1 name / 6
+   records; shared packet splitting, owner references and six rounding corrections.
+2. Temporary source damage prevention for Kry Shield or Heroism: eventual
+   2 names / 2 records across separate exact-source and filtered/payment shapes.
+
+Stop after this slice. Forty-two names / 77 records still reject. Complete
+collection gameplay, runtime cutover, Go-card and obsolete generator removal,
+and unused DSL cleanup remain unfinished.

@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ActivateManaAbilityOfEach] saves matching visits controlled by one player.
+// That player chooses the order, ability and output. Each visit can supply
+// one activation. Shared activation services check costs and resolve mana
+// abilities without the stack. Failed payments make no partial payment.
+// Returned visits cannot replace saved visits. Phased sources are absent.
+// Each activation has its own X. Copies and clones keep separate choices.
+// RON accepts the forced land activation and mana loss in PlayerAction.
+// The filter requires Land and an ActionPlayer controller in one And.
+// A saved player supplies both activation and loss. The lost mana result
+// uses [LostManaBinding]. Entry and draw replacement bodies reject.
+// All six complete Drain Power records have cast and resolution evidence.
+//
 // [RedirectNextDamageToPermanentFromSelectedSource] saves one exact source,
 // player and destination visit until use or cleanup. The destination must be
 // a present creature or planeswalker at damage time. Later target restrictions
@@ -109,8 +121,8 @@
 // RON accepts AddMana(TheManaLostThisWay) after LoseUnspentMana in an ordinary
 // action sequence. PlayerAction selects the donor or recipient. PlayerActions
 // keeps local results inside its body. New losses replace the lexical result.
-// Entry and draw replacement bodies reject this shape. Drain Power still needs
-// forced legal mana activation; its complete records remain unsupported.
+// Entry and draw replacement bodies reject this shape. Drain Power uses
+// forced mana activation through [ActivateManaAbilityOfEach].
 //
 // [PutChosenHandCardOnLibrary] requires one current hand card at resolution.
 // The typed player chooses. Empty hands and absent players make no choice.

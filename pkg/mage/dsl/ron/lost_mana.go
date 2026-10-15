@@ -18,7 +18,7 @@ func hasLostManaRead(nodes []Node) bool {
 }
 
 func lostManaProducer(n Node) bool {
-	return n.Name == "LoseUnspentMana" || n.Name == "PlayerAction" && len(n.Args) == 2 && n.Args[1].Name == "LoseUnspentMana"
+	return n.Name == "LoseUnspentMana" || n.Name == "PlayerAction" && len(n.Args) == 2 && (n.Args[1].Name == "LoseUnspentMana" || n.Args[1].Name == forcedManaAction)
 }
 
 func compileLostManaProducer(n Node, remaining []Node, ctx scope) (effectFactory, error) {
@@ -35,7 +35,14 @@ func compileLostManaProducer(n Node, remaining []Node, ctx scope) (effectFactory
 		}
 		action = n.Args[1]
 	}
-	if action.Kind != Symbol {
+	forced := action.Name == forcedManaAction
+	if forced {
+		var err error
+		player, err = compileForcedManaPlayer(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else if action.Kind != Symbol {
 		return nil, problem(action, "LoseUnspentMana requires a symbol")
 	}
 	result := &lostManaPlan{name: "lost mana " + n.Position.String()}
@@ -52,7 +59,14 @@ func compileLostManaProducer(n Node, remaining []Node, ctx scope) (effectFactory
 		binding := mage.BindLostMana(result.name)
 		bindings.lostMana[result] = binding
 		effects := make([]mage.Effect, 0, 1+len(body))
-		effects = append(effects, mage.LoseUnspentManaInto(player.build(bindings), binding))
+		ref := player.build(bindings)
+		if forced {
+			saved := mage.BindPlayer("forced mana player " + n.Position.String())
+			effects = append(effects, mage.SnapshotPlayer(ref, saved))
+			ref = mage.FromPlayer(saved)
+			effects = append(effects, mage.ActivateManaAbilityOfEach(ref, mage.IsLand))
+		}
+		effects = append(effects, mage.LoseUnspentManaInto(ref, binding))
 		for _, build := range body {
 			effects = append(effects, build(bindings))
 		}

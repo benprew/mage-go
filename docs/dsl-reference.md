@@ -18611,3 +18611,27 @@ references, simultaneous packets, replacement order, clone state and cleanup.
 The complete Nova Pentacle LEG record now includes
 `ChooseADamageSource(AnyDamageSource)` before this instruction, as its WotC
 ruling requires. Target selection remains the opponent's announcement choice.
+
+### Forced mana activation before mana loss
+
+RON accepts `PlayerAction(playerRef,
+ActivateAManaAbilityOfEachPermanentAndLoseUnspentMana(And([IsCardtype(Land),
+ControlledByAPlayer(SinglePlayer(ActionPlayer))])))` in ordinary resolving
+action sequences. Both filter clauses are required; their order can change.
+Other filters and entry/draw replacement bodies reject. The explicit player
+is saved once for activation and mana loss. A later
+`AddMana(TheManaLostThisWay)` reads the existing lexical lost-mana result.
+`PlayerActions` keeps a result local to its body. The instruction also works
+without a result consumer. All six Drain Power records now execute this shape.
+
+The native operation is `mage.ActivateManaAbilityOfEach(player mage.PlayerRef,
+filter mage.PermanentFilter) mage.ResolvingEffect`. It selects matching visits
+controlled by that player and requires one possible mana activation per visit.
+The player chooses the order, ability, mana colors and variable output.
+Shared activation transactions supply timing, arbitrary costs, rollback, mana
+replacements, bonuses and events. Zero output is permitted. Rechecks exclude
+departed, returned, phased, newly controlled or replaced ability instances.
+Copies and clones have separate local activation state. X belongs to each
+activation; the enclosing resolution's X is preserved. Use
+`LoseUnspentManaInto` and `AddLostManaFor` to save and transfer the actual pool
+after these activations, without a second mana-production event.
