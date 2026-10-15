@@ -65,9 +65,12 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 	if err != nil {
 		return nil, err
 	}
-	return func() *mage.GenericTriggered {
+	build := func(self *mage.TriggeredAbilityBinding) *mage.GenericTriggered {
 		player := mage.BindPlayer(ctx.stepEvent.playerName)
 		bindings := instanceBindings{steps: map[*stepEventPlan]*mage.PlayerBinding{ctx.stepEvent: player}}
+		if ctx.copyAbility != nil {
+			bindings.copyAbilities = map[*copyAbilityPlan]*mage.TriggeredAbilityBinding{ctx.copyAbility: self}
+		}
 		var pattern mage.EventPattern = mage.TurnStepBegins(step, player)
 		if chosen {
 			pattern = mage.ChosenPlayerUpkeep(player)
@@ -91,5 +94,11 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 		}
 		actions.effects = nil
 		return TriggerA(trigger, actions)
+	}
+	return func() *mage.GenericTriggered {
+		if ctx.copyAbility != nil {
+			return mage.BindTriggeredAbility(build)
+		}
+		return build(nil)
 	}, nil
 }

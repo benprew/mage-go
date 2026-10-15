@@ -112,8 +112,8 @@ func TestRONOptionalCopyVesuvanClause(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			record := repositoryRecord(t, set, "Vesuvan Doppelganger", set)
-			if _, err := Compile(record); err == nil {
-				t.Fatal("ThisAbility must remain rejected")
+			if _, err := Compile(record); err != nil {
+				t.Fatal(err)
 			}
 			rewrite := func(n Node) Node { return n }
 			rewrite = func(n Node) Node {

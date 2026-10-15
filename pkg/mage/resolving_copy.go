@@ -9,17 +9,20 @@ import (
 
 // CopyPermanent replaces one present visit's copiable characteristics.
 // The recipient keeps its status, counters, damage and physical card.
-func CopyPermanent(recipient, subject PermanentRef, keepColors bool) ResolvingEffect {
-	return &resolvingCopyEffect{recipient: recipient, subject: subject, keepColors: keepColors}
+func CopyPermanent(recipient, subject PermanentRef, keepColors bool, options ...ResolvingCopyOption) ResolvingEffect {
+	return resolvingCopyOptions(&resolvingCopyEffect{recipient: recipient, subject: subject, keepColors: keepColors}, options)
 }
 
 // MayCopyPermanent lets the saved player choose a copy at resolution.
 // Both exact visits must be present before the choice is offered.
-func MayCopyPermanent(player PlayerRef, recipient, subject PermanentRef, keepColors bool) ResolvingEffect {
-	return &resolvingCopyEffect{recipient: recipient, subject: subject, keepColors: keepColors, optional: true, player: player}
+func MayCopyPermanent(player PlayerRef, recipient, subject PermanentRef, keepColors bool, options ...ResolvingCopyOption) ResolvingEffect {
+	return resolvingCopyOptions(&resolvingCopyEffect{recipient: recipient, subject: subject, keepColors: keepColors, optional: true, player: player}, options)
 }
 
 type resolvingCopyEffect struct {
+	retained           *TriggeredAbilityBinding
+	retentionOptions   int
+	invalidOption      bool
 	recipient, subject PermanentRef
 	keepColors         bool
 	optional           bool
@@ -37,6 +40,12 @@ func (e *resolvingCopyEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-copy", Text: e.Text(), children: []definitionEdge{{"recipient", e.recipient}, {"subject", e.subject}}}
 	if e.optional {
 		n.children = append(n.children, definitionEdge{"player", e.player})
+	}
+	if e.retentionOptions > 0 {
+		n.children = append(n.children, definitionEdge{"retained ability", e.retained})
+	}
+	if e.retentionOptions > 1 || e.invalidOption {
+		n.problem = "supply one retained triggered ability"
 	}
 	return n
 }
@@ -62,7 +71,11 @@ func (e *resolvingCopyEffect) Apply(ctx *EffectContext) error {
 			return nil
 		}
 	}
-	return ctx.Game.BecomeCopyOfPermanent(recipient, subject, e.keepColors)
+	var modifications []CopyModification
+	if e.retained != nil {
+		modifications = append(modifications, CopyAddTriggeredAbility(e.retained.build))
+	}
+	return ctx.Game.becomeCopyOfPermanent(recipient, subject, e.keepColors, modifications...)
 }
 
 type resolvingCopyState struct {
@@ -75,6 +88,10 @@ type resolvingCopyState struct {
 // BecomeCopyOfPermanent captures the subject before it replaces recipient rules.
 // No entry event or entry replacement occurs. Later copies read the saved values.
 func (g *Game) BecomeCopyOfPermanent(recipient, subject *Permanent, keepColors bool) error {
+	return g.becomeCopyOfPermanent(recipient, subject, keepColors)
+}
+
+func (g *Game) becomeCopyOfPermanent(recipient, subject *Permanent, keepColors bool, modifications ...CopyModification) error {
 	if recipient == nil || subject == nil {
 		return fmt.Errorf("resolving copy requires two present visits")
 	}
@@ -99,6 +116,10 @@ func (g *Game) BecomeCopyOfPermanent(recipient, subject *Permanent, keepColors b
 		if err != nil {
 			return err
 		}
+	}
+	values, err = values.WithModifications(modifications...)
+	if err != nil {
+		return err
 	}
 	state := &resolvingCopyState{values: values}
 	if current.resolvingCopy != nil {

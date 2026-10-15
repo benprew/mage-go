@@ -208,12 +208,8 @@ func TestRONOptionalEntryCopyDependencies(t *testing.T) {
 			}
 			count++
 			_, err := Compile(n)
-			if name == "Clone" || name == "Copy Artifact" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), "unsupported resolving copy modification (AddAbilityVariable)") {
-				t.Fatalf("%s/%s: expected invoking-ability retention rejection, got %v", set, name, err)
+			if err != nil {
+				t.Fatalf("%s/%s: %v", set, name, err)
 			}
 		}
 	}

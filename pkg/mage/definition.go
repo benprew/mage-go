@@ -311,6 +311,9 @@ func describeDefinition(v any) definitionNode {
 			n.problem = "text revision requires a valid fixed, attached or produced-type mana bonus"
 		}
 	case *GenericTriggered:
+		if e.copyAbility != nil {
+			n.children = append(n.children, definitionEdge{"copy-ability", triggeredAbilityDeclaration{e.copyAbility}})
+		}
 		if e.sourceCardZoneOptions > 0 {
 			if e.sourceCardZoneOptions != 1 || len(e.zones) != 0 || e.IsStateTrigger() || len(e.targets) != 0 || len(e.modes) != 0 {
 				n.problem = "source card event requires one zone and an ordinary event without targets or modes"
@@ -709,7 +712,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
 			mill, paidMill := edge.value.(*millCost)
-			if !definitionSequential(value) && (!eventTrigger || (edge.name != "source-card" && edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !paidCost && !paidPlural && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
+			if !definitionSequential(value) && (!eventTrigger || (edge.name != "copy-ability" && edge.name != "source-card" && edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !paidCost && !paidPlural && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
 				assigned = before
 			}
 		}

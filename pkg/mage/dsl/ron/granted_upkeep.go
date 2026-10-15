@@ -37,6 +37,9 @@ func compileGrantedUpkeepLayer(n Node, parts []Node, ctx scope) (optionFactory, 
 	}, nil
 }
 
+// The marker has size so lexical declarations have separate addresses.
+type copyAbilityPlan struct{ _ byte }
+
 func compileRecipientUpkeepAbility(trigger Node) (func() *mage.GenericTriggered, error) {
 	if err := arity(trigger, 2); err != nil {
 		return nil, err
@@ -59,5 +62,5 @@ func compileRecipientUpkeepAbility(trigger Node) (func() *mage.GenericTriggered,
 		return nil, unsupported(player.Args[0], "granted upkeep player reference")
 	}
 	// A granted body cannot read the donor's attachment or bindings.
-	return compileBoundStepAbility(event, trigger.Args[1], scope{permanent: true}, mage.EachUpkeep, mage.YourUpkeep, "upkeep", nil)
+	return compileBoundStepAbility(event, trigger.Args[1], scope{permanent: true, copyAbility: &copyAbilityPlan{}}, mage.EachUpkeep, mage.YourUpkeep, "upkeep", nil)
 }

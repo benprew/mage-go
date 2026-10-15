@@ -15,7 +15,15 @@
 // CreatePermanentLayerEffect. Other copy exceptions and replacement bodies
 // reject. MayCopyPermanent supplies an optional resolution choice after both
 // visits are checked. RON accepts MayAction around these copy forms.
-// ThisAbility retention still needs a separate contract.
+// [BindTriggeredAbility] supplies one lexical [TriggeredAbilityBinding].
+// [RetainCopyAbility] adds a fresh build of that declaration to copy values.
+// Pending bodies keep their own declaration after other rules replace it.
+// Self-copy adds an instance. Other copies keep all donor instances and add one.
+// Nil, duplicate and unbound retention options fail definition checks.
+// RON accepts AddAbilityVariable(ThisAbility), alone or with KeepColor, in
+// resolving copy bodies of acquired controller-upkeep triggers. The reference
+// cannot read donor bindings or a different ability. All six complete Vesuvan
+// Doppelganger records have gameplay evidence.
 //
 // [PlayerLifeManaThisTurn] saves a player permission until cleanup.
 // Positive fixed life payments add one fixed mana at mana-ability timing.

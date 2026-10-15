@@ -18164,3 +18164,27 @@ six Vesuvan records and remove only AddAbilityVariable(ThisAbility), retaining
 the actual optional instruction. Complete Air Elemental and Grizzly Bears records
 supply donors. Existing resolving-copy tests retain snapshot, damage, counters,
 static layers, text, attachments and identity coverage.
+
+
+## Retaining the invoking triggered ability in copy values
+
+`BindTriggeredAbility(build func(*TriggeredAbilityBinding) *GenericTriggered)
+*GenericTriggered` supplies a typed lexical reference to the declaration being
+built. The pure builder must supply fresh rules and targets without game state.
+`RetainCopyAbility(binding *TriggeredAbilityBinding) ResolvingCopyOption` adds
+that declaration to the resulting copiable values. `CopyPermanent` and
+`MayCopyPermanent` accept `options ...ResolvingCopyOption` after `keepColors`.
+Existing calls remain valid. Nil, duplicate and unbound options fail validation.
+
+RON supports `AddAbilityVariable(ThisAbility)` alone or with one `KeepColor`
+inside `CopyEffects` in ordinary resolving copy actions, including `MayAction`.
+The lexical producer is an acquired controller-upkeep TriggerA built by the
+existing AddAbility adapter. Each pending body retains its own declaration;
+it does not search current runtime rules. Self-copy and copying another
+Doppelganger add an independent instance to the copied donor abilities.
+
+All six complete Vesuvan Doppelganger records execute in
+`TestRONCopyAbilityRetention`. Lifecycle, independent declarations, strict
+shapes and inventory roles have separate tests with that prefix. See
+[the rules contract](engine-rules-contracts.md#retaining-the-invoking-triggered-ability-in-copy-values)
+for the validation, identity, cloning and source boundaries.

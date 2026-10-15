@@ -186,7 +186,7 @@ func TestRONDefinitionPlanAcceptedCollection(t *testing.T) {
 			}
 		}
 	}
-	if accepted != 2332 || rejected != 113 {
+	if accepted != 2338 || rejected != 107 {
 		t.Fatalf("accepted=%d rejected=%d", accepted, rejected)
 	}
 }
@@ -206,11 +206,7 @@ func TestRONDefinitionPlanCopyConsumerBoundaries(t *testing.T) {
 		case "Clone", "Copy Artifact", "Vesuvan Doppelganger":
 			found++
 			_, err := Compile(node)
-			if node.Fields["Name"].String != "Vesuvan Doppelganger" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), "unsupported resolving copy modification (AddAbilityVariable)") {
+			if err != nil {
 				t.Fatalf("copy consumer: %v", err)
 			}
 		}

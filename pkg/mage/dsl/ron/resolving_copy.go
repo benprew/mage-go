@@ -18,6 +18,7 @@ func compileResolvingCopy(n Node, ctx scope, recipient permanentReferencePlan, p
 		return nil, err
 	}
 	keepColors := false
+	retainAbility := false
 	modifications := part.Args[1]
 	if modifications.Kind != Symbol || modifications.Name != "NoCopyEffects" {
 		if modifications.Name != "CopyEffects" {
@@ -31,20 +32,38 @@ func compileResolvingCopy(n Node, ctx scope, recipient permanentReferencePlan, p
 			return nil, err
 		}
 		for _, operation := range operations {
-			if operation.Name != "KeepColor" {
+			switch operation.Name {
+			case "KeepColor":
+				if operation.Kind != Symbol || keepColors {
+					return nil, problem(operation, "supply one KeepColor symbol")
+				}
+				keepColors = true
+			case "AddAbilityVariable":
+				if err := arity(operation, 1); err != nil {
+					return nil, err
+				}
+				ref := operation.Args[0]
+				if ref.Kind != Symbol || ref.Name != "ThisAbility" || ctx.copyAbility == nil || retainAbility {
+					return nil, problem(operation, "supply one bound ThisAbility reference")
+				}
+				retainAbility = true
+			default:
 				return nil, unsupported(operation, "resolving copy modification")
 			}
 		}
-		if len(operations) != 1 || operations[0].Kind != Symbol || operations[0].Name != "KeepColor" {
-			return nil, problem(modifications, "resolving copy supports one KeepColor symbol")
+		if len(operations) == 0 {
+			return nil, problem(modifications, "supply resolving copy modifications")
 		}
-		keepColors = true
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		if optional {
-			return mage.MayCopyPermanent(ctx.player.build(bindings), recipient.build(bindings), subject.build(bindings), keepColors)
+		var options []mage.ResolvingCopyOption
+		if retainAbility {
+			options = append(options, mage.RetainCopyAbility(bindings.copyAbilities[ctx.copyAbility]))
 		}
-		return mage.CopyPermanent(recipient.build(bindings), subject.build(bindings), keepColors)
+		if optional {
+			return mage.MayCopyPermanent(ctx.player.build(bindings), recipient.build(bindings), subject.build(bindings), keepColors, options...)
+		}
+		return mage.CopyPermanent(recipient.build(bindings), subject.build(bindings), keepColors, options...)
 	}, nil
 }
 

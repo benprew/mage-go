@@ -23980,3 +23980,56 @@ six Vesuvan records and remove only AddAbilityVariable(ThisAbility), retaining
 the actual optional instruction. Complete Air Elemental and Grizzly Bears records
 supply donors. Existing resolving-copy tests retain snapshot, damage, counters,
 static layers, text, attachments and identity coverage.
+
+
+## Retaining the invoking triggered ability in copy values
+
+`BindTriggeredAbility(build func(*TriggeredAbilityBinding) *GenericTriggered)
+*GenericTriggered` gives a pure declaration builder a typed reference to itself.
+Each build creates fresh references, abilities and targets. The reference holds
+no game state, target choice, source object or current runtime ability index.
+`RetainCopyAbility(binding *TriggeredAbilityBinding) ResolvingCopyOption` can be
+passed to `CopyPermanent` or `MayCopyPermanent` after `keepColors`; both APIs now
+accept `options ...ResolvingCopyOption`. Existing calls remain valid.
+
+Definition validation declares the reference before the trigger's event and body.
+A read must belong to that lexical trigger. Nil options, nil or unbound bindings,
+zero-value bindings and duplicate retention options reject before gameplay.
+The declaration edge does not traverse its own builder, so recursive rules have
+finite inspection and validation. Definition plans still check independent
+builds, including the new binding identities.
+
+At resolution, shared exact-visit and optional-choice checks run first. The
+copy operation then uses `CopyAddTriggeredAbility` and `WithModifications` to
+add a fresh build of the invoking declaration to the donor snapshot. It does
+not search the recipient's current rules. Other pending abilities, stack copies
+and game clones retain their own declarations. Self-copy retains the donor's
+instances and adds one; copying another Doppelganger also adds one. Later copies
+read those instances as copiable values. A face-down donor supplies nameless
+2/2 values plus the retained ability. KeepColor remains an independent exception.
+Existing copy services preserve status, damage, counters, attachments, source
+identity, text continuation, layers, phasing and printed-card restoration.
+No new payment, replacement ordering or simultaneous-operation service is added.
+CR 707.2–4 and 707.9a establish these copiable ability rules. Local WotC Vesuvan
+Doppelganger rulings explicitly require independent instances on self-copy and
+copying another Doppelganger, and the retained ability on a face-down copy.
+
+RON accepts `CopyEffects([AddAbilityVariable(ThisAbility)])` and that operation
+combined with one `KeepColor` symbol, in either order, in ordinary resolving
+`CreatePermanentLayerEffect` copy actions, including `MayAction`. The lexical
+producer is an acquired `TriggerA` with
+`AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))`, built by `AddAbility` in
+entry copy modifications or existing upkeep grants. It retains the complete
+validated body and its target declarations. Donor attachments and bindings do
+not enter that body. Other ability references, duplicate operations, malformed
+arities, replacement bodies and unbound uses reject. The inventory classifies
+ThisAbility as an ability_reference within copy modifications.
+
+Evidence: native `TestCopyAbilityRetention` and `Invalid`; RON
+`TestRONCopyAbilityRetention`, `Lifecycle`, `IndependentDeclarations`, `Shapes`,
+`Invalid` and `Inventory`. The complete Vesuvan records in LEA, LEB, 2ED, 3ED,
+CED and CEI now compile and execute paid casting, entry copying, targeted upkeep,
+optional decline, repeated copying and self-copy. Air Elemental and Grizzly Bears
+supply complete donor records. Synthetic distinct bodies prove that the last
+resolving declaration retains itself after earlier resolutions replace the rules.
+Earlier copy sections describe the prerequisites and their clause-only tests.

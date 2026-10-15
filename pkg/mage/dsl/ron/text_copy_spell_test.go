@@ -399,8 +399,8 @@ func TestRONTextCopySpellBoundaries(t *testing.T) {
 		t.Fatal("mixed unsupported context changed stack state")
 	}
 	for _, name := range []string{"Vesuvan Doppelganger"} {
-		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err == nil {
-			t.Fatal("incomplete dependent card accepted", name)
+		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err != nil {
+			t.Fatal("complete dependent card rejected", name, err)
 		}
 	}
 }
@@ -425,14 +425,14 @@ func TestRONTextCopySpellInventory(t *testing.T) {
 				continue
 			}
 			name := record.Fields["Name"].String
-			if name != "Clone" && name != "Copy Artifact" {
+			if name != "Clone" && name != "Copy Artifact" && name != "Vesuvan Doppelganger" {
 				t.Fatal("copy-entry continuation lacks gameplay mapping", name)
 			}
 			count++
 		}
 	}
-	if count != 12 {
-		t.Fatalf("mapped %d records, want 12", count)
+	if count != 18 {
+		t.Fatalf("mapped %d records, want 18", count)
 	}
 }
 

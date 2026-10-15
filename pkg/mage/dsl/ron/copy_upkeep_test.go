@@ -210,7 +210,7 @@ func TestRONCopyUpkeepVesuvanClause(t *testing.T) {
 					continue
 				}
 				found = true
-				if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "unsupported resolving copy modification (AddAbilityVariable)") {
+				if _, err := Compile(n); err != nil {
 					t.Fatal("full record blocker", err)
 				}
 				rewrite := func(node Node) Node { return node }

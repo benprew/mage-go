@@ -1536,6 +1536,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "mana_production"
 		}
 	case "copy_modification":
+		if n.Name == "AddAbilityVariable" && len(n.Args) == 1 {
+			return "ability_reference"
+		}
 		if n.Name == "AddAbility" && len(n.Args) == 1 {
 			return "rule"
 		}
