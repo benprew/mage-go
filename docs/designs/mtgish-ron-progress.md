@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **942 accepted / 44 rejected names**
-(986 total), **2,361 compiled / 84 rejected records** (2,445 total).
-The latest slice is **EFFECT-DISCARD-LIBRARY**.
-RON lowers the exact optional effect-discard library replacement to native rules.
-Shared discard batches now preserve chosen library order and identify each
-selected card in its private destination prompt. Costs do not use the rule.
-All six complete Library of Leng records have casting and discard evidence.
-Estimated and actual gain: one name / six records. Collection loading still
+Latest measured result (2026-10-15): **943 accepted / 43 rejected names**
+(986 total), **2,362 compiled / 83 rejected records** (2,445 total).
+The latest slice is **SELECTED-SOURCE-PERMANENT-REDIRECT**.
+RON lowers the chosen-source next-damage event from a player to a saved permanent.
+Native selected-source replacements now support both redirection directions.
+The corrected complete Nova Pentacle record has paid-cast and activation evidence,
+including opponent target choice and source choice at resolution.
+Estimated and actual gain: one name / one record. Collection loading still
 rejects atomically. Runtime cutover, Go-card removal and unused DSL cleanup
 remain gated by complete support and startup.
 
@@ -24,19 +24,18 @@ Reassess with fresh loader and complete-record evidence. Count reprints once.
 1. **Forced mana activation and saved mana:** Drain Power, eventual one name /
    six records. Saved lost-mana results are complete. Isolate legal activation
    offers, arbitrary costs, variable output choices and transactional rechecks.
-2. **Damage redirection:** Personal Incarnation and Nova Pentacle, eventual two
-   names / seven records. Personal Incarnation needs finite redirection and all
-   six death-loss rounding defects repaired; Nova Pentacle needs its missing
-   damage-source choice and the redirect adapter. Reassess shared prerequisites.
+2. **Finite damage redirection:** Personal Incarnation, eventual one name / six
+   records. Needs finite packet splitting, owner references and all six death-loss
+   rounding defects repaired. Nova Pentacle is complete.
 
 ## Dependencies and source blockers
 
 - Personal Incarnation's six source records round its death-trigger life loss
   down. Local LEA Oracle requires rounding up. Repair the complete reprint group
   with the card's implementation evidence; do not reverse shared rounding logic.
-- Nova Pentacle reads `TheChosenDamageSource` without a producer. Local LEG
-  Oracle and WotC rulings require a resolution-time choice. Its source repair
-  and missing redirection adapter are separate blockers.
+- Nova Pentacle's missing source-choice producer is repaired by
+  SELECTED-SOURCE-PERMANENT-REDIRECT. Its complete LEG record now compiles and has
+  gameplay evidence. The existing generic choice runs at resolution.
 
 - Reuse `TapAnyNumberEach`, `PlayerNumbersBinding` and `PlayerNumber` for optional
   tap results. The RON producer requires one conjunctive ActionPlayer controller
@@ -25554,3 +25553,156 @@ runtime loading/cutover, Go-card and obsolete Go-set generator removal, and
 unused DSL cleanup remain unfinished. Stop after this slice. The slice commit
 uses command-local `commit.gpgsign=false`; repository signing configuration is
 unchanged.
+
+## 2026-10-15 — SELECTED-SOURCE-PERMANENT-REDIRECT
+
+### Selection and dependency evidence
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loading returned the
+expected exit 1 with valid JSON: 2,361 compiled / 84 rejected records and
+942 accepted / 44 rejected names. This was collection rejection, not a build
+failure. Complete records, nested instructions and local rulings were read for
+all three compared names; reprints count once.
+
+| Candidate | Distinct affected cards; estimated full unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| First ranked: forced legal mana activation and saved mana | Drain Power; eventual one name / six records, zero from offers alone | Saved lost-mana values are ready. Legal offers for arbitrary costs, variable outputs, activation order, payment transactions and stale-offer rechecks still need a shared contract. This enables the complete forced instruction and future controlled-player actions. | Large; isolate the offer/activation prerequisite before full RON wiring |
+| Finite redirection | Personal Incarnation; eventual one name / six records | Requires finite damage splitting, owner references and correction of all six death-loss rounding defects. Enables bounded redirection independent of source identity. | Medium to large; multiple prerequisites before a truthful full-card claim |
+| Selected-source redirection to a permanent, selected | Nova Pentacle; one name / one record | Opponent-selected targets, complete damage-source choices, exact visits and selected-source replacement batches are ready. Missing source-choice producer has direct WotC evidence. Reuses and extends the shared redirection service for future chosen-source recipients. | Small to medium; one complete direction, source correction and interaction tests |
+
+The first ranked candidate is not ready as a complete adapter; the broad legal
+activation contract is still missing. No compared candidate gives an immediate
+multi-name unlock. The selected direction gives the smallest complete gain
+without partial forced activation or finite splitting. It extends the same
+replacement used by Jade Monolith's existing direction rather than adding a
+second rules executor. This run implements one slice and stops.
+
+### Exact contract and reuse boundary
+
+New public engine signature:
+`RedirectNextDamageToPermanentFromSelectedSource(source DamageSourceRef,
+player PlayerRef, destination PermanentRef, filter DamageSourceFilter)
+ResolvingEffect`.
+
+RON lowers exactly
+`CreateFutureReplaceWouldDealDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource, Player(playerRef)), [DealToCreatureOrPlaneswalkerInstead(permanentRef)])`.
+`compileSelectedSourceRedirect(Node, scope) (effectFactory, error)` dispatches
+the new direction to `compileSelectedPermanentRedirect(Node, scope)
+(effectFactory, error)`. Ordinary resolving bodies require a prior lexical
+source-choice plan and valid typed references. Entry and draw replacement
+bodies, malformed arities, extra operations and unbound reads reject.
+
+The native installation and replacement retain the existing signatures for
+reverse-direction callers. One direction flag changes the action recipient;
+source information, exact source/destination visits, current filter checks,
+selected permanent-spell continuation, waiting reference declarations, shared
+batch replacement order, clone state and cleanup remain in their existing
+services. All matching simultaneous packets redirect before the rule is used
+up. Nonpositive damage, wrong sources/players and invalid destinations leave the
+rule unused. Phasing suspends a destination; a phase cycle restores it. Return
+cannot restore an old visit. Later target restrictions do not apply. Source
+attribution, combat status, lifelink and damage events remain shared behavior.
+No new payment service is added; existing activation transactions handle failed
+payment without tap or stack publication.
+
+No Go definitions, DSL APIs or production registry paths are removed. Complete
+loading, runtime cutover and removal gates remain unmet. There is no Go-card
+fallback, card-name branch, global result slot or game-time declaration panic.
+
+### Rules, source defect and failing-first evidence
+
+Read Nova Pentacle's full LEG record, its local Oracle text and all four WotC
+rulings. There are no Scryfall notes. `go run ./cmd/fetchset -check -card
+"Nova Pentacle"` passed before implementation. The 2009-10-01 ruling requires
+a source choice at resolution; the original record read
+`TheChosenDamageSource` without a producer. Added the existing generic
+`ChooseADamageSource(AnyDamageSource)` immediately before the replacement.
+Nova Pentacle has one record in this collection, so no reprint correction is
+missing. Opponent target choice remains at announcement and permits creatures
+controlled by either player. The local Oracle text matches this behavior.
+CR 609.7a–b, 614.3–9, 616.1, 400.7 and 702.26b establish the engine contract.
+Personal Incarnation's six rounding defects remain explicit and deferred.
+
+Before implementation, `TestRONSelectedPermanentRedirectRecord` failed on the
+unbound chosen source in the complete record; the positive declaration case in
+`TestRONSelectedPermanentRedirectInvalid` failed in the old continued-damage
+dispatch. The native identity test failed to compile solely because the new API
+was undefined, after test fixture signature errors were corrected. These
+expected failures preceded the corresponding production changes.
+
+### Card-to-test and interaction evidence
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Nova Pentacle, complete LEG record | `TestRONSelectedPermanentRedirectRecord` | Failed and paid cast; failed activation leaves no tap/stack/replacement; opponent chooses a creature controlled by the activator; activator chooses damage source at resolution; pending ability survives departure; one-shot and cloned consumption |
+| Nova Pentacle target timing | `TestRONSelectedPermanentRedirectLegality` | Illegal target prevents source choice; later shroud does not stop redirection; phasing and phase cycle; returned destination excluded; source control change preserves activator; copied abilities choose and consume separately |
+| Separate RON factories | `TestRONSelectedPermanentRedirectInstances` | Two complete instances, different players, sources and destinations; independent resolution bindings and cloned replacements |
+| Declarations | `TestRONSelectedPermanentRedirectInvalid`, `TestSelectedPermanentRedirectInvalid` | Wrong arities, unbound event/source references, missing operands, entry/draw replacement and nonresolving contexts reject |
+| Native lifecycle | `TestSelectedPermanentRedirectIdentity` | Source departure/return with LKI damage, destination departure/return, phasing, type loss, control change, cleanup, complete simultaneous packet event, lifelink and clone isolation |
+| Native ordering and source continuity | `TestSelectedPermanentRedirectRechecks`, `SpellContinuity`, `Boundaries` | Affected player chooses prevention versus redirection; changed recipient rechecks; chosen spell continues to its permanent; exact waiting references, query purity, current filter, wrong player and nonpositive damage |
+| Retained callers and collection | `TestSelectedSourceRedirect*`, `TestRONSelectedSourceRedirect*`, `TestRONOpponentTargetsRecordFragments`, definition-plan/inventory/numeric collection tests | Reverse direction retained; full-record assertion now accepts Nova Pentacle; expected coverage advances by one record; remaining collection rejects atomically |
+
+The engine short suite exposed the old full-record blocker expectation in
+`TestRONOpponentTargetsRecordFragments/Nova_Pentacle`. The implementation now
+passes compilation, so its expected blocker is cleared; its target-choice
+fragment checks remain. This is an expected coverage update, not a weakened
+legality test or an environment failure.
+
+### Verification and measured coverage
+
+- Focused `go test ./pkg/mage/dsl/ron -run
+  'TestRONSelectedPermanentRedirect|TestRONOpponentTargetsRecordFragments'
+  -count=1`: passed. Native `go test ./pkg/mage -run
+  'TestSelected(Permanent|Source)Redirect' -count=1`: passed.
+- `make build`: passed, including the final post-lint run.
+- `go vet ./...`: passed, including the final post-lint run.
+- `go test ./pkg/mage/... -short -count=1`: passed for all engine packages after
+  the obsolete full-record blocker expectation was updated.
+- `make test`: passed for the full repository after that update.
+- `make lint`: passed twice, **0 issues**. Automatic changes only formatted
+  imports in the new test files. No production semantics or unrelated files
+  changed. The final focused tests, build, vet and both suites passed after
+  the initial formatting pass. A second lint pass covered the updated old
+  blocker assertion and made no further changes.
+- `git diff --check`: passed, including after this ledger update.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,362 compiled / 83 rejected records**, **943 accepted / 43 rejected names**.
+  The only removed fresh-baseline diagnostic is Nova Pentacle at LEG:184.
+  Every other diagnostic remains identical and in order. No new rejection
+  was added. Complete loading remains atomic and rejects the collection.
+- Vocabulary source hashes and the saved final loader report match the
+  refreshed snapshot. No environment failure remains.
+
+The slice commit uses command-local `commit.gpgsign=false`; repository signing
+configuration is unchanged.
+
+Estimated and actual gains agree: **one unique name / one record**. Final
+coverage is **943 accepted / 43 rejected names**, **2,362 compiled / 83 rejected
+records**. Comparing fresh loader outputs removes only Nova Pentacle at LEG:184;
+all remaining diagnostics are identical and retain their order. Compilation
+progress and complete RON gameplay evidence remain separate measurements.
+The vocabulary snapshot refresh includes the LEG hash, the two added constructor
+occurrences and current loader diagnostics; its older loader baseline had also
+retained already-resolved gaps from prior slices.
+
+Changed files: native `selected_source_redirect.go`, new
+`selected_permanent_redirect_test.go` and `doc.go`; RON
+`selected_source_redirect.go`, new `selected_permanent_redirect_test.go`,
+`opponent_target_test.go`, `definition_plan_test.go`, `inventory_test.go` and
+`numeric_consumers_test.go`; `cards/mtgish/LEG.lines.ron`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, vocabulary snapshot
+and this ledger. No unrelated work was changed.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers/transactions for Drain Power: eventual
+   one name / six records. Saved mana is ready; isolate arbitrary costs,
+   variable output choices, activation order and transactional rechecks.
+2. Finite damage redirection for Personal Incarnation: eventual one name / six
+   records. Needs finite packet splitting, owner references and the complete
+   six-record rounding correction. Selected-source permanent redirection is done.
+
+Forty-three names and 83 records still reject. Complete collection gameplay,
+runtime loading/cutover, Go-card and obsolete Go-set generator removal, and
+unused DSL cleanup remain unfinished. Stop after this slice.

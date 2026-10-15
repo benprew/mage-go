@@ -350,7 +350,7 @@ func TestRONOpponentTargetsRecordFragments(t *testing.T) {
 	for _, tc := range []struct{ set, name, blocker string }{
 		{"DRK", "Preacher", ""},
 		{"PROMOS", "Arena", ""},
-		{"LEG", "Nova Pentacle", "unbound or incompatible chosen damage source"},
+		{"LEG", "Nova Pentacle", ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			record := chosenDiscardRecord(t, tc.set, tc.name)

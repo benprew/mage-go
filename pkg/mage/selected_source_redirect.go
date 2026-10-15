@@ -12,11 +12,18 @@ func RedirectNextDamageFromSelectedSource(source DamageSourceRef, subject Perman
 	return &selectedSourceRedirectInstallation{source: source, subject: subject, player: player, filter: filter}
 }
 
+// RedirectNextDamageToPermanentFromSelectedSource saves one source and destination visit.
+// The saved player can differ from the destination's controller.
+func RedirectNextDamageToPermanentFromSelectedSource(source DamageSourceRef, player PlayerRef, destination PermanentRef, filter DamageSourceFilter) ResolvingEffect {
+	return &selectedSourceRedirectInstallation{source: source, subject: destination, player: player, filter: filter, toPermanent: true}
+}
+
 type selectedSourceRedirectInstallation struct {
-	filter  DamageSourceFilter
-	source  DamageSourceRef
-	subject PermanentRef
-	player  PlayerRef
+	toPermanent bool
+	filter      DamageSourceFilter
+	source      DamageSourceRef
+	subject     PermanentRef
+	player      PlayerRef
 }
 
 func (*selectedSourceRedirectInstallation) Text() string {
@@ -59,7 +66,7 @@ func (e *selectedSourceRedirectInstallation) Apply(ctx *EffectContext) error {
 	if !e.filter.Match(information) {
 		return nil
 	}
-	ctx.Game.effects.AddReplacement(&selectedSourceRedirectReplacement{replacementBase: replacementBase{duration: core.EndOfTurn}, source: cloneDamageSource(information), filter: e.filter, subject: subject, player: player})
+	ctx.Game.effects.AddReplacement(&selectedSourceRedirectReplacement{replacementBase: replacementBase{duration: core.EndOfTurn}, source: cloneDamageSource(information), filter: e.filter, subject: subject, player: player, toPermanent: e.toPermanent})
 	return nil
 }
 
@@ -70,29 +77,46 @@ type selectedSourceRedirectReplacement struct {
 	subject           capturedPermanent
 	player            uuid.UUID
 	consumed          bool
+	toPermanent       bool
 }
 
 func (r *selectedSourceRedirectReplacement) Matches(action Action, reader GameReader) bool {
-	damage, ok := action.(*DamageToCreatureAction)
-	if !ok || damage.Amount() <= 0 || damage.PermanentID() != r.subject.id {
+	if damageActionAmount(action) <= 0 {
 		return false
+	}
+	if r.toPermanent {
+		damage, ok := action.(*DamageToPlayerAction)
+		if !ok || damage.PlayerID() != r.player {
+			return false
+		}
+	} else {
+		damage, ok := action.(*DamageToCreatureAction)
+		if !ok || damage.PermanentID() != r.subject.id {
+			return false
+		}
 	}
 	g := reader.(*Game)
 	subject := g.FindPermanent(r.subject.id)
-	information := g.damageSourceRuleInformation(damage.DamageSource())
-	if !information.SameObject(damage.DamageSource()) {
-		information = damage.DamageSource()
+	source := damageActionSource(action)
+	information := g.damageSourceRuleInformation(source)
+	if !information.SameObject(source) {
+		information = source
 	}
-	return r.filter.Match(information) && subject != nil && subject.incarnationID == r.subject.incarnation && damageRedirectDestination(subject) && g.GetPlayer(r.player) != nil && (r.source.SameObject(damage.DamageSource()) || r.continued.SameObject(damage.DamageSource()))
+	return r.filter.Match(information) && subject != nil && subject.incarnationID == r.subject.incarnation && damageRedirectDestination(subject) && g.GetPlayer(r.player) != nil && (r.source.SameObject(source) || r.continued.SameObject(source))
 }
 func (r *selectedSourceRedirectReplacement) Replace(action Action, g *Game) Action {
 	if !r.Matches(action, g) {
 		return action
 	}
-	damage := action.(*DamageToCreatureAction)
 	r.consumed = true
+	if r.toPermanent {
+		damage := action.(*DamageToPlayerAction)
+		return NewDamageToCreatureAction(damage.ActionSource(), r.subject.id, damage.Amount(), damage.IsCombatDamage()).withDamageSource(damage.DamageSource())
+	}
+	damage := action.(*DamageToCreatureAction)
 	return NewDamageToPlayerAction(damage.ActionSource(), r.player, damage.Amount(), damage.IsCombatDamage()).withDamageSource(damage.DamageSource())
 }
+
 func (r *selectedSourceRedirectReplacement) IsActive(GameReader) bool { return !r.consumed }
 func (r *selectedSourceRedirectReplacement) Clone() ReplacementEffect {
 	c := *r

@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [RedirectNextDamageToPermanentFromSelectedSource] saves one exact source,
+// player and destination visit until use or cleanup. The destination must be
+// a present creature or planeswalker at damage time. Later target restrictions
+// do not apply. Phasing suspends the rule; return cannot restore the old visit.
+// Selected permanent spells continue to their permanent. Shared replacements
+// redirect all matching simultaneous packets, then consume the rule once.
+// Source information, combat status, lifelink and damage events remain intact.
+// RON accepts the chosen-source next-damage event for Player(playerRef) with
+// one DealToCreatureOrPlaneswalkerInstead(permanentRef) in resolving bodies.
+// Entry and draw replacement bodies reject. The corrected complete Nova Pentacle
+// record has paid-cast, opponent-target and resolution-source choice evidence.
+//
 // RON accepts ReplaceWouldDiscard with AnEffectWouldCausePlayerToDiscardACard(You)
 // and one MayAction(DiscardItToTopOfLibraryInstead) on battlefield permanents.
 // [DiscardToLibraryReplacement] supplies the live source and current controller.

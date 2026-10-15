@@ -18582,3 +18582,32 @@ source departure, current life totals at execution and clone isolation.
 `Invalid` and `Collection` cover declaration rejection,
 typed inventory, native definition validation and atomic registry rejection.
 No RON source correction or vocabulary snapshot change was required.
+
+### Selected-source damage from a player to a permanent
+
+RON accepts this shape in an ordinary resolving body:
+
+```text
+CreateFutureReplaceWouldDealDamage(
+  NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+    TheChosenDamageSource, Player(<player reference>)),
+  [DealToCreatureOrPlaneswalkerInstead(<permanent reference>)])
+```
+
+`compileSelectedPermanentRedirect(Node, scope) (effectFactory, error)` requires
+one prior lexical source choice, typed player and permanent references, and one
+operation. Entry and draw replacement bodies reject this shape. Existing
+instance bindings supply fresh choices for each factory; pending copies make
+separate resolution choices. The native API is
+`mage.RedirectNextDamageToPermanentFromSelectedSource(source DamageSourceRef,
+player PlayerRef, destination PermanentRef, filter DamageSourceFilter)
+ResolvingEffect`.
+
+The saved player and exact destination visit persist through source departure
+and control changes. At damage time the destination must be present and a
+creature or planeswalker. Later target restrictions do not apply. Shared selected
+source services retain filters, spell-to-permanent continuity, waiting source
+references, simultaneous packets, replacement order, clone state and cleanup.
+The complete Nova Pentacle LEG record now includes
+`ChooseADamageSource(AnyDamageSource)` before this instruction, as its WotC
+ruling requires. Target selection remains the opponent's announcement choice.

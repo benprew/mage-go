@@ -24559,3 +24559,48 @@ Evidence: native `TestLifeExchangeTotals`, `Restrictions`,
 `RestrictionLifetimeAndRollback`, `ReplacedLossAndGain` and
 `DelayedSourceIdentity` and `ReplacementOrder`. RON mappings are in the DSL
 reference and ledger.
+
+## Selected-source damage redirection to a permanent (RON migration)
+
+`RedirectNextDamageToPermanentFromSelectedSource(source DamageSourceRef,
+player PlayerRef, destination PermanentRef, filter DamageSourceFilter)
+ResolvingEffect` saves an exact chosen source, player and destination visit.
+It shares `selectedSourceRedirectInstallation` and
+`selectedSourceRedirectReplacement` with the existing reverse direction.
+Definition validation requires typed references and a bound source producer.
+No new replacement pipeline or source enumeration service is added.
+
+CR 609.7a–b and 614.3–9 govern source selection, current source filters, duration,
+consumption and destination checks. Positive damage to the saved player from
+the chosen source redirects to the saved creature or planeswalker. The
+permanent must still have its original visit and be present when damage occurs.
+Phasing suspends applicability and a phase cycle restores it; departure and
+return cannot restore it (CR 400.7, 702.26b). Control changes keep both saved
+recipients. Later shroud or other target restrictions do not affect redirection.
+A mismatched source, recipient or filter leaves the rule unused.
+
+One simultaneous event redirects all matching packets and consumes the rule
+once. Later damage passes normally. Cleanup removes an unused rule. The shared
+pipeline retains source attribution, combat status, lifelink, damage history,
+actual results and damage events. Affected players choose replacement order;
+prevention and redirection recheck their recipients after each choice (CR 616.1).
+Selected permanent spells continue to the exact permanent they become. Waiting
+reference queries include the destination and source without consuming the rule.
+Clones retain separate consumption and source snapshots.
+
+Native evidence: `TestSelectedPermanentRedirectIdentity`, `Rechecks`,
+`SpellContinuity`, `Invalid` and `Boundaries`. Existing
+`TestSelectedSourceRedirect*` retains reverse-direction evidence. RON evidence:
+`TestRONSelectedPermanentRedirectRecord` uses the complete corrected LEG record,
+failed and paid casting/activation, opponent target choice, resolution source
+choice and departure. `Legality` covers illegal resolution targets, later shroud,
+phasing, return, control changes and copied abilities. `Instances` covers two
+factory instances, distinct players and cloned state. `Invalid` rejects malformed
+operations, unbound reads and entry/draw replacement contexts.
+
+Nova Pentacle's local Oracle text and all four local WotC rulings were checked.
+The 2009-10-01 ruling requires the source choice as the ability resolves; the
+source lacked that producer. Its sole record now includes the existing generic
+choice instruction. The target remains a creature chosen by the opponent at
+announcement, and need not be controlled by that opponent. There are no local
+Scryfall notes. This establishes full-card RON gameplay for one name/record.
