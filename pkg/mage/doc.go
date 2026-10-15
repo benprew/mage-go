@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [GraveyardCreatureEnchantTarget] declares a graveyard creature enchant rule.
+// Aura spells save an exact target visit. Noncast entry chooses a graveyard host.
+// Copy and entry replacements run before that choice. Attachment precedes entry
+// observations. No legal host keeps a noncast Aura in its zone. Batch entry
+// checks hosts again after choices. State actions remove illegal attachments.
+// Phasing preserves identity and suspends state checks. Clones stay separate.
+// [EnchantedGraveyardCard] reads that visit through shared attachment identity.
+// Source departure supplies LKI. Returned cards and Auras cannot replace visits.
+// RON accepts EnchantGraveyardCard(IsCardtype(Creature), AnyPlayer).
+// Resolving hand and battlefield returns can read EnchantedGraveyardCard.
+// Entry and draw replacement bodies require separate adapters. Animate Dead's
+// complete record still needs linked enchant grants and trigger contracts.
+//
 // [PutExiledCardOntoBattlefieldOrElse] returns one exact exile visit under its
 // owner's control and selects a branch from actual entry. Failed entry clears
 // the typed result. Only the success body receives the new entrant binding.
@@ -42,7 +55,7 @@
 // RON accepts LosesAbility(Enchant(IsCardtype(Creature))) in ordinary resolving
 // CreatePermanentLayerEffect lists, alone or with supported acquired upkeep grants.
 // Entry and draw replacements reject. Takklemaggot's complete record executes.
-// Graveyard enchant declarations and replacement enchant grants need adapters.
+// Replacement enchant grants still need adapters.
 //
 // [TriggeredAbilityForPlayerModification] adds a typed event-player limit.
 // [Until] saves the player and exact recipient when the grant starts.

@@ -49,6 +49,8 @@ type entryCopyKey struct {
 }
 
 type battlefieldEntryContext struct {
+	auraSpell       bool
+	graveyardHost   capturedCard
 	entry           battlefieldEntryOptions
 	actor           uuid.UUID
 	announcedX      int

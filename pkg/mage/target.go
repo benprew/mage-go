@@ -1277,6 +1277,7 @@ func TargetAnyNumberOfCardsInYourGraveyard(filters ...CardFilter) Target {
 // (e.g. Reanimate, "Put target creature card from a graveyard onto the
 // battlefield under your control").
 type AnyGraveyardCardTarget struct {
+	graveyardEnchant bool
 	BaseTarget
 	Filters []CardFilter
 }

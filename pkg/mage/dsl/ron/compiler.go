@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	graveyardEnchant     bool
 	counterSnapshot      *counterSnapshotPlan
 	lifeSubject          *lifeSubjectPlan
 	permanentLoop        *permanentLoopPlan
@@ -382,6 +383,11 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		for _, rule := range rules {
+			if rule.Name == "EnchantGraveyardCard" {
+				ctx.graveyardEnchant = true
+			}
+		}
 		mixedStaticEventSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && mixedStaticEventSpellTextRules(rules)
 		manaTapSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && manaTapTextRules(rules)
 		upkeepObjectText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && upkeepObjectTextRules(rules)
@@ -505,7 +511,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 			if rule.Name == "SpellActions" {
 				spellCount++
 			}
-			if rule.Name == "EnchantPermanent" {
+			if rule.Name == "EnchantPermanent" || rule.Name == "EnchantGraveyardCard" {
 				enchantCount++
 			}
 			option, err := compileRule(rule, ctx)
@@ -816,6 +822,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		}, nil
 	case "Activated", "ActivatedWithModifiers":
 		return compileActivatedRule(n, ctx)
+	case "EnchantGraveyardCard":
+		return compileEnchantGraveyardCard(n, ctx)
 	case "EnchantPermanent":
 		return compileEnchantPermanent(n, ctx)
 	case "Protection":

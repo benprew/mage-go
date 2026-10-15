@@ -1,5 +1,49 @@
 # Engine rules contracts
 
+## Graveyard creature enchant declarations
+
+`GraveyardCreatureEnchantTarget() Target` declares enchant creature card in a
+graveyard. Use it as the sole cast target of an Aura enchantment.
+`EnchantedGraveyardCard(aura PermanentRef) CardRef` reads the exact enchanted
+graveyard visit. A returned card cannot replace that visit. The shared attachment
+identity service supplies the source's last attachment after departure and keeps
+a returned Aura separate. Copies and game clones retain independent entry state.
+
+Aura spells target a creature card in either player's graveyard. Existing target
+identity and legality checks apply before payment and again at resolution.
+Battlefield-only shroud and protection do not restrict a graveyard card.
+The saved spell target supplies attachment; resolution does not choose another
+host. Noncast entry uses the entry controller's required graveyard choice after
+copy and entry replacement processing. No legal host prevents entry and keeps
+a hand, graveyard or exile card in that zone. Batch entry rechecks saved hosts
+after other entry choices. Attachment is set before battlefield observations.
+
+State-based actions put an Aura with an absent or illegal graveyard host into
+its owner's graveyard. A phased Aura waits until it phases in. A phase cycle
+preserves its attachment identity. Permanent attachment operations cannot move
+this fixed graveyard enchant declaration onto a battlefield host.
+The contract follows CR 303.4a–g, 303.4j, 303.4m, 400.7, 702.5a and 704.5m.
+The five local Animate Dead rulings are WotC rulings, dated 2016-06-08.
+
+RON accepts the top-level rule
+`EnchantGraveyardCard(IsCardtype(Creature), AnyPlayer)` on Aura enchantments.
+Both the type and player are strict symbols. Exactly one enchant declaration is
+required; mixed or duplicate declarations reject. Resolving hand and creature
+battlefield return actions can read the strict `EnchantedGraveyardCard` symbol
+in that Aura's scope. Existing single-entry controller and result plans apply.
+Other card-reference consumers and entry/draw replacement bodies reject this
+reference. Source graveyard-enchant removal also rejects until its separate
+layer contract is available. No source spelling or runtime card-name policy is stored in mage.
+
+`TestGraveyardEnchant*` covers native casting, payment and stale-target rejection,
+noncast hand/graveyard/exile entry, entry observations, source LKI, phase cycles,
+independent Auras, waiting source queries, batch choice rechecks and clones.
+`TestRONGraveyardEnchant*` covers all six Animate Dead enchant clauses, RON
+gameplay through hand and battlefield returns, invalid declarations, reference
+scope, removal boundary and inventory roles. Complete Animate Dead still rejects: its linked
+enchant grant, source-presence condition and departure-player capture need
+separate contracts. These tests establish clause coverage, not full-card play.
+
 ## Counter snapshots and entry restoration
 
 `BindCounterSnapshot(name string) *CounterSnapshotBinding` declares independent

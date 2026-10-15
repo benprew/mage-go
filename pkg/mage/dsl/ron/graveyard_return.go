@@ -16,6 +16,7 @@ type cardTargetPlan struct {
 type deathCardPlan struct{ name string }
 
 type cardReferencePlan struct {
+	enchanted  bool
 	sourceZone *sourceZonePlan
 	exile      *groupedExilePlan
 	exileGroup int
@@ -49,6 +50,9 @@ func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
 }
 
 func (p cardReferencePlan) build(bindings instanceBindings) mage.CardRef {
+	if p.enchanted {
+		return mage.EnchantedGraveyardCard(mage.This)
+	}
 	if p.sourceZone != nil {
 		return mage.FromCard(bindings.sourceZones[p.sourceZone])
 	}
@@ -142,7 +146,16 @@ func compileGraveyardReturnInto(n Node, ctx scope, result *returnedPermanentPlan
 	if err := arity(n, count); err != nil {
 		return nil, err
 	}
-	card, err := compileCardRef(n.Args[0], ctx)
+	var card cardReferencePlan
+	var err error
+	if n.Args[0].Name == "EnchantedGraveyardCard" {
+		if n.Args[0].Kind != Symbol || !ctx.graveyardEnchant || !ctx.resolving || ctx.drawReplacementBody {
+			return nil, problem(n.Args[0], "enchanted graveyard card requires a resolving graveyard Aura scope")
+		}
+		card.enchanted = true
+	} else {
+		card, err = compileCardRef(n.Args[0], ctx)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +165,7 @@ func compileGraveyardReturnInto(n Node, ctx scope, result *returnedPermanentPlan
 	if count == 1 {
 		return func(bindings instanceBindings) mage.Effect { return mage.ReturnCardToHand(card.build(bindings)) }, nil
 	}
-	if card.target == nil || !card.target.creatureOnly {
+	if !card.enchanted && (card.target == nil || !card.target.creatureOnly) {
 		return nil, problem(n, "battlefield return requires a creature card target")
 	}
 	entries, err := list(n.Args[1])

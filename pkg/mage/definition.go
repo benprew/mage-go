@@ -405,6 +405,9 @@ func InspectDefinition(value any) DefinitionMetadata {
 // ValidateCardDefinition checks the expression families that have DSL adapters.
 func ValidateCardDefinition(name string, card Card) error {
 	if !nilDefinition(card) {
+		if graveyardEnchantTarget(card) != nil && (!card.HasType(TypeEnchantment) || !card.HasSubType("Aura") || len(card.CastTargets()) != 1) {
+			return fmt.Errorf("%s: graveyard enchant requires one Aura enchant declaration", name)
+		}
 		entrySacrifices := 0
 		entryLifePayments := 0
 		for _, ability := range card.Abilities() {

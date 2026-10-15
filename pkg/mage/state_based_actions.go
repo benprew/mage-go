@@ -86,6 +86,13 @@ func (g *Game) checkStateBasedActions() bool {
 			if p.PhasedOut {
 				continue
 			}
+			if p.HasSubType("Aura") && p.enchantedCard.id != uuid.Nil {
+				if _, legal := g.graveyardEnchantHost(p); !legal {
+					aurasToDrop = append(aurasToDrop, p)
+					actions = true
+				}
+				continue
+			}
 			if p.HasSubType("Aura") && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
 				if host == nil || host.incarnationID != p.attachedIncarnation {

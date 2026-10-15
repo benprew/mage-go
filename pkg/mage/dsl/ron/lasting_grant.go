@@ -12,6 +12,9 @@ func compileLastingAbilityGrants(n Node, ctx scope, subject permanentReferencePl
 	var builds []effectFactory
 	for _, part := range parts {
 		if part.Name == "LosesAbility" {
+			if ctx.graveyardEnchant && subject.kind == permanentSource {
+				return nil, unsupported(part, "graveyard enchant removal")
+			}
 			build, err := compileCreatureEnchantRemoval(part, subject)
 			if err != nil {
 				return nil, err

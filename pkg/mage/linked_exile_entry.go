@@ -143,6 +143,11 @@ func (e *exileEntryEffect) apply(ctx *EffectContext) bool {
 			failedVisits[entry.subject.id] = entry.subject
 			continue
 		}
+		if entry.permanent.enchantedCard.id != uuid.Nil {
+			if _, legal := g.graveyardEnchantHost(entry.permanent); !legal {
+				continue
+			}
+		}
 		if entry.host.id != uuid.Nil {
 			host := g.FindPermanent(entry.host.id)
 			if host == nil || host.PhasedOut || host.incarnationID != entry.host.incarnation || !g.canAttachEntering(entry.permanent, host) {
@@ -202,6 +207,10 @@ func (e *exileEntryEffect) apply(ctx *EffectContext) bool {
 }
 
 func (g *Game) chooseEntryAuraHost(perm *Permanent, owner Player) (capturedPermanent, bool) {
+	if perm.enchantedCard.id != uuid.Nil {
+		_, legal := g.graveyardEnchantHost(perm)
+		return capturedPermanent{}, legal
+	}
 	if !perm.HasSubType("Aura") {
 		return capturedPermanent{}, true
 	}

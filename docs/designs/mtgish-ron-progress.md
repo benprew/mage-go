@@ -8,15 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **924 accepted / 62 rejected names**
 (986 total), **2,308 compiled / 137 rejected records** (2,445 total).
-The latest slice is **SINGLE-EXILE-ENTRY-CONTINUATION**.
-RON lowers required single grouped exile entry with owner control, optional
-entry tapped status and saved counters, and an adjacent success/failure branch.
-Mage reuses shared exile entry and saves the exact entrant before observations.
-Only success receives the new entrant binding. Failed entry clears the result.
-Tawnos's Coffin now compiles and has complete-record RON gameplay coverage.
-Estimated and actual gain: one complete name / record. No accepted record regressed.
-No RON source changed. Animate Dead still needs graveyard Aura contracts;
-Vesuvan Doppelganger still needs copiable ability grants and recursive copies.
+The latest slice is **GRAVEYARD-CREATURE-ENCHANT**.
+RON lowers the fixed creature-card/any-graveyard enchant declaration and scoped
+hand/battlefield reads of EnchantedGraveyardCard. Mage saves exact graveyard
+attachments before entry observations and reuses attachment LKI after departure.
+Casting, noncast entry, state checks, phasing, copies and clones have native tests.
+All six Animate Dead enchant clauses validate; clause gameplay is tested in RON.
+Estimated and actual complete-card gain: zero names / records. Complete Animate
+Dead still needs linked enchant grants, presence and departure-player adapters.
+No RON source changed. Other accepted records retain their existing coverage.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and native startup.
 
@@ -24,15 +24,17 @@ DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Graveyard Aura attachment:** Animate Dead needs exact graveyard hosts,
-   entry linkage, linked enchant grants, a presence condition and departure-player
-   capture. One prerequisite estimates zero immediate gains; eventual one name /
-   six records. Reassess shared uses before selecting.
+1. **Linked enchant grants:** Animate Dead needs a copiable/lasting enchant rule
+   limited to the exact creature its source returned, plus linkage during entry.
+   This prerequisite estimates zero immediate gains; eventual one name / six
+   records. Source-presence and departure-player adapters also remain.
 2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
    recursive resolving copies and ThisAbility retention. One prerequisite
    estimates zero immediate gains; eventual one name / six records.
 3. **Counter-bound duration:** Cyclopean Tomb needs exact source/counter lifetime
-   and delayed upkeep removal. Inspect all nested forms before estimating unlocks.
+   and delayed upkeep removal. One duration prerequisite estimates zero immediate
+   gains; eventual one name / five records with counter history and repeated
+   removal still needed.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -20483,3 +20485,173 @@ interactive signing-key limitation. Repository configuration is unchanged.
    procedure and shared duration consumers before estimating a full-card gain.
 
 This run stops after SINGLE-EXILE-ENTRY-CONTINUATION.
+
+
+## 2026-10-15 — GRAVEYARD-CREATURE-ENCHANT
+
+### Fresh evidence and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh baseline loader output exited
+1 with valid JSON: 2,308 compiled / 137 rejected records; 924 accepted / 62
+rejected names, from 2,445 records / 986 unique names. Collection rejection was
+an expected compiler coverage result, not a build failure.
+
+Read the design, status block and latest ledger entry, engine API and relevant
+attachment/entry/rules-contract sections. Read the complete Animate Dead records
+in LEA, LEB, 2ED, 3ED, CED and CEI, plus the complete compared LEA records for
+Vesuvan Doppelganger and Cyclopean Tomb. Targeted vocabulary inspection found six
+EnchantGraveyardCard declarations and six EnchantedGraveyardCard symbols, all
+Animate Dead; the counter-bound duration has five Cyclopean Tomb occurrences.
+`go run ./cmd/fetchset -check -card "Animate Dead"` passed. Read all five local
+WotC rulings dated 2016-06-08; none are Scryfall notes. Rules used: CR 303.4a–g,
+303.4j/m, 400.7, 702.5a and 704.5m. No source correction was needed.
+
+| Candidate | Unique affected names | Estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Exact graveyard Aura attachment | Animate Dead | 0 now; eventual 1 / 6 records | Linked enchant grant, source-presence condition and departure-controller capture remain; supplies cross-zone host identity and scoped graveyard return | Medium, one engine/adapter slice with entry, legality, LKI and clone tests |
+| Copiable ability grants | Vesuvan Doppelganger | 0 now; eventual 1 / 6 records | Recursive resolving copies and ThisAbility identity remain; enables entry and later copy-grant retention | High; generic grant factories and recursive binding contract |
+| Counter-bound duration | Cyclopean Tomb | 0 now; eventual 1 / 5 records | Counter-placement/removal history and persistent upkeep removal remain; enables lasting layer effects bounded by exact counter state | Medium for duration alone; multiple slices for complete record |
+
+Selected ranked candidate 1 as the required attachment prerequisite. Its exact
+host/visit service was missing; shared graveyard targeting, card movement,
+attachment identity/LKI, entry preparation and state-action batching already
+existed. All three candidates expose one unique blocked name and zero immediate
+unlocks at this bounded size. Candidate 1 follows the current dependency ranking
+and establishes the missing entry contract before linked enchant grants. No
+multi-card unlock is inferred from reprint frequency. This is explicitly a
+single-card prerequisite, not a claim of six separate card implementations.
+The contract and acceptance cases were stated before production edits.
+
+### Signatures, contexts and reuse boundary
+
+New native APIs:
+
+- `GraveyardCreatureEnchantTarget() Target`
+- `EnchantedGraveyardCard(aura PermanentRef) CardRef`
+
+The target declares the fixed enchant-creature-card-in-a-graveyard rule. Its
+private marker distinguishes it from ordinary graveyard spell targets. Existing
+unmarked native callers keep their prior behavior. Definition validation requires
+one cast target on an Aura enchantment; nil/unbound reference declarations reject.
+
+Aura spells use the shared exact target visit, payment and resolution legality.
+A stale target fails rather than choosing another card. Noncast entry makes one
+required controller choice among either player's matching graveyard cards, after
+copy and entry operations. No legal host keeps an uncast Aura in its original
+hand, graveyard or exile zone. Saved host visits are checked again after batch
+entry choices. Entry sets attachment before observations. No battlefield-only
+shroud/protection is applied to a graveyard card. Fixed graveyard enchant cannot
+attach to a battlefield permanent. Shared state-action batching moves illegal
+Auras to their owners' graveyards. Phasing preserves visits and suspends checks.
+
+The permanent stores its exact enchanted card visit; shared departure attachment
+history supplies source LKI. A returned Aura or host cannot replace the saved
+visit. The typed card reference reads identity separately from current attachment
+legality. Hand/battlefield return effects expose their source reads to waiting
+queries. Existing entry, target, payment, card movement and clone services remain
+the execution owners. No card-name branches, Go fallbacks, partial registry,
+global result slot or declaration panic was added.
+
+RON accepts exactly
+`EnchantGraveyardCard(IsCardtype(Creature), AnyPlayer)` as one top-level enchant
+rule on an Aura enchantment. Creature and AnyPlayer are strict symbols. Duplicate
+and mixed enchant declarations reject. In ordinary resolving bodies of that Aura,
+`PutGraveyardCardIntoHand(EnchantedGraveyardCard)` and
+`PutGraveyardCardOntoBattlefield(EnchantedGraveyardCard, [entry])` lower through the
+existing return service. The latter accepts existing EntersNormally or one
+EntersUnderPlayersControl(playerRef) entry. The strict card symbol is scoped to
+these return adapters; other card consumers and entry/draw replacement bodies
+remain unsupported. Existing returned-permanent plans remain available without
+new mutable compiler state. Inventory gives the enchant rule's operands card
+filter and player filter roles. Source spelling stays in ron.
+
+### Failing-first evidence and card-to-test mapping
+
+A final boundary test first failed because the permanent-only removal adapter
+accepted a source graveyard-enchant removal. An explicit scope guard now rejects
+that missing contract.
+
+Native tests first failed compilation at the two missing APIs, after a fixture
+helper name was corrected. The RON tests independently failed at unsupported
+EnchantGraveyardCard. The initial return fixture was corrected to declare Aura
+metadata. A later batch test failed at a stale earlier host after another entry
+choice; final entry rechecks fix that failure without weakening the test.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Animate Dead enchant clauses, all six records | TestRONGraveyardEnchantClause, Reprints | Real unchanged enchant clause compiles, validates and casts on an opponent's graveyard creature; complete records still reject |
+| Scoped RON host reads | TestRONGraveyardEnchantRead, BattlefieldRead | Entry trigger reads host, returns to owner's hand or resolving controller's battlefield, checks Aura legality; pending clone retains identity |
+| Syntax, context and inventory | TestRONGraveyardEnchantInvalid, ReferenceScope, RemovalBoundary, Inventory | Malformed/unsupported filters and players, duplicate/mixed enchant rules, absent Aura declaration, strict symbol scope and typed roles |
+| Native entry and visits | TestGraveyardEnchantEntry, Legality | Either graveyard, cast/noncast entry, shroud/protection in graveyard, unpaid/illegal cast rollback, stale visit rejection and pending clone isolation |
+| Source lifecycle | TestGraveyardEnchantPhaseAndLKI, Waiting | Exact departure attachment, returned-source separation, phase cycle, phase-in state check and repeated pure waiting-source queries |
+| Entry timing and independent instances | TestGraveyardEnchantEntryObservations, CopyEntry | Attachment before observations, independent Auras, copied enchant declaration with a fresh host choice |
+| Noncast entry and simultaneous choices | TestGraveyardEnchantUntargetedZones, BatchChoiceRecheck | Hand/graveyard/exile entry, no-host zone retention, later choice invalidates earlier visit without moving blocked Aura |
+| Native declarations | TestGraveyardEnchantDeclarations | Non-Aura enchant target and nil Aura reference reject |
+
+No complete-card gameplay coverage is added. The clause coverage and synthetic
+RON/native contracts above supply an explicit prerequisite for Animate Dead.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONGraveyardEnchant'
+  -count=1` and `go test ./pkg/mage -run '^TestGraveyardEnchant' -count=1`:
+  pass. The copy-entry and removal-boundary focused checks also pass.
+- Final `make build` and `go vet ./...`: pass.
+- Final `go test ./pkg/mage/... -short -count=1` and `make test`: pass.
+- An initial short run exposed a regression in malformed-definition validation:
+  eager CastTargets traversal reached a nil ActionDefinition. Reading explicit
+  targets lets the existing validation report the error. The existing
+  TestTextStaticActivationSpellDeclaration now passes unchanged.
+- An initial full run exposed a compatibility regression for unmarked native
+  graveyard targets in existing TestAnimateDead scenarios. The explicit new
+  marker now selects the new rule, preserving prior unmarked target behavior.
+  `go test ./cards/limited -run '^TestAnimateDead' -count=1` passes unchanged.
+  Focused, build, vet, short and full checks were repeated after the final guard.
+- `make lint`: pass, 0 issues. The first pass changed import grouping only.
+  The final pass changed none of the 20 changed/new Go files, verified by SHA-256
+  before/after comparison. No lint suppression was added.
+- Final `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON;
+  **2,308 compiled / 137 rejected records**, **924 accepted / 62 rejected names**
+  from 2,445 records / 986 names. A parsed comparison asserts identical rejection
+  keys and compilation counts. Only Animate Dead's six diagnostics changed, from
+  unsupported EnchantGraveyardCard to unsupported entry intervening-if condition
+  (EnteringPermanentPassesFilter). Every other diagnostic is identical. No
+  accepted record regressed, and the collection still rejects atomically.
+
+Actual complete-card gain is **0 names / 0 records**, matching the estimate.
+Animate Dead gains clause-level RON evidence in all six records and synthetic
+host-return gameplay. This is separate from complete-card gameplay coverage,
+which does not increase. The first-error movement does not count as an unlock.
+
+### Remaining work and ranked next candidates
+
+1. Linked enchant grant and exact returned-host identity for Animate Dead. Add
+one reusable lasting enchant contract; do not accept the complete record until
+presence and departure-controller capture also execute. Estimate zero immediate
+gains for this prerequisite, eventual one name / six records.
+2. Copiable ability grants for Vesuvan Doppelganger, with explicit ThisAbility
+identity and recursive resolving copies as dependent contracts. Estimate zero
+immediate gains, eventual one name / six records.
+3. Counter-bound lifetime for Cyclopean Tomb, followed by counter-source history
+and persistent upkeep removal. Estimate zero immediate gains for duration alone,
+eventual one name / five records.
+
+No RON source changed, so the vocabulary snapshot does not need refresh. No source
+data defect or environmental failure was found. Runtime cutover, full collection
+gameplay, Go-card/generator removal and DSL cleanup remain gated. Existing callers
+and Go definitions remain. No DSL function removal was attempted.
+
+Changed files: new native and RON `graveyard_enchant.go` and
+`graveyard_enchant_test.go`; native `card.go`, `composable_actions.go`,
+`definition.go`, `doc.go`, `entry_copy.go`, `game.go`, `graveyard_batch_entry.go`,
+`linked_exile_entry.go`, `optional_hand_entry.go`, `selected_source_prevention.go`,
+`state_based_actions.go`, `target.go`; RON `compiler.go`, `graveyard_return.go`,
+`inventory.go`, `lasting_grant.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+Commit title: `feat(ron): implement graveyard creature enchant`.
+The commit invocation disables signing under the previously recorded interactive
+signing-key limitation. Repository configuration is unchanged.
+This run stops after GRAVEYARD-CREATURE-ENCHANT.

@@ -74,7 +74,7 @@ func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) (boo
 		return false, nil
 	}
 	var host *Permanent
-	if card.HasSubType("Aura") {
+	if card.HasSubType("Aura") && graveyardEnchantTarget(card) == nil {
 		source := NewPermanent(card, player.PlayerID())
 		var hosts []*Permanent
 		for _, p := range g.FilterBattlefield(AnyPermanent) {

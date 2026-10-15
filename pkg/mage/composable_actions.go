@@ -2887,7 +2887,7 @@ func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *returnCardToBattlefieldEffect) refersToSourcePermanent() bool {
-	return playerRefReadsSourcePermanent(e.controller) || permanentRefReadsSourcePermanent(e.entry.host)
+	return enchantedCardReadsSource(e.card) || playerRefReadsSourcePermanent(e.controller) || permanentRefReadsSourcePermanent(e.entry.host)
 }
 func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}

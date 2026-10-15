@@ -87,6 +87,11 @@ func (g *Game) enterSavedGraveyardCards(ctx *EffectContext, byOwner map[uuid.UUI
 		if owner == nil || g.graveyardEntryCard(owner, entry.subject) == nil || g.isLandEntryProhibited(entry.permanent.HasType(core.TypeLand)) {
 			continue
 		}
+		if entry.permanent.enchantedCard.id != uuid.Nil {
+			if _, legal := g.graveyardEnchantHost(entry.permanent); !legal {
+				continue
+			}
+		}
 		if entry.host.id != uuid.Nil {
 			host := g.FindPermanent(entry.host.id)
 			if host == nil || host.PhasedOut || host.incarnationID != entry.host.incarnation || !g.canAttachEntering(entry.permanent, host) {

@@ -594,6 +594,9 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 		}
 	}
 
+	if !g.prepareGraveyardEnchant(perm, context) {
+		return nil, nil
+	}
 	prepared = true
 	return perm, nil
 }
@@ -1701,6 +1704,7 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 		}
 	}
 
+	src.enchantedCard = capturedCard{}
 	src.AttachedTo = targetID
 	src.attachedIncarnation = target.incarnationID
 	target.Attachments = append(target.Attachments, sourceID)
@@ -1762,6 +1766,8 @@ func auraHostIsLegalForController(auraCard Card, host *Permanent, g *Game, contr
 		}
 		t = UnwrapTarget(t)
 		switch tt := t.(type) {
+		case *AnyGraveyardCardTarget:
+			return !tt.graveyardEnchant
 		case *CreatureTarget:
 			if !host.HasType(TypeCreature) {
 				continue

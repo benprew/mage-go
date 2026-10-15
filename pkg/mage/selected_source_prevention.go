@@ -1,6 +1,10 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
+)
 
 // PreventNextDamageFromSelectedSource prevents one source event this turn.
 // A shield on a permanent spell also applies to the permanent it becomes.
@@ -27,14 +31,21 @@ func (g *Game) continueSpellDamageReplacements(spell DamageSource, permanent *Pe
 }
 
 func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, colorsSpent int, hostID uuid.UUID) *Permanent {
-	permanent := g.prepareBattlefieldEntryWithContext(card, obj.Controller, obj.ColorOverride, battlefieldEntryContext{announcedX: obj.XValue, castColorsSpent: colorsSpent}, false)
+	context := battlefieldEntryContext{announcedX: obj.XValue, castColorsSpent: colorsSpent, auraSpell: true}
+	if hostID != uuid.Nil && obj.TargetZones[hostID] == ZoneGraveyard {
+		context.graveyardHost = capturedCard{id: hostID, visit: obj.targetIncarnations[hostID], zone: ZoneGraveyard}
+	}
+	permanent := g.prepareBattlefieldEntryWithContext(card, obj.Controller, obj.ColorOverride, context, false)
 	if permanent == nil {
+		if graveyardEnchantTarget(card) != nil && g.graveyardVisit(card.ID()) == uuid.Nil {
+			g.cleanupSpell(obj)
+		}
 		return nil
 	}
 	g.registerBattlefieldEntry(permanent, obj.ColorOverride, obj.SourceID)
 	g.continueSpellDamageReplacements(damageSourceFromSpellObject(obj), permanent)
 	g.continueSpellExileReplacement(damageSourceFromSpellObject(obj), permanent)
-	if hostID != uuid.Nil {
+	if hostID != uuid.Nil && permanent.enchantedCard.id == uuid.Nil {
 		g.Attach(permanent.ID(), hostID)
 	}
 	g.completeBattlefieldEntry(permanent, obj.Controller, obj.Controller, colorsSpent)

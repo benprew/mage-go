@@ -339,6 +339,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "entry_prohibition_card_filter"
 			}
+		case "EnchantGraveyardCard":
+			if len(n.Args) == 2 {
+				return []string{"card_filter", "player_filter"}[index]
+			}
 		case "EnchantPermanent":
 			if len(n.Args) == 1 {
 				return "permanent_filter"
