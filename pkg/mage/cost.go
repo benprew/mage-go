@@ -216,7 +216,7 @@ func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	if p == nil {
 		return ErrSourceNotFound
 	}
-	if !g.removeCountersFrom(p, c.ct, c.amount, g.counterPlacementSource(sourceID)) {
+	if !g.removeCountersFrom(p, c.ct, c.amount, g.counterPlacementSource(sourceID), controller) {
 		return fmt.Errorf("not enough %s counters", c.ct)
 	}
 	return nil
@@ -316,7 +316,7 @@ func (c *removeXCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error
 	if p == nil {
 		return ErrSourceNotFound
 	}
-	if !g.removeCountersFrom(p, c.ct, x, g.counterPlacementSource(sourceID)) {
+	if !g.removeCountersFrom(p, c.ct, x, g.counterPlacementSource(sourceID), controller) {
 		return fmt.Errorf("not enough %s counters to remove %d", c.ct, x)
 	}
 	return nil

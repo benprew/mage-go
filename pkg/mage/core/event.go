@@ -48,6 +48,7 @@ const (
 	EvtBlockerGroup           // SourceID is the creature. RelatedIDs are the new creatures that it blocks or that block it. Flag is true when the source blocks.
 	EvtAttacksUnblocked       // SourceID is an attacker that is unblocked after blockers are declared. TargetID is its defending player.
 	EvtCombatPair             // SourceID is one creature in a new pair; TargetID is the other. Flag is true when SourceID blocks.
+	EvtCountersRemoved
 )
 
 // GameEvent carries data about a game event.
@@ -76,6 +77,8 @@ type GameEvent struct {
 	DiscardedCardVisit uuid.UUID
 	PlayerID           uuid.UUID
 	Amount             int
+	CounterType        CounterType
+	CountersRemaining  int
 	Flag               bool // context-dependent
 	FromZone           Zone
 	ToZone             Zone

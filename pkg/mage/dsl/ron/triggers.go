@@ -20,6 +20,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent":
+		return compileLastCounterTrigger(trigger, n.Args[1], ctx)
 	case "WhenAnyNumberOfPermanentsAreOnTheBattlefield":
 		return compileStatePermanentSetTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentLeavesTheBattlefield":

@@ -110,6 +110,7 @@ type scope struct {
 	damageTargets     *damageTargetsPlan
 	castEvent         *castEventPlan
 	drawEvent         *drawEventPlan
+	lastCounterEvent  *lastCounterEventPlan
 	stepEvent         *stepEventPlan
 	permanentEvent    *permanentEventPlan
 	unblockedCreature *permanentEventPlan

@@ -17993,3 +17993,30 @@ RON `TestRONCopyUpkeepGameplay`, `Targets`, `Lifecycle`, `Invalid` and
 resolving copy action. Clause tests replace only that unsupported MayAction with
 a target tap to exercise their entry copy, retained color, upkeep grant and target
 binding together. This is prerequisite evidence, not complete-card gameplay.
+
+## Attributed last-counter removal
+
+Use `ControllerRemovesLastCounter(counter core.CounterType, actor *PlayerBinding)
+EventPattern` with `WhenEvent` for a battlefield source. It detects a positive
+actual removal that leaves no counters of that kind on the exact source visit.
+The actor must be its controller after post-removal layers apply. The binding
+saves the effect controller or cost payer at event time. Pending abilities keep
+that player through source departure and control changes. Resolving removal and
+fixed, X and chosen counter payments use the shared service. Zero removal,
+failed payments and zone departure supply no removal event.
+
+RON accepts:
+
+```text
+TriggerA(WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent(
+  SinglePlayer(You), InterventionCounter, SinglePermanent(ThisPermanent)),
+  ActionList([PlayerAction(Trigger_ThatPlayer, GainLife(Integer(1)))]))
+```
+
+Other supported permanent-counter symbols use the same contract. The event body
+has a local typed player binding; it cannot escape into another rule. Other
+player/permanent filters, entry or replacement contexts remain unsupported.
+Divine Intervention still requires `DrawTheGame`; its event clause has gameplay
+evidence in `TestRONLastCounterEventDivineClause`. Native and RON instance,
+identity, timing, clone, payment and declaration evidence is listed in
+`docs/engine-rules-contracts.md` under Attributed last-counter removal.

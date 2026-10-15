@@ -88,7 +88,7 @@ func PermanentsWithoutCountersRemovedBy(source PermanentRef, counter core.Counte
 	return counterHistoryPermanents{source: source, counter: counter, candidates: candidates, withoutRemoval: true}
 }
 
-func (g *Game) removeCountersFrom(p *Permanent, counter core.CounterType, amount int, source capturedPermanent) bool {
+func (g *Game) removeCountersFrom(p *Permanent, counter core.CounterType, amount int, source capturedPermanent, actor uuid.UUID) bool {
 	if p == nil || p.PhasedOut || amount < 0 || counter < 0 || counter >= core.NumCounters {
 		return false
 	}
@@ -101,6 +101,14 @@ func (g *Game) removeCountersFrom(p *Permanent, counter core.CounterType, amount
 			g.zones.counterRemovals = make(map[counterHistoryKey]bool)
 		}
 		g.zones.counterRemovals[counterHistoryKey{source, capturedPermanent{live.ID(), live.incarnationID}, counter}] = true
+	}
+	if amount > 0 {
+		g.ApplyContinuousEffects()
+		g.FireEvent(core.GameEvent{
+			Type: core.EvtCountersRemoved, SourceID: source.id, SourceIncarnation: source.incarnation,
+			TargetID: live.ID(), TargetIncarnation: live.incarnationID, PlayerID: actor,
+			CounterType: counter, Amount: amount, CountersRemaining: live.Counters[counter],
+		})
 	}
 	return true
 }

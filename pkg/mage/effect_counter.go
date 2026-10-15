@@ -133,7 +133,7 @@ func (e *removeCountersEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
 	source, _ := (sourceRef{}).informationIdentity(ctx)
 	for _, p := range perms {
-		ctx.Game.removeCountersFrom(p, e.ct, e.amount, source)
+		ctx.Game.removeCountersFrom(p, e.ct, e.amount, source, ctx.Controller)
 	}
 	return nil
 }

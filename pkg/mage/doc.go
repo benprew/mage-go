@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ControllerRemovesLastCounter] matches a positive removal from the source visit.
+// Shared resolving removal and counter costs save the acting player, counter kind,
+// actual count and remaining count. Layers update before event detection.
+// Zero removal and zone departure supply no removal event. Payment trials keep
+// events separate. The source controller must be the actor at event time.
+// Pending bodies keep their actor through control, zone and phase changes.
+// RON accepts WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent with
+// SinglePlayer(You), a supported counter symbol and SinglePermanent(ThisPermanent).
+// Its body can read Trigger_ThatPlayer. Divine Intervention still needs DrawTheGame.
+//
 // [SacrificeFor] instructs a typed player to sacrifice one exact permanent.
 // That player must control the present, unphased visit at resolution.
 // [Sacrifice] keeps its saved ability controller. Both use shared sacrifice

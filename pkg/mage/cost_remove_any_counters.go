@@ -51,7 +51,7 @@ func (c *removeAnyCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	if c.count == 0 {
 		return nil
 	}
-	if !g.removeCountersFrom(g.FindPermanent(sourceID), c.ct, c.count, g.counterPlacementSource(sourceID)) {
+	if !g.removeCountersFrom(g.FindPermanent(sourceID), c.ct, c.count, g.counterPlacementSource(sourceID), controller) {
 		return fmt.Errorf("cannot remove chosen counters")
 	}
 	return nil

@@ -23703,3 +23703,49 @@ source behavior, repeated additions, later copies, default replacement order,
 simultaneous entry and entry-trigger observation. The Vesuvan clause tests
 cover all six reprints but replace the unsupported optional copy body with a
 target tap. Full-card acceptance and gameplay are unchanged.
+
+## Attributed last-counter removal
+
+`ControllerRemovesLastCounter(counter core.CounterType, actor *PlayerBinding)
+EventPattern` matches a positive actual removal of the specified counter kind
+from the exact source visit. The acting player must be its controller when the
+event occurs. Shared resolving counter removal and fixed, X and chosen counter
+payments now publish `core.EvtCountersRemoved`. `SourceID` and
+`SourceIncarnation` identify the cause when it has a permanent identity;
+`TargetID` and `TargetIncarnation` identify the recipient. `PlayerID` is the
+effect controller or cost payer, independent of either permanent's controller.
+`CounterType`, `Amount` and `CountersRemaining` retain the removal result.
+
+Layers update after removal and before event detection. A counter-bound control
+or ability-removal effect can end at that point. The last-counter predicate uses
+the saved positive amount and zero remainder; later counter placement cannot
+cancel the event. Zero, failed or phased removal supplies no event. Counters
+that cease to exist on zone departure are not removed (CR 122.2). Native raw
+`Permanent.RemoveCounter` remains a state mutation without player attribution;
+this API does not treat state-based removals as player actions. No new removal
+replacement, counter-moving procedure or simultaneous counter batch is declared.
+
+The existing event service captures the actor in a typed binding. Pending
+triggers retain that player and their controller through source departure,
+return, phasing, control changes, stack copies and game clones (CR 113.7a,
+400.7, 603.2–3, 603.3a, 702.26). Declaration validation rejects invalid counter
+kinds and nil or unnamed bindings. Payment preparation and failed commit publish
+no live removal event; successful fixed, X and chosen payments publish once.
+
+RON accepts the event with `SinglePlayer(You)`, one supported permanent-counter
+symbol, and `SinglePermanent(ThisPermanent)` in a battlefield source TriggerA.
+The resolving body can read `Trigger_ThatPlayer` as a player. Other player and
+permanent filters remain rejected. The compiler owns syntax and lexical scope;
+the engine owns facts, post-removal layers, identity, matching and captures.
+Divine Intervention's complete record now rejects at `DrawTheGame`. Its clause
+test replaces only that action with explicit-player life gain, retaining real
+entry counters and upkeep removal. This proves the event clause, not full-card
+execution or an immediate game draw.
+
+Evidence: native `TestLastCounterEventFacts`, `Payments`, `Invalid`,
+`AttributionAndIdentity` and `PostRemovalLayers`; RON
+`TestRONLastCounterEventDivineClause`, `Instances` and `Invalid`. These cover
+partial, zero and last removal, wrong actor/kind/recipient, source control and
+ability removal, exact visits, zone departure, replenishment, phasing, independent
+instances, copied triggers, pending clones, all three counter payment forms,
+failed commits, pure affordability checks and post-removal layer timing.

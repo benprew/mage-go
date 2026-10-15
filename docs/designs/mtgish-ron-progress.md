@@ -8,14 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **926 accepted / 60 rejected names**
 (986 total), **2,319 compiled / 126 rejected records** (2,445 total).
-The latest slice is **COPIABLE-UPKEEP-GRANT**.
-RON lowers one controller-upkeep TriggerA in each AddAbility copy operation.
-Mage supplies CopyAddTriggeredAbility with validated fresh rule builders.
-Recipient source, controller, targets and bindings remain independent across
-copies, repeated additions, phasing and game clones. Entry replacements and
-observations see the added rules. All six Vesuvan Doppelganger records now
-reach the unsupported optional resolving copy action. Estimated and actual
-full-card gains are zero; this is prerequisite and clause-gameplay evidence.
+The latest slice is **ATTRIBUTED-LAST-COUNTER-EVENT**.
+RON lowers the controller's last-counter-removal event on ThisPermanent.
+Mage saves actual removal, exact recipient visit and acting-player facts.
+Resolving counter effects and fixed/X/chosen payments share that service.
+Post-removal layers apply before event detection; pending actor bindings
+survive control, zone and phase changes, stack copies and game clones.
+Divine Intervention now reaches the unsupported DrawTheGame action.
+Estimated and actual full-card gains are zero; clause gameplay advances.
 All required checks pass; no accepted record regressed.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
@@ -24,15 +24,14 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Resolving copiable copies and ThisAbility retention:** complete the remaining
-   Vesuvan Doppelganger copy contracts, preserving text, exact visits, per-instance
-   targets and repeated ability instances. Eventual one name / six records.
-2. **Counter-removal event:** Divine Intervention needs an actual attributed
-   last-counter removal event with its player binding, plus DrawTheGame.
-   One eventual name / one record; retain attribution and payment isolation.
-3. **Explicit-player attachment choice:** Kudzu needs its optional attachment
-   choice and Aura survival through the resolving host-destruction window.
-   One eventual name / six records. PlayerMayAction has no other unique user.
+1. **Immediate game draw:** Divine Intervention now needs only DrawTheGame.
+   Establish an immediate draw distinct from player losses, preserve clone and
+   result reporting behavior, then verify the complete record. One name / one record.
+2. **Resolving copiable copies and ThisAbility retention:** Vesuvan Doppelganger
+   still needs tracked live rule replacement, text rebinding, exact visits and
+   retained ability builders. Find a bounded prerequisite; eventual one / six.
+3. **Explicit-player attachment choice:** Kudzu needs its optional legal host
+   choice and Aura survival through resolving destruction. Eventual one / six.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -22199,3 +22198,162 @@ cleanup remain gated. Changed files: mage `copy_triggered_ability.go`,
 `copy_triggered_ability_test.go` and `doc.go`; RON `entry_copy.go`, `inventory.go`,
 `copy_upkeep_test.go` and the three retained copy-consumer test files; API/rules
 contract documentation and this ledger. This run stops after COPIABLE-UPKEEP-GRANT.
+
+## 2026-10-15 — ATTRIBUTED-LAST-COUNTER-EVENT
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1
+with valid rejection JSON: 2,319 compiled / 126 rejected records, 926 accepted /
+60 rejected names, from 2,445 records / 986 names. Collection rejection was not
+a build or test failure. Requirements came from complete RON records, local
+rulings and CR 122.1–5, 603.2–3, 707.2–9. The local rulings for all three
+comparison cards were read; `fetchset -check -card "Divine Intervention"` passed.
+
+| Ranked candidate | Distinct affected names and estimated full-card gain | Other blockers and downstream value | Full effort estimate |
+| --- | --- | --- | --- |
+| Resolving copiable copies / ThisAbility retention | Vesuvan Doppelganger; eventual 1 name / 6 records, zero for a single prerequisite | Needs tracked live rule replacement, continued text rebinding, exact source/subject visits, retained ability builders and optional resolving copy lowering. Existing legacy copy layers reject copiable capture. Live replacement is shared copy infrastructure, but the complete RON shape spans multiple missing contracts. | Large: several independently testable prerequisite slices, then full-card evidence. |
+| Attributed last-counter removal | Divine Intervention; zero immediate names / records; eventual 1 / 1 | Counter removal, positive removal history, event captures and transactional fixed/X/chosen payments exist. DrawTheGame remains a separate game-result contract. The event completes the missing trigger and exposes that final blocker. | Small to medium: one shared mutation-service extension, typed event pattern, compiler adapter and lifecycle/payment/layer tests. |
+| Explicit-player optional attachment | Kudzu; eventual 1 name / 6 records, zero for a plain optional wrapper | Requires a legal non-target host choice and Aura survival while its own ability destroys the old host. Existing exact attachment and prospective legality queries can be reused; the resolving Aura lifetime still needs a contract. | Medium to large: attachment decisions plus destruction/attachment lifecycle and LKI evidence. |
+
+Candidate 1 is not ready as one complete bounded slice: tracked resolving copy
+replacement and ability retention are still separate prerequisites. All three
+ranked candidates have one distinct eventual card user; reprints are counted
+once. Select candidate 2 because its shared mechanics are ready and it completes
+one coherent event contract in this run. The estimate was zero full-card unlocks;
+the event is a required prerequisite for Divine Intervention. No claim is made
+that first-error frequency measures a full-card unlock.
+
+### Exact contract, signatures and reuse boundary
+
+Mage adds:
+
+```go
+func ControllerRemovesLastCounter(counter core.CounterType, actor *PlayerBinding) EventPattern
+```
+
+RON accepts, in a battlefield-source TriggerA:
+
+```text
+WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent(
+  SinglePlayer(You), <supported permanent-counter symbol>,
+  SinglePermanent(ThisPermanent))
+```
+
+The resolving body can read Trigger_ThatPlayer as a local typed player. Factories
+build fresh bindings; the compiler owns spelling, validation and lexical scope.
+The engine owns attribution, event facts, exact visits, post-removal layers and
+pending captures. Invalid arities, tuple symbol spellings, unknown counters,
+other player/permanent filters, unbound actor reads and wrong reference types
+reject before gameplay. This does not add a text-revision context.
+
+The existing internal removeCountersFrom service now takes an explicit actor.
+Resolving removal supplies its saved effect controller; fixed, X and chosen
+counter costs supply their payer. Positive successful removals publish the new
+core.EvtCountersRemoved with cause and recipient identities, PlayerID,
+CounterType, actual Amount and CountersRemaining. The last-counter pattern
+requires zero remainder and matches the source's current exact visit and
+controller at detection. Source controller and actor are distinct from the
+removing effect's source controller. No mutable global action result is used.
+
+Completed layers are required after removal and before event detection. Tests
+first showed that an expiring counter-bound control or ability-removal effect
+could otherwise suppress the event. The shared service now updates layers at
+that boundary. Later counter placement does not cancel a pending event. Source
+control changes, departure, return and phasing do not change its saved player.
+Returned incarnations cannot supply an old event. Zone departure makes counters
+cease to exist and supplies no removal event (CR 122.2).
+
+Shared pending triggers, source LKI, stack copies, game cloning, declaration
+validation and cost transactions remain the execution path. Affordability queries
+and payment preparation publish no live events; stale fixed, X and chosen
+payments fail without publishing removal. Successful payments publish once.
+The raw Permanent.RemoveCounter mutation has no player attribution; state-based
+removals are not player actions. No counter-moving procedure, simultaneous
+counter-removal batch or new removal replacement order is declared. Existing
+zone, replacement and simultaneous-action services retain their contracts.
+
+No source-data defect was found or corrected. RON source files and the vocabulary
+snapshot are unchanged. No Go card definition, generator or broad DSL function
+was removed: complete loading, gameplay and startup gates remain unmet. There
+is no partial production registry, fallback, card-name branch or game-time
+production declaration panic.
+
+### Failing-first and card-to-test evidence
+
+After test-fixture corrections, native tests failed compilation only for the
+missing ControllerRemovesLastCounter API and new removal fact fields. The RON
+clause test then failed at the unsupported removal trigger. Both passed after
+the feature was added. Post-removal layer tests separately failed assertions
+for control and restored abilities before the layer refresh was implemented.
+Fixture fixes also set the physical owner before destruction and used
+ResolveTopOfStack to observe the independent trigger before it resolves.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Actual removal and pending frames | TestLastCounterEventFacts | Last, partial, zero, wrong player, wrong kind and other recipient; control before/after; ability removal; phase and phase cycle; source departure/return; pending clone isolation. |
+| Payment attribution and isolation | TestLastCounterEventPayments | Fixed, X and chosen counter costs; pure affordability, isolated preparation, stale failed commits and one committed event. |
+| Declaration validation | TestLastCounterEventInvalid | Invalid counter ranges and nil acting-player binding reject. |
+| Cause and recipient identity | TestLastCounterEventAttributionAndIdentity | Different removing-source controller; exact recipient visit; old events cannot match a returned visit; departure is not removal; enum metadata includes the new event. |
+| Post-removal continuous rules | TestLastCounterEventPostRemovalLayers | Expiring counter-bound control and ability removal update before event detection; post-removal controller receives the trigger. |
+| Divine Intervention, LEG | TestRONLastCounterEventDivineClause | Complete record first asserts remaining DrawTheGame blocker. A clause projection replaces only that action with explicit-player life gain; real entry counters, controller upkeep, positive last removal, pending source departure and cloned actor captures execute. This is not full-card gameplay. |
+| Per-instance RON bindings | TestRONLastCounterEventInstances | Fresh factories, independent recipients, wrong remover, control timing, counter replenishment, phasing, returned source and copied trigger. |
+| Invalid RON declarations | TestRONLastCounterEventInvalid | Arity, symbol kind, unknown counter, other filters/references, actor scope and player/permanent type errors reject. |
+
+Estimated and actual full-card gain: **zero names / zero records**. Gameplay
+coverage advances for Divine Intervention's removal-trigger clause. The complete
+record now rejects at DrawTheGame; no immediate draw or full-card coverage is
+claimed.
+
+### Verification and collection result
+
+- Baseline make build and full RON package tests: pass.
+- fetchset -check -card "Divine Intervention": pass, one checked card.
+- Focused go test ./pkg/mage/dsl/ron -run '^TestRONLastCounterEvent' -count=1:
+  pass. Native go test ./pkg/mage -run '^TestLastCounterEvent' -count=1: pass.
+- make build and go vet ./...: pass.
+- go test ./pkg/mage/... -short -count=1: pass, including the full RON package.
+- go test ./... -short -count=1: pass, as required by the engine skill.
+- make test: pass for the entire repository.
+- make lint: pass, 0 issues. Per-path pre/post Go-file hashes are identical;
+  there were no automatic edits. git diff --check: pass.
+- Final go run ./cmd/loadcards -json: expected exit 1 with valid JSON;
+  **2,319 compiled / 126 rejected records**, **926 accepted / 60 rejected names**.
+  Parsed baseline comparison asserts identical compiled/rejected counts and
+  rejected record identities. Exactly one diagnostic changes:
+  LEG.lines.ron:64:427 unsupported removal trigger becomes
+  LEG.lines.ron:64:565 unsupported action (DrawTheGame).
+  All other diagnostics are identical; no accepted record regresses.
+
+There is no remaining required-check or environment blocker. The full-card
+estimate of zero equals the measured gain of zero. This run uses the previous
+entry's per-command commit.gpgsign=false workaround for pinentry; repository
+signing configuration is unchanged.
+
+The package-wide enum generation command initially failed in the installed
+Go/enumer environment with `package "fmt" without types`. Running the same
+pinned enumer tool against an isolated copy of the exact enum declaration
+succeeded. The generated tables include the appended event and preserve existing
+numeric values. The canonical generation header is retained, without a temporary
+machine path. This workaround changes no dependency or toolchain configuration.
+
+### Remaining work and ranked next candidates
+
+1. Immediate game draw, then full Divine Intervention gameplay. One unique
+   name / one record. The draw must end immediately without declaring either
+   player a loser; include clones, reporting and stopped resolution.
+2. Tracked resolving copiable rule replacement for Vesuvan Doppelganger, then
+   ThisAbility retention and optional copy lowering. Eventual one / six. Preserve
+   continued text, exact visits and repeated independent ability instances.
+3. Explicit-player optional legal attachment for Kudzu, with the resolving Aura
+   survival contract. Eventual one / six. A plain PlayerMayAction wrapper cannot
+   establish complete support.
+
+Complete collection gameplay, runtime cutover, Go-card/generator deletion and
+unused DSL cleanup remain gated. Changed files: mage last_counter_event.go and
+its tests, counter_history.go, effect_counter.go, cost.go,
+cost_remove_any_counters.go, core/event.go and generated event_enumer.go, doc.go;
+RON last_counter_event.go and its tests, compiler.go, player_scope.go and
+triggers.go; API/rules-contract docs and this ledger. This run stops after
+ATTRIBUTED-LAST-COUNTER-EVENT.
