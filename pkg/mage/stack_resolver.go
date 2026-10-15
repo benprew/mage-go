@@ -13,7 +13,7 @@ import (
 func (g *Game) ResolveStack() {
 	// Move any pending triggers to the stack first (e.g. from EvtCardDrawn during draw step)
 	g.PutTriggersOnStack()
-	for !g.stack.IsEmpty() {
+	for !g.drawn && !g.stack.IsEmpty() {
 		obj := g.stack.Pop()
 		g.ResolveStackObject(obj)
 		// Check for new triggers after each resolution
@@ -23,7 +23,7 @@ func (g *Game) ResolveStack() {
 
 // ResolveTopOfStack resolves just the top item on the stack.
 func (g *Game) ResolveTopOfStack() {
-	if g.stack.IsEmpty() {
+	if g.drawn || g.stack.IsEmpty() {
 		return
 	}
 	obj := g.stack.Pop()
@@ -199,6 +199,9 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 }
 
 func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Color) {
+	if g.drawn {
+		return
+	}
 	referenceDepth := len(g.stack.resolvingReferenceObjects)
 	g.stack.resolvingReferenceObjects = append(g.stack.resolvingReferenceObjects, obj)
 	previousMana, previousTracking := g.resolution.manaProduced, g.resolution.manaTracking
@@ -273,6 +276,9 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 	defer g.resolution.Begin(obj)()
 	for _, eff := range obj.Effects {
 		_ = applyEffectWithCardSetCaptures(g, eff, obj.SourceID, obj.Controller, resolvedTargets, obj.capturedNumbers, obj.capturedPermanents, obj.capturedCards, obj.capturedCardSets)
+		if g.drawn {
+			return
+		}
 	}
 	g.resolution.ClearDistributions()
 

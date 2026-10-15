@@ -30,6 +30,9 @@ func (e *PipelineData) Properties() EffectProperties { return e.Props }
 
 func (e *PipelineData) Apply(ctx *EffectContext) error {
 	for _, step := range e.Steps {
+		if ctx.Game.drawn {
+			return errGameDrawn
+		}
 		if err := step.Apply(ctx); err != nil {
 			return err
 		}

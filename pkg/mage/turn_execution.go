@@ -381,7 +381,7 @@ func (g *Game) doCleanupActions() bool {
 
 // Run executes the game until the stop condition.
 func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
-	for g.turns.Turn() <= maxTurns {
+	for !g.drawn && g.turns.Turn() <= maxTurns {
 		// Turn-skip (CR 500.11): if the active player's next turn is
 		// marked as skipped, consume the skip and advance past this turn
 		// without running any steps.

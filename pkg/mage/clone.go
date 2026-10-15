@@ -20,6 +20,7 @@ type UUIDMap[V any] map[uuid.UUID]V
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
+		drawn:       g.drawn,
 		anteEnabled: g.anteEnabled,
 		anteSettled: g.anteSettled,
 		stopped:     g.stopped,

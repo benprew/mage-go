@@ -14,8 +14,8 @@ const lastCounterEvent = `WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent(S
 
 func TestRONLastCounterEventDivineClause(t *testing.T) {
 	n := chosenDiscardRecord(t, "LEG", "Divine Intervention")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "unsupported action (DrawTheGame)") {
-		t.Fatalf("remaining full-card blocker: %v", err)
+	if _, err := Compile(n); err != nil {
+		t.Fatalf("complete record: %v", err)
 	}
 	projected := false
 	var rewrite func(Node) Node

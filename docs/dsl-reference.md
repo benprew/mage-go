@@ -18020,3 +18020,33 @@ Divine Intervention still requires `DrawTheGame`; its event clause has gameplay
 evidence in `TestRONLastCounterEventDivineClause`. Native and RON instance,
 identity, timing, clone, payment and declaration evidence is listed in
 `docs/engine-rules-contracts.md` under Attributed last-counter removal.
+
+## Immediate game draw
+
+`mage.DrawGame() ResolvingEffect` ends a two-player game as a draw under
+CR 104.1 and 104.4c. It does not mark either player as a loser or change life,
+poison, libraries or ownership. An earlier terminal result remains unchanged.
+Use `ApplyEffect` to execute this effect: its `Apply` method returns an internal
+terminal signal through nested branches, sequences, pipelines and loops.
+`ApplyEffect` consumes the signal without reporting an execution error.
+Custom resolving wrappers must propagate errors from their child bodies.
+
+`Game.IsGameOver()` and `Game.IsDraw()` return true; `Game.Winner()` returns an
+empty string. Explicit draw state copies independently with `Game.Clone()`.
+Later resolving instructions and stack objects do not execute. The resolving
+spell does not enter the battlefield or move to the graveyard. State actions,
+trigger detection/placement, priority, step cleanup and later turns do not run.
+Pending stack objects remain available for terminal-state inspection.
+Ante settlement rejects a draw, including after a later direct player mutation.
+The existing simultaneous-loss draw behavior remains available.
+
+RON lowers the strict zero-argument symbol `DrawTheGame` in ordinary non-entry
+resolving action lists, including nested permanent loops and non-entry trigger
+bodies. The action has no player or permanent operand, target or binding.
+Tuple spellings, costs, explicit-player actions, source-entry scopes and entry
+or draw replacement bodies reject. RON owns spelling and declaration context;
+mage owns the result and execution stop. No source record changes are needed.
+`TestRONDrawGameDivineIntervention` and `TestRONDrawGamePending` establish full
+Divine Intervention gameplay. The existing last-counter clause tests retain
+independent attribution coverage. `TestRONDrawGameStopsActions`, `Nested` and
+`Invalid` cover action ordering and declaration boundaries.

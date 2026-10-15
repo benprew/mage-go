@@ -58,6 +58,7 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 
 // Game is the central game state and engine.
 type Game struct {
+	drawn             bool
 	players           []Player
 	playerPayments    []installedPlayerPayment
 	publicReveals     []PublicCardReveal
@@ -1874,6 +1875,9 @@ func (g *Game) DelayedTriggers() []*DelayedTrigger {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	if g.drawn {
+		return
+	}
 	if evt.Type == EvtSpellCast {
 		if obj := g.stack.FindByID(evt.TargetID); obj != nil && !obj.IsAbility && obj.SourceID == evt.SourceID {
 			evt.CastManaSpent = ManaSpentToCast(obj)
@@ -2126,6 +2130,9 @@ func (g *Game) resolveTappedForManaTriggers(pendingBefore int) {
 // CheckStateTriggers records state triggers that have no pending or active instance.
 // A condition can trigger again after its ability leaves the stack (CR 603.8).
 func (g *Game) CheckStateTriggers() {
+	if g.drawn {
+		return
+	}
 	if g.triggers.zoneBatch != nil || g.triggers.stateChecksPaused {
 		return
 	}
@@ -2199,6 +2206,9 @@ func (g *Game) CheckStateTriggers() {
 // CR 603.3b permits any order.
 // The engine uses the XMage order to maintain deterministic test results.
 func (g *Game) PutTriggersOnStack() {
+	if g.drawn {
+		return
+	}
 	pending := g.triggers.Pending()
 	if len(pending) > 1 {
 		activeIdx := g.turns.ActivePlayerIndex()
@@ -3546,8 +3556,11 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	return nil
 }
 
-// IsGameOver reports whether a player has lost the game.
+// IsGameOver reports whether the game has ended.
 func (g *Game) IsGameOver() bool {
+	if g.drawn {
+		return true
+	}
 	for _, p := range g.players {
 		if !p.IsAlive() {
 			return true
@@ -3556,8 +3569,11 @@ func (g *Game) IsGameOver() bool {
 	return false
 }
 
-// Winner returns the name of the winning player, or "" if no winner yet or if the game ended in a draw (CR 104.4a).
+// Winner returns the winner's name, or an empty string if there is no winner.
 func (g *Game) Winner() string {
+	if g.drawn {
+		return ""
+	}
 	var alive []Player
 	for _, p := range g.players {
 		if p.IsAlive() {
@@ -3570,8 +3586,11 @@ func (g *Game) Winner() string {
 	return ""
 }
 
-// IsDraw reports whether the game has ended in a draw (CR 104.4a).
+// IsDraw reports whether the game has ended in a draw (CR 104.4).
 func (g *Game) IsDraw() bool {
+	if g.drawn {
+		return true
+	}
 	if !g.IsGameOver() {
 		return false
 	}

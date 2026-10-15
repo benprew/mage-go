@@ -1417,6 +1417,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "DrawTheGame":
+		if n.Kind != Symbol {
+			return nil, problem(n, "DrawTheGame requires a symbol")
+		}
+		if !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "DrawTheGame requires an ordinary resolving body")
+		}
+		return one(func(instanceBindings) mage.Effect { return mage.DrawGame() })
 	case "ActionForEachPermanent":
 		build, err := compilePermanentLoop(n, ctx)
 		if err != nil {

@@ -89,6 +89,9 @@ func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool 
 //
 // If OnPriority is nil, falls back to draining the stack atomically (ResolveStack).
 func (g *Game) runPriorityRound(mainPhase bool) {
+	if g.drawn {
+		return
+	}
 	if g.onPriority == nil {
 		g.CheckStateBasedActions()
 		g.ResolveStack()
@@ -101,6 +104,9 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 	priorityStart := g.turns.ActivePlayerIndex()
 	iterations := 0
 	for {
+		if g.drawn {
+			return
+		}
 		iterations++
 		timingEnabled := EngineTimingEnabled()
 		if timingEnabled {

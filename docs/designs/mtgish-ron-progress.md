@@ -6,16 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **926 accepted / 60 rejected names**
-(986 total), **2,319 compiled / 126 rejected records** (2,445 total).
-The latest slice is **ATTRIBUTED-LAST-COUNTER-EVENT**.
-RON lowers the controller's last-counter-removal event on ThisPermanent.
-Mage saves actual removal, exact recipient visit and acting-player facts.
-Resolving counter effects and fixed/X/chosen payments share that service.
-Post-removal layers apply before event detection; pending actor bindings
-survive control, zone and phase changes, stack copies and game clones.
-Divine Intervention now reaches the unsupported DrawTheGame action.
-Estimated and actual full-card gains are zero; clause gameplay advances.
+Latest measured result (2026-10-15): **927 accepted / 59 rejected names**
+(986 total), **2,320 compiled / 125 rejected records** (2,445 total).
+The latest slice is **IMMEDIATE-GAME-DRAW**.
+RON lowers strict DrawTheGame in ordinary non-entry resolving bodies.
+Mage saves an explicit draw without marking either player as a loser.
+Nested bodies stop; later instructions, stack objects, state actions,
+priority, step finalization and turns do not run. Clones keep separate results.
+Divine Intervention's complete entry, upkeep and last-removal draw execute.
+Estimated and actual full-card gains are one name / one record.
 All required checks pass; no accepted record regressed.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
@@ -24,18 +23,15 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Immediate game draw:** Divine Intervention now needs only DrawTheGame.
-   Establish an immediate draw distinct from player losses, preserve clone and
-   result reporting behavior, then verify the complete record. One name / one record.
-2. **Resolving copiable copies and ThisAbility retention:** Vesuvan Doppelganger
-   still needs tracked live rule replacement, text rebinding, exact visits and
-   retained ability builders. Find a bounded prerequisite; eventual one / six.
-3. **Explicit-player attachment choice:** Kudzu needs its optional legal host
-   choice and Aura survival through resolving destruction. Eventual one / six.
-
-Heroism's payment-time source defect is recorded below. Do not implement its
-current replacement-time payment as an Oracle-faithful full-card adapter.
-Raging River can reuse permanent iteration after attack-event and pile services.
+1. **Resolving copiable rule replacement:** Vesuvan Doppelganger; first establish
+   tracked copies, then ThisAbility retention and optional copy lowering.
+   Eventual one name / six records; the prerequisite alone unlocks zero.
+2. **Explicit-player optional legal attachment:** Kudzu; retain the resolving
+   Aura through host destruction and use shared attachment legality.
+   Eventual one name / six records. A PlayerMayAction wrapper alone is incomplete.
+3. **Life payment for temporary mana abilities:** Channel; establish the shared
+   player-granted mana action and solver/payment contract before its adapter.
+   Reassess other users of that service before selection.
 
 ## Dependencies and source blockers
 
@@ -22357,3 +22353,130 @@ cost_remove_any_counters.go, core/event.go and generated event_enumer.go, doc.go
 RON last_counter_event.go and its tests, compiler.go, player_scope.go and
 triggers.go; API/rules-contract docs and this ledger. This run stops after
 ATTRIBUTED-LAST-COUNTER-EVENT.
+
+## 2026-10-15 — IMMEDIATE-GAME-DRAW
+
+Status: complete for this slice; all required checks pass.
+One cohesive capability: immediate draw as a distinct terminal result, its strict
+RON lowering, and full Divine Intervention gameplay. This run stops here.
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh baseline make build and the full RON package
+passed. Strict loading exited 1 with 2,319 compiled / 126 rejected records and
+926 accepted / 60 rejected names. Collection rejection was not a build failure.
+The previous entry's ranked candidates were evaluated from complete canonical
+RON records, including nested forms, and local rulings. Reprints count once.
+
+| Candidate | Unique affected card; records | Estimated full-card gain | Other blockers and downstream benefit | Complete effort |
+| --- | --- | --- | --- | --- |
+| Immediate draw | Divine Intervention; 1 | 1 name / 1 record | No later syntax gap. Shared terminal result and stopped resolution support future lifecycle and subgame work. | Small engine/compiler slice; result, clone and timing tests. |
+| Tracked resolving copies | Vesuvan Doppelganger; 6 | 0 for prerequisite; eventual 1 / 6 | Resolving copiable rule replacement, ThisAbility retention and optional targeted copy lowering. Enables continued text and repeated independent ability instances. | Larger layer, copy, visit and text contract. |
+| Explicit-player optional attachment | Kudzu; 6 | 0 for wrapper alone; eventual 1 / 6 | Legal optional host choice plus survival of the resolving Aura through host destruction. Enables explicit-player attachment choices. | Medium choice, attachment and state-action contract. |
+
+No compared candidate yields multiple distinct full cards. Immediate draw has
+the lowest complete effort, finishes the first ranked card and establishes a
+reusable lifecycle primitive. Neither alternative can be completed by adding
+its first missing compiler adapter. No new slice follows this one.
+
+### Exact contract, dependencies and boundaries
+
+`DrawTheGame` is a strict symbol with zero operands in ordinary non-entry
+resolving ActionList bodies, including non-entry triggers and nested permanent
+loops. RON rejects tuple spellings, costs, explicit-player actions, source-entry
+scopes and entry/draw replacement bodies before execution. The action needs no
+source, player, target, binding or mutable factory state. Other reference scopes
+keep their existing validation. This adds no text-revision declaration context.
+
+`mage.DrawGame() ResolvingEffect` saves Game.drawn when no earlier result exists.
+CR 104.1 and 104.4c establish immediate termination. Divine Intervention's three
+local 2009-10-01 rulings are WotC rulings, with no Scryfall notes: controller
+attribution, immediate draw without a winner/loser, and limited-range multiplayer.
+The last does not apply to this two-player engine. fetchset -check for Divine
+Intervention passed. No network refresh or source correction was needed.
+
+A private immutable error value carries the stop through nested resolving bodies;
+it is not a global action result. ApplyEffect consumes it without an execution
+error or log. Shared branches, sequences, pipelines and loops propagate child
+errors. The stack stops before subsequent effects, objects and spell cleanup or
+permanent entry. Deferred state actions and trigger checks cannot change the
+result. Trigger detection/placement, priority, step finalization, end-of-step
+mana cleanup and later turns stop. Scratch frames still restore normally.
+Pending objects remain for terminal-state inspection. Custom resolving wrappers
+must propagate child errors. The compiler owns spelling and context; mage owns
+all execution and result state.
+
+IsGameOver and IsDraw return true; Winner returns an empty string. Neither
+player's loss flag, life or other resources change. Clone copies draw state by
+value and preserves pending frames independently. An earlier win is not replaced.
+AnteResult rejects a draw even after a later direct mutation of a player's flag.
+The prior simultaneous-loss draw behavior is retained. Existing last-counter
+attribution, exact source visits, LKI, pending captures, copies, cost transactions,
+entry counters and upkeep services are reused. No new replacement ordering,
+simultaneous operation, target legality rule or payment procedure is added.
+
+### Failing-first and card-to-test evidence
+
+After fixture API corrections, native tests failed compilation only for the
+missing DrawGame API. New RON gameplay tests failed at unsupported DrawTheGame.
+Both passed after implementation. The first engine short run then found seven
+stale collection assertions. Exact compiled/rejected counts now require the gain;
+Divine Intervention must compile, and upkeep revision inventories explicitly
+require its one record. Existing attribution clause projections remain intact.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Divine Intervention, LEG | TestRONDrawGameDivineIntervention | Complete unmodified record: two entry counters; opponent upkeep ignored; controller upkeep removes one; final removal queues an independent draw; departure and pending clone execute. |
+| Pending draw identity/timing | TestRONDrawGamePending | Full record; live, departed, returned, phased or control-changed source; copied trigger ends first and leaves original pending; countered trigger does not draw. |
+| Resolution and declaration contexts | TestRONDrawGameStopsActions, Nested, Invalid | Ordered life changes, nested loop stop, strict symbol/arity and invalid roles/scopes. |
+| Result and clones | TestDrawGameResult, PreservesEarlierResult | Neither player loses; before/after clones, terminal reporting, factory validation and earlier win preservation. |
+| Stop boundaries | TestDrawGameStopsResolution, StopsStateAndPriority, TurnBoundary | Sequences, pipelines, loops, separate stack effects, pending lower objects, permanent spell entry/cleanup, lethal pending state, priority and repeated native Run calls. |
+| Typed loop and ante | TestDrawGameTypedLoopAndAnte | One iteration only; no ante settlement or ownership change. |
+| Existing removal contract | TestRONLastCounterEvent*, TestLastCounterEvent*, TestRONSingleCounterRemovalClauses | Wrong remover/kind, zero removal, distinct visits, phasing, LKI, replenishment, payments and copied/pending frames retain their prior evidence. |
+
+Estimated and measured gain: **one name / one record**. Compilation advances
+from 926 to 927 accepted names and 2,319 to 2,320 records. Full-card gameplay
+coverage advances for Divine Intervention; compilation and gameplay are separate
+measurements. No accepted record regressed.
+
+### Verification and collection result
+
+- Baseline make build and go test ./pkg/mage/dsl/ron -count=1: pass.
+- Focused TestRONDrawGame and native TestDrawGame suites: pass, count=1.
+- Affected collection/counter/upkeep inventory tests: pass with exact new counts.
+- make build and go vet ./...: pass.
+- go test ./pkg/mage/... -short -count=1: pass after inventory updates.
+- go test ./... -short -count=1 and make test: pass for the full repository.
+- make lint: pass, zero issues. Automatic edits only regrouped imports in
+  draw_game_test.go; the native focused suite passed again afterward.
+- git diff --check: pass.
+- Final go run ./cmd/loadcards -json: expected exit 1, valid JSON, 2,320 compiled /
+  125 rejected records; 927 accepted / 59 rejected names. A parsed baseline diff
+  confirms that only LEG.lines.ron:64 Divine Intervention's DrawTheGame diagnostic
+  disappears. All 125 remaining diagnostics are identical; none were added.
+
+There is no required-check or environment blocker. The estimate equals the gain.
+The commit uses the earlier ledger's per-command commit.gpgsign=false workaround;
+repository signing configuration remains unchanged.
+
+No source-data defect was found. RON files and the vocabulary snapshot are
+unchanged. No Go card definition, generator or broad DSL function was removed;
+complete loading, full gameplay and startup gates remain unmet. No partial
+production registry, Go-card fallback or card-name branch was added.
+Changed files: mage draw_game.go and tests; game/clone/effect/pipeline/stack,
+state actions, priority, turn execution and ante; RON compiler and draw tests,
+last-counter/counter-removal tests and six collection/upkeep inventory assertions;
+engine API/rules-contract docs, doc.go and this ledger.
+
+### Remaining work and ranked next candidates
+
+1. Tracked resolving copiable rule replacement for Vesuvan Doppelganger, then
+   ThisAbility retention and optional copy lowering. Eventual one name / six
+   records; keep continued text, exact visits and independent ability instances.
+2. Explicit-player optional legal attachment for Kudzu and its resolving Aura
+   survival contract. Eventual one / six; reuse shared host legality and choices.
+3. Channel's temporary player-granted life-payment mana ability. Reassess its
+   shared engine prerequisites and other consumers before selecting the slice.
+
+Complete collection gameplay, runtime loading, Go-card/generator deletion and
+unused DSL cleanup remain gated. This run stops after IMMEDIATE-GAME-DRAW.

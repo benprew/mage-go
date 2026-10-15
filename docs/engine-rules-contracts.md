@@ -23749,3 +23749,37 @@ partial, zero and last removal, wrong actor/kind/recipient, source control and
 ability removal, exact visits, zone departure, replenishment, phasing, independent
 instances, copied triggers, pending clones, all three counter payment forms,
 failed commits, pure affordability checks and post-removal layer timing.
+
+## Immediate draw and terminal resolution
+
+`DrawGame() ResolvingEffect` implements CR 104.1 and 104.4c for this two-player
+engine. Divine Intervention's WotC ruling dated 2009-10-01 confirms that its
+third ability ends the game immediately, without either player winning or
+losing. Its limited-range multiplayer ruling does not apply to this engine.
+No Scryfall notes are present in the local ruling record.
+
+The game saves explicit draw state independently of player loss flags. Reporting
+and clones retain that state; later direct player mutations cannot create a
+winner. An effect cannot replace an earlier terminal result. Existing
+simultaneous-loss reporting remains unchanged. No counter, damage, zone,
+replacement or payment procedure is added. A draw has no replacement event or
+subject legality test. Pending source LKI and copied trigger frames use their
+existing services. Cost transactions and speculative clones stay independent.
+
+The effect returns a private terminal signal through resolving wrappers.
+`ApplyEffect` consumes it without logging an error. Shared sequences, pipelines,
+loops and branches propagate child errors. Stack resolution stops before later
+instructions, later objects and spell cleanup or permanent entry. Deferred
+state actions and trigger checks cannot alter the result. Priority and turn
+execution stop, including step finalization and end-of-step mana cleanup.
+Scratch-frame restoration still runs. Pending objects are not discarded.
+Ante settlement requires a winner and rejects an explicit draw.
+
+Native evidence: `TestDrawGameResult`, `StopsResolution`, `StopsStateAndPriority`,
+`TypedLoopAndAnte`, `TurnBoundary` and `PreservesEarlierResult`. RON evidence:
+`TestRONDrawGameDivineIntervention`, `Pending`, `StopsActions`, `Nested` and
+`Invalid`. Full Divine Intervention entry, controller-upkeep removal and last
+removal drawing now execute together; the attribution event's existing tests
+cover wrong remover, wrong kind, zero removal and independent source visits.
+Source-entry and replacement declaration contexts remain unsupported for this
+RON action. Complete collection loading and runtime cutover remain separate gates.

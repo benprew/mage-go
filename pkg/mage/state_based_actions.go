@@ -15,6 +15,9 @@ func (g *Game) CheckStateBasedActions() {
 }
 
 func (g *Game) checkStateBasedActions() bool {
+	if g.drawn {
+		return false
+	}
 	performed := false
 	for {
 		actions := false

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [DrawGame] ends the game without a winner or loser (CR 104.4c).
+// Nested bodies return a stop signal. [ApplyEffect] consumes that signal.
+// Remaining instructions, stack objects, state actions and turns do not run.
+// [Game.IsGameOver], [Game.IsDraw] and [Game.Winner] report the saved draw.
+// Game clones keep separate terminal state. A draw cannot replace an earlier win.
+// Ante settlement requires a winner and rejects this result.
+// RON accepts the strict DrawTheGame symbol in ordinary non-entry resolving
+// bodies. Costs, player actions and entry or draw replacement bodies reject.
+// The complete Divine Intervention record has gameplay evidence.
+//
 // [ControllerRemovesLastCounter] matches a positive removal from the source visit.
 // Shared resolving removal and counter costs save the acting player, counter kind,
 // actual count and remaining count. Layers update before event detection.
@@ -8,7 +18,7 @@
 // Pending bodies keep their actor through control, zone and phase changes.
 // RON accepts WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent with
 // SinglePlayer(You), a supported counter symbol and SinglePermanent(ThisPermanent).
-// Its body can read Trigger_ThatPlayer. Divine Intervention still needs DrawTheGame.
+// Its body can read Trigger_ThatPlayer. Divine Intervention uses DrawGame.
 //
 // [SacrificeFor] instructs a typed player to sacrifice one exact permanent.
 // That player must control the present, unphased visit at resolution.

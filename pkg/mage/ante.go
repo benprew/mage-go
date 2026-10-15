@@ -337,6 +337,9 @@ func (g *Game) AnteResult() ([]OwnershipChange, error) {
 	if !g.IsGameOver() {
 		return nil, errors.New("game is not finished")
 	}
+	if g.IsDraw() {
+		return nil, errors.New("game does not have exactly one winner")
+	}
 	var winner Player
 	for _, player := range g.players {
 		if player.IsAlive() {

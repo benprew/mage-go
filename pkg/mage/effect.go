@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -62,6 +63,9 @@ func CompositeEffects(text string, effects ...Effect) Effect {
 func (e *compositeEffect) Text() string { return e.text }
 func (e *compositeEffect) Apply(ctx *EffectContext) error {
 	for _, sub := range e.effects {
+		if ctx.Game.drawn {
+			return errGameDrawn
+		}
 		if err := sub.Apply(ctx); err != nil {
 			return err
 		}
@@ -148,7 +152,7 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 }
 
 func applyEffectWithCardSetCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID, numbers map[*NumberBinding]int, permanents map[*PermanentBinding]capturedPermanent, cards map[*CardBinding]capturedCard, cardSets map[*CardsBinding][]capturedCard) error {
-	if e == nil {
+	if e == nil || g.drawn {
 		return nil
 	}
 	savedNumbers := g.resolution.numberBindings
@@ -221,6 +225,9 @@ func applyEffectWithCardSetCaptures(g *Game, e Effect, sourceID, controller uuid
 		}
 	}
 	err := e.Apply(ctx)
+	if errors.Is(err, errGameDrawn) {
+		return nil
+	}
 	g.CheckStateTriggers()
 	if err != nil {
 		fmt.Println("ERROR: ApplyEffect: ", err)
