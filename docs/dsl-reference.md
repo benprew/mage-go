@@ -17852,3 +17852,24 @@ The query can find a linked creature that enters later in that resolution.
 Entry and draw replacements, other recipients and other grant shapes reject.
 This is clause support for Animate Dead; its full record still needs adapters.
 See the lasting permanent enchant contract in `engine-rules-contracts.md`.
+
+## RON source-presence entry condition
+
+`TriggerI(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)),
+EnteringPermanentPassesFilter(OnTheBattlefield), body)` accepts an ordinary
+resolving body on a permanent. The condition and event require the exact listed
+shape, including symbol `OnTheBattlefield`. Other properties, event subjects,
+events, arities and tuple spellings of symbols reject during compilation.
+
+The adapter uses `PermanentMatchesFilter(This, AnyPermanent) StateCondition`
+and `WithInterveningIf`. It checks current presence of the saved source visit
+at detection and resolution. It does not use `PermanentMatchesFilterWithLKI`.
+Departure, return and current phasing prevent the old trigger body. A phase
+cycle preserves the visit. Control changes and ability removal after detection
+do not change the saved trigger controller. Copied triggers and game clones
+recheck independently. Each entry has its own source identity.
+
+`TestRONEntryPresenceTiming`, `Instances` and `Invalid` cover the adapter.
+`TestRONEntryPresenceAnimateDead` covers the real condition, grant and return
+clauses in all six reprints. These projections omit the unsupported attachment
+and departure-body instructions; they do not prove complete Animate Dead.

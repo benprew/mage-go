@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON accepts EnteringPermanentPassesFilter(OnTheBattlefield) in a source
+// entry TriggerI. [PermanentMatchesFilter] with This and AnyPermanent checks
+// the exact source visit. [WithInterveningIf] checks at entry and resolution.
+// Departure and phasing make the condition false. A phase cycle keeps the
+// visit; return cannot supply the old visit. Control changes keep the saved
+// trigger controller. Copies and clones check their own game state.
+// This condition has no LKI fallback. Other entry properties need adapters.
+//
 // [GrantPermanentEnchant] gives one exact recipient a live enchant restriction.
 // [Until] saves the recipient. The host query uses that recipient as This and
 // its current controller as You. Donor bindings cannot enter the query.

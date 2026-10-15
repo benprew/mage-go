@@ -23561,3 +23561,26 @@ compile; the instructions execute through mage before shared attachment checks.
 These are clause tests. The complete record still rejects at its source-presence
 condition, and still needs attachment-result and departure-player adapters.
 No complete-card gameplay or compilation gain is claimed.
+
+## Source-presence entry intervening condition
+
+RON's exact source-entry `EnteringPermanentPassesFilter(OnTheBattlefield)`
+adapter reuses `PermanentMatchesFilter(This, AnyPermanent)` and
+`WithInterveningIf`. No new engine state or execution service is required.
+CR 603.4 requires checks at detection and resolution; CR 400.7 requires the
+saved source visit. CR 702.26b treats a phased source as absent. A phase cycle
+preserves the visit; it can satisfy the later check. Current control does not
+change the triggered ability's controller (CR 603.3a). Once detected, ability
+removal does not erase the independent trigger (CR 113.7a).
+
+`TestEntryPresenceNativeDetection` covers live, phased, phase-cycle and absent
+source detection. `TestEntryPresenceNativeCopiedRecheck` covers live and absent
+sources for copied triggers and independent pending game clones. Existing
+`TestPermanentMatchesFilterIdentity` supplies direct incarnation and no-LKI
+contract evidence. `TestRONEntryPresenceTiming` adds return, control and ability
+removal through actual RON stack execution. `TestRONEntryPresenceInstances`
+separates pending entries. `TestRONEntryPresenceAnimateDead` supplies real
+six-reprint clause evidence while the complete record remains rejected.
+The WotC Animate Dead ruling dated 2016-06-08 requires that no effect happens
+when the Aura is absent at resolution. No Scryfall note supplies this contract.
+Costs, replacements and simultaneous operations retain their existing services.

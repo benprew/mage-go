@@ -8,26 +8,27 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **925 accepted / 61 rejected names**
 (986 total), **2,313 compiled / 132 rejected records** (2,445 total).
-The latest slice is **LASTING-LINKED-ENCHANT-GRANT**.
-RON lowers the exact paired graveyard-enchant removal and linked creature-enchant
-grant in resolving source-Aura bodies, including source entry triggers.
-Mage captures one recipient visit and retains a live host query in layer 6.
-Shared attachment checks intersect all enchant restrictions. Grants, removal,
-expiry, phasing and game clones use the shared layer and identity services.
-All six Animate Dead records have new grant-and-return clause evidence.
-Full-card compiler and gameplay gains are zero, as estimated. Its source-presence,
-attachment-result and departure-player adapters remain unsupported.
-No RON source changed. The collection still rejects atomically; runtime cutover,
-Go-card removal and DSL cleanup remain gated by complete support and startup.
+The latest slice is **SOURCE-PRESENCE-ENTRY-CONDITION**.
+RON lowers `EnteringPermanentPassesFilter(OnTheBattlefield)` in exact source
+entry `TriggerI` declarations. Mage checks the saved source visit at detection
+and resolution through existing presence and intervening-if services.
+Departure, return and current phasing stop the body. A phase cycle keeps the
+visit; control changes preserve the saved trigger controller. Copies, clones
+and independent pending entries have contract evidence.
+All six Animate Dead records have condition, grant and return clause evidence.
+Full-card compiler and gameplay gains are zero, as estimated. Attachment-result
+and departure-player adapters remain unsupported. No RON source changed.
+The collection still rejects atomically; runtime cutover, Go-card removal and
+DSL cleanup remain gated by complete support and startup.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Source-presence entry condition:** Animate Dead needs exact-visit presence
-   for `EnteringPermanentPassesFilter(OnTheBattlefield)` at detection and
-   resolution. Zero immediate gains; attachment-result and departure-player
-   adapters would still block its one name / six records.
+1. **Exact entry-result attachment:** Animate Dead needs an exact local entrant
+   result for its graveyard return and `AttachPermanentToPermanent`. Existing
+   entry-result and attachment services are prerequisites. Zero immediate
+   gains until departure-player capture; eventual one name / six records.
 2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
    recursive resolving copies and ThisAbility retention. One prerequisite
    estimates zero immediate gains, eventual one name / six records.
@@ -21593,3 +21594,139 @@ graveyard_enchant.go and doc.go; RON linked_enchant_grant.go,
 permanent_enchant_grant_test.go and indefinite_type.go; docs/dsl-reference.md,
 docs/engine-rules-contracts.md and this ledger.
 This run stops after LASTING-LINKED-ENCHANT-GRANT.
+
+
+## 2026-10-15 — SOURCE-PRESENCE-ENTRY-CONDITION
+
+### Selection and dependency evidence
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The fresh loader
+returned expected exit 1 with 2,313 compiled / 132 rejected records and
+925 accepted / 61 rejected unique names. Collection rejection was not a build
+or test failure. Complete records and nested forms were inspected for all
+three candidates; the six reprints of each LEA candidate are identical.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Remaining blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Exact entry-source presence | Animate Dead (six records) | 0 | Exact entry-result attachment and departure-controller capture remain. Supplies the gate for the whole linked reanimation sequence. | Small compiler adapter; existing native identity, presence and intervening-if mechanics; focused timing matrix. |
+| Copiable upkeep grants | Vesuvan Doppelganger (six records) | 0 | Retained ThisAbility and recursive resolving copy remain. Enables the nested upkeep-copy sequence and copiable granted rules. | Larger copy/definition traversal and recursive instance tests. |
+| Attributed last-counter removal | Divine Intervention (one record) | 0 | DrawTheGame remains. Enables the card's third ability with actual removal-player facts and transactional event isolation. | Larger event capture, shared removal/payment integration and clone tests. |
+
+Candidate #1 is dependency-ready and supplies the next required prerequisite.
+The user's ranked-candidate rule selects it. All compared candidates have zero
+immediate full-card gains. This bounded adapter completes one supported context
+in this run; the two alternatives need larger native changes. This does not
+claim a multi-card unlock or count reprints as separate cards.
+
+### Shape, contract and ownership
+
+Supported shape:
+
+```ron
+TriggerI(
+    WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)),
+    EnteringPermanentPassesFilter(OnTheBattlefield),
+    ActionList([...])
+)
+```
+
+The body uses the ordinary resolving compiler with `enteringSource` context.
+The property must be the exact symbol. Wrong arity, tuple spellings, properties,
+subjects and event contexts reject during compilation. No new event binding,
+replacement context or cost context is introduced. Existing keyword/LKI entry
+conditions keep their separate contract.
+
+RON owns syntax validation, lexical context and fresh factory lowering.
+`compileEntryInterveningCondition(Node, scope)` supplies a per-instance
+`func(instanceBindings) mage.StateCondition`. The native signatures remain
+`PermanentMatchesFilter(PermanentRef, PermanentFilter) StateCondition` and
+`WithInterveningIf(StateCondition)` (TriggerOption). `This` and `AnyPermanent`
+supply the exact live source query. Mage owns the source incarnation, pending
+trigger controller, resolution recheck, copied stack object and clone state.
+No new native service was needed; native contract tests establish this reuse.
+There is no LKI fallback for presence. Departure, return and current phasing
+fail. A phase cycle preserves the visit and permits resolution. Control changes
+and later ability removal do not erase the saved trigger. Independent entries
+cannot supply each other's source. Costs, replacements, legality and batches
+retain their existing shared services; the adapter adds no new operations.
+
+CR 603.4, 603.3a, 400.7, 113.7a and 702.26b establish these rules. All local
+Animate Dead rulings were read, including the WotC 2016-06-08 ruling that no
+effects happen if the Aura is absent at resolution. The comparison candidates'
+local rulings were also read. These are WotC rulings, not Scryfall notes.
+`go run ./cmd/fetchset -check -card "Animate Dead"` passed. No source defect was
+found, and no RON or vocabulary snapshot changed.
+
+### Failing-first evidence and card-to-test mapping
+
+The first focused RON run failed at the unsupported
+`EnteringPermanentPassesFilter` compiler guard for every positive timing case
+and all six Animate Dead projections. The adapter then made those tests pass.
+The native detection fixture first used a nonexistent event constant; it was
+corrected to the existing battlefield zone-change event. No assertion was
+weakened and no unsupported complete record was accepted.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Animate Dead, LEA/LEB/2ED/3ED/CED/CEI | `TestRONEntryPresenceAnimateDead` | Complete records still reject. Projections retain the real TriggerI condition, enchant grant and graveyard return. A live source returns the card; departure prevents both instructions and leaves the graveyard card untouched. Unsupported attachment and delayed departure bodies are omitted explicitly. |
+| Entry timing and identity | `TestRONEntryPresenceTiming` | Present, departed, returned, phased, phase-cycle, changed controller, lost ability and copied trigger; pending clone independence. A returned source queues a new controller's trigger while the old trigger fails. |
+| Independent factories and events | `TestRONEntryPresenceInstances` | Two pending entries, one departed source, only the remaining visit supplies a successful condition. |
+| Invalid declarations | `TestRONEntryPresenceInvalid` | Wrong property, tuple symbol, arity, source, death/upkeep contexts reject. |
+| Native event-time presence | `TestEntryPresenceNativeDetection` | Live, phased, phase-cycle and absent checks through the actual entry trigger condition. |
+| Native copied resolution | `TestEntryPresenceNativeCopiedRecheck` | Both copies recheck live/absent sources; pending clones keep their own live source. |
+| Existing native exact-visit query | `TestPermanentMatchesFilterIdentity` | Stale incarnations, return, source/host identity, phasing and clone isolation. |
+
+Estimated and actual full-card compiler gains are zero. Full-card gameplay gains
+are zero. New clause evidence covers one unique name / six records. Complete
+Animate Dead still needs entry-result attachment and departure-controller
+capture. Compilation and complete gameplay coverage remain separate.
+
+### Validation and final collection evidence
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONEntryPresence' -count=1`:
+  pass. Native `go test ./pkg/mage -run '^TestEntryPresenceNative' -count=1`:
+  pass.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1` and `make test`: pass.
+- `make lint`: pass, 0 issues. Pre/post file hashes show no automatic changes.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON,
+  **2,313 compiled / 132 rejected records**, **925 accepted / 61 rejected
+  names**. Parsed assertions compare the final report with the fresh baseline:
+  total/compiled/rejected counts and every rejected record identity are
+  unchanged. Exactly six diagnostics change, all Animate Dead. All other
+  diagnostics are identical. Thus no accepted record regressed.
+
+Animate Dead now rejects at `PutGraveyardCardOntoBattlefield`, with
+`returned permanent results require an ordinary resolving body`. Its adjacent
+attachment makes that return require an exact entrant result. This existing
+result adapter still excludes the resolving source-entry context. The next
+slice must establish that context and exact result/attachment integration;
+this run does not loosen the guard or claim the full card works. Collection
+loading still rejects atomically and publishes no partial registry.
+
+No source-data, environment or validation blocker remains for this slice.
+All required checks passed before commit. The commit uses a per-command
+`commit.gpgsign=false` override, as in the prior validated slice, to avoid the
+recorded pinentry problem. Repository signing configuration is unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Exact local entrant result and attachment for Animate Dead's graveyard
+   return. Reuse shared return-result and attachment services; failed entry,
+   stale visits, protection and shroud need explicit evidence. Zero immediate
+   gains while departure-controller capture remains; eventual one / six.
+2. Copiable upkeep grants for Vesuvan Doppelganger, then ThisAbility retention
+   and recursive resolving copies. Zero immediate gains; eventual one / six.
+3. Attributed actual last-counter removal event for Divine Intervention, then
+   DrawTheGame. Zero prerequisite gains; eventual one / one. Preserve removal
+   attribution, actual removal facts and speculative payment isolation.
+
+Runtime cutover, complete-collection startup, Go-card/generator deletion and
+broad DSL cleanup remain gated. No existing callers or Go card definitions were
+removed. No unused broad DSL API was deleted, so no removal audit was needed.
+Changed files: `pkg/mage/dsl/ron/zone_intervening.go` and `entry_presence_test.go`;
+`pkg/mage/entry_presence_test.go` and `doc.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+This run stops after SOURCE-PRESENCE-ENTRY-CONDITION.

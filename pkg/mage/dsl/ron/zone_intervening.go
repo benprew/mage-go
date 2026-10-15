@@ -29,6 +29,37 @@ func compileZoneIntervening(n Node, ctx scope) (optionFactory, error) {
 	if subject.Args[0].Kind != Symbol || subject.Args[0].Name != "ThisPermanent" {
 		return nil, unsupported(subject.Args[0], "entry intervening-if source")
 	}
+	conditionPlan, err := compileEntryInterveningCondition(condition, ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx.enteringSource = true
+	plan, err := compileActions(n.Args[2], ctx)
+	if err != nil {
+		return nil, err
+	}
+	return func() mage.CardOption {
+		bindings := instanceBindings{}
+		actions := plan.buildWithBindings(bindings)
+		trigger := mage.WhenEvent(mage.Enters(mage.This), mage.Sequence(actions.effects...), mage.WithInterveningIf(conditionPlan(bindings))).(*mage.GenericTriggered)
+		actions.effects = nil
+		return mage.WithAbility(TriggerA(trigger, actions))
+	}, nil
+}
+
+func compileEntryInterveningCondition(condition Node, ctx scope) (func(instanceBindings) mage.StateCondition, error) {
+	if condition.Name == "EnteringPermanentPassesFilter" {
+		if err := arity(condition, 1); err != nil {
+			return nil, err
+		}
+		property := condition.Args[0]
+		if property.Kind != Symbol || property.Name != "OnTheBattlefield" {
+			return nil, unsupported(property, "entry presence property")
+		}
+		return func(instanceBindings) mage.StateCondition {
+			return mage.PermanentMatchesFilter(mage.This, mage.AnyPermanent)
+		}, nil
+	}
 	if condition.Name != "PermanentPassesFilter" {
 		return nil, unsupported(condition, "entry intervening-if condition")
 	}
@@ -53,16 +84,7 @@ func compileZoneIntervening(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx.enteringSource = true
-	plan, err := compileActions(n.Args[2], ctx)
-	if err != nil {
-		return nil, err
-	}
-	return func() mage.CardOption {
-		bindings := instanceBindings{}
-		actions := plan.buildWithBindings(bindings)
-		trigger := mage.WhenEvent(mage.Enters(mage.This), mage.Sequence(actions.effects...), mage.WithInterveningIf(mage.PermanentMatchesFilterWithLKI(ref.build(bindings), mage.HasKeywordFilter(keyword)))).(*mage.GenericTriggered)
-		actions.effects = nil
-		return mage.WithAbility(TriggerA(trigger, actions))
+	return func(bindings instanceBindings) mage.StateCondition {
+		return mage.PermanentMatchesFilterWithLKI(ref.build(bindings), mage.HasKeywordFilter(keyword))
 	}, nil
 }
