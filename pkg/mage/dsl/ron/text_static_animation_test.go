@@ -189,16 +189,11 @@ func TestRONTextStaticAnimationBindings(t *testing.T) {
 
 func TestRONTextStaticAnimationBoundaries(t *testing.T) {
 	change, _ := mage.ReplaceColorWord(core.Black, core.Red)
-	for _, tc := range []struct{ set, name string }{{"LEA", "Bad Moon"}, {"LEA", "Goblin King"}, {"LEA", "Holy Strength"}} {
+	for _, tc := range []struct{ set, name string }{{"LEA", "Bad Moon"}, {"LEA", "Goblin King"}, {"LEA", "Holy Strength"}, {"ATQ", "Titania's Song"}} {
 		g, a, _ := ronGame()
 		source := g.PutOnBattlefield(repositoryCard(t, tc.set, tc.name), a.PlayerID())
 		if err := g.RevisePrintedStaticAnimation(source, textStaticID(t, source), change); err == nil {
 			t.Fatal("unmarked context accepted", tc.name)
-		}
-	}
-	for _, tc := range []struct{ set, name string }{{"ATQ", "Titania's Song"}} {
-		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil {
-			t.Fatal("dependent context accepted", tc.name)
 		}
 	}
 	TestRONStaticAnimationInvalid(t)

@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AnimateArtifactsUntilCleanupAfterExit] animates current noncreature artifacts.
+// Each member loses all abilities and has base P/T equal to its mana value.
+// Shared layer services keep each selection through layers 4, 6 and 7b.
+// Type dependencies and later ability grants keep their normal order.
+// Source departure retains the same effect and timestamp until cleanup.
+// Membership stays live, including artifacts that enter after departure.
+// Phasing suspends a present source without starting a departure duration.
+// Return creates a separate source visit. Clones keep separate lifetimes.
+// RON accepts EachPermanentStickyLayerEffect for this exact operation set,
+// a conjunctive noncreature artifact filter and UntilEndOfTurn.
+// Other sticky filters, operations, durations and resolving contexts reject.
+// Both complete Titania's Song records have casting and gameplay evidence.
+//
 // [LimitDamageLifeLoss] limits a typed player's life loss from damage.
 // Full damage remains available to events, history, outcomes and lifelink.
 // A live static rule uses current control, exact source identity and phasing.

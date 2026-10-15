@@ -10959,7 +10959,7 @@ Animate Artifact reprints: payment and target legality, copied Aura spells,
 attachment changes and returned hosts, phasing, source ability removal and
 departure, existing artifact creatures, counters, bonuses and P/T switching.
 Existing `While` callers keep their separate live layer selections.
-Titania's Song still needs sticky duration and its RON context.
+Sticky artifact animation and its RON context are documented separately below.
 
 ## Bands with other: live static grants and combat assignment
 
@@ -16156,8 +16156,8 @@ values, later text layers, phasing, LKI, printed recasts, live control, invalid
 syntax and exact record mappings. Native `TestTextGlobalStaticSpellDeclaration`
 and `RejectsAtomic` cover invalid markers, builders, groups and stack state.
 Gauntlet of Might, Conversion and Sunken City use the mixed continuation
-contract below. Titania's Song still fails compilation at its sticky rule. This adds
-no full-card compiler unlocks. Whole-object word dispatch, remaining spell
+contract below. Sticky artifact animation is documented separately below.
+This text contract adds no full-card compiler unlocks. Whole-object word dispatch, remaining spell
 contexts and both word-changing spells require further capabilities.
 
 
@@ -24426,3 +24426,57 @@ Tests: `TestDamageLifeFloorResults`, `TestDamageLifeFloorDamageEvents`,
 `TestDamageLifeFloorSimultaneousLifeGains`,
 `TestDamageLifeFloorPreventionLifeGain`, `TestDamageLifeFloorDefinition`, `TestDamageLifeFloorAPNAP`, and
 RON `TestRONDamageLifeFloor*` using the complete Ali from Cairo record.
+
+
+### Static artifact animation after source departure
+
+`AnimateArtifactsUntilCleanupAfterExit() StaticRule` applies to each current
+noncreature artifact. It adds the artifact and creature types in layer 4,
+removes all abilities in layer 6, and sets base power and toughness to that
+member's current mana value in layer 7b. Existing colors, other types, counters,
+status and control remain subject to the shared engine services. A zero mana
+value gives zero base toughness; ordinary state actions apply.
+
+Each layer pass saves exact member visits in layer 4 and uses that selection
+in later layers (CR 613.6). Type dependencies use the existing probe and ordering
+services (CR 613.8). Printed artifact creatures and artifacts made creatures by
+a prior type effect are excluded. Later layer 6 grants can restore abilities;
+later base setters, modifiers, counters and switches keep their normal order.
+The effect does not remove summoning sickness or bypass combat restrictions.
+
+On actual source departure, the effect manager replaces each registered part
+whose effect started in layer 4 with its independent continuation. A later
+layer 6 removal of the source ability cannot cancel that start. The timestamp
+is unchanged. The continuation still selects current members each pass, including artifacts
+that enter after departure (CR 611.3a and the explicit Oracle duration).
+Cleanup removes the continued parts. A present source retains its static rule
+through cleanup. Phasing suspends a present source without starting a departure
+duration. A phased recipient is absent from the selection. Return uses a new
+source incarnation; old and new selections cannot overwrite each other. Clones
+keep independent departure and cleanup state. Changing a live source's copiable
+rules removes its former registered effect without starting a departure duration.
+A continuation from an earlier visit remains independent of that change.
+
+RON accepts only this static permanent-rule shape:
+
+`EachPermanentStickyLayerEffect(And([IsNonCardtype(Creature), IsCardtype(Artifact)]),
+[LosesAllAbilities, AddCardtype(Artifact), AddCardtype(Creature),
+SetPowerAndToughnessBoth(ManaValueOfPermanent(EachablePermanent))], UntilEndOfTurn)`.
+
+The two conjuncts and four distinct operations may be reordered. Missing,
+duplicate or incompatible operands, other filters, values and durations, and
+resolving-body use reject at compilation. RON owns these syntax checks; the
+engine owns animation, membership, source visits and lifetime. This does not
+add arbitrary sticky layers or text-revision eligibility for sticky declarations.
+
+Evidence: `TestRONStickyAnimationRecords` uses both complete ATQ and 3ED records
+of Titania's Song for failed unpaid casting, paid casting, removed mana ability,
+source departure, later entrants and cleanup. `Invalid` and `Collection` cover
+syntax rejection, definition validation, role inventory and atomic loading.
+Native `TestStickyAnimationLifetime`, `Layers`, `DependencyAndIdentity`,
+`SourceCopy`, `CombatAndDefinition`, `ZeroManaValue`,
+`ClonedDepartureAndSharedDeclaration` and `CreatureTypeDependency` cover phasing,
+return, ability removal,
+clones, shared declarations, dependencies, LKI, layer order and state actions.
+The local WotC ruling on Titania's Song supplies the summoning-sickness contract;
+CR 302.6, 611.3, 613.1d/f/g, 613.4b, 613.6–8 and 702.26 supply the shared rules.

@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **939 accepted / 47 rejected names**
-(986 total), **2,352 compiled / 93 rejected records** (2,445 total).
-The latest slice is **DAMAGE-RESULT-LIFE-FLOOR**.
-RON lowers a positive fixed player damage life-loss floor into a live native
-static replacement. Damage amounts remain intact for events, history and
-lifelink. Shared damage batches include actual simultaneous life gains in the
-life-total test. The complete Ali from Cairo record has paid-cast, damage and
-static-lifetime gameplay evidence. Estimated and actual gain: one name / one
-record. Collection loading still rejects atomically. Runtime cutover, Go-card
+Latest measured result (2026-10-15): **940 accepted / 46 rejected names**
+(986 total), **2,354 compiled / 91 rejected records** (2,445 total).
+The latest slice is **STICKY-ARTIFACT-ANIMATION**.
+RON lowers the complete sticky noncreature-artifact animation shape into native
+layer services. Exact source visits and member selections stay separate.
+Source departure retains the same evolving effect and timestamp until cleanup;
+phasing suspends the live source. Both complete Titania's Song records have
+paid-cast and gameplay evidence. Estimated and actual gain: one name / two
+records. Collection loading still rejects atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and startup.
 
 ## Ranked next candidates
@@ -22,10 +22,13 @@ removal and DSL cleanup remain gated by complete support and startup.
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
 1. **Forced mana activation and saved mana:** Drain Power, eventual one name /
-   six records. Saved lost-mana results are complete. Next isolate legal
-   activation choices, arbitrary costs and variable output, then connect the complete instruction.
-2. **Sticky animation and ability removal:** Titania's Song, one name / two
-   records. It needs evolving layer membership and a post-source duration.
+   six records. Saved lost-mana results are complete. Isolate legal activation
+   offers, arbitrary costs, variable output choices and transactional rechecks.
+2. **Shared damage replacement prerequisites:** reassess Personal Incarnation
+   and Nova Pentacle before selecting a bounded shared contract. Nova Pentacle's
+   unbound chosen-source read requires a source/scope audit before unlock claims.
+3. **Life-total exchange:** Mirror Universe, one name / one record. Establish
+   atomic gain/loss restrictions and replacement behavior before its adapter.
 
 ## Dependencies and source blockers
 
@@ -25041,3 +25044,160 @@ repository signing configuration is unchanged.
 
 Runtime loading, complete RON gameplay, Go-card and obsolete generator removal,
 and unused DSL cleanup remain gated. Stop after this slice.
+
+## 2026-10-15 — STICKY-ARTIFACT-ANIMATION
+
+### Baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh collection validation exited
+1 with 2,352 compiled / 93 rejected records and 939 accepted / 47 rejected names.
+This was collection rejection, not a build or test failure.
+
+The latest ranked candidates were forced mana activation and sticky animation.
+Compared complete records and nested forms for these and Mirror Universe:
+
+| Candidate | Distinct affected names; records | Estimated complete-card gain | Dependencies and other blockers | Downstream capability; effort |
+| --- | --- | --- | --- | --- |
+| Forced legal mana activation | Drain Power; six records | Zero for a bounded prerequisite; eventually one name / six records | Saved lost-mana results are complete. The fixed tap/mana conversion planner does not offer arbitrary activation costs and variable-output choices. Both legal choice offers and transactional activation rechecks are needed before the complete forced instruction can lower. | Complete resolution-time forced activation and transfer; high effort, too broad for one complete supported instruction in this run |
+| Sticky artifact animation, selected | Titania's Song; two records, ATQ and 3ED | One name / two records | Existing animation membership, type dependencies, ability removal and base-P/T services are ready. Missing exact-visit binding and continuation after actual source departure. No other nested operation blocks these records. | Static layer continuation with an independent departure duration, evolving membership and retained timestamp; medium implementation and contract-test effort |
+| Life-total exchange | Mirror Universe; one LEG record | One name / one record | Activation costs, opponent target and upkeep restriction are ready. Atomic exchange needs native gain/loss restriction checks, simultaneous mutations, replacement behavior and the RON adapter. | Reusable life-total exchange; medium effort with fewer affected records and less continuation reuse |
+
+Candidate 1 was not dependency-ready as a complete forced instruction. Its
+missing contracts were not hidden behind a fixed-land-only implementation.
+Candidate 2 was the ready ranked candidate and gave a complete vertical result.
+The compared candidates each affect one unique name; no dependency-ready
+multi-name gain was established by this comparison. Reprints count once.
+Estimated gain was one name / two records, rather than an estimate based only
+on first diagnostics. Source-departure continuation remains an engine mechanism;
+no card-name branch or Go factory fallback was added.
+
+### Contract, signatures and reuse boundary
+
+RON now accepts this static rule on a permanent:
+
+`EachPermanentStickyLayerEffect(And([IsNonCardtype(Creature), IsCardtype(Artifact)]), [LosesAllAbilities, AddCardtype(Artifact), AddCardtype(Creature), SetPowerAndToughnessBoth(ManaValueOfPermanent(EachablePermanent))], UntilEndOfTurn)`.
+
+`compileStickyAnimation(Node) (optionFactory, error)` validates exactly two
+conjuncts and four distinct modifications. Each list may be reordered. Missing,
+duplicate or incompatible operations, a different subject/value, non-symbol
+removal or duration, other durations, wrong arity and resolving-body use reject.
+Inventory assigns permanent-filter, static-modification, static-value,
+permanent-reference and duration roles to the operands.
+
+Native API: `AnimateArtifactsUntilCleanupAfterExit() StaticRule`.
+It has no mutable input or result binding. Each registered animation layer gets
+its exact source incarnation through `bindCharacteristicEffect`. The per-pass
+membership key includes the declaration, physical source and source incarnation.
+Shared animation selection saves exact subject visits at layer 4. Layer 6 removes
+all abilities; layer 7b uses each member's current mana value. Existing type
+additions, dependency probes, ability-removal service, P/T reset/setters, modifiers,
+counters, combat permissions, LKI and state actions remain the execution path.
+
+`EffectManager.continueEffectsAfterSourceExit(*Game, *Permanent)` runs before
+ordinary source-effect removal. A typed continuation interface replaces a
+registered part in place only when its complete effect started in layer 4.
+This retains its timestamp and all layer parts even if layer 6 removed the
+source's ability. The independent effect expires at cleanup and continues to
+select current noncreature artifacts, including new entrants after departure.
+A present source keeps its static rule across cleanup. Source phasing suspends
+the live rule without starting the departure duration. Returning sources have
+new incarnation keys. Old continuations, new rules, separate physical copies
+and game clones cannot overwrite each other's lifetime or member selections.
+Changing a source's copiable rules is not departure and does not start the
+continuation. An earlier visit's continuation remains independent.
+
+Read both complete source records, the complete local WotC ruling, and local
+ATQ Oracle data. `go run ./cmd/fetchset -check -card "Titania's Song"` passed.
+The WotC ruling preserves continuous-control restrictions for attacking and tap
+abilities after animation. There are no local Scryfall notes for this card.
+CR 205.1b, 302.6, 611.3a–c, 613.1d/f/g, 613.4b, 613.6–8, 514.2 and 702.26
+supply the shared type, layer, cleanup and phasing contracts. The explicit
+Oracle sentence supplies continuation after source departure. This is the
+same static effect; it is not a newly resolving effect with frozen membership.
+
+### Failing-first evidence and card-to-test mappings
+
+Complete-record RON gameplay tests first failed with
+`unsupported rule (EachPermanentStickyLayerEffect)` for both ATQ and 3ED.
+Native contract tests first failed to compile because
+`AnimateArtifactsUntilCleanupAfterExit` did not exist. After implementation,
+`TestStickyAnimationCreatureTypeDependency` caught loss of the layer-4 part on
+source departure after layer-6 ability removal. Changed continuation eligibility
+to the saved layer-4 start and kept the regression. No expected behavior was
+weakened. Synthetic copy tests use retained definition builders; separate
+physical copies use separate IDs while sharing their immutable declarations.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Titania's Song, complete ATQ and 3ED records | `TestRONStickyAnimationRecords` | Failed unpaid cast, paid cast and entry, all three layers, removed mana ability, source bounce, later artifact entry and cleanup restoration |
+| Strict declaration, inventory and registry | `TestRONStickyAnimationInvalid`, `TestRONStickyAnimationCollection` | Bad shapes and resolving contexts reject; complete definition validation; operand roles; invalid collections preserve the prior registry |
+| Native lifetime and source identity | `TestStickyAnimationLifetime`, `TestStickyAnimationClonedDepartureAndSharedDeclaration` | Live cleanup, departure/return, source and recipient phasing, ability removal, cloned departure/cleanup and shared declarations with separate physical IDs |
+| Type dependencies and exact visits | `TestStickyAnimationDependencyAndIdentity`, `TestStickyAnimationCreatureTypeDependency` | Later artifact addition runs before selection, prior creature addition excludes the subject, expiry recalculates membership, returned recipients get fresh visits, departure LKI, and source ability removal cannot cancel the started effect |
+| Layer order and timestamp | `TestStickyAnimationLayers` | Printed artifact creatures excluded; later keyword grant, later base setter, modifier and counter order; source departure retains timestamp |
+| Copy changes | `TestStickyAnimationSourceCopy` | A changed live source loses its old effect without a departure duration; an earlier departed visit's effect remains until cleanup |
+| Combat, state actions and definitions | `TestStickyAnimationCombatAndDefinition`, `TestStickyAnimationZeroManaValue` | Definition validation, summoning sickness, attack/block permissions, attack prohibition and zero-toughness state actions |
+| Existing text-revision boundaries | `TestRONTextStaticAnimationBoundaries`, `TestRONTextGlobalStaticSpellBoundaries` | The complete sticky card now loads, while unmarked static and spell text revision still rejects atomically |
+| Accepted collection regressions | Definition-plan, inventory and numeric-consumer tests | Expected compilation count advances by two records |
+
+Gameplay coverage increases by one unique card, Titania's Song, with both
+complete source records tested. Compilation progress and gameplay evidence
+remain separate. No RON source defect or correction was needed. RON assets did
+not change, so no vocabulary snapshot refresh was required. No DSL function or
+Go card definition was deleted; their removal gates remain unmet.
+
+### Verification and measured coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONStickyAnimation -count=1`: passed,
+  including a final post-lint run.
+- `go test ./pkg/mage -run 'TestStickyAnimation|TestStaticAnimation' -count=1`:
+  passed, including the retained source-ability-removal regression. A final
+  `go test ./pkg/mage -run TestStickyAnimation -count=1` also passed after
+  strengthening the clone assertion to recalculate layers in the clone.
+- Focused existing text-boundary tests passed. Full RON package tests passed
+  in the fresh baseline and again as part of the engine short suite.
+- `make build`: passed. `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed for all engine packages.
+- `make test`: passed for the complete repository.
+- `make lint`: passed with **0 issues**. Reviewed automatic changes and final
+  source diffs; no unrelated files changed. Post-lint focused tests passed.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,354 compiled / 91 rejected records**, **940 accepted / 46 rejected names**.
+  Exact JSON comparison removes only the two Titania's Song diagnostics at
+  3ED line 257 and ATQ line 72. All other 91 diagnostics are identical and in
+  the same order; none was added.
+
+Actual gain is **one unique name / two records**, exactly the estimate.
+New complete-card gameplay evidence is Titania's Song. There was no environment
+or pre-existing check failure blocking this slice.
+
+Changed files: new `pkg/mage/dsl/ron/sticky_animation.go` and
+`sticky_animation_test.go`; new `pkg/mage/sticky_animation_test.go`;
+`pkg/mage/static_animation.go`, `characteristic_pt.go`, `effect_manager.go`,
+`game.go`, `doc.go`; RON `compiler.go`, `inventory.go`, `inventory_test.go`,
+`definition_plan_test.go`, `numeric_consumers_test.go`,
+`text_static_animation_test.go`, `text_global_static_spell_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+The slice commit uses command-local `commit.gpgsign=false`, as in prior slices;
+repository signing configuration is unchanged.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers and transactions for Drain Power:
+   eventual one name / six records. Saved lost mana is ready. Establish legal
+   arbitrary-cost choices, variable output and activation rechecks before
+   lowering the complete forced instruction.
+2. Reassess shared damage replacement prerequisites for Personal Incarnation
+   and Nova Pentacle: eventual two names / seven records only after complete
+   amount, recipient and saved-source contracts are proved. Nova Pentacle's
+   unbound chosen-source read needs source/scope evidence; no immediate gain
+   is claimed for a plumbing-only prerequisite.
+3. Life-total exchange for Mirror Universe: one name / one record. Use atomic
+   life gain/loss eligibility and shared replacements; defer if a useful shared
+   multi-card prerequisite is ready.
+
+There are still 46 rejected names / 91 rejected records. Complete collection
+gameplay, runtime loading, application cutover, Go-card and obsolete generator
+removal, and unused DSL cleanup remain gated. This run stops after this slice.

@@ -567,6 +567,27 @@ func (em *EffectManager) Remove(sourceID uuid.UUID) {
 	em.removeReplacements(sourceID, true)
 }
 
+func (em *EffectManager) continueEffectsAfterSourceExit(g *Game, source *Permanent) {
+	if source.PhasedOut {
+		return
+	}
+	for i, effect := range em.effects {
+		printed, ok := effect.(*printedAbilityContinuousEffect)
+		if !ok || effect.SourceID() != source.ID() {
+			continue
+		}
+		continuation, ok := printed.ContinuousEffect.(interface {
+			continueAfterSourceExit(*Game, *Permanent) ContinuousEffect
+		})
+		if !ok {
+			continue
+		}
+		if retained := continuation.continueAfterSourceExit(g, source); retained != nil {
+			em.effects[i] = retained
+		}
+	}
+}
+
 // RemoveEndOfTurn removes all effects with EndOfTurn duration.
 func (em *EffectManager) RemoveEndOfTurn() {
 	filtered := em.effects[:0]

@@ -83,6 +83,11 @@ func (e *countCharacteristicPT) ApplyContinuous(ctx *EffectContext) error {
 }
 
 func (g *Game) bindCharacteristicEffect(effect ContinuousEffect, p *Permanent) ContinuousEffect {
+	if declaration, ok := effect.(*staticAnimationLayer); ok {
+		bound := *declaration
+		bound.incarnation = p.incarnationID
+		return &bound
+	}
 	if declaration, ok := effect.(*countCharacteristicPT); ok {
 		bound := *declaration
 		bound.incarnation = p.incarnationID

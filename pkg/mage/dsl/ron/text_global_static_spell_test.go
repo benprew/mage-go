@@ -340,20 +340,18 @@ func TestRONTextGlobalStaticSpellBoundaries(t *testing.T) {
 			t.Fatal("invalid static declaration accepted", body)
 		}
 	}
-	data, err := os.ReadFile("../../../../cards/mtgish/ATQ.lines.ron")
-	if err != nil {
+	g, a, _ := ronGame()
+	card := repositoryCard(t, "ATQ", "Titania's Song")
+	card.SetOwner(a.PlayerID())
+	a.AddToHand(card)
+	a.ManaPool().Add(core.Green, 4)
+	if err := g.CastSpellByID(a.PlayerID(), card.ID(), nil, 0); err != nil {
 		t.Fatal(err)
 	}
-	records, err := Parse(strings.NewReader(string(data)), "ATQ.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, record := range records {
-		if record.Fields["Name"].String == "Titania's Song" {
-			if _, err := Compile(record); err == nil {
-				t.Fatal("sticky rule accepted")
-			}
-		}
+	before := g.StackPeek()
+	change, _ := mage.ReplaceColorWord(core.Red, core.Blue)
+	if err := g.RevisePrintedSpellText(before.ID, change); err == nil || before != g.StackPeek() {
+		t.Fatal("unmarked sticky spell text changed")
 	}
 	for _, tc := range []struct{ set, name string }{{"LEA", "Gauntlet of Might"}, {"LEA", "Conversion"}} {
 		g, a, _ := ronGame()

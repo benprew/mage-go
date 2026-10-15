@@ -931,6 +931,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	g.RemoveFromCombat(perm.ID())
 
 	// Remove continuous effects sourced from this permanent
+	g.effects.continueEffectsAfterSourceExit(g, perm)
 	g.effects.Remove(perm.ID())
 
 	// If this was attached to something, remove it from that thing's attachments

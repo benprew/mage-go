@@ -359,6 +359,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
+		case "EachPermanentStickyLayerEffect":
+			if len(n.Args) == 3 {
+				return []string{"permanent_filter", "static_modification", "duration"}[index]
+			}
 		case "EachPermanentLayerEffect":
 			if len(n.Args) == 2 {
 				return []string{"permanent_filter", "static_modification"}[index]

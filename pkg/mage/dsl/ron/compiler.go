@@ -755,6 +755,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileCollectionPermanentRule(n)
 	case "PermanentRuleEffect":
 		return compilePermanentBlockingRule(n, ctx)
+	case "EachPermanentStickyLayerEffect":
+		return compileStickyAnimation(n)
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":
 		return compileStaticLayer(n, ctx)
 	case "SpellActions":
