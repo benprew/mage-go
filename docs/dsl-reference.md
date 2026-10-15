@@ -18205,9 +18205,35 @@ builds and strict atomic loading use the existing services.
 
 `TestRONUnlimitedLandPlayRealRules` casts the exact permission clause from all
 six Fastbond records, plays four lands, checks the opponent's ordinary limit,
-and asserts that complete records still reject at `WhenAPlayerPlaysALand`.
+and checks that complete records compile.
 `Invalid` and `AtomicLoadAndInventory` cover declaration rejection, semantic
 inventory and preservation of an existing registry on collection failure.
-These are clause tests; Fastbond does not yet have complete gameplay coverage.
-No source RON changed. The first-land damage predicate still requires an
-explicit correction with the land-play event and condition slice.
+These remain clause tests. `TestRONLandPlayEventFastbond` below supplies
+complete gameplay coverage for the six corrected source records.
+
+## RON land-play ordinal triggers
+
+RON supports the following complete permanent rule shape:
+
+```text
+TriggerI(
+  WhenAPlayerPlaysALand(SinglePlayer(You), IsCardtype(Land)),
+  PermanentPassesFilter(Trigger_ThatLand, Not(IsFirstLandPlayedByPlayerThisTurn)),
+  ActionList([...])
+)
+```
+
+The compiler lowers the historical condition to
+`ControllerPlaysLand(player, land, ordinal).AfterFirst()`. The ordinal is saved
+at detection. The predicate cannot change between detection and resolution,
+including when the land leaves or turn history resets. It does not test the
+land's current type or battlefield presence. The body has typed, local
+`Trigger_ThatLand` and `Trigger_ThatPlayer` references. Every factory creates
+fresh bindings. Targets use the existing action-plan and event-query services.
+
+Other player filters, land filters, historical predicates, tuple reference
+symbols and uses of these references outside this event body reject. `Not` is
+supported only in this exact historical-condition context; it is not a general
+filter-negation adapter. The six complete Fastbond records use this form, with
+the first-land predicate corrected against local Oracle text and WotC rulings.
+`TestRONLandPlayEvent*` supplies full-record gameplay and declaration evidence.

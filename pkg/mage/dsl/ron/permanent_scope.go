@@ -50,6 +50,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 		return permanentReferencePlan{kind: permanentPlayerChoice, keyed: ctx.permanentChoices, choicePlayer: player}, nil
 	}
 	if n.Kind == Symbol {
+		if ctx.landPlayEvent != nil && n.Name == "Trigger_ThatLand" {
+			return permanentReferencePlan{kind: permanentEvent, event: ctx.landPlayEvent.land}, nil
+		}
 		if ctx.unblockedCreature != nil && n.Name == ctx.unblockedCreature.name {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.unblockedCreature}, nil
 		}

@@ -6,16 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **930 accepted / 56 rejected names**
-(986 total), **2,338 compiled / 107 rejected records** (2,445 total).
-The latest slice is **PLAYER-SCOPED-UNLIMITED-LAND-PLAYS**.
-RON lowers PlayerEffect(You, [MayPlayAnyNumberOfLandsDuringThierTurn]) to a
-live typed player permission. Source identity, current controller, abilities
-and phasing control its lifetime. Land timing and prohibitions still apply.
-All six exact Fastbond permission clauses now have RON gameplay evidence.
-Complete records still reject at WhenAPlayerPlaysALand; the damage predicate
-also needs the known source correction. Estimated and actual full-card gains
-are zero. All required checks pass; collection rejection remains expected.
+Latest measured result (2026-10-15): **931 accepted / 55 rejected names**
+(986 total), **2,344 compiled / 101 rejected records** (2,445 total).
+The latest slice is **CONTROLLER-LAND-PLAY-ORDINAL-EVENT**.
+RON lowers the controller land-play TriggerI and the negated first-play
+predicate to a native historical event filter with typed player, exact land
+visit and ordinal captures. All six Fastbond records now have complete RON
+cast-and-play gameplay evidence. Their inverted source predicate is corrected
+against local Oracle text and WotC rulings. Estimated and actual gains match:
+one unique name and six records. Final validation is recorded in the new entry.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -23,16 +22,15 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Land-play event and saved ordinal condition:** Fastbond; permission is now
-   supported. Add the event/condition contract and correct the inverted first-land
-   predicate in all six reprints with the recorded Oracle evidence. Eventual
-   one name / six records.
-2. **Forced mana activation and saved mana:** Drain Power; use contextual land
+1. **Forced mana activation and saved mana:** Drain Power; use contextual land
    selection, each land's legal mana choices, exact mana removal and typed results.
    Eventual one name / six records. Reuse shared planning/production services.
-3. **Sticky animation and ability removal:** Titania's Song; capture the correct
+2. **Sticky animation and ability removal:** Titania's Song; capture the correct
    evolving layer membership and retain effects until cleanup after source exit.
    Eventual one name / two records; needs a shared sticky layer contract.
+3. **Nth-spell event predicate:** Ichneumon Druid; assess the existing spell-cast
+   event snapshots and turn history before adding its third-spell condition.
+   Eventual one name / one record; complete-record blockers need fresh review.
 
 ## Dependencies and source blockers
 
@@ -23470,3 +23468,154 @@ No Go card definitions, generators or existing DSL APIs were removed.
 Complete RON gameplay, runtime loading and cutover, Go-card/generator removal
 and unused DSL cleanup remain incomplete. Stop after
 PLAYER-SCOPED-UNLIMITED-LAND-PLAYS.
+
+
+## 2026-10-15 — CONTROLLER-LAND-PLAY-ORDINAL-EVENT
+
+### Baseline and candidate selection
+
+The working tree was clean, including untracked-file status. Fresh `make build`
+and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loader JSON exited
+1 for collection rejection: 2,338 compiled / 107 rejected records and 930
+accepted / 56 rejected unique names. This was not a build or test failure.
+Read the execution design, engine API, current status and latest ledger entry.
+Read all complete Fastbond and Drain Power records in LEA/LEB/2ED/3ED/CED/CEI,
+both Titania's Song records in ATQ/3ED, and their complete local ruling files.
+Targeted vocabulary inspection covered the land-play event, land reference and
+first-land predicate. Reprints count once in the following comparison.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Blockers and downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| Controller land-play ordinal event | Fastbond | 1 name / 6 records | Unlimited permission already works; correct the inverted source predicate and supply the historical event condition. Typed land-play facts provide a shared event primitive for later play-history consumers | Small: one native pattern, one exact lowering context, source correction and lifecycle tests |
+| Forced legal mana activation and removed-mana result | Drain Power | 1 name / 6 records after the full procedure | Nested contextual land selection, forced legal mana choices, variable amounts and a typed removed-mana result remain. Shared production and payment planning exist; an `And` adapter alone does not finish the card | Larger: several decision/result contracts |
+| Sticky animation and post-source duration | Titania's Song | 1 name / 2 records after the full contract | Dynamic noncreature-artifact membership, type/ability/P/T layers, source exit and cleanup retention remain. Enables reusable sticky continuous effects | Larger: shared layer membership and lifetime contract |
+
+The first candidate is dependency-ready after the preceding permission slice.
+None of these compared candidates gives an immediate multi-name unlock. The
+land-play slice gives the same credible unique-name gain as the alternatives
+with less implementation effort and completes the already established Fastbond
+permission. Its estimate of one name / six records matches the actual gain.
+No additional capability slice was started.
+
+### Signatures, boundaries and rules evidence
+
+- Native API: `ControllerPlaysLand(player *PlayerBinding, land *PermanentBinding,
+  ordinal *NumberBinding) landPlayPattern`, with `.AfterFirst()` and the existing
+  `WhenEvent` service. All bindings are required and definition-validated. The
+  base native pattern includes first plays; `AfterFirst` requires `Amount > 1`.
+- `playLandCore` keeps the existing successful-play tracker and event path, and
+  now includes `SourceIncarnation` from its actual entrant. Each event captures
+  player, exact land visit and ordinal through shared event capture effects.
+  No new history tracker, global last-action slot or mutable factory state exists.
+- Exact RON shape on a permanent:
+  `TriggerI(WhenAPlayerPlaysALand(SinglePlayer(You), IsCardtype(Land)),
+  PermanentPassesFilter(Trigger_ThatLand,
+  Not(IsFirstLandPlayedByPlayerThisTurn)), ActionList([...]))`.
+  Only this negative historical predicate is supported. Other filters, scopes,
+  predicates, malformed arities and tuple symbols reject. `Not` is not a general
+  negation adapter. Body-local `Trigger_ThatLand` and `Trigger_ThatPlayer` lower
+  to fresh typed bindings for each factory instance.
+- The condition describes a fixed past event, not current battlefield state.
+  Lowering uses the event ordinal filter rather than a mutable state condition:
+  a later play, source departure, land departure, control change or turn-history
+  reset cannot change which ordinal this play had. Thus the CR 603.4 predicate
+  remains true at resolution without requiring the land to remain present.
+- RON owns spelling, shape, lexical scope, inventory roles and lowering. Mage
+  owns matching, typed snapshots and exact visit resolution. Existing event,
+  trigger placement, clone, source LKI, damage and prevention services execute
+  the rule. Land timing and failed-play state use the existing shared service.
+  No payment, replacement-order or simultaneous-operation contract was changed.
+- CR 305.1–4 distinguishes legal land plays, allowance history and direct entry.
+  CR 603.1–4 establishes detection, saved trigger control and historical
+  intervening conditions. CR 113.7a preserves pending source damage through
+  departure. Existing exact-visit services preserve CR 400.7 identity.
+- Fresh `go run ./cmd/fetchset -check -card Fastbond` passed before changes.
+  The two local Fastbond rulings are WotC rulings: all regular/additional plays
+  count, and direct entry does not. No Scryfall note was used as a WotC ruling.
+
+Source correction: all six Fastbond records formerly used the positive
+`IsFirstLandPlayedByPlayerThisTurn`. `data/LEA.json` Oracle text states:
+“Whenever you play a land, if it wasn't the first land you played this turn,
+this enchantment deals 1 damage to you.” All six now wrap the predicate in
+`Not(...)`; the positive predicate was not globally inverted. Complete records
+remain identical across reprints. No ruling data or other card was changed.
+The vocabulary snapshot was refreshed from positioned AST inventory: 605 tuple
+constructor signatures, new `Not/tuple/1`, six updated source hashes and current
+loader diagnostics. This also removes stale pre-existing Vesuvan Doppelganger
+errors from the snapshot; the fresh baseline already accepted those records.
+
+### Failing-first tests and gameplay evidence
+
+After correcting test-authoring syntax and a factory-call typo, native tests
+failed compilation on the missing `ControllerPlaysLand` API. RON tests failed on
+the inverted real source predicate and unsupported land-play event. Later
+inventory acceptance tests failed on missing child roles before those roles
+were added. No production stub or weakened test hid unsupported behavior.
+
+Initial green-path testing also corrected fixture setup: native games need a
+main phase; a transferred hand fixture needs the correct owner; phased lands
+must be queried after phase-in for the saved-read assertion. The pattern's
+bindings were then declared as event producers to satisfy definition validation.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Fastbond, all six full records | `TestRONLandPlayEventFastbond` | Full factory, unpaid and paid cast, direct entry, four real land plays, zero first-play damage, one damage on each later play, ordinary opponent play without damage |
+| Typed event operands | `TestRONLandPlayEventBindings` | Exact second land is tapped, first land is not, saved player receives the body effect |
+| Pending Fastbond damage | `TestRONLandPlayEventLifecycle` | Source departure/return, phasing, control change, history reset, prevention, independent source instances and game clones |
+| Saved native facts and identity | `TestLandPlayEventSnapshot` | Actual play queues a body; saved ordinal and player survive source changes; returned/phased land cannot supply the old read; clones keep independent state |
+| Detection and permission boundary | `TestLandPlayEventMatching` | First/later play filters, direct entry, opponent play, phase cycle, ability removal, failed play and overlapping sources |
+| Independent pending events | `TestLandPlayEventIndependentPending` | Two queued ordinals and land visits remain distinct; resetting current history cannot replace saved facts |
+| Zone permission and failure | `TestLandPlayEventLibraryAndFailure` | Permitted library play counts and supplies the event; failed second play preserves hand, count, life and stack |
+| Definitions and strict loading | `TestLandPlayEventInvalid`, `TestRONLandPlayEventInvalid`, `AtomicLoadAndInventory` | Nil/unbound native operands, wrong types/scopes/contexts, malformed declarations, semantic inventory and atomic rejection |
+| Existing permission and collection coverage | `TestRONUnlimitedLandPlayRealRules`, collection inventory/definition/numeric tests | Existing clause behavior remains; full records now compile; exact pinned collection totals advance by six |
+
+### Verification and final loader comparison
+
+- Focused RON and native tests passed with `-count=1`.
+- `make build` and `go vet ./...` passed.
+- The first engine short run exposed four pinned collection-count assertions.
+  Fresh AST/loader comparison proved exactly six Fastbond records were removed
+  from rejection, with no added or changed remaining diagnostic. Updated those
+  exact assertions from 2,338/107 to 2,344/101, preserving strict checks.
+- Repeated focused collection checks, build, vet and
+  `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed, including cards, applications and retained DSL callers.
+- `make lint`: passed, zero issues. Automatic edits only separated import
+  groups in the four new Go files; no semantic or unrelated file changes.
+  Repeated the focused native and RON tests after formatting: passed.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON,
+  **2,344 compiled / 101 rejected records**, **931 accepted / 55 rejected names**.
+  Exact parsed comparison shows only the six Fastbond issues disappeared;
+  no issue was added and every remaining diagnostic is unchanged. The collection
+  still rejects atomically. Example remaining error: Drain Power,
+  2ED.lines.ron:69:279, unsupported value (And).
+- Snapshot loader JSON equals the final report; all 12 source hashes match.
+
+No required-check blocker remains. The actual gain is six records and one
+full-card gameplay mapping, exactly as estimated. The configured GPG signer
+failed with `signing failed: Timeout` after launching curses pinentry. The
+requested commit is made with command-local `commit.gpgsign=false`; repository
+and global signing settings remain unchanged.
+
+Changed files: native land-play event and tests, land event publication;
+RON event lowering and tests, compiler scope/reference/inventory adapters;
+permission and pinned collection tests; six Fastbond source files; engine API,
+DSL/rules contracts, vocabulary snapshot and this ledger. No Go card definition,
+generator or broad DSL function was removed. Removal gates remain unmet.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation and typed removed-mana results for Drain Power.
+   One name / six records. First diagnostic is still unsupported value `(And)`;
+   inspect every nested activation, choice and result before setting scope.
+2. Sticky layer membership and post-source duration for Titania's Song.
+   One name / two records. First diagnostic is still
+   `EachPermanentStickyLayerEffect`; shared layer lifecycle remains necessary.
+3. Nth-spell event predicate for Ichneumon Druid. One name / one record.
+   First diagnostic is `WhenAPlayerCastsTheirNthSpellInATurn`; assess existing
+   cast-event facts and turn-history services before estimating a complete slice.
+
+55 unique names / 101 records still reject. Complete RON gameplay, runtime
+loading and cutover, Go-card/generator removal and unused DSL cleanup remain
+incomplete. Stop after CONTROLLER-LAND-PLAY-ORDINAL-EVENT.

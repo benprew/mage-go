@@ -24,6 +24,7 @@ type playerReferencePlan struct {
 	target              *playerTargetPlan
 	spell               *spellReferencePlan
 	event               *castEventPlan
+	landPlay            *landPlayEventPlan
 	draw                *drawEventPlan
 	lastCounter         *lastCounterEventPlan
 	step                *stepEventPlan
@@ -90,6 +91,7 @@ type instanceBindings struct {
 	pluralSacrifices     map[*pluralSacrificePlan]pluralSacrificeBindings
 	sacrifices           map[*sacrificeValuePlan]sacrificeValueBindings
 	events               map[*castEventPlan]castEventBindings
+	landPlayPlayers      map[*landPlayEventPlan]*mage.PlayerBinding
 	drawPlayers          map[*drawEventPlan]*mage.PlayerBinding
 	counterRemovers      map[*lastCounterEventPlan]*mage.PlayerBinding
 	steps                map[*stepEventPlan]*mage.PlayerBinding
@@ -183,6 +185,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 				return *ctx.damageRecipient, nil
 			}
 		case "Trigger_ThatPlayer":
+			if ctx.landPlayEvent != nil {
+				return playerReferencePlan{landPlay: ctx.landPlayEvent}, nil
+			}
 			if ctx.lastCounterEvent != nil {
 				return playerReferencePlan{lastCounter: ctx.lastCounterEvent}, nil
 			}
@@ -238,6 +243,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.landPlay != nil {
+		return mage.FromPlayer(bindings.landPlayPlayers[p.landPlay])
+	}
 	if p.blockAttacker != nil {
 		return mage.ControllerWhenLastBlockedThisTurn(p.blockAttacker.build(bindings), p.blockDefender.build(bindings))
 	}

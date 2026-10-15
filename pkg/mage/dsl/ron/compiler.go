@@ -110,6 +110,7 @@ type scope struct {
 	damageGroups      map[string]*damageTargetPlan
 	damageTargets     *damageTargetsPlan
 	castEvent         *castEventPlan
+	landPlayEvent     *landPlayEventPlan
 	drawEvent         *drawEventPlan
 	lastCounterEvent  *lastCounterEventPlan
 	stepEvent         *stepEventPlan

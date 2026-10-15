@@ -132,14 +132,19 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 		p.RemoveFromHand(cardID)
 	}
 
-	g.PutOnBattlefieldBy(card, playerID, playerID)
+	land := g.PutOnBattlefieldBy(card, playerID, playerID)
 	g.trackers.Turn.RecordLandPlayed()
 
+	var visit uuid.UUID
+	if land != nil {
+		visit = land.incarnationID
+	}
 	g.FireEvent(GameEvent{
-		Type:     EvtLandPlayed,
-		SourceID: card.ID(),
-		PlayerID: playerID,
-		Amount:   g.trackers.Turn.LandsPlayed(), // which land number this was
+		Type:              EvtLandPlayed,
+		SourceID:          card.ID(),
+		SourceIncarnation: visit,
+		PlayerID:          playerID,
+		Amount:            g.trackers.Turn.LandsPlayed(),
 	})
 	g.PutTriggersOnStack()
 

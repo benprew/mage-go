@@ -24065,6 +24065,31 @@ their existing services. This rule makes no choice or payment.
 Evidence: `TestUnlimitedLandPlayLifecycle`, `RestrictionsAndOverlap`, `Invalid`,
 `Legacy`, `StackTiming`, `CleanupAndFiniteGrants`; RON evidence is
 `TestRONUnlimitedLandPlayRealRules`, `Invalid`, `AtomicLoadAndInventory`.
-All six real Fastbond permission clauses execute; its complete records remain
-rejected for the missing land-play event. The damage predicate in those records
-also conflicts with local Oracle text. This slice does not establish that trigger.
+All six real Fastbond permission clauses execute. The land-play event contract
+below completes the corrected records and supplies full-record gameplay evidence.
+
+## Controller land-play events
+
+`ControllerPlaysLand(player *PlayerBinding, land *PermanentBinding,
+ordinal *NumberBinding)` matches `EvtLandPlayed` for the source's controller
+at detection. All three bindings are required and checked before gameplay.
+`.AfterFirst()` requires the event ordinal to exceed one. This is an immutable
+fact about that play, rather than a query of the current turn tracker or land.
+The same historical predicate remains true at resolution (CR 603.4).
+
+`playLandCore` supplies the successful play's ordinal and entrant incarnation.
+Hand and permitted library plays use this path. Failed plays publish no event;
+direct battlefield entry is not a play (CR 305.1–4). An entry replacement does
+not turn the completed special action into a spell or a direct-entry action.
+
+Shared event captures retain the player, exact land visit and ordinal for each
+pending ability. Later control changes, source departure, phasing and turn
+history reset cannot redirect that pending ability. A returned or phased land
+cannot satisfy a saved permanent read. Source absence, phasing and ability
+removal suppress future detection through the normal trigger service. Clone,
+stack, source LKI, damage prevention and trigger placement services remain shared.
+No new cost, replacement-order or simultaneous-operation service is introduced.
+
+Evidence: `TestLandPlayEventSnapshot`, `Matching`, `IndependentPending`,
+`LibraryAndFailure`, `Invalid`; `TestRONLandPlayEventFastbond`, `Bindings`,
+`Lifecycle`, `Invalid`, `AtomicLoadAndInventory`.

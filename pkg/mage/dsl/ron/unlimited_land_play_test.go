@@ -48,8 +48,8 @@ func TestRONUnlimitedLandPlayRealRules(t *testing.T) {
 					t.Fatal("permission escaped controller", err)
 				}
 			}
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "WhenAPlayerPlaysALand") {
-				t.Fatalf("wrong full-record boundary: %v", err)
+			if _, err := Compile(record); err != nil {
+				t.Fatalf("full record rejected: %v", err)
 			}
 		})
 	}
