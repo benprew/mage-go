@@ -22524,3 +22524,40 @@ legality and exact history, resolution power, zero counters, counter recovery,
 control, phasing, return, ability removal, spell/trigger copies and clone
 isolation. No new payment, replacement, event or simultaneous-operation
 mechanism is introduced.
+
+## Entry-time life loss
+
+RON accepts `AsPermanentEnters(ThisPermanent, [LoseLife(value)])` on a
+permanent, with exactly one operation. Values are `Integer(n)` for any integer,
+or `LifeTotalOfPlayer(You)` with a strict symbol. You is the entering controller,
+including entry under another player's control. Other players, lexical action
+subjects, targets, announced X, arithmetic and mixed entry lists reject in this
+context. Ordinary resolving life values keep their existing grammar.
+
+The adapter creates a fresh `LoseLifeAsEnters(amount ResolutionValue) Ability`.
+The shared entry replacement pipeline applies it at default priority once per
+entry declaration. It reads the amount after earlier replacements. Copy entry
+runs first and can remove the physical rule or supply a fresh copied rule.
+The engine calls `Game.PlayerLoseLife`; positive loss emits the existing life
+loss event, while nonpositive amounts do nothing. Damage prevention cannot stop
+life loss. This operation does not use a life payment or set a life total.
+
+Loss occurs before battlefield registration and entry events. The entrant's
+own battlefield life-loss trigger cannot observe this earlier loss. Earlier
+entry cancellation stops the operation; later cancellation keeps an applied
+loss. Separate declarations each apply once. Batch entry completes the losses
+and registers all successful entrants before entry observations. Source entry,
+return and copies perform new loss; phasing does not. Immutable declarations
+and per-entry replacement identities keep factory instances and clones separate.
+Nil amounts and unbound references fail native definition validation; spell-only
+cards cannot declare this battlefield entry rule.
+
+Evidence: `TestEntryLifeLossTiming`, `ReplacementOrder`, `CopyReturnAndClone`,
+`BatchAndIndependentRules` and `Invalid`; `TestRONEntryLifeLossLich`,
+`Resolution`, `FixedAndLifecycle`, `Invalid` and `Inventory`. The Lich test runs
+only the unchanged entry clause from all five full records inspected and keeps
+full-record rejection explicit. Lich's other rules remain unsupported; this is
+entry-clause evidence, not complete-card coverage. Local `data/LEA.json` agrees
+with the entry text. CR 119.3, 603.6d, 614.1c/12, 616.1c/e/f and 704.3 supply
+the life change, timing, replacement order and priority boundaries. No RON source
+changed. No new state-based action, damage, cost or event service was added.

@@ -82,7 +82,7 @@ func TestRONLifeTotalInvalid(t *testing.T) {
 		`SpellActions(ActionList([LoseLife(LifeTotalOfPlayer(ThisPermanent))]))`,
 		`SpellActions(ActionList([LoseLife(LifeTotalOfPlayer)]))`,
 		`SpellActions(ActionList([LoseLife(LifeTotalOfPlayer(You,You))]))`,
-		`AsPermanentEnters(ThisPermanent,[LoseLife(LifeTotalOfPlayer(You))])`,
+		`AsPermanentEnters(ThisPermanent,[LoseLife(LifeTotalOfPlayer(ActionPlayer))])`,
 		`SpellActions(ActionList([LoseLife(LifeTotalOfPlayer(ActionPlayer))]))`,
 		`SpellActions(ActionList([PlayerActions(You,[LoseLife(Integer(1))]),LoseLife(LifeTotalOfPlayer(ActionPlayer))]))`,
 		`CreatePermanentLayerEffect(ThisPermanent,[AdjustPTX(+1,+1,LifeTotalOfPlayer(You))])`,

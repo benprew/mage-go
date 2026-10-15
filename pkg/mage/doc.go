@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [LoseLifeAsEnters] causes the entry controller to lose a typed amount.
+// Shared entry replacements apply it once before battlefield observations.
+// Earlier replacements can change the amount. Copy rules can replace the rule.
+// A later cancelled entry keeps the loss. Earlier cancellation makes no loss.
+// Shared life handling supplies events; damage prevention does not stop loss.
+// Nonpositive amounts do nothing. Return reads again; phasing does not.
+// Batch entry completes all losses before entry observations. Clones stay separate.
+// RON accepts one source-entry LoseLife with Integer or LifeTotalOfPlayer(You).
+// This establishes Lich's entry clause. Its other rules still need adapters.
+// Other entry life values, subjects and operation lists remain unsupported.
+//
 // [AcquireStaticAbility] also accepts [PreventUntapDuringStep].
 // The exact recipient keeps the grant. Its current counters and controller
 // supply untap decisions. Ability removal uses layer order. Phasing suspends

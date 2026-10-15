@@ -1223,7 +1223,7 @@ type playerLifeTotalValue struct{ subject PlayerRef }
 
 type playerLifeGainedThisTurnValue struct{ subject PlayerRef }
 
-// LifeTotalOf reads the selected player's current life total at resolution.
+// LifeTotalOf reads the selected player's current life total.
 func LifeTotalOf(subject PlayerRef) ResolutionValue { return playerLifeTotalValue{subject} }
 
 func (v playerLifeTotalValue) Text() string { return "life total of player" }

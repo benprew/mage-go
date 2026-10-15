@@ -1486,6 +1486,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "entry_operation":
+		if n.Name == "LoseLife" && len(n.Args) == 1 {
+			return "entry_value"
+		}
 		if n.Name == "PayAnyAmountOfLifeUpto" && len(n.Args) == 1 {
 			return "value"
 		}
@@ -1517,6 +1520,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"entry_value", "permanent_counter_type"}[index]
 		}
 	case "entry_value":
+		if n.Name == "LifeTotalOfPlayer" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}

@@ -8,16 +8,17 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **919 accepted / 67 rejected names**
 (986 total), **2,299 compiled / 146 rejected records** (2,445 total).
-The latest slice is **LASTING-CONDITIONAL-ABILITY-GRANTS**.
-Resolving AddAbility lists now support conditional untap rules and
-controller-upkeep triggers with fresh recipient scopes. Acquired untap rules
-use the existing static acquisition, exact visit, layer order and untap services.
-Current counters and control, phasing, return, ability removal, copies and
-clones have native and RON evidence. Glyph of Delusion now executes its complete
-unchanged record, including both lasting abilities. Its earlier target suite
-also uses the complete record. Actual gain is **one name / one record**,
-matching the estimate. Complete-card gameplay coverage gains Glyph of Delusion.
-No RON source changed. All required validation passed; lint reported zero issues.
+The latest slice is **ENTRY-TIME-LIFE-LOSS**.
+Source entry now accepts one LoseLife operation with Integer or
+LifeTotalOfPlayer(You). The engine applies the typed amount once through shared
+entry replacements before battlefield observations and uses shared life events.
+Order, cancellation, copied entry rules, nonpositive amounts, controller,
+phasing, return, clones and batch entry have native and RON evidence.
+Lich's unchanged entry clause executes in all five reprints; its other rules
+still reject. Actual gain is **zero names / zero records**, matching the estimate.
+Complete-card gameplay coverage is unchanged. Only Lich's five diagnostics
+advance to DoesntLoseTheGameForHaving0OrLessLife. No RON source changed.
+All required validation passed; lint reported zero issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,17 +27,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Typed life-total values:** Personal Incarnation, Lich and Shahrazad share
-   `LifeTotalOfPlayer`. Ordinary resolution, entry and action-player contexts need
-   explicit contracts. No immediate full-card gain is assumed. Personal
-   Incarnation also needs bounded redirection and its rounding correction below.
-2. **Saved tap facts:** Phyrexian Gremlins and Vodalian War Machine need action
-   results and paid-tap histories. Inspect their complete records before choosing
-   a shared exact-visit prerequisite; they are different producers.
-3. **Combat history:** Giant Shark needs the zero-argument damage-history filter.
-   Glyph of Delusion needs a dependent block-history target predicate; Glyph of
-   Reincarnation already has a block-history collection adapter but still needs
-   casting timing, death-result iteration and former-block controller facts.
+1. **Lich loss exemption:** `PlayerEffect(You,
+   [DoesntLoseTheGameForHaving0OrLessLife])` needs a live source adapter.
+   Entry loss is complete. Gain-to-draw replacement, mandatory plural sacrifice
+   result and game-loss clauses remain; estimate zero immediate full-card gains.
+2. **Death-result iteration:** Glyph of Reincarnation needs exact death members
+   and per-member result frames. Block history and former controller services
+   exist; IsAfterCombat still blocks a complete-card gain.
+3. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
+   grants, recursive resolving copy changes and ThisAbility retention. The
+   upkeep parser is reusable; estimate zero immediate full-card gains.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -17761,3 +17761,133 @@ Changed files: engine `acquired_static.go`, new `acquired_untap_test.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement lasting conditional ability grants`.
 This run stops after LASTING-CONDITIONAL-ABILITY-GRANTS.
+
+
+## 2026-10-14 — ENTRY-TIME-LIFE-LOSS
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and uncached RON package tests
+passed. Fresh loader JSON reported 2,299 compiled / 146 rejected records and
+919 accepted / 67 rejected unique names. Its exit 1 was collection rejection,
+not a build or test failure. Complete Lich, Glyph of Reincarnation and Vesuvan
+Doppelganger records and nested forms were inspected. Targeted vocabulary reads
+covered AsPermanentEnters, LoseLife, LifeTotalOfPlayer, death-result iteration,
+CopyEffects and AddAbilityVariable. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Remaining blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Entry-time life loss | Lich (five records) | 0 | Required entry clause before Lich's loss exemption, gain-to-draw replacement, mandatory plural sacrifice result and game-loss clauses; shared typed pre-entry life handling | Small/medium: new entry replacement and strict adapter, timing/order/copy/batch tests |
+| Death-result iteration | Glyph of Reincarnation (one record) | 0 | IsAfterCombat still blocks the complete card; exact death visits, per-member result frames and former block-controller reads enable the later return procedure | Medium/large: simultaneous deaths and result-scope contracts |
+| Copy-effect ability grants | Vesuvan Doppelganger (six records) | 0 | Recursive resolving copy changes and ThisAbility retention still block the complete card; upkeep parser exists, copiable grant retention does not | Large: copy exceptions, retained declarations and recursive copy lifecycle |
+
+Candidate 1 is the latest entry's first-ranked, dependency-ready prerequisite.
+Shared entry ordering, typed life values and life events already exist. It is
+selected as a required prerequisite, not as an estimated multi-card unlock.
+The other compared candidates also have zero immediate gains and require more
+new contracts. No first-error frequency was treated as an unlock estimate.
+Before edits, the contract and acceptance cases were stated: pre-entry life
+loss, current entry-controller life, nonpositive amounts, prevention independence,
+replacement order/cancellation, copies, phasing, return, clones, batch entry
+and invalid lexical references. This run implements only that contract.
+
+### Supported shapes, dependencies and boundaries
+
+RON accepts `AsPermanentEnters(ThisPermanent, [LoseLife(value)])` on permanent
+cards with one operation. `value` is exactly `Integer(n)` for any integer or
+`LifeTotalOfPlayer(You)` with a strict symbol. Other subjects, result references,
+targets, X, arithmetic, tuple aliases and mixed operation lists reject here.
+Ordinary resolving life-value contexts keep their existing grammar and scope.
+
+New native signature: `LoseLifeAsEnters(amount ResolutionValue) Ability`.
+Its definition retains the typed amount and requires a battlefield source.
+Nil amounts, nil players and unbound bindings fail definition validation.
+Each factory has a fresh ability; each entry has separate replacement identities.
+The shared entry candidate cache uses declaration provenance and the loss-rule
+index so competing replacements cannot repeat a loss. Copy replacements run
+first and can remove the original rule or supply newly acquired loss rules.
+
+RON owns spelling, arity, entry-value restrictions and inventory roles. The
+engine owns the typed entry context, live life read, exact entry visit, default
+replacement priority, affected-player ordering, rechecks and event processing.
+`LifeTotalOf`, `Game.PlayerLoseLife`, battlefield entry preparation, copy
+builders, batch registration and game clones are reused. Loss is independent
+of damage prevention. Nonpositive amounts do nothing. Earlier cancellation
+stops loss; later cancellation keeps it. Distinct loss declarations each apply
+once. Batch entry observers see all successful entrants and completed losses.
+The entrant's own battlefield loss trigger cannot observe its earlier entry
+loss. Return applies loss again; phasing does not. Clones and factory instances
+keep separate life and entry state. No new cost, LKI, damage, state-based action,
+zone or trigger service was added; source-dependent values beyond the stated
+RON grammar are not claimed as new entry adapters.
+
+Local `data/LEA.json` confirms Lich's entry clause. CR 119.3, 603.6d,
+614.1c/12, 616.1c/e/f and 704.3 support life changes, pre-entry timing,
+replacement order and priority boundaries. No source defect was found or fixed.
+No RON source changed, so the vocabulary snapshot was not regenerated.
+Go definitions and existing DSL callers remain intact; no removal gate is open.
+
+### Failing-first and card-to-test evidence
+
+New RON tests first failed at `unsupported entry operation (LoseLife)` in all
+five Lich records, the synthetic resolving fixture and semantic inspection.
+Native tests first failed to compile at the new `LoseLifeAsEnters` signature.
+A test-only `NewPlayerBinding` spelling was corrected to `BindPlayer`;
+a later test-only `GainLife` spelling was corrected to `GainLifeFor`.
+The old invalid entry-life-total case now uses unbound ActionPlayer; the new
+suite supplies positive coverage for the newly supported You declaration.
+
+| Unique card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Lich entry clause; LEA:140, LEB/2ED/CED/CEI:141 | TestRONEntryLifeLossLich | Compile the unchanged entry subrule from every inspected complete record; alternate entry controller, ownership, prevention independence, entry observations; complete records still reject explicitly |
+| Supported synthetic RON shapes | TestRONEntryLifeLossResolution, FixedAndLifecycle, Invalid, Inventory | Native spell casting and queued ETB body; current life, clone execution, fixed positive/zero/negative values, over-life loss, return/control, phasing, factory isolation, invalid bindings/nonpermanents and role reporting |
+| Reusable engine contract | TestEntryLifeLossTiming, ReplacementOrder, CopyReturnAndClone, BatchAndIndependentRules, Invalid | Life-event timing, absent entrant from battlefield observations, own trigger exclusion, nonpositive totals, order/rechecks, cancellation before/after loss, acquired copy rule, return, phasing, clone isolation, batch observations and separate declarations |
+
+Compilation gains are **zero names / zero records**, matching the estimate.
+Complete-card gameplay coverage gains zero. Clause-level RON coverage now
+includes Lich's entry in all five reprints. Lich's remaining rules are explicit
+blockers; its entry fixture does not claim a complete-card implementation.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONEntryLifeLoss' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestEntryLifeLoss' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass, including the unchanged record
+  census, accepted-definition reconstruction and existing gameplay tests.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed final source and formatting; no
+  unrelated changes. The full RON suite and native entry life/copy/sacrifice/
+  variant regression suites passed again after lint.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1; **919 accepted /
+  67 rejected names**, **2,299 compiled / 146 rejected records**. Only five
+  diagnostics changed: Lich reprints advanced from `unsupported entry operation
+  (LoseLife)` at column 186 to `unsupported player rule operation
+  (DoesntLoseTheGameForHaving0OrLessLife)` at column 241. No accepted record or
+  other diagnostic changed.
+- `git diff --check`: pass, including this ledger update.
+
+Collection loading still rejects atomically. Complete collection gameplay,
+runtime cutover, Go-card and generator removal, DSL cleanup and native startup
+remain unfinished. No second slice was started.
+
+### Ranked next candidates
+
+1. Lich's `PlayerEffect(You, [DoesntLoseTheGameForHaving0OrLessLife])` adapter
+   and live source lifecycle. Estimated zero full-card gains; gain replacement,
+   mandatory sacrifice-result and game-loss clauses remain. Audit existing
+   loss-exemption services, current control, phasing and ability removal.
+2. Per-death action-result iteration for Glyph of Reincarnation. Estimated zero
+   until IsAfterCombat is supported. Exact block history and former controller
+   services exist; audit simultaneous deaths, result frames and owner control.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Estimated zero until
+   recursive resolving copy changes and ThisAbility retention also work.
+   Reuse the upkeep parser; audit copiable declarations and copy exceptions.
+
+Changed files: engine new `entry_life_loss.go` and `entry_life_loss_test.go`,
+`entry_copy.go`, `composable_target.go` and `doc.go`; RON new
+`entry_life_loss.go` and `entry_life_loss_test.go`, `entry_tapped.go`,
+`inventory.go` and `life_total_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement entry-time life loss`.
+This run stops after ENTRY-TIME-LIFE-LOSS.
