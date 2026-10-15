@@ -1042,6 +1042,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "SinglePermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "delayed_source_event":
+		if n.Name == "Or" && len(n.Args) == 1 {
+			return "delayed_source_event"
+		}
+		if (n.Name == "WhenPermanentLeavesTheBattlefield" || n.Name == "WhenPermanentBecomesUntapped") && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "delayed_step_event":
 		if (n.Name == "AtTheBeginningOfPlayersNextUpkeep" || n.Name == "AtTheBeginningOfPlayersNextMainPhase") && len(n.Args) == 1 {
 			return "player_reference"
@@ -1140,6 +1147,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {
+				if index == 0 && (n.Args[0].Name == "Or" || n.Args[0].Name == "WhenPermanentLeavesTheBattlefield" || n.Args[0].Name == "WhenPermanentBecomesUntapped") {
+					return "delayed_source_event"
+				}
 				return []string{"delayed_step_event", "actions"}[index]
 			}
 		case "ActionForEachPermanent":

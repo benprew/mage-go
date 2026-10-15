@@ -8,15 +8,16 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **923 accepted / 63 rejected names**
 (986 total), **2,307 compiled / 138 rejected records** (2,445 total).
-The latest slice is **COUNTER-SNAPSHOT-ENTRY**.
-RON saves typed counter snapshots in ordinary resolving bodies and restores them
-in the existing owner-controlled plural exile-entry context. Mage reads exact
-visits with LKI and combines saved/native entry counts before replacements.
-Independent frames, phasing, return, entry copies, cancellation and clones have
-tests. Coffin remains blocked on its delayed leave/untap event union and exact
-single-entry success continuation. Estimated and actual gain: zero complete
-names / records. Its snapshot prerequisite now has RON gameplay coverage.
-No RON source changed; no accepted record regressed.
+The latest slice is **DELAYED-SOURCE-LEAVE-UNTAP**.
+RON lowers future source leave and untap events and their two-member union.
+Mage consumes one subscription at the first matching future event for one exact
+visit. Shared delayed frames retain bindings, source/controller facts, copies
+and clones. Tests cover timing, phasing, return, stun and simultaneous departure.
+Coffin now rejects at required single exile-entry payment. Animate Dead still
+needs graveyard Aura contracts and a typed departure-controller capture adapter.
+Estimated and actual gain: zero complete names / records. Both cards' unchanged
+event clauses have new RON gameplay evidence. No accepted record regressed.
+No RON source changed. Complete-card gameplay coverage is unchanged.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,19 +26,17 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Exact single exile-entry success/result:** Coffin's counter snapshot and
-   native restoration option are available. It still needs the required entry
-   continuation, an exact entrant result and its source leave/untap event union.
-   Estimate zero gains until both remaining contracts land; eventual one name /
-   one record.
-2. **Source leave/untap delayed union:** save the exact source visit and install
-   only for future events. Coffin needs the union; Animate Dead needs shared
-   source-leave capture for its later linked sacrifice.
-3. **Copy grants or graveyard Aura attachment:** Vesuvan Doppelganger still needs
-   copiable upkeep grants, recursive resolving copies and ThisAbility retention.
-   Animate Dead needs exact graveyard hosts, entry linkage and acquired linked
-   enchant declarations. Each first prerequisite estimates zero gains; eventual
-   one name / six records each.
+1. **Exact single exile-entry success/result:** Coffin's saved counters and
+   source leave/untap union are now available. Implement owner control, tapped
+   entry, counter restoration, exact entrant result and required success
+   continuation. Estimated gain: one name / one record after the complete shape.
+2. **Graveyard Aura attachment:** Animate Dead still needs exact graveyard hosts,
+   return linkage, acquired linked enchant declarations, presence condition and
+   departure-controller capture. First prerequisite estimates zero immediate
+   gains; eventual one name / six records. Reassess shared uses before selecting.
+3. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
+   recursive resolving copies and ThisAbility retention. First prerequisite
+   estimates zero immediate gains; eventual one name / six records.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -20162,3 +20161,177 @@ This run stops after COUNTER-SNAPSHOT-ENTRY.
 3. Copiable ability grants / recursive copies for Vesuvan Doppelganger, or
    graveyard Aura attachment for Animate Dead. Each still has multiple independent
    blockers; estimated zero gains from one prerequisite alone.
+
+## 2026-10-15 — DELAYED-SOURCE-LEAVE-UNTAP
+
+### Baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The loader exited 1
+with valid JSON: 923 accepted / 63 rejected names and 2,307 compiled / 138 rejected
+records, from 986 names / 2,445 records. This was collection rejection, not a
+build or test failure. No unrelated files needed preservation.
+
+The latest entry ranked single exile-entry results first, source leave/untap
+second, and copiable grants / graveyard Auras third. Complete RON records and
+nested forms support this comparison; identical reprints count once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Exact single exile-entry success/result | Tawnos's Coffin | 0 while its event union is absent | Enables its counter-bearing tapped entry and Aura success continuation; eventual 1 name / 1 record | Medium: entry mechanics, results, branching, replacements and invalid declarations |
+| Delayed source leave/untap events | Tawnos's Coffin; Animate Dead | 0 | Coffin still needs single entry; Animate Dead needs graveyard Aura attachment, linkage, enchant changes, presence condition and departure-controller capture. Shared exact-visit delayed lifecycle advances 2 names / 7 records | Medium: one shared trigger subscription, strict lowering, identity/timing/frame tests |
+| Copiable ability grants | Vesuvan Doppelganger | 0 | Still needs recursive resolving copies and ThisAbility retention; eventual 1 name / 6 records | High: copiable recursive definitions, ability identity and layer interactions |
+
+Candidate 1 was dependency-ready but advanced one card while a concrete shared
+prerequisite remained. Candidate 2 supplies the source-event lifecycle for two
+cards at comparable effort. It was selected without implementing their remaining
+clauses. Candidate 3 has more independent contracts and greater effort.
+
+Complete records were read for all three names. A fresh scan confirms 1 Coffin,
+6 Animate Dead and 6 Doppelganger records, with one distinct complete record per
+name. All local rulings were read through their exact index entries; each file
+contains wotc rulings, with no scryfall notes used as authoritative rules.
+`go run ./cmd/fetchset -check -card <name>` passed for each of the three names.
+CR 603.6c, 603.7a–e, 603.10a and 400.7 establish future installation, one-shot
+matching, source/controller capture, departure observation and object identity.
+CR 702.26d supplies the phasing distinction. Coffin's published ruling explicitly
+requires no later return when it departs before its activation resolves.
+No source-data defect was found or corrected.
+
+### Supported signatures, contexts and reuse boundary
+
+Native API:
+
+- `WhenLeaves(subject PermanentRef, body ResolvingEffect) ResolvingEffect`.
+- `WhenUntaps(subject PermanentRef, body ResolvingEffect) ResolvingEffect`.
+- `WhenLeavesOrUntaps(subject PermanentRef, body ResolvingEffect) ResolvingEffect`.
+
+All require a present, unphased exact subject visit at installation. The union
+registers one subscription and is consumed at the first matching event. Cleanup
+does not expire these one-shot subscriptions. Earlier leave/untap events cannot
+replay. A returned incarnation cannot substitute for a saved visit. Control and
+characteristic changes preserve it. Phasing sends neither event and preserves
+the subscription. Stun replacement sends no untap event. Departure matching uses
+the existing former-battlefield observer, including simultaneous departures.
+
+The engine extends delayedPermanentEventEffect and adds a private scalar
+alternate event type to DelayedTrigger. Shared matching, captureDelayedBody,
+waiting-source queries, APNAP pending placement, stack copying, binding cleanup
+and game cloning remain the owners of their behavior. Existing turn-scoped
+callers retain their signatures and repeat/expiry semantics. Definition checks
+reuse existing typed subject/body and binding-dominance validation. There is no
+new mutable result registry, global last-action slot or card-name branch.
+
+RON accepts `CreateFutureTrigger(event, ActionList(actions))`, where event is
+`WhenPermanentLeavesTheBattlefield(ThisPermanent)`,
+`WhenPermanentBecomesUntapped(ThisPermanent)`, or their exact two-member `Or`
+list in either order. Subjects are strict ThisPermanent symbols. Duplicate
+members, other subjects, invalid arities, empty bodies and new body targets
+reject. Ordinary resolving permanent-source activations, triggers (including
+source-entry triggers), and nested delayed bodies are supported. Entry and draw
+replacement operations, source-zone rules and spells do not supply this shape.
+The event introduces no new event bindings; ControllerOfLeavingPermanent still
+rejects and requires a separate capture adapter. Outer lexical bindings remain
+available through existing captured frames. The inventory now distinguishes
+these events and their permanent-reference operands from delayed step events.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, TestRONDelayedLeaveUntap and CardClauses failed with
+unsupported delayed step event diagnostics for both leaves and Or. Native tests
+failed compilation only at the three new API signatures, after correcting a
+fixture's nonexistent DestroyAll spelling to the existing DestroyEach service.
+The inventory test then failed with delayed_step_event instead of
+delayed_source_event before the role adapter was added.
+
+A native fixture initially used two ApplyEffect calls as one binding frame;
+ApplyEffect correctly isolates those calls. The corrected fixture supplies the
+exact captured visit through the existing applyEffectWithCardSetCaptures service.
+Additional tests exposed an adapter rejection of source-entry trigger bodies:
+enteringSource also marks resolving entry triggers, so it cannot alone identify
+an entry replacement. The adapter now permits that resolving context; entry
+replacement grammars still reject the action. Final review added TestDelayedLeaveUntapNestedWaitingSource. It failed because
+the installer did not declare its source read while itself waiting inside a
+future step trigger. The delayed permanent-event effect now declares its subject
+and body reads through the shared pure query interface. Returned sources retain
+the old source information but cannot supply a live installation.
+
+An overlapping synthetic exile
+collection was changed to a distinct enchantment group so the saved-frame test
+asserts the intended membership without changing shared grouped-exile semantics.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Coffin and Animate Dead event clauses | TestRONDelayedLeaveUntapCardClauses | Extracts unchanged event ASTs from complete ATQ/LEA records and executes each through a supported resolving RON probe |
+| RON event shapes and lifecycle | TestRONDelayedLeaveUntap | Both leaves, both union orders, prior events, phase cycle, control changes, copied installations and cloned pending bodies |
+| RON saved results and pure queries | TestRONDelayedLeaveUntapSavedFrames | Retains exact grouped exile and noted counters through waiting queries, source departure and game clones; restores the selected group under its owner's control |
+| RON per-instance identity | TestRONDelayedLeaveUntapInstances | Two factories, distinct targets/controllers/sources, independent pending installations and waiting clones |
+| RON context and declaration boundary | TestRONDelayedLeaveUntapInvalid, Contexts, ContextRejection, Inventory | Invalid shapes, roles, bindings and contexts reject; entry-trigger and nested delayed bodies execute; inventory keeps typed roles |
+| Native event timing and saved visits | TestDelayedLeaveUntap | Leave/untap union, absent/returned/phased installation, no replay, cleanup lifetime, actual stun replacement, control, phase cycle, simultaneous destruction, pending/stack timing, stack copy and waiting/pending clones |
+| Native nested waiting source | TestDelayedLeaveUntapNestedWaitingSource | Repeated pure queries retain the exact live or departed/returned source; only the saved future step can install, and a returned visit cannot replace it |
+| Native isolated leaves and validation | TestDelayedLeaveUntapEventIsolation, Declarations | Other objects and wrong event kinds cannot trigger; returned visits cannot match; pending departures survive return; nil and undominated declarations reject |
+
+Coffin's full record still rejects, now at
+`ATQ.lines.ron:67:667: unsupported mandatory sacrifice cost (PutExiledCardOntoBattlefield)`.
+Animate Dead still rejects at EnchantGraveyardCard. These are prerequisite
+mappings, not claims of complete-card gameplay coverage. The prior counter
+snapshot test now asserts Coffin's new remaining gap.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONDelayedLeaveUntap' -count=1`
+  and `go test ./pkg/mage -run '^TestDelayedLeaveUntap' -count=1`: pass.
+  The counter snapshot focused group also passed with its updated gap assertion.
+- Final `make build` and `go vet ./...`: pass.
+- Final `go test ./pkg/mage/... -short -count=1` and `make test`: pass.
+- Initial lint attempts reported always-nil numbers, then cards arguments in
+  applyEffectWithCaptures after the native fixture added a caller. The fixture
+  now uses the underlying shared captured-frame service and actually reads a
+  saved number in its delayed body. No production helper signature was changed,
+  no check was suppressed and no test was weakened.
+- Final `make lint`: pass, 0 issues. Import grouping from earlier formatter runs
+  was reviewed. SHA-256 comparison of all 10 changed/new Go files proves final
+  lint changed none of the code checked by the focused/build/vet/short/full run.
+- `git diff --check`: pass.
+
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON.
+  Counts remain **923 accepted / 63 rejected names**, **2,307 compiled / 138
+  rejected records**, from 986 names / 2,445 records. A parsed comparison asserts
+  identical rejected-record keys and exactly one diagnostic change: Coffin's
+  delayed Or gap becomes required PutExiledCardOntoBattlefield at column 667.
+  All other diagnostics are unchanged. No accepted record regressed.
+
+Actual full-card gain is **0 names / 0 records**, matching the estimate.
+Compilation counts and complete-card gameplay coverage are unchanged; the
+shared event prerequisite gains the mapped RON/native gameplay evidence above.
+No environment failure or source correction remains. RON source is unchanged,
+so no vocabulary snapshot refresh is required. Atomic collection rejection,
+complete collection gameplay, runtime cutover, Go-card/generator deletion and
+unused DSL removal remain gated. Existing callers were preserved. No removal
+gate was reached and no DSL function was removed. No fallback, partial production
+registry, skipped rule or game-time declaration panic was introduced.
+
+Changed files: `pkg/mage/composable_conditions.go`, `delayed_leave_untap_test.go`,
+`game.go`, `trigger_system.go`, `doc.go`;
+`pkg/mage/dsl/ron/delayed_source_event.go`, `delayed_leave_untap_test.go`,
+`delayed_step.go`, `inventory.go`, `counter_snapshot_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+
+Commit title: `feat(ron): implement delayed source leave and untap events`.
+Signing is disabled for this commit invocation, following the prior recorded
+interactive signing-key limitation. Repository configuration is unchanged.
+
+### Ranked next candidates
+
+1. Exact single exile-entry result and required success continuation, with owner
+   control, tapped entry and saved counters. Coffin's source event union is now
+   supported. Estimated full gain: 1 name / 1 record for the complete shape.
+2. Graveyard Aura attachment and exact host identity. Animate Dead still needs
+   entry linkage, linked enchant grants, presence condition and departure-player
+   capture. Estimate zero immediate gains for one prerequisite; eventual 1 name /
+   6 records. Reassess shared uses before selecting.
+3. Copiable ability grants / recursive copies for Vesuvan Doppelganger. Keep
+   ThisAbility identity explicit. Estimate zero gains for one prerequisite;
+   eventual 1 name / 6 records.
+
+This run stops after DELAYED-SOURCE-LEAVE-UNTAP.

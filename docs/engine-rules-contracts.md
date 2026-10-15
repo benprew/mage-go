@@ -39,8 +39,9 @@ above 255, zero replacement, LKI, phasing, return, copy entry, cancellation,
 entry observations, counter replacements, clones and pure waiting queries.
 `TestRONCounterSnapshot*` covers unchanged Coffin clauses in a supported delayed
 entry probe, scope rejection, contexts, separate factories, delayed stack copies
-and game clones. Tawnos's Coffin's complete record still rejects at its delayed
-leave/untap event union; these probes establish prerequisite behavior only.
+and game clones. Tawnos's Coffin's complete record still rejects at its required
+single exile-entry operation. Its leave/untap event union is now supported as
+documented below. These probes establish prerequisite behavior only.
 
 
 ## Non-Aura entry and departed-Aura entrant results
@@ -23171,3 +23172,40 @@ damage have full-record gameplay evidence. Full-record lifecycle cases include
 control changes, phasing, return, producer stack copies and pending clones.
 Earlier fragment tests remain as separate contract tests. No new payment,
 replacement-order or simultaneous-operation policy is introduced.
+
+## One-shot delayed leave and untap events
+
+`WhenLeaves(subject PermanentRef, body ResolvingEffect) ResolvingEffect`,
+`WhenUntaps(subject PermanentRef, body ResolvingEffect) ResolvingEffect`, and
+`WhenLeavesOrUntaps(subject PermanentRef, body ResolvingEffect) ResolvingEffect`
+watch one exact present battlefield visit. The union registers one subscription.
+Its first matching departure or actual untap consumes it before trigger placement.
+A second matching event cannot add another trigger. These subscriptions survive
+cleanup; the existing turn-scoped departure APIs retain their current behavior.
+
+CR 603.7a–e requires future events, one-shot detection, exact object identity,
+and the installing resolution's source and controller. Installation cannot use
+LKI as a live subject. Departure before installation creates no subscription;
+earlier untapping cannot replay. Control and characteristic changes preserve the
+visit. Phasing is no departure and a phase cycle preserves the subscription
+(CR 702.26d). A returned visit cannot match. A stun replacement sends no actual
+untap event and cannot consume the subscription. Departure matching uses the
+shared former-battlefield observer, including simultaneous departures and
+replaced destruction destinations.
+
+The implementation extends `delayedPermanentEventEffect` and `DelayedTrigger`
+with one scalar alternate event type. It reuses shared identity matching,
+`captureDelayedBody`, waiting-source queries, pending triggers, APNAP placement,
+stack copying and game cloning. It adds no mutable result registry. Definition
+validation rejects absent subjects/bodies and undominated binding reads.
+
+`TestDelayedLeaveUntap`, `TestDelayedLeaveUntapEventIsolation`, and
+`TestDelayedLeaveUntapDeclarations` cover the native contract.
+`TestDelayedLeaveUntapNestedWaitingSource` covers pure source reads when the
+installer itself waits in a future step body. A returned source retains its
+old information but cannot supply a live installation. The RON
+`TestRONDelayedLeaveUntap*` tests cover both event leaves and the union, unchanged
+Coffin and Animate Dead event ASTs, installation timing, independent copied
+installations, trigger and nested contexts, saved grouped exile/counter frames,
+clone isolation, pure waiting queries, invalid declarations and inventory roles.
+These tests establish a prerequisite; neither full card has new gameplay coverage.

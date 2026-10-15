@@ -39,8 +39,9 @@ above 255, zero replacement, LKI, phasing, return, copy entry, cancellation,
 entry observations, counter replacements, clones and pure waiting queries.
 `TestRONCounterSnapshot*` covers unchanged Coffin clauses in a supported delayed
 entry probe, scope rejection, contexts, separate factories, delayed stack copies
-and game clones. Tawnos's Coffin's complete record still rejects at its delayed
-leave/untap event union; these probes establish prerequisite behavior only.
+and game clones. Tawnos's Coffin's complete record still rejects at its required
+single exile-entry operation. Its leave/untap event union is now supported as
+documented below. These probes establish prerequisite behavior only.
 
 
 ## Non-Aura entry and departed-Aura entrant results
@@ -17554,3 +17555,30 @@ damage have full-record gameplay evidence. Full-record lifecycle cases include
 control changes, phasing, return, producer stack copies and pending clones.
 Earlier fragment tests remain as separate contract tests. No new payment,
 replacement-order or simultaneous-operation policy is introduced.
+
+## RON one-shot delayed source leave and untap events
+
+`CreateFutureTrigger(event, ActionList(actions))` accepts either
+`WhenPermanentLeavesTheBattlefield(ThisPermanent)` or
+`WhenPermanentBecomesUntapped(ThisPermanent)`, and
+`Or([WhenPermanentLeavesTheBattlefield(ThisPermanent),
+WhenPermanentBecomesUntapped(ThisPermanent)])`. The two union members can appear
+in either order. The union requires exactly one of each event, with the strict
+`ThisPermanent` symbol as both subjects. Duplicate events, other subjects,
+wrong arities, empty bodies and new targets in the delayed body reject.
+
+This shape supports ordinary resolving permanent-source activation, trigger
+and nested delayed bodies, including source-entry triggers. It uses
+`WhenLeaves`, `WhenUntaps`, or `WhenLeavesOrUntaps` in mage. It captures outer
+bindings per installation and consumes one subscription on the first matching
+future event. Cleanup does not expire it. Departure before installation cannot
+replay; untap before installation waits for the next actual untap. Phasing and
+control changes preserve the visit; return creates a different visit.
+
+Entry replacement operations, draw replacement bodies, source-zone rules and
+spell sources reject this shape. The event introduces no player or permanent
+binding in its body. `ControllerOfLeavingPermanent` needs a separate typed
+capture adapter. Existing delayed action rules and lexical bindings still apply.
+Coffin's required single exile-entry continuation and Animate Dead's graveyard
+Aura contracts remain unsupported. `TestRONDelayedLeaveUntap*` maps these event
+prerequisites without claiming full-card execution.

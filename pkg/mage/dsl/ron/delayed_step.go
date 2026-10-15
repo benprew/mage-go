@@ -7,6 +7,9 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "Or" || event.Name == "WhenPermanentLeavesTheBattlefield" || event.Name == "WhenPermanentBecomesUntapped" {
+		return compileDelayedSourceEvent(n, ctx)
+	}
 	var pattern mage.DelayedStepPattern
 	switch event.Name {
 	case "AtTheBeginningOfTheNextEndStep", "AtTheNextEndOfCombat", "AtNextEndOfCombatThisTurn":

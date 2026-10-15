@@ -1970,7 +1970,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	// Check delayed triggers (one-shot unless Persistent, removed after matching)
 	var remaining []*DelayedTrigger
 	for _, dt := range g.triggers.Delayed() {
-		if dt.EventType == evt.Type {
+		if dt.EventType == evt.Type || dt.alternateEventType != 0 && dt.alternateEventType == evt.Type {
 			if dt.damageReceived != nil && !dt.damageReceived.matches(&evt, g) {
 				remaining = append(remaining, dt)
 				continue

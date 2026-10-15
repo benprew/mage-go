@@ -12,7 +12,7 @@ import (
 
 func TestRONCounterSnapshotEntry(t *testing.T) {
 	record := repositoryRecord(t, "ATQ", "Tawnos's Coffin", "coffin.ron")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported delayed step event (Or)") {
+	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported mandatory sacrifice cost (PutExiledCardOntoBattlefield)") {
 		t.Fatalf("unexpected remaining Coffin gap: %v", err)
 	}
 	var note, counters Node

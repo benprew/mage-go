@@ -10,6 +10,7 @@ import (
 
 // DelayedTrigger keeps a saved ability until its event or duration ends.
 type DelayedTrigger struct {
+	alternateEventType   EventType
 	targetingAbilityID   uuid.UUID
 	modes                []Mode
 	interveningCondition StateCondition

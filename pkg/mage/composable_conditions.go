@@ -440,6 +440,8 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 
 // --- from composable_delayed_death.go ---
 type delayedPermanentEventEffect struct {
+	once         bool
+	untaps       bool
 	subject      PermanentRef
 	body         ResolvingEffect
 	leaves       bool
@@ -464,12 +466,36 @@ func WhenLeavesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEff
 	return &delayedPermanentEventEffect{subject: subject, body: body, leaves: true}
 }
 
+// WhenLeaves watches the next departure of one exact battlefield visit.
+func WhenLeaves(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &delayedPermanentEventEffect{subject: subject, body: body, leaves: true, once: true}
+}
+
+// WhenUntaps watches the next actual untap of one exact battlefield visit.
+func WhenUntaps(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &delayedPermanentEventEffect{subject: subject, body: body, untaps: true, once: true}
+}
+
+// WhenLeavesOrUntaps consumes one trigger at the first matching event.
+func WhenLeavesOrUntaps(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &delayedPermanentEventEffect{subject: subject, body: body, leaves: true, untaps: true, once: true}
+}
+
 // WhenAttacksUnblockedThisTurn watches the original object in each combat this turn.
 func WhenAttacksUnblockedThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
 	return &delayedPermanentEventEffect{subject: subject, body: body, unblocked: true}
 }
 
 func (e *delayedPermanentEventEffect) Text() string {
+	if e.once {
+		if e.leaves && e.untaps {
+			return "when that permanent leaves the battlefield or becomes untapped"
+		}
+		if e.leaves {
+			return "when that permanent leaves the battlefield"
+		}
+		return "when that permanent becomes untapped"
+	}
 	if e.unblocked {
 		return "when that creature attacks unblocked this turn"
 	}
@@ -477,6 +503,10 @@ func (e *delayedPermanentEventEffect) Text() string {
 		return "when that permanent leaves the battlefield this turn"
 	}
 	return "when that permanent dies this turn"
+}
+
+func (e *delayedPermanentEventEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject) || effectReadsSourcePermanent(e.body)
 }
 
 func (e *delayedPermanentEventEffect) Properties() EffectProperties {
@@ -519,9 +549,16 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 		sourceIncarnation: body.sourceIncarnation,
 		matchIncarnation:  permanent.incarnationID,
 		deathCapture:      e.deathCapture,
-		Persistent:        true,
+		Persistent:        !e.once,
 	}
-	if e.unblocked {
+	if e.untaps {
+		if e.leaves {
+			dt.alternateEventType = EvtBecameUntapped
+		} else {
+			dt.EventType = EvtBecameUntapped
+			dt.MatchFromZone = ZoneAny
+		}
+	} else if e.unblocked {
 		dt.EventType = EvtAttacksUnblocked
 		dt.MatchFromZone = ZoneAny
 	} else if !e.leaves {

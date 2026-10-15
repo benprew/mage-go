@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WhenLeaves], [WhenUntaps] and [WhenLeavesOrUntaps] watch one exact visit.
+// The union consumes one subscription at the first matching future event.
+// Cleanup preserves it. Earlier events cannot replay. Return cannot match.
+// Phasing preserves the visit. Stun replacement supplies no actual untap.
+// Shared delayed frames keep bindings, copies and clones separate.
+// RON accepts the source leave and untap events and their two-member Or union
+// in ordinary resolving permanent-source bodies. The body gets no event players.
+// Coffin still needs single exile-entry continuation. Animate Dead still needs
+// graveyard Aura contracts and a departure-controller capture adapter.
+//
 // [BindCounterSnapshot] declares saved counts for all counter kinds.
 // [SnapshotCounters] reads one exact visit, with shared departure and phasing LKI.
 // [EnterWithSavedCounters] restores counts in native graveyard and exile entry.
@@ -10,7 +20,7 @@
 // RON accepts resolving NoteCountersOnPermanent and a strict
 // EntersWithNotedCounters symbol in owner-controlled plural exile returns.
 // Branch-local captures cannot escape. Factories keep separate bindings.
-// Coffin still needs single-entry continuations and its leave/untap event union.
+// Coffin still needs single-entry continuations. Its event union is supported.
 //
 // [RemoveCreatureEnchant] removes fixed [CreatureEnchantTarget] declarations.
 // [Until] saves the exact recipient. Layer 6 removes its enchant restriction.
