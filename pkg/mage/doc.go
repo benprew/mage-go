@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AttachToPermanent] attaches one exact permanent to one exact host.
+// The shared attachment service checks enchant limits and protection, updates
+// both links and timestamps, and applies layers. Shroud and hexproof permit
+// the move. Missing, phased and returned visits cannot supply saved objects.
+// An illegal move keeps the current attachment. No choice or target is added.
+// Waiting source queries retain explicit reads. Copies and clones stay separate.
+// RON accepts AttachPermanentToPermanent in resolving bodies, including source
+// entry triggers. Singular graveyard returns can save a local entrant in those
+// bodies. A failed return clears its result. Entry and draw replacements reject.
+// Animate Dead has grant, return, attachment and host-layer clause evidence.
+// Its complete record still needs the departure-controller capture adapter.
+//
 // RON accepts EnteringPermanentPassesFilter(OnTheBattlefield) in a source
 // entry TriggerI. [PermanentMatchesFilter] with This and AnyPermanent checks
 // the exact source visit. [WithInterveningIf] checks at entry and resolution.
@@ -733,8 +745,9 @@
 // the saved present, unphased visit for actions. Information reads can use LKI.
 // Copies, clones and delayed bodies keep separate result frames. RON accepts
 // ThePermanentPutOnTheBattlefieldThisWay after a singular creature-target
-// graveyard return in a resolving action list. Entry, payment, exile-return
-// and graveyard Aura producers need separate adapters.
+// graveyard return in a resolving action list, including source entry triggers.
+// Graveyard Auras can supply the result. Payment, exile-return
+// and replacement producers need separate adapters.
 //
 // [NewSourceCounterManaAbility] adds one fixed mana type per source counter.
 // Queries and activation read the same live count without spending counters.

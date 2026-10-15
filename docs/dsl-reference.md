@@ -17873,3 +17873,49 @@ recheck independently. Each entry has its own source identity.
 `TestRONEntryPresenceAnimateDead` covers the real condition, grant and return
 clauses in all six reprints. These projections omit the unsupported attachment
 and departure-body instructions; they do not prove complete Animate Dead.
+
+
+## Exact entrant attachment in resolving bodies
+
+`AttachToPermanent(attachment, host PermanentRef) ResolvingEffect` attaches
+without a choice or target. Both references must resolve to present, unphased
+visits. Saved references cannot follow departure and return; LKI cannot supply
+a move. `Game.Attach` supplies legality, both links, attachment timestamps,
+layer application and attach events. Illegal movement leaves the attachment in
+place. Shroud and hexproof permit attachment; protection and current enchant
+restrictions still apply (CR 303.4j, 701.3a–c). Definition validation checks both
+references and binding dominance. Waiting queries retain explicit source reads
+without moving objects. Saved frames and clones remain separate.
+
+RON lowers `AttachPermanentToPermanent(attachmentRef, hostRef)` in resolving
+action lists, including source entry `TriggerA` and `TriggerI` bodies. It accepts
+two bound singular references. Wrong arity, tuple reference spellings, unbound
+results, nonresolving entry operations and draw replacements reject. No new
+host choice is made. The existing collection-choice spelling keeps its contract.
+
+`PutGraveyardCardOntoBattlefield` can now produce a local
+`ThePermanentPutOnTheBattlefieldThisWay` in resolving source-entry bodies.
+`ReturnCardToBattlefieldInto` supplies the exact entrant after shared entry
+processing; failure clears the result. Later instructions keep their own lexical
+binding. Branch-local results cannot escape. `RecordEntryFrom` retains the
+source/entrant relation used by the live enchant grant (CR 400.7j, 608.2c).
+
+`TestRONEntryAttachmentAnimateDead` uses all six complete source records with
+only the unsupported delayed departure clause removed. It covers native Aura
+casting and noncast entry, return, linked enchant grant, exact attachment,
+host P/T, source presence, control, phasing, stale graveyard visits, shroud,
+hexproof, protection, prohibited entry, stack copies and pending clones.
+`TestRONEntryAttachmentInstances` separates pending factories and clone state.
+`TestRONEntryAttachmentFailedResult` proves that failed entry cannot reuse a
+prior entrant. `TestRONEntryAttachmentOrdinaryBody` checks activation target
+legality and attachment. `TestRONEntryAttachmentInvalid` covers declaration
+rejection. Native `TestExactAttachmentContracts`, `Definition` and
+`WaitingAndClone` cover saved identity, illegal movement, phasing, same-host
+no-op, nonattachment objects, validation and delayed source reads. Existing
+`TestAttachmentMoveUpdatesStaticEffectOrder` covers shared timestamp rules.
+
+These are clause tests. Complete Animate Dead still rejects at
+`ControllerOfLeavingPermanent`; its delayed sacrifice has no gameplay claim.
+State actions run after resolution, so the Aura can change its enchant rule,
+return the graveyard card and attach before legality is checked (CR 704.3).
+No RON data or vocabulary snapshot changed.

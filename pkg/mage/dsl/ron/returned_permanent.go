@@ -18,8 +18,8 @@ func hasReturnedPermanentRead(nodes []Node) bool {
 }
 
 func compileReturnedPermanentProducer(n Node, remaining []Node, ctx scope) (effectFactory, error) {
-	if ctx.enteringSource || ctx.drawReplacementBody {
-		return nil, problem(n, "returned permanent results require an ordinary resolving body")
+	if !ctx.resolving || ctx.drawReplacementBody {
+		return nil, problem(n, "returned permanent results require a resolving body")
 	}
 	plan := &returnedPermanentPlan{label: "returned permanent at " + n.Position.String()}
 	var producer effectFactory

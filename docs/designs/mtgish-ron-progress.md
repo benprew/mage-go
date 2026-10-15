@@ -8,16 +8,16 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **925 accepted / 61 rejected names**
 (986 total), **2,313 compiled / 132 rejected records** (2,445 total).
-The latest slice is **SOURCE-PRESENCE-ENTRY-CONDITION**.
-RON lowers `EnteringPermanentPassesFilter(OnTheBattlefield)` in exact source
-entry `TriggerI` declarations. Mage checks the saved source visit at detection
-and resolution through existing presence and intervening-if services.
-Departure, return and current phasing stop the body. A phase cycle keeps the
-visit; control changes preserve the saved trigger controller. Copies, clones
-and independent pending entries have contract evidence.
-All six Animate Dead records have condition, grant and return clause evidence.
-Full-card compiler and gameplay gains are zero, as estimated. Attachment-result
-and departure-player adapters remain unsupported. No RON source changed.
+The latest slice is **EXACT-ENTRY-RESULT-ATTACHMENT**.
+RON lowers `AttachPermanentToPermanent(attachmentRef, hostRef)` in resolving
+bodies, including source entry triggers. Singular graveyard returns in that
+context now supply an exact local entrant. Mage supplies mandatory attachment
+through shared legality, links, layers, timestamps and events. Stale visits,
+phasing and illegal hosts cannot move the attachment. Failed entry cannot reuse
+an earlier result. Copies, delayed references and clones keep separate frames.
+All six Animate Dead records have combined grant, return, attachment and host
+P/T clause evidence. Full-card compiler and gameplay gains are zero, as estimated.
+The delayed departure-controller capture remains unsupported. No RON changed.
 The collection still rejects atomically; runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -21730,3 +21730,155 @@ Changed files: `pkg/mage/dsl/ron/zone_intervening.go` and `entry_presence_test.g
 `pkg/mage/entry_presence_test.go` and `doc.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md` and this ledger.
 This run stops after SOURCE-PRESENCE-ENTRY-CONDITION.
+
+
+## 2026-10-15 — EXACT-ENTRY-RESULT-ATTACHMENT
+
+### Baseline, candidates and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The baseline loader
+returned valid JSON with exit 1: 2,445 records, 2,313 compiled, 132 rejected;
+925 accepted and 61 rejected unique names. Collection rejection was expected
+and separate from build and test success.
+
+Complete records and nested forms were read for the three ranked candidates.
+Reprints count once. Targeted vocabulary inspection found six exact attachment
+instructions, all Animate Dead, and 15 entrant-result reads across the collection.
+
+| Candidate | Affected unique names / records | Estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Exact entrant result and attachment | Animate Dead / six | 0 | Departure-controller capture remains. Completes grant → return → attachment → host layer; enables the saved entrant in the final delayed sacrifice. | Small native action and compiler-context adapter; identity, legality, failed-result, copy and clone tests. |
+| Copiable upkeep grant | Vesuvan Doppelganger / six | 0 | ThisAbility retention and recursive resolving copies remain. Enables nested upkeep copy and copiable rules. | Larger copy-definition traversal and recursive factory tests. |
+| Attributed actual last-counter removal | Divine Intervention / one | 0 | DrawTheGame remains. Enables actual removal-player facts for the third ability. | Larger removal/payment event integration and transaction tests. |
+
+Candidate #1 was dependency-ready and is selected under the ranked-candidate
+rule. All compared candidates have zero immediate full-card gains. This slice
+has the smallest complete contract and advances the next required prerequisite.
+No multi-card gain is claimed for reprints. The compiler gaps were the producer
+and reference guards in resolving source-entry bodies and the absent exact
+mandatory attachment adapter. The existing optional attachment API could not
+express a mandatory action. No new zone or attachment subsystem was required.
+
+### Supported shapes, ownership and contracts
+
+RON accepts:
+
+```ron
+PutGraveyardCardOntoBattlefield(EnchantedGraveyardCard,
+    [EntersUnderPlayersControl(You)]),
+AttachPermanentToPermanent(ThisPermanent,
+    ThePermanentPutOnTheBattlefieldThisWay)
+```
+
+The producer and reference now support resolving source entry `TriggerA` and
+`TriggerI` bodies. Existing ordinary creature-target and departed-Aura return
+contexts retain their own constraints. The entrant binding is lexical and
+per factory, never a global last-action slot. Wrong arity, tuple references,
+wrong types, unbound or forward result reads and unsupported replacement
+contexts reject during compilation. No result can escape a branch.
+
+`compileExactAttachment(Node, scope) (effectFactory, error)` owns syntax and
+scope. It lowers two singular references to the new native signature
+`AttachToPermanent(attachment, host PermanentRef) ResolvingEffect`. This action
+makes no choice and adds no target. It requires present, unphased exact visits;
+LKI cannot supply movement. Illegal attachment keeps the current host. A phase
+cycle preserves identity. Returned objects cannot replace saved visits.
+
+Mage reuses `ReturnCardToBattlefieldInto`, `PermanentBinding`, `From`,
+`RecordEntryFrom`, shared entry processing and `Game.Attach`. Attachment uses
+current enchant restrictions and protection. Shroud and hexproof permit a
+non-targeting attachment. Shared links, timestamps, layers and attach events
+remain authoritative. `refersToSourcePermanent` and definition traversal retain
+explicit source reads in waiting queries without execution. Immutable action
+plans need no new clone state; resolution and delayed frames keep bindings
+separate. Costs, replacement ordering and simultaneous operations have no new
+service or scheduling path. Existing entry and attachment tests retain those
+contracts. Failed or prohibited entry cannot supply an old entrant result.
+
+CR 303.4c/e/j, 400.7j, 608.2c, 701.3a–c and 704.3 establish the contract.
+All local rulings for the three comparison cards were read. They are WotC
+rulings, not Scryfall notes. Animate Dead's 2016-06-08 rulings explicitly cover
+protection, shroud and returning then attaching without an intervening state
+action. `go run ./cmd/fetchset -check -card "Animate Dead"` passed before edits.
+No source defect was found. No RON or vocabulary snapshot changed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation because `AttachToPermanent` did not
+exist. RON tests, after fixture API spelling corrections and a rejecting minimal
+adapter stub, failed all six real projections at the existing returned-result
+context guard. Removing the producer guard exposed the corresponding reference
+guard; both now use resolving context. The exact attachment adapter then
+completes the supported shape.
+
+Fixture corrections also fixed an Aura reentry expectation (noncast native
+entry starts unattached), an ordinary Aura's missing subtype, duplicate AST
+producer positions, and the delayed test's binding frame lifetime. The copied
+trigger assertion was corrected under the rules: the copy returns and attaches;
+the original's later failed return leaves that legal attachment intact. No
+production guard was loosened to hide an unsupported rule or failed test.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Animate Dead, LEA/LEB/2ED/3ED/CED/CEI | `TestRONEntryAttachmentAnimateDead` | Real records omit only the unsupported final delayed departure clause. Source presence, linked grant, return, exact attachment and host P/T act together. Cast/noncast entry, shroud, hexproof, protection, blocked land-creature entry, stale graveyard visits, source departure/phasing, phase cycle, control change, stack copy and pending clones. Complete records still reject. |
+| Separate pending instances | `TestRONEntryAttachmentInstances` | Two Aura factories save different graveyard cards; departure cancels only its own return. Pending clone keeps both results independent. |
+| Failed result | `TestRONEntryAttachmentFailedResult` | A second failed return cannot supply the first entrant to attachment; the creature remains and the unattached Aura leaves under state actions. |
+| Ordinary action and legality | `TestRONEntryAttachmentOrdinaryBody` | Activation target hexproof/shroud checks precede execution; a legal target receives the mandatory attachment. |
+| Invalid declarations | `TestRONEntryAttachmentInvalid` | Arity, wrong reference types, tuple references, unbound entrant, invalid card reference, entry and draw replacement contexts. |
+| Native exact movement | `TestExactAttachmentContracts` | Shroud, hexproof, protection, enchant prohibition, phasing, phase cycle, either saved visit returning, self, same host, nonattachment object and clones. |
+| Native declaration validation | `TestExactAttachmentDefinition` | Nil operands and unbound host reject; valid declarations pass. |
+| Native delayed queries and isolation | `TestExactAttachmentWaitingAndClone` | Waiting reads retain attachment and saved host without moving. Host return cannot supply old visit; clone still attaches to the saved visit. |
+| Reused attachment and entry services | `TestAttachmentMoveUpdatesStaticEffectOrder`, `TestReturnedPermanentEntryChoiceVisit`, `TestReturnedPermanentLKIAndWaiting`, existing `TestRONReturnedPermanent*` | Timestamp order, choice-time stale graveyard identity, result LKI, failed-result clearing, lexical scope and saved-frame regressions remain covered. |
+
+Estimated and actual complete-card compiler gains: zero. Complete-card gameplay
+gains: zero. Combined clause evidence advances one unique name / six records.
+Compilation acceptance and gameplay coverage remain separate.
+
+### Validation and final collection evidence
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONEntryAttachment' -count=1`:
+  pass. Native `go test ./pkg/mage -run '^TestExactAttachment' -count=1`: pass.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `go test ./... -short -count=1` and `make test`: pass.
+- `make lint`: pass, 0 issues. Pre/post hashes show no automatic Go changes.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON,
+  **2,313 compiled / 132 rejected records**, **925 accepted / 61 rejected
+  names**. Parsed assertions compare total counts and every rejected record
+  identity with the fresh baseline. Exactly six diagnostics change, all Animate
+  Dead, from the result-context guard to `unbound or incompatible player
+  reference (ControllerOfLeavingPermanent)` at column 810. All other diagnostics
+  are identical. No accepted record regressed. The collection still rejects
+  atomically and publishes no partial registry.
+
+No source-data, environment or validation blocker remains for this slice.
+A stale temporary test log was noticed during progress reporting; final results
+above come from the completed fresh commands. All required checks passed before
+commit. The commit uses the prior slice's per-command `commit.gpgsign=false`
+override for the recorded pinentry problem; repository signing settings remain
+unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Delayed source-departure controller capture for Animate Dead. Bind
+   `ControllerOfLeavingPermanent` at the watched leave event, with LKI and exact
+   source identity, then reuse the saved entrant and sacrifice service. Estimated
+   complete gain: one unique name / six records. Test protection-triggered Aura
+   state departure, changed Aura/creature controllers, returned visits, phase
+   cycles, copied triggers, clones and delayed frame isolation.
+2. Copiable upkeep grants for Vesuvan Doppelganger, then ThisAbility retention
+   and recursive resolving copies. Zero immediate gains; eventual one / six.
+3. Attributed actual last-counter removal for Divine Intervention, then
+   DrawTheGame. Zero prerequisite gains; eventual one / one. Preserve removal
+   attribution, actual facts and speculative payment isolation.
+
+Runtime cutover, complete collection loading, Go-card/generator removal and
+broad DSL cleanup remain gated. No existing caller or Go card definition was
+removed. No broad DSL API was deleted, so no removal audit was needed.
+Changed files: `pkg/mage/exact_attachment.go`, `exact_attachment_test.go` and
+`doc.go`; `pkg/mage/dsl/ron/exact_attachment.go`, `entry_attachment_test.go`,
+`compiler.go`, `permanent_scope.go` and `returned_permanent.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+This run stops after EXACT-ENTRY-RESULT-ATTACHMENT.

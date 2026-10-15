@@ -72,7 +72,7 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 				return permanentReferencePlan{kind: permanentLoopMember, loop: ctx.permanentLoop}, nil
 			}
 		case "ThePermanentPutOnTheBattlefieldThisWay":
-			if ctx.returnedPermanent != nil && !ctx.enteringSource && !ctx.drawReplacementBody {
+			if ctx.returnedPermanent != nil && ctx.resolving && !ctx.drawReplacementBody {
 				return permanentReferencePlan{kind: permanentReturned, returned: ctx.returnedPermanent}, nil
 			}
 		case "AnyTargetAsAPermanent":
