@@ -18188,3 +18188,26 @@ All six complete Vesuvan Doppelganger records execute in
 shapes and inventory roles have separate tests with that prefix. See
 [the rules contract](engine-rules-contracts.md#retaining-the-invoking-triggered-ability-in-copy-values)
 for the validation, identity, cloning and source boundaries.
+
+## RON player-scoped unlimited land plays
+
+In a permanent's top-level Rules list, RON accepts exactly
+`PlayerEffect(You, [MayPlayAnyNumberOfLandsDuringThierTurn])` for unlimited land
+plays. The existing spelling is retained. The symbol lowers to
+`mage.AllowUnlimitedLandPlaysFor(mage.You)`. The live permission follows the
+source's current controller and uses the shared printed-ability lifecycle.
+It changes the land play allowance, with timing and prohibitions still in force.
+
+Other player references, tuple forms of the operation, extra arguments, mixed
+operation lists, all-player declarations and resolving/cost contexts reject.
+The existing inventory role is `player_rule_operation`. Independent factory
+builds and strict atomic loading use the existing services.
+
+`TestRONUnlimitedLandPlayRealRules` casts the exact permission clause from all
+six Fastbond records, plays four lands, checks the opponent's ordinary limit,
+and asserts that complete records still reject at `WhenAPlayerPlaysALand`.
+`Invalid` and `AtomicLoadAndInventory` cover declaration rejection, semantic
+inventory and preservation of an existing registry on collection failure.
+These are clause tests; Fastbond does not yet have complete gameplay coverage.
+No source RON changed. The first-land damage predicate still requires an
+explicit correction with the land-play event and condition slice.

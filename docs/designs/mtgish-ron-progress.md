@@ -8,15 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **930 accepted / 56 rejected names**
 (986 total), **2,338 compiled / 107 rejected records** (2,445 total).
-The latest slice is **COPY-ABILITY-RETENTION**.
-RON lowers AddAbilityVariable(ThisAbility) inside acquired controller-upkeep
-copy bodies to a typed lexical declaration. Mage adds a fresh build of that
-invoking declaration to the resulting copiable rules. Independent pending
-instances do not read the permanent's current abilities. Self-copy adds an
-instance; copying another Doppelganger retains donor instances and adds one.
-All six complete Vesuvan Doppelganger records now have RON gameplay evidence.
-Estimated and actual full-card gains are one name / six records.
-All required checks pass; collection rejection remains expected.
+The latest slice is **PLAYER-SCOPED-UNLIMITED-LAND-PLAYS**.
+RON lowers PlayerEffect(You, [MayPlayAnyNumberOfLandsDuringThierTurn]) to a
+live typed player permission. Source identity, current controller, abilities
+and phasing control its lifetime. Land timing and prohibitions still apply.
+All six exact Fastbond permission clauses now have RON gameplay evidence.
+Complete records still reject at WhenAPlayerPlaysALand; the damage predicate
+also needs the known source correction. Estimated and actual full-card gains
+are zero. All required checks pass; collection rejection remains expected.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -24,15 +23,16 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Forced mana activation and saved mana:** Drain Power; use contextual land
+1. **Land-play event and saved ordinal condition:** Fastbond; permission is now
+   supported. Add the event/condition contract and correct the inverted first-land
+   predicate in all six reprints with the recorded Oracle evidence. Eventual
+   one name / six records.
+2. **Forced mana activation and saved mana:** Drain Power; use contextual land
    selection, each land's legal mana choices, exact mana removal and typed results.
    Eventual one name / six records. Reuse shared planning/production services.
-2. **Sticky animation and ability removal:** Titania's Song; capture the correct
+3. **Sticky animation and ability removal:** Titania's Song; capture the correct
    evolving layer membership and retain effects until cleanup after source exit.
    Eventual one name / two records; needs a shared sticky layer contract.
-3. **Additional land permissions:** Fastbond; establish the reusable player land
-   limit service and audit the known first-land damage predicate source defect.
-   Eventual one name / six records; source correction needs rules evidence.
 
 ## Dependencies and source blockers
 
@@ -23317,3 +23317,156 @@ changing repository configuration.
 
 Complete RON gameplay, runtime cutover/loading, Go-card/generator deletion and
 unused DSL cleanup remain incomplete. Stop after COPY-ABILITY-RETENTION.
+
+## 2026-10-15 — PLAYER-SCOPED-UNLIMITED-LAND-PLAYS
+
+### Candidate comparison and selection
+
+The initial worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The strict JSON loader exited 1
+with 2,338 compiled / 107 rejected records and 930 accepted / 56 rejected names.
+This was collection rejection, not a build or test failure. Complete records
+and nested forms were read for all three ranked candidates, including all
+identical reprints. The vocabulary was queried for their exact signatures.
+Reprints count once in the following estimates.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| Forced mana activation and saved removed mana | Drain Power | 0 for either prerequisite alone; eventual 1 name / 6 records | Requires player-context land selection, a legal forced activation and choice procedure, and a separate typed mana-loss producer/consumer. Shared mana planning is not itself a complete forced activation contract. Enables resolution-time mana extraction and transfer | Large for the complete procedure; multiple contracts |
+| Sticky animation and post-source duration | Titania's Song | Eventual 1 name / 2 records | Needs evolving layer membership, cross-layer continuation and retention after source departure until cleanup. Shared type, ability and P/T modifications exist, but their combined sticky lifecycle is missing | Medium/large lifecycle contract |
+| Player-scoped unlimited land-play permission | Fastbond | 0 for this slice; eventual 1 name / 6 records | Existing unlimited permission is global and capped at 999; needs a typed live player query. Land-play event and ordinal condition are separate adapters; all six records also have the known inverted damage predicate | Small complete static permission, lifecycle and legality slice |
+
+The first ranked candidate needs multiple distinct contracts before its full
+procedure is dependency-ready. None of these three candidates offers a
+multi-name unlock. Selected the bounded land-play permission prerequisite,
+which can be completed and validated independently in this run. The scope and
+zero full-card estimate were stated before edits. The land-play trigger and
+source correction were not folded into the permission slice. Actual full-card
+gain is zero, exactly as estimated; six exact source clauses now execute.
+
+### Supported shape, engine boundary and dependencies
+
+- Engine: `AllowUnlimitedLandPlaysFor(subject PlayerRef) ContinuousEffect` and
+  `(*Game).HasUnlimitedLandPlays(playerID uuid.UUID) bool`.
+- RON: permanent rule
+  `PlayerEffect(You, [MayPlayAnyNumberOfLandsDuringThierTurn])`.
+  The operation must be a symbol and the list must contain exactly one operation.
+  Other player scopes, tuple symbols, mixed lists, resolving/cost contexts and
+  all-player declarations reject. The historical spelling remains unchanged.
+- RON owns declaration recognition, operand checks and lowering. Mage owns the
+  live player permission, source lifecycle and land play legality. No card-name
+  branch, Go-card fallback, partial production registry or game-time declaration
+  panic was added.
+
+The native permission uses typed PlayerRef resolution and existing printed
+static-effect wrappers. Queries use the exact current source visit, current
+controller and surviving ability. Departure, phasing, face-down status and
+ability removal stop the printed rule; phase-in and ability restoration resume
+it. Return gets a fresh rule. Tapping does not stop it. Multiple sources and
+game clones retain independent lifetimes. Cleanup keeps the static permission.
+There is no saved player cache, last-action result or LKI fallback.
+
+`MaxLandPlays` reads the permission for the active player and returns
+`math.MaxInt` before additions. This removes the old artificial 999 ceiling and
+avoids adding finite grants to the unlimited sentinel. Finite grants and play
+history remain intact when a source stops. Existing `AllowUnlimitedLandPlays()`
+and its global rule flag remain for current callers. No broad DSL export was
+removed; cutover and whole-repository removal gates remain unmet.
+
+The legality acceptance test exposed a pre-existing missing empty-stack check
+in `playLandCore` and `GetPlayableLands`. Both now reject a nonempty stack.
+Main-phase, active-player, zone and prohibition services remain shared. Failed
+plays keep hand, stack and play count. Direct entry consumes no play. The
+permission adds no choices, costs, replacements or simultaneous-operation rules.
+
+### Rules and source evidence
+
+Read complete Fastbond RON records in LEA/LEB/2ED/3ED/CED/CEI and all local WotC
+rulings through `data/rulings/index.json`. Fresh
+`go run ./cmd/fetchset -check -card Fastbond` passed before implementation.
+Read the local Drain Power and Titania's Song rulings for candidate comparison.
+No Scryfall note was substituted for an authoritative rule.
+
+CR 305.1–4 establishes timing, turn ownership, allowance comparison and the
+distinction between play and direct entry. CR 611.3a–b and 613.11 establish the
+live static rule after object layers. CR 101.2 preserves prohibitions.
+
+Source defect remains explicit: each Fastbond record uses
+`PermanentPassesFilter(Trigger_ThatLand, IsFirstLandPlayedByPlayerThisTurn)`.
+`data/LEA.json` Oracle text requires damage when the land was not the first
+played that turn. Local WotC rulings distinguish play from direct entry and
+include regular and additional plays. This slice does not invert the predicate
+or silently add the unsupported trigger. Correct all six reprints together in
+the future land-play event/ordinal-condition slice. No source record changed;
+all 12 source hashes still match the vocabulary snapshot, so no refresh is needed.
+
+### Failing-first evidence and card-to-test mapping
+
+The first native run failed compilation for missing AllowUnlimitedLandPlaysFor
+and HasUnlimitedLandPlays. The first RON run failed all six real permission
+clauses and the valid inventory sample on the unsupported operation. After
+implementation, a separate timing acceptance test failed because execution and
+enumeration allowed a land with a pending spell; the shared empty-stack checks
+were added after that failure. No production stub or test weakening was used.
+A bounced-card hand-count fixture was corrected to compare its saved initial
+count. A copied AST is passed to the clause helper because that helper replaces
+the record's Rules map entry; full-record boundary checks retain the original.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Fastbond, all six reprints | TestRONUnlimitedLandPlayRealRules | Exact permission clause; unpaid cast preserves state, paid cast, four land plays, pure play enumeration, opponent retains ordinary allowance; complete records still reject at the land-play event |
+| Source identity and lifetime | TestUnlimitedLandPlayLifecycle | Current controller, tapping, phasing and phase cycle, removal/restoration of abilities, source departure/return, face-down status, clone independence; plays after 1,000 prior plays |
+| Restrictions and multiple instances | TestUnlimitedLandPlayRestrictionsAndOverlap | Separate sources, off-turn/main-phase rejection, prohibition, unchanged failed-play state, direct entry and final-source departure |
+| Timing | TestUnlimitedLandPlayStackTiming | Nonempty-stack rejection in query and execution, preserved hand/stack/history, legal play after resolution |
+| Cleanup, finite grants and callers | TestUnlimitedLandPlayCleanupAndFiniteGrants, TestUnlimitedLandPlayLegacy | Cleanup retains static rule and expires finite grant; permission loss preserves count and finite grants; legacy global permission remains available |
+| Native definition checks | TestUnlimitedLandPlayInvalid | Nil and unbound typed subjects reject before gameplay |
+| RON declarations and loading | TestRONUnlimitedLandPlayInvalid, AtomicLoadAndInventory | Invalid shapes/contexts, existing player_rule_operation role, successful valid load and atomic rejection |
+
+### Verification and final loader comparison
+
+- Baseline build, focused RON package and strict loader: results above.
+- Failing-first native and RON commands: expected missing APIs and unsupported
+  operation failures. The separate stack-timing red test failed both query and
+  execution assertions before the native timing checks were added.
+- `go test ./pkg/mage/dsl/ron -run TestRONUnlimitedLandPlay -count=1`: pass.
+- `go test ./pkg/mage -run 'TestUnlimitedLandPlay|TestLandPlayRestriction|TestGrantLandPlays' -count=1`: pass.
+  After adding failed-stack-play state assertions, repeated
+  `go test ./pkg/mage -run TestUnlimitedLandPlay -count=1`: pass.
+- `make build`: pass.
+- `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass, including existing card and application tests.
+- `make lint`: pass, zero issues. Reviewed the resulting diff; no unrelated or
+  semantic automatic changes were introduced.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON;
+  **2,338 compiled / 107 rejected records**, **930 accepted / 56 rejected names**.
+  A parsed comparison proves that the rejected record set is unchanged and only
+  six Fastbond messages advanced, from the permission operation to the missing
+  intervening-if event. Example: 2ED.lines.ron:80:193, unsupported intervening-if
+  event (WhenAPlayerPlaysALand). Every other diagnostic is unchanged. The complete
+  collection still rejects atomically.
+- All 12 RON source hashes match the vocabulary snapshot.
+
+No environment or required-check blocker remains. Changed files comprise
+unlimited_land_play.go and its tests in mage and ron; ron/compiler.go;
+mage/land.go, game.go and doc.go; the API/rules contracts and this ledger.
+No Go card definitions, generators or existing DSL APIs were removed.
+
+### Remaining work and ranked next candidates
+
+1. Fastbond land-play event and saved ordinal condition. The live permission is
+   complete. Add event-time ordinal capture and the required condition semantics;
+   correct the first-land predicate in all six source records using the local
+   Oracle and WotC evidence, and refresh the vocabulary snapshot. Estimated
+   eventual gain: one name / six records.
+2. Forced legal mana activation and typed removed-mana results for Drain Power.
+   One name / six records. First diagnostic remains unsupported value (And) at
+   2ED.lines.ron:69:279; nested activation and mana-result contracts remain.
+3. Sticky layer membership and post-source duration for Titania's Song.
+   One name / two records. First diagnostic remains EachPermanentStickyLayerEffect
+   at 3ED.lines.ron:257:149; establish the shared layer lifecycle contract.
+
+Complete RON gameplay, runtime loading and cutover, Go-card/generator removal
+and unused DSL cleanup remain incomplete. Stop after
+PLAYER-SCOPED-UNLIMITED-LAND-PLAYS.

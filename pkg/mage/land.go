@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 
@@ -10,11 +11,11 @@ import (
 
 // MaxLandPlays returns the maximum number of lands that can be played this turn.
 func (g *Game) MaxLandPlays() int {
-	limit := 1
-	if g.effects.Rules.UnlimitedLandPlays {
-		limit = 999
-	}
 	activeID := g.ActivePlayerObj().PlayerID()
+	if g.HasUnlimitedLandPlays(activeID) {
+		return math.MaxInt
+	}
+	limit := 1
 	limit += g.trackers.Turn.ExtraLandPlays(activeID)
 	limit += g.effects.Rules.AdditionalLandPlays(activeID)
 	return limit
@@ -80,6 +81,9 @@ func (g *Game) AddAdditionalLandPlay(playerID uuid.UUID, n int) {
 // stack. Callers are responsible for draining the stack (via ResolveStack
 // or RunPriorityRound).
 func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
+	if g.StackSize() != 0 {
+		return fmt.Errorf("can only play lands when the stack is empty")
+	}
 	if g.effects.Rules.CantPlayLands() {
 		return fmt.Errorf("players can't play lands")
 	}

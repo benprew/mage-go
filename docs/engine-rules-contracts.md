@@ -24033,3 +24033,38 @@ optional decline, repeated copying and self-copy. Air Elemental and Grizzly Bear
 supply complete donor records. Synthetic distinct bodies prove that the last
 resolving declaration retains itself after earlier resolutions replace the rules.
 Earlier copy sections describe the prerequisites and their clause-only tests.
+
+## Player-scoped unlimited land plays
+
+`AllowUnlimitedLandPlaysFor(subject PlayerRef) ContinuousEffect` declares a
+live player permission. `Game.HasUnlimitedLandPlays(playerID uuid.UUID) bool`
+is a pure query over active effects, using the source's current controller and
+exact source visit. Nil and unbound subjects fail definition validation. Unknown
+players have no permission. Printed abilities stop when the source leaves,
+phases out, turns face down or loses the ability. A phase cycle restores the
+same visit; return installs a fresh declaration. Multiple sources remain
+independent. Cleanup does not expire the static permission. Clones keep separate
+source lifetimes. No saved permission or LKI follows a departed source.
+
+The rule is read after object layers, through the existing printed continuous
+effect wrapper (CR 611.3a–b, 613.11). `You` follows current control. The existing
+`AllowUnlimitedLandPlays()` global rule and `GameRules.UnlimitedLandPlays` remain
+available for current callers. `MaxLandPlays()` returns `math.MaxInt` for an
+unlimited active player before adding finite grants; it no longer imposes the
+old 999-play ceiling. Finite static and turn grants retain their own lifetimes.
+Removing an unlimited source does not reset lands already played (CR 305.2a–b).
+
+The permission does not override prohibitions or permit off-turn plays, plays
+outside a main phase, or plays with a nonempty stack (CR 101.2, 305.1–3).
+`playLandCore` and `GetPlayableLands` now both reject a nonempty stack; the new
+acceptance test exposed the former missing check. Rejected plays preserve hand,
+stack and play count. Direct battlefield entry consumes no land play (CR 305.4).
+Other zone permissions, costs, replacements and simultaneous operations keep
+their existing services. This rule makes no choice or payment.
+
+Evidence: `TestUnlimitedLandPlayLifecycle`, `RestrictionsAndOverlap`, `Invalid`,
+`Legacy`, `StackTiming`, `CleanupAndFiniteGrants`; RON evidence is
+`TestRONUnlimitedLandPlayRealRules`, `Invalid`, `AtomicLoadAndInventory`.
+All six real Fastbond permission clauses execute; its complete records remain
+rejected for the missing land-play event. The damage predicate in those records
+also conflicts with local Oracle text. This slice does not establish that trigger.

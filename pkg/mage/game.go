@@ -3151,6 +3151,9 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 // Checks: main phase, active player, land-play limit (respects Fastbond etc.),
 // and expansion blocks.
 func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
+	if g.StackSize() != 0 {
+		return nil
+	}
 	if !g.turns.Step().IsMainPhase() {
 		return nil
 	}

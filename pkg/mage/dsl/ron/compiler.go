@@ -712,6 +712,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "EachPlayerEffect":
 		return compileAllPlayerRule(n)
 	case "PlayerEffect":
+		if isUnlimitedLandPlayRule(n) {
+			return compileUnlimitedLandPlayRule(n)
+		}
 		if isLifeTotalLossRule(n) {
 			return compileLifeTotalLossRule(n)
 		}

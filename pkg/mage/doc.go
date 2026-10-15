@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AllowUnlimitedLandPlaysFor] removes a live player's land play limit.
+// [Game.HasUnlimitedLandPlays] reads the current typed player without mutation.
+// Printed source identity, current abilities and phasing control the permission.
+// Control changes move You to the current controller. Cleanup keeps the rule.
+// [Game.MaxLandPlays] returns math.MaxInt for unlimited plays, before additions.
+// Existing global permissions remain available to current callers.
+// Main-phase timing, active player, an empty stack and prohibitions still apply.
+// Direct entry does not use a land play. Failed plays keep hand and play count.
+// RON accepts PlayerEffect(You, [MayPlayAnyNumberOfLandsDuringThierTurn]) on
+// permanents. All six Fastbond permission clauses have gameplay evidence.
+// The complete records still need the land-play event and condition adapters.
+// Their first-land damage predicate conflicts with the local Oracle text.
+//
 // [CopyPermanent] replaces one exact visit's copiable rules at resolution.
 // [Game.BecomeCopyOfPermanent] supplies the same native operation.
 // Shared snapshots and physical-card builders supply fresh rules and statics.
