@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [LimitDamageLifeLoss] limits a typed player's life loss from damage.
+// Full damage remains available to events, history, outcomes and lifelink.
+// A live static rule uses current control, exact source identity and phasing.
+// Shared damage batches save life results before events are sent. Actual gains
+// from lifelink and prevention enter the loss replacement's life-total test.
+// Direct life loss and legacy minimum-life callers keep their current behavior.
+// RON accepts PlayerEffect(You, one fixed positive damage life-floor operation).
+// The complete Ali from Cairo record has paid-cast and damage gameplay evidence.
+//
 // [LimitPlayerDamageFromTypes] supplies one live static damage replacement.
 // The current typed player and exact source types select each damage event.
 // Simultaneous packets from one source to that player share the threshold

@@ -468,7 +468,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "CantPlayLandsOfType" && len(n.Args) == 1 {
 			return "land_play_card_filter"
 		}
-		if n.Name == "SetMaximumHandSize" && len(n.Args) == 1 {
+		if (n.Name == "SetMaximumHandSize" || n.Name == "DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead") && len(n.Args) == 1 {
 			return "value"
 		}
 		if n.Name == "IncreaseSpellCost" && len(n.Args) == 2 {

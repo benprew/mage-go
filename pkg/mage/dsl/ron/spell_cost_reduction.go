@@ -26,6 +26,9 @@ func compilePlayerCostReduction(n Node) (optionFactory, error) {
 		return nil, problem(n.Args[1], "supply one spell cost reduction operation")
 	}
 	operation := operations[0]
+	if operation.Name == "DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead" {
+		return compileDamageLifeFloor(operation)
+	}
 	if operation.Name == "IncreaseSpellCost" {
 		return compileStaticSpellCostIncrease(n)
 	}

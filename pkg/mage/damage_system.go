@@ -86,9 +86,12 @@ type damageNotification struct {
 }
 
 type damageBatch struct {
-	events        []GameEvent
-	sources       []DamageSource
-	notifications []damageNotification
+	stageLifeResults bool
+	losses           []damageLifeResult
+	gains            []damageLifeResult
+	events           []GameEvent
+	sources          []DamageSource
+	notifications    []damageNotification
 }
 
 func (g *Game) fireDamageEvent(event GameEvent, source DamageSource) {
@@ -445,7 +448,8 @@ func (ds *DamageSystem) dealDamageToPlayerFromSourceOutcome(g *Game, p Player, a
 	result, gains := g.effects.prepareReplacements(action, g, local...)
 	outcome := damageOutcome{}
 	if result != nil {
-		outcome = executeDamageOutcome(g, result)
+		outcome = ds.executeDamageWithLifeResults(g, result, gains)
+		gains = nil
 	}
 	applyPreventionLifeGains(g, gains)
 	return outcome
@@ -464,6 +468,9 @@ func (ds *DamageSystem) prepareDamageToPlayer(g *Game, request damageRequest) Ac
 func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) int {
 	if a.Amount() <= 0 {
 		return 0
+	}
+	if g.damageBatch == nil && g.hasDamageLifeFloor() {
+		return ds.executeDamageWithLifeResults(g, a, nil).amount
 	}
 	p := g.GetPlayer(a.PlayerID())
 	if p == nil {
@@ -485,12 +492,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 	if g.effects.Rules.IsLichActive(g, p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
 	} else {
-		p.LoseLife(amount)
-		g.FireEvent(GameEvent{
-			Type:     EvtLifeLost,
-			PlayerID: p.PlayerID(),
-			Amount:   amount,
-		})
+		g.damageLifeLoss(p, amount)
 	}
 	source := a.DamageSource()
 	isArtifact := source.HasType(TypeArtifact)
@@ -577,7 +579,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 		}
 		srcPlayer := g.GetPlayer(controller)
 		if srcPlayer != nil {
-			g.gainLifeWithEvent(srcPlayer, amount)
+			g.damageLifeGain(srcPlayer, amount)
 		}
 	}
 	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown {
@@ -622,7 +624,8 @@ func (ds *DamageSystem) dealDamageToPermanentFromSourceOutcome(g *Game, perm *Pe
 	action, gains := g.effects.prepareReplacements(ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}), g, local...)
 	outcome := damageOutcome{}
 	if action != nil {
-		outcome = executeDamageOutcome(g, action)
+		outcome = ds.executeDamageWithLifeResults(g, action, gains)
+		gains = nil
 	}
 	applyPreventionLifeGains(g, gains)
 	return outcome
@@ -677,25 +680,47 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 	}
 	originalCount := len(actions)
 	actions, gains := g.effects.prepareDamageBatchReplacements(actions, g)
-	all := ds.executePreparedDamageActions(g, actions)
+	all := ds.executePreparedDamageActions(g, actions, gains...)
 	var outcomes []damageOutcome
 	for _, outcome := range all[:originalCount] {
 		if outcome.amount > 0 {
 			outcomes = append(outcomes, outcome)
 		}
 	}
-	applyPreventionLifeGains(g, gains)
 	return outcomes
 }
 
-func (ds *DamageSystem) executePreparedDamageActions(g *Game, actions []Action) []damageOutcome {
-	batch := &damageBatch{}
+func (ds *DamageSystem) executeDamageWithLifeResults(g *Game, action Action, gains []preventionLifeGain) damageOutcome {
+	// Keep the existing event order when no rule changes damage's life result.
+	if !g.hasDamageLifeFloor() {
+		outcome := executeDamageOutcome(g, action)
+		applyPreventionLifeGains(g, gains)
+		return outcome
+	}
+	actions := []Action{action}
+	if expanded, ok := action.(*expandedDamageAction); ok {
+		actions = expanded.actions
+	}
+	return ds.executePreparedDamageActions(g, actions, gains...)[0]
+}
+
+func (ds *DamageSystem) executePreparedDamageActions(g *Game, actions []Action, gains ...preventionLifeGain) []damageOutcome {
+	previous := g.damageBatch
+	batch := &damageBatch{stageLifeResults: g.hasDamageLifeFloor()}
+	if batch.stageLifeResults {
+		for _, gain := range gains {
+			if player := g.GetPlayer(gain.playerID); player != nil {
+				batch.gains = append(batch.gains, damageLifeResult{player, gain.amount})
+			}
+		}
+	}
 	g.damageBatch = batch
 	outcomes := make([]damageOutcome, len(actions))
 	for i, action := range actions {
 		outcomes[i] = executeDamageOutcome(g, action)
 	}
-	g.damageBatch = nil
+	g.damageBatch = previous
+	g.applyDamageLifeResults(batch)
 	for i, event := range batch.events {
 		g.fireDamageEvent(event, batch.sources[i])
 	}
@@ -704,6 +729,9 @@ func (ds *DamageSystem) executePreparedDamageActions(g *Game, actions []Action) 
 			ds.onDamageDealt(notification.source, notification.target, notification.amount, notification.combat)
 		}
 	}
+	if !batch.stageLifeResults {
+		applyPreventionLifeGains(g, gains)
+	}
 	return outcomes
 }
 
@@ -711,6 +739,9 @@ func (ds *DamageSystem) executePreparedDamageActions(g *Game, actions []Action) 
 func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureAction) int {
 	if a.Amount() <= 0 {
 		return 0
+	}
+	if g.damageBatch == nil && g.hasDamageLifeFloor() {
+		return ds.executeDamageWithLifeResults(g, a, nil).amount
 	}
 	perm := g.MutablePermanent(a.PermanentID())
 	if perm == nil || (a.recipientIncarnation != uuid.Nil && perm.incarnationID != a.recipientIncarnation) {
@@ -801,7 +832,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		}
 		srcPlayer := g.GetPlayer(controller)
 		if srcPlayer != nil {
-			g.gainLifeWithEvent(srcPlayer, amount)
+			g.damageLifeGain(srcPlayer, amount)
 		}
 	}
 	if perm.FaceDown {

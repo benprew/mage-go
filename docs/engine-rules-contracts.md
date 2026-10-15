@@ -24401,3 +24401,28 @@ Evidence: `TestStaticDamageCapPackets`, `TestStaticDamageCapSameSourceBatch`,
 `TestStaticDamageCapAPNAP`, `TestStaticDamageCapSeparateVisitsAndZero`,
 `TestStaticDamageCapEventsAndSimultaneousDeparture`,
 `TestStaticDamageCapAfterRedirection`, `TestStaticDamageCapDefinition`, and `TestRONStaticDamageCap*`.
+
+### Damage-result life-loss floor (CR 120.3a/f, 120.4b–d)
+
+`LimitDamageLifeLoss(PlayerRef, int)` supplies a static replacement for damage's
+life-loss result. The amount must be positive. The damage pipeline retains the
+full replaced damage amount for events, history, outcomes and lifelink. It saves
+life results for a damage event when a floor rule is present. All life gains are
+prepared through the shared modifiers/replacements, then the aggregate damage
+life loss passes through the shared replacement-choice pipeline in APNAP order. Its life-total
+test includes those actual simultaneous gains. Life changes finish before their
+events are sent. A player already below the floor does not gain life from it.
+Direct life loss is unaffected. Simultaneous lethal damage to the source keeps
+the protection until state actions remove it. Exact source visits, current
+controller, static ability identity and phasing determine the live rule.
+
+The existing minimum-life damage-amount APIs remain available to their callers;
+RON uses the damage-result contract. Damage without a result-floor rule retains
+its existing prevention additional-effect timing. No separate replacement manager
+or card-specific damage executor is introduced.
+
+Tests: `TestDamageLifeFloorResults`, `TestDamageLifeFloorDamageEvents`,
+`TestDamageLifeFloorSimultaneousDeparture`, `TestDamageLifeFloorPrevention`,
+`TestDamageLifeFloorSimultaneousLifeGains`,
+`TestDamageLifeFloorPreventionLifeGain`, `TestDamageLifeFloorDefinition`, `TestDamageLifeFloorAPNAP`, and
+RON `TestRONDamageLifeFloor*` using the complete Ali from Cairo record.

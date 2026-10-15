@@ -18479,3 +18479,19 @@ and rechecks. Damage events and lifelink use the replaced amount.
 `TestRONStaticDamageCapUpkeep` cover the complete unmodified Forethought Amulet
 record. `TestRONStaticDamageCapInvalid` and `TestRONStaticDamageCapCollection`
 cover declaration rejection, inventory roles and strict atomic loading.
+
+### Damage life-loss floor
+
+`Static(LimitDamageLifeLoss(player PlayerRef, floor int))` supplies a live rule
+with a positive fixed floor. It changes the life-loss result of damage, while
+preserving damage amounts, history, events, outcomes and lifelink. The source's
+current controller supplies `You`; phasing, departure and ability removal suspend
+the rule. Simultaneous life gains from lifelink and prevention use the shared
+life-gain modifiers and replacement service before the floor is checked.
+Direct life loss is outside this contract. Legacy minimum-life APIs remain.
+
+RON accepts the permanent static shape
+`PlayerEffect(You, [DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead(Integer(positive))])`.
+Other players, dynamic amounts, extra operations and resolving-body use reject.
+Ali from Cairo is covered by `TestRONDamageLifeFloorAli`,
+`TestRONDamageLifeFloorLifetime` and `TestRONDamageLifeFloorCollection`.

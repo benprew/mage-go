@@ -6,17 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **938 accepted / 48 rejected names**
-(986 total), **2,351 compiled / 94 rejected records** (2,445 total).
-The latest slice is **STATIC-PLAYER-DAMAGE-CAP**.
-RON lowers a fixed damage threshold, source-type filter and player recipient
-into a live native damage replacement. The shared pipeline groups simultaneous
-packets by exact source and player, then supplies ordering and rechecks.
-The complete Forethought Amulet record has paid-cast, damage, upkeep-payment
-and sacrifice gameplay evidence. Estimated and actual gain: one name / one
-record. Existing upkeep text inventories also cover the newly accepted record.
-Collection loading still rejects atomically. Runtime cutover, Go-card removal
-and DSL cleanup remain gated by complete support and startup.
+Latest measured result (2026-10-15): **939 accepted / 47 rejected names**
+(986 total), **2,352 compiled / 93 rejected records** (2,445 total).
+The latest slice is **DAMAGE-RESULT-LIFE-FLOOR**.
+RON lowers a positive fixed player damage life-loss floor into a live native
+static replacement. Damage amounts remain intact for events, history and
+lifelink. Shared damage batches include actual simultaneous life gains in the
+life-total test. The complete Ali from Cairo record has paid-cast, damage and
+static-lifetime gameplay evidence. Estimated and actual gain: one name / one
+record. Collection loading still rejects atomically. Runtime cutover, Go-card
+removal and DSL cleanup remain gated by complete support and startup.
 
 ## Ranked next candidates
 
@@ -24893,3 +24892,152 @@ No source defect or RON source change was needed. The vocabulary source snapshot
 therefore needs no refresh. Go-card removal, obsolete Go-set generation removal,
 runtime cutover and DSL cleanup gates remain unmet. No DSL function was removed.
 Stop after this slice.
+
+
+## 2026-10-15 — DAMAGE-RESULT-LIFE-FLOOR
+
+### Candidate comparison and selection
+
+The working tree was clean. Read AGENTS.md, the engine API reference, execution
+design, the ledger status and latest entry, targeted vocabulary signatures, and
+the complete records and all local rulings for these three candidates. Reprints
+count once. Fresh build and complete RON package tests passed. The final fresh
+baseline loader reported 2,351 compiled / 94 rejected records and 938 accepted /
+48 rejected names. An initial output file contained older diagnostics; a direct
+rerun established the baseline used below.
+
+| Candidate | Distinct names and full-card gain estimate | Other blockers and downstream use | Complete effort |
+| --- | --- | --- | --- |
+| Forced mana activation | Drain Power: eventual one name / six records; legal-offer prerequisite alone unlocks zero | Saved lost mana is ready. Legal choices with arbitrary costs, variable output, forced resolution timing and stale-choice transaction rechecks remain. Those services can support forced mana instructions and resolution mana choices. | Large, several distinct contracts before the full adapter is dependency-ready |
+| Sticky animation | Titania's Song: eventual one name / two records | Needs evolving layer membership, cross-layer dependencies and continuation after source departure until cleanup. Enables other persistent multi-layer animations, but no additional unique card is established by these complete records. | Large, shared layer-lifecycle work plus animation tests |
+| Damage-result life floor | Ali from Cairo: one name / one record | Current minimum-life APIs reduce damage itself and cannot provide this contract. Needs damage-result life-loss replacement with simultaneous gains; static lifetime and replacement choices are ready. Enables future damage-result replacements without changing damage amounts. | Bounded engine result stage, compiler adapter and gameplay tests |
+
+Selected Ali's shared damage-result life-loss contract. Candidate #1's complete
+forced instruction is not dependency-ready; an isolated legal-offer change would
+not supply its complete arbitrary-cost and variable-output contract in this run.
+No compared candidate yields multiple unique full-card unlocks. This slice has
+the largest credible complete gain for the bounded work. It adds no card-name
+branch or Go-card fallback. No later slice was started.
+
+### Supported contract, dependencies and reuse
+
+Exact RON shape, on a permanent as a static rule:
+
+`PlayerEffect(You, [DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead(Integer(positive))])`.
+
+The list must have exactly one operation. The player must be the strict `You`
+symbol. Zero/negative/dynamic amounts, wrong arity, additional operations,
+incompatible players and resolving-body use reject during compilation.
+`compileDamageLifeFloor(Node) (optionFactory, error)` owns lowering and syntax.
+The existing player-rule dispatcher supplies strict player and operation checks.
+Inventory assigns the operand its numeric value role.
+
+Native API: `LimitDamageLifeLoss(player PlayerRef, floor int) StaticRule`.
+Definition validation requires a player and a positive floor. A fresh static
+rule installs an exact-source cycle replacement through the existing static
+ability lifecycle. Current control supplies You. Departure, phasing and ability
+removal suspend it; return, phase-in and ability restoration reinstate current
+rules. Cleanup retains printed rules. Clones have separate sources and life.
+
+The internal `damageLifeLossAction` supplies player, loss amount and the proposed
+life total before that loss. A local damage batch saves life-loss and life-gain
+results when a result-floor rule is present. Actual gains from lifelink and
+prevention pass through `prepareLifeGain`, including modifiers and replacements.
+Their values enter the loss test. Aggregate damage life loss then passes through
+the existing replacement pipeline, including affected-player choice, priority,
+once-per-event application and rechecks. Both players choose in APNAP order. Life mutations finish before life and
+damage events dispatch. Existing damage packets, source information, amounts,
+outcomes, history, lifelink and source notifications remain shared. Nested batch
+execution restores the prior frame. No global last-result slot was added.
+
+Damage without the new result rule keeps its existing single-event and
+prevention additional-effect order. Legacy minimum-life APIs and Go callers
+remain unchanged. Direct life loss is unaffected. A player below the floor does
+not gain life from this rule. Simultaneous lethal damage to the source keeps its
+protection until state actions remove it.
+
+Rules: CR 120.3a/f and 120.4b–d distinguish damage, its life-loss result and
+simultaneous gains. The CR 120.4 example with Worship and Awe Strike requires
+including actual simultaneous gains. CR 611.3a–b supplies live static behavior;
+CR 614.4–6 and 616.1 supply replacement timing and rechecks. All three local Ali
+rulings are WotC rulings: direct life loss is excluded, full damage still triggers,
+and simultaneous lethal source damage retains protection. No Scryfall note was
+used as a WotC ruling. `go run ./cmd/fetchset -check -card 'Ali from Cairo'` passed.
+
+### Failing-first evidence and card mappings
+
+First wrote complete-record gameplay, lifetime and invalid-declaration tests.
+The focused run failed with `unsupported player rule operation
+(DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead)`.
+Native tests then failed to compile only because `LimitDamageLifeLoss` did not
+exist. Implemented the engine and adapter, then added simultaneous gain and
+replacement-order regressions. An existing prevention timing test caught an
+unintended order change; retained the existing path when no result floor is
+present. The new `TestDamageLifeFloorAPNAP` then failed with choice order B,A.
+Prepared result replacements in active-player order and confirmed A,B. No expected
+result or existing test was weakened.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Ali from Cairo, complete ARN record | `TestRONDamageLifeFloorAli` | Failed unpaid cast, paid cast and entry, full lifelink for damage above and at floor, independent direct life loss |
+| Ali static lifecycle | `TestRONDamageLifeFloorLifetime` | Departure/return, phase/phase cycle, control transfer, ability removal/restoration, cleanup and clone isolation |
+| Strict compiler and loader | `TestRONDamageLifeFloorInvalid`, `TestRONDamageLifeFloorCollection` | Invalid players, amounts, arity, context and operation lists; complete-record load and invalid-collection atomicity |
+| Full damage and life results | `TestDamageLifeFloorResults`, `TestDamageLifeFloorDamageEvents` | Starting life below/at/above floor, multiple packets, full outcomes, history and event-bound amount |
+| Simultaneous source departure | `TestDamageLifeFloorSimultaneousDeparture` | Source lethal damage and player damage in one batch, then loss of protection after departure |
+| Replacement and simultaneous gains | `TestDamageLifeFloorPrevention`, `TestDamageLifeFloorSimultaneousLifeGains`, `TestDamageLifeFloorPreventionLifeGain`, `TestDamageLifeFloorReplacedGains`, `TestDamageLifeFloorMultipleRules`, `TestDamageLifeFloorAPNAP` | Prevention before life loss, either packet order, lifelink, doubled/replaced/zero gains, prevention gain, multiple floors and rechecks |
+| Engine validation | `TestDamageLifeFloorDefinition` | Nil player and nonpositive floor reject |
+| Existing accepted-record inventories | Definition-plan, inventory and numeric-consumer tests | Expected accepted count advances by one record |
+
+Full-card gameplay coverage increases by Ali from Cairo only. Accepted compilation
+and gameplay coverage remain separate. No source defect or RON change was needed;
+the vocabulary source snapshot requires no refresh. No DSL API was deleted.
+
+### Verification and measured coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONDamageLifeFloor -count=1`: passed.
+- `go test ./pkg/mage -run TestDamageLifeFloor -count=1`: passed, including the
+  corrected APNAP case. Focused existing static damage-cap, source-prevention,
+  replacement-life-gain, reverse-damage and zero-damage regressions passed.
+- Complete RON package tests passed with `-count=1`.
+- `make build`: passed. `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed for the complete repository.
+- `make lint`: final full pass passed with **0 issues**. An earlier lint run
+  was intentionally stopped before the APNAP test and fix. Reran focused tests,
+  build, vet, engine short tests, full tests and lint on the corrected code.
+  Reviewed automatic formatting/modernization and the final source diff; no
+  unrelated file was changed.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,352 compiled / 93 rejected records**, **939 accepted / 47 rejected names**.
+  Exact JSON comparison removes only Ali from Cairo's player-rule diagnostic at
+  ARN line 6, column 181. The other 93 diagnostics are identical; none was added.
+
+Actual gain is **one unique name / one record**, exactly the estimate. New
+complete-record gameplay evidence is Ali from Cairo. No environmental or
+pre-existing check failure blocked the completed slice.
+
+Changed files: new `pkg/mage/damage_life_floor.go` and
+`pkg/mage/damage_life_floor_test.go`; `pkg/mage/damage_system.go`,
+`pkg/mage/doc.go`; new `pkg/mage/dsl/ron/damage_life_floor.go` and
+`damage_life_floor_test.go`; RON `spell_cost_reduction.go`, `inventory.go`,
+`inventory_test.go`, `definition_plan_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+The slice commit uses command-local `commit.gpgsign=false`, as in prior slices;
+repository signing configuration is unchanged.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers and transactions, then Drain Power:
+   eventual one name / six records. Saved lost mana is ready. Establish complete
+   arbitrary-cost and variable-output choices plus activation rechecks first.
+2. Sticky animation and post-source lifetime for Titania's Song: eventual one
+   name / two records. Establish evolving membership, layer dependencies and
+   continuation until cleanup after source departure.
+3. Reassess shared prerequisites across the remaining 47 rejected names using
+   complete records. Prefer concrete multi-card gains over another isolated
+   rare-card adapter.
+
+Runtime loading, complete RON gameplay, Go-card and obsolete generator removal,
+and unused DSL cleanup remain gated. Stop after this slice.
