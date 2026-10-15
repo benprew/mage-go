@@ -144,6 +144,9 @@ func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, 
 			return mage.PermanentFilter{}, nil, err
 		}
 		player := n.Args[0]
+		if player.Kind == Symbol && player.Name == "Opponent" {
+			return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOpponentOwns()}, nil
+		}
 		if player.Name != "SinglePlayer" {
 			return mage.PermanentFilter{}, nil, unsupported(player, "permanent target owner")
 		}

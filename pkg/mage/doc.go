@@ -1,5 +1,11 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetOpponentOwns] checks current ownership at selection and resolution.
+// Control does not change the owner test. Shared target services retain exact
+// visits, phasing, protection, copied controllers and separate factory bindings.
+// RON accepts OwnedByAPlayer(Opponent) in permanent targets, including And.
+// Bronze Tablet has target-fragment evidence; its other operations still reject.
+//
 // [PreventDamageByThisTurn] saves one exact permanent visit until cleanup.
 // Both combat and noncombat damage use shared prevention services.
 // Departure keeps the saved source. Return creates a different visit.

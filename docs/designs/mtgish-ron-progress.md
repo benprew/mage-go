@@ -6,28 +6,33 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **945 accepted / 41 rejected names**
-(986 total), **2,369 compiled / 76 rejected records** (2,445 total).
-The latest slice is **EXACT-SOURCE-DAMAGE-PREVENTION**.
-RON lowers all damage prevention from one typed permanent until cleanup.
-Native prevention saves exact visits and retains absent-source information.
-Shared damage services handle combat, noncombat, batches and replacements.
-The complete Kry Shield record has paid-cast and activation gameplay evidence.
-Estimated and actual gain: one name / one record. Collection loading still
-rejects atomically. Runtime cutover, Go-card removal and unused DSL cleanup
-remain gated by complete support and startup.
+Latest slice (2026-10-15): **OPPONENT-OWNED-PERMANENT-TARGET**.
+RON permanent targets now accept `OwnedByAPlayer(Opponent)` through a typed
+engine option over the shared owner check. Bronze Tablet has target-fragment
+coverage; its complete record still rejects at a later prerequisite.
+Estimated and actual complete-card gain: **zero names / zero records**.
+The preserved working tree measures **946 accepted / 40 rejected names**,
+**2,375 compiled / 70 rejected records** (986 names / 2,445 records total).
+Clean HEAD plus this independent slice measures **945 accepted / 41 rejected
+names**, **2,369 compiled / 76 rejected records**. The difference is preserved
+uncommitted prerequisite work. Collection loading still rejects atomically.
+Complete gameplay, runtime cutover, Go-card removal and unused DSL cleanup
+remain unfinished.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Finite damage redirection:** Personal Incarnation, eventual one name / six
-   records. Needs finite packet splitting, owner references and all six death-loss
-   rounding defects repaired. Nova Pentacle is complete.
+1. **Two-branch life payment and ownership results:** Bronze Tablet, eventual
+   one name / one record. Opponent-owner targets are complete. Retain exact
+   exiled visits and implement the absent-source ownership case. Ordinary
+   permanent-owner reads exist in preserved uncommitted work.
 2. **Resolving prevention selection/payment:** Heroism, eventual one name / one
-   record. Establish resolution-time selection and per-creature controller
-   payment. Its nested RON payment conflicts with the local timing ruling.
-   Kry Shield exact-source prevention is complete.
+   record. Correct the timing defect with its local WotC ruling; then select
+   current attacking red creatures and offer separate controller payments.
+3. **Attacking-player static reference:** Gaea's Liege, eventual one name / six
+   records. Audit all reprints, the duplicate predicate and the nested
+   source-bound land-type duration before choosing a small prerequisite.
 
 ## Dependencies and source blockers
 
@@ -25979,3 +25984,140 @@ Changed files: native `pkg/mage/source_damage_prevention.go`, its test,
 Stop after this slice. Forty-one names / 76 records still reject. Complete
 collection gameplay, runtime cutover, Go-card and obsolete generator removal,
 and unused DSL cleanup remain unfinished.
+
+## OPPONENT-OWNED-PERMANENT-TARGET — 2026-10-15
+
+### Selection and scope
+
+The fresh baseline build and full RON package tests passed. Collection loading
+returned expected exit 1 with 2,375 compiled / 70 rejected records and 946
+accepted / 40 rejected names. The initial working tree contains staged and
+unstaged ownership, finite-redirection and source-death work. Those changes and
+unrelated untracked files are preserved. This slice does not depend on them.
+
+Compared the latest entry's three candidates after reading their complete RON
+records and all local rulings (WotC; no Scryfall notes):
+
+| Candidate | Distinct names | Estimated immediate unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Opponent-owner target prerequisite | Bronze Tablet | 0 names / 0 records | Unblocks its exact nontoken target. Ordinary owner reads are present only in the dirty workspace; two-branch life payment, result-bound ownership operations and the absent-source acquisition case remain. Generic grouped exile already exists. Eventual one name / one record. | Small: typed option over existing owner targeting, compiler lowering and lifecycle tests. |
+| Resolution-time prevention/payment | Heroism | 0 from a small prerequisite | RON timing conflicts with the local WotC ruling. Needs current attacking red creature selection and separate controller payments. Eventual one name / one record. | Larger: source repair, selection and payment integration. |
+| Attacking-player static reference | Gaea's Liege | 0 from the reference alone | All six records duplicate IsntAttacking; static controller filtering and source-bound land-type duration need audit. Eventual one name / six records, counted once. | Larger: source repair and multiple static/duration dependencies. |
+
+Selected candidate 1 as a dependency-ready prerequisite for the first ranked
+card. No candidate offers an immediate multi-name unlock. This run establishes
+one complete target shape, not complete Bronze Tablet execution. No RON data was
+changed. Heroism's timing and Gaea's Liege's predicate defects remain unresolved.
+
+### Contract and reuse boundary
+
+Native signature: `TargetOpponentOwns() PermanentTargetOption`. This exposes
+existing `PermanentTarget.opponentOwned` behavior through typed declarations and
+definition inspection; it adds no second targeting pipeline. Ownership is read
+at target selection and resolution relative to the current stack object's
+controller, independently of the target's controller. RON lowers exactly
+`OwnedByAPlayer(Opponent)` in supported permanent target contexts, directly or
+inside `And`. The existing `SinglePlayer(You)` shape remains supported.
+Callable Opponent, malformed arities, unsupported player bindings and owner
+`Or` forms reject. Collection and ante-card filters keep their separate scopes.
+
+Existing target validation, exact incarnations, protection, phasing, cost
+transactions, saved ability controllers, stack copies and clone services do the
+runtime work. The option has no mutable state or result binding. CR 108.3,
+115.1c, 608.2b and 702.26b establish owner/control separation, announcement,
+resolution legality and phasing. The local Bronze Tablet WotC rulings also
+require target failure to stop resolution and permit a stolen Tablet. No
+replacement ordering or simultaneous movement contract changes in this slice.
+
+### Failing-first and gameplay evidence
+
+- Native `TestTargetOpponentOwner` first failed compilation at the missing
+  `TargetOpponentOwns` signature. It now validates a typed declaration and pure
+  repeated target queries with reversed players, split ownership/control and
+  phased objects.
+- `TestRONOpponentOwnerTarget` first failed for every scenario at unsupported
+  permanent target owner `Opponent`. It now uses Bronze Tablet's original
+  four-mana/tap cost and complete target AST with a test-only resolving body.
+  Tests cover invalid owner and token targets, unpaid/illegal-target rollback,
+  delayed action timing, owner changes, control changes, exact return identity,
+  phasing and phase cycles, shroud, source return, copies with unchanged and
+  different controllers, and pending clones.
+- `TestRONOpponentOwnerTargetInstances` checks two independent factory calls
+  controlled by different players with separate targets and pending clones.
+- `TestRONOpponentOwnerTargetInvalid` checks declaration rejection. The old
+  contextual-target rejection list now tests callable `Opponent()` instead of
+  the newly supported symbol. No runtime assertion was removed or relaxed.
+- `TestRONOpponentOwnerTargetRemainingGap` requires the complete record to stay
+  rejected at one of two evidenced prerequisites. In the workspace it reaches
+  `unsupported two-branch payment cost (PayLife)`; at clean HEAD it reaches
+  `unbound or incompatible player reference (OwnerOfPermanent)`. The first
+  isolated run exposed this distinction. Recognizing both keeps the test
+  independent of pre-existing uncommitted owner support.
+
+The first owner-change fixture failed because ordinary games reject ownership
+changes. Using `NewGameWithAnte` supplies the existing required contract.
+The initial paired-exile estimate was refined after inspecting grouped exile:
+movement already exists; the ownership result consumers still need adapters.
+Bronze Tablet has target-fragment coverage only. Estimated and actual complete
+card gain agree: **0 names / 0 records**. Compilation and gameplay coverage are
+separate. No Go card, fallback registry or broad DSL function was removed.
+Runtime cutover and removal gates remain unmet.
+
+### Verification, collection status and commit isolation
+
+Workspace checks passed in the requested order: focused RON tests, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`,
+`make lint` (0 issues) and `git diff --check`. Post-lint focused RON and native
+owner-target tests passed. Lint made no further source changes. The rulings
+coverage check `go run ./cmd/fetchset -check -card "Bronze Tablet"` passed.
+
+Final collection loading returned expected exit 1 and valid JSON: **2,375
+compiled / 70 rejected records**, **946 accepted / 40 rejected names**. All
+ordered diagnostics match the baseline except Bronze Tablet, which advances
+from the unsupported opponent owner target to two-branch `PayLife`. The
+collection still publishes no partial registry. RON sources did not change,
+so no vocabulary source/hash refresh is required; this entry records the new
+loader diagnostic separately from the historical vocabulary snapshot.
+
+A detached checkout of HEAD `e36a0df3` received only this slice's six source/test
+files and four documentation changes. Focused native and RON tests, build, vet,
+engine short tests, full tests, lint and diff checks passed there too. The
+isolated loader rejects at **2,369 compiled / 76 rejected records**, **945
+accepted / 41 rejected names**, with Bronze Tablet now failing at the ordinary
+owner-reference prerequisite. The six-record difference from the workspace is
+preserved pre-existing source-death/finite-redirection work, not this slice's
+coverage gain. Both states have zero new complete-card unlocks.
+
+Commit construction uses the isolated checkout. The main branch then advances
+to that commit with only this slice added to the index; existing staged blobs
+and working changes are retained around the required current-status update.
+The original index tree was `abd211607660454b638907dd052c9dabdb104f99` and stayed
+unchanged throughout validation. Unrelated unstaged patches were compared with
+the initial snapshot and match exactly. No prerequisite change is bundled.
+
+Changed files: `pkg/mage/target_opponent_owner.go`,
+`pkg/mage/target_opponent_owner_test.go`, `pkg/mage/composable_target.go`,
+`pkg/mage/dsl/ron/temporary_animation.go`,
+`pkg/mage/dsl/ron/opponent_owner_target_test.go`,
+`pkg/mage/dsl/ron/contextual_collection_test.go`, `pkg/mage/doc.go`,
+`docs/engine-rules-contracts.md`, `docs/dsl-reference.md` and this ledger.
+
+The first commit attempt reached interactive GPG pinentry and could not finish
+in this session. Its signing process was stopped. The final commit uses a
+command-local `commit.gpgsign=false`; repository and user settings are unchanged.
+
+### Ranked next candidates
+
+1. Bronze Tablet: two-branch optional life payment, then exact exiled ownership
+   result consumers and the missing-source acquisition case. Eventual one name /
+   one record. The ordinary permanent-owner prerequisite is still uncommitted.
+2. Heroism: repair the resolution-time payment timing defect, then current
+   attacking red creature selection with separate controller payments. Eventual
+   one name / one record.
+3. Gaea's Liege: audit the attacking predicate in all six records, attacking-player
+   static filtering and source-bound land-type duration. Eventual one name / six
+   records, counted as one unique card.
+
+Stop after OPPONENT-OWNED-PERMANENT-TARGET. Complete collection gameplay,
+runtime loading, Go-card deletion, obsolete generator removal and unused DSL
+cleanup remain incomplete.

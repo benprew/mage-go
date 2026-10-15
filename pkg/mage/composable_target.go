@@ -277,6 +277,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	if spec, ok := b.spec.(*PermanentTarget); ok && spec.opponentOnly {
 		n.children = append(n.children, definitionEdge{"controller", targetOpponentControlsOption{}})
 	}
+	if spec, ok := b.spec.(*PermanentTarget); ok && spec.opponentOwned {
+		n.children = append(n.children, definitionEdge{"opponent-owner", targetOpponentOwnsOption{}})
+	}
 	if spec, ok := b.spec.(*PermanentTarget); ok && spec.controllerOwned {
 		n.children = append(n.children, definitionEdge{"owner", targetYouOwnOption{}})
 	}

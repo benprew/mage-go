@@ -24691,3 +24691,35 @@ Evidence: native `TestSourceDamagePreventionIdentity`, `Declarations`,
 `TestRONSourceDamagePreventionKryShield`, `Instances`, `Delayed`, `Invalid`
 and `Inventory`. The complete Kry Shield record has paid-cast, activation
 payment and resolution evidence. No Oracle or RON source change is required.
+
+
+## Opponent-owned permanent targets
+
+`TargetOpponentOwns() PermanentTargetOption` uses the existing
+`PermanentTarget.opponentOwned` check. It compares current ownership with the
+spell or ability controller at both selection and resolution. Control is
+independent. The typed declaration exposes the owner restriction to definition
+inspection. Existing exact-visit targets, phasing, protection, cost validation,
+stack copies and clone services retain their contracts.
+
+RON accepts `OwnedByAPlayer(Opponent)` in supported permanent target declarations,
+directly or under `And`. `Opponent` must be a symbol. Callable forms, wrong
+arity, unbound player references and owner disjunctions reject. Existing
+`OwnedByAPlayer(SinglePlayer(You))` remains supported. Collection and ante-card
+filters retain their separate shapes. No new replacement or payment service
+is established.
+
+CR 108.3, 115.1c, 608.2b and 702.26b establish ownership, announcement, current
+legality and phasing. Bronze Tablet's local WotC rulings confirm opponent-owned
+objects can be controlled by the activating player, and an absent target stops
+resolution. The complete record still rejects at its two-branch life payment;
+its result-bound ownership operations need separate support.
+
+Evidence: `TestTargetOpponentOwner`, `TestRONOpponentOwnerTarget`,
+`TestRONOpponentOwnerTargetInstances`, `TestRONOpponentOwnerTargetInvalid` and
+`TestRONOpponentOwnerTargetRemainingGap`. The RON tests retain Bronze Tablet's
+complete cost and target declaration in a resolving-body fragment. They cover
+nontoken restrictions, unpaid and illegal-target rollback, ownership changes,
+control changes, source return, target return, phasing, phase cycles, shroud,
+copies with the same and a different controller, clones and factory isolation.
+This is fragment evidence, not complete Bronze Tablet gameplay.

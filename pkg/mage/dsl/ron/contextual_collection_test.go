@@ -237,7 +237,7 @@ func TestRONContextualCollectionDeclarations(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	for _, filter := range []string{`OwnedByAPlayer(You)`, `OwnedByAPlayer(SinglePlayer(Ref_TargetPlayer))`, `OwnedByAPlayer(Opponent)`, `Or([OwnedByAPlayer(SinglePlayer(You)),IsCardtype(Artifact)])`} {
+	for _, filter := range []string{`OwnedByAPlayer(You)`, `OwnedByAPlayer(SinglePlayer(Ref_TargetPlayer))`, `OwnedByAPlayer(Opponent())`, `Or([OwnedByAPlayer(SinglePlayer(You)),IsCardtype(Artifact)])`} {
 		src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(PayMana([]),Targeted([TargetPermanent(` + filter + `)],ActionList([TapPermanent(Ref_TargetPermanent)])))])`
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")
 		if err != nil {
