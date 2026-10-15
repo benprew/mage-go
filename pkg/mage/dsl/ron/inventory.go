@@ -223,6 +223,9 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 
 // Unknown roles prevent an unsupported parent from inventing a child's contract.
 func inventoryArgumentRole(n Node, role string, index int) string {
+	if (role == "player_filter" || role == "permanent_filter") && n.Name == "WasDealtDamageByPermanentThisGame" && len(n.Args) == 1 {
+		return "permanent_reference"
+	}
 	if (role == "permanent_collection" || role == "permanent_filter") && n.Name == "PutOntoBattlefieldByPermanent" && len(n.Args) == 1 {
 		return "permanent_reference"
 	}
@@ -2229,6 +2232,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return role
+		}
 		if n.Name == "ControlsA" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

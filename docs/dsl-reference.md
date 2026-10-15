@@ -3982,9 +3982,9 @@ MultipleRecipients([
 
 Supply exactly one `EachPermanent/1` and one `EachPlayer/1`, in either order.
 The permanent operand uses the existing context-free permanent filter grammar;
-the player operand must be symbol `AnyPlayer`. Duplicate sets, singular members,
-empty lists, player-history filters, and unbound references are rejected during
-compilation. This does not add multiple damage amounts or target groups.
+the player operand accepts symbol `AnyPlayer`. The game-long history extension
+is specified below. Duplicate sets, singular members, empty lists and unbound
+references are rejected during compilation. This does not add multiple damage amounts or target groups.
 
 The adapter builds `mage.DamageRecipients(mage.EachPlayer,
 mage.MatchingPermanents(filter))` and passes it to
@@ -18354,3 +18354,42 @@ Evidence: native `TestLostManaTransfer`, `Declarations`, `Frames`,
 complete six reprints each, with payment, timing, departed spell controllers,
 copy and clone regressions. This prerequisite adds syntax and engine contract
 coverage; it adds no complete-card compiler or gameplay unlock.
+
+## RON mixed recipients with game-long damage history
+
+Ordinary resolving `SpellDealsDamage` and `PermanentDealsDamage` mixed recipient
+lists accept this shape, with either ordering of the two sets:
+
+```ron
+MultipleRecipients([
+    EachPlayer(And([
+        Opponent,
+        WasDealtDamageByPermanentThisGame(ThisPermanent)
+    ])),
+    EachPermanent(And([
+        IsCardtype(Planeswalker),
+        WasDealtDamageByPermanentThisGame(ThisPermanent)
+    ]))
+])
+```
+
+Each history predicate takes one scoped permanent reference. `ThisPermanent`
+requires a permanent source; declared targets and bound event references use
+their own instance bindings. A bare history predicate selects all historical
+player or permanent candidates. The player conjunction permits one `AnyPlayer`
+or `Opponent` symbol. The permanent conjunction permits supported characteristic
+filters. Each conjunction permits one history predicate. Nested history unions,
+duplicate predicates, malformed calls, and unbound references reject. The new
+history grammar is limited to mixed recipients; singular collections keep their
+existing grammar. Entry operations and draw replacements reject this shape.
+
+The adapter passes per-instance sets to `DamageRecipients` and `DealDamageEach`.
+`PlayersDealtDamageBy` and `PermanentsDealtDamageBy` supply exact source history;
+`OpponentsOf` supplies the resolving player's opponents. Source and recipient
+returns cannot inherit old history. Cleanup and phasing preserve history.
+Recipient membership and characteristics are read at resolution, before a single
+simultaneous damage batch. The complete corrected The Fallen record has gameplay
+evidence in `TestRONDamageHistory*`. No new native API is introduced.
+The shared delayed-source traversal now retains explicit source reads in
+permanent game-history sets, including nested candidate sets. This supplies
+waiting source choices without querying history or executing the delayed body.

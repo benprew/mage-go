@@ -643,7 +643,7 @@ func cardType(n Node) (core.CardType, error) {
 	if err != nil {
 		return 0, err
 	}
-	kind, ok := map[string]core.CardType{"Creature": core.TypeCreature, "Artifact": core.TypeArtifact, "Land": core.TypeLand, "Enchantment": core.TypeEnchantment, "Instant": core.TypeInstant, "Sorcery": core.TypeSorcery}[name]
+	kind, ok := map[string]core.CardType{"Creature": core.TypeCreature, "Artifact": core.TypeArtifact, "Land": core.TypeLand, "Enchantment": core.TypeEnchantment, "Instant": core.TypeInstant, "Sorcery": core.TypeSorcery, "Planeswalker": core.TypePlaneswalker}[name]
 	if !ok {
 		return 0, unsupported(n, "card type")
 	}
@@ -1822,12 +1822,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			})
 		}
 		if n.Args[2].Name == "MultipleRecipients" {
-			recipients, err := compileMixedDamageRecipients(n.Args[2])
+			recipients, err := compileMixedDamageRecipients(n.Args[2], ctx)
 			if err != nil {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageEach(source(bindings), recipients(), amount(bindings))
+				return mage.DealDamageEach(source(bindings), recipients(bindings), amount(bindings))
 			})
 		}
 		if n.Args[2].Name == "Permanent" {

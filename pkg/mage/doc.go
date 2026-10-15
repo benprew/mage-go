@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PlayersDealtDamageBy] and [PermanentsDealtDamageBy] select exact source history.
+// Cleanup keeps that history. Phasing keeps visits but suspends recipients.
+// Return cannot inherit an old visit. Current types select permanent recipients.
+// Pending abilities keep their source visit and controller after departure.
+// Waiting delayed queries retain explicit history source and candidate reads.
+// [DamageRecipients] and [DealDamageEach] supply one simultaneous damage batch.
+// RON accepts WasDealtDamageByPermanentThisGame(ref) in mixed recipient sets.
+// A player And can add Opponent or AnyPlayer. A permanent And can add supported
+// characteristic filters. Each set permits one history predicate.
+// Other contexts and unbound references reject. The corrected complete The Fallen
+// record has cast and upkeep gameplay evidence, including its opponent limit.
+//
 // [LoseUnspentManaInto] saves the full removed mana in a [LostManaBinding].
 // [AddLostManaFor] transfers those values to a typed player (CR 106.13).
 // Restrictions remain. The transfer does not produce new mana, apply production

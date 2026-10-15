@@ -24245,3 +24245,54 @@ Evidence: native `TestLostManaTransfer`, `Declarations`, `Frames`,
 complete six reprints each, with payment, timing, departed spell controllers,
 copy and clone regressions. This prerequisite adds syntax and engine contract
 coverage; it adds no complete-card compiler or gameplay unlock.
+
+## RON game-long damage recipient history
+
+RON mixed damage recipients now lower `WasDealtDamageByPermanentThisGame(ref)`
+to the existing `PlayersDealtDamageBy(DamageSourceRef, PlayerSet)` and
+`PermanentsDealtDamageBy(DamageSourceRef, PermanentSet)` services. The source is
+built from a scoped permanent reference with `DamageSourceOf`. Player and
+permanent history operands can use different declarations. No new history store
+or damage executor is needed.
+
+The player filter can be the history predicate alone or one `And` containing
+that predicate and `AnyPlayer` or `Opponent`. The permanent filter can be the
+predicate alone or one `And` containing that predicate and supported permanent
+characteristic filters. `IsCardtype(Planeswalker)` uses the engine's current type
+query. Duplicate history predicates and unbound references fail compilation.
+These forms apply only to mixed recipients in ordinary resolving action lists.
+Entry operations and draw replacement bodies do not acquire this grammar.
+
+History records positive damage after replacement and prevention. Cleanup does
+not clear game-long history. Source and permanent recipient identities include
+incarnations (CR 400.7); phasing preserves those identities but suspends recipient
+membership (CR 702.26). Current recipient types are checked at resolution.
+`DealDamageEach` selects both sets before its simultaneous batch (CR 120.4).
+Repeated earlier hits do not multiply membership. Pending abilities retain their
+source visit and controller (CR 603.3a, 608.2h); departure does not erase their
+history. A returned source starts without its old history. Opponent selection
+uses the resolving ability's saved controller, including after source control
+changes. Copies and game clones use the existing independent frames and stores.
+
+The Fallen's complete DRK record now requires opponent membership in its player
+history filter. This corrects its former all-player selection using local Oracle
+text and all four WotC rulings. Its planeswalker clause retains no controller
+restriction. No other source record changes.
+
+Evidence: native `TestDamageHistoryRecipientSets*` and
+`TestDamageHistoryRecipientsCurrentMembership`; RON `TestRONDamageHistoryFallen`,
+`Lifetime`, `PreventionAndInstances`, `Controller`, `Targets`, `Invalid`, and
+`ContextsAndInventory`. These cover paid and failed casting, stack timing,
+noncumulative damage, current types, current opponents at trigger time, saved
+ability control, LKI, phasing, returned objects, prevention, copies, clones,
+factory isolation, strict loading and inventory reference roles. Existing
+`TestRONMixedDamage*` retains its batch and replacement-order evidence.
+
+The native permanent-set operand traversal now includes
+`PermanentsDealtDamageBy`. Waiting delayed effects retain explicit source reads
+from both the history source and recursively nested candidate sets. An empty
+history or zero amount cannot erase the declaration. Queries do not evaluate
+amounts or history membership. Phasing and departure preserve the captured visit;
+a returned source cannot replace it. Clone trigger detection ends only that
+clone's waiting lifetime. `TestDamageHistoryRecipientsWaitingSources` failed
+before this traversal was added and covers direct, wrapped and nested sources.

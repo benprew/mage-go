@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **934 accepted / 52 rejected names**
-(986 total), **2,347 compiled / 98 rejected records** (2,445 total).
-The latest slice is **SAVED-LOST-MANA**.
-RON lowers `AddMana(TheManaLostThisWay)` after an ordinary resolving
-`LoseUnspentMana`, with typed donor/recipient scope and per-instance results.
-The engine retains full mana values and restrictions under CR 106.13, without
-new production. This completes the saved-result prerequisite for Drain Power;
-forced legal mana activation remains unsupported. Estimated and actual gain:
-zero names / records. Mana Short and Power Sink gameplay remains covered.
+Latest measured result (2026-10-15): **935 accepted / 51 rejected names**
+(986 total), **2,348 compiled / 97 rejected records** (2,445 total).
+The latest slice is **GAME-DAMAGE-HISTORY-RECIPIENTS**.
+RON lowers exact-source game-long history in mixed player/permanent damage
+recipient sets, with scoped references and optional opponent/type filters.
+Existing engine history, identity, LKI and simultaneous damage services execute
+it. The corrected complete The Fallen record has paid-cast and upkeep gameplay
+evidence. Estimated and actual gain: one name / one record. Earthquake,
+Hurricane and Inferno retain their shared mixed-recipient gameplay coverage.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -24245,3 +24245,187 @@ belong to this slice. The commit uses the prior documented command-local
 52 unique names / 98 records still reject. Complete RON gameplay, runtime
 loading, application cutover, Go-card/generator removal and unused DSL cleanup
 remain incomplete. Stop after SAVED-LOST-MANA.
+
+## 2026-10-15 — GAME-DAMAGE-HISTORY-RECIPIENTS
+
+### Fresh baseline and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with valid collection-rejection JSON:
+2,347 compiled / 98 rejected records, 934 accepted / 52 rejected unique names.
+This was unsupported collection syntax, not a build or test failure.
+
+Read the instructions, engine API reference, execution design, current status
+and final prior entry. Inspected targeted vocabulary signatures and complete
+records, including nested forms, for these three candidates:
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream use | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: forced mana activation | Drain Power | 0 for offers alone; eventual 1 name / 6 records | Saved mana is ready. Legal offers for arbitrary costs, variable output, activation order and exact visit rechecks still need an engine contract. The offers would support the complete forced-activation instruction and reuse shared payment services. | Large: transaction, legality and choice tests before full adapter |
+| Ranked #2: sticky animation | Titania's Song | 0 for a prerequisite; eventual 1 name / 2 records | Needs evolving membership across layers, ability removal, individual mana-value P/T, dependencies and duration after source departure. Reuses artifact-animation and continuous-effect services. | Large: layer and lifetime work |
+| Selected: game-long damage recipient history | The Fallen; shared mixed-recipient callers Earthquake, Hurricane, Inferno | 1 name / 1 record | Exact history sets, opponent selection, LKI, cloning and simultaneous damage already exist. Needs compiler composition and a source correction. Supplies scoped history operands in the existing mixed-recipient capability. | Small: adapter plus gameplay, identity and strict-declaration tests |
+
+Neither ranked candidate was ready as a complete bounded adapter: each still
+needed a substantial shared engine prerequisite. No direct multi-name unlock
+was identified among these three. Selected the complete ready history slice
+for its credible full-card gain and reuse of the mixed-recipient compiler.
+No first-error count was used as an unlock estimate. Existing shared callers
+are regression value, not additional newly unlocked cards.
+
+Before edits, stated the contract, reuse boundary and acceptance cases. RON owns
+strict syntax and scoped per-instance operands. Mage owns actual history,
+incarnations, source information, opponents and simultaneous execution. Read
+The Fallen's complete RON and all four local WotC rulings; there are no Scryfall
+notes. `go run ./cmd/fetchset -check -card "The Fallen"` passed before edits.
+Also read complete Drain Power and Titania's Song comparison records and their
+local WotC rulings. Relevant contracts are CR 109.5, 120.1–7, 400.7, 603.3a,
+608.2h–i and 702.26b/d.
+
+### Supported shapes, engine reuse and source correction
+
+- `compileMixedDamageRecipients(Node, scope)
+  (func(instanceBindings) mage.DamageRecipientSet, error)` now receives lexical
+  scope and builds recipients with that factory instance's declarations.
+- `MultipleRecipients` still requires exactly one `EachPlayer/1` and one
+  `EachPermanent/1`, in either order. Existing ordinary mixed recipients retain
+  their behavior and restrictions.
+- In either set, `WasDealtDamageByPermanentThisGame(permanentRef)` is a strict
+  one-argument history predicate. The source is a typed permanent reference,
+  lowered through `DamageSourceOf`. Source, target and bound event declarations
+  use their existing scopes and instance bindings.
+- The player form accepts the history predicate alone, or one `And` containing
+  one history predicate and at most one symbol `AnyPlayer` or `Opponent`.
+  The permanent form accepts the history predicate alone, or one `And`
+  containing one history predicate and supported characteristic filters.
+  These source operands are independent across the two sets.
+- Added the missing `Planeswalker` card-type mapping to `core.TypePlaneswalker`.
+  The existing type filter reads the current permanent type.
+- Unbound, malformed, duplicate and incompatible history references reject.
+  Nested history unions and duplicate player filters reject. History requires
+  an ordinary resolving body; costs, static declarations, entry operations and
+  draw replacement bodies do not gain this grammar. Singular damage recipient
+  collections retain their existing grammar.
+- Reuse exact native signatures `PlayersDealtDamageBy(DamageSourceRef,
+  PlayerSet) PlayerSet`, `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet)
+  PermanentSet`, `OpponentsOf(PlayerRef) PlayerSet`,
+  `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet` and
+  `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue,
+  ...DamageEachResultOption) ResolvingEffect`. No new native API, history map or
+  damage execution path was needed. Native contract tests exercise composition
+  with copy-induced type changes, cleanup and saved resolution control.
+- The shared services retain positive actual damage after prevention and
+  replacement. Repeated hits select each recipient once. Cleanup preserves
+  game history; return resets identity. Phasing preserves history but excludes
+  current phased recipients. Pending source history uses the saved visit after
+  departure, phasing or return. Trigger control is saved. Game clones and
+  copied abilities retain independent resolution state. No cost or replacement
+  ordering service changed.
+- The final engine operand audit found that waiting delayed source traversal
+  handled player game-history sets and permanent turn-history sets, but omitted
+  permanent game-history sets. Applied the `implement-engine` skill for this
+  small engine contract repair. `permanentSetReadsSourcePermanent` now traverses
+  `damageHistoryPermanents` through both its source and candidate set. Direct,
+  wrapped and nested declarations preserve source choice eligibility without
+  reading history or amounts. Empty history and zero output keep declarations.
+  Source phase/departure/return and cloned trigger detection keep exact lifetimes.
+- Inventory now retains `permanent_reference` roles under both history filter
+  contexts and propagates player conjunction roles.
+
+Source defect: `cards/mtgish/DRK.lines.ron:105` formerly selected all previously
+hit players. `data/DRK.json` Oracle text says “each opponent and planeswalker it
+has dealt damage to this game.” The four WotC rulings confirm opponent selection,
+noncumulative damage, reset on departure, and persistence through phasing.
+Changed only the player predicate to
+`And([Opponent, WasDealtDamageByPermanentThisGame(ThisPermanent)])`.
+The planeswalker clause keeps no controller restriction. The collection has
+one The Fallen record, so there are no identical reprints to correct.
+
+Refreshed the vocabulary from a complete positioned AST walk. It retains 605
+tuple signatures, 501 symbol signatures and 51 top-level rule names. Updated
+DRK's hash, the two changed occurrence counts, shifted source positions and fresh
+loader diagnostics. The old dated loader snapshot still contained Martyr's Cry,
+Conch Horn and Ichneumon Druid errors; their removal reflects earlier completed
+slices already present in this run's fresh baseline, not gains from this slice.
+
+### Failing-first tests and card mappings
+
+Wrote the new RON gameplay and invalid-declaration tests before implementation.
+After fixing a test helper's control-change call, confirmed the intended failure:
+`unsupported damage player set filter (WasDealtDamageByPermanentThisGame)`.
+The tests then exposed the missing Planeswalker type mapping. The inventory test
+failed on missing history source roles before those roles were implemented.
+Native `TestDamageHistoryRecipientsWaitingSources` then failed all three shapes
+with missing waiting source eligibility before the engine traversal repair.
+Test fixtures were corrected to use trigger stack placement, current clone
+objects and the existing validated copy-definition builder. Assertions were
+retained. No production stub or weakened test hid an unsupported rule.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| The Fallen, complete corrected DRK record | `TestRONDamageHistoryFallen` | Unpaid cast rollback, full paid cast, upkeep stack timing, opponent-only players, planeswalkers, no untouched recipients, one damage despite repeated hits, simultaneous results and cleanup persistence |
+| The Fallen exact visits and LKI | `TestRONDamageHistoryLifetime` | Pending source departure/return/phasing/control changes, recipient return/phasing, phase cycle, independent pending clones and fresh returned-source history |
+| The Fallen prevention and independent instances | `TestRONDamageHistoryPreventionAndInstances`, `Controller` | Prevented/zero damage excluded, distinct source histories, copied ability, no phased-source trigger, phase-in memory and controller-relative opponent selection |
+| Scoped source declarations | `TestRONDamageHistoryTargets` | Real RON spells, both set orders, independent target/factory bindings, bare player history, permanent conjunction order and pending clones |
+| Native history composition | `TestDamageHistoryRecipientsCurrentMembership`; existing `TestDamageHistoryRecipientSets*` | Current recipient types after a validated copy, saved ability controller after control change, durable cleanup history, exact visits, clones and invalid native declarations |
+| Waiting delayed history operands | `TestDamageHistoryRecipientsWaitingSources` | Failing-first direct/wrapped/nested source traversal, query purity, empty history, phasing, departure/return and clone trigger lifetime |
+| Strict declarations and collection loading | `TestRONDamageHistoryInvalid`, `ContextsAndInventory` | Invalid arities/kinds, duplicate filters, unbound/incompatible references, context rejection, complete-record strict load, fresh instances, corrected source and inventory operand roles |
+| Earthquake, Hurricane and Inferno | Existing `TestRONMixedDamage*` | Shared compiler regression coverage, all reprints, membership, simultaneous packets, prevention and replacement order |
+
+### Verification and actual coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONDamageHistory -count=1`: passed.
+  Native `TestDamageHistoryRecipient*` and mixed-damage regressions also passed.
+- `go test ./pkg/mage/dsl/ron -count=1`: passed after updating measured inventory
+  expectations. The first engine run found six old count assertions: compiled
+  2,347/98 became 2,348/97, and upkeep declaration coverage became 68 names /
+  135 records instead of 67/134. Exact assertions remain, with The Fallen added.
+- `make build`: passed. `go vet ./...`: passed again after the engine repair.
+- `go test ./pkg/mage/... -short -count=1`: passed with the final engine repair.
+- `make test`: passed for the complete repository with the final engine repair.
+- Implement-engine's additional `go test ./... -short -count=1`: passed.
+- First `make lint` reported one `gocritic/unnamedResult` issue in the new filter
+  splitter. Named its results. Final `make lint`: passed, **0 issues**.
+  Reviewed formatting and automatic changes; no unrelated files changed.
+  Focused native history and RON history/mixed-damage tests passed after lint.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,348 compiled / 97 rejected records**, **935 accepted / 51 rejected names**.
+  Exact comparison with the fresh baseline removes only The Fallen's issue;
+  all 97 other diagnostics are unchanged. The refreshed vocabulary snapshot
+  exactly matches the final report, including records and every issue.
+
+No environment blocker or unresolved required-check failure remains. Commit uses
+command-local `commit.gpgsign=false`, as documented by earlier completed slices;
+repository and global signing settings remain unchanged.
+
+Actual gain is **one unique name / one record**, matching the estimate:
+**935 accepted / 51 rejected names**, **2,348 compiled / 97 rejected records**.
+The new full-card gameplay mapping is The Fallen. Compilation and gameplay
+coverage are reported separately; no claim is made for remaining rejected cards.
+
+Changed files: `cards/mtgish/DRK.lines.ron`; native
+`pkg/mage/damage_history_recipients_test.go`, `damage_history_waiting_test.go`,
+`waiting_delayed_source.go` and `pkg/mage/doc.go`; RON
+`mixed_damage.go`, `compiler.go`, `inventory.go`,
+`damage_history_recipients_test.go`, `definition_plan_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`, `text_upkeep_layer_test.go`,
+`text_upkeep_trigger_test.go`; both API/rules-contract docs; vocabulary and
+this ledger. The inventory expectation updates preserve exact counts and add
+explicit The Fallen assertions.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers, then Drain Power: one eventual name /
+   six records. Isolate legal choice and recheck contracts for arbitrary costs,
+   variable output and activation order before adapting the full instruction.
+2. Sticky animation and post-source duration for Titania's Song: one eventual
+   name / two records. Shared layer membership, dependencies and duration must
+   precede a complete adapter.
+3. Reassess modal triggered action bodies for Relic Bind: one potential name /
+   one record. Reuse existing native modal trigger announcement and legality
+   services; inspect the complete host-tap and player/planeswalker target forms.
+
+No Go card definitions, generators or broad DSL functions were removed. Full
+collection loading and startup remain unavailable. Go-card deletion, application
+cutover and unused DSL removal gates are not met. Stop after this slice.
