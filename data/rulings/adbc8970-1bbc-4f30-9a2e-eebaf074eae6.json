@@ -1,0 +1,43 @@
+{
+  "name": "Thelonite Druid",
+  "oracle_id": "adbc8970-1bbc-4f30-9a2e-eebaf074eae6",
+  "rulings_uri": "https://api.scryfall.com/cards/644aa4e7-9ea4-454b-abce-2a1a53c25560/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "adbc8970-1bbc-4f30-9a2e-eebaf074eae6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can sacrifice the Druid to itself."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "adbc8970-1bbc-4f30-9a2e-eebaf074eae6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The land animation ability does not wear off if the land stops being a Forest. It continues until the end of the turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "adbc8970-1bbc-4f30-9a2e-eebaf074eae6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The most recent land animating ability takes precedence."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "adbc8970-1bbc-4f30-9a2e-eebaf074eae6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only affects Forests that are on the battlefield when the effect resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "adbc8970-1bbc-4f30-9a2e-eebaf074eae6",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "A noncreature permanent that turns into a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn’t matter how long the permanent has been a creature."
+    }
+  ]
+}

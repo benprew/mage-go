@@ -1,0 +1,15 @@
+{
+  "name": "Elven Riders",
+  "oracle_id": "9a6ff511-3c8f-446e-8cad-b8997a753958",
+  "rulings_uri": "https://api.scryfall.com/cards/a4bf2a88-2771-4ea8-b448-35642e034965/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9a6ff511-3c8f-446e-8cad-b8997a753958",
+      "source": "wotc",
+      "published_at": "2007-05-01",
+      "comment": "Creatures with reach (such as Giant Spider) don't actually have flying, so they can't block this."
+    }
+  ]
+}

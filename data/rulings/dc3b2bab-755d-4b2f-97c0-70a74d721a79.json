@@ -1,0 +1,15 @@
+{
+  "name": "Black Mana Battery",
+  "oracle_id": "dc3b2bab-755d-4b2f-97c0-70a74d721a79",
+  "rulings_uri": "https://api.scryfall.com/cards/a81f7a0f-183f-438b-b252-738d8d30c245/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "dc3b2bab-755d-4b2f-97c0-70a74d721a79",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be tapped even if it has no counters."
+    }
+  ]
+}

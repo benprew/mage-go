@@ -1,0 +1,22 @@
+{
+  "name": "Rohgahh of Kher Keep",
+  "oracle_id": "44412804-aa69-4e62-b118-123741d91914",
+  "rulings_uri": "https://api.scryfall.com/cards/1429cc3d-f6a2-4011-b716-5c3e0cf251d0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "44412804-aa69-4e62-b118-123741d91914",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If you don't pay {R}{R}{R} as the first ability resolves, all creatures named Kobolds of Kher Keep become tapped (even the ones you don't control), as does Rohgahh. The chosen opponent gains control of Rohgahh and all creatures named Kobolds of Kher Keep regardless of whether you control them or whether they were tapped by the ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "44412804-aa69-4e62-b118-123741d91914",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Rohgahh's first ability isn't targeted. You don't choose the opponent that will gain control of the creatures until the ability resolves."
+    }
+  ]
+}

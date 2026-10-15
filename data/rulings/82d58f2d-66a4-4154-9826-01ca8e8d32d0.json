@@ -1,0 +1,22 @@
+{
+  "name": "Land's Edge",
+  "oracle_id": "82d58f2d-66a4-4154-9826-01ca8e8d32d0",
+  "rulings_uri": "https://api.scryfall.com/cards/41798dd9-8ce8-4642-89c2-7356ea129d4e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "82d58f2d-66a4-4154-9826-01ca8e8d32d0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The damage done when you discard a land only applies to lands which are discarded by choice using the Land's Edge ability. It does not work on forced discards of any type."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "82d58f2d-66a4-4154-9826-01ca8e8d32d0",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    }
+  ]
+}

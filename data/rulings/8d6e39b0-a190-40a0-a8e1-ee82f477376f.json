@@ -1,0 +1,15 @@
+{
+  "name": "Crumble",
+  "oracle_id": "8d6e39b0-a190-40a0-a8e1-ee82f477376f",
+  "rulings_uri": "https://api.scryfall.com/cards/4283c407-235d-4332-ab2b-50ec09cd9812/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8d6e39b0-a190-40a0-a8e1-ee82f477376f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the target artifact becomes illegal before resolution, the player does not gain any life."
+    }
+  ]
+}

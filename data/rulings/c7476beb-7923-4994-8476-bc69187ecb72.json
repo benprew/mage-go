@@ -1,0 +1,22 @@
+{
+  "name": "Hammerheim",
+  "oracle_id": "c7476beb-7923-4994-8476-bc69187ecb72",
+  "rulings_uri": "https://api.scryfall.com/cards/773acde9-504c-4065-95e0-f96428f05a7d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c7476beb-7923-4994-8476-bc69187ecb72",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This can be used on a creature without landwalking but has no effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c7476beb-7923-4994-8476-bc69187ecb72",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Causing a creature to lose landwalk abilities is useful only during the declare attackers step or earlier. Once the declare blockers step begins, it’s too late to block the creature."
+    }
+  ]
+}

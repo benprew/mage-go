@@ -1,0 +1,29 @@
+{
+  "name": "Hazezon Tamar",
+  "oracle_id": "d298df4e-7b60-4495-9773-cc81954b7dd9",
+  "rulings_uri": "https://api.scryfall.com/cards/4cd43773-2a6f-4f03-bcee-de32049561e5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d298df4e-7b60-4495-9773-cc81954b7dd9",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The first ability creates a delayed triggered ability that triggers at the beginning of your next upkeep. It doesn't matter who controls Hazezon Tamar at that time, or even if it's on the battlefield. The player who put Hazezon onto the battlefield gets the Sand Warriors."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d298df4e-7b60-4495-9773-cc81954b7dd9",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Only Sand Warriors that are actually on the battlefield when Hazezon Tamar leaves the battlefield are affected when its second ability resolves. If Hazezon leaves the battlefield after the delayed triggered ability created by its first ability triggers but before that ability resolves, its second ability triggers and resolves first, then the Sand Warriors are put on the battlefield. Those Sand Warriors will remain on the battlefield indefinitely."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d298df4e-7b60-4495-9773-cc81954b7dd9",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When Hazezon Tamar's second ability resolves, all permanents with both the Sand and Warrior creature types are exiled, not just the Sand Warrior creature tokens it created. Permanents that have just one of those types are unaffected."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Psychic Purge",
+  "oracle_id": "6af596d2-f075-4f55-b088-a5237fcdaa51",
+  "rulings_uri": "https://api.scryfall.com/cards/1f6e73a4-ad95-4c76-9aa5-94a439977204/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6af596d2-f075-4f55-b088-a5237fcdaa51",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The loss of life can't be prevented by any means. It is not damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6af596d2-f075-4f55-b088-a5237fcdaa51",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Discarding as a cost to cast a spell will not trigger the ability. Only discarding as an effect will trigger the ability."
+    }
+  ]
+}

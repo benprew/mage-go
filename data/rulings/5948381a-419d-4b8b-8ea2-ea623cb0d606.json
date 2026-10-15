@@ -1,0 +1,15 @@
+{
+  "name": "Elder Land Wurm",
+  "oracle_id": "5948381a-419d-4b8b-8ea2-ea623cb0d606",
+  "rulings_uri": "https://api.scryfall.com/cards/369b3ebc-572b-4614-aacb-4990309d8848/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5948381a-419d-4b8b-8ea2-ea623cb0d606",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Another effect can give Elder Land Wurm defender after it has lost it. Blocking again will cause it to lose that instance of defender too."
+    }
+  ]
+}

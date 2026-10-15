@@ -1,0 +1,15 @@
+{
+  "name": "Life Matrix",
+  "oracle_id": "0fd1ddc3-65cc-489f-81b9-6c144843fc67",
+  "rulings_uri": "https://api.scryfall.com/cards/c99a3abc-e2a3-4eee-8f72-b1b25dcd1d0b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0fd1ddc3-65cc-489f-81b9-6c144843fc67",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Once the counter is placed on the creature, the ability to remove it can only be activated by the player who controls the creature."
+    }
+  ]
+}

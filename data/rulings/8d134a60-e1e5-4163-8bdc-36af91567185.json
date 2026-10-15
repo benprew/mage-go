@@ -1,0 +1,29 @@
+{
+  "name": "Gaea's Liege",
+  "oracle_id": "8d134a60-e1e5-4163-8bdc-36af91567185",
+  "rulings_uri": "https://api.scryfall.com/cards/3ade8d4a-6a47-4a01-9a0f-ff866055fd49/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8d134a60-e1e5-4163-8bdc-36af91567185",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When being declared as an attacker, use the \"not attacking\" power and toughness. It only changes after declaration is complete."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8d134a60-e1e5-4163-8bdc-36af91567185",
+      "source": "wotc",
+      "published_at": "2006-09-25",
+      "comment": "The activated ability doesn't affect whether the land is basic or not. It overwrites any other land types. Being a Forest gives the affected land the ability \"{T}: Add {G}.\""
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8d134a60-e1e5-4163-8bdc-36af91567185",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Will not add or remove the supertype snow to or from a land."
+    }
+  ]
+}

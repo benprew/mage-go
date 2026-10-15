@@ -1,0 +1,15 @@
+{
+  "name": "Blood Lust",
+  "oracle_id": "55a253f9-f44d-4898-af83-fea68b7b279d",
+  "rulings_uri": "https://api.scryfall.com/cards/51d30379-bf83-4334-8556-bc23a81dbcd1/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "55a253f9-f44d-4898-af83-fea68b7b279d",
+      "source": "wotc",
+      "published_at": "2005-11-01",
+      "comment": "Has changed slightly in functionality, with the old continuous nature of the toughness reduction gone away; the toughness change remains static. For example, if you have three Swamps and Nightmare on the battlefield and then cast Blood Lust on it, it will become 7/1. If one of your Swamps is subsequently destroyed, your Nightmare will become 6/0 and be put in the graveyard."
+    }
+  ]
+}

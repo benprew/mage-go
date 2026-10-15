@@ -1,0 +1,29 @@
+{
+  "name": "Balance",
+  "oracle_id": "17fa98cd-ed8f-483f-9525-7e989a82ebb2",
+  "rulings_uri": "https://api.scryfall.com/cards/ce648aa3-098b-4af0-a433-fd290bc85904/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "17fa98cd-ed8f-483f-9525-7e989a82ebb2",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Balance doesn't have targets, so permanents that can't be targeted, such as a creature with shroud or protection from white, are valid choices to be sacrificed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "17fa98cd-ed8f-483f-9525-7e989a82ebb2",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Each type of object is counted during the corresponding part of the process. Cards in hand are counted after lands have been sacrificed, and creatures on the battlefield are counted after cards have been discarded. Thus, a land creature sacrificed to the first part of the spell would not be counted when determining how many creatures are on the battlefield for the last part."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "17fa98cd-ed8f-483f-9525-7e989a82ebb2",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "First the player whose turn it is chooses which lands (if any) to keep, then each other player in turn order does the same. Each player will know the choices made by the players who chose before them. All of the unchosen lands are then sacrificed simultaneously. Then the process is repeated for cards in hand, except that no cards are revealed until all players have chosen what to discard, at which point those cards are all discarded simultaneously. Lastly, the process is repeated for creatures, and players will again know earlier choices made when deciding what to sacrifice. All of the unchosen creatures are then sacrificed simultaneously."
+    }
+  ]
+}

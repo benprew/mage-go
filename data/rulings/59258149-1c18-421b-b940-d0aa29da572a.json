@@ -1,0 +1,15 @@
+{
+  "name": "Lord Magnus",
+  "oracle_id": "59258149-1c18-421b-b940-d0aa29da572a",
+  "rulings_uri": "https://api.scryfall.com/cards/2a02aabb-c464-4672-b37b-d5d713ef8939/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "59258149-1c18-421b-b940-d0aa29da572a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The statement that creatures with Plainswalk or Forestwalk can be blocked applies to all creatures on the battlefield blocking them, and not just to Lord Magnus."
+    }
+  ]
+}

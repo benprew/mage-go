@@ -1,0 +1,15 @@
+{
+  "name": "Pendelhaven",
+  "oracle_id": "f70e72e1-9abe-485b-9fea-e8b35352f5b3",
+  "rulings_uri": "https://api.scryfall.com/cards/acf85879-4d14-4d86-978c-b155c47b7dcd/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f70e72e1-9abe-485b-9fea-e8b35352f5b3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The current power/toughness being 1/1 is a targeting requirement so it is checked when announcing and again right before resolving."
+    }
+  ]
+}

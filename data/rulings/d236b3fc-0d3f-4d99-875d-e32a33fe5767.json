@@ -1,0 +1,15 @@
+{
+  "name": "Goblin King",
+  "oracle_id": "d236b3fc-0d3f-4d99-875d-e32a33fe5767",
+  "rulings_uri": "https://api.scryfall.com/cards/4b266935-25ea-49c5-a1da-57c22a4362fd/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d236b3fc-0d3f-4d99-875d-e32a33fe5767",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "Goblin King now has the Goblin creature type and its ability has been reworded to affect *other* Goblins. This means that if two Goblin Kings are on the battlefield, each gives the other a bonus."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Thelon's Chant",
+  "oracle_id": "ff4ccf8d-7d3d-4a44-a9ab-6bc88e90d6a7",
+  "rulings_uri": "https://api.scryfall.com/cards/9d970195-0a09-4cb4-a2c0-c16fcab5c859/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ff4ccf8d-7d3d-4a44-a9ab-6bc88e90d6a7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Damages the player putting the land onto the battlefield, even if they are not the controller of the land after it is on the battlefield."
+    }
+  ]
+}

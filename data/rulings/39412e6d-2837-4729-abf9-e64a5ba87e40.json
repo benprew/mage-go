@@ -1,0 +1,29 @@
+{
+  "name": "Power Sink",
+  "oracle_id": "39412e6d-2837-4729-abf9-e64a5ba87e40",
+  "rulings_uri": "https://api.scryfall.com/cards/9a6f3ce5-d4a5-4d7b-a7f9-b249c1d88e8f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "39412e6d-2837-4729-abf9-e64a5ba87e40",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not increase the mana cost of the spell. It just requires a separate expenditure in order for it to succeed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "39412e6d-2837-4729-abf9-e64a5ba87e40",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When this spell resolves, you either pay X mana or let your lands become tapped. The lands that become tapped are not “tapped for mana”. If you choose to pay, you may pay the X mana using whatever mana abilities you want to use."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "39412e6d-2837-4729-abf9-e64a5ba87e40",
+      "source": "wotc",
+      "published_at": "2010-03-01",
+      "comment": "Only lands that actually have mana abilities will get tapped. This includes basic lands and lands with mana abilities printed on them, as well as lands which have been granted a mana ability by some effect."
+    }
+  ]
+}

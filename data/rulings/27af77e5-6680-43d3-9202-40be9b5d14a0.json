@@ -1,0 +1,57 @@
+{
+  "name": "The Wretched",
+  "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+  "rulings_uri": "https://api.scryfall.com/cards/edf30a58-f77c-4887-a0b2-9d939243d86e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-05-01",
+      "comment": "The ability grants you control of all creatures that are blocking it as the ability resolves. This will include any creatures that were put onto the battlefield blocking it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-05-01",
+      "comment": "Any blocking creatures that regenerated during combat will have been removed from combat. Since such creatures are no longer in combat, they cannot be blocking The Wretched, which means you won’t be able to gain control of them."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-05-01",
+      "comment": "If The Wretched itself regenerated during combat, then it will have been removed from combat. Since it is no longer in combat, there cannot be any creatures blocking it, which means you won’t be able to gain control of any creatures."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The Wretched’s ability triggers only if it’s still on the battlefield when the end of combat step begins (after the combat damage step). For example, if it’s blocked by a 7/7 creature and is destroyed, its ability won’t trigger at all."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If The Wretched leaves the battlefield, you no longer control it, so the duration of its control-change effect ends."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If you lose control of The Wretched before its ability resolves, you won’t gain control of the creatures blocking it at all."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "27af77e5-6680-43d3-9202-40be9b5d14a0",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Once the ability resolves, it doesn’t care whether the permanents you gained control of remain creatures, only that they remain on the battlefield."
+    }
+  ]
+}

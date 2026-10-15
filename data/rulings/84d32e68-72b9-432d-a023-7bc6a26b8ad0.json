@@ -1,0 +1,15 @@
+{
+  "name": "Shatter",
+  "oracle_id": "84d32e68-72b9-432d-a023-7bc6a26b8ad0",
+  "rulings_uri": "https://api.scryfall.com/cards/929a41f7-f52d-4190-a80c-5ceb3e368a31/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "84d32e68-72b9-432d-a023-7bc6a26b8ad0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Regenerating artifacts can regenerate from this."
+    }
+  ]
+}

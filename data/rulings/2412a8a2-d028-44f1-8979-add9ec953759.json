@@ -1,0 +1,15 @@
+{
+  "name": "Wall of Tombstones",
+  "oracle_id": "2412a8a2-d028-44f1-8979-add9ec953759",
+  "rulings_uri": "https://api.scryfall.com/cards/55da1e86-fe18-486a-b510-f941e6f6e378/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2412a8a2-d028-44f1-8979-add9ec953759",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The effect from the ability overwrites other effects that set power and/or toughness if and only if those effects existed before the ability resolved. It will not overwrite effects that modify power or toughness (whether from a static ability, counters, or a resolved spell or ability), nor will it overwrite effects that set power and toughness which come into existence after the ability resolves. Effects that switch the creature’s power and toughness are always applied after any other power or toughness changing effects, including this one, regardless of the order in which they are created."
+    }
+  ]
+}

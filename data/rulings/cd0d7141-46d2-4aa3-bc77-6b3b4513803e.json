@@ -1,0 +1,15 @@
+{
+  "name": "Control Magic",
+  "oracle_id": "cd0d7141-46d2-4aa3-bc77-6b3b4513803e",
+  "rulings_uri": "https://api.scryfall.com/cards/84992800-9bad-4598-afd4-f1e59d2e0956/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cd0d7141-46d2-4aa3-bc77-6b3b4513803e",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Gaining control of a creature doesn't cause you to gain control of any Auras or Equipment attached to it."
+    }
+  ]
+}

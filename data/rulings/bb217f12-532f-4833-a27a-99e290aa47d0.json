@@ -1,0 +1,15 @@
+{
+  "name": "Island Fish Jasconius",
+  "oracle_id": "bb217f12-532f-4833-a27a-99e290aa47d0",
+  "rulings_uri": "https://api.scryfall.com/cards/84f18188-70fa-433e-a114-2f1dd49388ed/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "bb217f12-532f-4833-a27a-99e290aa47d0",
+      "source": "wotc",
+      "published_at": "2006-05-01",
+      "comment": "Reworded so that it triggers only once at beginning of upkeep, instead of being an activated ability usable any time during your upkeep. You can no longer make infinite combos with this ability."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Spell Blast",
+  "oracle_id": "04477339-7ed5-4770-9e5c-6e481ffcc858",
+  "rulings_uri": "https://api.scryfall.com/cards/26fb30a8-9f6b-425b-95d3-0719319dbb3f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "04477339-7ed5-4770-9e5c-6e481ffcc858",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "If the target spell has {X} in its mana cost, include the value chosen for that X when determining the value of the {X} in Spell Blast's mana cost. For example, if you wish to counter Volcanic Geyser (a spell with mana cost {X}{R}{R}) whose X is 7, you'll need to choose 9 for Spell Blast's X and pay {9}{U}."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "04477339-7ed5-4770-9e5c-6e481ffcc858",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "Alternative costs, additional costs, cost increases, and cost reductions don't affect a spell's mana value."
+    }
+  ]
+}

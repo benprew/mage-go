@@ -1,0 +1,22 @@
+{
+  "name": "Fastbond",
+  "oracle_id": "e27193b7-1a47-4555-865d-b1fd4c6d597f",
+  "rulings_uri": "https://api.scryfall.com/cards/daf43523-558c-4701-9fa3-5d1ceb82a006/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e27193b7-1a47-4555-865d-b1fd4c6d597f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You take damage when you play a land using the \"play a land\" action. Such an action can be your regular \"play a land\", one enabled by Fastbond, or ones enabled through other effects."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e27193b7-1a47-4555-865d-b1fd4c6d597f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You do not take damage when you \"put a land onto the battlefield\" through the effect of a spell or ability."
+    }
+  ]
+}

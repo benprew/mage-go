@@ -1,0 +1,15 @@
+{
+  "name": "Avoid Fate",
+  "oracle_id": "c04dd88f-fb7f-43be-b586-7fc5642073dc",
+  "rulings_uri": "https://api.scryfall.com/cards/04c9f48d-2213-4f95-8eac-b23bd2d95e34/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c04dd88f-fb7f-43be-b586-7fc5642073dc",
+      "source": "wotc",
+      "published_at": "2011-01-22",
+      "comment": "Avoid Fate must target an instant spell or an Aura spell as it’s cast, and it must be targeting an instant or an Aura spell at the time it resolves. It will still resolve if it starts out targeting a spell of one type but the target changes to a spell of the other type (thanks to Shunt, for instance) before it resolves."
+    }
+  ]
+}

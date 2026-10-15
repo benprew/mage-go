@@ -1,0 +1,15 @@
+{
+  "name": "Hurricane",
+  "oracle_id": "9c021685-4017-49c7-9f58-2ae0243361a0",
+  "rulings_uri": "https://api.scryfall.com/cards/371d83e8-f514-433c-bc6a-e0eeef3fab2a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9c021685-4017-49c7-9f58-2ae0243361a0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Whether or not a creature has flying is only checked on resolution."
+    }
+  ]
+}

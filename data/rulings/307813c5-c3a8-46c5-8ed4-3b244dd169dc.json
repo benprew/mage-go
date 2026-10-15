@@ -1,0 +1,22 @@
+{
+  "name": "Season of the Witch",
+  "oracle_id": "307813c5-c3a8-46c5-8ed4-3b244dd169dc",
+  "rulings_uri": "https://api.scryfall.com/cards/06900a71-34ca-48c6-94ac-fca744356829/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "307813c5-c3a8-46c5-8ed4-3b244dd169dc",
+      "source": "wotc",
+      "published_at": "2013-09-20",
+      "comment": "A creature won’t be destroyed if it was unable to attack that turn, even if you had a way to enable it to attack. For example, a creature that had summoning sickness wouldn’t be destroyed even if you had a way to give it haste."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "307813c5-c3a8-46c5-8ed4-3b244dd169dc",
+      "source": "wotc",
+      "published_at": "2013-09-20",
+      "comment": "At the beginning of every end step, regardless of whose turn it is, the second ability triggers. When it resolves every creature that could have been declared as an attacker during that turn’s Declare Attackers Step but wasn’t will be destroyed."
+    }
+  ]
+}

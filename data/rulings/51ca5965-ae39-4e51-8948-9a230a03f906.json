@@ -1,0 +1,29 @@
+{
+  "name": "Kudzu",
+  "oracle_id": "51ca5965-ae39-4e51-8948-9a230a03f906",
+  "rulings_uri": "https://api.scryfall.com/cards/c3bc363a-573e-4df4-9b1b-586bf4275f3c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "51ca5965-ae39-4e51-8948-9a230a03f906",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can move it to any other player's land whenever you get to move it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "51ca5965-ae39-4e51-8948-9a230a03f906",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "If Kudzu is destroyed directly, or the land is destroyed by a spell or ability, then Kudzu goes to the graveyard like any Aura would."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "51ca5965-ae39-4e51-8948-9a230a03f906",
+      "source": "wotc",
+      "published_at": "2008-04-01",
+      "comment": "Because the ability isn't targeted, the controller of the destroyed land may attach it to a land that can't be the target of abilities."
+    }
+  ]
+}

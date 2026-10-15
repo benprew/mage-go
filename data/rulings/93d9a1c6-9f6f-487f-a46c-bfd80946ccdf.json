@@ -1,0 +1,22 @@
+{
+  "name": "Glyph of Reincarnation",
+  "oracle_id": "93d9a1c6-9f6f-487f-a46c-bfd80946ccdf",
+  "rulings_uri": "https://api.scryfall.com/cards/a67e8214-a192-4143-9d5e-d0e254e1bf6e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "93d9a1c6-9f6f-487f-a46c-bfd80946ccdf",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "First place all the affected creatures in the graveyard, then choose the appropriate number of creatures from the attacker’s graveyard and put them onto the battlefield. Some or all of them may be the same creatures which were just destroyed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "93d9a1c6-9f6f-487f-a46c-bfd80946ccdf",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Yes, you can cast this targeting your opponent’s Walls to good effect."
+    }
+  ]
+}

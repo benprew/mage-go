@@ -1,0 +1,15 @@
+{
+  "name": "Ur-Drago",
+  "oracle_id": "537162d5-a2c2-4ad4-9fae-d2ec7a269dcc",
+  "rulings_uri": "https://api.scryfall.com/cards/81a40f34-fc26-4d05-9c52-6ffbf1766a3b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "537162d5-a2c2-4ad4-9fae-d2ec7a269dcc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Allows any creature controlled by any player to block Swampwalking creatures as if they did not have this ability. It is not limited to just Ur-Drago."
+    }
+  ]
+}

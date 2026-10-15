@@ -1,0 +1,22 @@
+{
+  "name": "Winter Blast",
+  "oracle_id": "594827de-e85f-4aac-b0e6-d92878f0f26c",
+  "rulings_uri": "https://api.scryfall.com/cards/d806c7c8-3aac-4385-b937-f66e360ffd28/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "594827de-e85f-4aac-b0e6-d92878f0f26c",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Winter Blast can target tapped creatures. If they have flying, the second part of the effect will still affect them."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "594827de-e85f-4aac-b0e6-d92878f0f26c",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Checks if the creatures are Flying on resolution and not on announcement. It’s not a targeting restriction."
+    }
+  ]
+}

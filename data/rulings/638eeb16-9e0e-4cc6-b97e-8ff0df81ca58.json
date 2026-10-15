@@ -1,0 +1,22 @@
+{
+  "name": "Cuombajj Witches",
+  "oracle_id": "638eeb16-9e0e-4cc6-b97e-8ff0df81ca58",
+  "rulings_uri": "https://api.scryfall.com/cards/6a26e910-275a-4981-831b-bfed936a7e3f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "638eeb16-9e0e-4cc6-b97e-8ff0df81ca58",
+      "source": "wotc",
+      "published_at": "2020-11-10",
+      "comment": "You choose which opponent chooses the second target. It doesn't have to be the opponent who controls (or is) the first target."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "638eeb16-9e0e-4cc6-b97e-8ff0df81ca58",
+      "source": "wotc",
+      "published_at": "2020-11-10",
+      "comment": "Even though the opponent chooses a target, you control the ability. An opponent can't target a creature they control with hexproof."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Grave Robbers",
+  "oracle_id": "6698b059-f1ed-4023-9d44-fbdf39fb159a",
+  "rulings_uri": "https://api.scryfall.com/cards/a131605a-f646-4745-a1e4-48d155a3d94f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6698b059-f1ed-4023-9d44-fbdf39fb159a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the target is not there on resolution, you do not gain the life."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6698b059-f1ed-4023-9d44-fbdf39fb159a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This exiles the artifact on resolution, but you choose it as a target when activating the ability."
+    }
+  ]
+}

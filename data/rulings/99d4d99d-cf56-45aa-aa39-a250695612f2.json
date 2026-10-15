@@ -1,0 +1,29 @@
+{
+  "name": "Time Vault",
+  "oracle_id": "99d4d99d-cf56-45aa-aa39-a250695612f2",
+  "rulings_uri": "https://api.scryfall.com/cards/c367ffc1-8084-45a1-87d5-22183604d1cb/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "99d4d99d-cf56-45aa-aa39-a250695612f2",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "The choice of whether or not to skip a turn is made as that turn would begin, and only if Time Vault is tapped at that time. If you choose to skip your turn, Time Vault untaps before anything else happens in the next turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "99d4d99d-cf56-45aa-aa39-a250695612f2",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This wording means that you no longer end up skipping multiple turns if you find a way to activate the ability multiple times."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "99d4d99d-cf56-45aa-aa39-a250695612f2",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If multiple \"extra turn\" effects resolve in the same turn, take them in the reverse of the order that the effects resolved. In other words, the most recently created extra turn is taken first."
+    }
+  ]
+}

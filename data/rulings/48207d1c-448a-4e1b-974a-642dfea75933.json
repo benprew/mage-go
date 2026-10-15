@@ -1,0 +1,29 @@
+{
+  "name": "Mana Short",
+  "oracle_id": "48207d1c-448a-4e1b-974a-642dfea75933",
+  "rulings_uri": "https://api.scryfall.com/cards/a0486784-de03-47a7-949d-550fd23492bc/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "48207d1c-448a-4e1b-974a-642dfea75933",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you play Mana Short in response to a spell, it will have no effect on that spell since the mana has already been paid."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "48207d1c-448a-4e1b-974a-642dfea75933",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since this is an instant, your opponent may use instants in response to the casting of this spell. Note that such spells and abilities will be resolved before mana is removed by Mana Short. This makes it useless as a countermeasure for spells. To use it effectively, you need to use it during Upkeep and even then it will not prevent the use of instant spells and abilities."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "48207d1c-448a-4e1b-974a-642dfea75933",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It even taps lands that do not produce mana."
+    }
+  ]
+}

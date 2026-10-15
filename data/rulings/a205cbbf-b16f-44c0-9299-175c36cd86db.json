@@ -1,0 +1,15 @@
+{
+  "name": "Lifeblood",
+  "oracle_id": "a205cbbf-b16f-44c0-9299-175c36cd86db",
+  "rulings_uri": "https://api.scryfall.com/cards/4ecb1362-9a67-4d4c-8d69-9ac2ebf4d0b0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a205cbbf-b16f-44c0-9299-175c36cd86db",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In a multi-player game, it affects all opponents."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Crookshank Kobolds",
+  "oracle_id": "61023b48-0433-4993-9534-308c08cef07e",
+  "rulings_uri": "https://api.scryfall.com/cards/f51d9dde-536b-4314-8de1-2c05a9bf3dbc/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "61023b48-0433-4993-9534-308c08cef07e",
+      "source": "wotc",
+      "published_at": "2013-06-07",
+      "comment": "Although originally printed with a characteristic-defining ability that defined its color, this card now has a color indicator. This color indicator can’t be affected by text-changing effects (such as the one created by Crystal Spray), although color-changing effects can still overwrite it."
+    }
+  ]
+}

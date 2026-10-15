@@ -1,0 +1,50 @@
+{
+  "name": "Rainbow Vale",
+  "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+  "rulings_uri": "https://api.scryfall.com/cards/51f8b918-ac13-4538-a39d-6553580bf39b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only changes controller at the end of a turn in which it was tapped for mana. It does not change controller if it is not tapped for mana."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Stays in the same tapped/untapped state it is in when it switches controllers."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "The opponent is chosen when the “at end of turn” triggered ability resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If control of Rainbow Vale has somehow changed before the “at end of turn” ability resolves, the player who activated the mana ability (not the current controller of Rainbow Vale) chooses one of their opponents to gain control of it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If more than one player manages to tap it for mana in a given turn, then two control-change abilities will trigger at end of the turn. These abilities resolve using the standard order for such things, so the active player’s triggers are put on the stack first, then the opponents’."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "76695b15-d0ba-41eb-85f1-52ba5d14b8ba",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If Rainbow Vale’s ability is activated during an End step, its “at the beginning of the end step” trigger won’t trigger until the End step of the next turn. If its ability is activated again during that turn, its “at the beginning of the end step” ability will trigger twice at the End step of that turn."
+    }
+  ]
+}

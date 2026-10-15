@@ -1,0 +1,15 @@
+{
+  "name": "Unstable Mutation",
+  "oracle_id": "278b237e-9699-43eb-a03e-0b68eccc08b3",
+  "rulings_uri": "https://api.scryfall.com/cards/da66b93a-11a6-4861-a775-d309b7adc461/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "278b237e-9699-43eb-a03e-0b68eccc08b3",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "The -1/-1 counters stay even if the Aura is removed, and the +3/+3 goes away when the Aura does."
+    }
+  ]
+}

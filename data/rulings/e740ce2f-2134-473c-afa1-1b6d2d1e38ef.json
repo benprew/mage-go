@@ -1,0 +1,15 @@
+{
+  "name": "Giant Spider",
+  "oracle_id": "e740ce2f-2134-473c-afa1-1b6d2d1e38ef",
+  "rulings_uri": "https://api.scryfall.com/cards/213c9202-b6f4-43ab-b57f-b97a1da5e263/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e740ce2f-2134-473c-afa1-1b6d2d1e38ef",
+      "source": "wotc",
+      "published_at": "2008-04-01",
+      "comment": "This card now uses the Reach keyword ability to enable the blocking of flying creatures. This works because a creature with flying can only be blocked by creatures with flying or reach."
+    }
+  ]
+}

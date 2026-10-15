@@ -1,0 +1,29 @@
+{
+  "name": "Nether Void",
+  "oracle_id": "53bab610-1d27-4897-a4ad-cfecca82b811",
+  "rulings_uri": "https://api.scryfall.com/cards/a3452173-01e1-4a4a-981e-e6b6dea61c61/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "53bab610-1d27-4897-a4ad-cfecca82b811",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not an additional cost, it is a triggered ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "53bab610-1d27-4897-a4ad-cfecca82b811",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "53bab610-1d27-4897-a4ad-cfecca82b811",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The ability triggers whenever any player (including you) casts a spell of any type."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Siren's Call",
+  "oracle_id": "269fc857-a052-4f0a-9759-467ccf42bebb",
+  "rulings_uri": "https://api.scryfall.com/cards/51832cfb-0a2e-4674-bb36-38027a71ac6d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "269fc857-a052-4f0a-9759-467ccf42bebb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The creature is destroyed if it does not attack because it simply can’t do so legally."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "269fc857-a052-4f0a-9759-467ccf42bebb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It will require creatures with Haste to attack since they are able, but it won’t destroy them if they don’t for some reason."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "269fc857-a052-4f0a-9759-467ccf42bebb",
+      "source": "wotc",
+      "published_at": "2009-02-01",
+      "comment": "This will destroy creatures that weren’t able to attack because they had been previously tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "269fc857-a052-4f0a-9759-467ccf42bebb",
+      "source": "wotc",
+      "published_at": "2013-09-20",
+      "comment": "If a turn has multiple combat phases, this spell can only be cast before the beginning of the Declare Attackers Step of the first combat phase in that turn."
+    }
+  ]
+}

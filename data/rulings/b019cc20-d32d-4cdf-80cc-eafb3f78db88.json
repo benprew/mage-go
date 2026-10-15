@@ -1,0 +1,15 @@
+{
+  "name": "Conch Horn",
+  "oracle_id": "b019cc20-d32d-4cdf-80cc-eafb3f78db88",
+  "rulings_uri": "https://api.scryfall.com/cards/860a9ba3-e4c4-4af9-bdfe-1ada39289fd5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b019cc20-d32d-4cdf-80cc-eafb3f78db88",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You draw two cards, then put one back as part of the same effect. You can’t do anything in between. Anything that triggers off of card drawing will wait until you finish resolving this ability before going on the stack."
+    }
+  ]
+}

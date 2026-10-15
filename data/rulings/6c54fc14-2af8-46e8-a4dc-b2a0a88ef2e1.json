@@ -1,0 +1,15 @@
+{
+  "name": "Yawgmoth Demon",
+  "oracle_id": "6c54fc14-2af8-46e8-a4dc-b2a0a88ef2e1",
+  "rulings_uri": "https://api.scryfall.com/cards/696a9fe1-ce63-4638-8793-5187fc726731/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6c54fc14-2af8-46e8-a4dc-b2a0a88ef2e1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The sacrificing of an artifact is not mandatory. You can choose not to sacrifice an artifact but will pay the consequences."
+    }
+  ]
+}

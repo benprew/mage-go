@@ -1,0 +1,15 @@
+{
+  "name": "Ley Druid",
+  "oracle_id": "a4ae41c7-9631-407d-8fd3-04f403d940a8",
+  "rulings_uri": "https://api.scryfall.com/cards/4dac78d2-dd1b-412a-b1b4-4fef1a4fd583/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a4ae41c7-9631-407d-8fd3-04f403d940a8",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The land is untapped as a normal ability that goes on the stack. It is not a mana ability, so it can’t be used at times that only mana abilities can be used."
+    }
+  ]
+}

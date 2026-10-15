@@ -1,0 +1,15 @@
+{
+  "name": "Petra Sphinx",
+  "oracle_id": "f1ae89ff-b23b-44b2-a30c-6f2ae3216189",
+  "rulings_uri": "https://api.scryfall.com/cards/e799b225-7bd7-40dd-b555-37ea500e12fe/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f1ae89ff-b23b-44b2-a30c-6f2ae3216189",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the targeted player’s library is empty, that player still names a card, but nothing further happens. That player will not lose the game."
+    }
+  ]
+}

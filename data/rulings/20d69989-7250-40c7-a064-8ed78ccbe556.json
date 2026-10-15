@@ -1,0 +1,29 @@
+{
+  "name": "Simulacrum",
+  "oracle_id": "20d69989-7250-40c7-a064-8ed78ccbe556",
+  "rulings_uri": "https://api.scryfall.com/cards/7c23232c-a264-4df9-824b-4111a5c6524c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "20d69989-7250-40c7-a064-8ed78ccbe556",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not damage prevention or redirection. It actually is life gain and newly dealt damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "20d69989-7250-40c7-a064-8ed78ccbe556",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can't use Simulacrum on Loss of Life, just damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "20d69989-7250-40c7-a064-8ed78ccbe556",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "Simulacrum is the source of the damage. If an effect needs to know a characteristic of the damage's source, it will see the damage coming from Simulacrum."
+    }
+  ]
+}

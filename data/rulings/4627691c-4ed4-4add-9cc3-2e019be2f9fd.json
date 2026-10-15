@@ -1,0 +1,29 @@
+{
+  "name": "Consecrate Land",
+  "oracle_id": "4627691c-4ed4-4add-9cc3-2e019be2f9fd",
+  "rulings_uri": "https://api.scryfall.com/cards/ded79afb-2a65-49e8-81c3-757e5d4c2203/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4627691c-4ed4-4add-9cc3-2e019be2f9fd",
+      "source": "wotc",
+      "published_at": "2005-04-01",
+      "comment": "The land can be targeted by land-destroying spells and the spell will resolve, but the land will simply not be destroyed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4627691c-4ed4-4add-9cc3-2e019be2f9fd",
+      "source": "wotc",
+      "published_at": "2006-09-25",
+      "comment": "If Consecrate Land enters attached to a land that's enchanted by other Auras, those Auras are put into their owners' graveyards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4627691c-4ed4-4add-9cc3-2e019be2f9fd",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "A permanent with indestructible can't be destroyed, but it can still be sacrificed, exiled, put into a graveyard, and so on."
+    }
+  ]
+}

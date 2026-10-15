@@ -1,0 +1,22 @@
+{
+  "name": "Aladdin",
+  "oracle_id": "9a410f83-ed92-4b55-834a-c7cec8f5d1e2",
+  "rulings_uri": "https://api.scryfall.com/cards/462094ff-5ec8-4a9b-8ab1-012c5f7d85ca/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9a410f83-ed92-4b55-834a-c7cec8f5d1e2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Aladdin's ability can take control of more than one artifact, although only one each time the ability is used."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9a410f83-ed92-4b55-834a-c7cec8f5d1e2",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "You do not lose control of the permanent if it stops being an artifact. The validity of the target is checked only on announcement and resolution of the ability."
+    }
+  ]
+}

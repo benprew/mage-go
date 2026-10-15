@@ -1,0 +1,29 @@
+{
+  "name": "Pyrotechnics",
+  "oracle_id": "794b9ddf-1660-441f-9cc2-a0f5d4d0cf22",
+  "rulings_uri": "https://api.scryfall.com/cards/51893dd5-e70f-44bb-85d4-e31480ba84d6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "794b9ddf-1660-441f-9cc2-a0f5d4d0cf22",
+      "source": "wotc",
+      "published_at": "2014-11-24",
+      "comment": "If an effect creates a copy of Pyrotechnics, the number of targets and division of damage can’t be changed. The effect that creates the copy may allow you to change the targets, however."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "794b9ddf-1660-441f-9cc2-a0f5d4d0cf22",
+      "source": "wotc",
+      "published_at": "2014-11-24",
+      "comment": "You choose how the damage is divided as you cast the spell, not as it resolves. Each target must be assigned at least 1 damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "794b9ddf-1660-441f-9cc2-a0f5d4d0cf22",
+      "source": "wotc",
+      "published_at": "2014-11-24",
+      "comment": "If some but not all of Pyrotechnics’s targets become illegal, you can’t change the division of damage. Damage that would have been dealt to illegal targets simply isn’t dealt."
+    }
+  ]
+}

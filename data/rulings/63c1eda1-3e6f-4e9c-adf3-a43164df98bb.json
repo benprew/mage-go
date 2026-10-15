@@ -1,0 +1,22 @@
+{
+  "name": "Ankh of Mishra",
+  "oracle_id": "63c1eda1-3e6f-4e9c-adf3-a43164df98bb",
+  "rulings_uri": "https://api.scryfall.com/cards/a6f86a32-8863-45da-99be-ef886c89f2c5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "63c1eda1-3e6f-4e9c-adf3-a43164df98bb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It determines the land's controller at the time the ability resolves. If the land leaves the battlefield before the ability resolves, the land's last controller before it left is used."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "63c1eda1-3e6f-4e9c-adf3-a43164df98bb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This triggers on any land entering. This includes playing a land or putting a land onto the battlefield using a spell or ability."
+    }
+  ]
+}

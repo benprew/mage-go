@@ -53,6 +53,19 @@ The project includes a pipeline for implementing entire card sets:
    go run ./cmd/fetchset -o data/DRK.json DRK
    ```
 
+   Each card includes a `rulings` array with the ruling text, source (`wotc`
+   or `scryfall`), publication date, and Oracle ID. Cards without rulings have
+   an empty array. The downloader follows `rulings_uri`, reuses results for
+   duplicate Oracle IDs, and spaces requests at least 110 milliseconds apart.
+   Run the command again to refresh card data and rulings together. A failed
+   download leaves the output file unchanged.
+
+   The command also updates the shared [rulings store](data/rulings/README.md)
+   used when implementing RON cards and engine features. To refresh rulings for
+   the full RON collection without downloading per-set card data, run
+   `go run ./cmd/fetchset -ron cards/mtgish`. For one card, run
+   `go run ./cmd/fetchset -card "Time Vault"`.
+
 2. **Generate** Go stubs from the JSON. This creates one file per card type (`creatures.go`, `spells.go`, etc.) with full Oracle text as comments and `// TODO: implement` markers. Reprints already registered in other sets are automatically skipped.
    ```bash
    go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/

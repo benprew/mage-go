@@ -1,0 +1,22 @@
+{
+  "name": "Stasis",
+  "oracle_id": "a8cf1379-0195-4e11-b994-481ef1284245",
+  "rulings_uri": "https://api.scryfall.com/cards/62f99124-6595-45f8-bece-1775e4c55a5c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a8cf1379-0195-4e11-b994-481ef1284245",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since there is no untap step, Phasing in/out won't happen."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a8cf1379-0195-4e11-b994-481ef1284245",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not prevent cards from being untapped outside the untap step."
+    }
+  ]
+}

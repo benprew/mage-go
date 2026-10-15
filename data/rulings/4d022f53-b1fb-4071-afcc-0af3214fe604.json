@@ -1,0 +1,36 @@
+{
+  "name": "Gloom",
+  "oracle_id": "4d022f53-b1fb-4071-afcc-0af3214fe604",
+  "rulings_uri": "https://api.scryfall.com/cards/0d26c559-ad06-4f78-b7b6-e658be8c7bdb/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4d022f53-b1fb-4071-afcc-0af3214fe604",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The extra mana is not considered part of the activation cost. It is a separate cost."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4d022f53-b1fb-4071-afcc-0af3214fe604",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The extra mana is part of the total cost, so cost reducers can be applied to this cost."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4d022f53-b1fb-4071-afcc-0af3214fe604",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The additional mana is paid at the same time the spell/ability is cast/activated."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4d022f53-b1fb-4071-afcc-0af3214fe604",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Activated abilities contain a colon. They're generally written \"[Cost]: [Effect].\" Some keywords are activated abilities and will have colons in their reminder text."
+    }
+  ]
+}

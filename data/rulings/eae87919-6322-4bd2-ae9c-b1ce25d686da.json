@@ -1,0 +1,43 @@
+{
+  "name": "Chains of Mephistopheles",
+  "oracle_id": "eae87919-6322-4bd2-ae9c-b1ce25d686da",
+  "rulings_uri": "https://api.scryfall.com/cards/f2edb3a6-8506-4885-b332-eca381940ce8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "eae87919-6322-4bd2-ae9c-b1ce25d686da",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Cards which are drawn as a cost are affected by this card because replacement effects can alter the payment of costs."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eae87919-6322-4bd2-ae9c-b1ce25d686da",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The effect is cumulative. If there are two of these on the battlefield, each of them will modify each draw (after the first one if during the draw step), and will cause the player to discard or to “mill” a card from their library. As they resolve in order, the player must discard if possible. Once the player fails to discard and instead “mills” a card, all further effects of additional Chains of Mephistopheles will not do anything. This is because the “mill” also replaces the draw effect and the player is no longer drawing a card. You handle them in order. Each one makes you discard first and then continue or else mill a card and lose the draw."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eae87919-6322-4bd2-ae9c-b1ce25d686da",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "A player’s normal card draw on their turn is exempt from this effect. All other draws will be affected."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eae87919-6322-4bd2-ae9c-b1ce25d686da",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If a spell or ability would cause a player to draw multiple cards, this is treated as a number of individual “draw one card” actions. Apply the effect of Chains of Mephistopheles to each one."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eae87919-6322-4bd2-ae9c-b1ce25d686da",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Here’s what happens when Chains of Mephistopheles replaces a player’s draw: — If that player has at least one card in their hand, they discard a card and then draws a card. — If that player’s hand is empty, they put the top card of their library into their graveyard. The player doesn’t draw a card at all."
+    }
+  ]
+}

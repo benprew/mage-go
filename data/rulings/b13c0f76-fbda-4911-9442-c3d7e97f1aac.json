@@ -1,0 +1,15 @@
+{
+  "name": "Remove Soul",
+  "oracle_id": "b13c0f76-fbda-4911-9442-c3d7e97f1aac",
+  "rulings_uri": "https://api.scryfall.com/cards/75c4b4d6-2230-4fb0-b127-b9e820d56048/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b13c0f76-fbda-4911-9442-c3d7e97f1aac",
+      "source": "wotc",
+      "published_at": "2008-04-01",
+      "comment": "A “creature spell” is any spell with the type Creature, even if it has other types such as Artifact or Enchantment. Older cards of type Summon are also Creature spells."
+    }
+  ]
+}

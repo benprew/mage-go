@@ -1,0 +1,29 @@
+{
+  "name": "Thrull Champion",
+  "oracle_id": "728f0a3f-722d-4936-ade8-31883499f56d",
+  "rulings_uri": "https://api.scryfall.com/cards/1c77c217-088c-41ab-b56b-2cb703d06991/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "728f0a3f-722d-4936-ade8-31883499f56d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used to steal another Thrull Champion."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "728f0a3f-722d-4936-ade8-31883499f56d",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Unlike many similar creatures, Thrull Champion untaps as normal during your untap step. Whether it’s tapped or untapped has no bearing on the control-change effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "728f0a3f-722d-4936-ade8-31883499f56d",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Gives himself +1/+1."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Firestorm Phoenix",
+  "oracle_id": "5653b40f-c566-4a14-b188-a9268ea36218",
+  "rulings_uri": "https://api.scryfall.com/cards/12e70195-bad7-47d7-a2ca-4d727faa6883/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5653b40f-c566-4a14-b188-a9268ea36218",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The “rebirth” is a replacement effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5653b40f-c566-4a14-b188-a9268ea36218",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It may not be cast again until your next turn, but it can be put onto the battlefield by other effects."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5653b40f-c566-4a14-b188-a9268ea36218",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The Firestorm Phoenix you return to your hand is tracked by its ability. As long as it remains in your hand, that particular card can’t be played before your next turn begins, but a different Firestorm Phoenix in your hand can."
+    }
+  ]
+}

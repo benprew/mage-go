@@ -1,0 +1,15 @@
+{
+  "name": "Wall of Caltrops",
+  "oracle_id": "20fa17d4-9c3e-470b-9993-a4a2799e33d1",
+  "rulings_uri": "https://api.scryfall.com/cards/664ad588-3002-4f63-93bd-38663171018f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "20fa17d4-9c3e-470b-9993-a4a2799e33d1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Banding is gained when the trigger resolves in the declare blockers step of the combat phase if the criterion is met."
+    }
+  ]
+}

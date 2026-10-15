@@ -1,0 +1,15 @@
+{
+  "name": "Mightstone",
+  "oracle_id": "2f578020-9b39-4c61-8b0b-6d29187e022a",
+  "rulings_uri": "https://api.scryfall.com/cards/39310639-643d-42d0-9e92-7bc0da9abd21/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2f578020-9b39-4c61-8b0b-6d29187e022a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The +1/+0 applies to attacking creatures from all players."
+    }
+  ]
+}

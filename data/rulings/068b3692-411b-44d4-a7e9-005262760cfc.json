@@ -1,0 +1,29 @@
+{
+  "name": "Sacrifice",
+  "oracle_id": "068b3692-411b-44d4-a7e9-005262760cfc",
+  "rulings_uri": "https://api.scryfall.com/cards/652bd781-1a48-42c1-9aff-f9050a9285d6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "068b3692-411b-44d4-a7e9-005262760cfc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Sacrificing an animated land gives no mana since the converted mana cost was zero."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "068b3692-411b-44d4-a7e9-005262760cfc",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "You must sacrifice exactly one creature to cast this spell; you cannot cast it without sacrificing a creature, and you cannot sacrifice additional creatures."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "068b3692-411b-44d4-a7e9-005262760cfc",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "Players can only respond once this spell has been cast and all its costs have been paid. No one can try to destroy the creature you sacrificed to prevent you from casting this spell."
+    }
+  ]
+}

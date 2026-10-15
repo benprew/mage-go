@@ -1,0 +1,15 @@
+{
+  "name": "Earthbind",
+  "oracle_id": "e8e35b49-8cfb-4fb5-89aa-8050f15b11bf",
+  "rulings_uri": "https://api.scryfall.com/cards/784cc686-e5a2-4835-8ff2-820461868ffa/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e8e35b49-8cfb-4fb5-89aa-8050f15b11bf",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the enchanted creature gains flying after Earthbind is put onto it, it will have flying. The two effects are simply applied in timestamp order."
+    }
+  ]
+}

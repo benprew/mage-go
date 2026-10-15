@@ -1,0 +1,15 @@
+{
+  "name": "Inquisition",
+  "oracle_id": "9178253e-0d89-450d-a93b-ed4765e945db",
+  "rulings_uri": "https://api.scryfall.com/cards/5f133f06-6398-4db1-8577-66c16fd3e00d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9178253e-0d89-450d-a93b-ed4765e945db",
+      "source": "wotc",
+      "published_at": "2014-02-01",
+      "comment": "If you target yourself with this spell, you must reveal your entire hand to the other players just as any other player would."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Tracker",
+  "oracle_id": "86260d53-a68e-43cb-88ba-6a97c0b2f4f4",
+  "rulings_uri": "https://api.scryfall.com/cards/74f0400c-35dd-4ba5-97d1-2e57689c9d53/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "86260d53-a68e-43cb-88ba-6a97c0b2f4f4",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If this leaves the battlefield before its activated ability resolves, it will still deal damage to the targeted creature. On the other hand, if the targeted creature leaves the battlefield before the ability resolves, the ability won't resolve and no damage will be dealt."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "86260d53-a68e-43cb-88ba-6a97c0b2f4f4",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Giving either creature first strike does not affect the ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "86260d53-a68e-43cb-88ba-6a97c0b2f4f4",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You may have Tracker target itself with its own ability. If you do, Tracker will deal damage to itself equal to its power, then immediately do it again."
+    }
+  ]
+}

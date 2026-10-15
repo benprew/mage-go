@@ -1,0 +1,15 @@
+{
+  "name": "Singing Tree",
+  "oracle_id": "23f9bee4-ac7e-4828-82c0-576fee0d29b7",
+  "rulings_uri": "https://api.scryfall.com/cards/78b11d04-aee6-48c8-b4e2-2949879a30c8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "23f9bee4-ac7e-4828-82c0-576fee0d29b7",
+      "source": "wotc",
+      "published_at": "2005-11-01",
+      "comment": "Changes creature's current power to zero (as opposed to giving it -X/-0, like before) but does not prevent raising it after the Tree has been used on it."
+    }
+  ]
+}

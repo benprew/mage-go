@@ -1,0 +1,29 @@
+{
+  "name": "Lord of the Pit",
+  "oracle_id": "ea152809-85a2-4fde-8251-3b1f267e4443",
+  "rulings_uri": "https://api.scryfall.com/cards/5b626ab2-4cf6-42e8-a7e2-9c9f310d2f00/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ea152809-85a2-4fde-8251-3b1f267e4443",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "If you have two Lords of the Pit, you can sacrifice them to each other."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ea152809-85a2-4fde-8251-3b1f267e4443",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "If you control any other creatures as Lord of the Pit’s triggered ability resolves, you must sacrifice one. You can’t choose to be dealt 7 damage instead."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ea152809-85a2-4fde-8251-3b1f267e4443",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "If Lord of the Pit has gained lifelink, being dealt 7 damage by it doesn’t cause your life total to change, even though you gain and lose life. If your life total is less than 7, you won’t lose the game."
+    }
+  ]
+}

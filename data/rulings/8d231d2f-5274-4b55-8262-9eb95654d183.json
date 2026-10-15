@@ -1,0 +1,22 @@
+{
+  "name": "Mirror Universe",
+  "oracle_id": "8d231d2f-5274-4b55-8262-9eb95654d183",
+  "rulings_uri": "https://api.scryfall.com/cards/0f9cbeaf-3456-4a87-ac75-e7658ccbd97f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8d231d2f-5274-4b55-8262-9eb95654d183",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "When the life totals are exchanged, each player gains or loses the amount of life necessary to equal the other player’s previous life total. For example, if player A has 5 life and player B has 3 life before the exchange, player A will lose 2 life and player B will gain 2 life. Replacement effects may modify these gains and losses, and triggered abilities may trigger on them."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8d231d2f-5274-4b55-8262-9eb95654d183",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "If an effect says that a player can’t lose life, that player can’t exchange life totals with a player who has a lower life total; in that case, the exchange won’t happen."
+    }
+  ]
+}

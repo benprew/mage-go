@@ -1,0 +1,15 @@
+{
+  "name": "Telekinesis",
+  "oracle_id": "1b9dd2b6-d14d-4c1e-9885-00ab2c0bf8da",
+  "rulings_uri": "https://api.scryfall.com/cards/d63f7944-5738-4a13-8f84-6813c188ac3a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1b9dd2b6-d14d-4c1e-9885-00ab2c0bf8da",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Telekinesis’ ability doesn’t lock in who the creature’s controller is when it resolves. If the creature changes controllers, it won’t untap during its controller’s untap step until it has not done so twice, regardless of who its controller was during any of those untap steps."
+    }
+  ]
+}

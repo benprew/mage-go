@@ -1,0 +1,36 @@
+{
+  "name": "Barl's Cage",
+  "oracle_id": "eb260cd3-9060-4a5e-bc60-a8ca13d542cc",
+  "rulings_uri": "https://api.scryfall.com/cards/c51825dc-9854-4a45-80e9-91924e406586/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "eb260cd3-9060-4a5e-bc60-a8ca13d542cc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not prevent a creature from untapping at other times. It just stops the “normal” untap during the untap step."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb260cd3-9060-4a5e-bc60-a8ca13d542cc",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You may target any creature with this ability. It doesn’t have to be tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb260cd3-9060-4a5e-bc60-a8ca13d542cc",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Barl’s Cage doesn’t track the creature’s controller. If the affected creature changes controllers before its old controller’s next untap step, this ability will prevent it from being untapped during its new controller’s next untap step."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb260cd3-9060-4a5e-bc60-a8ca13d542cc",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If the targeted creature is untapped at the time its controller’s next untap step begins, this ability has no effect. It won’t apply at some later time when the targeted creature is tapped."
+    }
+  ]
+}

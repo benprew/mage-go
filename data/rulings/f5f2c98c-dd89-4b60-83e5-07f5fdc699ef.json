@@ -1,0 +1,22 @@
+{
+  "name": "Cyclopean Mummy",
+  "oracle_id": "f5f2c98c-dd89-4b60-83e5-07f5fdc699ef",
+  "rulings_uri": "https://api.scryfall.com/cards/8de50323-7ce8-4ca6-a90b-b4be9d639752/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f5f2c98c-dd89-4b60-83e5-07f5fdc699ef",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The Mummy does go to the graveyard and trigger abilities which watch for something going to the graveyard. It then gets exiled as a triggered ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "f5f2c98c-dd89-4b60-83e5-07f5fdc699ef",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It does not get exiled if it goes to the graveyard from someplace other than the battlefield. This includes discarding from your hand or if the spell is countered."
+    }
+  ]
+}

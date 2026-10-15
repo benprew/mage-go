@@ -1,0 +1,22 @@
+{
+  "name": "Sindbad",
+  "oracle_id": "dc81069b-b2cf-44b3-98fc-45bb24b815cb",
+  "rulings_uri": "https://api.scryfall.com/cards/6a6372ec-1ae2-4806-bb31-78f9ea6259df/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "dc81069b-b2cf-44b3-98fc-45bb24b815cb",
+      "source": "wotc",
+      "published_at": "2006-09-25",
+      "comment": "If the draw is replaced by another effect, none of the rest of Sindbad’s ability applies, even if the draw is replaced by another draw (such as with Enduring Renewal)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dc81069b-b2cf-44b3-98fc-45bb24b815cb",
+      "source": "wotc",
+      "published_at": "2006-09-25",
+      "comment": "To avoid confusion, reveal the card you draw before putting it with the rest of the cards in your hand."
+    }
+  ]
+}

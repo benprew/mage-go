@@ -1,0 +1,22 @@
+{
+  "name": "Jandor's Ring",
+  "oracle_id": "737db899-dcdb-48f9-8d30-cbbce3ae3434",
+  "rulings_uri": "https://api.scryfall.com/cards/af9988fd-72a0-42dc-9f10-85edd3133977/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "737db899-dcdb-48f9-8d30-cbbce3ae3434",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you do not have the card still in your hand, you can’t pay the cost. There is currently no way to prove that it was the card you drew except to get a judge or 3rd party involved, or to put cards you draw aside until you decide whether or not to use this."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "737db899-dcdb-48f9-8d30-cbbce3ae3434",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you draw more than one card due to a spell or ability, you must discard the last one of those drawn."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Axelrod Gunnarson",
+  "oracle_id": "c640350b-16a5-4227-87fa-8b24fdb367c7",
+  "rulings_uri": "https://api.scryfall.com/cards/97f2b387-661e-435f-96c9-d3d5a601caa9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c640350b-16a5-4227-87fa-8b24fdb367c7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Each time a creature is put into a graveyard from play, check whether Axelrod Gunnarson had dealt any damage to it at any time during that turn. (This includes combat damage.) If so, Axelrod Gunnarson's second ability will trigger. It doesn't matter who controlled the creature or whose graveyard it was put into."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c640350b-16a5-4227-87fa-8b24fdb367c7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Axelrod Gunnarson and a creature it dealt damage to are both put into a graveyard at the same time, Axelrod Gunnarson's second ability will trigger."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c640350b-16a5-4227-87fa-8b24fdb367c7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The player you target with Axelrod Gunnarson's ability doesn't have to be the player that controlled the creature that was put into a graveyard."
+    }
+  ]
+}

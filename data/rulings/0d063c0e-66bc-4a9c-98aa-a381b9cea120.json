@@ -1,0 +1,36 @@
+{
+  "name": "Farrel's Zealot",
+  "oracle_id": "0d063c0e-66bc-4a9c-98aa-a381b9cea120",
+  "rulings_uri": "https://api.scryfall.com/cards/5417bcef-5181-4ca9-9391-b10e61ee4c69/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0d063c0e-66bc-4a9c-98aa-a381b9cea120",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In a multiplayer game, the target creature does not need to be one of the ones controlled by the player you actually attacked."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0d063c0e-66bc-4a9c-98aa-a381b9cea120",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This ability resolves during the declare blockers step. If the damage dealt this way is enough to destroy an attacking or blocking creature, that other creature won’t be around to deal its combat damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0d063c0e-66bc-4a9c-98aa-a381b9cea120",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "If there are no other creatures on the battlefield, Farrel’s Zealot will have to target itself. Of course, you can choose not to use the ability when it resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0d063c0e-66bc-4a9c-98aa-a381b9cea120",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "An ability that triggers when something “attacks and isn’t blocked” triggers in the declare blockers step after blockers are declared if (1) that creature is attacking and (2) no creatures are declared to block it. It will trigger even if that creature was put onto the battlefield attacking rather than having been declared as an attacker in the declare attackers step."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Nafs Asp",
+  "oracle_id": "da7bc9d6-a0cc-407a-bed9-d677c2dd74f2",
+  "rulings_uri": "https://api.scryfall.com/cards/0db4a4ef-20a8-415f-8d7d-a6740b482f73/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "da7bc9d6-a0cc-407a-bed9-d677c2dd74f2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If it damages a player twice, they get to pay or take damage twice during their next draw step."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "da7bc9d6-a0cc-407a-bed9-d677c2dd74f2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability does not cause itself to trigger again. It cause loss of life, and not damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "da7bc9d6-a0cc-407a-bed9-d677c2dd74f2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If its damage gets redirected to its controller, it will still trigger the ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "da7bc9d6-a0cc-407a-bed9-d677c2dd74f2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The player can pay the {1} mana at any time after damage is done before the draw step of that player’s turn. People commonly pay during upkeep."
+    }
+  ]
+}

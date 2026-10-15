@@ -1,0 +1,15 @@
+{
+  "name": "Angelic Voices",
+  "oracle_id": "3485109b-251f-4bef-a069-308031f47912",
+  "rulings_uri": "https://api.scryfall.com/cards/03f49b52-05fb-4d5a-a317-9fd89afcaa25/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3485109b-251f-4bef-a069-308031f47912",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You get the bonus if all of your creatures are white or artifact even if they also have other colors or qualities. So, if your only creature is a white and green creature, or a red artifact creature, you would get the bonus."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Bone Flute",
+  "oracle_id": "8664a004-d786-4357-8856-2f8f5a9ae24d",
+  "rulings_uri": "https://api.scryfall.com/cards/12aa4c51-4b3d-48c2-bebb-13ea98ebc3b2/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8664a004-d786-4357-8856-2f8f5a9ae24d",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The ability affects only creatures on the battlefield at the time it resolves. A creature that enters later in the turn won't get -1/-0."
+    }
+  ]
+}

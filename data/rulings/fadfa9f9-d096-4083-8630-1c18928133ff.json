@@ -1,0 +1,15 @@
+{
+  "name": "Spectral Cloak",
+  "oracle_id": "fadfa9f9-d096-4083-8630-1c18928133ff",
+  "rulings_uri": "https://api.scryfall.com/cards/7524fd0d-a675-41d6-bc99-bd3ba336893b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fadfa9f9-d096-4083-8630-1c18928133ff",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "Does not destroy Auras already on the creature."
+    }
+  ]
+}

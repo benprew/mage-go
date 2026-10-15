@@ -1,0 +1,43 @@
+{
+  "name": "Bronze Tablet",
+  "oracle_id": "a1ab033f-9605-4ca2-a98b-c0b2e1599609",
+  "rulings_uri": "https://api.scryfall.com/cards/cad56033-c1f9-4477-9dd6-ba7009c30593/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a1ab033f-9605-4ca2-a98b-c0b2e1599609",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If using a copy of the Tablet, you must trade the copy card to your opponent just like you would have traded the Tablet."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a1ab033f-9605-4ca2-a98b-c0b2e1599609",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can take control of your opponent's Tablet and in the trade you only have to give them back their Tablet."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a1ab033f-9605-4ca2-a98b-c0b2e1599609",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can't choose to pay 10 life if you have less than 10 life, but you may choose to give up the game immediately. This has roughly the same effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a1ab033f-9605-4ca2-a98b-c0b2e1599609",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the card being targeted by the Bronze Tablet is removed before Tablet takes effect, then the Tablet ability doesn't resolve and it remains tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a1ab033f-9605-4ca2-a98b-c0b2e1599609",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "If the tablet is not still on the battlefield when the ability resolves, it is not exiled. The other player still has the choice to pay 10 life, and you still become the owner of their card if they choose not to do so."
+    }
+  ]
+}

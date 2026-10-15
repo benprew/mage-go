@@ -1,0 +1,15 @@
+{
+  "name": "Soul Net",
+  "oracle_id": "6021c2d6-d098-4de2-9c7e-4c571f9238f6",
+  "rulings_uri": "https://api.scryfall.com/cards/62e267df-22e1-422e-973b-d192b40d5f19/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6021c2d6-d098-4de2-9c7e-4c571f9238f6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If animated so it is a creature, it can be triggered off its own destruction."
+    }
+  ]
+}

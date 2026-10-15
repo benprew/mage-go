@@ -1,0 +1,15 @@
+{
+  "name": "Nicol Bolas",
+  "oracle_id": "e26bf6a9-b31c-4bc0-b55b-c01f2f69be6b",
+  "rulings_uri": "https://api.scryfall.com/cards/8e92ba96-372c-418d-b271-45e1bf5c7af5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e26bf6a9-b31c-4bc0-b55b-c01f2f69be6b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Nicol Bolas's third ability triggers whenever it deals damage to an opponent for any reason. It's not limited to combat damage."
+    }
+  ]
+}

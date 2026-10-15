@@ -1,0 +1,22 @@
+{
+  "name": "City in a Bottle",
+  "oracle_id": "a83f25e3-4d84-4c9b-ab12-19b8d326e459",
+  "rulings_uri": "https://api.scryfall.com/cards/cfd5c243-2a40-4ba8-ad00-715f52eeda62/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a83f25e3-4d84-4c9b-ab12-19b8d326e459",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Token creatures and counters created by Arabian Nights cards are not removed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a83f25e3-4d84-4c9b-ab12-19b8d326e459",
+      "source": "wotc",
+      "published_at": "2014-02-01",
+      "comment": "Any time a player receives priority to cast spells or activate abilities, check to see whether any permanents on the battlefield were originally printed in the Arabian Nights expansion (even if the physical card representing that permanent is a reprint with a different expansion symbol). If there are any such permanents, the ability will trigger and those permanents will be sacrificed."
+    }
+  ]
+}

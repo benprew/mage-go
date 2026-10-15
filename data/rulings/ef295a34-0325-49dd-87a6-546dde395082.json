@@ -1,0 +1,15 @@
+{
+  "name": "Typhoon",
+  "oracle_id": "ef295a34-0325-49dd-87a6-546dde395082",
+  "rulings_uri": "https://api.scryfall.com/cards/254e0403-67d8-4e73-8d89-c901ebeba49f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ef295a34-0325-49dd-87a6-546dde395082",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Number of Islands is counted on resolution and not on announcement."
+    }
+  ]
+}

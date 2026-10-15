@@ -32,7 +32,11 @@ make lint                                  # lint (run after making changes and 
 
 **Card definitions**: Read cards from `cards/mtgish/*.ron`. These files use Rust Object Notation (RON). Use their card records to inspect card definitions and derive card requirements instead of reading `cards/<set>/*.go`.
 
+**Card rulings**: Before you implement or change card behavior, read the complete RON record and all local rulings for the card. Use `data/rulings/index.json` to map the exact card name to `data/rulings/<oracle-id>.json`. Reprints share one file. For an engine feature, read the rulings for each card used to define or test the feature. Use the Comprehensive Rules to establish the shared engine contract. Preserve the distinction between `wotc` rulings and `scryfall` notes. If a card has no local entry, run `go run ./cmd/fetchset -card "Card Name"` before proceeding. An explicit empty `rulings` array means the card was checked and has no published rulings; a missing file does not. Report a fetch failure instead of assuming there are no rulings. Refresh the full RON collection with `go run ./cmd/fetchset -ron cards/mtgish`. See `data/rulings/README.md` for the storage format and commands.
+
 **Read `pkg/mage/doc.go` first** — comprehensive reference for the engine API: card constructors, effects, targets, filters, costs, abilities, continuous effects, layers, attrs, replacement effects, and `*Game` methods.
+
+Before card or engine implementation, run `go run ./cmd/fetchset -check -card "Card Name"` for each affected card. If the check fails, use the download command in the error and repeat the check. The normal test suite also checks rulings coverage for the full RON collection.
 
 **Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
 

@@ -1,0 +1,29 @@
+{
+  "name": "Willow Satyr",
+  "oracle_id": "c7c660bd-5f58-464c-bc75-dd244b7ca535",
+  "rulings_uri": "https://api.scryfall.com/cards/2afe33f6-d93b-4ca5-bf21-396efbb9b94f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c7c660bd-5f58-464c-bc75-dd244b7ca535",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Willow Satyr stops being tapped before its ability resolves — even if it becomes tapped again right away — you won’t gain control of the targeted creature at all. The same is true if you lose control of Willow Satyr before the ability resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c7c660bd-5f58-464c-bc75-dd244b7ca535",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Willow Satyr leaves the battlefield, you no longer control it, so the duration of its control-change effect ends."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c7c660bd-5f58-464c-bc75-dd244b7ca535",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Once the ability resolves, it doesn’t care whether the targeted permanent remains a legal target for the ability, only that it’s on the battlefield. The effect will continue to apply to it even if it gains shroud, stops being a creature, stops being legendary, or would no longer be a legal target for any other reason."
+    }
+  ]
+}

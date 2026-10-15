@@ -1,0 +1,36 @@
+{
+  "name": "Drop of Honey",
+  "oracle_id": "383e9005-5869-4d1d-917d-30e5f214fbd9",
+  "rulings_uri": "https://api.scryfall.com/cards/588f1bc5-2230-4437-8d5e-a18f6e55b390/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "383e9005-5869-4d1d-917d-30e5f214fbd9",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "The first ability of Drop of Honey doesn't target. You can destroy a creature with shroud or protection from Green."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "383e9005-5869-4d1d-917d-30e5f214fbd9",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "If all creatures on the battlefield leave and immediately return (perhaps because Momentary Blink exiled and returned the only creature), the last ability of Drop of Honey triggers. You'll sacrifice it even though a creature's on the battlefield by the time the ability resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "383e9005-5869-4d1d-917d-30e5f214fbd9",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "If one of the creatures with the least power has indestructible, you must destroy one without indestructible. If all creatures with the least power have indestructible, you don't destroy any creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "383e9005-5869-4d1d-917d-30e5f214fbd9",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "No player can take actions between the time you choose which creature to destroy and the time it's destroyed."
+    }
+  ]
+}

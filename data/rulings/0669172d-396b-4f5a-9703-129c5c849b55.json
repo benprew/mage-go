@@ -1,0 +1,36 @@
+{
+  "name": "Drain Power",
+  "oracle_id": "0669172d-396b-4f5a-9703-129c5c849b55",
+  "rulings_uri": "https://api.scryfall.com/cards/380a7357-8c07-4ee5-83a0-10672d7e85d4/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0669172d-396b-4f5a-9703-129c5c849b55",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Your opponent may use instants and abilities of permanents in response to this spell before you get the mana."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0669172d-396b-4f5a-9703-129c5c849b55",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card forces the target player to draw mana from lands if they are untapped, but that player can choose how to draw the mana if a land they control has multiple mana abilities, or mana abilities with choices."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0669172d-396b-4f5a-9703-129c5c849b55",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If a land can draw a variable amount of mana, the target player (not the player of this spell) chooses how much to draw."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0669172d-396b-4f5a-9703-129c5c849b55",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "A mana ability is an ability that (1) isn't a loyalty ability, (2) doesn't target, and (3) could add mana when it resolves."
+    }
+  ]
+}

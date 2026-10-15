@@ -1,0 +1,36 @@
+{
+  "name": "Worms of the Earth",
+  "oracle_id": "9638ec0c-c8bf-4aa5-a7ca-8677e4b9f241",
+  "rulings_uri": "https://api.scryfall.com/cards/65a97821-ca5b-46fb-af08-86de81d0daac/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9638ec0c-c8bf-4aa5-a7ca-8677e4b9f241",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you cast a spell or activate an ability that lets you put a land onto the battlefield, the effect fails. You'll still do everything else the spell or ability tells you to do, such as shuffle the library."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9638ec0c-c8bf-4aa5-a7ca-8677e4b9f241",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Land can't enter, so an effect that \"puts a land onto the battlefield\" won't do anything, and the land will stay where it is."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9638ec0c-c8bf-4aa5-a7ca-8677e4b9f241",
+      "source": "wotc",
+      "published_at": "2006-05-01",
+      "comment": "In Two-Headed Giant, triggers only once per upkeep, not once for each player."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9638ec0c-c8bf-4aa5-a7ca-8677e4b9f241",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "If a permanent spell tries to enter as a land during its resolution (for instance, a Clone entering the battlefield as a copy of a Dryad Arbor or an animated Mutavault), it is put into its owner's graveyard instead of entering. It never enters, so abilities that would have triggered on it entering won't trigger."
+    }
+  ]
+}

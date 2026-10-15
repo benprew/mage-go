@@ -1,0 +1,22 @@
+{
+  "name": "Spirit Link",
+  "oracle_id": "c77ff526-c0a8-45c7-9730-2e306a0d01b8",
+  "rulings_uri": "https://api.scryfall.com/cards/fc046a97-4699-438d-8da4-022560a18564/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c77ff526-c0a8-45c7-9730-2e306a0d01b8",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "The triggered ability triggers when the enchanted creature deals any damage, not only combat damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c77ff526-c0a8-45c7-9730-2e306a0d01b8",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "Unlike the lifelink ability, the ability of Spirit Link is a triggered ability that goes on the stack and may be responded to. Notably, if the enchanted creature deals damage at the same time you’re dealt enough damage to reduce your life total to 0 or less, you’ll lose the game before you can gain any life."
+    }
+  ]
+}

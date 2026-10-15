@@ -1,0 +1,29 @@
+{
+  "name": "Mana Flare",
+  "oracle_id": "97159138-c34b-416e-b079-5c952383a243",
+  "rulings_uri": "https://api.scryfall.com/cards/a4bb303d-b230-430a-a2c3-f91a776de34e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "97159138-c34b-416e-b079-5c952383a243",
+      "source": "wotc",
+      "published_at": "2023-09-01",
+      "comment": "Mana Flare doesn't care about any restrictions or riders your lands put on the mana they produce, such as those of Unclaimed Territory and Cavern of Souls. It just produces one mana of the appropriate type, with no restrictions or riders."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "97159138-c34b-416e-b079-5c952383a243",
+      "source": "wotc",
+      "published_at": "2023-09-01",
+      "comment": "The types of mana are white, blue, black, red, green, and colorless."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "97159138-c34b-416e-b079-5c952383a243",
+      "source": "wotc",
+      "published_at": "2023-09-01",
+      "comment": "If you tap a land for more than one mana, you choose one type that was produced and add one mana of that type."
+    }
+  ]
+}

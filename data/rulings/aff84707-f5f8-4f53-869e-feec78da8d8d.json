@@ -1,0 +1,36 @@
+{
+  "name": "Rock Hydra",
+  "oracle_id": "aff84707-f5f8-4f53-869e-feec78da8d8d",
+  "rulings_uri": "https://api.scryfall.com/cards/28ab1823-e11e-48ae-8406-e025af32f407/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "aff84707-f5f8-4f53-869e-feec78da8d8d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If put onto the battlefield without casting it from your hand, X will be zero."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "aff84707-f5f8-4f53-869e-feec78da8d8d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Once on the battlefield, the X is considered to be zero when calculating its mana cost."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "aff84707-f5f8-4f53-869e-feec78da8d8d",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "If damage that would be dealt to Rock Hydra can't be prevented, you still remove a +1/+1 counter from it for each 1 damage dealt."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "aff84707-f5f8-4f53-869e-feec78da8d8d",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "You can activate the activated ability that prevents damage any time, even if no source seems likely to deal damage to you in the near future. It will prevent the next 1 damage that would be dealt this turn, even if that turns out to be much later in the turn."
+    }
+  ]
+}

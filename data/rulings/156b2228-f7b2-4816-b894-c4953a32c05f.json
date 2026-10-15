@@ -1,0 +1,15 @@
+{
+  "name": "Power Surge",
+  "oracle_id": "156b2228-f7b2-4816-b894-c4953a32c05f",
+  "rulings_uri": "https://api.scryfall.com/cards/0b5717af-a1a3-45cb-8b05-7543eed5532a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "156b2228-f7b2-4816-b894-c4953a32c05f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card knows how many were untapped even if it was not on the battlefield at the beginning of the turn."
+    }
+  ]
+}

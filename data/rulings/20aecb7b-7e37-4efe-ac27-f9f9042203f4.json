@@ -1,0 +1,29 @@
+{
+  "name": "Goblin Grenade",
+  "oracle_id": "20aecb7b-7e37-4efe-ac27-f9f9042203f4",
+  "rulings_uri": "https://api.scryfall.com/cards/b0e0ef27-3db2-4976-b9db-13e3d7cd795d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "20aecb7b-7e37-4efe-ac27-f9f9042203f4",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can't sacrifice more than one Goblin to get a greater effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "20aecb7b-7e37-4efe-ac27-f9f9042203f4",
+      "source": "wotc",
+      "published_at": "2011-09-22",
+      "comment": "The Goblin you sacrifice to cast Goblin Grenade doesn't have to be a creature. For example, you could sacrifice Boggart Shenanigans (a kindred enchantment with the subtype Goblin)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "20aecb7b-7e37-4efe-ac27-f9f9042203f4",
+      "source": "wotc",
+      "published_at": "2011-09-22",
+      "comment": "Players can only respond once Goblin Grenade has been cast and all its costs have been paid. No one can try and destroy the Goblin to prevent you from casting Goblin Grenade."
+    }
+  ]
+}

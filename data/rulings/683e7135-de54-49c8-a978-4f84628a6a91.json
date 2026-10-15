@@ -1,0 +1,15 @@
+{
+  "name": "Serendib Djinn",
+  "oracle_id": "683e7135-de54-49c8-a978-4f84628a6a91",
+  "rulings_uri": "https://api.scryfall.com/cards/ed1409f0-f17b-4f5c-9cf7-8ed18143b7b8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "683e7135-de54-49c8-a978-4f84628a6a91",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The sacrifice of the land is done during the resolution of the triggered ability. You also choose the land at that time."
+    }
+  ]
+}

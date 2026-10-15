@@ -1,0 +1,43 @@
+{
+  "name": "Urborg",
+  "oracle_id": "b6114962-035e-4e7f-9009-4739bf83a05a",
+  "rulings_uri": "https://api.scryfall.com/cards/5319f782-2713-43b1-9b28-0d1ec7a39203/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b6114962-035e-4e7f-9009-4739bf83a05a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability can be used on a creature without First Strike or Swampwalk but has no effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b6114962-035e-4e7f-9009-4739bf83a05a",
+      "source": "wotc",
+      "published_at": "2008-04-01",
+      "comment": "If a creature loses first strike after first strike combat damage has been assigned, it won’t deal damage during the second combat damage step."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b6114962-035e-4e7f-9009-4739bf83a05a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Causing a creature to lose swampwalk is useful only during the declare attackers step or earlier. Once the declare blockers step begins, it’s too late to block the creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b6114962-035e-4e7f-9009-4739bf83a05a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Urborg’s second ability affects only the first strike ability, not the part of the double strike ability that acts like first strike."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b6114962-035e-4e7f-9009-4739bf83a05a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You choose whether the targeted creature loses first strike or swampwalk as the ability resolves. If the creature has both abilities, it will lose just one of them."
+    }
+  ]
+}

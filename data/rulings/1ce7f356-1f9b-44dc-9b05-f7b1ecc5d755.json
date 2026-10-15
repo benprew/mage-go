@@ -1,0 +1,22 @@
+{
+  "name": "Giant Slug",
+  "oracle_id": "1ce7f356-1f9b-44dc-9b05-f7b1ecc5d755",
+  "rulings_uri": "https://api.scryfall.com/cards/d78999ab-2ccc-41ec-b808-18e40702d1c3/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1ce7f356-1f9b-44dc-9b05-f7b1ecc5d755",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the Slug changes controllers after the mana is spent, the player who activates this ability selects a landwalk during their next upkeep even if they don't control it at the time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "1ce7f356-1f9b-44dc-9b05-f7b1ecc5d755",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When the ability resolves, it creates another ability that triggers at the beginning of your next upkeep. When that ability resolves, you choose a basic land type."
+    }
+  ]
+}

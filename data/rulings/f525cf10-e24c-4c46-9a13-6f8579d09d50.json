@@ -1,0 +1,15 @@
+{
+  "name": "Winds of Change",
+  "oracle_id": "f525cf10-e24c-4c46-9a13-6f8579d09d50",
+  "rulings_uri": "https://api.scryfall.com/cards/3f09e393-7318-43eb-95f8-0f2797a771d7/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f525cf10-e24c-4c46-9a13-6f8579d09d50",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Each player draws a number of cards equal to the number of cards they shuffled into their own library."
+    }
+  ]
+}

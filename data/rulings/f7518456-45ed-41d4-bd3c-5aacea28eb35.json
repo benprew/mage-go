@@ -1,0 +1,15 @@
+{
+  "name": "Jump",
+  "oracle_id": "f7518456-45ed-41d4-bd3c-5aacea28eb35",
+  "rulings_uri": "https://api.scryfall.com/cards/2edd7be9-9334-4684-b642-1aaf2000e054/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f7518456-45ed-41d4-bd3c-5aacea28eb35",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "To work as an evasion ability, an attacking creature must already have flying when the declare blockers step begins. Once a creature has become blocked, giving it flying won’t change that."
+    }
+  ]
+}

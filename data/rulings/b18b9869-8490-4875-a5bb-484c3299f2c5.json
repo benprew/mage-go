@@ -1,0 +1,15 @@
+{
+  "name": "Jihad",
+  "oracle_id": "b18b9869-8490-4875-a5bb-484c3299f2c5",
+  "rulings_uri": "https://api.scryfall.com/cards/b6c7705a-2987-4ef1-92b1-2c55d989ec6f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b18b9869-8490-4875-a5bb-484c3299f2c5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In a multi-player game, it tracks only the chosen player. This is not changed even if this card changes controllers."
+    }
+  ]
+}

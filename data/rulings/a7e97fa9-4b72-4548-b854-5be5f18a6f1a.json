@@ -1,0 +1,15 @@
+{
+  "name": "Disenchant",
+  "oracle_id": "a7e97fa9-4b72-4548-b854-5be5f18a6f1a",
+  "rulings_uri": "https://api.scryfall.com/cards/7ac43e16-8b14-46f2-877a-600ea918766b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a7e97fa9-4b72-4548-b854-5be5f18a6f1a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not modal. If the target changes from an artifact to an enchantment or vice versa, this still destroys it."
+    }
+  ]
+}

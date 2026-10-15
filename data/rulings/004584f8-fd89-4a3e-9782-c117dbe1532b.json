@@ -1,0 +1,15 @@
+{
+  "name": "Weakstone",
+  "oracle_id": "004584f8-fd89-4a3e-9782-c117dbe1532b",
+  "rulings_uri": "https://api.scryfall.com/cards/5029bc71-29bf-47cf-a64b-7ab3d9af39ca/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "004584f8-fd89-4a3e-9782-c117dbe1532b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The -1/-0 applies to attacking creatures from all players."
+    }
+  ]
+}

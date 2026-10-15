@@ -1,0 +1,15 @@
+{
+  "name": "Murk Dwellers",
+  "oracle_id": "00358a89-2058-448b-a2fd-389f639ba2da",
+  "rulings_uri": "https://api.scryfall.com/cards/740564ec-c473-45bc-ba94-288786bf28b9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "00358a89-2058-448b-a2fd-389f639ba2da",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "An ability that triggers when something “attacks and isn’t blocked” triggers in the declare blockers step after blockers are declared if (1) that creature is attacking and (2) no creatures are declared to block it. It will trigger even if that creature was put onto the battlefield attacking rather than having been declared as an attacker in the declare attackers step."
+    }
+  ]
+}

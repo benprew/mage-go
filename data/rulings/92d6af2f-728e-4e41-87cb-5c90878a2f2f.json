@@ -1,0 +1,22 @@
+{
+  "name": "Disintegrate",
+  "oracle_id": "92d6af2f-728e-4e41-87cb-5c90878a2f2f",
+  "rulings_uri": "https://api.scryfall.com/cards/a83420d1-c51a-4fb7-8f1d-b376a0083d95/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "92d6af2f-728e-4e41-87cb-5c90878a2f2f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Disintegrated creatures do not go to the graveyard at all before being exiled. They do not trigger abilities which trigger due to a creature going to the graveyard."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "92d6af2f-728e-4e41-87cb-5c90878a2f2f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The “can’t regenerate” is an effect of Disintegrate and not an effect of the damage. It works even if the damage is prevented or redirected. If redirected, the damage does not take this effect with it."
+    }
+  ]
+}

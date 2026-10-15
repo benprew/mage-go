@@ -1,0 +1,29 @@
+{
+  "name": "Divine Intervention",
+  "oracle_id": "0158a440-6573-4f12-958b-a5f0cf190d5b",
+  "rulings_uri": "https://api.scryfall.com/cards/e250897e-a875-4c3c-bfec-4a09143dd587/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0158a440-6573-4f12-958b-a5f0cf190d5b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "In a multiplayer game played with the limited range of influence option, Divine Intervention won’t necessarily end the entire game when its third ability resolves. All players within range of Divine Intervention will leave the game. They’ll neither win nor lose; as far as they’re concerned, the result of the game is a draw. All other players will continue playing."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0158a440-6573-4f12-958b-a5f0cf190d5b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Divine Intervention’s third ability triggers only if its controller removes the last intervention counter from it. It doesn’t matter how that happens. For example, if you control Divine Intervention and the last intervention counter is removed as a result of a Clockspinning you control, the ability will trigger. On the other hand, if the last intervention counter is removed as a result of a Clockspinning another player controls, the ability won’t trigger (and won’t ever be able to)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0158a440-6573-4f12-958b-a5f0cf190d5b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When Divine Intervention’s third ability resolves, the game ends immediately. The game is a draw, meaning neither player wins and neither player loses."
+    }
+  ]
+}

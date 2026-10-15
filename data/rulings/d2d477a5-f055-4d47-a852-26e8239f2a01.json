@@ -1,0 +1,29 @@
+{
+  "name": "Kormus Bell",
+  "oracle_id": "d2d477a5-f055-4d47-a852-26e8239f2a01",
+  "rulings_uri": "https://api.scryfall.com/cards/40f826b8-9e92-4e0e-aa2f-c3f5e3061432/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d2d477a5-f055-4d47-a852-26e8239f2a01",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The lands are both lands and creatures at the same time. They are affected by anything that affects either permanent type."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d2d477a5-f055-4d47-a852-26e8239f2a01",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It affects Swamps controlled by any and all players."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d2d477a5-f055-4d47-a852-26e8239f2a01",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "A noncreature permanent that turns into a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn't matter how long the permanent has been a creature."
+    }
+  ]
+}

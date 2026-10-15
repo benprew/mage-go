@@ -1,0 +1,29 @@
+{
+  "name": "Whirling Dervish",
+  "oracle_id": "43f89524-4b22-4707-9aba-6eb4c01d75dc",
+  "rulings_uri": "https://api.scryfall.com/cards/9f1772bc-3330-4a10-9524-5bdcbd50c871/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "43f89524-4b22-4707-9aba-6eb4c01d75dc",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "If Dunerider Outlaw dealt damage to an opponent who later left the game before that turn's end step, its ability still gives it a +1/+1 counter."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "43f89524-4b22-4707-9aba-6eb4c01d75dc",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "Whirling Dervish's triggered ability gives it at most one +1/+1 counter each turn, regardless of how many opponents were dealt damage beyond the first."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "43f89524-4b22-4707-9aba-6eb4c01d75dc",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "Whirling Dervish's triggered ability checks to see if it dealt damage during the turn to an opponent of its current controller. If it dealt damage to player A, then player A takes control of it, the ability doesn't trigger."
+    }
+  ]
+}

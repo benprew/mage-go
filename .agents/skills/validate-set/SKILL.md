@@ -9,7 +9,7 @@ Audit actual implementation behavior. Do not edit card or engine code.
 
 ## Inputs
 
-Resolve the package and Scryfall code with the request, `data/sets.txt`, and package metadata. Use Scryfall JSON as the Oracle source of truth.
+Resolve the package and Scryfall code with the request, `data/sets.txt`, and package metadata. Use Scryfall JSON as the Oracle source of truth. For RON implementations, inspect the complete `cards/mtgish/*.ron` record. Before you assess behavior, read every local ruling for each audited card through `data/rulings/index.json` and its referenced Oracle file. If an entry or file is missing, run `go run ./cmd/fetchset -card "Card Name"`. An empty `rulings` array records a successful check; missing data does not. Keep `wotc` rulings distinct from `scryfall` notes, and consult the relevant Comprehensive Rules. Report a fetch failure as missing evidence. See `data/rulings/README.md` for the format and refresh commands.
 
 If canonical JSON is missing, disclose that the audit will add `data/<CODE>.json`, or fetch it to a temporary path when persistence is unnecessary:
 

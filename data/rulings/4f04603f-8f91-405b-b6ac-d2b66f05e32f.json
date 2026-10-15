@@ -1,0 +1,29 @@
+{
+  "name": "Cursed Rack",
+  "oracle_id": "4f04603f-8f91-405b-b6ac-d2b66f05e32f",
+  "rulings_uri": "https://api.scryfall.com/cards/26aa48e6-f23b-4fe1-8cf7-65a430ffba61/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4f04603f-8f91-405b-b6ac-d2b66f05e32f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The effect of lowering the maximum hand size makes it so the player discards down to 4 cards (instead of the usual 7) during the cleanup step."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4f04603f-8f91-405b-b6ac-d2b66f05e32f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You choose one opposing player just as this card is entering and it only affects that one player. This choice is not changed even if this card changes controllers. It becomes useless but stays on the battlefield if the chosen player leaves the game."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4f04603f-8f91-405b-b6ac-d2b66f05e32f",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If multiple effects modify your hand size, apply them in timestamp order. For example, if you put Null Profusion (an enchantment that says your maximum hand size is two) onto the battlefield and then a player puts Cursed Rack onto the battlefield choosing you, your maximum hand size will be four. However, if those permanents entered in the opposite order, your maximum hand size would be two."
+    }
+  ]
+}

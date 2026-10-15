@@ -1,0 +1,29 @@
+{
+  "name": "Tidal Flats",
+  "oracle_id": "bf39d0f7-f689-45fd-b37b-12d1618fd6e7",
+  "rulings_uri": "https://api.scryfall.com/cards/2e820f3f-434e-4d09-91b9-0ebd6966b393/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "bf39d0f7-f689-45fd-b37b-12d1618fd6e7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used more than once in a turn. Each time, the opponent can pay to prevent giving first strike to a creature, but this payment only stops the current activation and not future activations of Tidal Flats."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "bf39d0f7-f689-45fd-b37b-12d1618fd6e7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "First Strike is granted to your creatures currently blocking non-Flyers when this effect resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "bf39d0f7-f689-45fd-b37b-12d1618fd6e7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The payment is made when the Tidal Flats effect resolves."
+    }
+  ]
+}

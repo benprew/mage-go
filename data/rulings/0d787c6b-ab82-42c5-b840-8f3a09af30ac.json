@@ -1,0 +1,22 @@
+{
+  "name": "Fasting",
+  "oracle_id": "0d787c6b-ab82-42c5-b840-8f3a09af30ac",
+  "rulings_uri": "https://api.scryfall.com/cards/8da35f9f-e72c-4154-a212-7de98f84ad7d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0d787c6b-ab82-42c5-b840-8f3a09af30ac",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "When you resolve the beginning-of-upkeep triggered ability, you first put a hunger counter on Fasting, then you check how many hunger counters it has. If there are five or more, Fasting is destroyed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0d787c6b-ab82-42c5-b840-8f3a09af30ac",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "You choose whether or not to skip your draw step as that step begins. This ability is now separate from the beginning-of-upkeep triggered ability."
+    }
+  ]
+}

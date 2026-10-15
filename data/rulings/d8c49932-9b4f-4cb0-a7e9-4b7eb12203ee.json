@@ -1,0 +1,15 @@
+{
+  "name": "Leviathan",
+  "oracle_id": "d8c49932-9b4f-4cb0-a7e9-4b7eb12203ee",
+  "rulings_uri": "https://api.scryfall.com/cards/bc482c8f-5645-4cf9-8e90-090c77f9dc64/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d8c49932-9b4f-4cb0-a7e9-4b7eb12203ee",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You don't have to pay the untap cost if it is untapped outside the upkeep phase or is untapped by an effect."
+    }
+  ]
+}

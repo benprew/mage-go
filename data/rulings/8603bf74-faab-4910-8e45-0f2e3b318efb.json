@@ -1,0 +1,22 @@
+{
+  "name": "Firebreathing",
+  "oracle_id": "8603bf74-faab-4910-8e45-0f2e3b318efb",
+  "rulings_uri": "https://api.scryfall.com/cards/6fbcc269-aaa3-42aa-9898-3f908aaae272/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8603bf74-faab-4910-8e45-0f2e3b318efb",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The ability affects whichever creature is enchanted by Firebreathing at the time the ability resolves. The bonus remains even if Firebreathing stops enchanting that creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8603bf74-faab-4910-8e45-0f2e3b318efb",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "This ability can be activated by Firebreathing’s controller, not the enchanted creature’s controller (in case they’re different players)."
+    }
+  ]
+}

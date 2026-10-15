@@ -1,0 +1,15 @@
+{
+  "name": "Master of the Hunt",
+  "oracle_id": "cdf89ad2-ce08-4708-88c2-8acdc861526d",
+  "rulings_uri": "https://api.scryfall.com/cards/4e6bf56e-2d74-4e4d-a667-885853979377/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cdf89ad2-ce08-4708-88c2-8acdc861526d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since tapping is not part of the cost, you can use this more than once a turn."
+    }
+  ]
+}

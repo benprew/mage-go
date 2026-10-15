@@ -1,0 +1,15 @@
+{
+  "name": "Channel",
+  "oracle_id": "d1b815d1-2848-40d4-a555-66822d1becbc",
+  "rulings_uri": "https://api.scryfall.com/cards/ce54c7c1-3401-4414-8da0-5846cb0ae1b4/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d1b815d1-2848-40d4-a555-66822d1becbc",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "Once your life total is 0, you can't pay any more life, even if you've somehow not lost the game yet."
+    }
+  ]
+}

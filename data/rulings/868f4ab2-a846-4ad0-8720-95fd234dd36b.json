@@ -1,0 +1,22 @@
+{
+  "name": "Storm World",
+  "oracle_id": "868f4ab2-a846-4ad0-8720-95fd234dd36b",
+  "rulings_uri": "https://api.scryfall.com/cards/ad43358a-6369-4b8b-a0b7-f8ba07c1bf39/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "868f4ab2-a846-4ad0-8720-95fd234dd36b",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "868f4ab2-a846-4ad0-8720-95fd234dd36b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If the player whose turn it is has four or more cards in their hand as Storm World's ability resolves, the ability just won't do anything that turn."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Delif's Cube",
+  "oracle_id": "3106ba15-08d7-474c-a384-6848b713ba8d",
+  "rulings_uri": "https://api.scryfall.com/cards/14749600-9eca-4122-b04f-30ddda091b74/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3106ba15-08d7-474c-a384-6848b713ba8d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you use the ability after blockers are declared, it won’t trigger at all. So you want to use it before blockers are declared."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3106ba15-08d7-474c-a384-6848b713ba8d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card has an activated ability that creates a triggered ability which watches the target creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3106ba15-08d7-474c-a384-6848b713ba8d",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "An ability that triggers when something “attacks and isn’t blocked” triggers in the declare blockers step after blockers are declared if (1) that creature is attacking and (2) no creatures are declared to block it. It will trigger even if that creature was put onto the battlefield attacking rather than having been declared as an attacker in the declare attackers step."
+    }
+  ]
+}

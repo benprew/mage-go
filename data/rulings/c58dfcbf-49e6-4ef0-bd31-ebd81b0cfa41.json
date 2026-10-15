@@ -1,0 +1,36 @@
+{
+  "name": "Nettling Imp",
+  "oracle_id": "c58dfcbf-49e6-4ef0-bd31-ebd81b0cfa41",
+  "rulings_uri": "https://api.scryfall.com/cards/54039c4b-23c7-4e2c-8bd3-7a28714244b8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c58dfcbf-49e6-4ef0-bd31-ebd81b0cfa41",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The creature is destroyed if it does not attack because it simply can’t do so legally."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c58dfcbf-49e6-4ef0-bd31-ebd81b0cfa41",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can use this effect on a creature you know won’t be able to attack. For example, you can use it on a tapped creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c58dfcbf-49e6-4ef0-bd31-ebd81b0cfa41",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the Imp leaves the battlefield before the end of the turn, the creature still is destroyed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c58dfcbf-49e6-4ef0-bd31-ebd81b0cfa41",
+      "source": "wotc",
+      "published_at": "2013-09-20",
+      "comment": "If a turn has multiple combat phases, the ability can only be activated before the beginning of the declare attackers step of the first combat phase in that turn."
+    }
+  ]
+}

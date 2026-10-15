@@ -1,0 +1,29 @@
+{
+  "name": "Personal Incarnation",
+  "oracle_id": "6e49a5b8-6bc4-4c7b-82c1-957f1fb0ca5f",
+  "rulings_uri": "https://api.scryfall.com/cards/456b44ec-c299-419a-82b6-99d8609a0c04/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6e49a5b8-6bc4-4c7b-82c1-957f1fb0ca5f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You do not lose life if this card is exiled or sent someplace without going to the graveyard first."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6e49a5b8-6bc4-4c7b-82c1-957f1fb0ca5f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The owner of the Incarnation loses life when it is destroyed, not the controller. So if you control your opponent's Incarnation you can let it die to make them lose life."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6e49a5b8-6bc4-4c7b-82c1-957f1fb0ca5f",
+      "source": "wotc",
+      "published_at": "2007-02-01",
+      "comment": "If you attempt to halve a negative life total, you halve 0. This means that the life total stays the same. A life total of -10 would remain -10."
+    }
+  ]
+}

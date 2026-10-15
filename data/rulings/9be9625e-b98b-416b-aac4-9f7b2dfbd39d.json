@@ -1,0 +1,15 @@
+{
+  "name": "Colossus of Sardia",
+  "oracle_id": "9be9625e-b98b-416b-aac4-9f7b2dfbd39d",
+  "rulings_uri": "https://api.scryfall.com/cards/d0926087-73cf-4aa4-80f9-6f2c54e230ec/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9be9625e-b98b-416b-aac4-9f7b2dfbd39d",
+      "source": "wotc",
+      "published_at": "2008-05-01",
+      "comment": "The ability that untaps it during your upkeep has been returned to an activated ability. There is no restriction on how many times it can be untapped during your upkeep with this ability."
+    }
+  ]
+}

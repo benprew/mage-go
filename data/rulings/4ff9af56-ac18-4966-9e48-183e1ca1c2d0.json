@@ -1,0 +1,22 @@
+{
+  "name": "Living Artifact",
+  "oracle_id": "4ff9af56-ac18-4966-9e48-183e1ca1c2d0",
+  "rulings_uri": "https://api.scryfall.com/cards/8af097b1-9eae-4bd6-8ee6-582cae57e970/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4ff9af56-ac18-4966-9e48-183e1ca1c2d0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not trigger on loss of life, just on damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4ff9af56-ac18-4966-9e48-183e1ca1c2d0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can cast it targeting your opponent's artifacts. The controller of the Aura (not the controller of the artifact) controls the Living Artifact ability."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Land Tax",
+  "oracle_id": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
+  "rulings_uri": "https://api.scryfall.com/cards/c70d3706-9d28-49ac-8718-4a516413e727/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "You can fetch any of the \"Snow-Covered\" lands, since they all also have the supertype basic."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "This ability has an \"intervening 'if' clause.\" That means (1) the ability won't trigger at all unless any one of your opponents controls more lands than you, and (2) the ability will do nothing if you control at least as many lands as each of your opponents by the time it resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d2d9ecea-7925-420e-98b9-2f87f41f387c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You shuffle your library if you search, even if you don't put any basic land cards into your hand."
+    }
+  ]
+}

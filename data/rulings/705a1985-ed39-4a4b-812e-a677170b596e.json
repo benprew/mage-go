@@ -1,0 +1,36 @@
+{
+  "name": "Dragon Whelp",
+  "oracle_id": "705a1985-ed39-4a4b-812e-a677170b596e",
+  "rulings_uri": "https://api.scryfall.com/cards/7f7bdfb7-1dc1-4ddf-8146-9276dff37b2b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "705a1985-ed39-4a4b-812e-a677170b596e",
+      "source": "wotc",
+      "published_at": "2022-09-09",
+      "comment": "The first three times Dragon Whelp's ability is activated in a turn will do nothing other than give it +1/+0 until end of turn. Any subsequent activations will also cause its delayed triggered ability to trigger. That means if you activate Dragon Whelp's ability five times, for example, two different delayed triggered abilities will trigger at the beginning of the next end step and cause you to sacrifice Dragon Whelp."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "705a1985-ed39-4a4b-812e-a677170b596e",
+      "source": "wotc",
+      "published_at": "2022-09-09",
+      "comment": "If the fourth (or more) time Dragon Whelp's ability is activated during the same turn happens to be during that turn's end step, the delayed triggered ability won't trigger until the beginning of the next turn's end step. You'll have to sacrifice Dragon Whelp at that time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "705a1985-ed39-4a4b-812e-a677170b596e",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If the fourth (or subsequent) time Dragon Whelp's ability is activated during the same turn is during that turn's end step, the delayed triggered ability won't trigger until the beginning of the next turn's end step. You'll have to sacrifice Dragon Whelp at that time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "705a1985-ed39-4a4b-812e-a677170b596e",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "There's no limit to the number of times you can activate Dragon Whelp's ability in a turn. However, the fourth activation in a turn and each subsequent activation will cause a delayed triggered ability that will force you to sacrifice Dragon Whelp at the beginning of the next end step."
+    }
+  ]
+}

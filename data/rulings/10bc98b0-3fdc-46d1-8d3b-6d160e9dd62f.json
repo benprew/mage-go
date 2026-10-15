@@ -1,0 +1,22 @@
+{
+  "name": "Goblin Balloon Brigade",
+  "oracle_id": "10bc98b0-3fdc-46d1-8d3b-6d160e9dd62f",
+  "rulings_uri": "https://api.scryfall.com/cards/485e9d38-1536-4af6-9b58-00c08c07e222/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "10bc98b0-3fdc-46d1-8d3b-6d160e9dd62f",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "You can activate the ability repeatedly during a turn. This generally has no additional effect, unless some other effect (like that from Adarkar Windform has caused it to lose flying since the last time the ability resolved."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "10bc98b0-3fdc-46d1-8d3b-6d160e9dd62f",
+      "source": "wotc",
+      "published_at": "2010-08-15",
+      "comment": "For flying to work as an evasion ability, an attacking Goblin Balloon Brigade's ability must be activated before the declare blockers step begins. Once Goblin Balloon Brigade has become blocked, giving it flying won't change that."
+    }
+  ]
+}

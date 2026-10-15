@@ -1,0 +1,22 @@
+{
+  "name": "Hell's Caretaker",
+  "oracle_id": "2f0d797e-d897-453d-92b6-a90e1a548dc5",
+  "rulings_uri": "https://api.scryfall.com/cards/84a65ccf-37b6-48a3-9873-7a4cafef27cb/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2f0d797e-d897-453d-92b6-a90e1a548dc5",
+      "source": "wotc",
+      "published_at": "2018-03-16",
+      "comment": "The upkeep step is before the draw step, after the untap step. Because the turn has already begun, creatures put onto the battlefield during your upkeep won't be able to attack or pay a {T} cost this turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2f0d797e-d897-453d-92b6-a90e1a548dc5",
+      "source": "wotc",
+      "published_at": "2018-03-16",
+      "comment": "Hell's Caretaker can be the creature sacrificed to activate its ability, but it can't be the target of its own ability."
+    }
+  ]
+}

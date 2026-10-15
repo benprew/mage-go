@@ -1,0 +1,15 @@
+{
+  "name": "Gaea's Avenger",
+  "oracle_id": "a4b60080-3f80-4aeb-8bd9-7953e77aaf75",
+  "rulings_uri": "https://api.scryfall.com/cards/5df83b52-02df-4dfb-87b5-e2eab3d6c65b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a4b60080-3f80-4aeb-8bd9-7953e77aaf75",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In multi-player games it counts artifacts of all opponents."
+    }
+  ]
+}

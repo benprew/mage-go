@@ -1,0 +1,15 @@
+{
+  "name": "Necrite",
+  "oracle_id": "e6ab8a04-e225-4ff0-bb8b-c80d0e6ce50c",
+  "rulings_uri": "https://api.scryfall.com/cards/86a99edc-22d9-4653-8a7a-825f4b443d75/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e6ab8a04-e225-4ff0-bb8b-c80d0e6ce50c",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "An ability that triggers when something “attacks and isn’t blocked” triggers in the declare blockers step after blockers are declared if (1) that creature is attacking and (2) no creatures are declared to block it. It will trigger even if that creature was put onto the battlefield attacking rather than having been declared as an attacker in the declare attackers step."
+    }
+  ]
+}

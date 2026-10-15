@@ -1,0 +1,22 @@
+{
+  "name": "Triskelion",
+  "oracle_id": "74f67dcf-5afb-45aa-8d4b-3cdb23f6f2a1",
+  "rulings_uri": "https://api.scryfall.com/cards/63349fa3-4462-413c-bd96-bbc1049165a0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "74f67dcf-5afb-45aa-8d4b-3cdb23f6f2a1",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If you activate the ability of an attacking or blocking Triskelion during the declare blockers step, it will deal less combat damage as a result. If you wait until the combat damage step, but Triskelion is dealt lethal damage, it’ll be destroyed before you get a chance to activate its ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "74f67dcf-5afb-45aa-8d4b-3cdb23f6f2a1",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If Triskelion has damage marked on it, activating its ability may cause that damage to become lethal. For example, say a Triskelion with two +1/+1 counters on it has been dealt 2 damage earlier in the turn. If you activate its ability by removing a +1/+1 counter from it, it now has 2 toughness and is destroyed as a state-based action. You won’t be able to remove the other +1/+1 counter from it to activate its ability again. The first activation of the ability will still resolve."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Goblin War Drums",
+  "oracle_id": "29c21edd-781b-448e-824a-17bc8b8f4077",
+  "rulings_uri": "https://api.scryfall.com/cards/6d18b250-cbfb-4248-96c6-c1b36f8299b8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "29c21edd-781b-448e-824a-17bc8b8f4077",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Multiple War Drums are not cumulative. They are redundant."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "29c21edd-781b-448e-824a-17bc8b8f4077",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When combined with an effect that reads \"Each creature you control can't be blocked by more than one creature,\" none of your creatures can be blocked."
+    }
+  ]
+}

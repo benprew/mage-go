@@ -1,0 +1,36 @@
+{
+  "name": "Mana Matrix",
+  "oracle_id": "256cea34-4691-4367-a789-17d15460f664",
+  "rulings_uri": "https://api.scryfall.com/cards/0c69b20a-34f8-4c61-babe-1d3221c28a07/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "256cea34-4691-4367-a789-17d15460f664",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only affects its controller, not all players."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "256cea34-4691-4367-a789-17d15460f664",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only works on instants and enchantments. It does not work on sorceries."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "256cea34-4691-4367-a789-17d15460f664",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only reduces the generic mana portion of a spell's cost. If the cost does not include generic mana or includes less than {2}, you get a reduced or null effect from this card."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "256cea34-4691-4367-a789-17d15460f664",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Multiple Matrices are cumulative. Two will reduce the cost by up to {4}, and so on."
+    }
+  ]
+}

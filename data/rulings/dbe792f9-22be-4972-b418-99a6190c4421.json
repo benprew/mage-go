@@ -1,0 +1,50 @@
+{
+  "name": "Transmute Artifact",
+  "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+  "rulings_uri": "https://api.scryfall.com/cards/2888553d-5ed0-4e47-8cc2-1491b5557c53/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Because the \"search\" requires you to find a card with certain characteristics, you don't have to find the card if you don't want to."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the chosen artifact costs less than or the same as the sacrificed artifact, you simply put it onto the battlefield without paying any additional costs."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can't sacrifice more than one artifact to this spell."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The one from the library enters when the spell is resolved, and this does not count as the casting of an artifact."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Additional mana spent to cover the differences in mana costs is not part of the mana cost of this spell. It is spent during spell resolution."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dbe792f9-22be-4972-b418-99a6190c4421",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "The sacrifice of an artifact is an effect of the spell, not a cost, which means it happens as the spell resolves. If Transmute Artifact is countered, you do not have to sacrifice an artifact."
+    }
+  ]
+}

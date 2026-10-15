@@ -1,0 +1,15 @@
+{
+  "name": "Juggernaut",
+  "oracle_id": "4ac9116f-36bc-4d71-b696-d6ee064e1d58",
+  "rulings_uri": "https://api.scryfall.com/cards/f4468fff-cd6f-428c-b7a0-ff89f5bbea2e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4ac9116f-36bc-4d71-b696-d6ee064e1d58",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If Juggernaut can't attack for any reason (such as being tapped or having come under your control that turn), then it doesn't attack. If there's a cost associated with having it attack, you're not forced to pay that cost, so it doesn't have to attack in that case either."
+    }
+  ]
+}

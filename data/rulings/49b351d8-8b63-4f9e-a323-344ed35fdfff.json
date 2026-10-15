@@ -1,0 +1,29 @@
+{
+  "name": "Elvish Hunter",
+  "oracle_id": "49b351d8-8b63-4f9e-a323-344ed35fdfff",
+  "rulings_uri": "https://api.scryfall.com/cards/baf265bf-0f83-4073-87c2-f0b9ef268592/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "49b351d8-8b63-4f9e-a323-344ed35fdfff",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "Elvish Hunter doesn’t track the creature’s controller. If the affected creature changes controllers before its old controller’s next untap step, Elvish Hunter will prevent it from being untapped during its new controller’s next untap step."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "49b351d8-8b63-4f9e-a323-344ed35fdfff",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "If the targeted creature is untapped at the time its controller’s next untap step begins, this ability has no effect. It won’t apply at some later time when the targeted creature is tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "49b351d8-8b63-4f9e-a323-344ed35fdfff",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "You may target any creature with this ability. It doesn’t have to be tapped."
+    }
+  ]
+}

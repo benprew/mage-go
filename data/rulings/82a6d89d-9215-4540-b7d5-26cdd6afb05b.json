@@ -1,0 +1,22 @@
+{
+  "name": "Shapeshifter",
+  "oracle_id": "82a6d89d-9215-4540-b7d5-26cdd6afb05b",
+  "rulings_uri": "https://api.scryfall.com/cards/f15f2638-3895-459a-84af-fb91de06c395/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "82a6d89d-9215-4540-b7d5-26cdd6afb05b",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The ability that sets its power and toughness is a characteristic-defining ability. This means it applies before any other effects that modify power and/or toughness."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "82a6d89d-9215-4540-b7d5-26cdd6afb05b",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The ability that lets you choose a new number is a triggered ability that triggers only once each upkeep."
+    }
+  ]
+}

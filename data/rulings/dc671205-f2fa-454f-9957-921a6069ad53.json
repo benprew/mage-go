@@ -1,0 +1,22 @@
+{
+  "name": "High Tide",
+  "oracle_id": "dc671205-f2fa-454f-9957-921a6069ad53",
+  "rulings_uri": "https://api.scryfall.com/cards/babd2248-5517-4b7b-a159-9a1f7b5583c8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "dc671205-f2fa-454f-9957-921a6069ad53",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "The effect applies even if the Island in question entered the battlefield after High Tide resolved."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dc671205-f2fa-454f-9957-921a6069ad53",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "The delayed triggered ability refers to any land with the land type Island, not just those named Island."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Twiddle",
+  "oracle_id": "773ad2ef-5acc-49ea-8d85-056330e87039",
+  "rulings_uri": "https://api.scryfall.com/cards/1b25858a-ab2d-441a-a3fe-6d5ecd7f05be/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "773ad2ef-5acc-49ea-8d85-056330e87039",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not a toggle effect. If you use Twiddle to tap a card and before it takes effect your opponent taps it, Twiddle will not automatically untap the card."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "773ad2ef-5acc-49ea-8d85-056330e87039",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The decision whether or not to tap or untap is made on resolution. This is not a modal spell."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Skull of Orm",
+  "oracle_id": "67601399-089b-44fe-82db-c319729c75bf",
+  "rulings_uri": "https://api.scryfall.com/cards/ccc3a7b4-ff44-4909-ab8d-35ba5d187815/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "67601399-089b-44fe-82db-c319729c75bf",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can bring back any enchantment."
+    }
+  ]
+}

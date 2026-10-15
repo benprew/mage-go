@@ -1,0 +1,15 @@
+{
+  "name": "Wall of Shadows",
+  "oracle_id": "0e6ff89e-9ae7-4dc3-98b7-05401c5df266",
+  "rulings_uri": "https://api.scryfall.com/cards/69c6e076-d7bf-435b-ba79-84aa9f073130/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0e6ff89e-9ae7-4dc3-98b7-05401c5df266",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be targeted by a modal spell that can target a non-Wall in one of its modes, even if it has a mode that targets only Walls. That spell can, in theory, target a non-Wall, so it is not a “spell that can target only Walls”."
+    }
+  ]
+}

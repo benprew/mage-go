@@ -1,0 +1,15 @@
+{
+  "name": "Library of Alexandria",
+  "oracle_id": "2111588d-9af5-4a33-989e-b074d83f0463",
+  "rulings_uri": "https://api.scryfall.com/cards/e5145f31-a4ac-44ef-8f85-e4d95f2c9ff5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2111588d-9af5-4a33-989e-b074d83f0463",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You may tap multiples of these in response to each other because the requirement for 7 cards is checked only at the time the ability is announced and not again when it resolves."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Pestilence",
+  "oracle_id": "dafe63ef-f3d6-45e7-877a-573da92ba85e",
+  "rulings_uri": "https://api.scryfall.com/cards/29d852c4-bd53-4a3b-b1e2-896917cbc27f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "dafe63ef-f3d6-45e7-877a-573da92ba85e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Each activation is considered a new damage effect. An activation can only be 1 point of damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dafe63ef-f3d6-45e7-877a-573da92ba85e",
+      "source": "wotc",
+      "published_at": "2011-06-01",
+      "comment": "It will stay on the battlefield if there is a creature that is put into the graveyard during the end step. This is because this ability will not trigger at all if there is at least one creature on the battlefield as the end step begins."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dafe63ef-f3d6-45e7-877a-573da92ba85e",
+      "source": "wotc",
+      "published_at": "2011-06-01",
+      "comment": "Note that \"until end of turn\" effects wear off after \"at the beginning of the end step\" triggered abilities, so an artifact that animates until end of turn can keep this on the battlefield."
+    }
+  ]
+}

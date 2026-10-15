@@ -1,0 +1,22 @@
+{
+  "name": "Recall",
+  "oracle_id": "4158f397-4ee4-4f53-90f2-3b64bfe4f9b8",
+  "rulings_uri": "https://api.scryfall.com/cards/dd82d1f8-12bb-4b71-9a25-76a9dcb68345/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4158f397-4ee4-4f53-90f2-3b64bfe4f9b8",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You don’t choose which cards in your graveyard you’ll return to your hand until after you discard cards. You choose a card in your graveyard for each card you discarded, then you put all cards chosen this way into your hand at the same time. You may choose to return some or all of the cards you just discarded."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4158f397-4ee4-4f53-90f2-3b64bfe4f9b8",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You don’t discard cards until Recall resolves. If you don’t have X cards in your hand at that time, you discard all the cards in your hand."
+    }
+  ]
+}

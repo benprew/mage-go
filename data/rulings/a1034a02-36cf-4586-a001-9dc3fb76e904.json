@@ -1,0 +1,15 @@
+{
+  "name": "Caverns of Despair",
+  "oracle_id": "a1034a02-36cf-4586-a001-9dc3fb76e904",
+  "rulings_uri": "https://api.scryfall.com/cards/209f7479-b3a0-4c27-9602-78babb8d2e99/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a1034a02-36cf-4586-a001-9dc3fb76e904",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    }
+  ]
+}

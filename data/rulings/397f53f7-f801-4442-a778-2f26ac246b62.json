@@ -1,0 +1,15 @@
+{
+  "name": "Dark Sphere",
+  "oracle_id": "397f53f7-f801-4442-a778-2f26ac246b62",
+  "rulings_uri": "https://api.scryfall.com/cards/72cfe9b9-677d-4ecb-83ab-67fb6481371d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "397f53f7-f801-4442-a778-2f26ac246b62",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "If two or more of these effects would apply, you apply them sequentially. So if the source would deal 5 damage after two of these abilities have resolved, the first one prevents 2 damage, reducing it to 3 damage, then the second one prevents a further 1 damage, reducing the total damage dealt to 2."
+    }
+  ]
+}

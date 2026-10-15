@@ -1,0 +1,22 @@
+{
+  "name": "Homarid Warrior",
+  "oracle_id": "6facb0f6-fa49-4ce6-9f95-15bb3ce4bcf2",
+  "rulings_uri": "https://api.scryfall.com/cards/80f20d8e-bbdf-4af8-9505-d5604b04ad72/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6facb0f6-fa49-4ce6-9f95-15bb3ce4bcf2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It taps when the ability resolves if it was not already tapped. It may be used even if it is already tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6facb0f6-fa49-4ce6-9f95-15bb3ce4bcf2",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "Does not cause Auras on it to be removed when the effect is activated. An Aura on the battlefield is neither a spell nor an ability."
+    }
+  ]
+}

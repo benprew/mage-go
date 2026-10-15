@@ -1,0 +1,15 @@
+{
+  "name": "Forethought Amulet",
+  "oracle_id": "0edf0988-9ed8-4fe6-aa47-4921870f05a8",
+  "rulings_uri": "https://api.scryfall.com/cards/700f53d3-0a84-4c55-8495-786f0f0783db/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0edf0988-9ed8-4fe6-aa47-4921870f05a8",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This does not reduce damage which is already 2 or 1."
+    }
+  ]
+}

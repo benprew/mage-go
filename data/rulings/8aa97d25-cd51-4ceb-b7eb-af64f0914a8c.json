@@ -1,0 +1,15 @@
+{
+  "name": "Smoke",
+  "oracle_id": "8aa97d25-cd51-4ceb-b7eb-af64f0914a8c",
+  "rulings_uri": "https://api.scryfall.com/cards/109bea85-a991-46be-b502-0984160090a8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8aa97d25-cd51-4ceb-b7eb-af64f0914a8c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Animated lands are affected by this spell. If on the battlefield with an effect that limits the number of land you untap, untapping an animated land will count as the one creature and the one land you can untap... thereby limiting you to one thing to be untapped."
+    }
+  ]
+}

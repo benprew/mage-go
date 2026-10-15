@@ -1,0 +1,29 @@
+{
+  "name": "Copy Artifact",
+  "oracle_id": "80bc56a9-40e0-48da-ae86-190e39c8a4a3",
+  "rulings_uri": "https://api.scryfall.com/cards/cd360a6c-6685-462b-8aee-b869c1e4aa89/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "80bc56a9-40e0-48da-ae86-190e39c8a4a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The copy of the artifact is not still blue. It copies the color of the thing it is copying."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "80bc56a9-40e0-48da-ae86-190e39c8a4a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The artifact to copy is chosen at the time this card enters. If there is no valid artifact to choose, then this card enters as an enchantment that has no effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "80bc56a9-40e0-48da-ae86-190e39c8a4a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The copy is both an artifact and an enchantment, so it is an artifact-enchantment (perhaps even an artifact-creature-enchantment). It can be affected by anything which affects either type of permanent."
+    }
+  ]
+}

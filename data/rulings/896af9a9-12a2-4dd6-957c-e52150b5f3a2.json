@@ -1,0 +1,15 @@
+{
+  "name": "Gaseous Form",
+  "oracle_id": "896af9a9-12a2-4dd6-957c-e52150b5f3a2",
+  "rulings_uri": "https://api.scryfall.com/cards/c5464250-a6a9-4399-a67f-2488073794e9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "896af9a9-12a2-4dd6-957c-e52150b5f3a2",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "The enchanted creature can still attack and block."
+    }
+  ]
+}

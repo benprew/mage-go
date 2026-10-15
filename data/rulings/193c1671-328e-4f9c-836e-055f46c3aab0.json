@@ -1,0 +1,22 @@
+{
+  "name": "Rakalite",
+  "oracle_id": "193c1671-328e-4f9c-836e-055f46c3aab0",
+  "rulings_uri": "https://api.scryfall.com/cards/90633271-f4dc-45a5-ab5f-84321145b0fe/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "193c1671-328e-4f9c-836e-055f46c3aab0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only returns to your hand if it is still on the battlefield at the end of the turn. If it leaves the battlefield, it does not return."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "193c1671-328e-4f9c-836e-055f46c3aab0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used any number of times during the turn before it leaves the battlefield."
+    }
+  ]
+}

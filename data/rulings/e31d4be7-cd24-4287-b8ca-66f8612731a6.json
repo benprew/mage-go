@@ -1,0 +1,15 @@
+{
+  "name": "Wall of Putrid Flesh",
+  "oracle_id": "e31d4be7-cd24-4287-b8ca-66f8612731a6",
+  "rulings_uri": "https://api.scryfall.com/cards/07a17b74-a9c9-419a-8369-9ab4fec213f2/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e31d4be7-cd24-4287-b8ca-66f8612731a6",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "The term “enchanted creatures” means “creatures with an Aura on them”."
+    }
+  ]
+}

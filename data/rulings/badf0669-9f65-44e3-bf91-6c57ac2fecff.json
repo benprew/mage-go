@@ -1,0 +1,15 @@
+{
+  "name": "Kobolds of Kher Keep",
+  "oracle_id": "badf0669-9f65-44e3-bf91-6c57ac2fecff",
+  "rulings_uri": "https://api.scryfall.com/cards/a6797542-0781-43d6-aa8e-b55e5c1e08c0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "badf0669-9f65-44e3-bf91-6c57ac2fecff",
+      "source": "wotc",
+      "published_at": "2013-06-07",
+      "comment": "Although originally printed with a characteristic-defining ability that defined its color, this card now has a color indicator. This color indicator can't be affected by text-changing effects (such as the one created by Crystal Spray), although color-changing effects can still overwrite it."
+    }
+  ]
+}

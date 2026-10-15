@@ -1,0 +1,15 @@
+{
+  "name": "Wormwood Treefolk",
+  "oracle_id": "2a014ef1-0450-4485-8a8c-8210a985be4c",
+  "rulings_uri": "https://api.scryfall.com/cards/3d4468de-2452-47b6-9417-b92055e496eb/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2a014ef1-0450-4485-8a8c-8210a985be4c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Causing Wormwood Treefolk to gain forestwalk or swampwalk is useful only during the declare attackers step or earlier. Once it becomes blocked, giving it a landwalk ability won't change that."
+    }
+  ]
+}

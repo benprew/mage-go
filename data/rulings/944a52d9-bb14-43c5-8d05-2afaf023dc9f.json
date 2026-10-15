@@ -1,0 +1,22 @@
+{
+  "name": "Ashes to Ashes",
+  "oracle_id": "944a52d9-bb14-43c5-8d05-2afaf023dc9f",
+  "rulings_uri": "https://api.scryfall.com/cards/9e61209b-0f56-4bab-9ada-700f91b18dec/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "944a52d9-bb14-43c5-8d05-2afaf023dc9f",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If one of the targeted creatures is an illegal target by the time Ashes to Ashes resolves, it still exiles the other one and deals 5 damage to you."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "944a52d9-bb14-43c5-8d05-2afaf023dc9f",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If both of the targeted creatures are illegal targets by the time Ashes to Ashes resolves, it’s countered. It doesn’t deal 5 damage to you."
+    }
+  ]
+}

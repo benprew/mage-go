@@ -1,0 +1,15 @@
+{
+  "name": "Hasran Ogress",
+  "oracle_id": "a57d4a9d-4ac5-4a68-adb9-a73754034d7c",
+  "rulings_uri": "https://api.scryfall.com/cards/adc33c02-1eab-422a-8a84-b510d09dd827/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a57d4a9d-4ac5-4a68-adb9-a73754034d7c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You either take damage or pay the 2 mana during resolution."
+    }
+  ]
+}

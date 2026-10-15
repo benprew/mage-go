@@ -1,0 +1,22 @@
+{
+  "name": "Lure",
+  "oracle_id": "7a7425ba-4478-4bc4-855f-abf947ea4fa2",
+  "rulings_uri": "https://api.scryfall.com/cards/72c8336d-54cf-45af-a9ef-a1428facf91b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7a7425ba-4478-4bc4-855f-abf947ea4fa2",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "As blockers are declared, any creature that’s tapped or affected by a spell or ability that says it can’t block doesn’t block. If there’s a cost associated with having the creature block, no player is forced to pay that cost, so it doesn’t block if that cost isn’t paid."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7a7425ba-4478-4bc4-855f-abf947ea4fa2",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "Lure doesn’t give any creatures the ability to block the target creature. It just forces those creatures that are already able to block the creature to do so."
+    }
+  ]
+}

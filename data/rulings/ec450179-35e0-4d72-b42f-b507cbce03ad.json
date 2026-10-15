@@ -1,0 +1,22 @@
+{
+  "name": "Glyph of Life",
+  "oracle_id": "ec450179-35e0-4d72-b42f-b507cbce03ad",
+  "rulings_uri": "https://api.scryfall.com/cards/ba1384e5-d140-4074-9548-250af09cb413/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ec450179-35e0-4d72-b42f-b507cbce03ad",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not redirection of damage. The wall still takes the damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ec450179-35e0-4d72-b42f-b507cbce03ad",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can cast this targeting your opponent’s walls to good effect."
+    }
+  ]
+}

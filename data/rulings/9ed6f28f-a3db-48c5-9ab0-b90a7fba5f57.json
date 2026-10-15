@@ -1,0 +1,22 @@
+{
+  "name": "Royal Assassin",
+  "oracle_id": "9ed6f28f-a3db-48c5-9ab0-b90a7fba5f57",
+  "rulings_uri": "https://api.scryfall.com/cards/67ef9842-7142-4c63-8aea-fa73f02722a5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9ed6f28f-a3db-48c5-9ab0-b90a7fba5f57",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the creature is no longer tapped when the Assassin's ability resolves, then the ability doesn't resolve."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9ed6f28f-a3db-48c5-9ab0-b90a7fba5f57",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can't target itself because you choose the target before you tap him. At that time he is not yet a legal target."
+    }
+  ]
+}

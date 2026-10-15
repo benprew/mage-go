@@ -1,0 +1,15 @@
+{
+  "name": "Halfdane",
+  "oracle_id": "2ee13155-a3b8-4cad-8e68-5d2c5aba3bb4",
+  "rulings_uri": "https://api.scryfall.com/cards/cac1e57a-0ef5-442b-a492-059fc6ff3dfc/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2ee13155-a3b8-4cad-8e68-5d2c5aba3bb4",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Note that the duration of Halfdane's ability is until the end of your next upkeep. If Halfdane's ability doesn't get a chance to resolve (because there are no legal targets when it triggers, or because it's countered), then the effect from the previous turn's ability will continue to work through the rest of that upkeep step. Then that effect will wear off, and Halfdane will revert to being 3/3, its printed power and toughness (unless some other effect is modifying what its power and toughness is)."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Basalt Monolith",
+  "oracle_id": "6b8cf2a0-b045-4d91-9d91-c602d40c6237",
+  "rulings_uri": "https://api.scryfall.com/cards/f79de5e7-1545-420c-bfe1-ee2444fca85b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6b8cf2a0-b045-4d91-9d91-c602d40c6237",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Basalt Monolith's last ability can untap it as often as you can pay for it. If you believe you've found a way to generate an unbounded amount of mana with it, you're probably right."
+    }
+  ]
+}

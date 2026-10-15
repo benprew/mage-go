@@ -1,0 +1,15 @@
+{
+  "name": "Goblin Wizard",
+  "oracle_id": "912c99a0-ee97-4bb9-8ab7-2e469d74fa03",
+  "rulings_uri": "https://api.scryfall.com/cards/09167603-93ab-488b-88eb-37f7cf9e3e19/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "912c99a0-ee97-4bb9-8ab7-2e469d74fa03",
+      "source": "wotc",
+      "published_at": "2007-05-01",
+      "comment": "Putting the card onto the battlefield is optional. When the ability resolves, you can choose not to."
+    }
+  ]
+}

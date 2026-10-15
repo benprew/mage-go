@@ -1,0 +1,29 @@
+{
+  "name": "Primal Clay",
+  "oracle_id": "dccf2ca8-8c87-41c9-8373-351859396d05",
+  "rulings_uri": "https://api.scryfall.com/cards/1e51f1b3-d8a3-4746-b0db-67d5ec71fb17/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "dccf2ca8-8c87-41c9-8373-351859396d05",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "If an object on the battlefield becomes a copy of Primal Clay, it copies the values determined by its enters-the-battlefield replacement effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dccf2ca8-8c87-41c9-8373-351859396d05",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "While not on the battlefield, Primal Clay is a 0/0 creature card. It doesn't have flying or defender."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "dccf2ca8-8c87-41c9-8373-351859396d05",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "If an object enters the battlefield as a copy of Primal Clay, it copies the values determined by its enters-the-battlefield replacement effect, but its power and toughness are determined by the copy's own enters-the-battlefield replacement effect. This can cause you to have a 3/3 creature with flying, or a 1/6 creature with flying and defender, for example."
+    }
+  ]
+}

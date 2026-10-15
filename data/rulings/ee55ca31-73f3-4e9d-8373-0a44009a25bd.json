@@ -1,0 +1,15 @@
+{
+  "name": "Venom",
+  "oracle_id": "ee55ca31-73f3-4e9d-8373-0a44009a25bd",
+  "rulings_uri": "https://api.scryfall.com/cards/cbb503ef-31a4-492d-9c7d-26b72c36904b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ee55ca31-73f3-4e9d-8373-0a44009a25bd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If this Aura is moved onto a creature after blockers are declared, creatures blocking the newly-enchanted creature are not affected. This is because the ability triggers at the time blocking occurs."
+    }
+  ]
+}

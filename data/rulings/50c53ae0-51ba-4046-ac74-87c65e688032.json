@@ -1,0 +1,113 @@
+{
+  "name": "Fork",
+  "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+  "rulings_uri": "https://api.scryfall.com/cards/e4ff994a-bddd-486d-9a7b-a8959b4cf1dd/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you copy a spell for which Buyback has been paid, you get nothing back since the copied spell does not have a card to give you."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You need not (and may not) pay any additional mana or other costs (like sacrifices) to use the spell which is Forked. You get control over a complete copy but can change nothing except the targets."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It does copy the mana symbols in the mana cost for the card it is copying, but it uses its own color definition and not the one from those mana symbols. This is so it maintains its color just like the text says."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The copy that is placed on the stack is not considered to have been \"cast\"."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "For spells that can have a variable number of targets, the controller of the copy must use the same number of targets the original spell did."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Forking a spell with an X in the cost requires you to use the same X value."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When a spell with additional costs is copied, you don't have to pay those costs again."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the spell being copied targets a spell on the stack, it is possible to target Fork itself since Fork is still on the stack when you pick the target(s) for the copy. Note that the copy's target will be illegal when it resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If mana or other costs need to be spent at resolution of the spell, the player of Fork would still be responsible for paying that cost."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Fork will not copy changes made by modifying effects to the spell prior to the use of Fork, such as text-changing effects."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Fork does not let you make non-targeting choices about the spell."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The Fork card goes to the graveyard when it resolves and leaves the copy on the stack. There is no card representing the copy on the stack."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2004-12-01",
+      "comment": "If you Fork a Spliced spell, the spliced text is added during the announcement of the original spell, and therefore is fully copied by Fork."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2009-05-01",
+      "comment": "The copy will have the same mana cost as the original spell, but will be red rather than whatever color that mana cost would have made it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "50c53ae0-51ba-4046-ac74-87c65e688032",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If the targeted spell was kicked, then the copy will be kicked as well. If the targeted spell was not kicked, then the copy will not be kicked."
+    }
+  ]
+}

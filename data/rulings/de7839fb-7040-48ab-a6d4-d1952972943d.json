@@ -1,0 +1,22 @@
+{
+  "name": "Black Vise",
+  "oracle_id": "de7839fb-7040-48ab-a6d4-d1952972943d",
+  "rulings_uri": "https://api.scryfall.com/cards/bce2259a-f4cb-4130-9c7e-130980a8df38/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "de7839fb-7040-48ab-a6d4-d1952972943d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You choose one opposing player as it enters and it only affects that one player. This choice is not changed even if Black Vise changes controllers. It becomes useless but stays on the battlefield if that player leaves the game."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "de7839fb-7040-48ab-a6d4-d1952972943d",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If the chosen player has four or fewer cards in their hand as Black Vise's ability resolves, the ability just won't do anything that turn."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Sengir Vampire",
+  "oracle_id": "749141aa-f6c4-4ad8-b146-406e68ae9b0b",
+  "rulings_uri": "https://api.scryfall.com/cards/de652420-eacf-4f9d-9f13-c6bc02b0fa72/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "749141aa-f6c4-4ad8-b146-406e68ae9b0b",
+      "source": "wotc",
+      "published_at": "2007-07-15",
+      "comment": "If Sengir Vampire deals nonlethal damage to a creature and then a different effect or damage source causes that creature to be put into a graveyard later in the turn, Sengir Vampire's ability will trigger and it will get a +1/+1 counter."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "749141aa-f6c4-4ad8-b146-406e68ae9b0b",
+      "source": "wotc",
+      "published_at": "2011-09-22",
+      "comment": "Each time a creature is put into a graveyard from the battlefield, check whether Sengir Vampire had dealt any damage to it at any time during that turn. If so, Sengir Vampire's ability will trigger. It doesn't matter who controlled the creature or whose graveyard it was put into."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "749141aa-f6c4-4ad8-b146-406e68ae9b0b",
+      "source": "wotc",
+      "published_at": "2011-09-22",
+      "comment": "If Sengir Vampire and a creature it dealt damage to are both put into a graveyard at the same time, Sengir Vampire's ability will trigger, but it will do nothing when it resolves."
+    }
+  ]
+}

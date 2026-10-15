@@ -1,0 +1,22 @@
+{
+  "name": "In the Eye of Chaos",
+  "oracle_id": "6a0da9f3-cb06-42b1-ae73-b142c0eedaff",
+  "rulings_uri": "https://api.scryfall.com/cards/6964fc80-7f39-4ffd-80fd-17d9a75e8e84/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6a0da9f3-cb06-42b1-ae73-b142c0eedaff",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This ability triggers when the spell is cast."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6a0da9f3-cb06-42b1-ae73-b142c0eedaff",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    }
+  ]
+}

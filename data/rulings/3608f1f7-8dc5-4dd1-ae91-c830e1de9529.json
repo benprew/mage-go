@@ -1,0 +1,15 @@
+{
+  "name": "Icy Manipulator",
+  "oracle_id": "3608f1f7-8dc5-4dd1-ae91-c830e1de9529",
+  "rulings_uri": "https://api.scryfall.com/cards/ac5a54ca-f175-4005-895f-d76effd6178e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3608f1f7-8dc5-4dd1-ae91-c830e1de9529",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "Once a player announces that they're casting a spell or activating an ability, no player may take other actions until the spell or ability has been paid for. Notably, other players can't try to tap that player's permanents to stop them from paying {T} or to stop them from producing enough mana."
+    }
+  ]
+}

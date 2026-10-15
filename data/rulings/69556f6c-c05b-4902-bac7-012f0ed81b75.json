@@ -1,0 +1,15 @@
+{
+  "name": "Merchant Ship",
+  "oracle_id": "69556f6c-c05b-4902-bac7-012f0ed81b75",
+  "rulings_uri": "https://api.scryfall.com/cards/2b827094-fb2c-46db-b898-02e0c308601f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "69556f6c-c05b-4902-bac7-012f0ed81b75",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "An ability that triggers when something “attacks and isn’t blocked” triggers in the declare blockers step after blockers are declared if (1) that creature is attacking and (2) no creatures are declared to block it. It will trigger even if that creature was put onto the battlefield attacking rather than having been declared as an attacker in the declare attackers step."
+    }
+  ]
+}

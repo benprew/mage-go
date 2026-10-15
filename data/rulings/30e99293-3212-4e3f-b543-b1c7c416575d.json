@@ -1,0 +1,22 @@
+{
+  "name": "Living Plane",
+  "oracle_id": "30e99293-3212-4e3f-b543-b1c7c416575d",
+  "rulings_uri": "https://api.scryfall.com/cards/0b944310-3170-4b57-95e0-2b78a3b50f95/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "30e99293-3212-4e3f-b543-b1c7c416575d",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "30e99293-3212-4e3f-b543-b1c7c416575d",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "A noncreature permanent that turns into a creature is subject to the \"summoning sickness\" rule: It can only attack, and its {T} abilities can only be activated, if its controller has continuously controlled that permanent since the beginning of their most recent turn."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Khabál Ghoul",
+  "oracle_id": "cb558dda-0c05-426d-aedc-bc07cc54db76",
+  "rulings_uri": "https://api.scryfall.com/cards/98f443cb-55bb-4e83-826a-98261287bfd3/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cb558dda-0c05-426d-aedc-bc07cc54db76",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "The effect counts all creatures put into all graveyards from the battlefield during the turn. This includes creature tokens put into a graveyard as well as creatures put into a graveyard before Khabál Ghoul entered the battlefield."
+    }
+  ]
+}

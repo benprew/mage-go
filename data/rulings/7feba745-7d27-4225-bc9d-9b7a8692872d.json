@@ -1,0 +1,15 @@
+{
+  "name": "Erg Raiders",
+  "oracle_id": "7feba745-7d27-4225-bc9d-9b7a8692872d",
+  "rulings_uri": "https://api.scryfall.com/cards/b29d88ad-5074-4f37-bb6a-2a7fe75c5771/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7feba745-7d27-4225-bc9d-9b7a8692872d",
+      "source": "wotc",
+      "published_at": "2018-03-16",
+      "comment": "A creature \"comes under your control\" if it enters the battlefield under your control or if you gain control of it while it's already on the battlefield."
+    }
+  ]
+}

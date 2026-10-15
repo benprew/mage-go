@@ -1,0 +1,50 @@
+{
+  "name": "Farrel's Mantle",
+  "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+  "rulings_uri": "https://api.scryfall.com/cards/cd5182d9-fc52-4309-a622-41c0b5ae58b8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you put this on your opponent’s creature, they decide whether or not to make their creature deal no damage to you."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "If the same creature is enchanted with more than one Farrel’s Mantle, they’ll each trigger if that creature attacks and isn’t blocked. The creature’s controller may have it deal damage multiple times. As long as the enchanted creature’s controller chooses to use Farrel’s Mantle’s ability at least once to deal damage, the enchanted creature will deal no combat damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "If the enchanted creature’s controller chooses to have it deal no combat damage, that combat damage is not prevented. It’s simply not dealt. A creature whose damage can’t be prevented (such as Excruciator) would deal no combat damage this way."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This ability resolves during the declare blockers step. If the damage dealt this way is enough to destroy an attacking or blocking creature, that other creature won’t be around to deal its combat damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+      "source": "wotc",
+      "published_at": "2011-01-25",
+      "comment": "The enchanted creature’s controller cannot choose to have the enchanted creature deal damage to itself. If there are no other creatures on the battlefield, then a legal target cannot be chosen so the ability does nothing."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ffae3ff4-67f7-4e41-b166-c63f88c7aa08",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "An ability that triggers when something “attacks and isn’t blocked” triggers in the declare blockers step after blockers are declared if (1) that creature is attacking and (2) no creatures are declared to block it. It will trigger even if that creature was put onto the battlefield attacking rather than having been declared as an attacker in the declare attackers step."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Island of Wak-Wak",
+  "oracle_id": "d427e61d-5b30-4d2a-bad2-2e7f016036ca",
+  "rulings_uri": "https://api.scryfall.com/cards/17f4a1aa-395f-423c-b70c-00cf178bb84d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d427e61d-5b30-4d2a-bad2-2e7f016036ca",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not an Island."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d427e61d-5b30-4d2a-bad2-2e7f016036ca",
+      "source": "wotc",
+      "published_at": "2005-11-01",
+      "comment": "Sets power to 0 instead of giving the creature -X/-0."
+    }
+  ]
+}

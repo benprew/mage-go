@@ -1,0 +1,29 @@
+{
+  "name": "Voodoo Doll",
+  "oracle_id": "4d330c40-3d72-4528-a254-d036683958d3",
+  "rulings_uri": "https://api.scryfall.com/cards/c60ea64d-0209-4ca4-bee6-f9eb63784c9e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4d330c40-3d72-4528-a254-d036683958d3",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Each X in the cost of Voodoo Doll's third ability is the number of pin counters on Voodoo Doll at the time you activate the ability. The X in the ability's effect is the number of pin counters on Voodoo Doll at the time it resolves, which may not be the same number (if a spell or ability put counters on it or removed counters from it in the meantime). If Voodoo Doll is no longer on the battlefield as the ability resolves, its last existence on the battlefield is checked to see how many pin counters were on it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4d330c40-3d72-4528-a254-d036683958d3",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Voodoo Doll's second ability has an \"intervening 'if' clause.\" That means (1) the ability won't trigger at all unless Voodoo Doll is untapped, and (2) the ability will do nothing if Voodoo Doll is tapped by the time it resolves. If Voodoo Doll is no longer on the battlefield as the ability resolves, its last existence on the battlefield is checked to see if it was tapped or untapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "4d330c40-3d72-4528-a254-d036683958d3",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "Voodoo Doll's second ability causes it to be destroyed regardless of whether it actually deals damage to you or not. Voodoo Doll is destroyed even if all the damage is prevented or redirected."
+    }
+  ]
+}

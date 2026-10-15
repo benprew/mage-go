@@ -1,0 +1,36 @@
+{
+  "name": "Icatian Store",
+  "oracle_id": "87a0e0b9-6c2d-47a4-a3ed-7e0ae62fbffc",
+  "rulings_uri": "https://api.scryfall.com/cards/e68c45d3-0f3c-4429-a93e-4ca70ea6b1a4/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "87a0e0b9-6c2d-47a4-a3ed-7e0ae62fbffc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Whether or not it is tapped is checked at the beginning of upkeep. If it is not tapped, the ability does not trigger. It also checks during resolution and you only get a counter if it is still tapped then."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "87a0e0b9-6c2d-47a4-a3ed-7e0ae62fbffc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Counters are not lost if the land is changed to another land type. They wait around for the land to change back."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "87a0e0b9-6c2d-47a4-a3ed-7e0ae62fbffc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It is only considered “tapped for mana” if you activate its mana ability and generate mana from it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "87a0e0b9-6c2d-47a4-a3ed-7e0ae62fbffc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the land is tapped by some external effect, no counters are removed from it."
+    }
+  ]
+}

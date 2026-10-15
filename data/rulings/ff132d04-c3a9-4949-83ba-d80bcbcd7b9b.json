@@ -1,0 +1,22 @@
+{
+  "name": "Tetsuo Umezawa",
+  "oracle_id": "ff132d04-c3a9-4949-83ba-d80bcbcd7b9b",
+  "rulings_uri": "https://api.scryfall.com/cards/ec22ddf8-cb5e-4ca0-8f2f-c5d48f2cbd26/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ff132d04-c3a9-4949-83ba-d80bcbcd7b9b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card can be enchanted by moving Auras onto it. The “can’t be the target” text is different from “can’t be enchanted” in that it only applies to Aura spells when they are being cast."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ff132d04-c3a9-4949-83ba-d80bcbcd7b9b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Tetsuo Umezawa can be targeted by abilities from Auras."
+    }
+  ]
+}

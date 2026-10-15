@@ -1,0 +1,29 @@
+{
+  "name": "Rasputin Dreamweaver",
+  "oracle_id": "fef452ee-9018-4175-bb79-476544e48433",
+  "rulings_uri": "https://api.scryfall.com/cards/78418809-f048-4611-88cb-369f427d9c44/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fef452ee-9018-4175-bb79-476544e48433",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The fourth ability has an \"intervening 'if' clause,\" so it won't trigger at all unless Rasputin Dreamweaver started the turn untapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fef452ee-9018-4175-bb79-476544e48433",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If a permanent with eight or more dream counters on it becomes a copy of Rasputin Dreamweaver (or just gains its last ability), all dream counters except seven are removed from it as a state-based action."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fef452ee-9018-4175-bb79-476544e48433",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If a number of dream counters would be put on Rasputin Dreamweaver for any reason that would bring the total number of dream counters on it to eight or more, the total number of dream counters on it is brought to seven instead."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Fallen Angel",
+  "oracle_id": "1869a326-8b48-4331-b969-5ce83cf4ff8a",
+  "rulings_uri": "https://api.scryfall.com/cards/d3baa621-1b50-4a7f-9ed4-4ae0e0e9e4e7/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1869a326-8b48-4331-b969-5ce83cf4ff8a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can sacrifice itself."
+    }
+  ]
+}

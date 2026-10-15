@@ -1,0 +1,15 @@
+{
+  "name": "Amnesia",
+  "oracle_id": "8345187a-a210-49d7-bdce-10fb2909e050",
+  "rulings_uri": "https://api.scryfall.com/cards/23d6dbd3-652f-4dc3-9453-24299332938d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8345187a-a210-49d7-bdce-10fb2909e050",
+      "source": "wotc",
+      "published_at": "2014-02-01",
+      "comment": "If you target yourself with this spell, you must reveal your entire hand to the other players just as any other player would."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Puppet Master",
+  "oracle_id": "42c7e933-f169-444b-917d-b4dca918d989",
+  "rulings_uri": "https://api.scryfall.com/cards/b401d253-4e51-42db-91cc-ac8cc3d06ae6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "42c7e933-f169-444b-917d-b4dca918d989",
+      "source": "wotc",
+      "published_at": "2008-05-01",
+      "comment": "You only get the opportunity to pay {U}{U}{U} (and thus to return Puppet Master to its owner's hand) if the creature card actually gets returned to its owner's hand. If it isn't (for instance, if it was removed from the graveyard prior to this ability resolving), you don't get the option to pay."
+    }
+  ]
+}

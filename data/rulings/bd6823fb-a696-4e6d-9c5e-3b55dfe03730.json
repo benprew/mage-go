@@ -1,0 +1,15 @@
+{
+  "name": "Forcefield",
+  "oracle_id": "bd6823fb-a696-4e6d-9c5e-3b55dfe03730",
+  "rulings_uri": "https://api.scryfall.com/cards/c6e4c51a-8539-48e0-a6dc-d66548e38f40/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "bd6823fb-a696-4e6d-9c5e-3b55dfe03730",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This can’t be used to prevent damage caused by a blocked creature with Trample ability."
+    }
+  ]
+}

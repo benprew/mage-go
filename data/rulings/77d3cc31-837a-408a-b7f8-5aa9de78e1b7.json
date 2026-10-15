@@ -1,0 +1,29 @@
+{
+  "name": "Knowledge Vault",
+  "oracle_id": "77d3cc31-837a-408a-b7f8-5aa9de78e1b7",
+  "rulings_uri": "https://api.scryfall.com/cards/c416fca6-e201-4dbc-b9c7-248d70967746/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "77d3cc31-837a-408a-b7f8-5aa9de78e1b7",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "You can activate the second ability any time you have priority, including in response to itself. However, you will only be able to sacrifice the Vault as the first such ability resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "77d3cc31-837a-408a-b7f8-5aa9de78e1b7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If you activate Knowledge Vault's second ability, all that happens at that time is that you pay a cost of {0}. As the ability resolves, you must sacrifice Knowledge Vault. This is mandatory. If you are able to do so, you discard your hand and put all cards exiled with Knowledge Vault into their owners' hands. If you aren't able to do so because Knowledge Vault left the battlefield or changed controllers before the ability resolves, nothing happens."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "77d3cc31-837a-408a-b7f8-5aa9de78e1b7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You don't get to look at the cards exiled with Knowledge Vault."
+    }
+  ]
+}

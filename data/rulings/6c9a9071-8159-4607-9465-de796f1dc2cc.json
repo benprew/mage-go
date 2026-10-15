@@ -1,0 +1,15 @@
+{
+  "name": "Ramses Overdark",
+  "oracle_id": "6c9a9071-8159-4607-9465-de796f1dc2cc",
+  "rulings_uri": "https://api.scryfall.com/cards/61bb42b2-327b-47d3-9fe3-76c029d91ee9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6c9a9071-8159-4607-9465-de796f1dc2cc",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "A creature is “enchanted” if it has any Auras attached to it."
+    }
+  ]
+}

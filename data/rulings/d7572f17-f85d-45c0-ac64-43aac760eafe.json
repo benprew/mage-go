@@ -1,0 +1,22 @@
+{
+  "name": "Circle of Protection: Blue",
+  "oracle_id": "d7572f17-f85d-45c0-ac64-43aac760eafe",
+  "rulings_uri": "https://api.scryfall.com/cards/5ced2118-dfb3-4f29-ad6b-454c0a8a094b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d7572f17-f85d-45c0-ac64-43aac760eafe",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used even when there is no damage to prevent. It prevents the next damage (if any) from the source this turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d7572f17-f85d-45c0-ac64-43aac760eafe",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "A source of damage is a permanent, a spell on the stack (including one that creates a permanent), or any object referred to by an object on the stack. A source doesn’t need to be capable of dealing damage to be a legal choice."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Quarum Trench Gnomes",
+  "oracle_id": "ce5e52c9-4cb1-42aa-8403-bcd143d68704",
+  "rulings_uri": "https://api.scryfall.com/cards/1c3b33bf-3074-406e-86f3-2a9843cf4862/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ce5e52c9-4cb1-42aa-8403-bcd143d68704",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The ability only replaces white mana produced by the Plains. If a Plains somehow tries to produce mana of a different color (for instance, if you control a Joiner Adept), this effect will not cause it to produce colorless mana."
+    }
+  ]
+}

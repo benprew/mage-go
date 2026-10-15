@@ -1,0 +1,15 @@
+{
+  "name": "Hypnotic Specter",
+  "oracle_id": "759af941-f6a3-4726-91f2-9b1e4e55ea71",
+  "rulings_uri": "https://api.scryfall.com/cards/9695f390-f791-4d64-90b2-731d6d37df1c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "759af941-f6a3-4726-91f2-9b1e4e55ea71",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The ability triggers even if the Specter’s damage is being redirected to an opponent. It does not trigger if damage that would have been dealt to the opponent is redirected to a nonopponent player or a creature, or if the damage is prevented."
+    }
+  ]
+}

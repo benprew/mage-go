@@ -1,0 +1,15 @@
+{
+  "name": "Uncle Istvan",
+  "oracle_id": "44e855a4-95f9-4515-a868-a8ad7a2db751",
+  "rulings_uri": "https://api.scryfall.com/cards/9bf85d06-9efe-488d-9af0-fb945b346524/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "44e855a4-95f9-4515-a868-a8ad7a2db751",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Works even on damage from activated abilities of creatures such as Prodigal Sorcerer."
+    }
+  ]
+}

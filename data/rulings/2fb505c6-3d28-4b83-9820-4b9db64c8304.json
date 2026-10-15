@@ -1,0 +1,29 @@
+{
+  "name": "Reflecting Mirror",
+  "oracle_id": "2fb505c6-3d28-4b83-9820-4b9db64c8304",
+  "rulings_uri": "https://api.scryfall.com/cards/d551ff93-d8da-4c21-bc3c-6451c0dde07e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2fb505c6-3d28-4b83-9820-4b9db64c8304",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This spell only changes the target of a spell, and not the player."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2fb505c6-3d28-4b83-9820-4b9db64c8304",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can’t be used on abilities of permanents. Those are abilities and not spells."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2fb505c6-3d28-4b83-9820-4b9db64c8304",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This can’t be used on spells which affect “you” and which do not say they target you."
+    }
+  ]
+}

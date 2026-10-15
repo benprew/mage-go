@@ -1,0 +1,15 @@
+{
+  "name": "Psychic Venom",
+  "oracle_id": "a60422e8-f2f4-4c37-a0f4-eedad27eb08c",
+  "rulings_uri": "https://api.scryfall.com/cards/984ae881-9b43-42ce-885e-2eb5e683eed7/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a60422e8-f2f4-4c37-a0f4-eedad27eb08c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Whenever the land is tapped for any reason, the ability triggers."
+    }
+  ]
+}

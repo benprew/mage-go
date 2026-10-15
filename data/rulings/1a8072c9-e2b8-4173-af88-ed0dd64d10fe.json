@@ -1,0 +1,15 @@
+{
+  "name": "Ashnod's Transmogrant",
+  "oracle_id": "1a8072c9-e2b8-4173-af88-ed0dd64d10fe",
+  "rulings_uri": "https://api.scryfall.com/cards/31c830a1-5b93-493f-9976-af950f6ec70a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1a8072c9-e2b8-4173-af88-ed0dd64d10fe",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "It’s the ability, not the counter that makes the creature an artifact. The creature remains an artifact even if the +1/+1 counter is removed."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Abomination",
+  "oracle_id": "2c57c4e9-0a46-45d6-92db-9203fb722b60",
+  "rulings_uri": "https://api.scryfall.com/cards/a363bc91-8278-448e-9d5c-564e4b51eb62/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2c57c4e9-0a46-45d6-92db-9203fb722b60",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The color of the blocking/blocked creature is checked only at declaration of the block. If the creature is green or white at that time, it will be destroyed at end of combat even if it changes color before combat ends."
+    }
+  ]
+}
