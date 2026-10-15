@@ -22789,9 +22789,9 @@ clones copy result slices through the existing resolution frame clone.
 
 RON accepts only the adjacent destruction/one-owner-return loop shape described
 in the DSL reference. Its member-local last-block expression uses the existing
-pure history query. Other loop bodies reject. The current Glyph record still
-rejects its casting predicate, so the extracted complete spell body establishes
-clause coverage only. There is no new payment or replacement-ordering pipeline.
+pure history query. Other loop bodies reject. The complete Glyph record now
+uses the actual combat completion contract below. There is no new payment or
+replacement-ordering pipeline.
 
 Rules: CR 400.7, 608.2c–f, 608.2h, 700.4, 701.8, 701.19 and 702.26b.
 Glyph of Reincarnation's two local wotc rulings require all affected creatures to
@@ -22802,3 +22802,39 @@ entry, changed visits, history, binding restoration and clones.
 `TestRONDeathResultReturnGlyph`, `Instances`, `Contexts` and `Invalid` exercise
 the real spell body, two factories, copies, changed control, last-block history,
 target legality, return, phasing and strict declarations.
+
+## Actual combat completion and postcombat casting
+
+`AfterFirstCombat() StateCondition` uses
+`TurnReader.CombatHasEnded() bool`. TurnSystem stores actual combat completion
+separately from the existing first-combat window closure. CR 500.2, 506.7d and
+511.1–3 require the end-of-combat priority round to finish before the condition
+becomes true. Native `finishStep(EndCombat)` records that boundary. Direct
+`SetStep` callers record completion when they leave an actual combat step for a
+noncombat step, or leave EndCombat for another step. Skipping the end step still
+ends the phase on that departure. A direct postcombat step without a prior combat
+step supplies no history. No phase enum comparison alone establishes completion.
+
+A full combat-phase skip does not complete a phase (CR 500.11, 614.10).
+An empty combat does complete when its end step finishes; skipped blockers and
+damage steps do not complete it early. A later actual combat can establish
+completion after a skipped phase. Once true, this turn's condition stays true
+through additional combats, phases and cleanup steps (CR 506.7d). SetTurn and
+IncrementTurn reset the value. The step's turn identity prevents old combat state
+from completing combat in a new turn. Game clones copy independent value state.
+Queries do not change state or grant permission. This adds no source, LKI,
+replacement-order, payment or zone-change service.
+
+RON accepts only bare `IsAfterCombat` in existing nonmodal instant/sorcery
+`CastEffect(CantBeCastUnless(condition))/1` restrictions, including nonempty
+nested `And` condition lists without `IsDuringCombat`. A simultaneous
+`IsDuringCombat` restriction needs a separate current-combat contract and rejects.
+Existing permanent, modal and action-context rejections remain. Shared casting gates check before choices and payment; spell
+copies and resolution do not repeat the check.
+
+Evidence: `TestAfterCombatHistory`, `TestAfterCombatSkippedAndEmpty`,
+`TestRONAfterCombatTiming`, `TestRONAfterCombatInvalid`, `TestRONAfterCombatScope`,
+and the complete-record
+`TestRONDeathResultReturnGlyph` and `TestRONDeathResultReturnInstances`.
+Existing `TestCombatTiming*` and `TestSpellCastingCondition*` retain their
+window, payment-path and definition-validation contracts.

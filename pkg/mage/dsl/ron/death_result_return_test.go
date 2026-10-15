@@ -13,9 +13,6 @@ import (
 func glyphDeathResultFactory(t *testing.T) mage.CardFactory {
 	t.Helper()
 	record := hostUntapRecord(t, "LEG", "Glyph of Reincarnation")
-	rules := record.Fields["Rules"]
-	rules.Args = rules.Args[1:]
-	record.Fields["Rules"] = rules
 	factory, err := Compile(record)
 	if err != nil {
 		t.Fatal(err)
@@ -45,6 +42,7 @@ func TestRONDeathResultReturnGlyph(t *testing.T) {
 			replacement := mage.NewCreature("Replacement", "", 3, 4)
 			replacement.SetOwner(a.PlayerID())
 			a.AddToGraveyard(replacement)
+			g.SetStep(core.EndCombat)
 			g.SetStep(core.PostcombatMain)
 			if change == "last-block" {
 				g.SetActivePlayerIndex(1)
@@ -171,6 +169,7 @@ func TestRONDeathResultReturnInstances(t *testing.T) {
 		g.ExecuteBlockers([]mage.BlockAssignment{{BlockerID: walls[1-i].ID(), AttackerID: victims[i].ID()}})
 		g.GetCombat().Reset()
 	}
+	g.SetStep(core.EndCombat)
 	g.SetStep(core.PostcombatMain)
 	for i, player := range []mage.Player{a, b} {
 		spell := factory()

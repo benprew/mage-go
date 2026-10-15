@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **920 accepted / 66 rejected names**
-(986 total), **2,304 compiled / 141 rejected records** (2,445 total).
-The latest slice is **DEATH-RESULT-GRAVEYARD-RETURN**.
-RON pairs destruction with one owner-control creature-card return for each death.
-Exact death visits and local member frames retain last-block controller history.
-Shared graveyard batch entry makes all choices before simultaneous entry.
-Glyph of Reincarnation's unchanged spell body now executes; IsAfterCombat
-still blocks its complete record. Compilation coverage gains zero names/records,
-as estimated. Gameplay evidence gains its complete spell body, not full-card
-coverage. No RON source changed. Build, vet, short/full tests and lint pass.
+Latest measured result (2026-10-15): **921 accepted / 65 rejected names**
+(986 total), **2,305 compiled / 140 rejected records** (2,445 total).
+The latest slice is **POSTCOMBAT-CASTING-WINDOW**.
+RON accepts the strict IsAfterCombat casting predicate. Actual combat completion
+is separate from before-window closure; skipped phases do not complete combat.
+End-of-combat priority remains inside combat. Later combats retain the result;
+turn changes reset it and clones keep separate history. Glyph of Reincarnation's
+complete unchanged record now compiles and has full-card gameplay evidence.
+Compilation coverage gains one name / one record, as estimated.
+No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,16 +24,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Postcombat casting predicate:** Glyph of Reincarnation now has a complete
-   spell-body adapter. IsAfterCombat is the remaining compiler blocker; estimate
-   one complete name / one record. Establish actual combat completion history,
-   skipped combat and additional-combat timing before lowering the predicate.
+1. **Exact Aura guest departure/graveyard identity:** shared prerequisite for
+   Puppet Master and Takklemaggot. Estimate zero immediate full-card gains;
+   establish exact source visits and state-based departure before return adapters.
 2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
-   grants, recursive resolving copy changes and ThisAbility retention. The
-   upkeep parser is reusable; estimate zero immediate full-card gains.
-3. **Graveyard attachment prerequisites:** Compare Animate Dead's graveyard Aura
-   and departure links with Puppet Master and Takklemaggot before sizing a shared
-   attachment lifecycle slice. Complete-card gains depend on their nested rules.
+   grants, recursive resolving copy changes and ThisAbility retention. Estimate
+   zero immediate gains; eventual gain is one name / six records.
+3. **Graveyard Aura targeting/attachment:** Animate Dead still needs entry,
+   dynamic enchant and departure links after this prerequisite. Estimate zero
+   immediate full-card gains. Size one complete contract before implementation.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -18797,3 +18796,144 @@ Commit title: `feat(ron): implement death-result graveyard returns`.
    the next multi-card capability. These records were not selected or changed.
 
 This run stops after DEATH-RESULT-GRAVEYARD-RETURN.
+
+## 2026-10-15 — POSTCOMBAT-CASTING-WINDOW
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Baseline loader JSON reported
+2,304 compiled / 141 rejected records, with 920 accepted / 66 rejected unique
+names. Its exit 1 was expected atomic collection rejection, not a build failure.
+The latest entry's ranked candidates were evaluated first. Complete records and
+nested forms were read for Glyph of Reincarnation, Vesuvan Doppelganger, Animate
+Dead, Puppet Master and Takklemaggot. Reprints count once in this comparison.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Postcombat casting window | Glyph of Reincarnation | 1 name / 1 record | Its entire spell body already executes. A reusable actual-combat completion query closes the last dependency and serves future timing restrictions. | Small: turn history, strict adapter, timing and full-record regression tests |
+| Copiable ability grants | Vesuvan Doppelganger | 0 from the grant prerequisite; 1 name / 6 records after dependent work | Needs recursive resolving copy changes and ThisAbility retention in addition to entry grants. Copy-grant support is reusable, but this is one distinct affected card. | Medium/large: layer-1 grants, recursion and ability-instance identity |
+| Graveyard attachment/lifecycle prerequisites | Animate Dead, Puppet Master, Takklemaggot | 0 from one prerequisite alone | Animate Dead needs a graveyard Aura target/attachment and return/entry/departure links. Puppet Master needs a required exact graveyard-to-hand payment before its optional guest return. Takklemaggot needs a required legal-enchant choice, guest return/entry operations and saved dead-controller grants. Guest departure identity can serve the latter two; there is no single shared adapter that completes these records. | Large across the complete records; separate cross-zone identity, payment and entry contracts must be sized first |
+
+POSTCOMBAT-CASTING-WINDOW was selected for its one credible complete-card gain
+at small effort. The proposed copy prerequisite has no multi-card gain, and the
+three-card attachment family requires different supported shapes with further
+cross-zone dependencies. A single-card timing completion is the smallest fully
+ready capability from the comparison. This choice does not claim that the whole
+attachment family is one implementable slice.
+
+### Contract, ownership and requirements
+
+The exact supported declaration is the strict symbol `IsAfterCombat/0` inside
+`CastEffect(CantBeCastUnless(condition))/1` on the existing nonmodal
+instant/sorcery path. Nonempty nested `And` lists can combine it with supported
+turn conditions. Callable symbols, invalid contexts and conjunctions containing
+`IsDuringCombat` reject. The latter require a separate current-combat contract;
+this slice does not infer one from first-combat history.
+
+The native signatures are `AfterFirstCombat() StateCondition` and
+`TurnReader.CombatHasEnded() bool`, implemented by `(*Game).CombatHasEnded`.
+TurnSystem's value-only combat history now retains actual completion separately
+from first-window closure. EndCombat completion is recorded after priority;
+departure from an actual combat step also records the boundary for direct
+SetStep callers, including a skipped end step. A postcombat enum alone cannot
+supply completion. A wholly skipped combat supplies none. Empty combat completes
+at its end, and a later actual combat can complete after a skipped phase. Once
+true, the result stays true through later combats and phases in the same turn.
+SetTurn and IncrementTurn clear it. Existing value cloning supplies isolation,
+and the existing step-turn identity prevents inheritance from the prior turn.
+
+RON owns spelling, arity, context and lowering. The engine owns history and the
+pure query. Existing WithCastingCondition gates supply all casting paths,
+pre-choice/pre-payment rejection and no repeat checks for stack copies or
+resolution. Existing death-result, historical-controller, target and collective
+entry services supply the spell body. No new source binding, LKI, payment,
+replacement-ordering or simultaneous-operation contract is introduced.
+No fallback, card-name branch, global action slot or partial registry was added.
+
+Both complete local ruling files for Glyph and its Wall of Wood fixture were
+read. Glyph has two wotc rulings; Wall has an explicit empty array. The fetchset
+checks passed for both names. Glyph's local LEG Oracle text confirms the timing,
+destruction, no-regeneration and owner-control return instructions. Relevant
+rules are CR 500.2, 500.11, 505.1a, 506.7c–g, 511.1–3 and 614.10. The vocabulary
+snapshot has one IsAfterCombat occurrence, in LEG:104. No source defect was
+found. No RON changed, so no vocabulary refresh was needed. The implement-engine
+skill supplied the native-contract workflow. Removal and cutover gates remain
+closed; no Go card definition, generator or DSL export was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed to compile because AfterFirstCombat and CombatHasEnded
+did not exist. The RON timing test and the upgraded Glyph body tests then failed
+at the unsupported IsAfterCombat node before production implementation.
+The existing Glyph helper now compiles the complete unmodified record, instead
+of deleting CastEffect. Fixtures establish actual combat departure before casts.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Actual combat completion | TestAfterCombatHistory | Every first-combat step, actual end-step priority callbacks, native completion, independent clone, additional combats, repeated cleanup, both turn-reset paths and valid definitions |
+| Skips and empty combat | TestAfterCombatSkippedAndEmpty | Build-time and execution-time full skips, no completion from empty attackers, end-step priority, extra actual combat after skip, departure when the end step is skipped |
+| Glyph of Reincarnation full LEG:104 | TestRONAfterCombatTiming | Both players, first and later combat timing, direct postcombat without history, pure cast queries, rejected-cast hand/mana/stack preservation, copies and pending clones resolving after turn reset |
+| Glyph declaration boundary | TestRONAfterCombatInvalid, TestRONAfterCombatScope | Strict symbols, nested turn conjunctions, current-combat conjunction rejection in either order, permanent/modal/action-context rejection |
+| Glyph complete gameplay | TestRONDeathResultReturnGlyph, TestRONDeathResultReturnInstances | Unchanged complete record; multiple deaths, historical versus current and last-block control, owner entry, no regeneration, phasing, returned visits, indestructibility, exile/replaced destinations, illegal/returned Wall, copies, clones and separate factories |
+| Glyph target domain | TestRONTargetSubtypeDomainRecords | Complete-record Wall domain proof, immutable metadata and independent factories |
+| Shared services | TestCombatTiming*, TestSpellCastingCondition*, full engine suite | Existing before windows, skips, casting paths, transactional rejection and copy behavior remain |
+
+The first engine-short run exposed seven stale migration assertions: three
+expected Glyph to remain incomplete; four expected 2,304/141 collection counts.
+They were updated to positive complete-record/domain checks and exact 2,305/140
+counts. Invalid-declaration tests remain intact. Inventory now explicitly rejects
+any regression diagnostic for Glyph. The short suite then passed.
+
+### Validation and collection result
+
+- Baseline build, RON short tests and loader: passed / expected collection exit 1.
+- `go run ./cmd/fetchset -check -card "Glyph of Reincarnation"` and the same
+  check for `"Wall of Wood"`: pass.
+- `go test ./pkg/mage/dsl/ron -run '^TestRONAfterCombat|^TestRONDeathResultReturn|^TestRONCastingWindow|^TestRONCombatTiming' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestAfterCombat|^TestCombatTiming|^TestSpellCastingCondition' -count=1`: pass.
+- Focused regression command covering all seven updated migration assertions:
+  pass. `make build` and `go vet ./...`: pass after those updates.
+- `go test ./pkg/mage/... -short -count=1`: pass after the stale assertions were
+  corrected. `make test`: pass for the full repository.
+- `make lint`: pass, 0 issues. Its automatic passes introduced no additional
+  changes; the final diff was reviewed. `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: valid JSON and expected exit 1 from
+  atomic collection rejection. **921 accepted / 65 rejected unique names**,
+  **2,305 compiled / 140 rejected records** out of 2,445. A parsed comparison
+  proves every remaining diagnostic is exactly equal to baseline; only Glyph's
+  IsAfterCombat diagnostic disappeared. No accepted record regressed.
+
+Actual gain is **one complete name / one record**, matching the estimate.
+Full-card RON gameplay evidence now covers Glyph's unchanged complete record.
+The remaining 65 names / 140 records still block complete loading. There is no
+validation or environment blocker. Full collection gameplay, runtime cutover,
+embedded startup, Go-card/generator removal and DSL cleanup remain incomplete.
+
+Changed files: pkg/mage/combat_timing.go, turn_system.go, game_mutator.go,
+after_combat_test.go and doc.go; pkg/mage/dsl/ron/casting_window.go,
+after_combat_test.go, casting_window_test.go, death_result_return_test.go,
+block_history_test.go, chosen_graveyard_return_test.go,
+target_subtype_domain_test.go, definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. Only these slice files are staged. The commit uses signing
+disabled for this invocation, following the preceding entry's evidence that the
+configured signing key requires an interactive prompt; repository configuration
+is unchanged. Commit title: `feat(ron): implement postcombat casting windows`.
+
+### Ranked next candidates
+
+1. Exact Aura guest departure/graveyard identity for Puppet Master and
+   Takklemaggot. Estimate zero immediate complete gains from this shared
+   prerequisite; concrete downstream benefit is both guest return procedures.
+   Size the exact source visit, state-based departure and queued-trigger capture
+   contract before implementing return/payment adapters.
+2. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero immediate
+   complete gains until recursive resolving copies and ThisAbility retention
+   execute; eventual full-card gain is one name / six records.
+3. Graveyard Aura target/attachment for Animate Dead. Estimate zero immediate
+   gains until its intervening-if entry, return links, dynamic enchant rule and
+   departure sacrifice execute. Do not combine the whole lifecycle into one
+   unbounded slice.
+
+This run stops after POSTCOMBAT-CASTING-WINDOW.

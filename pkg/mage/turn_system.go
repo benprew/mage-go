@@ -302,6 +302,7 @@ func (ts *TurnSystem) finishStep(step PhaseStep) {
 		ts.combatTiming.firstEnded = true
 	}
 	if ts.stepTurn == ts.turn && step == EndCombat {
+		ts.combatTiming.completed = true
 		ts.combatTiming.closeWindows()
 		ts.combatTiming.firstEnded = true
 	}

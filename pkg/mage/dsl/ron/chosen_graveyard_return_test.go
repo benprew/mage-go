@@ -102,8 +102,8 @@ func TestRONChosenGraveyardReturnInvalidAndNative(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Glyph of Reincarnation"} {
-		if _, err := Compile(hostUntapRecord(t, "LEG", name)); err == nil {
-			t.Fatal("published incomplete record", name)
+		if _, err := Compile(hostUntapRecord(t, "LEG", name)); err != nil {
+			t.Fatal("complete Glyph record rejected", err)
 		}
 	}
 	files := fstest.MapFS{"valid.ron": {Data: []byte(`Card(Name:"Return",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(ActionList([` + valid + `]))])`)}}

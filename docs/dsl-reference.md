@@ -4520,7 +4520,20 @@ Combat conditions also support bare `IsDuringCombat`, `IsBeforeAttackersDeclared
 The before conditions use the first combat of the turn. A nonempty nested `And`
 that includes `IsDuringCombat` uses the current combat for its before conditions,
 regardless of operand order. This permits the window in an extra combat phase
-(CR 506.7c/d). `IsAfterCombat` remains unsupported.
+(CR 506.7c/d). The strict `IsAfterCombat` symbol lowers to
+`AfterFirstCombat() StateCondition`. It requires actual combat completion in this
+turn. End-of-combat priority is still inside combat. A fully skipped phase does
+not satisfy it. Once a combat ends, later combats and phases retain the result.
+Turn changes reset it. A direct jump to a postcombat step without combat history
+does not supply completion. The condition grants no casting permission.
+`TestRONAfterCombatTiming` covers both players, rejected-cast resources,
+stack copies, pending clones and resolution after the turn changes.
+`TestRONAfterCombatInvalid` rejects tuple spellings and combinations with
+`IsDuringCombat`; those need a separate current-combat contract.
+`TestRONAfterCombatScope` covers nested turn conjunctions and invalid contexts.
+The complete, unchanged Glyph record now runs in `TestRONDeathResultReturnGlyph` and `Instances`, including
+historical controllers, owner entry, regeneration exclusion, phasing, return,
+replacement destinations, target legality and independent factory bindings.
 Skipped blockers/damage close their windows when the attackers step ends;
 a skipped combat phase closes them when the precombat main phase ends.
 First-strike damage closes the combat-damage window. Tuple forms remain errors.
@@ -7662,12 +7675,10 @@ must still be live and phased in. Invalid arity, unbound references, player
 references and cross-rule reads are declaration errors. Inventory gives the
 operand a permanent-reference role even below unsupported delayed actions.
 
-After-combat casting remains a separate gap. The death-result graveyard-return
-shape and last-block expression are documented below. The
-engine's typed `ControllerWhenLastBlockedThisTurn` supplies the controller
-history prerequisite. Glyph of Reincarnation still rejects;
-Glyph of Doom uses the bounded schedule described below. Tests
-of extracted clauses do not claim complete gameplay coverage for those cards.
+The death-result graveyard-return shape and last-block expression are documented
+below. The engine's typed `ControllerWhenLastBlockedThisTurn` supplies the
+controller history. Glyph of Reincarnation now uses its complete record with
+`IsAfterCombat`; Glyph of Doom uses the bounded schedule described below.
 
 ## RON resolving collection attack rules
 
@@ -17205,6 +17216,7 @@ precedes all choices, and all choices precede entry. Failed entry does not cause
 another selection. Return, copies and clones cannot substitute another visit.
 The last-block player adapter reuses `ControllerWhenLastBlockedThisTurn`.
 
-Glyph of Reincarnation's unchanged spell body has gameplay evidence. Its complete
-record still rejects `IsAfterCombat`; this slice does not establish full-card
-coverage. No RON source or Go card definition changes.
+Glyph of Reincarnation's complete unchanged record has gameplay evidence in
+`TestRONDeathResultReturnGlyph` and `Instances`. Its casting predicate uses the
+actual combat completion contract described above. No RON source or Go card
+definition changed.

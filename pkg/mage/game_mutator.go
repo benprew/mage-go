@@ -45,6 +45,7 @@ type ResolutionReader interface {
 // TurnReader provides read-only queries for turn and active player progression.
 type TurnReader interface {
 	CombatWindowOpen(PhaseStep, bool) bool
+	CombatHasEnded() bool
 	UpkeepHasEnded() bool
 	GetStep() PhaseStep
 	CurrentTurn() int

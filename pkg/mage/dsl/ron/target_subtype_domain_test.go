@@ -70,6 +70,7 @@ func TestRONTargetSubtypeDomainRecords(t *testing.T) {
 		{"LEG", "Glyph of Delusion", "Wall"},
 		{"LEG", "Glyph of Doom", "Wall"},
 		{"LEG", "Glyph of Life", "Wall"},
+		{"LEG", "Glyph of Reincarnation", "Wall"},
 		{"DRK", "Goblin Digging Team", "Wall"},
 		{"DRK", "Goblin Wizard", "Goblin"},
 		{"FEM", "Icatian Lieutenant", "Soldier"},
@@ -110,11 +111,6 @@ func TestRONTargetSubtypeDomainRecords(t *testing.T) {
 				t.Fatal("missing domain")
 			}
 		})
-	}
-	for _, name := range []string{"Glyph of Reincarnation"} {
-		if _, err := Compile(staticBaseRecord(t, "LEG", name)); err == nil {
-			t.Fatalf("published incomplete %s", name)
-		}
 	}
 }
 

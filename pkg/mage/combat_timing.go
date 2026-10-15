@@ -6,9 +6,13 @@ type combatTimingHistory struct {
 	firstProgress   PhaseStep
 	currentProgress PhaseStep
 	firstEnded      bool
+	completed       bool
 }
 
 func (h *combatTimingHistory) enter(previous, next PhaseStep) {
+	if previous >= BeginCombat && previous <= EndCombat && (next < BeginCombat || next > EndCombat || (previous == EndCombat && next != EndCombat)) {
+		h.completed = true
+	}
 	if previous == EndCombat && next != EndCombat {
 		h.closeWindows()
 		h.firstEnded = true
@@ -67,3 +71,18 @@ func (g *Game) CombatWindowOpen(point PhaseStep, during bool) bool {
 	}
 	return !h.firstEnded && h.firstProgress < point
 }
+
+type afterFirstCombatCondition struct{}
+
+// AfterFirstCombat requires an actual combat phase to end in this turn.
+func AfterFirstCombat() StateCondition            { return afterFirstCombatCondition{} }
+func (afterFirstCombatCondition) stateCondition() {}
+func (afterFirstCombatCondition) checkState(g GameReader, _ StateContext) bool {
+	return g.CombatHasEnded()
+}
+func (afterFirstCombatCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "after the first combat"}
+}
+
+// CombatHasEnded reports actual combat completion without changing state.
+func (g *Game) CombatHasEnded() bool { return g.turns.combatTiming.completed }

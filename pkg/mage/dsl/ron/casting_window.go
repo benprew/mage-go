@@ -93,6 +93,11 @@ func compileCastingConditionInCombat(n Node, during bool) (mage.StateCondition, 
 		return mage.IsDuringSteps(core.DeclareAttackers), nil
 	case "IsDuringDeclareBlockersStep":
 		return mage.IsDuringSteps(core.DeclareBlockers), nil
+	case "IsAfterCombat":
+		if during {
+			return nil, unsupported(n, "after-combat restriction during combat")
+		}
+		return mage.AfterFirstCombat(), nil
 	case "IsAfterUpkeep":
 		return mage.AfterFirstUpkeep(), nil
 	default:

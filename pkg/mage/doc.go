@@ -11,7 +11,7 @@
 // RON pairs destruction with ActionForEachPermanentThatDiedThisWay and one
 // creature-card return under its owner's control. The last-block controller
 // expression reads EachablePermanent and one bound blocker in that body.
-// Other loop bodies reject. Glyph of Reincarnation still needs IsAfterCombat.
+// Other loop bodies reject. Glyph of Reincarnation uses its complete record.
 //
 // [PermanentDies] with SourceOnly matches the source's move to a graveyard.
 // It permits noncreatures and retains departure owner and controller bindings.
@@ -2690,6 +2690,11 @@
 // and payment. Conditions read the caster. [IsDuringSteps] reads the current
 // step through [TurnReader]. [AfterFirstUpkeep] permits later upkeeps after
 // the first upkeep ends. A restriction does not grant casting permission.
+// [AfterFirstCombat] requires actual combat completion in this turn.
+// [Game.CombatHasEnded] supplies the pure history query. End-of-combat priority
+// is still in combat. A skipped phase does not complete combat. Later combats
+// keep the result. Turn changes reset it; clones keep separate history.
+// RON accepts the strict IsAfterCombat symbol in spell casting restrictions.
 // Use [BeforeCombatStep] for attackers, blockers, or combat damage boundaries.
 // A first-combat window stays closed during later combats. Set during to true
 // for a window in each combat phase.

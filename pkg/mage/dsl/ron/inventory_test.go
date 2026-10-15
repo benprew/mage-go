@@ -95,10 +95,13 @@ func TestInventoryRepositoryCollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Records != 2445 || report.UniqueCards != 986 || report.Compiled != 2304 || len(report.Issues) != 141 {
+	if report.Records != 2445 || report.UniqueCards != 986 || report.Compiled != 2305 || len(report.Issues) != 140 {
 		t.Fatalf("collection counts: %d/%d/%d/%d", report.Records, report.UniqueCards, report.Compiled, len(report.Issues))
 	}
 	for _, issue := range report.Issues {
+		if issue.Card == "Glyph of Reincarnation" {
+			t.Fatalf("supported postcombat card rejected: %v", issue)
+		}
 		if issue.Card == "Bronze Horse" {
 			t.Fatalf("supported targeted spell prevention rejected: %v", issue)
 		}
@@ -223,7 +226,7 @@ func TestInventoryLeavesRealRONGameplayAndRegistryUnchanged(t *testing.T) {
 	old := mage.DefaultRegistry
 	bolt := repositoryCard(t, "LEB", "Lightning Bolt")
 	report, err := InspectFS(os.DirFS("../../../../cards/mtgish"), "*.ron")
-	if err != nil || report.Compiled != 2304 {
+	if err != nil || report.Compiled != 2305 {
 		t.Fatalf("inspection: %v", err)
 	}
 	if mage.DefaultRegistry != old {

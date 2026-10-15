@@ -117,8 +117,8 @@ func TestRONBlockHistoryInvalid(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Glyph of Reincarnation"} {
-		if _, err := Compile(hostUntapRecord(t, "LEG", name)); err == nil {
-			t.Fatal("prerequisite published incomplete card", name)
+		if _, err := Compile(hostUntapRecord(t, "LEG", name)); err != nil {
+			t.Fatal("complete Glyph record rejected", err)
 		}
 	}
 }
