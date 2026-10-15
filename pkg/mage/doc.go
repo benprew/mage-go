@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AttachedPermanentDies] accepts WithDepartedAuraCard with a typed card binding.
+// The exact Aura and host visits supply the capture. A simultaneous graveyard
+// move or an orphan-Aura state action supplies its first graveyard visit.
+// Other departures cannot supply it. Return cannot replace the saved visit.
+// Pending clones keep separate captures. Stack copies retain the saved card.
+// RON accepts ReturnDeadGuestGraveyardCardToHand in resolving Aura host-death
+// bodies. Shared card movement returns it to its owner's hand. This supplies a
+// prerequisite for Puppet Master and Takklemaggot; complete records still reject.
+//
 // [CreatureDeathsInto] saves exact creature visits from one destruction batch.
 // Regeneration, indestructibility, phasing and other destinations exclude visits.
 // Tokens that die count. Return cannot change the saved visit.

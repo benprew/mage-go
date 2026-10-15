@@ -1,5 +1,35 @@
 # Engine rules contracts
 
+## Aura graveyard visits after host death
+
+`AttachedPermanentDies().WithDepartedAuraCard(card *CardBinding)` produces a
+saved card binding under CR 400.7f. `AttachedCreatureDies` can use the same
+capture. The binding must be non-nil, occur once, and differ from `WithCard`.
+Other death patterns reject this option. The source must be an Aura at detection.
+
+The exact Aura and host battlefield visits are saved before trigger placement.
+A simultaneous zone batch fills the binding from the Aura's first graveyard
+visit. The orphan-Aura state action can instead fill it when the original host
+is absent. Host return cannot restore an attachment to an old visit. An ordinary
+later destruction, another host's departure, exile, or a hand move cannot fill
+this binding. Graveyard departure and return invalidate the saved card. Tokens
+supply no returnable card. Capture does not move the card or make a choice.
+Phasing and ability removal use normal trigger detection. Pending clones keep
+separate captures; stack copies and clones keep the same saved visit.
+
+RON accepts the strict symbol `ReturnDeadGuestGraveyardCardToHand/0` in an
+ordinary resolving Aura host-death body. It lowers to `ReturnCardToHand` using
+that binding. Existing owner-zone movement applies. Other event, entry and
+replacement contexts reject. Puppet Master's exact return clause and both
+cards' host-death event declarations have fragment gameplay evidence in
+`TestRONDepartedAuraCardRecordPrerequisites`. Puppet Master and Takklemaggot
+remain unsupported as complete records. Their payment and battlefield-return
+procedures require separate slices. No production partial record is installed.
+
+Evidence: `TestDepartedAuraCard`, `TestDepartedAuraCardInvalid`,
+`TestRONDepartedAuraCard`, and `TestRONDepartedAuraCardInvalid`.
+Rules: CR 400.7, 400.7f, 603.3, 603.10 and 704.5m.
+
 ## Paid tap history for resolving collections
 
 `TappedForAbilitiesThisTurn(source PermanentRef) PermanentSet` selects present,

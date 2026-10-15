@@ -16,8 +16,7 @@ func TestCurseArtifact(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Curse Artifact")
 		permA := g.FindPermanentByName("Curse Artifact", g.GetPlayer(gametest.PlayerA).PlayerID())
 		permB := g.FindPermanentByName("Black Vise", g.GetPlayer(gametest.PlayerB).PlayerID())
-		permA.AttachedTo = permB.ID()
-		permB.Attachments = append(permB.Attachments, permA.ID())
+		g.Attach(permA.ID(), permB.ID())
 
 		// Turn 2 is Player B's upkeep. Player B chooses not to sacrifice Black Vise.
 		g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(false)
@@ -34,8 +33,7 @@ func TestCurseArtifact(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Curse Artifact")
 		permA := g.FindPermanentByName("Curse Artifact", g.GetPlayer(gametest.PlayerA).PlayerID())
 		permB := g.FindPermanentByName("Black Vise", g.GetPlayer(gametest.PlayerB).PlayerID())
-		permA.AttachedTo = permB.ID()
-		permB.Attachments = append(permB.Attachments, permA.ID())
+		g.Attach(permA.ID(), permB.ID())
 
 		// Turn 2 is Player B's upkeep. Player B chooses to sacrifice Black Vise.
 		g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(true)
@@ -160,8 +158,7 @@ func TestGoblinCaves(t *testing.T) {
 
 	permA := g.FindPermanentByName("Goblin Caves", g.GetPlayer(gametest.PlayerA).PlayerID())
 	permM := g.FindPermanentByName("Mountain", g.GetPlayer(gametest.PlayerA).PlayerID())
-	permA.AttachedTo = permM.ID()
-	permM.Attachments = append(permM.Attachments, permA.ID())
+	g.Attach(permA.ID(), permM.ID())
 
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
@@ -179,8 +176,7 @@ func TestGoblinShrine(t *testing.T) {
 
 		permA := g.FindPermanentByName("Goblin Shrine", g.GetPlayer(gametest.PlayerA).PlayerID())
 		permM := g.FindPermanentByName("Mountain", g.GetPlayer(gametest.PlayerA).PlayerID())
-		permA.AttachedTo = permM.ID()
-		permM.Attachments = append(permM.Attachments, permA.ID())
+		g.Attach(permA.ID(), permM.ID())
 
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
@@ -199,8 +195,7 @@ func TestGoblinShrine(t *testing.T) {
 
 		permA := g.FindPermanentByName("Goblin Shrine", g.GetPlayer(gametest.PlayerA).PlayerID())
 		permM := g.FindPermanentByName("Mountain", g.GetPlayer(gametest.PlayerA).PlayerID())
-		permA.AttachedTo = permM.ID()
-		permM.Attachments = append(permM.Attachments, permA.ID())
+		g.Attach(permA.ID(), permM.ID())
 
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Disenchant", "Goblin Shrine")
 		g.StopAt(1, core.PostcombatMain)

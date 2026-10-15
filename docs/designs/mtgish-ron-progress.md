@@ -8,13 +8,13 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **921 accepted / 65 rejected names**
 (986 total), **2,305 compiled / 140 rejected records** (2,445 total).
-The latest slice is **POSTCOMBAT-CASTING-WINDOW**.
-RON accepts the strict IsAfterCombat casting predicate. Actual combat completion
-is separate from before-window closure; skipped phases do not complete combat.
-End-of-combat priority remains inside combat. Later combats retain the result;
-turn changes reset it and clones keep separate history. Glyph of Reincarnation's
-complete unchanged record now compiles and has full-card gameplay evidence.
-Compilation coverage gains one name / one record, as estimated.
+The latest slice is **DEPARTED-AURA-GRAVEYARD-VISIT**.
+RON lowers ReturnDeadGuestGraveyardCardToHand in resolving Aura host-death
+bodies. Native event capture saves the exact Aura graveyard visit after a
+simultaneous departure or an orphan-Aura state action (CR 400.7f). Returned
+hosts cannot restore old attachments. Copies and clones keep saved visits.
+Puppet Master and Takklemaggot have prerequisite fragment gameplay evidence;
+their complete records still reject. Coverage gain is zero, as estimated.
 No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -24,15 +24,18 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Exact Aura guest departure/graveyard identity:** shared prerequisite for
-   Puppet Master and Takklemaggot. Estimate zero immediate full-card gains;
-   establish exact source visits and state-based departure before return adapters.
+1. **Explicit Aura entry attachment and legality:** shared service for
+   Takklemaggot and Tawnos's Coffin. Estimate zero immediate full-card gains;
+   both retain other return, choice and lifecycle blockers. Check the related
+   Animate Dead attachment path without merging all three lifecycles.
 2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
    grants, recursive resolving copy changes and ThisAbility retention. Estimate
    zero immediate gains; eventual gain is one name / six records.
-3. **Graveyard Aura targeting/attachment:** Animate Dead still needs entry,
-   dynamic enchant and departure links after this prerequisite. Estimate zero
-   immediate full-card gains. Size one complete contract before implementation.
+3. **Required graveyard-to-hand payment:** Puppet Master's first return must
+   save success before offering its optional mana payment. The Aura identity
+   prerequisite and hand-return operation are now present. Estimate one complete
+   name / one record if the existing payment branch services cover all remaining
+   requirements. Reassess this single-card completion against shared work.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -18937,3 +18940,158 @@ is unchanged. Commit title: `feat(ron): implement postcombat casting windows`.
    unbounded slice.
 
 This run stops after POSTCOMBAT-CASTING-WINDOW.
+
+## 2026-10-15 — DEPARTED-AURA-GRAVEYARD-VISIT
+
+### Selection and baseline
+
+The working tree was clean at 56f8ddc3. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. The baseline loader returned
+valid JSON and expected exit 1: 2,305 compiled / 140 rejected records and
+921 accepted / 65 rejected names. Collection rejection was not a build failure.
+
+The latest entry ranked exact Aura departure identity first. Complete Puppet
+Master and Takklemaggot LEG records, including their nested payments and return
+branches, were inspected. This prerequisite was dependency-ready and selected.
+The compared ranked alternatives were:
+
+| Capability | Distinct affected names | Estimated full-card gain | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Exact Aura departure identity, selected | Puppet Master; Takklemaggot | 0 names / 0 records | Supplies both guest return procedures; Puppet Master still needs required host-card return success and optional mana continuation; Takklemaggot needs legal choice, attached/non-Aura entry, enchant removal and a saved-player granted upkeep trigger | Small native queued-capture contract, one RON operation, identity and batch tests |
+| Copy-effect ability grants | Vesuvan Doppelganger | 0 immediately; eventual 1 name / 6 records | Copiable upkeep grants precede recursive resolving copy changes and ThisAbility retention | Larger copy-layer and recursive ability contract |
+| Graveyard Aura target/attachment | Animate Dead | 0 immediately; eventual 1 name / 6 records | Needs intervening-if entry, exact return links, dynamic enchant restriction, attachment and departure sacrifice | Larger cross-zone targeting and lifecycle contract |
+
+Reprints count once. Complete records for the latter two alternatives were also
+read. No first-error count was used as a full-card unlock estimate. The first
+candidate gives concrete benefit to two incomplete cards with a bounded contract;
+the whole Aura return family was not combined into this slice.
+
+### Contract, boundaries and requirements
+
+Native `AttachedPermanentDies().WithDepartedAuraCard(card *CardBinding)` and
+`AttachedCreatureDies().WithDepartedAuraCard(card *CardBinding)` expose the new
+capture. The binding must be non-nil, occur once, differ from the host's WithCard
+binding and use an attached death pattern. Normal declaration validation rejects
+invalid producers and unbound consumers. A non-Aura source supplies no Aura card.
+
+Detection saves exact source and host battlefield visits in an immutable pending
+capture. The shared simultaneous zone batch records destination visits before
+trigger dispatch and fills captures only for matched Aura/host deaths in that
+batch. The orphan-Aura state action can instead fill a pending capture after
+host departure. It checks attachment incarnation as well as ID. Source return,
+reattachment, an ordinary later destruction, exile and hand movement cannot
+supply an eligible visit. The existing saved-card reference rejects later
+graveyard visits. Tokens supply no returnable card. There is no new global
+last-action slot or persistent departure-history map. Pending clone capture
+slices are replaced independently; stack copies retain immutable saved facts.
+Existing callers and engine card movement remain in use.
+
+RON accepts strict `ReturnDeadGuestGraveyardCardToHand/0` in an ordinary resolving
+Aura `WhenAPermanentDies(SinglePermanent(HostPermanent))` body. The host-death plan
+requests one fresh native binding per factory only if the operation is used.
+It lowers to `ReturnCardToHand(FromCard(binding))`. Other events, callable symbols,
+entry and replacement contexts reject. RON owns spelling/context; mage owns
+trigger capture, exact visits, state actions and owner-zone movement. Takklemaggot
+can reuse the same native binding for later battlefield-return adapters.
+
+Puppet Master's complete local file has one wotc ruling. Takklemaggot's has four
+wotc rulings. Both were read in full. The latter explicitly establishes that the
+Aura goes to the graveyard as a state action after its host dies and must still
+be in that graveyard at resolution. Wall of Wood's fixture ruling file has an
+explicit empty array. `fetchset -check` passed for all three affected/test names.
+Local LEG Oracle records confirm both return procedures. Rules read: CR 400.7f,
+603.3, 603.10 and 704.5m. Vocabulary has one hand-return symbol (Puppet Master),
+one legality symbol and two battlefield-return tuples (Takklemaggot). No source
+defect was found. No RON changed; the vocabulary snapshot needs no refresh.
+The implement-engine skill supplied the native-contract workflow. No Go card,
+generator or DSL API was removed; cutover gates remain closed.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests first failed compilation because WithDepartedAuraCard did not
+exist. The corrected RON fixture then failed at the unsupported hand-return
+symbol before its adapter was restored. The first RON fixture used a helper
+without an Aura subtype and failed too early; that fixture was corrected before
+recording the expected unsupported-node failure. A host-return assertion also
+failed with the old ID-only Aura state check (`hand=0 want=1`), then passed with
+the incarnation check.
+
+| Card / contract | Test | Evidence |
+| --- | --- | --- |
+| Aura first graveyard visit | TestDepartedAuraCard | Orphan state action, both simultaneous orders, independent pending and stack clones, stack copy, owner different from controller, control changes, returned host and Aura, direct graveyard revisits, reattachment, phasing, removed abilities before/after detection, manual later death, exile, replacement-to-exile, regeneration and tokens |
+| Independent source instances | TestDepartedAuraCardInstances | Two Auras on one host; changing one graveyard visit leaves the other's saved visit intact |
+| Declaration validation | TestDepartedAuraCardInvalid | Nil, duplicate, nonattached and conflicting host/Aura card bindings reject |
+| RON supported operation | TestRONDepartedAuraCard | Synthetic complete Aura declaration is cast on an opposing creature, resolves, sees host death and returns its saved card to its owner |
+| RON scope | TestRONDepartedAuraCardInvalid | Ordinary spell context, source-death context and callable-symbol forms reject |
+| Puppet Master LEG:200 | TestRONDepartedAuraCardRecordPrerequisites/Puppet_Master | Exact nested hand-return symbol extracted from the complete record, with its original host-death event and enchant rule; unsupported payment instructions excluded only in this test fragment |
+| Takklemaggot LEG:256 | TestRONDepartedAuraCardRecordPrerequisites/Takklemaggot | Original host-death event and enchant rule with the supported hand-return probe to observe its native source binding; its actual return branches remain unsupported |
+
+The record-prerequisite test first asserts that each complete record still
+rejects. Fragments establish this capability and do not claim full-card gameplay.
+Existing Creature Bond and attached-death regressions pass. No new payment,
+replacement-order selection, target or continuous-layer rule was introduced.
+
+### Validation
+
+The first engine-short run found TestAttachmentTargetCopyController's manually
+assigned attachment ID. The first full suite found the same fixture issue in
+Curse Artifact, Goblin Caves and Goblin Shrine. Those test setups now call
+Game.Attach to save the host incarnation and maintain both attachment sides.
+All gameplay assertions remain unchanged. Their complete RON records and local
+ruling files were read, and their fetchset checks passed. No Go card behavior
+or RON source was changed for these regressions.
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONDepartedAuraCard' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestDepartedAuraCard|^TestAttachedPermanentDies' -count=1`: pass.
+- Targeted attachment-copy and Dark fixture regressions: pass after fixture setup
+  repairs; unchanged assertions.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass after fixture repair.
+- `make test`: pass for the full repository after fixture repair.
+- First lint run reported one preallocation issue in the new two-Aura test.
+  The test now allocates capacity two. Focused native/RON tests passed again
+  after that change and automatic import formatting.
+- Final `make lint`: pass, 0 issues. Automatic fixes only formatted imports in
+  new files. The final diff was reviewed. `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1. A parsed
+  comparison asserts that the complete report is identical to baseline:
+  **921 accepted / 65 rejected names**, **2,305 compiled / 140 rejected records**
+  out of 2,445. Puppet Master still reports unsupported mandatory sacrifice cost
+  (PutGraveyardCardIntoHand) at LEG:200:276; Takklemaggot still reports unsupported
+  required player payment cost (ChooseAPermanent) at LEG:256:479. No accepted
+  record or remaining diagnostic regressed.
+
+Actual gain is **zero names / zero records**, matching the estimate. Gameplay
+coverage adds the native exact Aura visit contract, a complete synthetic RON
+Aura, Puppet Master's exact return clause and both real host-death event
+fragments. Full-card gameplay coverage for the two dependents is not claimed.
+There is no remaining validation or environment blocker. Complete collection
+gameplay, atomic loading success, runtime cutover, embedded startup, Go-card and
+generator removal, and unused DSL cleanup remain incomplete.
+
+Changed files: pkg/mage/departed_aura_card.go and departed_aura_card_test.go,
+composable_events.go, composable_target_test.go, state_based_actions.go,
+zone_change_batch.go and doc.go; pkg/mage/dsl/ron/compiler.go, host_death.go and
+departed_aura_card_test.go; cards/thedark/enchantments_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+The commit title is `feat(ron): implement departed aura graveyard visits`.
+Signing is disabled for that invocation, following the prior entry's evidence
+that the configured key requires an interactive prompt. Repository signing
+configuration remains unchanged.
+
+### Ranked next candidates
+
+1. Explicit Aura entry attachment and legality for Takklemaggot and Tawnos's
+   Coffin. Estimate zero immediate gains, with concrete shared return-entry
+   benefit. Inspect Animate Dead's related attachment path separately. Keep
+   chosen exact host visits, attachment legality without targeting, and entry
+   replacement/copy behavior in the engine.
+2. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero immediate
+   gains until recursive resolving copies and ThisAbility retention execute;
+   eventual gain one name / six records.
+3. Required graveyard-to-hand payment for Puppet Master. Its exact Aura return
+   operation is now present. Estimate one name / one record if required host-card
+   return success and existing optional-mana payment continuations suffice.
+   Compare this completion with useful shared work before selecting it.
+
+This run stops after DEPARTED-AURA-GRAVEYARD-VISIT.

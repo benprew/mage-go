@@ -88,7 +88,7 @@ func (g *Game) checkStateBasedActions() bool {
 			}
 			if p.HasSubType("Aura") && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
-				if host == nil {
+				if host == nil || host.incarnationID != p.attachedIncarnation {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				} else if host.HasProtectionFromInGame(p.Card, g) {
@@ -103,7 +103,14 @@ func (g *Game) checkStateBasedActions() bool {
 		if len(aurasToDrop) > 0 {
 			g.withZoneChangeBatch(func() {
 				for _, a := range aurasToDrop {
+					aura := capturedPermanent{a.ID(), a.incarnationID}
+					host := capturedPermanent{a.AttachedTo, a.attachedIncarnation}
+					currentHost := g.FindPermanent(host.id)
+					absentHost := currentHost == nil || currentHost.incarnationID != host.incarnation
 					g.PutPermanentIntoGraveyard(a)
+					if absentHost && g.FindPermanent(aura.id) == nil {
+						g.captureDepartedAuraCard(aura, host, capturedCard{id: aura.id, visit: g.graveyardVisit(aura.id), zone: ZoneGraveyard})
+					}
 				}
 			})
 		}

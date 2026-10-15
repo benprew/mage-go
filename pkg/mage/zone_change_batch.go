@@ -25,9 +25,17 @@ func (g *Game) withZoneChangeBatch(apply func()) {
 	g.effects.Apply(g)
 	// Trigger checks need the completed death count and the former battlefield.
 	batch.before.trackers.Turn.creatureDeaths = g.trackers.Turn.creatureDeaths
+	cards := make(map[capturedPermanent]capturedCard)
+	for _, evt := range batch.events {
+		if evt.Type == EvtZoneChange && evt.ToZone == ZoneGraveyard {
+			identity := capturedPermanent{evt.SourceID, evt.SourceIncarnation}
+			cards[identity] = capturedCard{id: evt.SourceID, visit: g.graveyardVisit(evt.SourceID), zone: ZoneGraveyard}
+		}
+	}
 	for _, evt := range batch.events {
 		g.fireEvent(evt, batch.before)
 	}
+	g.captureBatchAuraCards(batch.events, cards)
 	g.CheckStateTriggers()
 }
 

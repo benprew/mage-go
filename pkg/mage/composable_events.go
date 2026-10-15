@@ -452,6 +452,9 @@ func captureDetectedTriggerEvent(ability TriggeredAbility, event *GameEvent, obs
 		}); ok {
 			captures = pattern.captureDetectedEvent(event, observer, source)
 		}
+		if pattern, ok := trigger.eventDefinition.(creatureDiesPattern); ok {
+			captures = append(captures, pattern.captureAuraCard(event, observer, source)...)
+		}
 		if pattern, ok := trigger.eventDefinition.(interface {
 			captureDestinationEvent(*GameEvent, *Game) []Effect
 		}); ok {
@@ -2710,6 +2713,8 @@ func (p creatureEntersPattern) captureDetectedEvent(event *GameEvent, observer G
 }
 
 type creatureDiesPattern struct {
+	departedAura       *CardBinding
+	departedAuraCount  int
 	sourceOnly         bool
 	duplicateSource    bool
 	creatureOnly       bool
@@ -3076,6 +3081,13 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 		text += " after damage by this source this turn"
 	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
+	if p.departedAuraCount > 0 {
+		n.bindingWrites = append(n.bindingWrites, p.departedAura)
+		n.children = append(n.children, definitionEdge{"departed Aura", &eventCardCapture{binding: p.departedAura}})
+		if p.departedAuraCount != 1 || p.departedAura == nil || p.departedAura == p.card || !p.attachedOnly {
+			n.problem = "death event: supply one departed Aura card binding on an attached pattern"
+		}
+	}
 	if p.duplicateSource || (p.sourceOnly && p.otherOnly) {
 		n.problem = "death event: supply one compatible source restriction"
 	}

@@ -1723,6 +1723,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ReturnDeadGuestGraveyardCardToHand":
+		if n.Kind != Symbol || ctx.hostDeath == nil || !ctx.aura || !ctx.resolving || ctx.drawReplacementBody {
+			return nil, unsupported(n, "departed Aura return context")
+		}
+		ctx.hostDeath.departedAura = true
+		return one(func(bindings instanceBindings) mage.Effect {
+			return mage.ReturnCardToHand(mage.FromCard(bindings.hostDeaths[ctx.hostDeath].aura))
+		})
 	case "DeadGuestPermanentDealsDamage":
 		build, err := compileDeadGuestDamage(n, ctx)
 		if err != nil {

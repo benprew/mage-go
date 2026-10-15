@@ -2,12 +2,16 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-type hostDeathPlan struct{ name string }
+type hostDeathPlan struct {
+	name         string
+	departedAura bool
+}
 
 type hostDeathBindings struct {
 	controller, owner *mage.PlayerBinding
 	toughness         *mage.NumberBinding
 	permanent         *mage.PermanentBinding
+	aura              *mage.CardBinding
 }
 
 func compileHostDeathTrigger(subject, body Node, ctx scope) (optionFactory, error) {
@@ -30,6 +34,7 @@ func compileHostDeathTrigger(subject, body Node, ctx scope) (optionFactory, erro
 			owner:      mage.BindPlayer("OwnerOfDeadPermanent"),
 			toughness:  mage.BindNumber("ToughnessOfDeadPermanent"),
 			permanent:  mage.BindPermanent(ctx.hostDeath.name),
+			aura:       mage.BindCard("departed Aura"),
 		}
 		card := mage.BindCard(ctx.deathCard.name)
 		actions := plan.buildWithBindings(instanceBindings{
@@ -38,6 +43,9 @@ func compileHostDeathTrigger(subject, body Node, ctx scope) (optionFactory, erro
 		})
 		pattern := mage.AttachedPermanentDies().WithController(death.controller).WithOwner(death.owner).
 			WithToughness(death.toughness).WithPermanent(death.permanent).WithCard(card)
+		if ctx.hostDeath.departedAura {
+			pattern = pattern.WithDepartedAuraCard(death.aura)
+		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))

@@ -428,7 +428,7 @@ func TestAttachmentTargetCopyController(t *testing.T) {
 		host := g.PutOnBattlefield(NewCreature("Host", "", 2, 2), player)
 		aura := NewAura("Aura", "")
 		aura.SetOwner(player)
-		g.PutOnBattlefield(aura, player).AttachedTo = host.ID()
+		g.Attach(g.PutOnBattlefield(aura, player).ID(), host.ID())
 		targets = append(targets, aura.ID())
 	}
 	target := DeclarePermanentTarget("aura", And(IsEnchantment, HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())
