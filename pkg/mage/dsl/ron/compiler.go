@@ -2046,6 +2046,22 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "SacrificePermanent" {
+		if !ctx.resolving || ctx.drawReplacementBody {
+			return nil, problem(n, "explicit-player sacrifice requires an ordinary resolving body")
+		}
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		subject, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.SacrificeFor(ctx.player.build(bindings), subject.build(bindings))
+		}}, nil
+	}
+
 	if n.Name == "LoseTheGame" {
 		if n.Kind != Symbol {
 			return nil, problem(n, "LoseTheGame requires a symbol")

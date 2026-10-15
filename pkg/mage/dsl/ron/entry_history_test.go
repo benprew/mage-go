@@ -14,8 +14,8 @@ func TestRONEntryHistoryAnimateDead(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			record := chosenDiscardRecord(t, set, "Animate Dead")
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete full record accepted")
+			if _, err := Compile(record); err != nil {
+				t.Fatal("complete full record rejected", err)
 			}
 			grant := record.Fields["Rules"].Args[1].Args[2].Args[0].Args[0]
 			filter := grant.Args[1].Args[1].Args[0].Args[0].Args[0]

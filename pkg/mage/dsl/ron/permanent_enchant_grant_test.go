@@ -12,8 +12,8 @@ func TestRONPermanentEnchantGrantAnimateDead(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			record := chosenDiscardRecord(t, set, "Animate Dead")
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete full record accepted")
+			if _, err := Compile(record); err != nil {
+				t.Fatal("complete full record rejected", err)
 			}
 			rules := record.Fields["Rules"]
 			body := rules.Args[1].Args[2]

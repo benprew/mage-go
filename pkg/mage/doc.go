@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SacrificeFor] instructs a typed player to sacrifice one exact permanent.
+// That player must control the present, unphased visit at resolution.
+// [Sacrifice] keeps its saved ability controller. Both use shared sacrifice
+// preparation, replacements and events. Waiting queries do not resolve operands.
+// RON accepts PlayerAction(playerRef, SacrificePermanent(permanentRef)) in
+// resolving bodies, including delayed source departure. Animate Dead reads
+// its saved entrant's current controller. Aura control does not select that
+// player. All six source records use the corrected creature-controller read.
+//
 // [AttachToPermanent] attaches one exact permanent to one exact host.
 // The shared attachment service checks enchant limits and protection, updates
 // both links and timestamps, and applies layers. Shroud and hexproof permit

@@ -6,35 +6,34 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **925 accepted / 61 rejected names**
-(986 total), **2,313 compiled / 132 rejected records** (2,445 total).
-The latest slice is **EXACT-ENTRY-RESULT-ATTACHMENT**.
-RON lowers `AttachPermanentToPermanent(attachmentRef, hostRef)` in resolving
-bodies, including source entry triggers. Singular graveyard returns in that
-context now supply an exact local entrant. Mage supplies mandatory attachment
-through shared legality, links, layers, timestamps and events. Stale visits,
-phasing and illegal hosts cannot move the attachment. Failed entry cannot reuse
-an earlier result. Copies, delayed references and clones keep separate frames.
-All six Animate Dead records have combined grant, return, attachment and host
-P/T clause evidence. Full-card compiler and gameplay gains are zero, as estimated.
-The delayed departure-controller capture remains unsupported. No RON changed.
-The collection still rejects atomically; runtime cutover, Go-card removal and
+Latest measured result (2026-10-15): **926 accepted / 60 rejected names**
+(986 total), **2,319 compiled / 126 rejected records** (2,445 total).
+The latest slice is **EXPLICIT-PLAYER-EXACT-SACRIFICE**.
+RON lowers `PlayerAction(playerRef, SacrificePermanent(permanentRef))` in
+ordinary resolving bodies, including delayed source departure. Mage supplies
+`SacrificeFor` through shared exact-visit sacrifice, replacements and events.
+The selected player must control the present, unphased visit at resolution.
+All six Animate Dead records now read the returned creature's current controller,
+correcting the departing-Aura controller source defect. Complete-record gameplay
+covers all clauses together, control timing, protection, exact identity, phasing,
+copies and clones. Full-card compiler and gameplay gains are one unique name /
+six records, as estimated. All required checks pass; no accepted record regressed.
+The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Exact entry-result attachment:** Animate Dead needs an exact local entrant
-   result for its graveyard return and `AttachPermanentToPermanent`. Existing
-   entry-result and attachment services are prerequisites. Zero immediate
-   gains until departure-player capture; eventual one name / six records.
-2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
-   recursive resolving copies and ThisAbility retention. One prerequisite
+1. **Copiable upkeep grants:** Vesuvan Doppelganger needs copiable upkeep grants,
+   recursive resolving copies and ThisAbility retention. A prerequisite slice
    estimates zero immediate gains, eventual one name / six records.
-3. **Counter-removal event:** Divine Intervention needs an actual attributed
+2. **Counter-removal event:** Divine Intervention needs an actual attributed
    last-counter removal event with its player binding, plus DrawTheGame.
    One eventual name / one record; retain attribution and payment isolation.
+3. **Shared player choices:** Reassess nested PlayerMayAction forms, including
+   Kudzu. Complete-record and downstream-blocker evidence is required before
+   estimating unlocks or selecting the supported shape.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -21882,3 +21881,168 @@ Changed files: `pkg/mage/exact_attachment.go`, `exact_attachment_test.go` and
 `compiler.go`, `permanent_scope.go` and `returned_permanent.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 This run stops after EXACT-ENTRY-RESULT-ATTACHMENT.
+
+## 2026-10-15 — EXPLICIT-PLAYER-EXACT-SACRIFICE
+
+### Baseline, comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loading exited 1 with
+2,313 compiled / 132 rejected records and 925 accepted / 61 rejected unique
+names. This was collection rejection, not a build or test failure.
+
+The latest entry's first candidate was evaluated first. Complete RON records
+and all local rulings were read for the three comparison names. Reprints count
+once. Nested forms, rather than first diagnostic counts, establish these estimates:
+
+| Candidate | Distinct cards / records | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Departure-controller capture, corrected to explicit-player exact sacrifice | Animate Dead / six | One name / six records | Prior slices already supply graveyard enchant, presence, lasting grant, linked return, exact attachment, host P/T and one-shot leave frames. The proposed departing-Aura controller is a source defect; the creature's resolution-time controller is required. A shared player operand completes delayed sacrifice. | Small implementation; medium gameplay matrix |
+| Copiable upkeep grant | Vesuvan Doppelganger / six | Zero immediately; eventual one / six | Complete nested record also needs ThisAbility retention and recursive resolving copies. Enables copiable acquired upkeep abilities. | Medium implementation; large recursive copy matrix |
+| Attributed actual last-counter removal | Divine Intervention / one | Zero immediately; eventual one / one | Complete record also needs DrawTheGame. Enables player-attributed actual removal facts across resolving effects and payments. | Medium engine work and payment-isolation tests |
+
+Select the corrected first candidate. It is dependency-ready and completes the
+previous shared Aura/entry prerequisites. No compared alternative provides a
+larger immediate unique-card gain. The implementation adds no departure-player
+capture: that would execute the wrong rule for this source record.
+
+### Source defect and rules evidence
+
+All six Animate Dead records used:
+
+```ron
+PlayerAction(ControllerOfLeavingPermanent,
+    SacrificePermanent(ThePermanentPutOnTheBattlefieldThisWay))
+```
+
+Local `data/LEA.json` Oracle text says, "that creature's controller sacrifices
+it." The WotC ruling dated 2016-06-08 confirms that even failed attachment due
+to protection causes Aura state departure and delayed sacrifice of the returned
+creature. CR 303.4e separates Aura control from host control; CR 701.21a requires
+the sacrificing player to control the permanent. CR 603.7a-e, 400.7 and 608.2
+supply delayed timing, exact identities and resolution-time reads. These local
+rulings are WotC rulings, not Scryfall notes. No missing rulings were assumed.
+`go run ./cmd/fetchset -check -card "Animate Dead"` passed before implementation.
+
+The six identical records now use
+`ControllerOfPermanent(ThePermanentPutOnTheBattlefieldThisWay)` instead of the
+unbound departure-player symbol. This reads the creature's controller when the
+body resolves, including changes after the Aura leaves. No other RON record
+changed. The vocabulary snapshot was refreshed from a full parser AST walk:
+604 tuple signatures, one fewer symbol signature, six added current-controller
+reads and saved-entrant reads, updated positions, six hashes and fresh loader
+status. Snapshot loader data had lagged prior slices; it now matches this run.
+
+### Exact shape, contract and reuse boundary
+
+Mage adds:
+
+```go
+func SacrificeFor(player PlayerRef, subject PermanentRef) ResolvingEffect
+```
+
+The typed player must control the exact present, unphased subject visit at
+resolution. Absent, phased, returned or differently controlled subjects cannot
+be sacrificed. LKI can supply information, never a live object for movement.
+No choice, target or new cost state is added. Owner destinations,
+indestructibility, regeneration, sacrifice replacements and events use the
+existing `sacrificeEffect`, `prepareSacrifice` and `performSacrifice` path.
+`Sacrifice` keeps its existing ability-controller and result-option contract.
+Its definition child layout also remains compatible with existing inspectors
+and chosen-sacrifice callers. Explicit player operands enter definition and
+waiting-source traversal. Queries resolve neither operand and move nothing.
+
+RON adds `PlayerAction(playerRef, SacrificePermanent(permanentRef))` in ordinary
+resolving bodies, including source entry and delayed source departure bodies.
+The compiler owns spelling, arity, role and binding checks. It lowers through
+`compilePlayerEffect`, `compilePlayerRef` and `compilePermanentRef` to the new
+native API. `PlayerActions` is not extended. Nonresolving entry operations and
+draw replacements reject. `ControllerOfLeavingPermanent` stays unbound; no
+incorrect event binding was invented. There are no card-name branches.
+
+Existing `WhenLeaves`, `PermanentBinding`, `From`, `ReturnCardToBattlefieldInto`,
+entry history, attachments and `captureDelayedBody` supply all other behavior.
+Each installation captures its own exact source and entrant. Cleanup does not
+end the unbounded subscription. Source return cannot supply a different visit.
+Copies and pending/waiting clones keep separate frames. No clone-owned mutable
+state, global action slot, parallel event path or partial registry was added.
+No cost or simultaneous-operation service changed; the full shared regression
+suite retains rollback, replacement ordering and batch contracts.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation at undefined `SacrificeFor`. RON tests
+first used the exact Oracle-corrected AST and failed at the existing generic
+value parser for `SacrificePermanent`. They now use the unchanged complete
+records from disk after the six source corrections. All new gameplay assertions
+pass. No projection removes a rule from these complete-card tests.
+
+The first broader run exposed a compatibility regression from inserting a new
+player child before the existing subject child. Chosen-sacrifice validation
+relies on that layout. A subsequent engine check also caught the legacy
+sacrifice-result inspector's exact child layout. Explicit-player dependencies
+are now declared only for the new API, preserving both existing contracts.
+New and old focused tests pass together. Fixture corrections use a real typed
+saved reference for waiting-query tests, expect two independent delays from
+copied entry triggers, and phase the creature after Aura departure because
+phasing the host also phases its attached Aura. No rule was skipped.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Animate Dead, LEA/LEB/2ED/3ED/CED/CEI | `TestRONExactPlayerSacrificeAnimateDead` | Complete records: cast/noncast entry, presence condition, enchant grant, exact linked return, attachment, host P/T and delayed sacrifice. Changed Aura and creature controllers; control changed after trigger placement; protection, shroud and hexproof; source loss/phasing; phase cycles; copied entry/delayed triggers; simultaneous departure; returned creature identity; waiting and pending clones. |
+| Independent entrants | `TestRONExactPlayerSacrificeInstances` | Two complete Aura instances and a waiting clone sacrifice only their own saved entrants. |
+| Explicit player legality | `TestRONExactPlayerSacrificePlayerScope` | A spell's controller cannot sacrifice an opponent's target; a typed current-controller instruction can. The ability controller remains separate. |
+| Invalid syntax and contexts | `TestRONExactPlayerSacrificeInvalid` | Missing/excess arguments, symbols, wrong types, tuple references, unbound results, nonresolving and draw replacement contexts. |
+| Native exact sacrifice | `TestSacrificeForContracts` | Wrong player, owner, changed control, phasing, phase cycle, returned visit, indestructibility, regeneration and game clones. |
+| Native definition validation | `TestSacrificeForDefinition` | Nil player/subject and unbound player/permanent reads reject; valid declaration passes. |
+| Native waiting reads | `TestSacrificeForDelayedReads` | Repeated pure queries retain player-source and saved-subject visits; live player reads and divergent clone state govern later sacrifice. |
+| Retained clause and caller evidence | `TestRONEntryAttachment*`, `TestRONEntryHistory*`, `TestRONPermanentEnchantGrant*`, `TestRONEntryPresence*`, `TestRONGraveyardEnchant*`, `TestChosenSacrificeDefinition`, `TestSacrificeSubtypeResultDeclaration`, `TestSavedSacrificeSubtype*` | Existing Aura legality, prohibited entry, stale graveyard identity, source presence, linked grant, exact attachment and legacy sacrifice/result contracts remain covered. Complete-record assertions now require acceptance. |
+
+Estimated and actual complete-card gain: **one unique name / six records**.
+Compilation acceptance and complete-card gameplay both advance for Animate Dead;
+compilation alone remains no gameplay claim for the rest of the collection.
+
+### Validation and final collection evidence
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONExactPlayerSacrifice' -count=1`:
+  pass. Full `go test ./pkg/mage/dsl/ron -count=1`: pass.
+- Native `go test ./pkg/mage -run '^(TestSacrificeFor|TestSavedSacrificeSubtype|TestChosenSacrificeDefinition|TestSacrificeSubtypeResultDeclaration)' -count=1`:
+  pass after the definition-layout repair.
+- Fresh final `make build` and `go vet ./...`: pass.
+- Fresh final `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass, including card, loader, inventory and engine regressions.
+- `make lint`: pass, 0 issues. Pre/post Go hashes show no automatic changes;
+  the only edit during lint was a documented manual wording change in doc.go.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON,
+  **2,319 compiled / 126 rejected records**, **926 accepted / 60 rejected names**.
+  Parsed assertions compare all record identities and messages against this
+  run's fresh baseline: exactly six Animate Dead diagnostics disappear; no
+  diagnostic is added or changed. No accepted record regressed. Strict loading
+  still rejects the unsupported collection atomically.
+
+No environment or validation blocker remains. The source defect above is fixed
+in every identical reprint. All required checks passed before commit. The commit
+uses the prior entry's per-command `commit.gpgsign=false` override for its
+recorded pinentry problem; repository signing settings remain unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Copiable upkeep grants for Vesuvan Doppelganger. Preserve recipient source,
+   per-instance targets and copiable rules; then ThisAbility retention and
+   recursive resolving copies. Zero prerequisite gain; eventual one / six.
+2. Attributed actual last-counter removal for Divine Intervention, then
+   DrawTheGame. Zero prerequisite gain; eventual one / one. Preserve actual
+   positive removals, event-time player facts and speculative payment isolation.
+3. Reassess shared resolution-time player choices against Kudzu and other
+   rejected nested PlayerMayAction forms. Inventory complete records before
+   estimating unlocks; current first errors do not establish their other gaps.
+
+Runtime cutover, complete RON loading, Go-card/generator removal and broad DSL
+cleanup remain gated. No existing card definition or broad DSL function was
+removed. No removal audit was required. Changed files: the six Animate Dead RON
+assets; `pkg/mage/composable_target.go`, `definition.go`,
+`waiting_delayed_source.go`, `sacrifice_for_test.go` and `doc.go`; RON
+`compiler.go`, `exact_player_sacrifice_test.go`, five retained Aura clause test
+files and three collection-count test files; API/rules docs, vocabulary snapshot
+and this ledger. This run stops after EXPLICIT-PLAYER-EXACT-SACRIFICE.

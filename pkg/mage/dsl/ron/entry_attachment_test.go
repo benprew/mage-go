@@ -119,8 +119,8 @@ func TestRONEntryAttachmentAnimateDead(t *testing.T) {
 					}
 				})
 			}
-			if _, err := Compile(chosenDiscardRecord(t, set, "Animate Dead")); err == nil {
-				t.Fatal("incomplete full record accepted")
+			if _, err := Compile(chosenDiscardRecord(t, set, "Animate Dead")); err != nil {
+				t.Fatal("complete full record rejected", err)
 			}
 		})
 	}

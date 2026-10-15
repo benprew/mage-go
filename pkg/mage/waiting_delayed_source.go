@@ -58,8 +58,7 @@ func (e *destroySubjectEffect) refersToSourcePermanent() bool {
 }
 
 func (e *sacrificeEffect) refersToSourcePermanent() bool {
-	_, ok := e.subject.(sourceRef)
-	return ok
+	return permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.player)
 }
 
 func (e *returnToHandSubjectEffect) refersToSourcePermanent() bool {

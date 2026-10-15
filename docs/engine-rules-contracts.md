@@ -23625,8 +23625,52 @@ rejection. Native `TestExactAttachmentContracts`, `Definition` and
 no-op, nonattachment objects, validation and delayed source reads. Existing
 `TestAttachmentMoveUpdatesStaticEffectOrder` covers shared timestamp rules.
 
-These are clause tests. Complete Animate Dead still rejects at
-`ControllerOfLeavingPermanent`; its delayed sacrifice has no gameplay claim.
+These clause tests are retained. The explicit-player exact sacrifice contract
+below adds complete Animate Dead gameplay evidence.
 State actions run after resolution, so the Aura can change its enchant rule,
 return the graveyard card and attach before legality is checked (CR 704.3).
-No RON data or vocabulary snapshot changed.
+The attachment slice changed no RON data. The sacrifice correction below
+updates all six reprints and the vocabulary snapshot.
+
+## Explicit-player exact sacrifice
+
+`SacrificeFor(player PlayerRef, subject PermanentRef) ResolvingEffect` requires
+one exact present, unphased visit controlled by the selected player at resolution
+(CR 701.21a). It creates no target or choice. It uses shared sacrifice preparation,
+replacement rechecks and event publication. Indestructibility and regeneration
+do not stop sacrifice. The owner's graveyard receives the card unless a zone
+replacement changes the destination. `Sacrifice` retains its saved ability
+controller and existing result options. The new API does not change that caller
+contract or add cost state.
+
+RON accepts `PlayerAction(playerRef, SacrificePermanent(permanentRef))` in
+ordinary resolving bodies, including source entry and delayed source departure
+bodies. Both operands use typed references. The adapter does not change the
+ability controller or the meaning of `You`. Invalid arities, unbound results,
+wrong reference types, tuple symbol spellings and replacement contexts reject.
+`PlayerActions` does not add this shape in this slice.
+
+Animate Dead's six identical records now read
+`ControllerOfPermanent(ThePermanentPutOnTheBattlefieldThisWay)` in the delayed
+body. The old `ControllerOfLeavingPermanent` selected the Aura's controller and
+contradicted local Oracle text and the WotC rulings dated 2016-06-08. The creature's
+controller is read when the delayed body resolves, including a control change
+after departure. No new event-player capture is required. Delayed source identity,
+saved entrant identity, one-shot timing and frames reuse `WhenLeaves`, `From`,
+`PermanentBinding` and `captureDelayedBody` (CR 603.7a-e, 400.7). Returned visits
+cannot supply either saved object. Phasing makes no departure. Waiting source
+queries retain the typed player and subject reads without moving a permanent.
+Copies and game clones retain separate saved frames.
+
+`TestSacrificeForContracts`, `Definition` and `DelayedReads` cover native player
+legality, owner, exact visits, phasing, clone state, indestructibility,
+regeneration, invalid declarations and pure waiting queries.
+`TestRONExactPlayerSacrificeAnimateDead` runs all six complete records through
+cast/noncast entry, the enchant grant, return, attachment, host P/T and delayed
+sacrifice. It covers changed Aura and creature controllers, changes after trigger
+placement, protection, shroud, hexproof, intervening source presence, phase cycles,
+copied entry and delayed triggers, simultaneous departures and waiting/pending
+clones. `TestRONExactPlayerSacrificeInstances` separates two saved entrants and
+clones. `PlayerScope` tests a wrong explicit player and a current-controller read.
+`Invalid` tests declaration rejection. Existing entry, grant, attachment and
+sacrifice suites retain the deeper shared service contracts.

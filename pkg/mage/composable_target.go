@@ -1031,12 +1031,14 @@ func (sourceRef) resolvePermanent(ctx *EffectContext) (*Permanent, bool) {
 }
 
 type sacrificeEffect struct {
-	subject       PermanentRef
-	result        *NumberBinding
-	subtypeResult *NumberBinding
-	subtype       string
-	invalidOption bool
-	optionCount   int
+	explicitPlayer bool
+	player         PlayerRef
+	subject        PermanentRef
+	result         *NumberBinding
+	subtypeResult  *NumberBinding
+	subtype        string
+	invalidOption  bool
+	optionCount    int
 }
 
 // SacrificeResultOption selects an output for one sacrifice instruction.
@@ -1084,7 +1086,7 @@ func (o sacrificeSubtypeOption) applySacrificeResult(e *sacrificeEffect) {
 // Sacrifice instructs the stored controller to sacrifice the subject.
 // An absent subject or a subject controlled by another player has no effect.
 func Sacrifice(subject PermanentRef, options ...SacrificeResultOption) ResolvingEffect {
-	e := &sacrificeEffect{subject: subject}
+	e := &sacrificeEffect{subject: subject, player: You}
 	for _, option := range options {
 		if nilDefinition(option) {
 			e.invalidOption = true
@@ -1094,6 +1096,13 @@ func Sacrifice(subject PermanentRef, options ...SacrificeResultOption) Resolving
 	}
 	return e
 }
+
+// SacrificeFor instructs one player to sacrifice one exact permanent.
+// The player must control that visit when the action resolves.
+func SacrificeFor(player PlayerRef, subject PermanentRef) ResolvingEffect {
+	return &sacrificeEffect{player: player, subject: subject, explicitPlayer: true}
+}
+
 func (e *sacrificeEffect) Text() string {
 	if _, ok := e.subject.(sourceRef); ok {
 		return "sacrifice this permanent"
@@ -1119,7 +1128,11 @@ func (e *sacrificeEffect) Apply(ctx *EffectContext) error {
 			ctx.Game.resolution.numberBindings[e.subtypeResult] = 0
 		}
 	}
-	if p, ok := e.subject.resolvePermanent(ctx); ok && p.ControllerID() == ctx.Controller {
+	player, valid := e.player.resolvePlayer(ctx)
+	if !valid || ctx.Game.GetPlayer(player) == nil {
+		return nil
+	}
+	if p, ok := e.subject.resolvePermanent(ctx); ok && !p.PhasedOut && p.ControllerID() == player {
 		action := ctx.Game.prepareSacrifice(p)
 		if action == nil {
 			return nil

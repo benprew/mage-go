@@ -65,6 +65,9 @@ func (c *statePredicate) inspectDefinition() definitionNode {
 }
 func (e *sacrificeEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	if e.explicitPlayer {
+		n.children = append(n.children, definitionEdge{"player", e.player})
+	}
 	if e.invalidOption {
 		n.problem = "supply a non-nil sacrifice result binding and a subtype"
 	} else if e.optionCount > 1 {
