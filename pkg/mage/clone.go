@@ -214,6 +214,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 // copied only when non-empty.
 func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
+		resolvingCopy:               src.resolvingCopy,
 		Card:                        src.Card, // shared
 		incarnationID:               src.incarnationID,
 		createdTokenLink:            src.createdTokenLink,

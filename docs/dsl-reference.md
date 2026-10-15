@@ -18098,3 +18098,23 @@ Native `TestPlayerLifeMana*` tests cover payment windows, life budgets, rollback
 LKI, phasing, source control, restrictions and replacement boundaries. The old
 Channel spell-cost substitution remains for existing callers; RON uses only
 the new permission. No RON source correction is required.
+
+## Resolving permanent copying
+
+`CopyPermanent(recipient, subject PermanentRef, keepColors bool) ResolvingEffect`
+replaces the recipient's copiable definition from a snapshot of the present
+subject. `Game.BecomeCopyOfPermanent(recipient, subject *Permanent, keepColors
+bool) error` is the native service. Both visits must still exist and be unphased.
+The operation preserves object state and replaces printed rules and static
+registrations. Later copies read the new values. Departure restores the printed
+physical card. Existing word changes continue with their original lifetimes;
+word changes and ordinary layers do not transfer from the donor.
+
+RON supports one `IsACopyOfPermanent(subject, NoCopyEffects)` or
+`IsACopyOfPermanent(subject, CopyEffects([KeepColor]))` inside a resolving
+`CreatePermanentLayerEffect(recipient, [...])`. Replacement bodies and other
+copy modifications reject. Ability retention and the optional copy wrapper
+remain separate dependencies for the full Vesuvan Doppelganger record.
+
+See the resolving-copy contract and `TestRONResolvingCopy*` for gameplay and
+rejection evidence. No broad DSL alias is added.

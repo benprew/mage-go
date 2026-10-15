@@ -42,6 +42,8 @@ func layeredManaTapEligible(a Ability) bool {
 }
 
 type printedManaTapTextEffect struct {
+	// A paired object instruction must continue once after copying.
+	copyTextOmitted bool
 	effectSource
 	subject   capturedPermanent
 	abilityID uuid.UUID
@@ -73,6 +75,9 @@ func (g *Game) AddPrintedManaTapTextEffect(source *Permanent, abilityID uuid.UUI
 	}
 	effect := &printedManaTapTextEffect{subject: capturedPermanent{id: current.ID(), incarnation: current.incarnationID}, abilityID: abilityID, duration: duration, changes: slices.Clone(changes)}
 	effect.SetSourceID(current.ID())
+	if err := g.prepareAddedResolvingCopyText(current, effect); err != nil {
+		return err
+	}
 	g.AddContinuousEffect(effect)
 	return nil
 }

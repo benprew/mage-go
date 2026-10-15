@@ -23881,3 +23881,56 @@ entry/draw replacements and other durations reject. The six Channel records
 match local Oracle and require no source change. Existing `SetChannelActive`
 and generic-cost substitution callers remain until migration removal gates.
 Evidence: `TestPlayerLifeMana*` and `TestRONPlayerLifeMana*`.
+
+## Resolving permanent copy replacement
+
+`CopyPermanent(recipient, subject PermanentRef, keepColors bool) ResolvingEffect`
+reads two exact present visits at resolution. `Game.BecomeCopyOfPermanent(recipient,
+subject *Permanent, keepColors bool) error` supplies the same native operation.
+Absent, phased or returned visits cannot supply either operand. There is no LKI
+fallback for an instruction to become a copy. Shared target services still check
+legality for targeted operands before resolution. Waiting queries retain source
+reads without capturing values or replacing rules.
+
+CR 707.2–5 and 613.1a establish snapshot copying and later copying. The operation
+uses `CaptureCopiableValues`, `CopyRetainColors`, `BuildEntryCopyWithText` and
+validated definition plans. The recipient gets fresh declarations and static
+registrations. Its former printed registrations are removed; independent
+resolving effects, granted rules and pending stack objects remain. KeepColor
+reads the recipient's copiable colors, excluding ordinary color effects. The
+new copied values include this exception and are available to later copies.
+The copy is indefinite for the saved visit; no source dependency is introduced.
+Legacy untracked copy layers still cannot supply provenance.
+
+CR 707.4 and the local Vesuvan Doppelganger rulings require preserved identity,
+status, counters, damage, controller, attachments and continued text. Copying
+fires no entry/departure event and applies no entry replacement. Face-down status
+still hides the new underlying definition; a face-down donor supplies nameless
+2/2 values. Source departure does not undo a snapshot. Phasing keeps it; return
+restores the physical card's printed definition. Clones keep separate state
+transitions and word-effect lifetimes.
+
+The existing color/basic-land word services continue on the recipient after its
+rules change. Their saved order and durations remain; donor word effects do not
+transfer. A paired object instruction continues once, even if it changed two old
+rules. Supported lifetimes are indefinite and end of turn. Both current and
+post-cleanup definitions are built before installation, including when a new
+word effect is added to a copied visit. Expiry uses prepared definitions without
+a declaration panic. Static registrations keep their order during text expiry.
+Ordinary word changes stay outside copied values.
+
+RON accepts `CreatePermanentLayerEffect(permanentRef,
+[IsACopyOfPermanent(permanentRef, NoCopyEffects)])` and the same form with
+`CopyEffects([KeepColor])` in ordinary resolving bodies. Each uses existing typed
+reference scopes. Mixed modification lists, other copy exceptions, invalid
+signatures and entry/draw replacement bodies reject. `ThisAbility` retention and
+optional resolving copying remain unsupported; no complete Vesuvan record is
+accepted by this prerequisite alone.
+
+Evidence: native `TestResolvingCopyRulesAndIdentity`, `Declarations`,
+`FailuresAndSelf`, `LaterLayersAndPending`, `Waiting`; RON
+`TestRONResolvingCopyGameplay`, `VesuvanClause`, `TimingAndVisits`,
+`TextContinuation`, `NewTextAndExpiry`, `GroupedText`, `Invalid`, `Inventory`.
+The six Vesuvan clause tests explicitly remove the two unsupported wrappers;
+they establish clause behavior, not full-card coverage. Complete Air Elemental,
+Bog Wraith, Grizzly Bears and Gauntlet of Might records provide donor evidence.

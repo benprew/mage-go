@@ -54,10 +54,14 @@ func (g *Game) AddPrintedMixedStaticEventTextEffect(source *Permanent, duration 
 	capture := capturedPermanent{id: current.ID(), incarnation: current.incarnationID}
 	pending := []ContinuousEffect{&printedStaticAbilityTextEffect{subject: capture, abilityID: staticID, duration: duration, changes: slices.Clone(changes), contract: kind}}
 	if _, mana := event.(*ManaBonusAbility); mana {
-		if err := probe.AddPrintedManaTapTextEffect(probe.FindPermanent(current.ID()), event.AbilityID(), duration, changes...); err != nil {
+		eventProbe := g.Clone()
+		if err := eventProbe.AddPrintedManaTapTextEffect(eventProbe.FindPermanent(current.ID()), event.AbilityID(), duration, changes...); err != nil {
 			return err
 		}
-		pending = append(pending, &printedManaTapTextEffect{subject: capture, abilityID: event.AbilityID(), duration: duration, changes: slices.Clone(changes)})
+		pending = append(pending, &printedManaTapTextEffect{copyTextOmitted: true, subject: capture, abilityID: event.AbilityID(), duration: duration, changes: slices.Clone(changes)})
+	}
+	if err := g.prepareAddedResolvingCopyText(current, pending[0]); err != nil {
+		return err
 	}
 	for _, effect := range pending {
 		effect.SetSourceID(current.ID())

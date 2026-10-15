@@ -63,7 +63,10 @@ func (g *Game) AddPrintedProtectionPTTextEffect(source *Permanent, duration core
 	capture := capturedPermanent{id: current.ID(), incarnation: current.incarnationID}
 	pending := []ContinuousEffect{
 		&printedProtectionTextEffect{subject: capture, abilityID: protection.AbilityID(), duration: duration, changes: slices.Clone(colors)},
-		&printedStaticAbilityTextEffect{subject: capture, abilityID: pt.AbilityID(), duration: duration, changes: slices.Clone(colors), contract: staticPTTextContract},
+		&printedStaticAbilityTextEffect{copyTextOmitted: true, subject: capture, abilityID: pt.AbilityID(), duration: duration, changes: slices.Clone(colors), contract: staticPTTextContract},
+	}
+	if err := g.prepareAddedResolvingCopyText(current, pending[0]); err != nil {
+		return err
 	}
 	for _, effect := range pending {
 		effect.SetSourceID(current.ID())

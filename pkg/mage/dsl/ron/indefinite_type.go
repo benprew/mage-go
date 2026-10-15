@@ -20,6 +20,11 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	for _, part := range parts {
+		if part.Name == "IsACopyOfPermanent" {
+			return compileResolvingCopy(n, ctx, subject, parts)
+		}
+	}
+	for _, part := range parts {
 		if part.Name == "AddAbility" && len(part.Args) == 1 && part.Args[0].Kind == List {
 			for _, ability := range part.Args[0].Args {
 				if ability.Name == "EnchantPermanent" {

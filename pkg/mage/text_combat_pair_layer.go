@@ -55,6 +55,9 @@ func (g *Game) AddPrintedCombatPairTextEffect(source *Permanent, abilityID uuid.
 	}
 	effect := &printedCombatPairTextEffect{subject: capturedPermanent{id: current.ID(), incarnation: current.incarnationID}, abilityID: abilityID, duration: duration, changes: slices.Clone(changes)}
 	effect.SetSourceID(current.ID())
+	if err := g.prepareAddedResolvingCopyText(current, effect); err != nil {
+		return err
+	}
 	g.AddContinuousEffect(effect)
 	return nil
 }

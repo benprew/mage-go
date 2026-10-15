@@ -629,6 +629,7 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
+	g.refreshResolvingCopyText()
 	g.resetPrintedLandwalkTextLayers()
 	g.resetPrintedProtectionTextLayers()
 	g.resetPrintedStaticAbilityTextLayers()

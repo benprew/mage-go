@@ -1,5 +1,20 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CopyPermanent] replaces one exact visit's copiable rules at resolution.
+// [Game.BecomeCopyOfPermanent] supplies the same native operation.
+// Shared snapshots and physical-card builders supply fresh rules and statics.
+// Status, counters, damage, control and attachments stay with the recipient.
+// Entry rules do not run. Pending abilities keep their former rules.
+// Later copies read the new values. Return restores the physical printed card.
+// Phasing keeps the snapshot. Clones keep separate transitions and lifetimes.
+// Existing word effects continue in order, once per object instruction.
+// Current and cleanup definitions are checked before word effects start.
+// Expiry keeps static order. Ordinary word changes stay outside copy values.
+// RON accepts one IsACopyOfPermanent(ref, NoCopyEffects) or
+// IsACopyOfPermanent(ref, CopyEffects([KeepColor])) in an ordinary resolving
+// CreatePermanentLayerEffect. Other copy exceptions and replacement bodies
+// reject. ThisAbility retention and optional copying still need adapters.
+//
 // [PlayerLifeManaThisTurn] saves a player permission until cleanup.
 // Positive fixed life payments add one fixed mana at mana-ability timing.
 // [Game.ActivatePlayerManaAbility] resolves the payment without a stack object.
@@ -2362,7 +2377,7 @@
 // Returned and phased subjects cannot supply a new capture. Saved values remain.
 // Legacy copy layers and untracked characteristic changes return errors.
 // The snapshot does not supply casting or battlefield entry permission.
-// Live copy layers and other copy exceptions need separate services.
+// Use [CopyPermanent] for resolving copy replacement. Other exceptions reject.
 // [BuildEntryCopy] builds fresh battlefield rules for a physical card's next
 // entry. It keeps that card's ID, owner, token status and printed origin.
 // Departure uses fresh printed rules; LKI and pending abilities keep copy rules.
@@ -2396,7 +2411,7 @@
 // the rule. Ordinary ability removal cannot change these copiable values.
 // RON accepts one controller-upkeep TriggerA in each AddAbility copy operation.
 // Its body has a fresh permanent scope. Donor bindings cannot enter that scope.
-// ThisAbility retention and resolving copy layers need separate services.
+// [CopyPermanent] supplies resolving copy replacement. ThisAbility still rejects.
 //
 // CopiableValues.WithModifications keeps copy exceptions in text builders.
 // BuildTextChangedDefinition and BuildTextDefinitionRevision use fresh rules.
@@ -2413,7 +2428,8 @@
 // are omitted from this copy; ordinary color-changing abilities remain.
 // Later copies retain the exception. Ordinary color layers still apply.
 // Entry replacement identities survive the omission of color definitions.
-// Added abilities and live copy installation need separate services.
+// [CopyPermanent] supplies resolving copying with retained colors.
+// Invoking-ability retention still needs a separate service.
 //
 // Use [OracleCardNameCatalog] for legal English names without card factories.
 // The retained nontoken snapshot includes separate faces and excludes combined

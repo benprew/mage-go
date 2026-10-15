@@ -29,6 +29,8 @@ const (
 )
 
 type printedStaticAbilityTextEffect struct {
+	// A paired object instruction must continue once after copying.
+	copyTextOmitted bool
 	effectSource
 	subject   capturedPermanent
 	abilityID uuid.UUID
@@ -84,6 +86,9 @@ func (g *Game) addPrintedStaticTextEffect(source *Permanent, abilityID uuid.UUID
 		abilityID: abilityID, duration: duration, changes: slices.Clone(changes), contract: kind,
 	}
 	effect.SetSourceID(current.ID())
+	if err := g.prepareAddedResolvingCopyText(current, effect); err != nil {
+		return err
+	}
 	g.AddContinuousEffect(effect)
 	return nil
 }

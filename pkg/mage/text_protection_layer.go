@@ -61,6 +61,9 @@ func (g *Game) AddPrintedProtectionTextEffect(source *Permanent, abilityID uuid.
 		abilityID: abilityID, duration: duration, changes: slices.Clone(changes),
 	}
 	effect.SetSourceID(source.ID())
+	if err := g.prepareAddedResolvingCopyText(current, effect); err != nil {
+		return err
+	}
 	g.AddContinuousEffect(effect)
 	return nil
 }

@@ -680,6 +680,7 @@ func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 
 // Permanent represents a card on the battlefield.
 type Permanent struct {
+	resolvingCopy       *resolvingCopyState
 	enchantedCard       capturedCard
 	createdTokenLink    *CreatedTokenLink
 	createdTokenSource  capturedPermanent

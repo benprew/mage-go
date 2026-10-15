@@ -1594,6 +1594,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "static_modification", "temporary_modification", "resolving_modification":
+		if role == "resolving_modification" && n.Name == "IsACopyOfPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "copy_modification"}[index]
+		}
 		if n.Name == "AddAbilityVariable" && len(n.Args) == 1 {
 			return "ability_reference"
 		}

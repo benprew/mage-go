@@ -63,6 +63,9 @@ func (g *Game) AddPrintedBasicLandwalkTextEffect(source *Permanent, abilityID uu
 		abilityID: abilityID, duration: duration, changes: slices.Clone(changes),
 	}
 	effect.SetSourceID(source.ID())
+	if err := g.prepareAddedResolvingCopyText(current, effect); err != nil {
+		return err
+	}
 	g.AddContinuousEffect(effect)
 	return nil
 }
