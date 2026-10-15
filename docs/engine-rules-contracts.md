@@ -41,9 +41,8 @@ visits and declaration roles. Native `TestCounterDurationLifetime`,
 `StartAndDeclarations`, `SeparateSubjectAndStateActions`, `Waiting`,
 `PlacementReplacement`, `PaymentPreparation`, `InstructionTiming` and
 `PhaseTiming` cover lifetime and shared-service
-boundaries. Tomb's complete record still requires counter-source history and a
-persistent upkeep removal procedure. Clause evidence does not establish complete
-card gameplay.
+boundaries. Complete Tomb gameplay is covered by
+`TestRONCounterRemovalHistoryTomb`, in addition to these clause tests.
 
 
 ## Graveyard creature enchant declarations
@@ -23356,7 +23355,7 @@ and exact source information after return and cleanup. `TestRONPersistentStep*`
 covers real Tomb subscription projections, saved target visits, phasing/return,
 countering, pending clones, declaration boundaries, inventory roles and failed
 activation payment. No replacement ordering or simultaneous-operation contract
-changes. Complete Tomb removal history and its procedure remain unsupported.
+changes. The counter removal contract below completes Tomb.
 
 ### Exact-source counter placement history
 
@@ -23398,4 +23397,51 @@ references, pure queries, entry, clones, payment rollback, prevented/zero/capped
 placements, redirection and replacement-time source/recipient transitions.
 `TestRONCounterPlacementHistory*` covers real Tomb projections, announcement and
 resolution timing, illegal targets, stack copies, pending clones, invalid syntax,
-unsupported contexts and inventory roles. Full Tomb remains unsupported.
+unsupported contexts and inventory roles. The removal contract below completes Tomb.
+
+
+### Exact-source counter removal history and required selection
+
+`PermanentsWithoutCountersRemovedBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet`
+selects current candidate visits without a positive removal of that counter kind
+by the exact source visit. It shares placement-history definition checks and
+information identity. Nil/unbound references, nil sets and invalid counter kinds
+fail validation. A saved departed source remains readable. Queries are pure.
+Phased recipients are absent until phase-in; neither source nor recipient return
+can inherit history. Cleanup, control changes and ability loss do not erase it.
+
+Shared `RemoveCounters` effects, their typed single/all/result wrappers, and
+fixed, X and chosen-count counter payments record successful positive removals.
+Resolving effects use captured source identity; payments use their locked current
+source. Each removal uses a current unphased exact recipient visit. Zero,
+negative, insufficient and stale removals record nothing. Zone departure does
+not count as removal (CR 122.2). Direct `Permanent.RemoveCounter`, state actions,
+legacy counter-moving effects and rule-driven removal remain unattributed.
+This does not add counter-removal replacements or a general removal event.
+Clone maps and speculative payment trials are separate. Failed preparation or
+commit cannot publish trial history. Existing payment ordering stays unchanged.
+
+CR 122.1 makes counters of the same kind interchangeable. CR 400.7 separates
+returned visits. CR 608.2d puts untargeted required choices at resolution.
+Cyclopean Tomb's local WotC ruling dated 2008-08-01 requires the original source
+instance and permits removal of counters from other origins. Its local Oracle
+text requires removal of **all** mire counters from **one** eligible land.
+A zero-counter land can supply an empty all-counter removal; no positive removal
+is recorded, so that visit remains eligible if it later gains counters.
+
+RON composes `ChoosePermanent` and `RemoveAllCounters` with a private factory-local
+`PermanentBinding`. Shared required-choice rules handle empty candidate sets,
+invalid responses, exact visits and phased/returned choices. Shroud and hexproof
+do not prohibit a choice. No targeting or selection at announcement is added.
+Separate instructions, stack copies and delayed frames retain separate results.
+The existing instruction boundary refreshes counter-bound layers after removal.
+
+Native `TestCounterRemovalHistoryLifecycle`, `Declarations`, `Payments` and
+`WaitingAndSavedSource` cover purity, counter kinds, zero removal, source and
+recipient return, phasing, cleanup, saved source identity, clone isolation,
+fixed/X/chosen payments, pure affordability, trial preparation and stale commits.
+`TestRONCounterRemovalHistoryTomb` executes all five complete Tomb records.
+`Resolution`, `PlayerScope` and `Invalid` cover copies, pending clones, required
+choice fallback, empty sets, shroud, stale choices, scoped players, syntax,
+contexts and inventory roles. Existing duration, placement and persistent-step
+tests retain their narrower interaction coverage.

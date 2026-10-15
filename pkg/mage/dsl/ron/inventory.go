@@ -223,7 +223,7 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 
 // Unknown roles prevent an unsupported parent from inventing a child's contract.
 func inventoryArgumentRole(n Node, role string, index int) string {
-	if (role == "permanent_collection" || role == "permanent_filter") && n.Name == "PermanentPutACounterOfTypeOnIt" && len(n.Args) == 2 {
+	if (role == "permanent_collection" || role == "permanent_filter") && (n.Name == "PermanentPutACounterOfTypeOnIt" || n.Name == "PermanentHasNotRemovedACounterOfTypeFromIt") && len(n.Args) == 2 {
 		return []string{"permanent_reference", "permanent_counter_type"}[index]
 	}
 	if role == "metadata" {
@@ -1506,6 +1506,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_counter_type", "permanent_reference", "value"}[index]
 		}
 	case "counter_removal_instruction":
+		if n.Name == "AllCountersOfTypeFromAPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_counter_type", "permanent_collection"}[index]
+		}
 		if n.Name == "ACounterOfTypeFromCardInExile" && len(n.Args) == 2 {
 			return []string{"card_counter_type", "card_reference"}[index]
 		}

@@ -6,18 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **924 accepted / 62 rejected names**
-(986 total), **2,308 compiled / 137 rejected records** (2,445 total).
-The latest slice is **EXACT-SOURCE-COUNTER-PLACEMENT-HISTORY**.
-RON lowers PermanentPutACounterOfTypeOnIt in ordinary resolving collections.
-Mage records actual positive placements by exact source and recipient visits
-and counter kind after replacements and caps. Copies, clones, delayed frames
-and payment trials preserve identity and isolation. Cleanup retains history.
-All five Cyclopean Tomb records have projected placement/history gameplay tests.
-The unsupported removal operation is replaced by a tap probe in those tests.
-Estimated and actual complete-card gain: zero names / records. Complete Tomb
-still needs source removal history and its required one-land removal procedure.
-No RON source changed. Other accepted records retain their existing coverage.
+Latest measured result (2026-10-15): **925 accepted / 61 rejected names**
+(986 total), **2,313 compiled / 132 rejected records** (2,445 total).
+The latest slice is **REQUIRED-COUNTER-REMOVAL-HISTORY**.
+RON lowers AllCountersOfTypeFromAPermanent as a required resolution-time choice
+and PermanentHasNotRemovedACounterOfTypeFromIt as an exact-visit history query.
+Mage records actual positive resolving removals and fixed/X/chosen payments.
+Clones and payment trials keep separate history; failed payments publish none.
+All five complete Cyclopean Tomb records now compile and have RON gameplay tests.
+Estimated and actual complete-card gain: one unique name / five records.
+No RON source changed. All other loader diagnostics remain unchanged.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and native startup.
 
@@ -25,17 +23,16 @@ DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Counter removal history and procedure:** Cyclopean Tomb still reaches
-   AllCountersOfTypeFromAPermanent. Persistent upkeep and exact-source placement
-   history are complete. Removal history and the required land-removal procedure remain.
-   Choose one dependency-ready prerequisite;
-   estimate zero immediate gains, eventual one name / five records.
-2. **Source-to-return linkage:** Animate Dead needs a forward exact returned-host
+1. **Source-to-return linkage:** Animate Dead needs a forward exact returned-host
    link before its lasting enchant grant, then presence and departure-player
    adapters. Estimate zero immediate gains, eventual one name / six records.
-3. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
+2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
    recursive resolving copies and ThisAbility retention. One prerequisite
    estimates zero immediate gains, eventual one name / six records.
+3. **Counter-removal event:** Divine Intervention needs an actual attributed
+   last-counter removal event with its player binding, plus DrawTheGame. The new removal service
+   can supply observations, but does not yet emit that event. Compare its effort
+   and shared event value with other remaining multi-card prerequisites first.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -21101,3 +21098,163 @@ bounded_counters.go, waiting_delayed_source.go and doc.go; RON counter_history.g
 and counter_history_test.go, contextual_collection.go and inventory.go;
 docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
 This run stops after EXACT-SOURCE-COUNTER-PLACEMENT-HISTORY.
+
+
+## 2026-10-15 — REQUIRED-COUNTER-REMOVAL-HISTORY
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and uncached complete RON package
+tests passed. Baseline loader JSON exited 1 for collection rejection, with
+2,308 compiled / 137 rejected records and 924 accepted / 62 rejected names.
+No build, test or environment failure was confused with unsupported records.
+The latest ranked candidate was evaluated first. Complete Tomb RON records in
+LEA/LEB/2ED/CED/CEI and complete LEA Animate Dead and Vesuvan Doppelganger records
+were read, including nested forms. Targeted vocabulary queries found five
+occurrences each of Tomb's singular choice and removal-history forms, six
+returned-host predicates, and eight AddAbilityVariable uses across distinct
+contexts. Reprints count once; constructor frequency is not an unlock estimate.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream contracts | Effort |
+| --- | --- | --- | --- | --- |
+| Required all-counter choice with exact-source removal history | Cyclopean Tomb | 1 name / 5 records | Placement history, persistent upkeep, exact visits and required choice already exist. Removal observation is reusable by later event adapters, but this slice adds no removal event | Small/medium: one history query, shared removal attribution, one choice adapter and lifecycle/transaction/gameplay tests |
+| Forward returned-host link | Animate Dead | 0 now; eventual 1 / 6 | Needs the link before the lasting enchant grant; presence condition, attachment result and departure-controller capture still block the complete card | Medium prerequisite, large complete-card chain |
+| Copiable upkeep grant | Vesuvan Doppelganger | 0 now; eventual 1 / 6 | Needs copiable triggered grants, resolving recursive copies and retained ThisAbility; resolving and entry contexts differ | Medium/large prerequisite, large complete-card chain |
+
+Candidate #1 is dependency-ready. Its history and selection form one complete
+observable procedure and finish a previously tested chain. No compared candidate
+provides a bounded multi-name unlock. The shared removal service also gives a
+clear observation point for later removal-event work. Selected gain is one name
+and five records; actual gain matches. No second slice was started.
+
+### Contract, supported signatures and boundaries
+
+Native API:
+`PermanentsWithoutCountersRemovedBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet`.
+It shares typed information identity, definition validation and waiting-source
+traversal with placement history. It selects exact current recipient visits
+without a positive removal by that exact source visit and counter kind.
+Phased recipients are absent until phase-in. Source departure, phasing, control
+changes and cleanup preserve observations. Return cannot inherit either visit.
+Game clones copy both history maps. Repeated queries make no state changes.
+
+The shared native resolving removal effect now records successful positive
+removals for its single/all/result wrappers. Fixed, X and chosen-count counter
+costs use the same internal service, with their existing locked identities and
+transaction order. Insufficient, negative, zero, stale and phased removals cannot
+record history. Payment preparation, affordability and failed commit cannot
+publish speculative observations. Direct Permanent.RemoveCounter, state actions,
+legacy moving-counter effects and rule-driven removals stay unattributed.
+This slice adds neither a general removal event nor removal replacements.
+
+RON accepts exactly:
+- `PermanentHasNotRemovedACounterOfTypeFromIt(permanentRef, counter)` in ordinary
+  resolving contextual collections, including nested And/Or.
+- `RemoveCounters([AllCountersOfTypeFromAPermanent(counter, collection)])` in
+  ordinary resolving bodies, including explicit PlayerActions scopes. This is
+  one required singular choice, not an all-members removal. The current action
+  player chooses at resolution; the choice does not target. It composes existing
+  ChoosePermanent and RemoveAllCounters with a private factory-local typed
+  PermanentBinding. An empty collection does nothing. Invalid/nil responses use
+  existing required-choice fallback. Returned/phased choices cannot supply a
+  different live visit. Each instruction, copy and delayed frame keeps its result.
+
+Strict existing counter and lexical reference grammars apply. Missing bindings,
+malformed shapes, payment declarations, static layers, entry and draw replacement
+contexts reject. Explicit player scopes accept only this new singular removal
+shape; their other counter-removal declarations retain rejection. Inventory
+assigns permanent_reference/permanent_counter_type to the predicate and
+permanent_counter_type/permanent_collection to the instruction. RON owns syntax,
+scope, action-player selection and construction; mage owns history and execution.
+No card-name branch, fallback registry, global action slot or declaration panic
+was introduced. Existing Go callers remain.
+
+CR 122.1 establishes interchangeable same-kind counters; CR 122.2 excludes zone
+departure from removal; CR 400.7 separates returned visits; CR 608.2d establishes
+resolution-time choices. The complete local Oracle text requires **all** mire
+counters from **one** eligible land. The local 2008-08-01 WotC ruling confirms
+original-source identity, recurrence and removal of counters from another origin.
+All local Tomb rulings were read; these are WotC rulings, not Scryfall notes.
+`go run ./cmd/fetchset -check -card "Cyclopean Tomb"` passed. No source defect or
+RON correction was needed. No vocabulary snapshot refresh is needed because
+RON source did not change. API and rules documentation describe this contract.
+
+### Failing-first evidence and gameplay mappings
+
+Native tests first failed to compile for the absent history-query signature.
+All five complete RON records first failed at AllCountersOfTypeFromAPermanent.
+The explicit player-scope test then failed at the scoped action dispatcher;
+its narrowly scoped adapter resolves that failure. Test-authoring corrections
+fixed a legacy-selector/reference mismatch and a fixture count that included
+newly re-added counters. Assertions were corrected to verify the actual intended
+history contract; no production rejection or rules requirement was weakened.
+Old assertions requiring Tomb rejection now require full compilation. Collection
+count assertions advance by exactly five records.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Cyclopean Tomb, LEA/LEB/2ED/CED/CEI | TestRONCounterRemovalHistoryTomb | Complete unchanged records: two real activations, persistent upkeep after death and return under another controller, one eligible land each upkeep, all counters including another source's counters, removal-history exclusion after counters return, unrelated land excluded, layer restoration and pending clone |
+| Existing activation/layer interactions | TestRONCounterDuration*, TestRONCounterPlacementHistory* | Upkeep/payment restrictions, illegal and stale targets, source departure, counter duration, placement replacements, stack copies and projections; these remain clause evidence alongside new complete-record tests |
+| Existing subscription interactions | TestRONPersistentStep*, TestPersistentStep* | Saved controller, recurrence, countering, phasing, source LKI, independent saved frames and clones |
+| Full-record activation legality | TestRONCounterRemovalHistoryTombLegality | Main phase and opponent upkeep reject, nonland/Swamp/phased targets reject, unpaid activation has no side effects |
+| Resolution selection and identity | TestRONCounterRemovalHistoryResolution, PlayerScope | No announcement-time choice, empty collection, required nil/invalid fallback, shroud, returned/phased selected visit, copied stack objects, clone isolation, scoped chooser |
+| Strict declarations | TestRONCounterRemovalHistoryInvalid, TestCounterRemovalHistoryDeclarations | Arity, symbol, counter and binding errors; unsupported costs/static/entry/draw contexts; typed inventory roles |
+| Native removal history | TestCounterRemovalHistoryLifecycle | Positive and zero removals, pure repeated reads, source/recipient return, source/recipient phasing, cleanup, counter kinds and clones |
+| Payment isolation | TestCounterRemovalHistoryPayments | Fixed/X/chosen costs, pure affordability, preparation, successful commit, stale failed commit, history maps already populated and clone isolation |
+| Delayed source reads | TestCounterRemovalHistoryWaitingAndSavedSource | Exact bound departed source, returned source cannot replace it, pure waiting inspection, persistent execution after cleanup |
+
+Adds complete-card gameplay evidence for one unique card across five complete
+records. The previous projected tests are preserved and are not counted as new
+complete-card gains. Existing accepted-record tests remain in the full suite.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONCounterRemovalHistory' -count=1`
+  and `go test ./pkg/mage -run '^TestCounterRemovalHistory' -count=1`: pass.
+  Both passed again after import formatting; the RON focus also passed after
+  adding the complete-record legality test and fixing test preallocation.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`, `make test`, and the engine skill's
+  additional `go test ./... -short -count=1`: pass. Final `make test` and
+  `go vet ./...` reruns also pass and include the late full-record legality test.
+- First `make lint` reported one prealloc issue in the new Tomb fixture.
+  The fixture now allocates capacity for its three lands. Focused tests and the
+  complete `make lint` rerun pass, with 0 issues. Hash comparison and review
+  confirm automatic changes only grouped imports in the two new test files.
+  The allocation fix was explicit. No lint suppression was added.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON,
+  **2,313 compiled / 132 rejected records**, **925 accepted / 61 rejected names**,
+  from 2,445 records / 986 names. Parsed JSON assertions verify that deleting
+  Tomb's five baseline issues produces the final issues array exactly. Every
+  other diagnostic is unchanged; accepted records did not regress. The loader
+  still rejects the collection atomically and publishes no partial registry.
+
+No environment or pre-existing validation blocker was found. Estimated and
+actual full-card compiler gains both equal one name / five records. Gameplay
+coverage gains match: all five complete Tomb records now execute. No RON source
+changed, so the vocabulary snapshot remains unchanged. The commit uses a
+per-command signing override for the interactive signing-key limitation already
+recorded in the prior entry; repository configuration is unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Forward returned-host linkage for Animate Dead, then its lasting enchant grant,
+   source-presence and departure-player adapters. Estimate zero immediate gains,
+   eventual one name / six records. Reassess other shared work before selection.
+2. Copiable upkeep grants for Vesuvan Doppelganger, then retained ThisAbility and
+   recursive resolving copies. Estimate zero immediate gains, eventual one / six.
+3. Actual last-counter removal events for Divine Intervention. The shared removal
+   service now gives an observation point, but event players, timing and the
+   DrawTheGame action remain unsupported. Compare broader shared prerequisites first.
+
+The collection still rejects atomically. Runtime cutover, complete collection
+gameplay, Go-card/generator deletion and unused DSL cleanup remain gated.
+No Go definitions or DSL functions were removed. No authoring cutover was claimed.
+Changed files: native counter_history.go, counter_removal_history_test.go,
+zone_system.go, effect_counter.go, cost.go, cost_remove_any_counters.go and doc.go;
+RON counter_history.go, counter_removal_history_test.go, contextual_collection.go,
+counter_state.go, player_actions.go, inventory.go, counter_history_test.go,
+persistent_step_test.go, definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. This run stops after REQUIRED-COUNTER-REMOVAL-HISTORY.

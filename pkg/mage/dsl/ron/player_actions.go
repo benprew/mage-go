@@ -44,6 +44,10 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 			continue
 		}
 		switch part.Name {
+		case "RemoveCounters":
+			if len(part.Args) != 1 || part.Args[0].Kind != List || len(part.Args[0].Args) != 1 || part.Args[0].Args[0].Name != "AllCountersOfTypeFromAPermanent" {
+				return nil, nil, nil, unsupported(part, "scoped counter removal")
+			}
 		case "CreateFutureTrigger", "AttachPermanentToAPermanent", "GainControlOfPermanent":
 		case "LoseTheGame", "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
 		default:

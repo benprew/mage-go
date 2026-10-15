@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentsWithoutCountersRemovedBy] reads exact source and recipient visits.
+// Only positive removals by resolving counter effects and counter payments enter
+// history. Zero removal and zone departure do not enter history. Cleanup keeps it.
+// Phasing suspends recipient selection. Return cannot inherit either visit.
+// Clones and payment trials keep separate history. Failed payments publish none.
+// RON accepts PermanentHasNotRemovedACounterOfTypeFromIt in resolving collections
+// and AllCountersOfTypeFromAPermanent in ordinary resolving counter instructions.
+// The action player must choose one member at resolution. A local typed binding
+// retains the exact visit through removal. This choice does not target.
+// Shared choice, removal and persistent upkeep services complete Cyclopean Tomb.
+// Entry and draw replacement contexts need separate adapters.
+//
 // [PermanentsGivenCountersBy] reads counter placement history for an exact source
 // and each exact recipient visit. Only positive placements after replacements
 // and caps enter history. Counter removal and cleanup do not erase it. Phasing
@@ -9,7 +21,7 @@
 // and payment trials keep separate history. Raw ID APIs read a current source.
 // RON accepts PermanentPutACounterOfTypeOnIt(permanentRef, counter) in ordinary
 // resolving collections. Waiting queries retain source reads without placement.
-// Tomb still needs removal history and its required one-land removal procedure.
+// The shared removal history and choice services complete Tomb.
 //
 // [AtEach] saves a step subscription for the rest of the game.
 // Each match queues a new body with the saved controller and typed references.
@@ -18,7 +30,7 @@
 // separate results. Existing information services supply exact source LKI.
 // RON accepts CreateTrigger with AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))
 // and a nonempty ActionList in ordinary resolving bodies. No new targets are
-// declared in that body. Cyclopean Tomb still needs removal history and its removal procedure.
+// declared in that body. Cyclopean Tomb uses the shared removal procedure.
 //
 // [UntilPermanentHasCounter] saves one watched visit and its counter condition.
 // It captures layer recipients and values through the shared resolving service.
@@ -30,8 +42,7 @@
 // RON accepts ForAsLongAsPermanentHasACounterOfTypeOnIt(EachablePermanent,
 // counter) in ordinary resolving singular layer actions. The duration binds
 // EachablePermanent to the recipient. SetLandType uses shared subtype layers.
-// Cyclopean Tomb's activated clauses execute. Its removal history and upkeep removal
-// still require separate contracts.
+// Cyclopean Tomb uses this duration in its complete RON record.
 //
 // [GraveyardCreatureEnchantTarget] declares a graveyard creature enchant rule.
 // Aura spells save an exact target visit. Noncast entry chooses a graveyard host.

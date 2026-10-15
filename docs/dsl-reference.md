@@ -41,9 +41,8 @@ visits and declaration roles. Native `TestCounterDurationLifetime`,
 `StartAndDeclarations`, `SeparateSubjectAndStateActions`, `Waiting`,
 `PlacementReplacement`, `PaymentPreparation`, `InstructionTiming` and
 `PhaseTiming` cover lifetime and shared-service
-boundaries. Tomb's complete record still requires counter-source history and a
-persistent upkeep removal procedure. Clause evidence does not establish complete
-card gameplay.
+boundaries. Complete Tomb gameplay is covered by
+`TestRONCounterRemovalHistoryTomb`, in addition to these clause tests.
 
 
 ## Graveyard creature enchant declarations
@@ -17716,8 +17715,7 @@ and payment declarations remain unsupported.
 Cyclopean Tomb's five records supply the real source-death event and persistent
 upkeep declaration in `TestRONPersistentStepTomb`. Only the unsupported removal
 body is replaced by a life-gain probe in these tests. This is subscription
-coverage, not complete Tomb gameplay. Complete records still reject at
-`AllCountersOfTypeFromAPermanent`; removal history and its procedure need separate work.
+coverage. `TestRONCounterRemovalHistoryTomb` now covers the complete records.
 
 ### RON counter placement history
 
@@ -17743,4 +17741,39 @@ bypass and cannot establish source history.
 `TestRONCounterPlacementHistoryTomb` projects all five real Tomb records: the
 activation and placement filter are unchanged; the unsupported removal operation
 is replaced by a tap probe and its removal-history filter is omitted. These are
-history tests, not complete card coverage. Full records continue to reject.
+history tests. `TestRONCounterRemovalHistoryTomb` now covers the complete records.
+
+
+### RON required all-counter removal and removal history
+
+`RemoveCounters([AllCountersOfTypeFromAPermanent(counter, collection)])`
+is supported in ordinary resolving bodies. The instruction chooses exactly one
+member at resolution through the current action player, then removes all counters
+of that kind. An empty collection does nothing. This choice does not target.
+The compiler creates a private typed result for each built instruction and reuses
+`ChoosePermanent` and `RemoveAllCounters`. Invalid/nil choice responses use the
+shared required-choice fallback. Phasing or return cannot replace a saved choice.
+This form accepts exactly one counter-removal instruction. Counter names use the
+strict permanent counter grammar and the collection uses contextual collections.
+Costs, entry replacements and draw replacement bodies reject this new form.
+
+`PermanentHasNotRemovedACounterOfTypeFromIt(permanentRef, counter)` is a resolving
+collection predicate, including within `And` and `Or`. It lowers to
+`PermanentsWithoutCountersRemovedBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet`.
+Only actual positive attributed removals exclude a visit. Zero removals and zone
+departures do not. The exact source can be departed; phasing suspends candidate
+selection and return cannot inherit history. Clones and payment trials are separate.
+Missing bindings, malformed operands, static layers and replacement contexts
+reject. The two operands have permanent_reference and permanent_counter_type
+inventory roles; the singular choice instruction has permanent_counter_type and
+permanent_collection roles.
+
+`TestRONCounterRemovalHistoryTomb` covers the complete unchanged LEA, LEB, 2ED,
+CED and CEI records: activation, persistent upkeep after source departure/return,
+removal of counters from another origin, one land per upkeep, removal-history
+exclusion after new counters, subtype restoration, unrelated land exclusion and
+pending clones. Existing `TestRONCounterDuration*`, `CounterPlacementHistory*`
+and `PersistentStep*` retain their clause-specific timing and legality evidence.
+`TestRONCounterRemovalHistoryResolution`, `PlayerScope` and `Invalid` cover
+resolution choices, empty collections, shroud, copies, clones, scoped players,
+phased/returned choices, strict declarations and unsupported contexts.

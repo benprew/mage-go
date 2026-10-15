@@ -85,8 +85,8 @@ func TestRONCounterPlacementHistoryInvalid(t *testing.T) {
 		assertConditionalRejected(t, `Activated(PayMana([]),ActionList([TapEachPermanent(`+filter+`)]))`)
 	}
 	for _, set := range []string{"LEA", "LEB", "2ED", "CED", "CEI"} {
-		if _, err := Compile(chosenDiscardRecord(t, set, "Cyclopean Tomb")); err == nil || !strings.Contains(err.Error(), "AllCountersOfTypeFromAPermanent") {
-			t.Fatal("incomplete Tomb accepted", err)
+		if _, err := Compile(chosenDiscardRecord(t, set, "Cyclopean Tomb")); err != nil {
+			t.Fatal("complete Tomb rejected", err)
 		}
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-type counterPlacementKey struct {
+type counterHistoryKey struct {
 	source    capturedPermanent
 	recipient capturedPermanent
 	counter   core.CounterType
@@ -17,9 +17,9 @@ func (g *Game) recordCounterPlacement(source capturedPermanent, recipient *Perma
 		return
 	}
 	if g.zones.counterPlacements == nil {
-		g.zones.counterPlacements = make(map[counterPlacementKey]bool)
+		g.zones.counterPlacements = make(map[counterHistoryKey]bool)
 	}
-	g.zones.counterPlacements[counterPlacementKey{source, capturedPermanent{recipient.ID(), recipient.incarnationID}, counter}] = true
+	g.zones.counterPlacements[counterHistoryKey{source, capturedPermanent{recipient.ID(), recipient.incarnationID}, counter}] = true
 }
 
 func (g *Game) counterPlacementSource(sourceID uuid.UUID) capturedPermanent {
@@ -33,15 +33,16 @@ func (g *Game) counterPlacementSource(sourceID uuid.UUID) capturedPermanent {
 }
 
 type counterHistoryPermanents struct {
-	source     PermanentRef
-	counter    core.CounterType
-	candidates PermanentSet
+	source         PermanentRef
+	counter        core.CounterType
+	candidates     PermanentSet
+	withoutRemoval bool
 }
 
 // PermanentsGivenCountersBy selects visits that received this kind of counter from the source.
 // Counter removal does not erase a placement.
 func PermanentsGivenCountersBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet {
-	return counterHistoryPermanents{source, counter, candidates}
+	return counterHistoryPermanents{source: source, counter: counter, candidates: candidates}
 }
 func (counterHistoryPermanents) permanentSet() {}
 func (s counterHistoryPermanents) resolvePermanents(ctx *EffectContext) []*Permanent {
@@ -55,17 +56,51 @@ func (s counterHistoryPermanents) resolvePermanents(ctx *EffectContext) []*Perma
 	}
 	var selected []*Permanent
 	for _, p := range s.candidates.resolvePermanents(ctx) {
-		if p != nil && !p.PhasedOut && ctx.Game.zones.counterPlacements[counterPlacementKey{source, capturedPermanent{p.ID(), p.incarnationID}, s.counter}] {
+		if p == nil || p.PhasedOut {
+			continue
+		}
+		key := counterHistoryKey{source, capturedPermanent{p.ID(), p.incarnationID}, s.counter}
+		matches := ctx.Game.zones.counterPlacements[key]
+		if s.withoutRemoval {
+			matches = !ctx.Game.zones.counterRemovals[key]
+		}
+		if matches {
 			selected = append(selected, p)
 		}
 	}
 	return selected
 }
 func (s counterHistoryPermanents) inspectDefinition() definitionNode {
-	n := permanentInformationNode(s.source, "permanent-set", "permanents given counters by source")
+	text := "permanents given counters by source"
+	if s.withoutRemoval {
+		text = "permanents without counters removed by source"
+	}
+	n := permanentInformationNode(s.source, "permanent-set", text)
 	n.children = append(n.children, definitionEdge{"candidates", s.candidates})
 	if s.counter < 0 || s.counter >= core.NumCounters {
 		n.problem = "supply a valid counter type"
 	}
 	return n
+}
+
+// PermanentsWithoutCountersRemovedBy selects visits without actual removal by the source.
+func PermanentsWithoutCountersRemovedBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet {
+	return counterHistoryPermanents{source: source, counter: counter, candidates: candidates, withoutRemoval: true}
+}
+
+func (g *Game) removeCountersFrom(p *Permanent, counter core.CounterType, amount int, source capturedPermanent) bool {
+	if p == nil || p.PhasedOut || amount < 0 || counter < 0 || counter >= core.NumCounters {
+		return false
+	}
+	live := g.MutablePermanent(p.ID())
+	if live == nil || live.incarnationID != p.incarnationID || !live.RemoveCounter(counter, amount) {
+		return false
+	}
+	if amount > 0 && source.incarnation != uuid.Nil {
+		if g.zones.counterRemovals == nil {
+			g.zones.counterRemovals = make(map[counterHistoryKey]bool)
+		}
+		g.zones.counterRemovals[counterHistoryKey{source, capturedPermanent{live.ID(), live.incarnationID}, counter}] = true
+	}
+	return true
 }

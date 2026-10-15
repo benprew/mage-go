@@ -131,12 +131,9 @@ func (e *removeCountersEffect) Properties() EffectProperties { return EffectProp
 
 func (e *removeCountersEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
+	source, _ := (sourceRef{}).informationIdentity(ctx)
 	for _, p := range perms {
-		p = ctx.Game.MutablePermanent(p.ID())
-		if p == nil {
-			continue
-		}
-		p.RemoveCounter(e.ct, e.amount)
+		ctx.Game.removeCountersFrom(p, e.ct, e.amount, source)
 	}
 	return nil
 }

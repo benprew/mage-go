@@ -180,8 +180,8 @@ func TestRONPersistentStepBoundaries(t *testing.T) {
 		t.Fatal(got)
 	}
 	record := chosenDiscardRecord(t, "LEA", "Cyclopean Tomb")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "AllCountersOfTypeFromAPermanent") {
-		t.Fatalf("complete Tomb must retain history rejection: %v", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatalf("complete Tomb rejected: %v", err)
 	}
 }
 
