@@ -1158,6 +1158,10 @@ func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, cho
 }
 
 func (em *EffectManager) replacementCandidates(action Action, g *Game, applied map[ReplacementEffect]bool, local ...ReplacementEffect) []ReplacementEffect {
+	return em.replacementCandidatesMatching(action, g, applied, func(r ReplacementEffect) bool { return r.Matches(action, g) }, local...)
+}
+
+func (em *EffectManager) replacementCandidatesMatching(action Action, g *Game, applied map[ReplacementEffect]bool, matches func(ReplacementEffect) bool, local ...ReplacementEffect) []ReplacementEffect {
 	var candidates []ReplacementEffect
 	seen := make(map[ReplacementEffect]bool)
 	for _, list := range [3][]ReplacementEffect{em.replacements, em.cycleReplacements, local} {
@@ -1168,7 +1172,7 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 					continue
 				}
 			}
-			if !applied[r] && !seen[r] && r.IsActive(g) && r.Matches(action, g) {
+			if !applied[r] && !seen[r] && r.IsActive(g) && matches(r) {
 				candidates = append(candidates, r)
 				seen[r] = true
 			}

@@ -18446,3 +18446,36 @@ through native combat steps. `TestRONCheckableAbilityInstances`, `Invalid` and
 `Collection` check independent factories, resolution timing, scope rejection,
 strict loading and inventory roles. Existing `TestRONTemporaryKeyword*` and
 `TestRONResolutionChoice*` retain the shared layer and choice contracts.
+
+## RON static player damage amount replacement
+
+A permanent can declare:
+
+```ron
+ReplaceWouldDealDamage(
+    AnAmountOfDamageWouldBeDealtByASourceToRecipient(
+        GreaterThanOrEqualTo(Integer(3)),
+        Or([IsCardtype(Instant), IsCardtype(Sorcery)]),
+        Player(You)
+    ),
+    [DealDamageInstead(Integer(2))]
+)
+```
+
+The threshold is a fixed positive integer. The replacement amount is a fixed
+nonnegative integer smaller than that threshold. A source filter is one
+`IsCardtype` or an `Or` list of at least two distinct `IsCardtype` filters.
+Only `Player(You)` is supported in this static context. Other recipients,
+comparisons, dynamic values, combined operations, resolving actions and entry
+or draw replacement bodies reject during compilation.
+
+RON owns this grammar and its declaration checks. It lowers to
+`Static(LimitPlayerDamageFromTypes(You, threshold, amount, kinds...))`.
+The engine resolves current control, exact source information and simultaneous
+source-event grouping. The shared damage replacement pipeline supplies ordering
+and rechecks. Damage events and lifelink use the replaced amount.
+
+`TestRONStaticDamageCapAmulet`, `TestRONStaticDamageCapLifetime` and
+`TestRONStaticDamageCapUpkeep` cover the complete unmodified Forethought Amulet
+record. `TestRONStaticDamageCapInvalid` and `TestRONStaticDamageCapCollection`
+cover declaration rejection, inventory roles and strict atomic loading.

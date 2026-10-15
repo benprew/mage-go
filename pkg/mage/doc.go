@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [LimitPlayerDamageFromTypes] supplies one live static damage replacement.
+// The current typed player and exact source types select each damage event.
+// Simultaneous packets from one source to that player share the threshold
+// and replacement amount. Separate visits and recipients stay separate.
+// Shared damage services apply replacement order, rechecks, events and lifelink.
+// Source departure, phasing and ability removal suspend the static rule.
+// RON accepts a fixed positive GreaterThanOrEqualTo threshold, one IsCardtype
+// or an Or of distinct types, Player(You) and one fixed DealDamageInstead.
+// The replacement amount must be nonnegative and less than the threshold.
+// The complete Forethought Amulet record has cast, upkeep and damage evidence.
+//
 // RON accepts ChooseACheckableAbility with at least two distinct fixed keywords,
 // followed by one temporary LosesAbility(TheChosenAbility) operation.
 // The duration must be UntilEndOfTurn in an ordinary resolving body.

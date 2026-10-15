@@ -259,6 +259,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"player_reference", "player_rule_operation"}[index]
 		}
 		if n.Name == "ReplaceWouldDealDamage" && len(n.Args) == 2 {
+			if n.Args[0].Name == "AnAmountOfDamageWouldBeDealtByASourceToRecipient" {
+				return []string{"damage_amount_event", "damage_amount_operation"}[index]
+			}
 			return []string{"prevention_event", "redirection_operation"}[index]
 		}
 		if n.Name == "PreventDamage" && len(n.Args) == 2 {
@@ -902,6 +905,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "proposed_damage_value":
 		if n.Name == "HalfRoundedDown" && len(n.Args) == 1 {
 			return role
+		}
+	case "damage_amount_event":
+		if n.Name == "AnAmountOfDamageWouldBeDealtByASourceToRecipient" && len(n.Args) == 3 {
+			return []string{"damage_amount_comparison", "damage_source_filter", "prevention_recipient"}[index]
+		}
+	case "damage_amount_comparison":
+		if n.Name == "GreaterThanOrEqualTo" && len(n.Args) == 1 {
+			return "value"
+		}
+	case "damage_amount_operation":
+		if n.Name == "DealDamageInstead" && len(n.Args) == 1 {
+			return "value"
 		}
 	case "prevention_event":
 		if n.Name == "ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient" && len(n.Args) == 3 {

@@ -24357,3 +24357,47 @@ through native combat steps. `TestRONCheckableAbilityInstances`, `Invalid` and
 `Collection` check independent factories, resolution timing, scope rejection,
 strict loading and inventory roles. Existing `TestRONTemporaryKeyword*` and
 `TestRONResolutionChoice*` retain the shared layer and choice contracts.
+
+## Static player damage amount replacement
+
+`LimitPlayerDamageFromTypes(subject PlayerRef, threshold, amount int,
+kinds ...core.CardType) StaticRule` installs a live rule through `Static`.
+The threshold must be positive. The replacement amount must be nonnegative and
+smaller than the threshold. Source types must be valid, distinct and nonempty.
+Definition validation checks the typed subject and all these constraints.
+The constructor copies the type list.
+
+At each proposed damage event, the rule reads its source's current controller
+and exact battlefield visit, resolves the player, and checks the damage source's
+current or retained types through the existing source-information service
+(CR 609.7c). Other players and permanent recipients are excluded. Phasing,
+departure and printed ability removal suspend the rule. A new visit supplies
+its own rule. Control changes move `You` to the current controller.
+
+Damage from one exact source to the player in a simultaneous batch shares one
+threshold and replacement amount. Separate spell visits and recipients remain
+separate. Threshold accumulation cannot overflow. The internal
+`damageBatchReplacement` interface lets the existing replacement pipeline query
+and replace such a group. It retains the existing priority, affected-player
+APNAP choice, applicability recheck and per-packet application records. It does
+not execute damage or add a second replacement pipeline. A rule applies at most
+once to a packet, including after redirection (CR 614.5, 616.1).
+
+This operation replaces damage (CR 614.1a), so damage results, lifelink, history
+and damage-trigger bindings use the replaced amount (CR 120.3f, 120.4b).
+A zero replacement supplies no damage event. Independent life loss is unchanged.
+Damage and source deaths in the same batch retain the rule until state actions.
+Clones keep their own source lifetime, pending stack and life totals.
+
+RON accepts this operation only as a permanent's top-level static
+`ReplaceWouldDealDamage` rule. The complete Forethought Amulet record has
+paid-cast, damage and upkeep-payment or sacrifice evidence. Its local WotC
+ruling confirms that amounts of one and two remain unchanged. No source-data
+correction is needed. This contract does not establish life-loss replacement,
+including the distinct rule needed by Ali from Cairo.
+
+Evidence: `TestStaticDamageCapPackets`, `TestStaticDamageCapSameSourceBatch`,
+`TestStaticDamageCapSourceInformation`, `TestStaticDamageCapReplacementOrder`,
+`TestStaticDamageCapAPNAP`, `TestStaticDamageCapSeparateVisitsAndZero`,
+`TestStaticDamageCapEventsAndSimultaneousDeparture`,
+`TestStaticDamageCapAfterRedirection`, `TestStaticDamageCapDefinition`, and `TestRONStaticDamageCap*`.

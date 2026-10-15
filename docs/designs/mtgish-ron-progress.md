@@ -6,17 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **937 accepted / 49 rejected names**
-(986 total), **2,350 compiled / 95 rejected records** (2,445 total).
-The latest slice is **CHECKABLE-KEYWORD-REMOVAL**.
-RON lowers a resolution-time fixed-keyword choice and its adjacent temporary
-removal continuation. Native choice, targeting, layer-6 removal, copy, clone,
-combat and cleanup services execute each independent branch.
-The complete Urborg record has land-play, mana and both-choice gameplay evidence.
-Estimated and actual gain: one name / one record. Existing keyword removal and
-ability-choice grant regressions remain covered. Collection loading still
-rejects atomically. Runtime cutover, Go-card removal and DSL cleanup remain
-gated by complete support and startup.
+Latest measured result (2026-10-15): **938 accepted / 48 rejected names**
+(986 total), **2,351 compiled / 94 rejected records** (2,445 total).
+The latest slice is **STATIC-PLAYER-DAMAGE-CAP**.
+RON lowers a fixed damage threshold, source-type filter and player recipient
+into a live native damage replacement. The shared pipeline groups simultaneous
+packets by exact source and player, then supplies ordering and rechecks.
+The complete Forethought Amulet record has paid-cast, damage, upkeep-payment
+and sacrifice gameplay evidence. Estimated and actual gain: one name / one
+record. Existing upkeep text inventories also cover the newly accepted record.
+Collection loading still rejects atomically. Runtime cutover, Go-card removal
+and DSL cleanup remain gated by complete support and startup.
 
 ## Ranked next candidates
 
@@ -24706,3 +24706,190 @@ Changed files: `pkg/mage/dsl/ron/resolution_choice.go`, `optional_payment.go`,
 Urborg is no longer a candidate. Complete RON gameplay and collection loading,
 runtime startup/cutover, Go-card deletion, obsolete Go-set generation removal and
 unused DSL cleanup remain unfinished. Stop after this slice.
+
+
+## 2026-10-15 — STATIC-PLAYER-DAMAGE-CAP
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before implementation.
+The baseline loader exited 1 with valid JSON: 2,350 compiled / 95 rejected
+records, 937 accepted / 49 rejected names. This was collection rejection,
+not a build or test failure. No unrelated files needed preservation.
+
+Evaluated the latest ranking first. Read the complete Drain Power records
+in LEA/LEB/2ED/3ED/CED/CEI and Titania's Song records in ATQ/3ED; each name's
+reprints are identical. Read the complete Forethought Amulet LEG record and
+its local WotC ruling. Checked targeted vocabulary entries for the amount event,
+replacement operation and static replacement parent. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream capability | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Forced legal mana activations and saved mana | Drain Power | 0 for isolated offer/payment prerequisite; eventually 1 name / 6 records | Saved lost mana exists. The mana planner deliberately excludes arbitrary costs and some variable bodies. Legal ability offers, transaction choices, variable production and activation-order rechecks remain separate prerequisites. A complete offer service also supports later controlled-play payment work, but does not complete that card | Large; several contracts before a complete resolving instruction |
+| Sticky animation after source departure | Titania's Song | Eventually 1 name / 2 records | Needs evolving noncreature artifact membership, cross-layer dependencies and continuation until cleanup after source departure. The current ordinary static lifetime cannot supply that continuation | Large; new layer membership and duration contracts |
+| Static player damage amount replacement | Forethought Amulet | 1 name / 1 record | Its upkeep optional-payment and sacrifice body already compiles. Reuse exact source information, static ability lifetime and the shared damage replacement pipeline. A grouped amount matcher also enables later source-event amount replacements | Small/medium; one static rule and adapter, with grouped batch and ordering evidence |
+
+Selected the third candidate because it completes one full record within this
+run. The first ranked candidate lacks the legal-offer/payment contracts needed
+for its complete instruction; implementing only fixed untapped mana sources
+would silently omit legal abilities and choices. The second candidate also has
+multiple absent contracts. None of these candidates supplies an immediate
+multi-name unlock; this bounded complete operation has the best credible gain
+for its effort. No partial forced activation or sticky animation was added.
+
+### Contract, signatures and ownership
+
+Supported top-level permanent declaration:
+
+```ron
+ReplaceWouldDealDamage(
+    AnAmountOfDamageWouldBeDealtByASourceToRecipient(
+        GreaterThanOrEqualTo(Integer(threshold)),
+        Or([IsCardtype(Instant), IsCardtype(Sorcery)]),
+        Player(You)
+    ),
+    [DealDamageInstead(Integer(amount))]
+)
+```
+
+The source filter can instead be one `IsCardtype`. An `Or` requires at least two
+distinct valid types. The threshold is positive; the fixed replacement amount
+is nonnegative and smaller than the threshold. Other comparisons, players,
+recipient kinds, dynamic amounts, duplicate types, extra operations, resolving
+bodies and entry/draw replacement bodies reject before factory publication.
+There is no runtime declaration panic, card-name branch or Go-card fallback.
+
+New compiler helpers:
+`compileStaticDamageCap(n Node) (optionFactory, error)`,
+`compileDamageCapSourceTypes(n Node) ([]core.CardType, error)` and
+`fixedDamageCapAmount(n Node) (int, error)`.
+RON owns spelling, arity, context and immutable lowering. Inventory reports the
+amount event/comparison/operation, source filters, card types and player reads
+with their separate roles.
+
+New engine API:
+`LimitPlayerDamageFromTypes(subject PlayerRef, threshold, amount int,
+kinds ...core.CardType) StaticRule`. Definition validation checks the player,
+threshold, amount and copied type list. The rule supplies a live static effect
+and a per-cycle replacement. Current controller and exact source incarnation
+are checked for each event. Source exit, phasing and ability removal suspend
+it. Return installs a new rule; cleanup retains a live printed rule.
+
+Reuse: `Static`, `funcContinuousEffect`, printed ability identity, cycle
+replacements, `damageSourceHasCardType`, current/retained source information,
+`DamageSource.SameObject`, `PlayerRef`, damage assignments/outcomes, affected
+player replacement priority and APNAP choice, prevention, damage event bindings,
+lifelink, state actions, activation/cast payments, stack copying and game cloning.
+No parallel damage executor or replacement manager was introduced.
+
+The shared replacement pipeline now accepts an internal
+`damageBatchReplacement` with `matchesDamageBatch` and `replaceDamageBatch`.
+`replacementCandidatesMatching` retains ordinary candidates and priorities
+while allowing a grouped matcher. Simultaneous packets from one exact source
+to the player share a threshold and replacement amount. Other sources, visits,
+players and permanent recipients stay separate. Threshold accumulation saturates
+at the threshold to avoid overflow. Applied records remain per packet, so later
+redirection cannot cause a second use. No global last-event state is used.
+
+CR 614.1a, 614.4–6 and 616.1 establish live replacement, one application and
+rechecks after the affected player's choice. CR 609.7c supplies source-type
+matching. CR 611.3a–b and 702.26b/d establish current control, static lifetime
+and phasing. CR 120.3f/120.4b establish replaced damage amounts for lifelink
+and damage events. The local Forethought Amulet WotC ruling confirms that
+amounts one and two remain unchanged. No Scryfall note was substituted for a
+WotC ruling. `go run ./cmd/fetchset -check -card 'Forethought Amulet'` passed.
+
+Ali from Cairo was checked as a possible reuse boundary: its complete RON record
+and local WotC rulings require replacing the life-loss result while the full
+damage is still dealt. It is not a damage-amount replacement. This slice does
+not reuse or change the legacy minimum-life damage cap and does not claim Ali
+as a new unlock.
+
+### Failing-first tests and card mappings
+
+Wrote the real-record gameplay, invalid declarations and strict collection tests
+first. After correcting fixture helper signatures, confirmed the expected
+failure: `LEG.ron:90:312: unsupported rule (ReplaceWouldDealDamage)`.
+Engine tests then failed to compile solely because
+`LimitPlayerDamageFromTypes` did not exist. A later same-source simultaneous
+case failed with life 17/23 instead of 18/22 for packets 1+2. Added the grouped
+matcher through the existing batch pipeline, then confirmed that case passes.
+No expected gameplay result was weakened.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Forethought Amulet, complete LEG record | `TestRONStaticDamageCapAmulet` | Rejected unpaid cast, paid native cast, entry, instant and sorcery damage amounts 0/1/2/3/7 |
+| Amulet static lifetime and copies | `TestRONStaticDamageCapLifetime` | Source exit/return, phase and phase cycle, current control, ability removal and expiry, cleanup, pending spell copy, clone source/stack/life isolation |
+| Amulet upkeep | `TestRONStaticDamageCapUpkeep` | Only controller upkeep triggers; resolution-time payment, paid survival or unpaid sacrifice, exact mana use |
+| Supported alternate declaration | `TestRONStaticDamageCapSingleTypeZero` | One fixed source type, zero replacement and nonmatching damage |
+| Declaration rejection and atomic loading | `TestRONStaticDamageCapInvalid`, `TestRONStaticDamageCapCollection` | Invalid amounts, types, comparison, scope, context, arity and operation lists; complete record loads, roles remain typed, invalid collections retain the old registry |
+| Distinct sources and recipients | `TestStaticDamageCapPackets` | Negative/zero amounts, threshold boundaries, two sources in one batch, other player and permanent recipients, actual outcomes |
+| Source-event amounts and identity | `TestStaticDamageCapSameSourceBatch`, `TestStaticDamageCapSeparateVisitsAndZero` | Same-source packets below/above threshold, overflow, lifelink, distinct stack visits, copied declaration inputs, zero replacement and separate life loss |
+| Exact source information | `TestStaticDamageCapSourceInformation` | Current type gains/losses, nonmatching sources, departure, return with different types, phased source information and unknown source |
+| Shared replacement choice | `TestStaticDamageCapReplacementOrder`, `TestStaticDamageCapAPNAP` | Cap before/after prevention produces different correct outcomes; applicability recheck and active-player-first choices |
+| Damage events and simultaneous departure | `TestStaticDamageCapEventsAndSimultaneousDeparture` | Damage event binds the replaced amount; source killed in the same batch still protects; subsequent damage is unaffected |
+| Redirection recheck | `TestStaticDamageCapAfterRedirection` | Redirected permanent damage joins the same-source player event and makes the threshold applicable |
+| Engine declarations | `TestStaticDamageCapDefinition` | Nil player, empty/invalid/duplicate types, invalid thresholds and amounts reject |
+| Existing accepted-record inventories | `TestRONDefinitionPlanAcceptedCollection`, `TestInventoryRepositoryCollection`, numeric inventory and upkeep text inventories | Exact compiled counts advance by one; upkeep text revision now covers Forethought Amulet too |
+
+Full-card gameplay coverage increases by Forethought Amulet only. Other accepted
+records retain existing regressions; compilation does not add a gameplay claim.
+
+### Verification and measured coverage
+
+- Baseline build and complete RON package tests: passed.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONStaticDamageCap -count=1`:
+  passed. Engine damage-cap, prevention-allocation and damage-batch regressions
+  passed with `-count=1`.
+- `make build`: passed. `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed for the complete repository.
+- `make lint`: the first pass found two test identifiers that shadowed the
+  builtin `cap` and one deprecated `core.Keyword` alias. Renamed the identifiers
+  and used `core.Attr`. Then reran focused tests, build, vet, the engine short
+  suite and `make test` on the final code; all passed. The final full lint pass
+  passed with **0 issues**. Reviewed automatic formatting/modernization edits;
+  the final lint pass changed no checked source or test file.
+- `git diff --check`: passed.
+- `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,351 compiled / 94 rejected records**, **938 accepted / 48 rejected names**.
+  Exact JSON diagnostic comparison removes only Forethought Amulet's
+  `unsupported rule (ReplaceWouldDealDamage)` at LEG line 90, column 312.
+  The other 94 diagnostics are identical. No new diagnostic was added.
+
+Actual gain is **one unique name / one record**, exactly the estimate.
+New complete-record gameplay evidence is Forethought Amulet. Compilation and
+behavior coverage remain separate. No environmental or pre-existing validation
+failure blocked this slice. The only failures during final validation were the
+three new test lint issues above, which were corrected and rechecked.
+
+Changed files: new `pkg/mage/static_damage_cap.go` and
+`pkg/mage/static_damage_cap_test.go`; `pkg/mage/effect_manager.go`,
+`pkg/mage/prevention_allocation.go`, `pkg/mage/doc.go`; new
+`pkg/mage/dsl/ron/static_damage_cap.go` and `static_damage_cap_test.go`;
+RON `compiler.go`, `inventory.go`, `inventory_test.go`,
+`definition_plan_test.go`, `numeric_consumers_test.go`,
+`text_upkeep_layer_test.go`, `text_upkeep_trigger_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+The slice commit uses command-local `commit.gpgsign=false`, as in prior slices;
+repository signing configuration is unchanged.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers and transactions, then Drain Power:
+   eventual one name / six records. Establish complete legal ability choices,
+   arbitrary costs, variable production and rechecks before lowering the full
+   instruction. Saved lost mana is ready.
+2. Sticky animation and post-source lifetime for Titania's Song: eventual one
+   name / two records. Establish evolving membership, layer dependencies and
+   continuation until cleanup after the source leaves.
+3. Damage-result life-loss replacement for Ali from Cairo: one name / one record.
+   Full damage must remain available to triggers and lifelink; distinguish the
+   life-loss stage from this slice's damage-amount stage.
+
+No source defect or RON source change was needed. The vocabulary source snapshot
+therefore needs no refresh. Go-card removal, obsolete Go-set generation removal,
+runtime cutover and DSL cleanup gates remain unmet. No DSL function was removed.
+Stop after this slice.

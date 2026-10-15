@@ -42,6 +42,11 @@ type damageReplacementCandidate struct {
 	replacement ReplacementEffect
 }
 
+type damageBatchReplacement interface {
+	matchesDamageBatch([]Action, []map[ReplacementEffect]bool, int, *Game) bool
+	replaceDamageBatch([]Action, []map[ReplacementEffect]bool, int, *Game)
+}
+
 func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game) []Action {
 	result, outcomes := em.prepareDamageBatchReplacements(actions, g)
 	applyPreventionLifeGains(g, outcomes)
@@ -73,7 +78,13 @@ func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Actio
 				if (player == nil && affected != nil) || (player != nil && (affected == nil || affected.PlayerID() != player.PlayerID())) {
 					continue
 				}
-				for _, replacement := range em.replacementCandidates(action, g, applied[i], local...) {
+				matches := func(r ReplacementEffect) bool {
+					if batch, ok := r.(damageBatchReplacement); ok {
+						return batch.matchesDamageBatch(actions, applied, i, g)
+					}
+					return r.Matches(action, g)
+				}
+				for _, replacement := range em.replacementCandidatesMatching(action, g, applied[i], matches, local...) {
 					p := getReplacementPriority(replacement)
 					if p > priority {
 						continue
@@ -121,6 +132,8 @@ func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Actio
 		}
 		selected := candidates[choice]
 		switch replacement := selected.replacement.(type) {
+		case damageBatchReplacement:
+			replacement.replaceDamageBatch(actions, applied, selected.index, g)
 		case damageEventExpander:
 			originalCount := len(actions)
 			actions, applied = replacement.expandDamageEvent(actions, applied, g)
