@@ -22,7 +22,13 @@ func compileReturnedPermanentProducer(n Node, remaining []Node, ctx scope) (effe
 		return nil, problem(n, "returned permanent results require an ordinary resolving body")
 	}
 	plan := &returnedPermanentPlan{label: "returned permanent at " + n.Position.String()}
-	producer, err := compileGraveyardReturnInto(n, ctx, plan)
+	var producer effectFactory
+	var err error
+	if n.Name == "ReturnDeadGuestGraveyardCardToBattlefield" {
+		producer, err = compileDepartedAuraEntryInto(n, ctx, plan)
+	} else {
+		producer, err = compileGraveyardReturnInto(n, ctx, plan)
+	}
 	if err != nil {
 		return nil, err
 	}

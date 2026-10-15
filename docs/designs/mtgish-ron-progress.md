@@ -8,14 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **922 accepted / 64 rejected names**
 (986 total), **2,306 compiled / 139 rejected records** (2,445 total).
-The latest slice is **REQUIRED-LEGAL-AURA-CHOICE**.
-RON lowers required permanent choices with adjacent payment-result branches.
-The success branch receives an exact local choice. Aura host-death choices can
-use the saved departed Aura's legal hosts with the resolving entry controller.
-Mage reuses required choice, attachment legality and per-resolution bindings.
-Takklemaggot's choice and attached-return fragment now execute; non-Aura return
-and retained-player grants still reject. Estimated and actual gain: zero names
-and records. No accepted record regressed. No RON source changed.
+The latest slice is **NON-AURA-ENTRY-RESULT**.
+RON lowers departed-Aura returns as non-Aura enchantments and supplies a local
+exact entrant to later instructions. Mage owns entry type/subtype changes,
+replacement reads, exact visits, layer order and clone state. Copied Aura
+abilities can return physical nonenchantment cards with the correct entry type.
+Takklemaggot's fallback return fragment now executes; enchant removal and
+retained-player grants still reject. Estimated and actual gain: zero names and
+records. No accepted record regressed. No RON source changed.
 Build, vet, short/full tests, focused tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -25,10 +25,10 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Non-Aura return and exact entrant:** Takklemaggot has required legal
-   choice, native explicit attachment and departed-Aura capture. Still needs
-   non-Aura entry, an exact entrant result and a retained-player grant.
-   Estimate zero immediate gains for choice alone; eventual one name / one record.
+1. **Enchant removal and retained-player grants:** Takklemaggot now has both
+   return forms and an exact successful entrant. It still needs enchant ability
+   removal and a grant that retains the dead host's controller. Reassess a shared
+   grant prerequisite first. Eventual one name / one record.
 2. **Counter snapshots and exact exile-entry continuations:** Tawnos's Coffin
    needs saved counters, a successful single-card entrant and source lifecycle
    lowering. Estimate zero immediate gains for either prerequisite; eventual one name.
@@ -19532,3 +19532,187 @@ Commit title: `feat(ron): implement required legal Aura host choices`.
 Signing is disabled for this invocation, consistent with the prior ledger's
 interactive signing-key limitation. Repository signing configuration is unchanged.
 This run stops after REQUIRED-LEGAL-AURA-CHOICE.
+
+## 2026-10-15 — NON-AURA-ENTRY-RESULT
+
+### Baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader returned valid
+JSON and expected exit 1: 922 accepted / 64 rejected unique names, 2,306 compiled
+/ 139 rejected records, 986 names / 2,445 records total. This was collection
+rejection, not a build or test failure.
+
+The three ranked candidates were checked against their complete RON records,
+including nested bodies and identical reprints. Counts below count each name
+once; a first diagnostic is not a complete-card unlock estimate.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Non-Aura return and exact entrant | Takklemaggot (LEG, 1 record) | 0 immediate; eventual 1 name / 1 record | Required legal choice, departed-Aura capture and attached entry already exist. Enchant ability removal and the retained dead-host player in an acquired upkeep trigger remain. Establishes the fallback entrant and its later-instruction identity. | Medium: entry layer lifetime, replacement reads, result scope and gameplay |
+| Counter snapshots and singular exile entry | Tawnos's Coffin (ATQ, 1 record) | 0 for either prerequisite; eventual 1 name / 1 record | Noted counters, successful singular exile entry and source leave/untap continuations remain. Enables conditional attached Aura returns with saved counters. | Higher: saved counter maps, entry results and lifecycle adapters |
+| Copy-effect ability grants | Vesuvan Doppelganger (6 records) | 0 for grants alone; eventual 1 name / 6 records | Recursive resolving copies and ThisAbility retention remain. Enables copiable recurring upkeep grants. | Highest: recursive declaration identity, copiable grants and resolution copies |
+
+Candidate 1 was dependency-ready and unblocked the next stage of Takklemaggot.
+All three candidates have zero immediate complete-card gains; the first had the
+smallest remaining prerequisite with an exact gameplay acceptance test. The
+native entry option is reusable for graveyard and exile entry. The result
+adapter reuses the existing exact entrant service rather than adding a second
+result mechanism. No other slice was started.
+
+### Requirements, rules and source evidence
+
+Complete records read: Takklemaggot, Tawnos's Coffin, and all six identical
+Vesuvan Doppelganger records. All local rulings were read through the exact-name
+rulings index. `go run ./cmd/fetchset -check -card "<name>"` passed for each of
+these three names. No ruling fetch or source correction was required.
+
+Takklemaggot's local LEG Oracle text says it returns under the prior Aura
+controller's control as a non-Aura enchantment when no legal creature can be
+chosen. Its 2008-05-01 wotc ruling separates chooser and return controller; its
+2009-10-01 wotc rulings establish the exact graveyard visit and non-Aura fallback.
+No scryfall note was treated as a wotc ruling. Rules read through the local index
+and relevant sections: CR 205.1/205.3, 303.4, 400.7 (including 400.7f/j),
+611.2c/e, 613.1d and 614.12. No source defect was found or corrected. No RON
+source changed, so the vocabulary snapshot needs no refresh.
+
+### Contract, signatures and reuse boundary
+
+- Native signatures:
+  `EnterWithoutSubtype(family SubtypeFamily, subtype string) BattlefieldEntryOption`
+  and `EnterAsNonAuraEnchantment() BattlefieldEntryOption`.
+  It removes one subtype in layer 4 from one exact entrant visit and preserves
+  other subtypes and card types. The second constructor also sets the card type
+  to Enchantment. Other card types and their associated subtypes do not remain;
+  supertypes stay unchanged. A copied Aura ability can return a physical card
+  that is not an enchantment. Invalid family/subtype declarations, empty
+  subtypes, duplicate options and existing nil option checks reject before play.
+- The shared entry context carries the option into graveyard and exile entry.
+  Replacement checks see the removal before entry. Copy replacements can replace
+  subtype state, so each later entry check reapplies it. Projected entry queries
+  use the same retained layer effect. Successful entry keeps the effect in the
+  shared layer service. Cancelled preparation and rejected/stale prepared entries
+  remove the unused effect. Existing entry ordering, attachment and batch
+  registration services remain in charge of movement and observations.
+- The effect saves a `capturedPermanent`, not a bare card ID. Phasing suspends it
+  and preserves the visit; a full phase cycle restores it. Departure ends its
+  application. A new visit cannot inherit it. Printed cards and copiable values
+  retain their subtypes. Later subtype effects use normal timestamp order.
+  Game clones keep independent effect objects and later layer changes.
+- RON accepts exactly
+  `ReturnDeadGuestGraveyardCardToBattlefield([EntersUnderPlayersControl(playerRef), EntersAsNonAuraEnchantment])`
+  in ordinary resolving Aura host-death bodies. The second entry is a strict
+  symbol, sets Enchantment and removes Aura from the saved departed Aura's new visit. The existing
+  explicit attached-entry shape remains supported. Enchant ability removal is
+  a later instruction and is not silently included in the entry operation.
+- Both departed-Aura return forms can now produce
+  `ThePermanentPutOnTheBattlefieldThisWay` for later instructions in the same
+  action list. Shared
+  `ReturnCardToBattlefieldInto(card CardRef, controller PlayerRef, result *PermanentBinding, options ...BattlefieldEntryOption)`
+  clears failed results and saves the exact successful entrant. RON uses a fresh
+  per-instance binding and its existing returned-permanent scope plan. Branch
+  results cannot escape; nested producers shadow and restore outer scope.
+  Delayed bodies, stack copies and clones reuse the existing saved-frame and
+  LKI services. There is no global last-entry result.
+- Entry and draw replacement contexts, missing Aura host-death scopes,
+  malformed entry lists, incorrect arity and escaped results still reject.
+  This is an entry instruction, not a payment transaction. It adds no cost
+  rollback or replacement-choice ordering policy. Existing callers are retained.
+  No Go-card fallback, partial registry, declaration panic or card-name branch
+  was added.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation at the missing `EnterWithoutSubtype`
+signature. RON gameplay tests first failed at the unsupported strict
+`EntersAsNonAuraEnchantment` entry. Both passed after implementation. Final review identified the copied-physical-
+card case. The additional native test failed at the missing
+`EnterAsNonAuraEnchantment` signature. The RON copied-physical-card test failed
+an assertion with the removal-only adapter and passed with full entry type
+setting. The engine now keeps a derived type set for types without identity
+attributes, resets it with other layer values and copies it in game clones.
+A physical land returned as an enchantment is checked as an enchantment by the
+land-entry prohibition service. Later
+fixture checks supplied card ownership and validated copy provenance, used the
+clone's player for zone moves, and accounted for the clone's independent entry
+choice. A repeated synthetic producer uses a distinct source position, as real
+separate declarations do. No engine rule was relaxed to fit those fixtures.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Takklemaggot LEG:256 fallback return fragment | `TestRONNonAuraEntry` | Real record's required choice, failure branch and return entry; distinct owner/controller, no legal host, stale graveyard visit, unattached non-Aura survives state actions, delayed exact entrant, waiting queries, stack copy, game clone, phase cycle and leave/return |
+| Copied Aura on a physical artifact | `TestRONNonAuraEntryCopiedPhysicalCard` | Copies the real Takklemaggot fragment onto an artifact; its departed physical card returns solely as a non-Aura enchantment, with separate owner/controller and the exact entrant continuation |
+| Native entry type setting | `TestEntryAsNonAuraEnchantmentCardTypes` | Physical artifact/creature/land/planeswalker types, land-entry prohibition, printed return and clones; copied physical type cannot defeat the entry instruction |
+| Failed entrant result | `TestRONNonAuraEntryClearsResult` | A failed second return cannot supply the first successful entrant to a later counter operation |
+| RON declarations and scopes | `TestRONNonAuraEntryInvalid` | Tuple spelling of the strict symbol, wrong arity, duplicate entries, use-before-produce, branch escape and absent Aura host-death context reject |
+| Native entry contract | `TestEntryWithoutSubtype` | Graveyard/exile entry, preserved Curse subtype, cancellation, changed visits during replacements, removal of unused effects, phasing, printed return, actual optional entry copying, unchanged copiable values, projected filtered entry and clone isolation |
+| Native declarations and type ordering | `TestEntryWithoutSubtypeInvalid`, `TestEntryWithoutSubtypeLayers` | Wrong-family/empty/duplicate declarations reject; later subtype addition and replacement obey timestamps; a clone made after entry keeps its own effect and layers |
+| Preserved existing behavior | `TestRONAttachedEntry*`, `TestRONRequiredPermanentChoice*`, `TestRONReturnedPermanent*`, `TestRONPermanentChoiceRecordsAndInventory` | Existing attachment and result services still pass; the old negative non-Aura case now tests malformed arity; the collection assertion requires the next real blocker |
+
+The Takklemaggot probe replaces only its unsupported later acquired-ability
+modification with an observable counter continuation. It is a real-record
+fragment test, not a complete-card gameplay claim. The full record now rejects
+at `LEG.lines.ron:256:874: unsupported lasting ability modification (LosesAbility)`.
+The retained dead-host player in the granted upkeep trigger also remains a
+separate requirement. No production record was weakened or skipped.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONNonAuraEntry' -count=1`: pass,
+  including a repeat after lint and the copied physical-card regression.
+- `go test ./pkg/mage -run '^TestEntry(WithoutSubtype|AsNonAuraEnchantment)' -count=1`:
+  pass, including a repeat after lint.
+- Existing RON attachment, required-choice, returned-permanent and inventory
+  focused tests: pass. Two obsolete negative assertions were updated to the
+  malformed new entry and the exact next full-record diagnostic. Positive
+  gameplay and declaration tests cover the newly supported form.
+- `make build` and `go vet ./...`: pass on the completed implementation.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass for the full repository.
+- `make lint`: final pass, 0 issues. The first run found two `deferInLoop`
+  warnings and one unused test assignment. Cleanup now runs once at the function
+  boundary; the unused assignment was removed. Subsequent focused, build, vet,
+  engine, full and lint checks passed. Automatic import formatting was reviewed;
+  no unrelated files changed.
+- `go test ./... -short -count=1`: pass after final lint, as required by the
+  native skill. Focused checks passed again after final formatting.
+- `git diff --check`: pass, including the final API documentation and ledger.
+- Final `go run ./cmd/loadcards -json`: valid JSON and expected exit 1 for
+  atomic collection rejection. Counts remain 922 accepted / 64 rejected names
+  and 2,306 compiled / 139 rejected records. A parsed comparison asserts
+  unchanged rejected record sets, unchanged accepted coverage and exactly one
+  changed diagnostic, Takklemaggot. No accepted record regressed. There is no
+  environment blocker.
+
+Actual gain: **0 names / 0 records**, equal to the estimate. Gameplay coverage
+increases for non-Aura entry and the real Takklemaggot fallback fragment;
+complete-card gameplay coverage does not increase. Complete collection gameplay,
+runtime loading, embedded startup, Go-card/generator deletion and unused DSL
+cleanup remain incomplete. Their removal gates remain closed. No production
+Go definitions, generators or DSL functions were removed.
+
+Changed files: `pkg/mage/entry_subtype.go` and its tests; `attached_entry.go`,
+`composable_actions.go`, `effect_cards.go`, `effect_manager.go`, `entry_copy.go`,
+`game.go`, `linked_exile_entry.go`, `card.go`, `clone.go`, `doc.go`; `pkg/mage/dsl/ron/attached_entry.go`,
+`attached_entry_test.go`, `compiler.go`, `optional_payment.go`,
+`returned_permanent.go`, `non_aura_entry_test.go`, `permanent_choice_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Takklemaggot's enchant ability removal and retained-player acquired upkeep
+   trigger. Required choice, departed-Aura capture, both return forms and an
+   exact successful entrant now exist. Reassess a shared grant prerequisite
+   before completing the card. Eventual one name / one record.
+2. Coffin's saved counter snapshots, then exact single exile entry continuation.
+   Keep counter snapshots and the successful entrant in mage. Source leave/untap
+   lifecycle adapters remain. Estimate zero gains per prerequisite; eventual
+   one name / one record.
+3. Copy-effect ability grants for Vesuvan Doppelganger, followed by recursive
+   resolving copies and ThisAbility retention. Estimate zero gains for grants
+   alone; eventual one name / six records. Reassess shared work before selection.
+
+Commit title: `feat(ron): implement non-Aura entry results`.
+Signing is disabled for this invocation, consistent with the prior ledger's
+interactive signing-key limitation. Repository signing configuration is unchanged.
+This run stops after NON-AURA-ENTRY-RESULT.

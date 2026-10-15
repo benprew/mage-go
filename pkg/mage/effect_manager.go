@@ -682,7 +682,7 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 			continue
 		}
-		needsReset := len(p.SubTypeOverride) > 0 ||
+		needsReset := p.cardTypeOverride != nil || len(p.SubTypeOverride) > 0 ||
 			len(p.SubTypeAdditions) > 0 ||
 			p.hasSubtypeFamilyEffects() ||
 			p.printedAbilitiesSuppressed ||
@@ -748,6 +748,7 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		p.RuntimeAbilities = base
+		p.cardTypeOverride = nil
 		p.SubTypeOverride = nil
 		p.SubTypeAdditions = nil
 		p.resetSubtypeFamilyEffects()
@@ -1114,6 +1115,10 @@ func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, cho
 	var outcomes []preventionLifeGain
 	applied := make(map[ReplacementEffect]bool)
 	for action != nil {
+		// Copy replacements can replace subtype state before the next entry check.
+		if entry, ok := action.(*battlefieldEntryAction); ok && entry.context.entry.withoutSubtype != nil {
+			entry.context.entry.withoutSubtype.apply(g, entry.permanent)
+		}
 		if entry, ok := action.(*battlefieldEntryAction); ok && g.isLandEntryProhibited(entry.permanent.HasType(TypeLand)) {
 			return nil, outcomes
 		}

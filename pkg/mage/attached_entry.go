@@ -11,6 +11,8 @@ type battlefieldEntryOptions struct {
 	host                       PermanentRef
 	tappedCount, attachedCount int
 	invalid                    bool
+	withoutSubtype             *enterWithoutSubtypeOption
+	withoutSubtypeCount        int
 }
 
 func newBattlefieldEntryOptions(options []BattlefieldEntryOption) battlefieldEntryOptions {
@@ -29,8 +31,13 @@ func (e battlefieldEntryOptions) inspect(node *definitionNode) {
 	if e.invalid {
 		node.problem = "supply non-nil entry options"
 	}
-	if e.tappedCount > 1 || e.attachedCount > 1 {
+	if e.tappedCount > 1 || e.attachedCount > 1 || e.withoutSubtypeCount > 1 {
 		node.problem = "supply one entry option of each kind"
+	}
+	if e.withoutSubtype != nil {
+		if err := ValidateSubtypeFamily(e.withoutSubtype.family, e.withoutSubtype.subtype); err != nil || e.withoutSubtype.subtype == "" {
+			node.problem = "supply one valid subtype to remove"
+		}
 	}
 	if e.attachedCount > 0 {
 		node.children = append(node.children, definitionEdge{"entry-host", e.host})

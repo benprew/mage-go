@@ -12,7 +12,11 @@ func compileAttachedEntry(n Node, ctx scope) (permanentReferencePlan, error) {
 	return compilePermanentRef(n.Args[0], ctx)
 }
 
-func compileDepartedAuraAttachedEntry(n Node, ctx scope) (effectFactory, error) {
+func compileDepartedAuraEntry(n Node, ctx scope) (effectFactory, error) {
+	return compileDepartedAuraEntryInto(n, ctx, nil)
+}
+
+func compileDepartedAuraEntryInto(n Node, ctx scope, result *returnedPermanentPlan) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
@@ -24,7 +28,7 @@ func compileDepartedAuraAttachedEntry(n Node, ctx scope) (effectFactory, error) 
 		return nil, err
 	}
 	if len(entries) != 2 || entries[0].Name != "EntersUnderPlayersControl" {
-		return nil, unsupported(n.Args[0], "departed Aura attached entry")
+		return nil, unsupported(n.Args[0], "departed Aura entry")
 	}
 	if err := arity(entries[0], 1); err != nil {
 		return nil, err
@@ -33,12 +37,29 @@ func compileDepartedAuraAttachedEntry(n Node, ctx scope) (effectFactory, error) 
 	if err != nil {
 		return nil, err
 	}
-	host, err := compileAttachedEntry(entries[1], ctx)
-	if err != nil {
-		return nil, err
+	var entry func(instanceBindings) mage.BattlefieldEntryOption
+	if entries[1].Name == "EntersAsNonAuraEnchantment" {
+		if _, err := symbol(entries[1]); err != nil {
+			return nil, err
+		}
+		entry = func(instanceBindings) mage.BattlefieldEntryOption {
+			return mage.EnterAsNonAuraEnchantment()
+		}
+	} else {
+		host, err := compileAttachedEntry(entries[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		entry = func(bindings instanceBindings) mage.BattlefieldEntryOption {
+			return mage.EnterAttachedTo(host.build(bindings))
+		}
 	}
 	ctx.hostDeath.departedAura = true
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.ReturnCardToBattlefield(mage.FromCard(bindings.hostDeaths[ctx.hostDeath].aura), controller.build(bindings), mage.EnterAttachedTo(host.build(bindings)))
+		card := mage.FromCard(bindings.hostDeaths[ctx.hostDeath].aura)
+		if result != nil {
+			return mage.ReturnCardToBattlefieldInto(card, controller.build(bindings), bindings.returnedPermanents[result], entry(bindings))
+		}
+		return mage.ReturnCardToBattlefield(card, controller.build(bindings), entry(bindings))
 	}, nil
 }

@@ -699,6 +699,7 @@ type Permanent struct {
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
 
+	cardTypeOverride            []CardType
 	RuntimeAbilities            []Ability // base + granted by effects
 	SubTypeOverride             []string  // if set, replaces card's subtypes (from continuous effects)
 	SubTypeAdditions            []string  // additive subtypes granted by continuous effects (CR 613 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
@@ -898,7 +899,10 @@ func (p *Permanent) HasType(t CardType) bool {
 	case TypeEnchantment:
 		return p.HasAttr(AttrIsEnchantment)
 	}
-	// For other types (Instant, Sorcery, Planeswalker, etc.), fall through to card.
+	// A type change can remove types that have no identity attribute.
+	if p.cardTypeOverride != nil {
+		return slices.Contains(p.cardTypeOverride, t)
+	}
 	return p.Card.HasType(t)
 }
 

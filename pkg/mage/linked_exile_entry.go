@@ -46,6 +46,12 @@ type preparedExileEntry struct {
 
 func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
+	var proposed []*Permanent
+	defer func() {
+		for _, p := range proposed {
+			g.discardUnregisteredEntrySubtype(p)
+		}
+	}()
 	attachment := e.entry.captureAttachment(ctx)
 	savedX := g.resolution.X()
 	g.resolution.SetX(0)
@@ -81,7 +87,8 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 			}
 			card := exiled.Card.Copy()
 			card.SetID(subject.id)
-			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller}, e.entry.tapped)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller, entry: e.entry}, e.entry.tapped)
+			proposed = append(proposed, perm)
 			if perm == nil {
 				if failed != nil {
 					prepared = append(prepared, preparedExileEntry{subject: subject, failed: failed, owner: owner.PlayerID()})

@@ -21,7 +21,7 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			}
 			return append(effects, build), ctx.chosenName, nil
 		}
-		if part.Name == "PutGraveyardCardOntoBattlefield" && hasReturnedPermanentRead(parts[i+1:]) {
+		if (part.Name == "PutGraveyardCardOntoBattlefield" || part.Name == "ReturnDeadGuestGraveyardCardToBattlefield") && hasReturnedPermanentRead(parts[i+1:]) {
 			build, err := compileReturnedPermanentProducer(part, parts[i+1:], ctx)
 			if err != nil {
 				return nil, nil, err

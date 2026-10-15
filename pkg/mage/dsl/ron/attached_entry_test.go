@@ -137,7 +137,7 @@ func TestRONAttachedEntryInvalid(t *testing.T) {
 		strings.Replace(valid, "EntersAttachedToPermanent(TheChosenPermanent)", "EntersAttachedToPermanent", 1),
 		strings.Replace(valid, "EntersAttachedToPermanent(TheChosenPermanent)", "EntersAttachedToPermanent(TheChosenPermanent,ThisPermanent)", 1),
 		strings.Replace(valid, "EntersUnderPlayersControl(You)", "EntersUnderPlayersControl(You),EntersUnderPlayersControl(You)", 1),
-		strings.Replace(valid, "EntersAttachedToPermanent(TheChosenPermanent)", "EntersAsNonAuraEnchantment", 1),
+		strings.Replace(valid, "EntersAttachedToPermanent(TheChosenPermanent)", "EntersAsNonAuraEnchantment(ThisPermanent)", 1),
 		`ReturnDeadGuestGraveyardCardToBattlefield`,
 	} {
 		node := nameScopeNode(t, `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[Aura]),Rules:[EnchantPermanent(IsCardtype(Creature)),TriggerA(WhenAPermanentDies(SinglePermanent(HostPermanent)),ActionList([ChooseAPermanent(IsCardtype(Creature)),`+body+`]))])`)

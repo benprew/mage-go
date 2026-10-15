@@ -281,6 +281,7 @@ func clonePermanentInto(dst, src *Permanent) {
 	if n := len(src.RuntimeAbilities); n > 0 {
 		dst.RuntimeAbilities = src.RuntimeAbilities[:n:n]
 	}
+	dst.cardTypeOverride = slices.Clone(src.cardTypeOverride)
 	// Deep copy subtype override.
 	if len(src.SubTypeOverride) > 0 {
 		dst.SubTypeOverride = make([]string, len(src.SubTypeOverride))

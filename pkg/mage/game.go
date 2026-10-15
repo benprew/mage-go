@@ -464,7 +464,7 @@ func (g *Game) prepareBattlefieldEntryWithContext(card Card, controller uuid.UUI
 
 // Entry batches must finish choices before a failed entry moves to the graveyard.
 func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uuid.UUID, colors *[]Color, context battlefieldEntryContext, tapped bool) (*Permanent, Card) {
-	if g.IsLandEntryProhibited(card) {
+	if g.IsLandEntryProhibited(card) && (context.entry.withoutSubtype == nil || !context.entry.withoutSubtype.asEnchantment) {
 		return nil, nil
 	}
 	if context.actor == uuid.Nil {
@@ -482,6 +482,13 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 	g.syncAbilityContext(perm)
 	g.zones.SetEnteringPermanent(perm)
 	defer g.zones.ClearEnteringPermanent()
+	cancelSubtype := context.entry.prepareSubtype(g, perm)
+	prepared := false
+	defer func() {
+		if !prepared {
+			cancelSubtype()
+		}
+	}()
 	entry := &battlefieldEntryAction{context: context, permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement), textChanges: entryCopyTextChanges(card)}
 	if g.effects.ApplyReplacements(entry, g) == nil {
 		if g.isLandEntryProhibited(perm.HasType(TypeLand)) {
@@ -578,6 +585,7 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 		}
 	}
 
+	prepared = true
 	return perm, nil
 }
 

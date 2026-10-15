@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [EnterWithoutSubtype] removes one subtype from an exact entrant in layer 4.
+// Entry replacements read the removal. Copy choices cannot erase it.
+// Later layer effects use timestamp order. Phasing preserves the visit.
+// Return cannot inherit it. Printed cards and copiable values stay unchanged.
+// Cancelled entry and stale card visits discard the unused entry effect.
+// [EnterAsNonAuraEnchantment] also sets the entrant's type to Enchantment.
+// A copied Aura ability can return a card with a different printed type.
+// RON accepts EntersAsNonAuraEnchantment in departed-Aura graveyard returns.
+// That return and attached returns can supply a local exact entrant result.
+// Shared [ReturnCardToBattlefieldInto] clears failed results and saves visits.
+// Delayed bodies and clones keep separate frames. Takklemaggot's return now
+// executes; its enchant removal and retained-player upkeep grant still reject.
+//
 // [ChoosePermanentForPlayerOrElse] selects a branch after a required choice.
 // Shared choice rules save the chooser and exact visit. Empty results cannot
 // supply an old choice. [LegalHostsForAuraCard] reads the exact current Aura

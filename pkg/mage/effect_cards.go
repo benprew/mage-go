@@ -500,13 +500,20 @@ func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, acto
 }
 
 func returnGraveyardCardToBattlefieldWithAttachment(g *Game, cardID, controller, actor uuid.UUID, tapped bool, attachment *entryAttachment) *Permanent {
+	return returnGraveyardCardToBattlefieldWithOptions(g, cardID, controller, actor, battlefieldEntryOptions{tapped: tapped}, attachment)
+}
+
+func returnGraveyardCardToBattlefieldWithOptions(g *Game, cardID, controller, actor uuid.UUID, options battlefieldEntryOptions, attachment *entryAttachment) *Permanent {
+	var prepared *Permanent
+	defer func() { g.discardUnregisteredEntrySubtype(prepared) }()
 	for _, player := range g.players {
 		for _, card := range player.Graveyard() {
 			if card.ID() != cardID {
 				continue
 			}
 			visit := g.graveyardVisit(cardID)
-			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, controller, nil, battlefieldEntryContext{actor: actor}, tapped)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, controller, nil, battlefieldEntryContext{actor: actor, entry: options}, options.tapped)
+			prepared = perm
 			if visit == uuid.Nil || g.graveyardVisit(cardID) != visit {
 				return nil
 			}

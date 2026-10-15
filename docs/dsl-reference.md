@@ -1,5 +1,55 @@
 # DSL reference
 
+## Non-Aura entry and departed-Aura entrant results
+
+`EnterWithoutSubtype(family SubtypeFamily, subtype string) BattlefieldEntryOption`
+removes one subtype in layer 4 from the exact battlefield visit. It works with
+`ReturnCardToBattlefield`, `ReturnCardToBattlefieldInto` and
+`PutExiledCardsOntoBattlefieldUnderOwnersControl`. Other subtypes and card types
+remain. `EnterAsNonAuraEnchantment() BattlefieldEntryOption` also sets the card
+type to Enchantment. It removes other card types and their associated subtypes,
+including types without identity attributes. Supertypes stay unchanged. This
+is required when a copied Aura ability returns a physical nonenchantment card.
+Nil, duplicate and invalid options fail definition validation.
+
+The removal applies before entry replacements inspect the entrant, including
+the shared projected entry query. Copy replacements cannot erase the removal.
+The normal layer service retains the effect after entry and orders later type
+effects by timestamp. Phasing suspends the effect and preserves its visit.
+Departure ends its application; return cannot inherit it. The printed card and
+copiable values keep their subtypes. Copies and clones keep separate game state.
+Cancelled entry and changed zone visits remove the unused entry effect.
+This establishes CR 205.1/205.3, 400.7, 611.2c/e, 613.1d and 614.12 behavior.
+
+In ordinary Aura host-death resolving bodies, RON accepts
+`ReturnDeadGuestGraveyardCardToBattlefield([EntersUnderPlayersControl(playerRef),
+EntersAsNonAuraEnchantment])`. The second entry must be a strict symbol. It sets
+Enchantment and removes Aura from the captured departed Aura's new visit.
+It does not remove its enchant ability. The existing explicit attached-entry form is retained.
+Both forms can publish `ThePermanentPutOnTheBattlefieldThisWay` to following
+instructions in the same action list. The compiler reuses
+`ReturnCardToBattlefieldInto` and a fresh `PermanentBinding` per instance.
+A failed return clears its result. Nested lists restore outer scope; branch
+results cannot escape. Delayed bodies retain the exact entrant and its LKI.
+Entry and draw replacement bodies, malformed entry lists and absent Aura
+host-death scopes reject. There is no shared last-entry result.
+
+Takklemaggot's LEG fallback return fragment now executes with separate owner
+and controller. Its later enchant removal and retained-player upkeep grant
+remain unsupported; its full record still rejects. `TestRONNonAuraEntry*`
+uses the real fallback entry with a test counter continuation in place of that
+unsupported grant. It covers stale Aura visits, copies, clones, phasing,
+departure, result clearing, waiting queries and invalid declarations.
+`TestEntryWithoutSubtype*` covers native graveyard/exile entry, cancellation,
+changed visits during choices, projected replacements, actual entry copying,
+copiable values, type timestamps, phasing and clone isolation.
+`TestEntryAsNonAuraEnchantmentCardTypes` covers physical artifact, creature, land
+and planeswalker types, printed return and clones. A printed land enters as
+an enchantment through a land-entry prohibition. The RON copied-physical-card
+test first copies Takklemaggot onto an artifact, then executes the real fallback
+return on that artifact. The resulting object is solely a non-Aura enchantment.
+
+
 ## Required permanent choices and legal Aura hosts
 
 `ChoosePermanentForPlayerOrElse(player PlayerRef, subjects PermanentSet,
@@ -32,8 +82,8 @@ In an Aura host-death body, the collection
 and the resolving controller as its prospective entry controller. The strict
 symbol must be the second of exactly two operands. Other legal-Aura predicate
 contexts reject. This lowers Takklemaggot's required attachment choice and its
-existing attached-return success branch. Its non-Aura return and retained-player
-ability grant still reject; the complete card has no new gameplay claim.
+existing attached-return success branch. Its non-Aura return now lowers; its retained-player
+ability grant still rejects; the complete card has no new gameplay claim.
 Its 2009-10-01 wotc ruling specifies the dead creature's controller as chooser,
 a required legal choice at resolution, and no targeting.
 
@@ -105,7 +155,8 @@ RON accepts these exact shapes in ordinary resolving bodies:
 
 - `ReturnDeadGuestGraveyardCardToBattlefield([EntersUnderPlayersControl(playerRef),
   EntersAttachedToPermanent(permanentRef)])` in an Aura host-death body. It uses
-  the existing departed-Aura card binding. Other return-entry lists reject.
+  the existing departed-Aura card binding. The non-Aura form is specified above;
+  other return-entry lists reject.
 - `PutEachExiledCardOntoTheBattlefield(exiledSet, [EntersUnderOwnersControl,
   EntersAttachedToPermanent(permanentRef)])` for the existing grouped or linked
   exile sets. The existing owner-only form remains supported.
@@ -113,7 +164,7 @@ RON accepts these exact shapes in ordinary resolving bodies:
 RON owns these spellings, list shapes and lexical reference checks. Mage owns
 host visits, legality, replacements, batch entry, movement and attachment.
 Required creature choice and `CanBeEnchantedByDeadGuest` now use the
-required-choice contract above. Non-Aura return, noted counters and Coffin's
+required-choice contract above. Noted counters and Coffin's
 single-card return remain separate adapters. Animate
 Dead's graveyard attachment and later on-battlefield attachment are separate
 contexts. These complete records remain rejected; no partial registry is used.

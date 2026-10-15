@@ -49,6 +49,7 @@ type entryCopyKey struct {
 }
 
 type battlefieldEntryContext struct {
+	entry           battlefieldEntryOptions
 	actor           uuid.UUID
 	announcedX      int
 	castColorsSpent int

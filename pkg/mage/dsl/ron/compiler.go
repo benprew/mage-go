@@ -1724,7 +1724,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "ReturnDeadGuestGraveyardCardToBattlefield":
-		build, err := compileDepartedAuraAttachedEntry(n, ctx)
+		build, err := compileDepartedAuraEntry(n, ctx)
 		if err != nil {
 			return nil, err
 		}

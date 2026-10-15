@@ -292,7 +292,7 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 				continue
 			}
 			if name == "Takklemaggot" {
-				blocker = "EntersAsNonAuraEnchantment"
+				blocker = "unsupported lasting ability modification (LosesAbility)"
 			}
 			if err == nil || !strings.Contains(err.Error(), blocker) {
 				t.Fatalf("%s: expected %s, got %v", name, blocker, err)
