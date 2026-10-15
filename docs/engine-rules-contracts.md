@@ -10891,6 +10891,43 @@ seven protection names, failed payment, copied activations, cloned shields,
 resolution-time choice, property rechecks and simultaneous damage. This is
 bounded category evidence; full protection records still reject.
 
+## Effect discard to library: private choices and batch order
+
+`DiscardToLibraryReplacement() ContinuousEffect` retains its public signature.
+The current controller makes a private decision for each effect-caused discard.
+The prompt identifies the selected card, including a random selection, without
+calling a reveal service. Cost discards and mill do not match.
+
+The shared discard batch prepares replacements before movement. For each player
+in APNAP order, cards whose final destination is the library use
+`orderCardsByChoice` with separate card snapshots and a top-first prompt. Invalid
+answers use valid original candidates. Execution reverses this order for its
+successive top insertions. Existing library cards stay below all new cards.
+Discard events follow all moves, including library moves. Graveyard order and
+replacement rechecks retain their existing services.
+
+RON supports the exact static declaration
+`ReplaceWouldDiscard(AnEffectWouldCausePlayerToDiscardACard(You),
+[MayAction(DiscardItToTopOfLibraryInstead)])` on battlefield permanents.
+Malformed declarations, different players or operations, spell statics,
+resolving actions, entry bodies and other source zones reject.
+
+CR 401.4, 701.9a–c, 614.1a and 616.1 establish destination order, hidden
+characteristics, replacement and choice rules. Library of Leng's local WotC
+rulings require a separate decision for each discarded card, a private look at
+a random discard, and chosen order for simultaneous library placement.
+
+Evidence: `TestDiscardLibraryOrder` covers native chosen order, invalid-choice
+fallback, card-specific prompts and events after all movement.
+`TestRONDiscardReplacementRecords` covers failed and paid casting and
+accept/decline/cost behavior for all six complete reprints. `Lifecycle` covers
+current control, exact source visits, phasing, ability removal, departure,
+return, pure source queries and clone isolation. `RandomBatch` executes a RON
+random-discard spell with three private decisions and chosen library order.
+`Invalid` and `Collection` cover strict syntax, roles, validation and atomic
+collection rejection. Existing `TestWaitingDiscardSources*` retains competing
+replacement rechecks and stale-registration evidence.
+
 ## Exact subjects of waiting exile replacements
 
 `Game.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID)` retains

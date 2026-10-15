@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -74,7 +76,18 @@ func (r *discardToLibraryReplacement) Replace(action Action, g *Game) Action {
 		return action
 	}
 	player := g.GetPlayer(source.ControllerID())
-	if player == nil || !player.ChooseMayAbility("put discarded card on top of your library instead") {
+	if player == nil {
+		return action
+	}
+	var reason strings.Builder
+	reason.WriteString("put discarded card on top of your library instead")
+	for _, card := range player.Hand() {
+		if card.ID() == action.(*DiscardAction).CardID() {
+			reason.WriteString(" (" + card.Name() + ")")
+			break
+		}
+	}
+	if !player.ChooseMayAbility(reason.String()) {
 		return action
 	}
 	return action.(*DiscardAction).withDestination(ZoneLibrary)

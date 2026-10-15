@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON accepts ReplaceWouldDiscard with AnEffectWouldCausePlayerToDiscardACard(You)
+// and one MayAction(DiscardItToTopOfLibraryInstead) on battlefield permanents.
+// [DiscardToLibraryReplacement] supplies the live source and current controller.
+// Costs do not match. Each selected card has a separate private decision.
+// Shared discard batches ask for library order before any card moves. Choices
+// put the first choice on top and use a valid fallback. Discard events follow
+// all moves.
+// The destination prompt identifies the selected hand card without a reveal.
+// All six complete Library of Leng records have cast and discard evidence.
+//
 // [ExchangeLifeTotals] saves both typed players and their current life totals.
 // A prohibited gain or loss stops the complete exchange. Life replacements
 // run in turn order before either ordinary life change. Events follow both

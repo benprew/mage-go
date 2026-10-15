@@ -94,12 +94,6 @@ func TestRONMaximumHandSizeLibraryRule(t *testing.T) {
 			record = node
 		}
 	}
-	if _, err = Compile(record); err == nil || !strings.Contains(err.Error(), "ReplaceWouldDiscard") {
-		t.Fatalf("remaining replacement blocker: %v", err)
-	}
-	rules := record.Fields["Rules"]
-	rules.Args = rules.Args[:1]
-	record.Fields["Rules"] = rules
 	factory, err := Compile(record)
 	if err != nil {
 		t.Fatal(err)

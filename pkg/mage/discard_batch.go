@@ -51,7 +51,8 @@ func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requir
 	if requireAll && len(prepared) != len(actions) {
 		return nil
 	}
-	g.orderDiscardGraveyards(prepared)
+	g.orderDiscardDestinations(prepared, core.ZoneGraveyard)
+	g.orderDiscardDestinations(prepared, core.ZoneLibrary)
 	var events []core.GameEvent
 	for _, action := range prepared {
 		if card, ok := g.moveDiscardedCard(action); ok {
@@ -64,14 +65,14 @@ func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requir
 	return events
 }
 
-func (g *Game) orderDiscardGraveyards(actions []*DiscardAction) {
+func (g *Game) orderDiscardDestinations(actions []*DiscardAction, destination core.Zone) {
 	for offset := range len(g.players) {
 		player := g.players[(g.turns.ActivePlayerIndex()+offset)%len(g.players)]
 		var cards []Card
 		var positions []int
 		byID := make(map[uuid.UUID]*DiscardAction)
 		for index, action := range actions {
-			if action.PlayerID() != player.PlayerID() || action.Destination() != core.ZoneGraveyard {
+			if action.PlayerID() != player.PlayerID() || action.Destination() != destination {
 				continue
 			}
 			for _, card := range player.Hand() {
@@ -86,8 +87,18 @@ func (g *Game) orderDiscardGraveyards(actions []*DiscardAction) {
 		if len(cards) < 2 {
 			continue
 		}
-		for index, card := range g.orderCardsForGraveyard(player, cards) {
-			actions[positions[index]] = byID[card.ID()]
+		var ordered []Card
+		if destination == core.ZoneLibrary {
+			ordered = g.orderCardsByChoice(player, cards, "choose the next card for the top of your library")
+		} else {
+			ordered = g.orderCardsForGraveyard(player, cards)
+		}
+		for index, card := range ordered {
+			position := index
+			if destination == core.ZoneLibrary {
+				position = len(ordered) - 1 - index
+			}
+			actions[positions[position]] = byID[card.ID()]
 		}
 	}
 }

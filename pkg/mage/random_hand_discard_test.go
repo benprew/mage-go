@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -204,12 +205,14 @@ func TestRandomHandDiscardOnlyRevealedNames(t *testing.T) {
 
 type randomHandOrderPlayer struct {
 	*BasePlayer
-	orders int
-	test   *testing.T
+	orders  int
+	reasons []string
+	test    *testing.T
 }
 
-func (p *randomHandOrderPlayer) ChooseCardFromLibrary(cards []Card, _ string, g GameReader) Card {
+func (p *randomHandOrderPlayer) ChooseCardFromLibrary(cards []Card, reason string, g GameReader) Card {
 	p.orders++
+	p.reasons = append(p.reasons, reason)
 	if len(p.Hand()) != 3 || len(p.Graveyard()) != 0 || len(g.(*Game).PublicReveals()) != 3 {
 		p.test.Error("graveyard order choice did not see complete revealed hand before moves")
 	}
@@ -236,8 +239,13 @@ func TestRandomHandDiscardOwnerOrder(t *testing.T) {
 			t.Fatal(err)
 		}
 		if replace {
-			if a.orders != 0 || len(a.Library()) != 3 {
-				t.Fatal("hidden destinations offered a graveyard order")
+			if a.orders != 2 || len(a.Library()) != 3 || a.Library()[0].ID() != cards[2].ID() || a.Library()[2].ID() != cards[0].ID() {
+				t.Fatal("owner could not order simultaneous library discards")
+			}
+			for _, reason := range a.reasons {
+				if !strings.Contains(reason, "top of your library") {
+					t.Fatal("library destination offered a graveyard order")
+				}
 			}
 		} else if a.orders != 2 || len(a.Graveyard()) != 3 || a.Graveyard()[0].ID() != cards[2].ID() || a.Graveyard()[2].ID() != cards[0].ID() {
 			t.Fatal("owner could not order simultaneous discards")

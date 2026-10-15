@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **941 accepted / 45 rejected names**
-(986 total), **2,355 compiled / 90 rejected records** (2,445 total).
-The latest slice is **LIFE-TOTAL-EXCHANGE**.
-RON lowers a resolving life-total exchange to typed native life services.
-Both totals are saved before replacement preparation; ordinary life changes
-finish before events. Shared eligibility blocks an impossible exchange in full.
-The complete Mirror Universe record has casting and activation gameplay evidence.
-Estimated and actual gain: one name / one record. Collection loading still
+Latest measured result (2026-10-15): **942 accepted / 44 rejected names**
+(986 total), **2,361 compiled / 84 rejected records** (2,445 total).
+The latest slice is **EFFECT-DISCARD-LIBRARY**.
+RON lowers the exact optional effect-discard library replacement to native rules.
+Shared discard batches now preserve chosen library order and identify each
+selected card in its private destination prompt. Costs do not use the rule.
+All six complete Library of Leng records have casting and discard evidence.
+Estimated and actual gain: one name / six records. Collection loading still
 rejects atomically. Runtime cutover, Go-card removal and unused DSL cleanup
 remain gated by complete support and startup.
 
@@ -28,9 +28,6 @@ Reassess with fresh loader and complete-record evidence. Count reprints once.
    names / seven records. Personal Incarnation needs finite redirection and all
    six death-loss rounding defects repaired; Nova Pentacle needs its missing
    damage-source choice and the redirect adapter. Reassess shared prerequisites.
-3. **Discard replacement decisions:** Library of Leng, one name / six records.
-   Audit effect-versus-cost discard cause and hidden-card destination choices;
-   its no-maximum-hand-size clause is already supported.
 
 ## Dependencies and source blockers
 
@@ -25385,3 +25382,175 @@ Complete collection gameplay, runtime loading/cutover, Go-card and obsolete
 Go-set generator removal, and unused DSL cleanup remain unfinished. Stop after
 this slice. The slice commit uses command-local `commit.gpgsign=false`, consistent
 with prior entries; repository signing configuration is unchanged.
+
+## 2026-10-15 — EFFECT-DISCARD-LIBRARY
+
+Status: complete for the exact battlefield static effect-discard replacement.
+Estimated and actual gain: **one unique name / six records**, Library of Leng.
+Its complete LEA, LEB, 2ED, 3ED, CED and CEI records now compile and have paid-cast
+and discard gameplay evidence. This is one capability slice; no cutover or
+second capability was started.
+
+### Fresh baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The initial loader returned expected
+exit 1 with **2,355 compiled / 90 rejected records**, **941 accepted / 45 rejected
+names**. Unsupported collection rejection was separate from build/test status.
+
+Read the current design, top status and latest ledger entry, engine API and
+relevant discard/rules contracts. Queried only selected vocabulary keys. Read
+all complete Drain Power, Personal Incarnation and Library of Leng reprints,
+the complete Nova Pentacle record and each candidate's complete local rulings.
+
+| Candidate | Distinct affected names; estimated full-card gain | Blockers and downstream value | Estimated implementation/test effort |
+| --- | --- | --- | --- |
+| Forced mana activation | Drain Power; zero for isolated legal-offer prerequisite, eventually one name / six records | Saved lost-mana values already work. The complete forced instruction still needs legal activation offers, arbitrary cost transactions, player-selected ability/output/order and rechecks. Existing fixed-source automatic planning is not this decision contract. Offers would unblock the forced instruction. | Large; offer/transaction prerequisite plus full forced-action integration and choices. Not dependency-ready as one bounded complete forced-action slice. |
+| Damage redirection | Personal Incarnation and Nova Pentacle; eventual two names / seven records | Personal Incarnation needs bounded permanent-to-player redirection; Nova needs selected-source player-to-permanent redirection. Existing selected-source native redirection has the opposite recipient direction. Six rounding defects and Nova's missing source-choice producer remain separate source repairs. Shared damage packet services remain available, but one small adapter cannot complete both cards. | Large; separate destination/amount contracts, packet splitting and ordering, plus both source repairs and full gameplay. |
+| Effect-discard library destination | Library of Leng; one name / six records | No unresolved source or scope prerequisite. Existing cause-aware native replacement, identity and events are reusable. The missing batch order/private-card prompt are small shared engine fixes. Enables the exact static discard-replacement adapter and ordered hidden library destinations for all native discard batches. | Small to medium; strict lowering, shared batch fix and complete reprint/gameplay regressions. Selected. |
+
+No single dependency-ready multi-name slice emerged from these candidates.
+Library of Leng supplies the largest credible complete gain for the bounded
+work. The two redirection cards need different supported contexts; treating
+them as one spelling adapter would hide missing mechanics. Drain Power's legal
+activation decision contract remains a prerequisite, not a forced-tap shortcut.
+
+### Supported declaration, native boundary and dependencies
+
+RON supports exactly:
+
+```ron
+ReplaceWouldDiscard(
+    AnEffectWouldCausePlayerToDiscardACard(You),
+    [MayAction(DiscardItToTopOfLibraryInstead)]
+)
+```
+
+The declaration must be a battlefield permanent rule. Wrong event/player,
+arity, operations, required destination, extra operations, other source zones,
+spell statics, ordinary resolving actions and entry bodies reject.
+`compileDiscardReplacement(Node, scope) (optionFactory, error)` validates this
+shape and creates a fresh `WithStaticAbility(DiscardToLibraryReplacement())`
+for each factory instance. Inventory assigns discard-event, optional-operation,
+destination and typed-player roles without inventing general action bindings.
+
+`DiscardToLibraryReplacement() ContinuousEffect` retains its public signature.
+Its existing typed native rule supplies exact source incarnation, live ability,
+phasing, current controller and effect-versus-cost cause checks. The private
+optional prompt now identifies the selected card, including random discards.
+It does not call a reveal service. Each card has an independent decision.
+
+The shared discard batch now calls
+`(*Game).orderDiscardDestinations([]*DiscardAction, core.Zone)` for graveyard
+and library destinations. Library ordering uses the existing
+`orderCardsByChoice` snapshots and invalid-answer fallback. Players order their
+library cards in APNAP order before movement. The first selected card ends on
+top; successive top insertions execute in reverse order. Old library cards stay
+below new cards. All destination moves precede discard events. Native graveyard
+ordering, replacement rechecks and cost transactions stay in their shared
+services. No RON-specific zone executor or second replacement manager was added.
+
+No public DSL API or Go card definition was removed. The runtime/definition/DSL
+removal gates are still unmet. There is no Go-card fallback, card-name branch,
+partial production registry, global action-result slot or game-time declaration
+panic. The new API/rules documentation covers only this established contract.
+
+### Rules, source data and failing-first evidence
+
+Library of Leng's local LEA Oracle text matches all six RON records. All nine
+local rulings are WotC rulings; there are no Scryfall notes. They require private
+inspection of random discards, a decision for each card, library-order choice,
+continued discard triggers and exclusion of costs and mill. CR 401.4,
+701.9a–c, 614.1a and 616.1 establish library order, hidden characteristics,
+discard cause and replacement choice/rechecks. Existing source lifecycle
+contracts use CR 400.7 and 702.26b.
+
+`go run ./cmd/fetchset -check -card "Library of Leng"` passed. Also read the
+complete Hymn to Tourach FEM record and its explicit empty local rulings array;
+its `-check` passed before updating its retained replacement integration test.
+No RON source changed, no new source defect was found, and no vocabulary snapshot
+refresh was necessary. Personal Incarnation's rounding defects and Nova
+Pentacle's missing source choice remain deferred and explicit.
+
+Before implementation, `TestRONDiscardReplacementRecords` failed for all six
+records with `unsupported rule (ReplaceWouldDiscard)`. Native
+`TestDiscardLibraryOrder` failed because there was no ordering choice and both
+private prompts omitted the selected card. Both failures were confirmed before
+the corresponding implementation changes.
+
+### Card-to-test and contract evidence
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Library of Leng, all six complete records | `TestRONDiscardReplacementRecords` | Failed unpaid and successful paid casting; controller-only unlimited hand size; accept/decline effect discards; cost exclusion |
+| Library of Leng lifecycle | `TestRONDiscardReplacementLifecycle` | Current control, phasing/cycle, ability removal, departure, new source visit, pure waiting-source queries and independent cloned state |
+| Private random batch | `TestRONDiscardReplacementRandomBatch` | RON spell executes three random discards; all-accept and mixed per-card decisions; private prompts identify actual selected cards; no public reveals; chosen library order, correct graveyard and unchanged next RNG result |
+| Exact declaration and atomic publication | `TestRONDiscardReplacementInvalid`, `Collection` | Invalid shapes and contexts reject; typed inventory roles; native definition validation through loading; invalid collection preserves existing registry |
+| Shared library destination order | `TestDiscardLibraryOrder` | First choice becomes top card; invalid choices use original candidates; old library retained; all moves precede discard events; prompts identify private cards |
+| Existing full-record hand-size behavior | `TestRONMaximumHandSizeLibraryRule` | Uses the complete record now, including its replacement, without removing rules to compile |
+| Hymn to Tourach retained RON integration | `TestRONRandomDiscardReplacement` | Real paid targeted spell, random selection, native replacement and complete batch events; asserts both chosen library positions |
+| Shared source/replacement contracts | `TestWaitingDiscardSources*`, `TestSelectedDiscardBatch*`, `TestRandomDiscardBatch*`, `TestDiscardToLibraryReplacementOnlyAppliesToEffects` | Exact visits/LKI departure, stale registration, ability identity, control, clones, accept/decline/cost, cancellation and competing replacement rechecks |
+| Existing revealed discard order | `TestRandomHandDiscardOwnerOrder` | Retains graveyard-order evidence; verifies exact chosen library order and that library destinations never receive a graveyard-order prompt |
+| Accepted collection | Definition-plan, inventory and numeric-consumer collection tests | Six more valid records, preserved factories and unchanged atomic-rejection policy |
+
+The engine short suite exposed two old expectations of missing library-order
+choices: the revealed-discard test expected no choice, and Hymn's integration
+expected reversed selection order. Updated both to assert the required chosen
+order; retained their selection, privacy, event and RNG assertions. These were
+behavior changes required by CR 401.4, not unrelated or environmental failures.
+
+### Verification and measured coverage
+
+- Focused RON `go test ./pkg/mage/dsl/ron -run TestRONDiscardReplacement
+  -count=1`: passed. Final post-lint run also included
+  `TestRONRandomDiscardReplacement` and `TestRONMaximumHandSizeLibraryRule`;
+  all passed.
+- Native focused tests for `TestDiscardLibraryOrder`,
+  `TestRandomHandDiscardOwnerOrder`, `TestWaitingDiscard*`,
+  `TestSelectedDiscardBatch*`, `TestRandomDiscardBatch*` and
+  `TestDiscardToLibraryReplacement*`: passed, including the final post-lint run.
+- `make build`: passed, including a post-lint rerun.
+- `go vet ./...`: passed, including a post-lint rerun.
+- `go test ./pkg/mage/... -short -count=1`: passed for all engine packages
+  after the two ordering-expectation updates.
+- `make test`: passed for the full repository.
+- `make lint`: passed, **0 issues**. Reviewed automatic changes: import
+  formatting in the new tests and a `strings.Builder` rewrite of the private
+  prompt. No unrelated file changed. Affected native and RON tests, build and
+  vet passed after lint; no semantic change required another full-suite run.
+- `git diff --check`: passed after the ledger update.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,361 compiled / 84 rejected records**, **942 accepted / 44 rejected names**.
+  Exact comparison removes only Library of Leng's six diagnostics at 2ED:140,
+  3ED:145, CED:140, CEI:140, LEA:139 and LEB:140. All other diagnostics remain
+  identical and in the same order. No new rejection was added. The complete
+  collection still rejects atomically.
+
+Estimated and actual gain agree: **one unique name / six records**. New full-card
+RON gameplay evidence is Library of Leng; Hymn to Tourach retains its existing
+integration evidence. Compilation and gameplay coverage remain separate.
+There was no environment blocker and no source-data correction.
+
+Changed files: new `pkg/mage/dsl/ron/discard_replacement.go` and
+`discard_replacement_test.go`; RON `compiler.go`, `inventory.go`,
+`definition_plan_test.go`, `inventory_test.go`, `maximum_hand_size_test.go`,
+`numeric_consumers_test.go` and `random_discard_test.go`; native
+`action_discard.go`, `discard_batch.go`, new `discard_library_order_test.go`,
+`random_hand_discard_test.go` and `doc.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers/transactions for Drain Power: eventual
+   one name / six records. Isolate arbitrary costs, variable output choices,
+   ordering and activation rechecks before the complete forced instruction.
+2. Finite damage-redirection contract for Personal Incarnation and selected-source
+   redirection to a permanent for Nova Pentacle: eventual two names / seven
+   records. Repair Personal Incarnation's six rounding defects and Nova's absent
+   source-choice producer with their complete implementation evidence.
+
+Forty-four names and 84 records still reject. Complete collection gameplay,
+runtime loading/cutover, Go-card and obsolete Go-set generator removal, and
+unused DSL cleanup remain unfinished. Stop after this slice. The slice commit
+uses command-local `commit.gpgsign=false`; repository signing configuration is
+unchanged.

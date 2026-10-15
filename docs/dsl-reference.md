@@ -9146,7 +9146,14 @@ RON `chosenDamageSourcePlan.waitingDiscardChoice(instanceBindings)` lowers
 validated `ChooseADamageSource(filter)` with `You` and its instance binding.
 Empty lists and absent players clear only that binding. Complete production
 source choices still reject until the remaining CR 609.7a audit is complete.
-This does not lower Library of Leng's `ReplaceWouldDiscard` declaration.
+RON now lowers the exact battlefield static declaration
+`ReplaceWouldDiscard(AnEffectWouldCausePlayerToDiscardACard(You),
+[MayAction(DiscardItToTopOfLibraryInstead)])` to this native rule. Other events,
+players, operations and source zones reject. The private destination prompt
+identifies the selected hand card. Shared discard batches ask for top-first
+library order before movement and send discard events after all moves.
+The complete Library of Leng records also use the existing no-maximum-hand-size
+rule. `TestRONDiscardReplacement*` covers all six records and strict loading.
 
 Evidence: `TestWaitingDiscardSourcesLifecycle`, `Choices`, `Execution` and
 `InvalidRegistrations`; `TestRONWaitingDiscardSourceProtection`, `Invalid` and

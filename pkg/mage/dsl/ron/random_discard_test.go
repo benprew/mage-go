@@ -316,7 +316,7 @@ func TestRONRandomDiscardReplacement(t *testing.T) {
 		t.Fatal(err)
 	}
 	g.ResolveStack()
-	if events != 2 || b.Hand()[0].ID() != hand[1].ID() || b.Library()[0].ID() != hand[0].ID() || g.RandIntn(10) != 7 {
+	if events != 2 || b.Hand()[0].ID() != hand[1].ID() || b.Library()[0].ID() != hand[2].ID() || b.Library()[1].ID() != hand[0].ID() || g.RandIntn(10) != 7 {
 		t.Fatal("replacement bypassed selected batch")
 	}
 }

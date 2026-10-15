@@ -327,6 +327,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"destruction_replacement_event", "destruction_replacement_operation"}[index]
 			}
+		case "ReplaceWouldDiscard":
+			if len(n.Args) == 2 {
+				return []string{"discard_replacement_event", "discard_replacement_operation"}[index]
+			}
 		case "ReplaceWouldGainLife":
 			if len(n.Args) == 2 {
 				return []string{"life_gain_replacement_event", "life_gain_replacement_operation"}[index]
@@ -400,6 +404,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "retained_entry_sacrifice":
 		if n.Name == "SacrificeAPermanent" && len(n.Args) == 1 {
 			return "entry_permanent_filter"
+		}
+	case "discard_replacement_event":
+		if n.Name == "AnEffectWouldCausePlayerToDiscardACard" && len(n.Args) == 1 {
+			return "player_reference"
+		}
+	case "discard_replacement_operation":
+		if n.Name == "MayAction" && len(n.Args) == 1 {
+			return "discard_replacement_destination"
 		}
 	case "life_gain_replacement_event":
 		if n.Name == "PlayerWouldGainLife" && len(n.Args) == 1 {
