@@ -21,30 +21,48 @@ func compileHostTapTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	}
 	if ref.kind == permanentSource {
 		ctx.sourceTapped = true
-		plan, err := compileActions(body, ctx)
+		plan, err := compileTapTriggerBody(body, ctx)
 		if err != nil {
 			return nil, err
 		}
 		return func() mage.CardOption {
-			actions := plan.build()
-			trigger := mage.WhenEvent(mage.BecomesTapped(mage.This), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
-			actions.effects = nil
-			return mage.WithAbility(TriggerA(trigger, actions))
+			return mage.WithAbility(plan(mage.BecomesTapped(mage.This), instanceBindings{}))
 		}, nil
 	}
 	if ref.kind != permanentHost {
 		return nil, unsupported(subject.Args[0], "host tap event reference")
 	}
 	ctx.permanentEvent = &permanentEventPlan{name: "Trigger_ThatPermanent"}
-	plan, err := compileActions(body, ctx)
+	plan, err := compileTapTriggerBody(body, ctx)
 	if err != nil {
 		return nil, err
 	}
 	return func() mage.CardOption {
 		host := mage.BindPermanent(ctx.permanentEvent.name)
-		actions := plan.buildWithBindings(instanceBindings{tapped: map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: host}})
-		trigger := mage.WhenEvent(mage.AttachedBecomesTapped(host), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		bindings := instanceBindings{tapped: map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: host}}
+		return mage.WithAbility(plan(mage.AttachedBecomesTapped(host), bindings))
+	}, nil
+}
+
+func compileTapTriggerBody(body Node, ctx scope) (func(mage.EventPattern, instanceBindings) *mage.GenericTriggered, error) {
+	if body.Name == "Modal_ChooseOne" {
+		plans, err := compileChooseOneModes(body, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(pattern mage.EventPattern, bindings instanceBindings) *mage.GenericTriggered {
+			trigger := mage.WhenEvent(pattern, nil).(*mage.GenericTriggered)
+			return trigger.WithModes(buildChooseOneModes(plans, bindings)...)
+		}, nil
+	}
+	plan, err := compileActions(body, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return func(pattern mage.EventPattern, bindings instanceBindings) *mage.GenericTriggered {
+		actions := plan.buildWithBindings(bindings)
+		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil
-		return mage.WithAbility(TriggerA(trigger, actions))
+		return TriggerA(trigger, actions)
 	}, nil
 }

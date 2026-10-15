@@ -161,12 +161,8 @@ func TestRONEnchantControllerReporting(t *testing.T) {
 	if _, err := Compile(hostUntapRecord(t, "LEG", "Cocoon")); err != nil {
 		t.Fatal(err)
 	}
-	for _, tc := range []struct{ set, name, blocker string }{
-		{"LEG", "Relic Bind", "unsupported action list (Modal_ChooseOne)"},
-	} {
-		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.blocker) {
-			t.Fatalf("%s: full-record blocker changed: %v", tc.name, err)
-		}
+	if _, err := Compile(hostUntapRecord(t, "LEG", "Relic Bind")); err != nil {
+		t.Fatal(err)
 	}
 	valid := `Card(Name:"Supported clause",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[Aura]),Rules:[EnchantPermanent(And([ControlledByAPlayer(Opponent),IsCardtype(Artifact)]))])`
 	files := fstest.MapFS{"a.ron": {Data: []byte(valid)}}

@@ -24296,3 +24296,26 @@ amounts or history membership. Phasing and departure preserve the captured visit
 a returned source cannot replace it. Clone trigger detection ends only that
 clone's waiting lifetime. `TestDamageHistoryRecipientsWaitingSources` failed
 before this traversal was added and covers direct, wrapped and nested sources.
+
+## RON choose-one tap-trigger bodies
+
+`TestRONModalTriggerRelicBind` executes the complete Relic Bind RON record:
+failed and paid Aura casts, opponent artifact attachment, both modes, player
+and planeswalker damage, prevention, retap suppression, missing or disabled
+sources, saved control, phasing, returned targets, shroud, copied targets and
+independent clones. Its pending source departure case retains damage source
+information through the existing LKI service.
+
+`TestRONModalTriggerBindingsAndSource` covers source-tap and host-tap contexts,
+fresh factory bindings, exact saved hosts after reattachment and clone isolation.
+`TestRONModalTriggerLegalMenu` covers unavailable modes, retained declaration
+indices and invalid choices. `TestRONModalTriggerInvalid` rejects malformed
+mode lists, wrong arity, unbound event players and cross-mode target reads.
+`TestRONModalTriggerCollection` loads the complete record through strict loading.
+Existing `TestRONHostTap*` tests retain nonmodal behavior.
+
+CR 603.3c–d and 700.2b–c require mode and target selection at stack placement.
+CR 700.2f–g requires copies to retain the chosen mode. The RON adapter reuses
+`GenericTriggered.WithModes` and the existing modal trigger menu, announcement,
+copy and target legality services. It adds no payment, replacement, zone or
+simultaneous-operation contract and makes no change to native engine mechanics.

@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON accepts Modal_ChooseOne with at least two action bodies in a
+// WhenAPermanentBecomesTapped trigger for ThisPermanent or HostPermanent.
+// Each mode has separate targets. Host modes can read Trigger_ThatPermanent.
+// Shared modal triggers choose one legal mode at stack placement (CR 700.2b).
+// Resolution keeps that mode. Copies keep the mode and can change targets.
+// Pending bodies keep source information and exact event visits after departure.
+// The complete Relic Bind record has paid-cast and both-mode gameplay evidence.
+//
 // [PlayersDealtDamageBy] and [PermanentsDealtDamageBy] select exact source history.
 // Cleanup keeps that history. Phasing keeps visits but suspends recipients.
 // Return cannot inherit an old visit. Current types select permanent recipients.

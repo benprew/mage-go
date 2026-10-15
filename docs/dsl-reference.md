@@ -18393,3 +18393,18 @@ evidence in `TestRONDamageHistory*`. No new native API is introduced.
 The shared delayed-source traversal now retains explicit source reads in
 permanent game-history sets, including nested candidate sets. This supplies
 waiting source choices without querying history or executing the delayed body.
+
+### RON choose-one tap triggers
+
+`TriggerA(WhenAPermanentBecomesTapped(SinglePermanent(ref)),
+Modal_ChooseOne([body, body, ...]))` accepts at least two ordinary action bodies.
+`ref` is `ThisPermanent`, or `HostPermanent` on an Aura. The host event supplies
+`Trigger_ThatPermanent` inside each mode. Each mode has separate target bindings;
+one mode cannot read another mode's targets. Unsupported events and nested
+modal bodies remain declaration errors.
+
+The adapter uses `GenericTriggered.WithModes`, the shared legal-mode menu,
+stack placement, target checks, copying and resolution. The controller chooses
+one legal mode and only its targets at stack placement. Copies retain the mode.
+Relic Bind's complete LEG record has casting and gameplay coverage in
+`TestRONModalTriggerRelicBind`. Native modal trigger services are unchanged.

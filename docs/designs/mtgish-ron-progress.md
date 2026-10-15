@@ -6,17 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **935 accepted / 51 rejected names**
-(986 total), **2,348 compiled / 97 rejected records** (2,445 total).
-The latest slice is **GAME-DAMAGE-HISTORY-RECIPIENTS**.
-RON lowers exact-source game-long history in mixed player/permanent damage
-recipient sets, with scoped references and optional opponent/type filters.
-Existing engine history, identity, LKI and simultaneous damage services execute
-it. The corrected complete The Fallen record has paid-cast and upkeep gameplay
-evidence. Estimated and actual gain: one name / one record. Earthquake,
-Hurricane and Inferno retain their shared mixed-recipient gameplay coverage.
-The collection still rejects atomically. Runtime cutover, Go-card removal and
-DSL cleanup remain gated by complete support and startup.
+Latest measured result (2026-10-15): **936 accepted / 50 rejected names**
+(986 total), **2,349 compiled / 96 rejected records** (2,445 total).
+The latest slice is **MODAL-TAP-TRIGGER**.
+RON lowers choose-one action bodies on source-tap and Aura-host-tap events.
+Each mode has separate targets and retains the event scope. Existing native
+modal trigger, legality, copy, clone and LKI services execute the bodies.
+The complete Relic Bind record has paid-cast and both-mode gameplay evidence.
+Estimated and actual gain: one name / one record. Nonmodal tap-trigger
+regressions remain covered. Collection loading still rejects atomically.
+Runtime cutover, Go-card removal and DSL cleanup remain gated by complete
+support and startup.
 
 ## Ranked next candidates
 
@@ -24429,3 +24429,138 @@ explicit The Fallen assertions.
 No Go card definitions, generators or broad DSL functions were removed. Full
 collection loading and startup remain unavailable. Go-card deletion, application
 cutover and unused DSL removal gates are not met. Stop after this slice.
+
+## 2026-10-15 — MODAL-TAP-TRIGGER
+
+### Fresh baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 with valid JSON: 2,348 compiled /
+97 rejected records, 935 accepted / 51 rejected names. This was collection
+rejection, with no build or environment failure.
+
+Read the execution design, engine reference, top status and latest ledger entry,
+targeted vocabulary signatures, complete records and local rulings for all
+three ranked candidates. Reprints count once. Local Relic Bind Oracle text
+matches its complete LEG record. Its rulings file has an explicit empty array;
+`go run ./cmd/fetchset -check -card 'Relic Bind'` passed. Drain Power's four
+WotC rulings require the affected player's choices of ability and variable
+output. Titania's Song has one WotC ruling about creature timing. None of these
+files has a Scryfall note to treat as an Oracle ruling.
+
+| Candidate | Distinct affected names; estimated full unlocks | Missing dependencies and downstream value | Complete effort estimate |
+| --- | --- | --- | --- |
+| Forced mana activation and saved mana | Drain Power; eventual 1 name / 6 records, 0 from legal-offer prerequisite alone | Lost-mana transfer exists. Missing legal activation offers, arbitrary cost transactions, variable-output choices and activation-order rechecks must precede the complete instruction. Enables forced mana production without a second activation executor. | Large; several engine contracts and cost/choice/rollback suites. Not dependency-ready as one adapter slice. |
+| Sticky animation | Titania's Song; eventual 1 name / 2 records | Whole record requires noncreature-artifact selection, ability removal, artifact and creature types, per-member mana-value P/T and an effect that persists to cleanup after source departure. Evolving membership, layer dependencies and post-source duration precede the adapter. Those services can support later continuous rules. | Large; shared layer lifecycle and dependency work before full gameplay. |
+| Choose-one tap-trigger bodies, selected | Relic Bind; 1 name / 1 record | Host tap, opponent artifact enchantment, mixed player/planeswalker target, source damage and player life gain already compile separately. Only the modal body adapter is missing. Reuses existing modal target scoping and native trigger legality; supplies source/host event modes for later trigger adapters. | Small; compiler integration plus real-card, scope, legality, identity and clone/copy tests. |
+
+All three candidates affect one unique collection card each. No compared candidate
+offers a dependency-ready multi-card unlock. Selected the third because its
+single missing adapter can finish a full record in this run. Did not implement
+partial forced activation or sticky layer semantics to increase compile counts.
+
+### Supported shape, boundary and engine reuse
+
+Supported declaration:
+`TriggerA(WhenAPermanentBecomesTapped(SinglePermanent(ref)),
+Modal_ChooseOne([body, body, ...]))`, with at least two ordinary action bodies.
+`ref` is `ThisPermanent`, or `HostPermanent` on an Aura. Host modes can read
+`Trigger_ThatPermanent`. Source modes retain source-tap context. Unsupported
+modal event contexts, nested modal actions, invalid lists/arity, incompatible
+references and cross-mode target reads still reject at declaration time.
+
+`compileTapTriggerBody(Node, scope)` returns a per-instance builder with type
+`func(mage.EventPattern, instanceBindings) *mage.GenericTriggered`.
+It reuses `compileChooseOneModes` and `buildChooseOneModes`, with fresh target
+namespaces and host bindings for each factory call. The nonmodal path keeps its
+existing sequence and target construction. RON owns syntax and scope only.
+
+Native execution uses `BecomesTapped`, `AttachedBecomesTapped`,
+`WhenEvent`, `GenericTriggered.WithModes`, the legal-mode menu, trigger stack
+placement, typed target groups, shared damage/prevention, LKI, stack copying
+and game cloning. No new engine API or parallel execution path was necessary.
+CR 603.3c–d and 700.2b–c require mode and target selection at placement;
+CR 700.2f–g retains the chosen mode in copies. Resolution does not prompt again.
+Pending triggers retain controller and source information after source departure,
+control change or phasing. Resolution checks exact target visits and current
+legality. Reattachment cannot change the captured host.
+
+No mana payment, replacement ordering, simultaneous batch or zone lifecycle
+contract changed. Aura casts use the existing transaction: unpaid and illegal
+casts preserve hand and mana. Damage prevention uses the shared shield service.
+No source defect, RON change, vocabulary change, fallback, production allowlist,
+Go-card deletion, generator removal or DSL removal is part of this slice.
+The vocabulary snapshot need not be regenerated because source syntax is unchanged.
+
+### Failing-first tests and card mappings
+
+Wrote real-record gameplay, strict loading and invalid declarations first.
+After correcting test helper signatures, confirmed the expected failure:
+`LEG.ron:217:297: unsupported action list (Modal_ChooseOne)`.
+Integration exposed invalid empty/nil effect construction in the first nonmodal
+refactor; retained the original nonmodal sequence construction and reran all
+host-tap regressions. Test fixtures use native trigger targets rather than the
+spell-only modal target storage, and supported counter syntax. No assertion was
+weakened to accept missing behavior.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Relic Bind, full LEG record | `TestRONModalTriggerRelicBind` | Unpaid rollback, rejected own artifact, full paid cast/attachment, damage and life modes, player and planeswalker recipients, no event-time choice, one placement choice, no resolution choice, retap suppression, wrong host and disabled source |
+| Relic Bind lifetimes and shared damage | Same test, departure/phase/control/shroud/return/copy/prevention scenarios | Pending source LKI and saved controller, exact returned targets, phase cycle, current target legality, shield prevention, copied targets and independent pending clones |
+| Per-instance event scope | `TestRONModalTriggerBindingsAndSource` | Source and Aura-host modes, fresh factories, event host after reattachment, untouched second instance and clone isolation |
+| Modal legality | `TestRONModalTriggerLegalMenu` | Unavailable creature-target mode omitted, declaration index retained, invalid choices leave no trigger |
+| Invalid declarations | `TestRONModalTriggerInvalid` | Empty/short lists, wrong arity, unbound player and cross-mode target reads |
+| Full-record loading | `TestRONModalTriggerCollection`, `TestRONEnchantControllerReporting` | Strict complete-record loading and formerly blocked record now accepted |
+| Existing tap triggers | `TestRONHostTap*` | Existing nonmodal host/source lifetime, casting, event scope and batch regressions retained |
+
+Changed the old atomic-loader rejection fixture from Relic Bind to the still
+unsupported complete Mirror Universe record. The rejection assertion remains.
+Updated exact repository inventory assertions from 2,348/97 to 2,349/96 and added
+Relic Bind to the explicit supported-card checks. Compilation gain is separate
+from gameplay evidence; this entry maps gameplay for one new unique card.
+
+### Verification and actual coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONModalTrigger -count=1`: passed.
+  The modal, nonmodal host-tap, enchant-controller reporting and damage-received
+  regression tests also passed together before and after lint.
+- `make build`: passed. `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed, including full RON package
+  tests and the exact repository inventory assertions.
+- `make test`: passed for the complete repository.
+- `make lint`: passed, **0 issues**. Reviewed automatic formatting: the new
+  test file's import groups changed; no unrelated files or behavior changed.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,349 compiled / 96 rejected records**, **936 accepted / 50 rejected names**.
+  Exact JSON issue comparison removes only Relic Bind's
+  `unsupported action list (Modal_ChooseOne)` issue at LEG line 217. All
+  remaining 96 diagnostics are unchanged; no new issue was added.
+
+Actual gain is **one unique name / one record**, exactly the estimate. The new
+full-card gameplay mapping is Relic Bind; accepted compilation alone does not
+establish gameplay coverage for other records. No environment failure or
+unresolved required-check failure remains. The commit uses command-local
+`commit.gpgsign=false`, consistent with prior slices; signing configuration
+remains unchanged.
+
+Changed files: `pkg/mage/dsl/ron/host_tap.go`, new `modal_trigger_test.go`,
+`damage_received_test.go`, `definition_plan_test.go`, `enchant_controller_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`; `pkg/mage/doc.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers, then Drain Power: one eventual name /
+   six records. Establish legal ability/variable-output choices, arbitrary
+   cost transactions and activation-order rechecks before the full instruction.
+2. Sticky animation and post-source duration for Titania's Song: one eventual
+   name / two records. Shared evolving layer membership, dependencies and
+   cleanup-after-source-departure duration precede the adapter.
+
+Reassess fresh remaining records for useful shared prerequisites before another
+single-card adapter. Relic Bind is no longer a next candidate. The complete
+collection still cannot load, and runtime cutover, Go-card deletion, obsolete
+Go-set generation removal and broad DSL cleanup gates remain unmet.
+Stop after this slice.
