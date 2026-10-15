@@ -6946,7 +6946,7 @@ Dwarven Soldier has complete RON gameplay coverage in `TestRONGroupedCombat*`.
 Spitting Slug still rejects its unsupported `MayCost`/`IfElse` continuation;
 this event adapter does not establish payment branches or collection grants.
 
-## RON two-branch fixed mana payments
+## RON two-branch fixed mana or life payments
 
 In resolving action sequences, adjacent `MayCost(PayMana([...]))` or
 `PlayerMayCost(player, PayMana([...]))` and
@@ -6954,8 +6954,9 @@ In resolving action sequences, adjacent `MayCost(PayMana([...]))` or
 The condition is the bare symbol `CostWasPaid` or `CostWasntPaid`. Both lists
 must contain at least one supported action. Each branch can contain another
 payment pair. The result cannot be read outside the pair. Fixed costs include
-an explicit zero cost; X, mandatory payments and nonmana costs in this
-three-argument continuation remain errors. Existing one-branch forms retain
+an explicit zero cost. Fixed nonnegative `PayLife(Integer(n))` is also supported;
+X, mandatory payments and other costs in this three-argument continuation
+remain errors. Existing one-branch forms retain
 their contracts. The adapter lowers to `mage.PayOrElse` with typed player and
 body references, built separately for each factory instance.
 
@@ -18677,14 +18678,52 @@ is established.
 CR 108.3, 115.1c, 608.2b and 702.26b establish ownership, announcement, current
 legality and phasing. Bronze Tablet's local WotC rulings confirm opponent-owned
 objects can be controlled by the activating player, and an absent target stops
-resolution. The complete record still rejects at its two-branch life payment;
-its result-bound ownership operations need separate support.
+resolution. Two-branch fixed life payment is supported. With ordinary owner
+references, the record compiles; its absent-source ownership behavior still
+requires a source correction and a separate assignment contract.
 
 Evidence: `TestTargetOpponentOwner`, `TestRONOpponentOwnerTarget`,
 `TestRONOpponentOwnerTargetInstances`, `TestRONOpponentOwnerTargetInvalid` and
-`TestRONOpponentOwnerTargetRemainingGap`. The RON tests retain Bronze Tablet's
+`TestRONOpponentOwnerTargetCompilationBoundary`. The RON tests retain Bronze Tablet's
 complete cost and target declaration in a resolving-body fragment. They cover
 nontoken restrictions, unpaid and illegal-target rollback, ownership changes,
 control changes, source return, target return, phasing, phase cycles, shroud,
 copies with the same and a different controller, clones and factory isolation.
 This is fragment evidence, not complete Bronze Tablet gameplay.
+
+## RON two-branch fixed life payment
+
+An adjacent `MayCost(PayLife(Integer(n)))` or
+`PlayerMayCost(playerRef, PayLife(Integer(n)))` and
+`IfElse(CostWasPaid, [paid_actions], [unpaid_actions])` is one resolving
+operation. `n` must be a fixed nonnegative integer. `CostWasntPaid` reverses
+the branches. Both branches must contain supported actions. The payment result
+is local to this pair, including nested pairs and separate factory instances.
+Dynamic life amounts, cost alternatives and mandatory payments require separate
+adapters in this two-branch shape. Invalid declarations fail during compilation.
+
+Lowering builds fresh `LifePayCost(n)` and typed player/body declarations for
+`PayOrElse`. Its shared total-cost transaction pays only at resolution. An exact
+life total can pay. Insufficient life or a prohibition on life loss selects the
+unpaid branch. Zero life still requires acceptance, including at nonpositive
+life totals. A missing payer executes neither branch. Existing target legality,
+source identity, phasing, copied controllers, delayed contexts and cloning apply.
+Life payment uses life-loss replacement services, not damage prevention. A
+replacement can cancel the loss while the accepted payment remains paid
+(CR 118.3, 118.5, 118.11–12, 119.4, 119.8, 608.2b).
+
+`TestRONLifePaymentBranches*` covers both conditions, implicit and explicit
+players, exact/short/zero/declined payment, nested/adjacent results, multiple
+factory instances, copied spells with different targets/controllers, pending
+clones, delays and declaration errors. Bronze Tablet has activation/payment
+fragment evidence with original cost, target and condition ASTs. That fixture
+substitutes a supported controller reference for its owner reference and uses
+life-gain probes for its result actions. In the preserved workspace, the complete Bronze Tablet record compiles after
+this adapter. Compilation does not establish complete gameplay: its RON uses an
+atomic two-card exchange, but its WotC ruling requires acquisition of the other
+card even when the source is absent. This source-data/contract gap needs a
+separate capability. Without the uncommitted owner-reference prerequisite,
+clean HEAD still rejects the complete record at `OwnerOfPermanent`.
+`TestLifePaymentBranches*` adds native restriction/replacement evidence; existing
+`TestResolutionPaymentBranches*` retains rollback and absent-payer evidence.
+No second payment implementation or new mutable result slot is introduced.

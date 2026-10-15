@@ -3163,6 +3163,11 @@
 // and the source types at the time of damage. Later type changes do not change it.
 // Use [PayOrElse] for one optional payment with two resolution branches.
 // The payment result stays local to the operation.
+// RON accepts fixed nonnegative PayLife(Integer(n)) with a two-branch IfElse.
+// Both CostWasPaid and CostWasntPaid use the shared payment transaction.
+// Zero life requires acceptance. An exact life total can pay the cost.
+// Life-loss replacements keep payment acceptance; damage prevention has no effect.
+// Bronze Tablet has payment-fragment evidence. Its absent-source case needs work.
 // Use [PayActionOrElse] with [GainLifePayment], [DamagePayment], or
 // [DestroyPayment] for one optional action paid during resolution.
 // The accepted payment selects the branch even if prevention or replacement

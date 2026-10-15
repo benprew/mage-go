@@ -22,7 +22,7 @@ func compilePaymentBranches(payment, continuation Node, ctx scope) (effectFactor
 		return nil, err
 	}
 	cost := payment.Args[len(payment.Args)-1]
-	if cost.Name != "PayMana" {
+	if cost.Name != "PayMana" && cost.Name != "PayLife" {
 		return nil, unsupported(cost, "two-branch payment cost")
 	}
 	costs, hasX, err := compileCosts(cost)

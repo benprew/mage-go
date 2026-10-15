@@ -105,9 +105,18 @@ func TestRONAnteDeckCollectionDeclarations(t *testing.T) {
 			}
 			seen[name] = true
 			records++
-			_, compileErr := Compile(node)
+			factory, compileErr := Compile(node)
 			complete := name == "Demonic Attorney" || name == "Contract from Below" || name == "Jeweled Bird" || name == "Darkpact"
-			if complete && compileErr != nil || !complete && (compileErr == nil || strings.Contains(compileErr.Error(), "DeckConstruction")) {
+			if name == "Bronze Tablet" {
+				if compileErr != nil && !strings.Contains(compileErr.Error(), "unbound or incompatible player reference (OwnerOfPermanent)") {
+					t.Fatalf("%s: owner prerequisite: %v", name, compileErr)
+				}
+				if compileErr == nil {
+					if err := mage.ValidateCardDefinition(name, factory()); err != nil {
+						t.Fatal(err)
+					}
+				}
+			} else if complete && compileErr != nil || !complete && (compileErr == nil || strings.Contains(compileErr.Error(), "DeckConstruction")) {
 				t.Fatalf("%s: independent behavior support: %v", name, compileErr)
 			}
 			option, err := compileDeckConstruction(*declaration)

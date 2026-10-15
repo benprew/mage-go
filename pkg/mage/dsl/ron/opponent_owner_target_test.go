@@ -146,10 +146,15 @@ func TestRONOpponentOwnerTargetInvalid(t *testing.T) {
 	}
 }
 
-func TestRONOpponentOwnerTargetRemainingGap(t *testing.T) {
-	_, err := Compile(staticBaseRecord(t, "ATQ", "Bronze Tablet"))
-	if err == nil || (!strings.Contains(err.Error(), "unsupported two-branch payment cost (PayLife)") &&
-		!strings.Contains(err.Error(), "unbound or incompatible player reference (OwnerOfPermanent)")) {
+func TestRONOpponentOwnerTargetCompilationBoundary(t *testing.T) {
+	factory, err := Compile(staticBaseRecord(t, "ATQ", "Bronze Tablet"))
+	if err == nil {
+		if err := mage.ValidateCardDefinition("Bronze Tablet", factory()); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	if !strings.Contains(err.Error(), "unbound or incompatible player reference (OwnerOfPermanent)") {
 		t.Fatalf("next gap: %v", err)
 	}
 	t.Log(err)

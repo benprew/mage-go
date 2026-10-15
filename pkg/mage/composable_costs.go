@@ -798,6 +798,8 @@ func IfPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) Resolving
 }
 
 // PayOrElse uses one payment result to select one resolution branch.
+// Fixed life costs use the same transaction as other resolution costs.
+// Zero life requires acceptance. An absent payer runs neither branch.
 func PayOrElse(player PlayerRef, costs CostGroup, paid, unpaid ResolvingEffect) ResolvingEffect {
 	return &unlessPaidEffect{player: player, costs: costs, effect: paid, otherwise: unpaid, ifPaid: true, twoBranches: true}
 }

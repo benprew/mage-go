@@ -6,27 +6,28 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest slice (2026-10-15): **OPPONENT-OWNED-PERMANENT-TARGET**.
-RON permanent targets now accept `OwnedByAPlayer(Opponent)` through a typed
-engine option over the shared owner check. Bronze Tablet has target-fragment
-coverage; its complete record still rejects at a later prerequisite.
-Estimated and actual complete-card gain: **zero names / zero records**.
-The preserved working tree measures **946 accepted / 40 rejected names**,
-**2,375 compiled / 70 rejected records** (986 names / 2,445 records total).
-Clean HEAD plus this independent slice measures **945 accepted / 41 rejected
-names**, **2,369 compiled / 76 rejected records**. The difference is preserved
-uncommitted prerequisite work. Collection loading still rejects atomically.
-Complete gameplay, runtime cutover, Go-card removal and unused DSL cleanup
-remain unfinished.
+Latest slice (2026-10-15): **TWO-BRANCH-FIXED-LIFE-PAYMENT**.
+RON accepts fixed nonnegative `PayLife(Integer(n))` with optional payment and
+an adjacent two-branch `IfElse`. Shared `PayOrElse`/`LifePayCost` supply execution.
+Estimated and actual complete-gameplay gain: **zero names / zero records**.
+The preserved workspace measures **947 accepted / 39 rejected names**,
+**2,376 compiled / 69 rejected records** (986 names / 2,445 records total).
+The isolated slice measures **945 accepted / 41 rejected names**,
+**2,369 compiled / 76 rejected records**. Uncommitted prerequisites account
+for the difference. Bronze Tablet now compiles in the workspace, but its atomic
+ownership-exchange RON fails the WotC absent-source acquisition contract.
+Its complete gameplay remains unverified; this slice supplies payment fragments.
+Collection loading still rejects atomically. Complete gameplay, runtime cutover,
+Go-card removal and unused DSL cleanup remain unfinished.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Two-branch life payment and ownership results:** Bronze Tablet, eventual
-   one name / one record. Opponent-owner targets are complete. Retain exact
-   exiled visits and implement the absent-source ownership case. Ordinary
-   permanent-owner reads exist in preserved uncommitted work.
+1. **Independent exiled-card ownership assignments:** Bronze Tablet, eventual
+   one gameplay name / one record. Correct the atomic exchange RON for absent
+   and stolen Tablet cases. Preserve exact exiled visits and saved controller.
+   Ordinary permanent-owner reads remain in preserved uncommitted work.
 2. **Resolving prevention selection/payment:** Heroism, eventual one name / one
    record. Correct the timing defect with its local WotC ruling; then select
    current attacking red creatures and offer separate controller payments.
@@ -26121,3 +26122,199 @@ command-local `commit.gpgsign=false`; repository and user settings are unchanged
 Stop after OPPONENT-OWNED-PERMANENT-TARGET. Complete collection gameplay,
 runtime loading, Go-card deletion, obsolete generator removal and unused DSL
 cleanup remain incomplete.
+
+## 2026-10-15 — TWO-BRANCH-FIXED-LIFE-PAYMENT
+
+### Baseline and candidate selection
+
+The starting HEAD was `bd3b81a5`. The workspace contained staged owner-reference
+and delayed-source changes, plus unstaged source-death, finite-redirection,
+RON, vocabulary and other engine/test changes. They were retained. Fresh
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The baseline
+loader returned expected exit 1: **2,375 compiled / 70 rejected records**,
+**946 accepted / 40 rejected names** out of 2,445 records / 986 names.
+
+The latest ranked candidates were compared from complete RON records and local
+WotC rulings. Vocabulary checks targeted `PayLife` (11 occurrences), `IfElse`
+(17) and `PlayerMayCost` (31); these frequencies were not unlock estimates.
+
+| Candidate | Distinct affected names | Estimated complete-gameplay unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Fixed-life optional payment with two branches | Bronze Tablet | 0 names / 0 records | Shared prerequisite for its paid/unpaid ownership paths. Owner reads remain uncommitted; absent-source ownership needs a separate contract and source repair. | Small adapter; payment, declaration, timing, identity and isolation tests. |
+| Resolution-time prevention selection and payment | Heroism | 0 from a small prerequisite; eventual 1 name / 1 record | Current attacking red creature selection, distinct controller payments, and RON timing correction. The WotC ruling requires payment during resolution, not at future damage. | Larger selection/payment/source change. |
+| Attacking-player static reference | Gaea's Liege | 0 from the reference alone; eventual 1 name / 6 records | All six records duplicate `IsntAttacking`; static player filtering and source-bound land-type duration need audit. | Larger static/reference/duration/source change. |
+
+Candidate 1 is dependency-ready and supplies the first ranked prerequisite.
+None of these candidates offers a multi-name unlock. This run completes one
+payment form. The initial zero complete-gameplay estimate remains correct.
+The initial expectation of zero compilation gains was too conservative:
+`compileGroupedExileGraveyard` and `compileCardOwnershipExchange` already lower
+both result branches. Together with preserved owner-reference work, the new
+adapter lets one additional record compile in the workspace. Full compilation
+is separate from Oracle fidelity and complete gameplay evidence.
+
+### Contract, exact shapes and reuse boundary
+
+In ordinary resolving action lists, the adjacent forms
+`MayCost(PayLife(Integer(n)))` or
+`PlayerMayCost(playerRef, PayLife(Integer(n)))` and
+`IfElse(condition, [true_actions], [false_actions])` lower as one operation.
+`n` is a fixed nonnegative integer. The bare condition is `CostWasPaid` or
+`CostWasntPaid`; the latter reverses the branches. Both action lists must be
+nonempty. Nested and adjacent pairs keep their own results. Existing typed
+player scopes supply the payer. Results cannot escape their pair.
+
+`ron.compilePaymentBranches` reuses `compileCosts` and fresh `LifePayCost(n)`
+declarations. The existing native signature is
+`PayOrElse(player PlayerRef, costs CostGroup, paid, unpaid ResolvingEffect)
+ResolvingEffect`. No new engine API or payment-result slot is needed. Shared
+`tryResolutionCostPaymentFor`, total-cost transactions and life services handle
+affordability, choices, permission, rollback, replacements and events. Exact
+life is payable. Positive life costs cannot be paid with insufficient life or
+a life-loss prohibition. Zero life requires acceptance even at nonpositive
+life. Missing payers execute neither branch. Payment replacement cancellation
+keeps the accepted paid result; damage prevention cannot prevent life payment.
+CR 118.3, 118.5, 118.10–12, 119.4 and 119.8 establish the payment contract.
+CR 113.7a, 400.7, 608.2b/h and 702.26b supply existing source, LKI, legality and
+phasing behavior. No replacement-order or simultaneous-operation rule changes.
+
+Dynamic life, `Or` alternatives, mandatory payments, malformed values, empty
+branches and unbound players remain declaration errors in this shape. Existing
+fixed-mana two-branch callers retain their behavior. Go definitions, registry
+cutover and broad DSL removal gates are not reached.
+
+### Failing-first evidence and card-to-test mapping
+
+The first `go test ./pkg/mage/dsl/ron -run '^TestRONLifePaymentBranches' -count=1`
+failed at `unsupported two-branch payment cost (PayLife)`, including the original
+Bronze Tablet payment AST. An initial fixture also tried unsupported bare
+`Opponent` as a singular player; that fixture was corrected to supported typed
+player references before the final red run. Native payment service tests passed
+before the adapter change, establishing exact engine reuse.
+
+- `TestRONLifePaymentBranches`: both condition polarities, implicit You,
+  explicit You and a bound player target; accepted, declined, short, exact,
+  zero and negative-life/zero-declined payments. Checks activation versus
+  resolution timing, selected payer and independent pending clone execution.
+  Cloned games receive explicit test choice policies because search players do
+  not inherit the custom player's optional-payment policy.
+- `TestRONLifePaymentBranchesNested`: nested unpaid and outer paid paths,
+  followed by another payment. Checks local results and current resources.
+- `TestRONLifePaymentBranchesBronzeTabletFragment`: retains Bronze Tablet's
+  original activation cost, target, fixed life cost and `IfElse` condition AST.
+  It substitutes `ControllerOfPermanent(Ref_TargetPermanent)` for the owner
+  operand and life-gain probes for result bodies. Covers paid/declined/short,
+  source departure/return/phasing, target return/phasing/phase cycle, source
+  control change and independent copied offers. This is fragment evidence.
+- `TestRONLifePaymentBranchesInvalid`: malformed costs/values, negative and
+  dynamic life, alternatives, mandatory payment, unbound payer, empty branches,
+  callable condition and an escaped result all reject at compilation.
+- `TestRONLifePaymentBranchesInstances`, `SpellCopy`, `Delayed`: separate factory
+  bindings with reversed players, a zero-cost spell copied under a different
+  controller with a different player target, and next-end-step payment after
+  source departure. Repeated waiting queries and trigger detection make no
+  payment choice. The spell fixture has an explicit zero casting cost.
+- `TestLifePaymentBranchesRestrictions`, `Replacement`: native life-loss
+  prohibition, legal zero payment, replacement cancellation and damage
+  prevention separation. Existing `TestResolutionPaymentBranches*` covers
+  combined-cost rollback, absent payers and declaration flow.
+- The former owner-target rejection test now checks the compilation boundary:
+  a compiled definition must validate, or the exact uncommitted owner-reference
+  prerequisite must reject. The ante-deck collection test uses the same explicit
+  boundary. Neither test removes a runtime assertion.
+
+### Source defect and remaining full-card gap
+
+The complete Bronze Tablet record now compiles in the preserved workspace.
+It is **not complete-gameplay verified**. `ATQ.lines.ron:15` uses
+`ExchangeOwnershipOfTwoCards(TheFirstCardExiledThisWay,TheSecondCardExiledThisWay)`.
+That engine contract is an atomic exchange of two current owners. Local
+`data/ATQ.json` Oracle text instead assigns the source to the other player and
+the other exiled card to the resolving controller. The WotC 2008-08-01 ruling
+explicitly retains acquisition when Tablet is absent; the 2004-10-04 ruling
+also permits a stolen Tablet. An atomic owner swap cannot express those cases.
+This is a source-data/contract mismatch, not a life-payment adapter defect.
+
+An exploratory full-record `TestBronzeAbsentSourceContractProbe` used an ante
+game, activated the real card, bounced Tablet before resolution, and declined
+the payment. It observed the payment offer but failed the WotC acquisition
+assertion. The probe and failure log are in `/tmp/ron-bronze-contract-probe.txt`
+and `/tmp/ron-bronze-contract-probe.log`; no expected-failure test was added to
+the suite. The source repair requires independently applied typed ownership
+assignments, preserving exact exiled visits and the saved ability controller.
+This is the next slice, not a silent reinterpretation of generic exchange.
+
+Bronze Tablet's complete local rulings were read, and
+`go run ./cmd/fetchset -check -card 'Bronze Tablet'` passed. Heroism and Gaea's
+Liege rulings were read for candidate comparison only. Their source defects
+remain. This slice changes no RON source and does not refresh the preserved
+vocabulary snapshot. The loader measurements below are fresh.
+
+### Verification and isolation
+
+Both workspace and isolated checkout passed the required sequence: focused RON
+slice tests; `make build`; `go vet ./...`; `go test ./pkg/mage/... -short -count=1`;
+`make test`; `make lint` (0 issues); and `git diff --check`. Native focused tests
+also passed. Post-lint focused RON and native tests passed with `-count=1`.
+The first native tests passed before implementation because the engine service
+already supplies the complete mechanics. The RON tests established the red/green
+adapter change. No test runtime assertion was removed or relaxed.
+
+Initial verification exposed three integration/fixture issues that were fixed:
+old Bronze Tablet rejection assertions needed the newly supported compilation
+boundary; cloned search players needed explicit test choice policies; and lint
+rejected a test variable named `copy`, which was renamed to `copied`. The initial
+workspace vet also raced removal of the diagnostic probe file; a fresh build
+and vet passed after removal. Parallel lint attempts hit golangci-lint's shared
+lock. Sequential retries passed. The final lint runs made no further changes.
+
+Final `go run ./cmd/loadcards -json` returned expected exit 1 in both states.
+The workspace reports **2,376 compiled / 69 rejected records**, **947 accepted /
+39 rejected names**. Its ordered issues exactly equal the baseline issues with
+Bronze Tablet removed. Previously accepted records retain their tests. The
+isolated slice reports **2,369 compiled / 76 rejected records**, **945 accepted /
+41 rejected names**; Bronze Tablet rejects at `OwnerOfPermanent`. Collection
+loading still rejects atomically and publishes no partial production registry.
+
+Actual compilation gain: workspace **1 name / 1 record**, isolated **0 / 0**.
+Actual complete-gameplay gain: **0 / 0** in both states. The source defect above
+prevents treating the compiled workspace card as a complete gameplay unlock.
+The seven-record difference between final states consists of preserved Personal
+Incarnation work (six records) and owner-reference work enabling Bronze Tablet
+with this adapter (one record).
+
+The isolated commit contains ten files: `pkg/mage/dsl/ron/payment_branches.go`,
+`life_payment_branches_test.go`, `opponent_owner_target_test.go`,
+`ante_deck_test.go`, `pkg/mage/composable_costs.go`,
+`pkg/mage/life_payment_branches_test.go`, `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Three already modified workspace tests (`inventory_test.go`,
+`definition_plan_test.go`, `numeric_consumers_test.go`) receive only exact
+2,376/69 expectation updates. Those integration changes remain with the
+uncommitted prerequisites: committed HEAD correctly retains its independently
+validated 2,369/76 expectations. No prerequisite implementation is bundled.
+
+The initial index tree was `e03834799b44e6074141ddd2be336720b52480ea` and stayed
+unchanged during validation. Unrelated file hashes match the starting snapshot;
+reversing only the three exact count increments restores their original hashes.
+Commit construction uses the isolated checkout, then advances the main branch
+while retaining the original staged content and all working changes. Only this
+slice's source/tests and documentation transformations enter its commit.
+Signing is disabled only for that commit command, without changing settings.
+
+### Ranked next candidates
+
+1. Bronze Tablet: typed independent exiled-card ownership assignments and RON
+   correction for absent/stolen sources; complete paid-cast/entry, ante,
+   payment, acquisition and clone coverage. Eventual one gameplay name / one
+   record. Ordinary owner references remain in preserved uncommitted work.
+2. Heroism: resolution-time attacking red creature selection, separate controller
+   payments and correction of its deferred-payment source defect. One name /
+   one record.
+3. Gaea's Liege: correct the attacking predicate across all six reprints, then
+   attacking-player static filtering and source-bound land-type duration. One
+   unique name / six records.
+
+Stop after TWO-BRANCH-FIXED-LIFE-PAYMENT. Complete collection gameplay, runtime
+loading, Go-card deletion, obsolete generator removal and unused DSL cleanup
+remain incomplete.
