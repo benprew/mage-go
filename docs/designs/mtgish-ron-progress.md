@@ -8,15 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **923 accepted / 63 rejected names**
 (986 total), **2,307 compiled / 138 rejected records** (2,445 total).
-The latest slice is **FIXED-CREATURE-ENCHANT-REMOVAL**.
-RON lowers fixed creature-enchant removal alone or with existing lasting grants.
-Mage removes the typed declaration in layer 6 from one exact recipient visit.
-Shared attachment legality reads the result. Other abilities and enchant
-restrictions remain. Expiry, phasing, return, clones and source LKI have tests.
-Takklemaggot's complete unchanged record now executes both return branches,
-upkeep counters and retained-player damage, including lifecycle and stack copies.
-Estimated and actual gain: one name / one record. No accepted record regressed.
-No RON source changed. Build, vet, short/full tests and lint pass.
+The latest slice is **COUNTER-SNAPSHOT-ENTRY**.
+RON saves typed counter snapshots in ordinary resolving bodies and restores them
+in the existing owner-controlled plural exile-entry context. Mage reads exact
+visits with LKI and combines saved/native entry counts before replacements.
+Independent frames, phasing, return, entry copies, cancellation and clones have
+tests. Coffin remains blocked on its delayed leave/untap event union and exact
+single-entry success continuation. Estimated and actual gain: zero complete
+names / records. Its snapshot prerequisite now has RON gameplay coverage.
+No RON source changed; no accepted record regressed.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,16 +25,19 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Coffin counter snapshots:** Tawnos's Coffin needs saved counters, a
-   successful single-card exile entrant and source leave/untap adapters.
-   Snapshots alone estimate zero gains; eventual one name / one record.
-2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
-   grants, recursive resolving copies and ThisAbility retention.
-   Grants alone estimate zero gains; eventual one name / six records.
-3. **Graveyard Aura attachments:** Animate Dead needs exact graveyard hosts,
-   entry linkage and acquired linked enchant declarations. Fixed creature-enchant
-   removal is available; its other contracts remain. Eventual one name / six
-   records, with zero gains from the first prerequisite alone.
+1. **Exact single exile-entry success/result:** Coffin's counter snapshot and
+   native restoration option are available. It still needs the required entry
+   continuation, an exact entrant result and its source leave/untap event union.
+   Estimate zero gains until both remaining contracts land; eventual one name /
+   one record.
+2. **Source leave/untap delayed union:** save the exact source visit and install
+   only for future events. Coffin needs the union; Animate Dead needs shared
+   source-leave capture for its later linked sacrifice.
+3. **Copy grants or graveyard Aura attachment:** Vesuvan Doppelganger still needs
+   copiable upkeep grants, recursive resolving copies and ThisAbility retention.
+   Animate Dead needs exact graveyard hosts, entry linkage and acquired linked
+   enchant declarations. Each first prerequisite estimates zero gains; eventual
+   one name / six records each.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -20003,3 +20006,159 @@ Commit title: `feat(ron): implement fixed creature-enchant removal`.
 Signing is disabled for this invocation, as in the prior run, to avoid the
 recorded interactive signing-key limitation. Repository configuration is unchanged.
 This run stops after FIXED-CREATURE-ENCHANT-REMOVAL.
+
+
+## 2026-10-15 — COUNTER-SNAPSHOT-ENTRY
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and the complete RON package
+suite passed before changes. The loader exited 1 with valid JSON: 923 accepted /
+63 rejected names and 2,307 compiled / 138 rejected records. Collection rejection
+was expected and was separate from compilation or test failure.
+
+The latest ranked candidate was reassessed first. Complete RON records were read
+for Tawnos's Coffin (ATQ), Vesuvan Doppelganger (LEA) and Animate Dead (LEA),
+including their nested forms. The loader's reprint checks establish identical
+records by name. Targeted vocabulary entries were inspected for
+NoteCountersOnPermanent, EntersWithNotedCounters, CopyEffects and the related
+entry/result/event forms. Reprints count once below.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Counter snapshot and entry restoration | Tawnos's Coffin | 0 now; eventual 1 name / 1 record | Needs exact single exile-entry success/result continuation and source leave/untap delayed union. Establishes all-kind LKI capture and external entry counts over shared frames and entry services | Small/medium: one cohesive capture/restore contract with native and RON tests |
+| Copiable ability grants | Vesuvan Doppelganger | 0 now; eventual 1 name / 6 records | Nested targeted upkeep grant also needs resolving recursive copy changes and ThisAbility retention. Broad copy exception support has no second currently rejected full-card unlock in this shape | Large: recursive declarations and ability identity need independent contracts |
+| Graveyard Aura attachment | Animate Dead | 0 now; eventual 1 name / 6 records | Needs graveyard host attachment, linked entrant enchant predicate, return attachment and source-leave delayed sacrifice. Fixed creature-enchant removal is available | Large: several zone/attachment/link contracts |
+
+Candidate #1 is an unblocking prerequisite with the smallest complete reusable
+contract. None of these candidates supplies a dependency-ready multi-name gain.
+The slice is counter capture **and its entry consumer**, so it proves observable
+restoration rather than merely accepting an unused instruction. The supported
+RON consumer uses the existing plural exile-entry context. Coffin's singular
+payment/result context is explicitly deferred. No second slice was started.
+
+### Rules, signatures and reuse boundary
+
+Coffin's complete local rulings were read through data/rulings/index.json and
+`go run ./cmd/fetchset -check -card "Tawnos's Coffin"` passed. All six entries are
+Wizards rulings. Comparison-card local rulings were also read; no Scryfall note
+was used as an authoritative rule. CR 122.2/6, 400.7, 608.2h, 614.5/12 and 616.1
+establish counter loss across zones, exact-object LKI, entry observations and
+replacement behavior. No source defect was found and no RON source changed.
+
+Native API:
+
+- `BindCounterSnapshot(name string) *CounterSnapshotBinding`.
+- `SnapshotCounters(subject PermanentRef, result *CounterSnapshotBinding) ResolvingEffect`.
+- `EnterWithSavedCounters(saved *CounterSnapshotBinding) BattlefieldEntryOption`.
+
+A binding contains one typed number binding per counter kind. Capture reads the
+exact permanent visit through CountersOnWithLKI and writes every count, including
+zero. Missing visits supply zeros; returned visits cannot substitute their data.
+Existing number frames supply cleanup, delayed captures, copies and clone
+isolation. No new mutable state registry or last-action slot was introduced.
+Waiting delayed queries inspect source reads without executing capture.
+
+The native entry option works with existing graveyard return services and
+owner-controlled exile batches. Entry saves the counts before choices, combines
+them with native entry counters by kind and applies the existing counter
+replacement service once per kind. Tests exposed duplicate additional-counter
+replacement when the saved and printed amounts were applied separately; the
+entry path now aggregates them. Entry copying replaces native rules but cannot
+erase external counts. Counts exist before entry observations; failed entry
+cannot attach them to another visit. Definition validation rejects nil/empty
+bindings, undominated reads, invalid subjects and duplicate entry options.
+
+RON accepts `NoteCountersOnPermanent(permanentRef)` in ordinary resolving action
+lists. Its typed result dominates only following instructions and their nested
+bodies. Branch-local captures cannot escape; later captures shadow earlier ones.
+Each factory allocates fresh binding instances. The consumer is
+`PutEachExiledCardOntoTheBattlefield(set, [EntersUnderOwnersControl,
+EntersWithNotedCounters])`, for either already-supported exile set. The modifier
+is a strict symbol. Entry/draw replacement contexts reject. Existing owner-only
+and attachment-only lists remain supported. Combined option lists and the
+single-card exile-entry payment/result context remain unsupported.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, `TestRONCounterSnapshotEntry` failed with unsupported
+action NoteCountersOnPermanent. Native tests failed compilation at the three
+missing API signatures. The later additional-counter test failed with 303
+instead of 302, then passed after aggregation. Copy-entry tests needed a model
+with a CardDefinitionPlan and an accepting cloned player; these fixture fixes
+retain the shared entry-copy contract.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Tawnos's Coffin clauses | TestRONCounterSnapshotEntry | Extracts unchanged NoteCountersOnPermanent and EntersWithNotedCounters AST nodes from the complete ATQ record; uses a supported delayed plural entry probe; saves counters after exile through target LKI; retains owner control and counts above 255 in a game clone |
+| RON instance/copy contract | TestRONCounterSnapshotInstances | Two factory instances save different counts; delayed stack copy and pending clone restore their own exact exile visits without duplicate counters |
+| RON declarations | TestRONCounterSnapshotInvalid, Contexts | Wrong roles, arities, unbound refs, use before capture, branch escape, tuple modifier and replacement contexts reject |
+| Native capture/entry lifecycle | TestCounterSnapshotEntry | Live, departed, returned, phased and phase-cycle subjects; entry copy; native plus saved counters; additional-counter replacement; tapped entry; clone mutation isolation |
+| Native all-kind/frame contract | TestCounterSnapshotAllKinds | Every counter kind, large values, separate bindings, zero capture and resolution cleanup |
+| Native declaration contract | TestCounterSnapshotDeclarations | Positive validated producer/consumer plus nil, empty, missing, undominated, branch-only and duplicate declarations |
+| Native graveyard/waiting contract | TestCounterSnapshotGraveyardAndWaitingLKI | Graveyard entry; entry observation sees combined counts; cancellation; repeated pure waiting queries retain departed-source LKI and execute only at the saved step |
+
+Coffin's full record still rejects, now at `unsupported delayed step event (Or)`.
+No full-card gameplay claim is made for it. The snapshot and restoration
+prerequisite has new gameplay evidence; complete-card coverage is unchanged.
+The inventory adapter classifies the NoteCountersOnPermanent argument as a
+permanent reference. Vocabulary refresh is unnecessary because source RON did
+not change.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONCounterSnapshot' -count=1`
+  and `go test ./pkg/mage -run '^TestCounterSnapshot' -count=1`: pass.
+- `make build`, `go vet ./...`: pass, including the final post-lint rerun.
+- `go test ./pkg/mage/... -short -count=1`: pass before and after lint fixes.
+- `make test`: full repository passes before and after lint fixes.
+- Initial `make lint` reported two preallocation requirements in the new compiler
+  and its test. They were fixed without changing behavior. Final `make lint`
+  passes with 0 issues. Automatic import grouping was reviewed; no unrelated
+  file changed. The focused RON suite passed after the fixes, and the final
+  build/vet/short/full checks ran against that code.
+- `git diff --check`: pass, including final documentation and ledger changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON. Counts stay
+  **923 accepted / 63 rejected names**, **2,307 compiled / 138 rejected records**
+  out of 986 names / 2,445 records. A parsed before/after comparison asserts the
+  exact same rejected-record keys and exactly one changed diagnostic:
+  `ATQ.lines.ron:67:479: unsupported action (NoteCountersOnPermanent)` becomes
+  `ATQ.lines.ron:67:545: unsupported delayed step event (Or)` for Coffin.
+  Every other issue is unchanged. No accepted record regressed.
+
+Actual gain is **0 names / 0 records**, matching the estimate. Compilation and
+complete-card gameplay coverage are unchanged; the counter snapshot/restoration
+prerequisite gains the mapped gameplay tests above. There is no environment
+blocker or source-data correction. No RON source changed, so the vocabulary
+snapshot remains unchanged. Atomic collection rejection remains required.
+Runtime cutover, complete collection gameplay, Go-card and generator deletion,
+and unused DSL removal remain gated. Existing callers were preserved; no
+removal gate was reached, and no DSL function was removed. No fallback, partial
+registry, card-name branch or game-time declaration panic was introduced.
+
+Changed files: `pkg/mage/counter_snapshot.go`, `counter_snapshot_test.go`,
+`attached_entry.go`, `linked_exile_entry.go`, `composable_actions.go`, `game.go`,
+`doc.go`; `pkg/mage/dsl/ron/counter_snapshot.go`, `counter_snapshot_test.go`,
+`compiler.go`, `player_scope.go`, `optional_payment.go`,
+`linked_exile_transport.go`, `inventory.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. API documentation now links
+older counter-note gap statements to the new supported contract.
+
+Commit title: `feat(ron): implement counter snapshot entry restoration`.
+Signing is disabled for this commit invocation, following the prior recorded
+interactive signing-key limitation. Repository configuration is unchanged.
+This run stops after COUNTER-SNAPSHOT-ENTRY.
+
+### Ranked next candidates
+
+1. Exact single exile-entry result and required success continuation. Coffin's
+   saved counters now have an engine entry option; this needs an exact entrant
+   result and success branch. Estimate zero immediate gains until its event union
+   is supported; eventual one name / one record.
+2. Source leave/untap delayed event union, with exact source incarnation and no
+   replay of events before installation. Coffin requires this; the shared source
+   leave service also supplies Animate Dead's later delayed sacrifice. Reassess
+   dependencies before selecting its complete supported shape.
+3. Copiable ability grants / recursive copies for Vesuvan Doppelganger, or
+   graveyard Aura attachment for Animate Dead. Each still has multiple independent
+   blockers; estimated zero gains from one prerequisite alone.

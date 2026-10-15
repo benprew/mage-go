@@ -41,6 +41,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	counterSnapshots     map[*counterSnapshotPlan]*mage.CounterSnapshotBinding
 	lifeSubjects         map[*lifeSubjectPlan]*mage.PlayerBinding
 	permanentLoops       map[*permanentLoopPlan]*mage.PermanentBinding
 	chosenMana           map[*chosenManaPlan]*mage.NumberBinding

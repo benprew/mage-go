@@ -50,20 +50,32 @@ func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	var host *permanentReferencePlan
+	var counters *counterSnapshotPlan
 	if args == 2 {
 		options := n.Args[1]
 		if options.Kind != List || len(options.Args) < 1 || len(options.Args) > 2 || options.Args[0].Kind != Symbol || options.Args[0].Name != "EntersUnderOwnersControl" {
-			return nil, problem(options, "supply owner control and at most one explicit attachment")
+			return nil, problem(options, "supply owner control and at most one attachment or noted-counter option")
 		}
 		if len(options.Args) == 2 {
-			ref, err := compileAttachedEntry(options.Args[1], ctx)
-			if err != nil {
-				return nil, err
+			option := options.Args[1]
+			if option.Name == "EntersWithNotedCounters" {
+				if option.Kind != Symbol || ctx.counterSnapshot == nil || !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+					return nil, problem(option, "noted counters require a bound resolving snapshot and a symbol")
+				}
+				counters = ctx.counterSnapshot
+			} else {
+				ref, err := compileAttachedEntry(option, ctx)
+				if err != nil {
+					return nil, err
+				}
+				host = &ref
 			}
-			host = &ref
 		}
 	}
 	entryOptions := func(bindings instanceBindings) []mage.BattlefieldEntryOption {
+		if counters != nil {
+			return []mage.BattlefieldEntryOption{mage.EnterWithSavedCounters(bindings.counterSnapshots[counters])}
+		}
 		if host == nil {
 			return nil
 		}

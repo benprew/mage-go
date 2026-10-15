@@ -506,10 +506,11 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 		perm.RevokeBaseAttr(EntersTapped)
 	}
 
-	// The entry keeps its own spell facts through replacement choices.
+	// Each counter kind has one entry event for counter replacements.
+	counterAmounts := entry.context.entry.counterAmounts
 	for _, a := range perm.RuntimeAbilities {
 		if xc, ok := a.(*EntersWithXCountersAbility); ok {
-			g.AddCountersWithReplacement(perm, xc.CounterType, entry.context.announcedX, perm.ID(), true)
+			counterAmounts[xc.CounterType] += max(0, entry.context.announcedX)
 		}
 	}
 
@@ -517,7 +518,7 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 	baseCtrTypes := map[CounterType]bool{}
 	for _, a := range perm.RuntimeAbilities {
 		if nc, ok := a.(*EntersWithNCountersAbility); ok {
-			g.AddCountersWithReplacement(perm, nc.CounterType, nc.Count, perm.ID(), true)
+			counterAmounts[nc.CounterType] += max(0, nc.Count)
 			baseCtrTypes[nc.CounterType] = true
 		}
 	}
@@ -534,7 +535,7 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 		if cc, ok := a.(*EntersWithComputedCountersAbility); ok && cc.Compute != nil {
 			n := cc.Compute(g, perm)
 			if n > 0 {
-				g.AddCountersWithReplacement(perm, cc.CounterType, n, perm.ID(), true)
+				counterAmounts[cc.CounterType] += n
 			}
 			baseCtrTypes[cc.CounterType] = true
 		}
@@ -543,9 +544,17 @@ func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uu
 		if counters, ok := ability.(*entryCountersAbility); ok && !nilDefinition(counters.amount) {
 			n := counters.amount.entryCounterAmount(entry.context)
 			if n > 0 {
-				g.AddCountersWithReplacement(perm, counters.counter, n, perm.ID(), true)
+				counterAmounts[counters.counter] += n
 				baseCtrTypes[counters.counter] = true
 			}
+		}
+	}
+
+	for counter, amount := range counterAmounts {
+		if amount > 0 {
+			ct := CounterType(counter)
+			g.AddCountersWithReplacement(perm, ct, amount, perm.ID(), true)
+			baseCtrTypes[ct] = true
 		}
 	}
 

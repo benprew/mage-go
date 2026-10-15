@@ -1,5 +1,48 @@
 # DSL reference
 
+## Counter snapshots and entry restoration
+
+`BindCounterSnapshot(name string) *CounterSnapshotBinding` declares independent
+saved counts for every supported counter kind.
+`SnapshotCounters(subject PermanentRef, result *CounterSnapshotBinding)
+ResolvingEffect` reads the exact permanent visit at resolution. A departed or
+phased visit uses shared LKI; a returned visit cannot substitute its counters.
+Unknown visits supply zeros. Each capture replaces every count, including zeros.
+The implementation uses typed number bindings, so resolution cleanup, delayed
+frames, stack copies and game clones retain their existing isolation rules.
+Nil, empty and unbound declarations fail definition validation. Waiting-source
+queries inspect the typed reads without capturing counts or executing effects.
+
+`EnterWithSavedCounters(saved *CounterSnapshotBinding) BattlefieldEntryOption`
+works with native graveyard returns and owner-controlled exile entry batches.
+It saves the counts before entry choices, adds them to the entrant's other entry
+counts, and sends one combined amount per counter kind through the shared
+counter replacement service. Counters exist before entry observations. Copy
+replacements can change the entrant's native entry rules but cannot erase these
+external saved counts. The option changes neither printed nor copiable rules.
+Cancelled entry cannot retain the counts on another visit. Nil, duplicate or
+undominated options fail definition validation. Rules: CR 122.2/6, 400.7,
+608.2h, 614.5/12 and 616.1.
+
+RON accepts `NoteCountersOnPermanent(permanentRef)` in ordinary resolving action
+lists. The result is local to the following instructions and their nested bodies;
+a branch-local capture cannot escape its branch. A later capture shadows the
+prior result for its continuation. Factories allocate separate bindings.
+`PutEachExiledCardOntoTheBattlefield(set, [EntersUnderOwnersControl,
+EntersWithNotedCounters])` consumes that result with either existing supported
+exile set. The entry modifier must be a symbol. Existing attachment-only and
+owner-only entry lists remain supported. Combined entry lists, single-card exile
+return continuations, and entry/draw replacement contexts need separate adapters.
+
+`TestCounterSnapshot*` covers native declarations, all counter kinds, counts
+above 255, zero replacement, LKI, phasing, return, copy entry, cancellation,
+entry observations, counter replacements, clones and pure waiting queries.
+`TestRONCounterSnapshot*` covers unchanged Coffin clauses in a supported delayed
+entry probe, scope rejection, contexts, separate factories, delayed stack copies
+and game clones. Tawnos's Coffin's complete record still rejects at its delayed
+leave/untap event union; these probes establish prerequisite behavior only.
+
+
 ## Non-Aura entry and departed-Aura entrant results
 
 `EnterWithoutSubtype(family SubtypeFamily, subtype string) BattlefieldEntryOption`
@@ -164,8 +207,8 @@ RON accepts these exact shapes in ordinary resolving bodies:
 RON owns these spellings, list shapes and lexical reference checks. Mage owns
 host visits, legality, replacements, batch entry, movement and attachment.
 Required creature choice and `CanBeEnchantedByDeadGuest` now use the
-required-choice contract above. Noted counters and Coffin's
-single-card return remain separate adapters. Animate
+required-choice contract above. Noted counters use the snapshot and entry
+contract above. Coffin's single-card return still needs a separate adapter. Animate
 Dead's graveyard attachment and later on-battlefield attachment are separate
 contexts. These complete records remain rejected; no partial registry is used.
 
@@ -11540,11 +11583,12 @@ single/other references. One explicit source group supplies `ThisExiledCard`.
 These symbol references are lexical and cannot escape conditional producers.
 
 Singular results can feed `PutExiledCardIntoOwnersGraveyard`. The other collection
-can feed the existing plural hand/graveyard/owner-entry adapters; owner entry
-permits only `[EntersUnderOwnersControl]`. `compileCardRef` lowers singular
+can feed the existing plural hand/graveyard/owner-entry adapters, including
+the attachment and noted-counter options specified above. `compileCardRef` lowers singular
 results for future card consumers and preserves zone restrictions. This contract
-does not supply noted counters, attachment entry, ownership exchange, exile
-replacement rules or linked accumulation across separate activations.
+delegates noted counters and attachment entry to the entry services above.
+It does not supply ownership exchange, exile replacement rules or linked
+accumulation across separate activations.
 
 See the grouped permanent exile contract in `engine-rules-contracts.md` and
 `TestGroupedExile*`/`TestRONGroupedExile*` for identity and gameplay evidence.

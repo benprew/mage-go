@@ -14,6 +14,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "NoteCountersOnPermanent" {
+			build, err := compileCounterSnapshot(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if part.Name == "PayAnyAmountOfMana" || (part.Name == "PlayerAction" && len(part.Args) == 2 && part.Args[1].Name == "PayAnyAmountOfMana") {
 			build, err := compileChosenManaPayment(part, parts[i+1:], ctx)
 			if err != nil {

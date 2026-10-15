@@ -1,5 +1,11 @@
 package mage
 
+import (
+	"fmt"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
+
 // BattlefieldEntryOption changes how a saved card enters the battlefield.
 type BattlefieldEntryOption interface {
 	battlefieldEntryOption()
@@ -7,6 +13,9 @@ type BattlefieldEntryOption interface {
 }
 
 type battlefieldEntryOptions struct {
+	savedCounters              *CounterSnapshotBinding
+	savedCountersCount         int
+	counterAmounts             [core.NumCounters]int
 	tapped                     bool
 	host                       PermanentRef
 	tappedCount, attachedCount int
@@ -31,8 +40,17 @@ func (e battlefieldEntryOptions) inspect(node *definitionNode) {
 	if e.invalid {
 		node.problem = "supply non-nil entry options"
 	}
-	if e.tappedCount > 1 || e.attachedCount > 1 || e.withoutSubtypeCount > 1 {
+	if e.tappedCount > 1 || e.attachedCount > 1 || e.withoutSubtypeCount > 1 || e.savedCountersCount > 1 {
 		node.problem = "supply one entry option of each kind"
+	}
+	if e.savedCountersCount > 0 {
+		if e.savedCounters == nil {
+			node.problem = "supply a counter snapshot binding"
+		} else {
+			for counter, binding := range e.savedCounters.counts {
+				node.children = append(node.children, definitionEdge{fmt.Sprintf("entry-counter-%d", counter), FromNumber(binding)})
+			}
+		}
 	}
 	if e.withoutSubtype != nil {
 		if err := ValidateSubtypeFamily(e.withoutSubtype.family, e.withoutSubtype.subtype); err != nil || e.withoutSubtype.subtype == "" {

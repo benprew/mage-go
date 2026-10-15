@@ -53,6 +53,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 		}
 	}()
 	attachment := e.entry.captureAttachment(ctx)
+	entry := e.entry.captureCounters(ctx)
 	savedX := g.resolution.X()
 	g.resolution.SetX(0)
 	defer g.resolution.SetX(savedX)
@@ -87,7 +88,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 			}
 			card := exiled.Card.Copy()
 			card.SetID(subject.id)
-			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller, entry: e.entry}, e.entry.tapped)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller, entry: entry}, entry.tapped)
 			proposed = append(proposed, perm)
 			if perm == nil {
 				if failed != nil {

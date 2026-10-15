@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [BindCounterSnapshot] declares saved counts for all counter kinds.
+// [SnapshotCounters] reads one exact visit, with shared departure and phasing LKI.
+// [EnterWithSavedCounters] restores counts in native graveyard and exile entry.
+// Entry combines saved and native counts before counter replacements apply.
+// Copy entry cannot erase external counts. Entry observations read the result.
+// Typed number bindings supply cleanup, delayed frames and clone isolation.
+// Waiting source queries retain reads without executing a capture.
+// RON accepts resolving NoteCountersOnPermanent and a strict
+// EntersWithNotedCounters symbol in owner-controlled plural exile returns.
+// Branch-local captures cannot escape. Factories keep separate bindings.
+// Coffin still needs single-entry continuations and its leave/untap event union.
+//
 // [RemoveCreatureEnchant] removes fixed [CreatureEnchantTarget] declarations.
 // [Until] saves the exact recipient. Layer 6 removes its enchant restriction.
 // Other abilities and enchant restrictions remain. Printed and copiable rules
@@ -2056,7 +2068,8 @@
 // Delays and clones retain separate result storage. Waiting queries declare
 // explicit source reads without selecting subjects or moving permanents.
 // RON supports plural permanent subject groups and lexical result references.
-// Counter notes, ownership exchange and return attachments need separate adapters.
+// Counter notes use [SnapshotCounters]. Entry options supply return attachments.
+// Single-card exile entry still needs a separate adapter.
 //
 // Use [NewExileLink] for a distinct group of linked exile declarations.
 // [ExilePermanentLinked] and [ExileLibraryTopLinked] save that declaration

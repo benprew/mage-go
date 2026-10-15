@@ -1,5 +1,48 @@
 # Engine rules contracts
 
+## Counter snapshots and entry restoration
+
+`BindCounterSnapshot(name string) *CounterSnapshotBinding` declares independent
+saved counts for every supported counter kind.
+`SnapshotCounters(subject PermanentRef, result *CounterSnapshotBinding)
+ResolvingEffect` reads the exact permanent visit at resolution. A departed or
+phased visit uses shared LKI; a returned visit cannot substitute its counters.
+Unknown visits supply zeros. Each capture replaces every count, including zeros.
+The implementation uses typed number bindings, so resolution cleanup, delayed
+frames, stack copies and game clones retain their existing isolation rules.
+Nil, empty and unbound declarations fail definition validation. Waiting-source
+queries inspect the typed reads without capturing counts or executing effects.
+
+`EnterWithSavedCounters(saved *CounterSnapshotBinding) BattlefieldEntryOption`
+works with native graveyard returns and owner-controlled exile entry batches.
+It saves the counts before entry choices, adds them to the entrant's other entry
+counts, and sends one combined amount per counter kind through the shared
+counter replacement service. Counters exist before entry observations. Copy
+replacements can change the entrant's native entry rules but cannot erase these
+external saved counts. The option changes neither printed nor copiable rules.
+Cancelled entry cannot retain the counts on another visit. Nil, duplicate or
+undominated options fail definition validation. Rules: CR 122.2/6, 400.7,
+608.2h, 614.5/12 and 616.1.
+
+RON accepts `NoteCountersOnPermanent(permanentRef)` in ordinary resolving action
+lists. The result is local to the following instructions and their nested bodies;
+a branch-local capture cannot escape its branch. A later capture shadows the
+prior result for its continuation. Factories allocate separate bindings.
+`PutEachExiledCardOntoTheBattlefield(set, [EntersUnderOwnersControl,
+EntersWithNotedCounters])` consumes that result with either existing supported
+exile set. The entry modifier must be a symbol. Existing attachment-only and
+owner-only entry lists remain supported. Combined entry lists, single-card exile
+return continuations, and entry/draw replacement contexts need separate adapters.
+
+`TestCounterSnapshot*` covers native declarations, all counter kinds, counts
+above 255, zero replacement, LKI, phasing, return, copy entry, cancellation,
+entry observations, counter replacements, clones and pure waiting queries.
+`TestRONCounterSnapshot*` covers unchanged Coffin clauses in a supported delayed
+entry probe, scope rejection, contexts, separate factories, delayed stack copies
+and game clones. Tawnos's Coffin's complete record still rejects at its delayed
+leave/untap event union; these probes establish prerequisite behavior only.
+
+
 ## Non-Aura entry and departed-Aura entrant results
 
 `EnterWithoutSubtype(family SubtypeFamily, subtype string) BattlefieldEntryOption`
@@ -164,8 +207,8 @@ RON accepts these exact shapes in ordinary resolving bodies:
 RON owns these spellings, list shapes and lexical reference checks. Mage owns
 host visits, legality, replacements, batch entry, movement and attachment.
 Required creature choice and `CanBeEnchantedByDeadGuest` now use the
-required-choice contract above. Noted counters and Coffin's
-single-card return remain separate adapters. Animate
+required-choice contract above. Noted counters use the snapshot and entry
+contract above. Coffin's single-card return still needs a separate adapter. Animate
 Dead's graveyard attachment and later on-battlefield attachment are separate
 contexts. These complete records remain rejected; no partial registry is used.
 
@@ -14467,8 +14510,8 @@ Evidence: `TestLinkedExileEntryBatch`, `VisitsAndProhibition`, `Aura`,
 `CopyReplacement`, `Invalid`. Full Safe Haven tests use its unchanged RON record
 and cover successful/declined sacrifice, control loss, departure/return, phasing,
 stack copies, independent sources, illegal targets, tokens and pending clones.
-The complete Coffin record remains unsupported; no counter-note or explicit
-attachment semantics are inferred from this entry service.
+The complete Coffin record remains unsupported. Saved counters and explicit
+attachment entry use the separate option contracts above.
 
 ## Saved reveal mana value and typed resolution life payment
 
@@ -14577,8 +14620,9 @@ Evidence: native `TestGroupedExileIdentity`, `Declarations`, `Waiting`,
 RON `TestRONGroupedExileSubjects`, `Results`, `Invalid`, `CardReferences`,
 `TimingAndLegality` and `Contexts`. The actual Bronze Tablet and Tawnos's Coffin
 exile nodes run in test-only action probes. This evidence establishes their exile
-prerequisite, not complete-card behavior. Counter notes, departure-or-untap return
-subscriptions, noted-counter/attachment entry and ownership exchange remain gaps.
+prerequisite, not complete-card behavior. Counter notes and explicit attachment
+entry use the separate contracts above. Coffin still needs departure-or-untap
+return subscriptions and exact single-entry continuations.
 
 ## Two-card ownership exchange (CR 108.3, 400.7, 407.3, 701.12a)
 

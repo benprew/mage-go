@@ -2921,7 +2921,7 @@ func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	attachment := e.entry.captureAttachment(ctx)
-	permanent := returnGraveyardCardToBattlefieldWithOptions(ctx.Game, card.ID(), controller, controller, e.entry, attachment)
+	permanent := returnGraveyardCardToBattlefieldWithOptions(ctx.Game, card.ID(), controller, controller, e.entry.captureCounters(ctx), attachment)
 	if e.saveResult && permanent != nil {
 		if ctx.Game.resolution.permanentBindings == nil {
 			ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)

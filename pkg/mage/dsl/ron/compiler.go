@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	counterSnapshot      *counterSnapshotPlan
 	lifeSubject          *lifeSubjectPlan
 	permanentLoop        *permanentLoopPlan
 	createdTokenLink     *mage.CreatedTokenLink

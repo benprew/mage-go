@@ -1368,7 +1368,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				}
 				return "permanent_filter"
 			}
-		case "RemoveCreatureFromCombat", "RemoveCreatureFromCombatAndUnblockBlockers", "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "TapOrUntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
+		case "NoteCountersOnPermanent", "RemoveCreatureFromCombat", "RemoveCreatureFromCombatAndUnblockBlockers", "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "TapOrUntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 			if len(n.Args) == 1 {
 				return "permanent_reference"
 			}
