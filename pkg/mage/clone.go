@@ -105,7 +105,7 @@ func extractBasePlayer(p Player) *BasePlayer {
 		poisonCounters:  p.PoisonCounters(),
 		lastDrawnCardID: p.LastDrawnCardID(),
 	}
-	if !p.IsAlive() && p.Life() > 0 {
+	if !p.IsAlive() {
 		bp.lost = true
 	}
 	if history, ok := p.(interface{ lastDrawnHandCard() capturedCard }); ok {

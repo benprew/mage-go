@@ -397,10 +397,12 @@ func TestParity_TerminalEval_SignedByWinner(t *testing.T) {
 
 	pa.SetLife(20)
 	pb.SetLife(-1)
-	if got := terminalEval(g, pa.PlayerID()); got <= 1e5 {
+	terminal := g.Clone()
+	terminal.CheckStateBasedActions()
+	if got := terminalEval(terminal, pa.PlayerID()); got <= 1e5 {
 		t.Fatalf("alive-vs-dead = %v, want large positive", got)
 	}
-	if got := terminalEval(g, pb.PlayerID()); got >= -1e5 {
+	if got := terminalEval(terminal, pb.PlayerID()); got >= -1e5 {
 		t.Fatalf("dead-vs-alive = %v, want large negative", got)
 	}
 

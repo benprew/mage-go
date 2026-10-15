@@ -22561,3 +22561,52 @@ entry-clause evidence, not complete-card coverage. Local `data/LEA.json` agrees
 with the entry text. CR 119.3, 603.6d, 614.1c/12, 616.1c/e/f and 704.3 supply
 the life change, timing, replacement order and priority boundaries. No RON source
 changed. No new state-based action, damage, cost or event service was added.
+
+## Static life-total loss exemption
+
+`PreventLifeTotalLossStatic(subject PlayerRef) ContinuousEffect`, installed with
+`WithStaticAbility`, prevents only the subject's state-based game loss from a
+nonpositive life total (CR 104.3b, 704.5a). Definition validation requires a
+battlefield source and rejects nil or unbound player references. RON accepts
+exactly `PlayerEffect(You, [DoesntLoseTheGameForHaving0OrLessLife])` on permanent
+cards. Other players, tuple aliases, combined operation lists and resolving
+contexts remain unsupported.
+
+The engine reads the current source controller for `You`. The shared printed
+static-ability wrapper checks the exact source visit and current abilities.
+Departure, phasing and ability removal stop the exemption; phase-in and ability
+restoration can restore it. Return registers a fresh source visit. Copies retain
+the declaration and bind their own source. Multiple sources remain independent.
+Clones copy effect source and player loss state.
+`Game.PreventsLifeTotalLoss(playerID uuid.UUID) bool` supplies the shared pure
+exemption query to state-based actions and scenario anomaly detection.
+Queries use completed layers
+without a layer pass, choices, state changes or LKI (CR 113.6, 611.3, 702.26b).
+
+`Player.IsAlive` reports whether the player has recorded game loss. Life total
+alone does not cause immediate loss: `CheckStateBasedActions` records it when a
+player would get priority. Life restored during an instruction can avoid that
+loss, but life gain cannot reverse a recorded loss. `IsGameOver`, `Winner`,
+`IsDraw`, AI terminal evaluation and ante settlement read this same recorded
+state. Synthetic callers that set life directly must perform the state-based
+check before expecting a finished game. Clone extraction preserves recorded loss
+even when the original player's life was nonpositive.
+
+Each state-based iteration saves all player loss decisions before changing
+permanents. An exemption or life change during another state-based action cannot
+change that batch's saved decision. The next iteration reads the new state
+(CR 704.3). Poison, empty-library draws and explicit `SetLost` still cause loss,
+including while the player is at negative life under this exemption. Simultaneous
+player losses produce a draw (CR 104.4a). This is not a damage replacement,
+life-total floor or general game-loss prohibition.
+
+Evidence: native `TestLifeTotalLoss*` covers timing, positive recovery, permanent
+loss state, other causes, simultaneous snapshots, current control, source visit,
+phasing, removal/restoration, copy entry, independent sources, clones, declaration
+validation and pure queries. `TestRONLifeTotalLoss*` executes the unchanged entry
+and exemption clauses together from all five Lich records, paid and failed native
+casting, queued clones, negative life, phasing, departure, independent factories,
+ability removal, uninterrupted resolution, rejection cases and inventory roles.
+Complete Lich records still reject later unsupported rules; this is clause-level
+coverage only. No new Lich gain replacement, sacrifice result or loss action is
+claimed.

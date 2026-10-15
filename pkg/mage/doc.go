@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventLifeTotalLossStatic] stops one player's nonpositive-life game loss.
+// Use [WithStaticAbility]. You reads the current source controller. Departure,
+// phasing and ability removal stop the rule through the shared source lifecycle.
+// Copies, return and clones keep separate source visits and loss state.
+// [Game.PreventsLifeTotalLoss] supplies the pure exemption query.
+// [Player.IsAlive] reads recorded loss. [Game.CheckStateBasedActions] records
+// life-total loss at priority boundaries. Life restored before that check can
+// avoid loss. Later life gain cannot reverse recorded loss. Poison, empty draws
+// and explicit loss still apply. Each batch saves loss decisions before moves.
+// RON accepts PlayerEffect(You, [DoesntLoseTheGameForHaving0OrLessLife]).
+// This establishes Lich's loss exemption. Its later clauses still need adapters.
+// Other RON players, operation lists and contexts remain unsupported.
+//
 // [LoseLifeAsEnters] causes the entry controller to lose a typed amount.
 // Shared entry replacements apply it once before battlefield observations.
 // Earlier replacements can change the amount. Copy rules can replace the rule.

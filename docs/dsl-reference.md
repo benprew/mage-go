@@ -16990,3 +16990,36 @@ entry-clause evidence, not complete-card coverage. Local `data/LEA.json` agrees
 with the entry text. CR 119.3, 603.6d, 614.1c/12, 616.1c/e/f and 704.3 supply
 the life change, timing, replacement order and priority boundaries. No RON source
 changed. No new state-based action, damage, cost or event service was added.
+
+## RON static life-total loss exemption
+
+Permanent cards support this exact top-level declaration:
+
+```text
+PlayerEffect(You, [DoesntLoseTheGameForHaving0OrLessLife])
+```
+
+The player and operation are strict symbols, and the list contains one operation.
+Other player references, constructor aliases, mixed lists, all-player rules and
+resolving contexts reject. The inventory uses `player_reference` and
+`player_rule_operation` for the two arguments.
+
+RON creates a fresh `PreventLifeTotalLossStatic(You) ContinuousEffect` through
+`WithStaticAbility` per factory instance. The rule follows the current controller
+and the shared static source lifecycle, including exact visits, phasing, ability
+removal, copies and clones. It stops only the life-total state-based loss. Poison,
+empty-library draws and explicit game loss remain effective.
+
+`Game.PreventsLifeTotalLoss(playerID uuid.UUID) bool` queries the active static
+exemption without changing game state. Scenario anomaly detection uses it.
+
+Native `Player.IsAlive` now reads recorded game loss. `CheckStateBasedActions`
+records nonpositive-life loss at the next priority boundary unless the player has
+an active exemption. Life restored before that boundary can avoid loss; life gain
+after recorded loss cannot reverse it. Native fixtures that set life directly
+must perform the check before expecting terminal state.
+
+`TestRONLifeTotalLoss*` supplies gameplay evidence for Lich's first two unchanged
+clauses in all five reprints and for synthetic complete supported declarations.
+Lich's later gain replacement, mandatory sacrifice result and loss actions still
+block its complete record. This adapter does not establish complete-card coverage.

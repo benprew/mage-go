@@ -132,6 +132,7 @@ func TestChangeOwnerPreservesZoneControllerAndSupportsReversal(t *testing.T) {
 		t.Fatal(err)
 	}
 	a.SetLife(0)
+	g.CheckStateBasedActions()
 	result, err := g.AnteResult()
 	if err != nil || len(result) != 0 {
 		t.Fatalf("reversed transfer result = %#v, %v", result, err)
@@ -206,6 +207,7 @@ func TestAnteResultSettlesAndIsIdempotent(t *testing.T) {
 		t.Fatal("unfinished game settled")
 	}
 	b.SetLife(0)
+	g.CheckStateBasedActions()
 	got, err := g.AnteResult()
 	if err != nil || len(got) != 2 {
 		t.Fatalf("AnteResult = %#v, %v", got, err)
@@ -225,6 +227,7 @@ func TestAnteResultRejectsWinnerlessGame(t *testing.T) {
 	g, _ := NewGameWithAnte(a, b, nil, nil)
 	a.SetLife(0)
 	b.SetLife(0)
+	g.CheckStateBasedActions()
 	if _, err := g.AnteResult(); err == nil {
 		t.Fatal("winnerless game settled")
 	}

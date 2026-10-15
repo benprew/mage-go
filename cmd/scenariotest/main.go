@@ -229,7 +229,7 @@ func runOneGame(cfg gameConfig) (result scenario.GameResult) {
 			// Anomaly detection after each step.
 			for idx := 0; idx < g.PlayerCount(); idx++ {
 				p := g.PlayerAt(idx)
-				if p.Life() <= 0 && !g.IsGameOver() {
+				if p.Life() <= 0 && !g.IsGameOver() && !g.PreventsLifeTotalLoss(p.PlayerID()) {
 					anomalies = append(anomalies, fmt.Sprintf("negative_life_alive:%s:%d:turn%d",
 						p.Name(), p.Life(), g.CurrentTurn()))
 				}

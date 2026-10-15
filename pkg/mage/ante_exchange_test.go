@@ -146,6 +146,7 @@ func TestAnteExchangeOwnershipOtherZonesAndSettlement(t *testing.T) {
 				t.Fatal("ownership lost visit")
 			}
 			b.SetLife(0)
+			g.CheckStateBasedActions()
 			changes, err := g.AnteResult()
 			if err != nil || len(changes) != 1 || changes[0].CardID != card.ID() || changes[0].OriginalOwner != b.PlayerID() || changes[0].FinalOwner != a.PlayerID() {
 				t.Fatal("ownership settlement", changes, err)

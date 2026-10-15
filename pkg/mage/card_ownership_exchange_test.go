@@ -85,6 +85,7 @@ func TestCardOwnershipExchange(t *testing.T) {
 			}
 			if swapped {
 				b.SetLife(0)
+				g.CheckStateBasedActions()
 				changes, err := g.AnteResult()
 				if err != nil || len(changes) != 2 {
 					t.Fatal("settlement lost ownership changes", changes, err)

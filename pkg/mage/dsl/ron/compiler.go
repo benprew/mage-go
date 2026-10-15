@@ -701,6 +701,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "EachPlayerEffect":
 		return compileAllPlayerRule(n)
 	case "PlayerEffect":
+		if isLifeTotalLossRule(n) {
+			return compileLifeTotalLossRule(n)
+		}
 		if isManaSpendingRule(n) {
 			return compileManaSpendingRule(n)
 		}

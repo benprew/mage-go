@@ -19,6 +19,16 @@ func (g *Game) checkStateBasedActions() bool {
 	for {
 		actions := false
 
+		// All loss conditions use the state before this batch changes permanents.
+		var losing []Player
+		for _, p := range g.players {
+			lifeLoss := p.Life() <= 0 && !g.PreventsLifeTotalLoss(p.PlayerID())
+			if p.IsAlive() && (lifeLoss || p.PoisonCounters() >= 10 || p.DrewFromEmpty()) {
+				losing = append(losing, p)
+			}
+			p.ClearDrewFromEmpty()
+		}
+
 		for _, card := range slices.Clone(g.zones.exile) {
 			if card.spellCopy {
 				g.RemoveFromExile(card.Card.ID())
@@ -169,29 +179,9 @@ func (g *Game) checkStateBasedActions() bool {
 			actions = true
 		}
 
-		// MTG rule 704.5a: player with 0 or less life loses
-		for _, p := range g.players {
-			if p.Life() <= 0 && p.IsAlive() {
-				p.SetLost()
-				actions = true
-			}
-		}
-
-		// MTG rule 704.5c: player with 10 or more poison counters loses
-		for _, p := range g.players {
-			if p.PoisonCounters() >= 10 && p.IsAlive() {
-				p.SetLost()
-				actions = true
-			}
-		}
-
-		// MTG rule 704.5b: player who attempted to draw from empty library loses
-		for _, p := range g.players {
-			if p.DrewFromEmpty() {
-				p.ClearDrewFromEmpty()
-				p.SetLost()
-				actions = true
-			}
+		for _, p := range losing {
+			p.SetLost()
+			actions = true
 		}
 
 		// MTG rule 704.5d / CR 111.7: a token in any zone other than the battlefield

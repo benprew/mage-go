@@ -3500,7 +3500,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	return nil
 }
 
-// IsGameOver returns true if any player has 0 or less life.
+// IsGameOver reports whether a player has lost the game.
 func (g *Game) IsGameOver() bool {
 	for _, p := range g.players {
 		if !p.IsAlive() {

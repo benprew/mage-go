@@ -226,7 +226,7 @@ func (p *BasePlayer) StartingLife() int {
 	return p.startingLife
 }
 func (p *BasePlayer) SetStartingLife(n int) { p.startingLife = n }
-func (p *BasePlayer) IsAlive() bool         { return p.life > 0 && !p.lost }
+func (p *BasePlayer) IsAlive() bool         { return !p.lost }
 func (p *BasePlayer) DrewFromEmpty() bool   { return p.drewFromEmpty }
 func (p *BasePlayer) ClearDrewFromEmpty()   { p.drewFromEmpty = false }
 func (p *BasePlayer) SetLost()              { p.lost = true }

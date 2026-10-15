@@ -108,6 +108,7 @@ func TestBronzeTabletDeclinedPaymentSwapsOwnership(t *testing.T) {
 		t.Fatal("declined branch did not exchange ownership")
 	}
 	g.SetLife(gametest.PlayerB, 0)
+	g.CheckStateBasedActions()
 	result, err := g.AnteResult()
 	if err != nil || len(result) != 2 {
 		t.Fatalf("AnteResult = %#v, %v", result, err)
