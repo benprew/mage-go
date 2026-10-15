@@ -724,7 +724,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	ds.turnDamageRecipients[capturedPermanent{perm.ID(), perm.incarnationID}] = true
 
 	if perm.HasType(TypePlaneswalker) {
-		perm.Counters[Loyalty] -= min(amount, perm.Counters[Loyalty])
+		perm.RemoveCounter(Loyalty, min(amount, perm.Counters[Loyalty]))
 	}
 	if perm.HasType(TypeCreature) {
 		perm.Damage += amount

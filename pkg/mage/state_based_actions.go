@@ -59,8 +59,8 @@ func (g *Game) checkStateBasedActions() bool {
 				if p == nil {
 					continue
 				}
-				p.Counters[P1P1] -= remove
-				p.Counters[M1M1] -= remove
+				p.RemoveCounter(P1P1, remove)
+				p.RemoveCounter(M1M1, remove)
 				actions = true
 			}
 		}

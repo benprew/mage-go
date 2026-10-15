@@ -668,6 +668,7 @@ type composedLayerEffect struct {
 	rule              *continuousRule
 	modifications     []*layerModification
 	captured          []capturedModification
+	counterLifetime   capturedCounterLifetime
 	sourceBound       bool
 	sourceTapped      bool
 	sourcePresent     bool
@@ -697,6 +698,12 @@ func (e *composedLayerEffect) survivesSourceExit() bool {
 	return e.rule == nil && !e.sourceBound
 }
 func (e *composedLayerEffect) IsActive(g *Game) bool {
+	if e.counterLifetime.subject.id != uuid.Nil && !e.counterLifetime.active(g) {
+		e.expired = true
+	}
+	if e.expired {
+		return false
+	}
 	if e.continuesAcrossLayers(g) {
 		return true
 	}
@@ -808,14 +815,17 @@ func (e *composedLayerEffect) inspectDefinition() definitionNode {
 }
 
 type untilEffect struct {
-	duration      Duration
-	modifications []ContinuousModification
-	sourceBound   bool
-	sourceTapped  bool
-	sourcePresent bool
-	upkeepPlayer  PlayerRef
-	endNextUpkeep bool
-	endNextTurn   bool
+	counterBound   bool
+	counterSubject PermanentRef
+	counterType    CounterType
+	duration       Duration
+	modifications  []ContinuousModification
+	sourceBound    bool
+	sourceTapped   bool
+	sourcePresent  bool
+	upkeepPlayer   PlayerRef
+	endNextUpkeep  bool
+	endNextTurn    bool
 }
 
 // UntilNextUpkeep saves the player so source changes cannot change the duration.
@@ -864,6 +874,9 @@ func (e *untilEffect) Text() string {
 		}
 	}
 	body := strings.Join(descriptions, "; ")
+	if e.counterBound {
+		return body + " for as long as the selected permanent has a " + e.counterType.String() + " counter"
+	}
 	if e.sourcePresent {
 		return body + " for as long as this source remains on the battlefield"
 	}
@@ -973,6 +986,12 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 		}
 		n.children = append(n.children, definitionEdge{"source", This})
 	}
+	if e.counterBound {
+		n.children = append(n.children, definitionEdge{"counter-subject", e.counterSubject})
+		if e.counterType < 0 || e.counterType >= NumCounters {
+			n.problem = "invalid counter type"
+		}
+	}
 	if len(e.modifications) == 0 {
 		n.problem = "supply at least one modification"
 	}
@@ -992,6 +1011,14 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	return n
 }
 func (e *untilEffect) Apply(ctx *EffectContext) error {
+	var counterLifetime capturedCounterLifetime
+	if e.counterBound {
+		p, ok := e.counterSubject.resolvePermanent(ctx)
+		if !ok || p.PhasedOut || p.Counters[e.counterType] <= 0 {
+			return nil
+		}
+		counterLifetime = capturedCounterLifetime{subject: capturedPermanent{p.ID(), p.incarnationID}, counter: e.counterType, zeroEpoch: p.counterZeroEpoch[e.counterType], phaseEpoch: p.phaseEpoch}
+	}
 	var upkeepPlayer uuid.UUID
 	if e.duration == UntilYourNextTurn {
 		var ok bool
@@ -1049,6 +1076,7 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	for _, entry := range effects {
+		entry.counterLifetime = counterLifetime
 		if e.endNextTurn {
 			entry.duration = Indefinite
 			entry.nextTurnPlayer = upkeepPlayer

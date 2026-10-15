@@ -1,5 +1,51 @@
 # Engine rules contracts
 
+## Counter-bound resolving layers
+
+`UntilPermanentHasCounter(subject PermanentRef, counter core.CounterType,
+modifications ...ContinuousModification) ResolvingEffect` captures the watched
+permanent visit and the existing modification subjects and values at resolution.
+The effect starts only when the watched visit is present, unphased and has at
+least one counter of the selected kind. Counter origin does not matter.
+Removing the last counter, departure or phasing out ends the duration permanently.
+A later counter, return or phase-in cannot restore it. Source departure, source
+phasing, ability removal, controller changes and cleanup do not end an otherwise
+valid duration. An affected recipient can phase out and in without ending the
+duration when it is a different object from the watched permanent.
+
+The shared layer service retains timestamps, subtype-family changes, ability
+grants and exact captured recipients. Counter-zero and phase epochs preserve
+transitions between layer evaluations. The counter array, epochs and captured
+lifetimes copy by value in game clones. The shared instruction boundary refreshes
+expired lifetimes before state triggers and the next instruction. Phase-out
+refreshes affected layers immediately. Native counter removal, counter
+annihilation, loyalty damage and cleanup resets use the shared removal method.
+Queries and speculative payment cannot expire the live game's duration.
+Nil/unbound subjects, invalid counter kinds and empty/nil modifications fail
+card-definition validation. This follows CR 122.1, 400.7, 611.2a–d and 702.26e–f,
+and Cyclopean Tomb's WotC rulings from 2006-10-15 and 2008-08-01.
+
+RON accepts `CreatePermanentLayerEffectUntil(subject, modifications,
+ForAsLongAsPermanentHasACounterOfTypeOnIt(EachablePermanent, counter))` in ordinary
+resolving bodies. `EachablePermanent` is a strict symbol local to this duration;
+it means the singular layer recipient. Existing singular references and temporary
+modifications apply. This duration also accepts `SetLandType(type)` for one strict
+basic land type through `SetSubtypeFamily`. Entry/draw replacement bodies, costs,
+static layers, collection layers and other duration subjects remain unsupported.
+The compiler owns syntax and scope; mage owns identity, counters and expiry.
+
+`TestRONCounterDurationTomb` runs the unchanged activated clause in all five Tomb
+records. `TestRONCounterDurationTiming`, `Invalid`, `Boundaries` and `Inventory`
+cover timing, copied abilities, pending clones, payment rollback, illegal/stale
+visits and declaration roles. Native `TestCounterDurationLifetime`,
+`StartAndDeclarations`, `SeparateSubjectAndStateActions`, `Waiting`,
+`PlacementReplacement`, `PaymentPreparation`, `InstructionTiming` and
+`PhaseTiming` cover lifetime and shared-service
+boundaries. Tomb's complete record still requires counter-source history and a
+persistent upkeep removal procedure. Clause evidence does not establish complete
+card gameplay.
+
+
 ## Graveyard creature enchant declarations
 
 `GraveyardCreatureEnchantTarget() Target` declares enchant creature card in a

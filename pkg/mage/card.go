@@ -696,6 +696,9 @@ type Permanent struct {
 	// Permanent is a memcpy instead of a map allocation. Absent counters are
 	// zero. To iterate, loop over [0, NumCounters) and skip zeros.
 	Counters [NumCounters]int
+	// Keep ended durations separate from counters added later in the same resolution.
+	counterZeroEpoch [NumCounters]uint64
+	phaseEpoch       uint64
 
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
@@ -1119,7 +1122,11 @@ func (p *Permanent) LethalDamage(g GameReader) bool {
 
 // AddCounter adds counters of the given type.
 func (p *Permanent) AddCounter(ct CounterType, n int) {
+	before := p.Counters[ct]
 	p.Counters[ct] += n
+	if before > 0 && p.Counters[ct] <= 0 {
+		p.counterZeroEpoch[ct]++
+	}
 }
 
 // RemoveCounter removes counters, returns true if successful.
@@ -1127,7 +1134,11 @@ func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
 	if p.Counters[ct] < n {
 		return false
 	}
+	before := p.Counters[ct]
 	p.Counters[ct] -= n
+	if before > 0 && p.Counters[ct] <= 0 {
+		p.counterZeroEpoch[ct]++
+	}
 	return true
 }
 

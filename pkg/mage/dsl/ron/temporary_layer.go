@@ -6,11 +6,11 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}
-	duration, err := compileTemporaryDuration(n.Args[2], ctx)
+	subject, err := compilePermanentRef(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
 	}
-	subject, err := compilePermanentRef(n.Args[0], ctx)
+	duration, err := compileTemporaryLayerDuration(n.Args[2], ctx, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -20,6 +20,14 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 	}
 	var modifications []func(instanceBindings) mage.ContinuousModification
 	for _, part := range parts {
+		if part.Name == "SetLandType" && n.Args[2].Name == "ForAsLongAsPermanentHasACounterOfTypeOnIt" {
+			build, err := compileCounterDurationLandType(part, subject)
+			if err != nil {
+				return nil, err
+			}
+			modifications = append(modifications, build)
+			continue
+		}
 		if part.Name == "SwitchPT" {
 			if _, err := symbol(part); err != nil {
 				return nil, err

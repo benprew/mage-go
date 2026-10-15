@@ -361,7 +361,7 @@ func (g *Game) doCleanupActions() bool {
 	for _, p := range g.zones.battlefield {
 		p = g.MutablePermanentIncludingPhased(p.ID())
 		// Clear activation tracking (Charge counters used for per-turn counts)
-		p.Counters[Charge] = 0
+		p.RemoveCounter(Charge, p.Counters[Charge])
 		// Cloned games can share abilities before this reset.
 		for _, action := range p.revisedPrintedActions {
 			fresh := *action

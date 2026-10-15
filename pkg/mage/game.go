@@ -241,6 +241,7 @@ func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 		expired = g.effects.expireCapturedControlSource(permanentID, false) || expired
 		expired = g.effects.expireControlPowerSubject(permanentID) || expired
 	}
+	expired = g.effects.expireCounterDurations(g) || expired
 	if expired {
 		g.ApplyContinuousEffects()
 	}
@@ -2111,6 +2112,10 @@ func (g *Game) resolveTappedForManaTriggers(pendingBefore int) {
 // A condition can trigger again after its ability leaves the stack (CR 603.8).
 func (g *Game) CheckStateTriggers() {
 	if g.triggers.zoneBatch != nil || g.triggers.stateChecksPaused {
+		return
+	}
+	if g.effects.expireCounterDurations(g) {
+		g.ApplyContinuousEffects()
 		return
 	}
 	seen := make(map[stateTriggerKey]bool)

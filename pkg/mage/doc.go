@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [UntilPermanentHasCounter] saves one watched visit and its counter condition.
+// It captures layer recipients and values through the shared resolving service.
+// No counter at resolution starts no effect. Last-counter removal, departure
+// and phasing out end the duration. Later counters or phase-in cannot restart it.
+// Counter origin and source departure do not change the saved duration.
+// Counter-zero and phase epochs retain transitions between layer evaluations.
+// Clones and speculative payments keep separate epochs and installed effects.
+// RON accepts ForAsLongAsPermanentHasACounterOfTypeOnIt(EachablePermanent,
+// counter) in ordinary resolving singular layer actions. The duration binds
+// EachablePermanent to the recipient. SetLandType uses shared subtype layers.
+// Cyclopean Tomb's activated clauses execute. Its history and upkeep removal
+// still require separate contracts.
+//
 // [GraveyardCreatureEnchantTarget] declares a graveyard creature enchant rule.
 // Aura spells save an exact target visit. Noncast entry chooses a graveyard host.
 // Copy and entry replacements run before that choice. Attachment precedes entry

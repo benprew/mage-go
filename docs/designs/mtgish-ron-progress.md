@@ -8,14 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **924 accepted / 62 rejected names**
 (986 total), **2,308 compiled / 137 rejected records** (2,445 total).
-The latest slice is **GRAVEYARD-CREATURE-ENCHANT**.
-RON lowers the fixed creature-card/any-graveyard enchant declaration and scoped
-hand/battlefield reads of EnchantedGraveyardCard. Mage saves exact graveyard
-attachments before entry observations and reuses attachment LKI after departure.
-Casting, noncast entry, state checks, phasing, copies and clones have native tests.
-All six Animate Dead enchant clauses validate; clause gameplay is tested in RON.
-Estimated and actual complete-card gain: zero names / records. Complete Animate
-Dead still needs linked enchant grants, presence and departure-player adapters.
+The latest slice is **COUNTER-BOUND-LAYER-DURATION**.
+RON lowers recipient-bound counter lifetimes and basic-land type changes in
+ordinary resolving singular layer actions. Mage saves exact watched visits and
+counter-zero/phase transitions, with immediate instruction-boundary expiry.
+All five Cyclopean Tomb activated clauses validate and have RON gameplay tests.
+Native tests cover phasing, identity, counter replacement, payment and clones.
+Estimated and actual complete-card gain: zero names / records. Complete Tomb
+still needs persistent upkeep subscriptions, counter history and removal.
 No RON source changed. Other accepted records retain their existing coverage.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and native startup.
@@ -24,17 +24,16 @@ DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Linked enchant grants:** Animate Dead needs a copiable/lasting enchant rule
-   limited to the exact creature its source returned, plus linkage during entry.
-   This prerequisite estimates zero immediate gains; eventual one name / six
-   records. Source-presence and departure-player adapters also remain.
-2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
+1. **Persistent upkeep and counter history:** Cyclopean Tomb now reaches
+   CreateTrigger. It still needs a repeated upkeep subscription, exact-source
+   placement/removal history and its removal procedure. Choose one prerequisite;
+   estimate zero immediate gains, eventual one name / five records.
+2. **Source-to-return linkage:** Animate Dead needs a forward exact returned-host
+   link before its lasting enchant grant, then presence and departure-player
+   adapters. Estimate zero immediate gains, eventual one name / six records.
+3. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
    recursive resolving copies and ThisAbility retention. One prerequisite
-   estimates zero immediate gains; eventual one name / six records.
-3. **Counter-bound duration:** Cyclopean Tomb needs exact source/counter lifetime
-   and delayed upkeep removal. One duration prerequisite estimates zero immediate
-   gains; eventual one name / five records with counter history and repeated
-   removal still needed.
+   estimates zero immediate gains, eventual one name / six records.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -20655,3 +20654,161 @@ Commit title: `feat(ron): implement graveyard creature enchant`.
 The commit invocation disables signing under the previously recorded interactive
 signing-key limitation. Repository configuration is unchanged.
 This run stops after GRAVEYARD-CREATURE-ENCHANT.
+
+## 2026-10-15 — COUNTER-BOUND-LAYER-DURATION
+
+### Baseline, candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh collection loading returned
+expected exit 1 with 2,308 compiled / 137 rejected records and 924 accepted /
+62 rejected names. This was collection rejection, not a build or test failure.
+The complete records and nested forms for Animate Dead, Vesuvan Doppelganger
+and Cyclopean Tomb were read across their reprints. Targeted vocabulary queries
+confirmed six linked-host filters, six Doppelganger copy declarations and five
+counter-bound durations. Counts below exclude duplicate reprints.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| Linked enchant grants, ranked #1 | Animate Dead | 0 immediately; eventual 1 name / 6 records | Grant precedes the return producer. The existing returned-permanent binding only dominates later consumers; no forward source-to-return link supplies the enchant restriction. Presence and departure-controller adapters also remain. Exact returned-host provenance must precede the complete grant | Large: forward link, graveyard-enchant removal, grant lifecycle and attachment legality |
+| Copiable ability grants, ranked #2 | Vesuvan Doppelganger | 0 immediately; eventual 1 name / 6 records | Copiable trigger identity, ThisAbility and recursive resolving copies remain. Existing lasting layer-6 upkeep grants do not establish layer-1 copy exceptions | Large: distinct copiable-grant and recursive identity contracts |
+| Counter-bound duration, ranked #3, selected | Cyclopean Tomb | 0 immediately; eventual 1 name / 5 records | Existing counter placement, exact permanent references and basic-land layers supply prerequisites. Counter-source history, persistent upkeep subscriptions and the removal procedure remain. Duration supplies a reusable recipient-bound lifetime independently of the source | Small/medium: one typed duration, transition tracking, singular layer adapter and lifecycle tests |
+
+Candidate #1 is not dependency-ready as a grant adapter: it needs a forward
+returned-host identity contract first. None of the compared candidates provides
+a complete multi-name unlock in this bounded run. These are prerequisites for
+remaining cards. Counter duration provides the smallest complete end-to-end
+contract using existing services. This run implements that one capability;
+it does not treat first-error movement as a complete-card unlock.
+
+The selected contract and acceptance cases were stated before edits. Local
+rulings for all three candidates were read. Before implementation,
+`go run ./cmd/fetchset -check -card 'Cyclopean Tomb'` passed. Tomb has three WotC
+rulings and no Scryfall notes. Its land effect persists independently of the Tomb,
+uses any mire counter on the land, and does not change snow status. CR 122.1,
+400.7, 611.2a–d and 702.26e–f establish counter interchangeability, exact visits,
+captured subjects and the permanent end of a tracked duration on phase-out.
+
+### Exact signatures, contexts and engine reuse
+
+Engine API:
+`UntilPermanentHasCounter(subject PermanentRef, counter core.CounterType,
+modifications ...ContinuousModification) ResolvingEffect`.
+The watched visit must be present, unphased and have a positive selected counter
+count at resolution. An absent condition starts no effect. Last-counter removal,
+departure or phase-out ends the duration permanently. Partial removal, counters
+from another origin, controller changes, ability removal and cleanup do not end
+it. The source can depart or phase independently. A different affected recipient
+can phase without ending the watched condition.
+
+Each permanent records counter-zero and phase epochs. Captured lifetimes save
+these values and the incarnation. Remove-and-readd and phase-out-and-in between
+layer passes cannot restart the duration. Game clones copy these values and
+installed effects independently. The shared instruction/state-trigger boundary
+refreshes expired layers before the next instruction. Phase-out refreshes them
+immediately. Native counter annihilation, loyalty damage and charge cleanup
+resets use RemoveCounter so these operations retain transitions too.
+
+The existing untilEffect/composedLayerEffect services own recipient/value capture,
+layer ordering, timestamps, source independence, control changes, subtype-family
+changes and grants. Waiting delayed queries include explicit source reads in the
+duration without executing it. Speculative payments cannot expire live effects.
+No replacement, payment, zone or layer service was duplicated in ron.
+
+RON accepts exactly
+`CreatePermanentLayerEffectUntil(subject, modifications,
+ForAsLongAsPermanentHasACounterOfTypeOnIt(EachablePermanent, counter))`
+in ordinary resolving bodies. The duration's first operand is the strict local
+symbol EachablePermanent, bound to the singular layer recipient. Counter types
+reuse the existing permanent counter grammar. Existing singular references and
+temporary modifications apply. This duration also accepts one strict basic-land
+`SetLandType(type)` modification through the existing SetSubtypeFamily service.
+Static/collection layers, costs, entry/draw replacements, malformed symbols and
+other duration subjects reject. Inventory reports the operands as permanent
+reference and permanent counter type. The symbol does not leak into other scopes.
+No card-name branch, Go fallback, partial registry, global last-action slot or
+game-time declaration panic was added.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation at the missing UntilPermanentHasCounter
+API. After correcting test fixture method names, RON tests failed at the missing
+duration in all five real Tomb activated clauses. The initial implementation
+passed these tests. Two additional timing tests then failed: a following life
+instruction read the expired power bonus (life 23 instead of 22), and phase-out
+left a separate recipient's bonus installed. Shared boundary refresh and immediate
+phase expiry fix those failures without weakening the assertions.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Cyclopean Tomb, activated clause in LEA/LEB/2ED/CED/CEI | TestRONCounterDurationTomb | Real unchanged activated clause validates, pays, adds mire, sets Swamp, persists after Tomb departure and expires permanently after last-counter removal |
+| RON execution timing and visits | TestRONCounterDurationTiming | Payment rollback, no action at payment time, illegal/phased/returned targets, source departure, copied abilities and pending-clone isolation |
+| Declaration and inventory boundary | TestRONCounterDurationInvalid, Boundaries, Inventory | Arity, strict symbols, local EachablePermanent, counter types, basic land types, entry/cost/static rejection and typed operand roles |
+| Captured native lifetime | TestCounterDurationLifetime, StartAndDeclarations | Partial/failed removal, other counters, remove-and-readd, source departure/phasing, target return/phasing, control, cleanup, clones, absent start and invalid declarations |
+| Watched versus affected identity | TestCounterDurationSeparateSubjectAndStateActions | A separate recipient can phase; watched phase-out and counter annihilation end the duration |
+| Replacement and payment contracts | TestCounterDurationPlacementReplacement, PaymentPreparation | Actual prevented/doubled placement controls whether duration starts; failed/speculative payment preserves live effects, committed last-counter payment expires them |
+| Pure waiting queries | TestCounterDurationWaiting | Explicit duration source is retained without executing capture or changing counters |
+| Instruction and phase timing | TestCounterDurationInstructionTiming, PhaseTiming | The next instruction reads expired layers correctly; watched phase-out immediately updates a separate recipient |
+
+Clause gameplay increases for one unique card across five records. Complete-card
+gameplay does not increase. The complete Tomb record is deliberately not accepted
+without its remaining history and persistent removal contracts.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONCounterDuration' -count=1`
+  and `go test ./pkg/mage -run '^TestCounterDuration' -count=1`: pass. Both
+  were repeated after the final native timing changes and after lint formatting.
+- Final `make build` and `go vet ./...`: pass.
+- Final `go test ./pkg/mage/... -short -count=1`, `make test` and the engine
+  skill's additional `go test ./... -short -count=1`: pass.
+- Final `make lint`: pass, 0 issues. SHA-256 comparison of all mage and ron Go
+  files before/after the final pass found only import grouping changes in
+  native counter_duration.go. Focused tests pass with that formatting.
+  No lint suppression was added.
+- Final `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON,
+  **2,308 compiled / 137 rejected records**, **924 accepted / 62 rejected names**,
+  from 2,445 records / 986 names. A parsed comparison asserts identical rejection
+  keys and compilation counts. Exactly five diagnostics changed, all Cyclopean
+  Tomb, from unsupported ForAsLongAsPermanentHasACounterOfTypeOnIt to unsupported
+  action CreateTrigger. Every other diagnostic is identical. No accepted record
+  regressed; collection loading still rejects atomically.
+
+Actual complete-card gain is **0 names / 0 records**, matching the estimate.
+One unique card gains clause-level gameplay across five unchanged records.
+This is separate from complete-card gameplay coverage, which does not increase.
+No source defect was corrected or RON source changed; the vocabulary snapshot
+therefore needs no refresh. No environment failure was found.
+
+### Remaining work and ranked next candidates
+
+1. Persistent upkeep subscriptions and exact source-counter history for Cyclopean
+Tomb. The fresh first gap is CreateTrigger; its body also needs the exact-source
+placement/removal history filters and a rules-verified removal procedure. Select
+one dependency-ready prerequisite, not the complete procedure at once. Estimate
+zero immediate gains per prerequisite; eventual one name / five records.
+2. Exact source-to-return linkage before Animate Dead's lasting enchant grant.
+The forward link must exist before the grant runs and retain the exact returned
+host. Presence and departure-controller capture adapters remain. Estimate zero
+immediate gains; eventual one name / six records.
+3. Copiable upkeep grants for Vesuvan Doppelganger, followed by ThisAbility and
+recursive resolving copies. Estimate zero immediate gains; eventual one name /
+six records.
+
+Runtime cutover, complete collection gameplay, Go-card/generator removal and DSL
+cleanup remain gated. Existing callers and Go definitions remain. No DSL function
+removal was attempted, and no second slice was started.
+
+Changed files: new native and RON counter_duration.go and
+counter_duration_test.go; native card.go, composable_continuous.go,
+damage_system.go, doc.go, game.go, state_based_actions.go, turn_execution.go,
+waiting_delayed_source.go and zone_system.go; RON inventory.go and
+temporary_layer.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and
+this ledger. Existing direct native array mutation sites outside the new service
+were not used as RON requirements or changed as card implementations.
+
+Commit title: `feat(ron): implement counter-bound layer duration`.
+The commit invocation disables signing under the previously recorded interactive
+signing-key limitation. Repository configuration is unchanged.
+This run stops after COUNTER-BOUND-LAYER-DURATION.

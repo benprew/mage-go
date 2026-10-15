@@ -427,7 +427,7 @@ func (e *counterEachEffect) refersToSourcePermanent() bool {
 }
 
 func (e *untilEffect) refersToSourcePermanent() bool {
-	if e.sourceBound || playerRefReadsSourcePermanent(e.upkeepPlayer) {
+	if e.sourceBound || permanentRefReadsSourcePermanent(e.counterSubject) || playerRefReadsSourcePermanent(e.upkeepPlayer) {
 		return true
 	}
 	return slices.ContainsFunc(e.modifications, func(value ContinuousModification) bool {

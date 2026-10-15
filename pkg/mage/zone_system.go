@@ -350,6 +350,7 @@ func (zs *ZoneSystem) PhaseOut(id uuid.UUID) []uuid.UUID {
 		return nil
 	}
 	perm.PhasedOut = true
+	perm.phaseEpoch++
 	phased := []uuid.UUID{id}
 	for _, p := range zs.battlefield {
 		if p.PhasedOut || p.AttachedTo != id {
@@ -363,6 +364,7 @@ func (zs *ZoneSystem) PhaseOut(id uuid.UUID) []uuid.UUID {
 			continue
 		}
 		att.PhasedOut = true
+		att.phaseEpoch++
 		phased = append(phased, att.ID())
 	}
 	return phased
