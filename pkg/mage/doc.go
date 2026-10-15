@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [MayAttachPermanentToChoice] lets one saved player accept a legal host choice.
+// Shared attachment and choice services check both exact visits before the move.
+// The choice does not target. Protection and enchant limits still apply.
+// Decline or failed movement keeps the attachment. Waiting queries make no choice.
+// State actions run after resolution, so an Aura can move after its host leaves.
+// RON accepts PlayerMayAction(playerRef, AttachPermanentToAPermanent) in ordinary
+// resolving bodies. Kudzu uses its saved tapping land and that land's controller.
+// All six complete records have gameplay evidence. Other optional actions reject.
+//
 // [DrawGame] ends the game without a winner or loser (CR 104.4c).
 // Nested bodies return a stop signal. [ApplyEffect] consumes that signal.
 // Remaining instructions, stack objects, state actions and turns do not run.

@@ -5,11 +5,22 @@ import "slices"
 // AttachPermanentToChoice moves an attachment to a required legal host choice.
 // The choice does not target. Return cannot replace either saved visit.
 func AttachPermanentToChoice(player PlayerRef, attachment PermanentRef, hosts PermanentSet) ResolvingEffect {
+	return newAttachmentMove(player, attachment, hosts, false)
+}
+
+// MayAttachPermanentToChoice offers a legal attachment move to one saved player.
+// The offer and host choice do not target. A failed move keeps the attachment.
+func MayAttachPermanentToChoice(player PlayerRef, attachment PermanentRef, hosts PermanentSet) ResolvingEffect {
+	return newAttachmentMove(player, attachment, hosts, true)
+}
+
+func newAttachmentMove(player PlayerRef, attachment PermanentRef, hosts PermanentSet, optional bool) *attachmentMoveEffect {
 	result := BindPermanent("attachment host")
 	return &attachmentMoveEffect{
 		attachment: attachment,
 		hosts:      hosts,
-		choice:     &permanentChoice{player, legalAttachmentHosts{attachment, hosts}, result},
+		choice:     &permanentChoice{player, legalAttachmentHosts{attachment, hosts, optional}, result},
+		optional:   optional,
 	}
 }
 
@@ -17,6 +28,7 @@ type attachmentMoveEffect struct {
 	attachment PermanentRef
 	hosts      PermanentSet
 	choice     *permanentChoice
+	optional   bool
 }
 
 func (*attachmentMoveEffect) Text() string                 { return "attach permanent to a chosen permanent" }
@@ -31,7 +43,14 @@ func (e *attachmentMoveEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	visit := capturedPermanent{attachment.ID(), attachment.incarnationID}
-	if err := e.choice.Apply(ctx); err != nil {
+	player, ok := e.choice.player.resolvePlayer(ctx)
+	if !ok || ctx.Game.GetPlayer(player) == nil {
+		return nil
+	}
+	if e.optional && (len(e.choice.subjects.resolvePermanents(ctx)) == 0 || !ctx.Game.GetPlayer(player).ChooseMayAbility(e.Text())) {
+		return nil
+	}
+	if err := e.choice.applyForPlayer(ctx, "", player); err != nil {
 		return err
 	}
 	attachment = ctx.Game.FindPermanent(visit.id)
@@ -55,8 +74,9 @@ func (e *attachmentMoveEffect) refersToSourcePermanent() bool {
 }
 
 type legalAttachmentHosts struct {
-	attachment PermanentRef
-	hosts      PermanentSet
+	attachment   PermanentRef
+	hosts        PermanentSet
+	allowCurrent bool
 }
 
 func (legalAttachmentHosts) permanentSet() {}
@@ -74,7 +94,11 @@ func (s legalAttachmentHosts) resolvePermanents(ctx *EffectContext) []*Permanent
 			continue
 		}
 		current := ctx.Game.FindPermanent(host.ID())
-		if current != nil && !current.PhasedOut && current.incarnationID == host.incarnationID && ctx.Game.canAttach(attachment, current) && !slices.Contains(hosts, current) {
+		legal := ctx.Game.canAttach(attachment, current)
+		if s.allowCurrent {
+			legal = ctx.Game.attachmentHostIsLegal(attachment, current)
+		}
+		if current != nil && !current.PhasedOut && current.incarnationID == host.incarnationID && legal && !slices.Contains(hosts, current) {
 			hosts = append(hosts, current)
 		}
 	}

@@ -18050,3 +18050,11 @@ mage owns the result and execution stop. No source record changes are needed.
 Divine Intervention gameplay. The existing last-counter clause tests retain
 independent attribution coverage. `TestRONDrawGameStopsActions`, `Nested` and
 `Invalid` cover action ordering and declaration boundaries.
+
+
+`mage.MayAttachPermanentToChoice(player, attachment, hosts)` offers a legal
+attachment move at resolution. It saves the chooser before the offer, uses no
+targets, and checks both visits and attachment legality after the choice.
+RON supports `PlayerMayAction(playerRef, AttachPermanentToAPermanent(ref, filter))`
+in ordinary resolving bodies. See the optional attachment contract in
+`docs/engine-rules-contracts.md` for timing and Kudzu's saved event host.

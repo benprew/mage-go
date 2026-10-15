@@ -23783,3 +23783,55 @@ removal drawing now execute together; the attribution event's existing tests
 cover wrong remover, wrong kind, zero removal and independent source visits.
 Source-entry and replacement declaration contexts remain unsupported for this
 RON action. Complete collection loading and runtime cutover remain separate gates.
+
+
+## Optional attachment by an explicit player
+
+`MayAttachPermanentToChoice(player PlayerRef, attachment PermanentRef,
+hosts PermanentSet) ResolvingEffect` saves the acting player before its optional
+offer. It uses the required attachment move's shared legal host set, permanent
+choice, exact-visit checks and attachment service. No legal host means no offer.
+Decline makes no host choice. Acceptance chooses at resolution and checks the
+attachment visit, host visit, current collection and attachment legality again.
+A controller change during the offer cannot change the chooser. Return cannot
+supply either saved object. Failed movement keeps the current attachment.
+The current legal host is a valid optional choice and makes no move, attach
+event or timestamp change (CR 701.3b–c). Required movement keeps its existing
+other-host selection. Shroud and hexproof permit the move; protection and enchant
+limits still apply (CR 303.4, 701.3, 702.16, 702.18, 702.11). The move changes neither ownership nor
+control. Existing layer updates and attachment timestamps remain in use.
+
+The resolving stack boundary supplies the Aura timing contract (CR 608.2c,
+704.3–4, 704.5m). Destruction leaves an Aura present through the remaining
+instructions. Successful attachment can save it; decline or no host leaves it
+for state actions after resolution. Indestructibility or regeneration does not
+suppress the later independent instruction. This API adds no payment, batch,
+replacement order or state-action exception. Waiting queries only inspect
+source reads. Each factory and resolution frame retains separate bindings;
+pending copies and clones do not share selected state.
+
+RON lowers `PlayerMayAction(playerRef,
+AttachPermanentToAPermanent(attachmentRef, filter))` in ordinary resolving
+bodies. Costs, static rules, entry and draw replacement bodies, invalid references,
+wrong arities and other optional actions reject before gameplay. No chosen host
+escapes the operation. The compiler owns syntax and scope; mage owns choice and
+attachment rules.
+
+Kudzu's LEA/LEB/2ED/3ED/CED/CEI records now use `Trigger_ThatPermanent` for both
+destruction and the later controller read. Local Oracle text in `data/LEA.json`
+says “destroy it” and “That land's controller”; the former HostPermanent body
+followed a moved Aura's new host. CR 603.2, 608.2c/h/k and 400.7 require the saved
+event visit and current or last-known controller. Local WotC rulings permit
+other players' lands (2004-10-04), ordinary Aura death outside the resolving
+ability (2005-08-01), and nontargeted attachment (2008-04-01). There are no local
+Scryfall notes. The event declaration still watches the current enchanted land;
+only the resolving body's references changed.
+
+Evidence: native `TestOptionalAttachmentContracts`, `Declarations`, `Waiting`, `CurrentHost`
+and existing `TestAttachmentMove*`; RON `TestRONOptionalAttachmentKudzu` runs all
+six complete records with casting/payment, pending movement, control changes,
+exact departed/returned visits, phasing, protection/shroud/hexproof, failed
+destruction, decline, no host, source departure, copied/countered triggers and
+pending clones. `TestRONOptionalAttachmentInstances` separates two instances and
+their choosers. `TestRONOptionalAttachmentInvalid` covers declaration rejection.
+The existing host-tap suites retain event, layer-6 removal and transition tests.

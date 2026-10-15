@@ -1725,6 +1725,13 @@ func (g *Game) canAttach(src, target *Permanent) bool {
 	if src == nil || target == nil || src.AttachedTo == target.ID() && src.attachedIncarnation == target.incarnationID {
 		return false
 	}
+	return g.attachmentHostIsLegal(src, target)
+}
+
+func (g *Game) attachmentHostIsLegal(src, target *Permanent) bool {
+	if src == nil || target == nil {
+		return false
+	}
 	if src.HasSubType("Aura") {
 		if src.HasType(TypeCreature) || src.ID() == target.ID() ||
 			target.HasAttr(AttrCantBeEnchanted) || target.HasProtectionFromInGame(src.Card, g) ||

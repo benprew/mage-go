@@ -1926,12 +1926,19 @@ func (e *permanentChoice) Apply(ctx *EffectContext) error {
 	return e.applyWithReason(ctx, "")
 }
 func (e *permanentChoice) applyWithReason(ctx *EffectContext, reason string) error {
+	id, ok := e.player.resolvePlayer(ctx)
+	if !ok {
+		delete(ctx.Game.resolution.permanentBindings, e.binding)
+		return nil
+	}
+	return e.applyForPlayer(ctx, reason, id)
+}
+func (e *permanentChoice) applyForPlayer(ctx *EffectContext, reason string, id uuid.UUID) error {
 	if ctx.Game.resolution.permanentBindings == nil {
 		ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)
 	}
 	delete(ctx.Game.resolution.permanentBindings, e.binding)
-	id, ok := e.player.resolvePlayer(ctx)
-	if !ok {
+	if ctx.Game.GetPlayer(id) == nil {
 		return nil
 	}
 	candidates := e.subjects.resolvePermanents(ctx)

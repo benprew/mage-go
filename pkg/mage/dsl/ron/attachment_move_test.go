@@ -255,8 +255,8 @@ func TestRONAttachmentMoveScopesAndDelay(t *testing.T) {
 func TestRONAttachmentMoveKudzuPrerequisite(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		record := chosenDiscardRecord(t, set, "Kudzu")
-		if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "PlayerMayAction") {
-			t.Fatalf("remaining Kudzu blocker: %v", err)
+		if _, err := Compile(record); err != nil {
+			t.Fatalf("complete Kudzu record: %v", err)
 		}
 		move := record.Fields["Rules"].Args[1].Args[1].Args[0].Args[1].Args[1]
 		if move.Name != "AttachPermanentToAPermanent" {

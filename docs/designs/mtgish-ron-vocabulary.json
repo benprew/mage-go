@@ -11,12 +11,12 @@
     {
       "path": "cards/mtgish/2ED.lines.ron",
       "records": 291,
-      "sha256": "95c17da2f3d751095e3c7e312c22001fee91c26a491dc087b74f432ad9d6938a"
+      "sha256": "264812ef64e6db6c47bbc6092bb3e75bed4c90215f5f156ca0d3c7c29d7f37fb"
     },
     {
       "path": "cards/mtgish/3ED.lines.ron",
       "records": 296,
-      "sha256": "0accd9f3b5944f14f04465c5e1e0d0c3c5ac0de0641367def38ae65cb5978077"
+      "sha256": "03510b0ecab06d3b786bf0ce9e4a8b4395340096198ef2e1fc53cb6d8b564d27"
     },
     {
       "path": "cards/mtgish/ARN.lines.ron",
@@ -31,12 +31,12 @@
     {
       "path": "cards/mtgish/CED.lines.ron",
       "records": 291,
-      "sha256": "95c17da2f3d751095e3c7e312c22001fee91c26a491dc087b74f432ad9d6938a"
+      "sha256": "264812ef64e6db6c47bbc6092bb3e75bed4c90215f5f156ca0d3c7c29d7f37fb"
     },
     {
       "path": "cards/mtgish/CEI.lines.ron",
       "records": 291,
-      "sha256": "95c17da2f3d751095e3c7e312c22001fee91c26a491dc087b74f432ad9d6938a"
+      "sha256": "264812ef64e6db6c47bbc6092bb3e75bed4c90215f5f156ca0d3c7c29d7f37fb"
     },
     {
       "path": "cards/mtgish/DRK.lines.ron",
@@ -51,12 +51,12 @@
     {
       "path": "cards/mtgish/LEA.lines.ron",
       "records": 289,
-      "sha256": "80caf7799b6a5fd3ebb07a6fd0a825281cafcc0fe6d7ebd7ae5901a6fb4a2112"
+      "sha256": "4853f35a3e02745c957a79aeca28fb016669425be83dbdbd5cef910ab56cb0f4"
     },
     {
       "path": "cards/mtgish/LEB.lines.ron",
       "records": 291,
-      "sha256": "95c17da2f3d751095e3c7e312c22001fee91c26a491dc087b74f432ad9d6938a"
+      "sha256": "264812ef64e6db6c47bbc6092bb3e75bed4c90215f5f156ca0d3c7c29d7f37fb"
     },
     {
       "path": "cards/mtgish/LEG.lines.ron",
@@ -230,7 +230,7 @@
     {"name": "AtTheEndOfCombat", "kind": "symbol", "arity": 0, "occurrences": 8, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:253)", "Clockwork Beast (cards/mtgish/3ED.lines.ron:39:253)", "Clockwork Avian (cards/mtgish/ATQ.lines.ron:20:260)"]},
     {"name": "AtTheNextEndOfCombat", "kind": "symbol", "arity": 0, "occurrences": 33, "examples": ["Cockatrice (cards/mtgish/2ED.lines.ron:40:328)", "Cockatrice (cards/mtgish/2ED.lines.ron:40:580)", "Thicket Basilisk (cards/mtgish/2ED.lines.ron:244:324)"]},
     {"name": "Atog", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Atog (cards/mtgish/3ED.lines.ron:11:81)", "Atog (cards/mtgish/ATQ.lines.ron:13:81)"]},
-    {"name": "AttachPermanentToAPermanent", "kind": "tuple", "arity": 2, "occurrences": 7, "examples": ["Kudzu (cards/mtgish/2ED.lines.ron:137:360)", "Kudzu (cards/mtgish/3ED.lines.ron:142:360)", "Kudzu (cards/mtgish/CED.lines.ron:137:360)"]},
+    {"name": "AttachPermanentToAPermanent", "kind": "tuple", "arity": 2, "occurrences": 7, "examples": ["Kudzu (cards/mtgish/2ED.lines.ron:137:376)", "Kudzu (cards/mtgish/3ED.lines.ron:142:376)", "Kudzu (cards/mtgish/CED.lines.ron:137:376)"]},
     {"name": "AttachPermanentToPermanent", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:632)", "Animate Dead (cards/mtgish/3ED.lines.ron:5:632)", "Animate Dead (cards/mtgish/CED.lines.ron:4:632)"]},
     {"name": "AttachedToAPermanent", "kind": "tuple", "arity": 1, "occurrences": 8, "examples": ["Pyramids (cards/mtgish/ARN.lines.ron:62:243)", "Miracle Worker (cards/mtgish/DRK.lines.ron:73:234)", "Savaen Elves (cards/mtgish/DRK.lines.ron:89:262)"]},
     {"name": "AttachedToPermanent", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Tawnos's Coffin (cards/mtgish/ATQ.lines.ron:67:428)", "Gauntlets of Chaos (cards/mtgish/LEG.lines.ron:95:683)", "Gauntlets of Chaos (cards/mtgish/LEG.lines.ron:95:726)"]},
@@ -572,7 +572,7 @@
     {"name": "Horror", "kind": "symbol", "arity": 0, "occurrences": 4, "examples": ["Eater of the Dead (cards/mtgish/DRK.lines.ron:29:94)", "Abomination (cards/mtgish/LEG.lines.ron:1:88)", "Cosmic Horror (cards/mtgish/LEG.lines.ron:50:90)"]},
     {"name": "Horse", "kind": "symbol", "arity": 0, "occurrences": 7, "examples": ["Nightmare (cards/mtgish/2ED.lines.ron:174:97)", "Nightmare (cards/mtgish/3ED.lines.ron:176:97)", "Nightmare (cards/mtgish/CED.lines.ron:174:97)"]},
     {"name": "HostController", "kind": "symbol", "arity": 0, "occurrences": 49, "examples": ["Cursed Land (cards/mtgish/2ED.lines.ron:53:250)", "Feedback (cards/mtgish/2ED.lines.ron:82:243)", "Paralyze (cards/mtgish/2ED.lines.ron:179:414)"]},
-    {"name": "HostPermanent", "kind": "symbol", "arity": 0, "occurrences": 346, "examples": ["Animate Artifact (cards/mtgish/2ED.lines.ron:3:220)", "Animate Artifact (cards/mtgish/2ED.lines.ron:3:283)", "Animate Artifact (cards/mtgish/2ED.lines.ron:3:391)"]},
+    {"name": "HostPermanent", "kind": "symbol", "arity": 0, "occurrences": 334, "examples": ["Animate Artifact (cards/mtgish/2ED.lines.ron:3:220)", "Animate Artifact (cards/mtgish/2ED.lines.ron:3:283)", "Animate Artifact (cards/mtgish/2ED.lines.ron:3:391)"]},
     {"name": "Human", "kind": "symbol", "arity": 0, "occurrences": 176, "examples": ["Benalish Hero (cards/mtgish/2ED.lines.ron:14:90)", "Black Knight (cards/mtgish/2ED.lines.ron:17:89)", "Keldon Warlord (cards/mtgish/2ED.lines.ron:135:91)"]},
     {"name": "HungerCounter", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Fasting (cards/mtgish/DRK.lines.ron:35:233)", "Fasting (cards/mtgish/DRK.lines.ron:35:364)"]},
     {"name": "Hydra", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Rock Hydra (cards/mtgish/2ED.lines.ron:207:87)", "Rock Hydra (cards/mtgish/3ED.lines.ron:212:87)", "Rock Hydra (cards/mtgish/CED.lines.ron:207:87)"]},
@@ -812,7 +812,7 @@
     {"name": "PlayerAction_ThatPlayer", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Magnetic Mountain (cards/mtgish/3ED.lines.ron:158:487)", "Magnetic Mountain (cards/mtgish/ARN.lines.ron:51:487)", "Thelon's Curse (cards/mtgish/FEM.lines.ron:87:464)"]},
     {"name": "PlayerActions", "kind": "tuple", "arity": 2, "occurrences": 13, "examples": ["Power Sink (cards/mtgish/2ED.lines.ron:191:325)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:370)", "Power Sink (cards/mtgish/3ED.lines.ron:195:325)"]},
     {"name": "PlayerEffect", "kind": "tuple", "arity": 2, "occurrences": 29, "examples": ["Fastbond (cards/mtgish/2ED.lines.ron:80:123)", "Library of Leng (cards/mtgish/2ED.lines.ron:140:136)", "Lich (cards/mtgish/2ED.lines.ron:141:222)"]},
-    {"name": "PlayerMayAction", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Kudzu (cards/mtgish/2ED.lines.ron:137:306)", "Kudzu (cards/mtgish/3ED.lines.ron:142:306)", "Kudzu (cards/mtgish/CED.lines.ron:137:306)"]},
+    {"name": "PlayerMayAction", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Kudzu (cards/mtgish/2ED.lines.ron:137:314)", "Kudzu (cards/mtgish/3ED.lines.ron:142:314)", "Kudzu (cards/mtgish/CED.lines.ron:137:314)"]},
     {"name": "PlayerMayCost", "kind": "tuple", "arity": 2, "occurrences": 31, "examples": ["Paralyze (cards/mtgish/2ED.lines.ron:179:444)", "Power Sink (cards/mtgish/2ED.lines.ron:191:191)", "Paralyze (cards/mtgish/3ED.lines.ron:183:444)"]},
     {"name": "PlayerMustCost", "kind": "tuple", "arity": 2, "occurrences": 2, "examples": ["Chains of Mephistopheles (cards/mtgish/LEG.lines.ron:44:229)", "Takklemaggot (cards/mtgish/LEG.lines.ron:256:437)"]},
     {"name": "PlayerOrControllerOfPermanent", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Chain Lightning (cards/mtgish/LEG.lines.ron:43:243)", "Chain Lightning (cards/mtgish/LEG.lines.ron:43:353)"]},
@@ -1125,7 +1125,7 @@
     {"name": "Trigger_ThatMuch", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Glyph of Life (cards/mtgish/LEG.lines.ron:103:387)"]},
     {"name": "Trigger_ThatOtherCreature", "kind": "symbol", "arity": 0, "occurrences": 19, "examples": ["Cockatrice (cards/mtgish/2ED.lines.ron:40:379)", "Thicket Basilisk (cards/mtgish/2ED.lines.ron:244:375)", "Cockatrice (cards/mtgish/3ED.lines.ron:41:379)"]},
     {"name": "Trigger_ThatOtherPermanent", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Infernal Medusa (cards/mtgish/LEG.lines.ron:132:340)", "Wall of Dust (cards/mtgish/LEG.lines.ron:291:294)", "Wall of Dust (cards/mtgish/LEG.lines.ron:291:380)"]},
-    {"name": "Trigger_ThatPermanent", "kind": "symbol", "arity": 0, "occurrences": 44, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:287)", "Gauntlet of Might (cards/mtgish/2ED.lines.ron:96:336)", "Psychic Venom (cards/mtgish/2ED.lines.ron:195:347)"]},
+    {"name": "Trigger_ThatPermanent", "kind": "symbol", "arity": 0, "occurrences": 56, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:287)", "Gauntlet of Might (cards/mtgish/2ED.lines.ron:96:336)", "Kudzu (cards/mtgish/2ED.lines.ron:137:290)"]},
     {"name": "Trigger_ThatPlayer", "kind": "symbol", "arity": 0, "occurrences": 141, "examples": ["Black Vise (cards/mtgish/2ED.lines.ron:19:348)", "Black Vise (cards/mtgish/2ED.lines.ron:19:389)", "Copper Tablet (cards/mtgish/2ED.lines.ron:46:253)"]},
     {"name": "Trigger_ThatSpell", "kind": "symbol", "arity": 0, "occurrences": 7, "examples": ["Mana Vortex (cards/mtgish/DRK.lines.ron:65:337)", "In the Eye of Chaos (cards/mtgish/LEG.lines.ron:130:309)", "In the Eye of Chaos (cards/mtgish/LEG.lines.ron:130:365)"]},
     {"name": "Trigger_TheBlockingCreature", "kind": "symbol", "arity": 0, "occurrences": 16, "examples": ["Cockatrice (cards/mtgish/2ED.lines.ron:40:631)", "Thicket Basilisk (cards/mtgish/2ED.lines.ron:244:627)", "Cockatrice (cards/mtgish/3ED.lines.ron:41:631)"]},
@@ -1230,7 +1230,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:234)"]}
   ],
   "loader_baseline": {
-    "compiled": 2319,
+    "compiled": 2326,
     "issues": [
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
       {"card": "Channel", "source": {"File": "2ED.lines.ron", "Line": 31, "Column": 1}, "message": "2ED.lines.ron:31:184: unsupported temporary player operation (MayPayLifeToProduceManaAsManaAbility)"},
@@ -1239,23 +1239,21 @@
       {"card": "Fastbond", "source": {"File": "2ED.lines.ron", "Line": 80, "Column": 1}, "message": "2ED.lines.ron:80:142: unsupported player rule operation (MayPlayAnyNumberOfLandsDuringThierTurn)"},
       {"card": "Gaea's Liege", "source": {"File": "2ED.lines.ron", "Line": 95, "Column": 1}, "message": "2ED.lines.ron:95:584: unsupported static condition filter (ControlledByPlayer)"},
       {"card": "Illusionary Mask", "source": {"File": "2ED.lines.ron", "Line": 120, "Column": 1}, "message": "2ED.lines.ron:120:211: unsupported optional payment cost (ChooseACardInHand)"},
-      {"card": "Kudzu", "source": {"File": "2ED.lines.ron", "Line": 137, "Column": 1}, "message": "2ED.lines.ron:137:306: unsupported action (PlayerMayAction)"},
       {"card": "Library of Leng", "source": {"File": "2ED.lines.ron", "Line": 140, "Column": 1}, "message": "2ED.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Personal Incarnation", "source": {"File": "2ED.lines.ron", "Line": 181, "Column": 1}, "message": "2ED.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Raging River", "source": {"File": "2ED.lines.ron", "Line": 197, "Column": 1}, "message": "2ED.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Time Vault", "source": {"File": "2ED.lines.ron", "Line": 248, "Column": 1}, "message": "2ED.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
-      {"card": "Vesuvan Doppelganger", "source": {"File": "2ED.lines.ron", "Line": 263, "Column": 1}, "message": "2ED.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
+      {"card": "Vesuvan Doppelganger", "source": {"File": "2ED.lines.ron", "Line": 263, "Column": 1}, "message": "2ED.lines.ron:263:436: unsupported optional action (CreatePermanentLayerEffect)"},
       {"card": "Word of Command", "source": {"File": "2ED.lines.ron", "Line": 289, "Column": 1}, "message": "2ED.lines.ron:289:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)"},
       {"card": "Aladdin's Lamp", "source": {"File": "3ED.lines.ron", "Line": 2, "Column": 1}, "message": "3ED.lines.ron:2:457: unsupported activation modifier (XCantBeZero)"},
       {"card": "Channel", "source": {"File": "3ED.lines.ron", "Line": 32, "Column": 1}, "message": "3ED.lines.ron:32:184: unsupported temporary player operation (MayPayLifeToProduceManaAsManaAbility)"},
       {"card": "Drain Power", "source": {"File": "3ED.lines.ron", "Line": 71, "Column": 1}, "message": "3ED.lines.ron:71:279: unsupported value (And)"},
       {"card": "Fastbond", "source": {"File": "3ED.lines.ron", "Line": 86, "Column": 1}, "message": "3ED.lines.ron:86:142: unsupported player rule operation (MayPlayAnyNumberOfLandsDuringThierTurn)"},
       {"card": "Gaea's Liege", "source": {"File": "3ED.lines.ron", "Line": 101, "Column": 1}, "message": "3ED.lines.ron:101:584: unsupported static condition filter (ControlledByPlayer)"},
-      {"card": "Kudzu", "source": {"File": "3ED.lines.ron", "Line": 142, "Column": 1}, "message": "3ED.lines.ron:142:306: unsupported action (PlayerMayAction)"},
       {"card": "Library of Leng", "source": {"File": "3ED.lines.ron", "Line": 145, "Column": 1}, "message": "3ED.lines.ron:145:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Personal Incarnation", "source": {"File": "3ED.lines.ron", "Line": 185, "Column": 1}, "message": "3ED.lines.ron:185:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Titania's Song", "source": {"File": "3ED.lines.ron", "Line": 257, "Column": 1}, "message": "3ED.lines.ron:257:149: unsupported rule (EachPermanentStickyLayerEffect)"},
-      {"card": "Vesuvan Doppelganger", "source": {"File": "3ED.lines.ron", "Line": 269, "Column": 1}, "message": "3ED.lines.ron:269:292: unsupported entry copy modifications (AddAbility)"},
+      {"card": "Vesuvan Doppelganger", "source": {"File": "3ED.lines.ron", "Line": 269, "Column": 1}, "message": "3ED.lines.ron:269:436: unsupported optional action (CreatePermanentLayerEffect)"},
       {"card": "Abu Ja'far", "source": {"File": "ARN.lines.ron", "Line": 1, "Column": 1}, "message": "ARN.lines.ron:1:259: unsupported permanent filter (BlockedDeadAttacker)"},
       {"card": "Aladdin's Lamp", "source": {"File": "ARN.lines.ron", "Line": 3, "Column": 1}, "message": "ARN.lines.ron:3:457: unsupported activation modifier (XCantBeZero)"},
       {"card": "Ali from Cairo", "source": {"File": "ARN.lines.ron", "Line": 6, "Column": 1}, "message": "ARN.lines.ron:6:181: unsupported player rule operation (DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead)"},
@@ -1276,12 +1274,11 @@
       {"card": "Fastbond", "source": {"File": "CED.lines.ron", "Line": 80, "Column": 1}, "message": "CED.lines.ron:80:142: unsupported player rule operation (MayPlayAnyNumberOfLandsDuringThierTurn)"},
       {"card": "Gaea's Liege", "source": {"File": "CED.lines.ron", "Line": 95, "Column": 1}, "message": "CED.lines.ron:95:584: unsupported static condition filter (ControlledByPlayer)"},
       {"card": "Illusionary Mask", "source": {"File": "CED.lines.ron", "Line": 120, "Column": 1}, "message": "CED.lines.ron:120:211: unsupported optional payment cost (ChooseACardInHand)"},
-      {"card": "Kudzu", "source": {"File": "CED.lines.ron", "Line": 137, "Column": 1}, "message": "CED.lines.ron:137:306: unsupported action (PlayerMayAction)"},
       {"card": "Library of Leng", "source": {"File": "CED.lines.ron", "Line": 140, "Column": 1}, "message": "CED.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Personal Incarnation", "source": {"File": "CED.lines.ron", "Line": 181, "Column": 1}, "message": "CED.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Raging River", "source": {"File": "CED.lines.ron", "Line": 197, "Column": 1}, "message": "CED.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Time Vault", "source": {"File": "CED.lines.ron", "Line": 248, "Column": 1}, "message": "CED.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
-      {"card": "Vesuvan Doppelganger", "source": {"File": "CED.lines.ron", "Line": 263, "Column": 1}, "message": "CED.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
+      {"card": "Vesuvan Doppelganger", "source": {"File": "CED.lines.ron", "Line": 263, "Column": 1}, "message": "CED.lines.ron:263:436: unsupported optional action (CreatePermanentLayerEffect)"},
       {"card": "Word of Command", "source": {"File": "CED.lines.ron", "Line": 289, "Column": 1}, "message": "CED.lines.ron:289:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)"},
       {"card": "Camouflage", "source": {"File": "CEI.lines.ron", "Line": 28, "Column": 1}, "message": "CEI.lines.ron:28:233: unsupported action (CreateGameEffect)"},
       {"card": "Channel", "source": {"File": "CEI.lines.ron", "Line": 31, "Column": 1}, "message": "CEI.lines.ron:31:184: unsupported temporary player operation (MayPayLifeToProduceManaAsManaAbility)"},
@@ -1290,12 +1287,11 @@
       {"card": "Fastbond", "source": {"File": "CEI.lines.ron", "Line": 80, "Column": 1}, "message": "CEI.lines.ron:80:142: unsupported player rule operation (MayPlayAnyNumberOfLandsDuringThierTurn)"},
       {"card": "Gaea's Liege", "source": {"File": "CEI.lines.ron", "Line": 95, "Column": 1}, "message": "CEI.lines.ron:95:584: unsupported static condition filter (ControlledByPlayer)"},
       {"card": "Illusionary Mask", "source": {"File": "CEI.lines.ron", "Line": 120, "Column": 1}, "message": "CEI.lines.ron:120:211: unsupported optional payment cost (ChooseACardInHand)"},
-      {"card": "Kudzu", "source": {"File": "CEI.lines.ron", "Line": 137, "Column": 1}, "message": "CEI.lines.ron:137:306: unsupported action (PlayerMayAction)"},
       {"card": "Library of Leng", "source": {"File": "CEI.lines.ron", "Line": 140, "Column": 1}, "message": "CEI.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Personal Incarnation", "source": {"File": "CEI.lines.ron", "Line": 181, "Column": 1}, "message": "CEI.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Raging River", "source": {"File": "CEI.lines.ron", "Line": 197, "Column": 1}, "message": "CEI.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Time Vault", "source": {"File": "CEI.lines.ron", "Line": 248, "Column": 1}, "message": "CEI.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
-      {"card": "Vesuvan Doppelganger", "source": {"File": "CEI.lines.ron", "Line": 263, "Column": 1}, "message": "CEI.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
+      {"card": "Vesuvan Doppelganger", "source": {"File": "CEI.lines.ron", "Line": 263, "Column": 1}, "message": "CEI.lines.ron:263:436: unsupported optional action (CreatePermanentLayerEffect)"},
       {"card": "Word of Command", "source": {"File": "CEI.lines.ron", "Line": 289, "Column": 1}, "message": "CEI.lines.ron:289:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)"},
       {"card": "Frankenstein's Monster", "source": {"File": "DRK.lines.ron", "Line": 43, "Column": 1}, "message": "DRK.lines.ron:43:162: entry requires one entry operation (AsPermanentEnters)"},
       {"card": "Martyr's Cry", "source": {"File": "DRK.lines.ron", "Line": 69, "Column": 1}, "message": "DRK.lines.ron:69:276: unsupported value (NumPermanentsOfTypeExiledThisWay)"},
@@ -1314,12 +1310,11 @@
       {"card": "Fastbond", "source": {"File": "LEA.lines.ron", "Line": 79, "Column": 1}, "message": "LEA.lines.ron:79:142: unsupported player rule operation (MayPlayAnyNumberOfLandsDuringThierTurn)"},
       {"card": "Gaea's Liege", "source": {"File": "LEA.lines.ron", "Line": 94, "Column": 1}, "message": "LEA.lines.ron:94:584: unsupported static condition filter (ControlledByPlayer)"},
       {"card": "Illusionary Mask", "source": {"File": "LEA.lines.ron", "Line": 119, "Column": 1}, "message": "LEA.lines.ron:119:211: unsupported optional payment cost (ChooseACardInHand)"},
-      {"card": "Kudzu", "source": {"File": "LEA.lines.ron", "Line": 136, "Column": 1}, "message": "LEA.lines.ron:136:306: unsupported action (PlayerMayAction)"},
       {"card": "Library of Leng", "source": {"File": "LEA.lines.ron", "Line": 139, "Column": 1}, "message": "LEA.lines.ron:139:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Personal Incarnation", "source": {"File": "LEA.lines.ron", "Line": 180, "Column": 1}, "message": "LEA.lines.ron:180:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Raging River", "source": {"File": "LEA.lines.ron", "Line": 196, "Column": 1}, "message": "LEA.lines.ron:196:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Time Vault", "source": {"File": "LEA.lines.ron", "Line": 247, "Column": 1}, "message": "LEA.lines.ron:247:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
-      {"card": "Vesuvan Doppelganger", "source": {"File": "LEA.lines.ron", "Line": 262, "Column": 1}, "message": "LEA.lines.ron:262:292: unsupported entry copy modifications (AddAbility)"},
+      {"card": "Vesuvan Doppelganger", "source": {"File": "LEA.lines.ron", "Line": 262, "Column": 1}, "message": "LEA.lines.ron:262:436: unsupported optional action (CreatePermanentLayerEffect)"},
       {"card": "Word of Command", "source": {"File": "LEA.lines.ron", "Line": 287, "Column": 1}, "message": "LEA.lines.ron:287:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)"},
       {"card": "Camouflage", "source": {"File": "LEB.lines.ron", "Line": 28, "Column": 1}, "message": "LEB.lines.ron:28:233: unsupported action (CreateGameEffect)"},
       {"card": "Channel", "source": {"File": "LEB.lines.ron", "Line": 31, "Column": 1}, "message": "LEB.lines.ron:31:184: unsupported temporary player operation (MayPayLifeToProduceManaAsManaAbility)"},
@@ -1328,18 +1323,16 @@
       {"card": "Fastbond", "source": {"File": "LEB.lines.ron", "Line": 80, "Column": 1}, "message": "LEB.lines.ron:80:142: unsupported player rule operation (MayPlayAnyNumberOfLandsDuringThierTurn)"},
       {"card": "Gaea's Liege", "source": {"File": "LEB.lines.ron", "Line": 95, "Column": 1}, "message": "LEB.lines.ron:95:584: unsupported static condition filter (ControlledByPlayer)"},
       {"card": "Illusionary Mask", "source": {"File": "LEB.lines.ron", "Line": 120, "Column": 1}, "message": "LEB.lines.ron:120:211: unsupported optional payment cost (ChooseACardInHand)"},
-      {"card": "Kudzu", "source": {"File": "LEB.lines.ron", "Line": 137, "Column": 1}, "message": "LEB.lines.ron:137:306: unsupported action (PlayerMayAction)"},
       {"card": "Library of Leng", "source": {"File": "LEB.lines.ron", "Line": 140, "Column": 1}, "message": "LEB.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Personal Incarnation", "source": {"File": "LEB.lines.ron", "Line": 181, "Column": 1}, "message": "LEB.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Raging River", "source": {"File": "LEB.lines.ron", "Line": 197, "Column": 1}, "message": "LEB.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Time Vault", "source": {"File": "LEB.lines.ron", "Line": 248, "Column": 1}, "message": "LEB.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
-      {"card": "Vesuvan Doppelganger", "source": {"File": "LEB.lines.ron", "Line": 263, "Column": 1}, "message": "LEB.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
+      {"card": "Vesuvan Doppelganger", "source": {"File": "LEB.lines.ron", "Line": 263, "Column": 1}, "message": "LEB.lines.ron:263:436: unsupported optional action (CreatePermanentLayerEffect)"},
       {"card": "Word of Command", "source": {"File": "LEB.lines.ron", "Line": 289, "Column": 1}, "message": "LEB.lines.ron:289:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)"},
       {"card": "Arboria", "source": {"File": "LEG.lines.ron", "Line": 17, "Column": 1}, "message": "LEG.lines.ron:17:205: unsupported global landwalk blocking operation (CantAttackAPlayer)"},
       {"card": "Backdraft", "source": {"File": "LEG.lines.ron", "Line": 24, "Column": 1}, "message": "LEG.lines.ron:24:221: unsupported action (ChooseASpellThatResolvedThisTurn)"},
       {"card": "Blazing Effigy", "source": {"File": "LEG.lines.ron", "Line": 31, "Column": 1}, "message": "LEG.lines.ron:31:278: unsupported action (DeadPermanentDealsDamage)"},
       {"card": "Chain Lightning", "source": {"File": "LEG.lines.ron", "Line": 43, "Column": 1}, "message": "LEG.lines.ron:43:243: unbound or incompatible player reference (PlayerOrControllerOfPermanent)"},
-      {"card": "Divine Intervention", "source": {"File": "LEG.lines.ron", "Line": 64, "Column": 1}, "message": "LEG.lines.ron:64:427: unsupported trigger (WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent)"},
       {"card": "Equinox", "source": {"File": "LEG.lines.ron", "Line": 77, "Column": 1}, "message": "LEG.lines.ron:77:250: unsupported untargeted granted body (Targeted)"},
       {"card": "Firestorm Phoenix", "source": {"File": "LEG.lines.ron", "Line": 85, "Column": 1}, "message": "LEG.lines.ron:85:175: unsupported rule (ReplaceWouldPutIntoGraveyard)"},
       {"card": "Forethought Amulet", "source": {"File": "LEG.lines.ron", "Line": 90, "Column": 1}, "message": "LEG.lines.ron:90:312: unsupported rule (ReplaceWouldDealDamage)"},

@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **927 accepted / 59 rejected names**
-(986 total), **2,320 compiled / 125 rejected records** (2,445 total).
-The latest slice is **IMMEDIATE-GAME-DRAW**.
-RON lowers strict DrawTheGame in ordinary non-entry resolving bodies.
-Mage saves an explicit draw without marking either player as a loser.
-Nested bodies stop; later instructions, stack objects, state actions,
-priority, step finalization and turns do not run. Clones keep separate results.
-Divine Intervention's complete entry, upkeep and last-removal draw execute.
-Estimated and actual full-card gains are one name / one record.
+Latest measured result (2026-10-15): **928 accepted / 58 rejected names**
+(986 total), **2,326 compiled / 119 rejected records** (2,445 total).
+The latest slice is **OPTIONAL-PLAYER-ATTACHMENT**.
+RON lowers PlayerMayAction with a legal attachment choice in resolving bodies.
+Mage saves the chooser before its optional offer and checks exact visits and
+attachment legality again. A current legal host is a valid no-op choice.
+All six complete Kudzu records execute. Their bodies now read the saved tapping
+land, so pending reattachment cannot redirect destruction or the chooser.
+Estimated and actual full-card gains are one name / six records.
 All required checks pass; no accepted record regressed.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
@@ -23,15 +23,14 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Resolving copiable rule replacement:** Vesuvan Doppelganger; first establish
-   tracked copies, then ThisAbility retention and optional copy lowering.
-   Eventual one name / six records; the prerequisite alone unlocks zero.
-2. **Explicit-player optional legal attachment:** Kudzu; retain the resolving
-   Aura through host destruction and use shared attachment legality.
-   Eventual one name / six records. A PlayerMayAction wrapper alone is incomplete.
-3. **Life payment for temporary mana abilities:** Channel; establish the shared
-   player-granted mana action and solver/payment contract before its adapter.
-   Reassess other users of that service before selection.
+1. **Life payment for temporary mana abilities:** Channel; establish actual
+   player mana activation and production with shared solver/payment contracts.
+   The current generic spell-cost substitution does not supply the full ability.
+   Eventual one name / six records.
+2. **Resolving copiable rule replacement:** Vesuvan Doppelganger; first establish
+   tracked runtime rule/static replacement and continued text, then ThisAbility
+   retention and optional copy lowering. Prerequisite alone gives zero; eventual
+   one name / six records. Preserve independent repeated ability instances.
 
 ## Dependencies and source blockers
 
@@ -22480,3 +22479,177 @@ engine API/rules-contract docs, doc.go and this ledger.
 
 Complete collection gameplay, runtime loading, Go-card/generator deletion and
 unused DSL cleanup remain gated. This run stops after IMMEDIATE-GAME-DRAW.
+
+## 2026-10-15 — OPTIONAL-PLAYER-ATTACHMENT
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh make build and go test ./pkg/mage/dsl/ron
+-count=1 passed. Strict loading exited 1 with valid diagnostics: 2,320 compiled /
+125 rejected records, 927 accepted / 59 rejected names. This was collection
+rejection, not an environment or build failure. The latest ranked candidates
+were evaluated from complete canonical records and their nested forms. Their
+reprints are identical apart from positions and count once per name. Targeted
+vocabulary reads confirmed six IsACopyOfPermanent, six player life-mana grants,
+and seven attachment-choice occurrences (six Kudzu, one Enchantment Alteration).
+Fresh rejected diagnostics did not reveal a shared first error across names;
+that observation alone was not used as a full-card unlock estimate.
+
+| Candidate | Distinct affected names; records | Estimated full-card gains | Other blockers and downstream capabilities | Complete effort |
+| --- | --- | --- | --- | --- |
+| Tracked resolving copies, previous #1 | Vesuvan Doppelganger; 6 | 0 for prerequisite; eventual 1 / 6 | Existing legacy copy effect copies only P/T and keywords and rejects copiable capture. Needs complete runtime rule/static registration replacement and continued text before ThisAbility retention and optional targeted copying. Enables resolving copies and later copy-of-copy capture. | Large; the first adapter is not dependency-ready. A separate tracked rule replacement contract is required. |
+| Explicit-player optional legal attachment | Kudzu; 6 | 1 / 6 | Required legal attachment selection, saved host-tap event, LKI and resolving Aura survival already exist. Needs optional offer with a saved chooser and a source-reference correction. Reuses host selection for explicit players and delayed bodies. | Small/medium; one engine/compiler shape plus visit, timing, legality, copy and clone tests. |
+| Temporary life-payment mana action | Channel; 6 | 0 for service prerequisite; eventual 1 / 6 | Existing Channel flag substitutes generic spell cost with life; it does not supply an actual player mana action. Needs explicit activation, actual colorless production, payment-window/solver integration, restrictions and rollback before lowering. Enables reusable temporary player mana actions and other payment contexts. | Larger engine/payment slice; a flag adapter alone would skip rules. |
+
+The first candidate's complete mechanics are not adapter-ready. None of these
+three candidates unlocks multiple distinct cards in one bounded slice. Optional
+attachment has the largest credible immediate gain for the complete effort.
+Its Aura survival dependency proved to be an existing engine contract, not a
+missing service: RemoveFromBattlefield leaves Auras for the stack boundary's
+state actions. No new state-action exception was introduced. Estimated and actual
+gain are one unique name / six records. No second slice follows this one.
+
+### Exact signatures, scope and reuse boundary
+
+Engine: `MayAttachPermanentToChoice(player PlayerRef, attachment PermanentRef,
+hosts PermanentSet) ResolvingEffect`. The shared attachment move now has an
+optional form. It saves the player before ChooseMayAbility. No present attachment,
+no player or no legal host means no offer. Decline makes no host choice.
+Acceptance uses the shared permanentChoice with the saved player ID, then checks
+the attachment visit, chosen host visit, host collection and attachment legality
+again. The private applyForPlayer helper prevents a controller change during the
+offer from changing the chooser. Internal host bindings remain local to each
+factory and resolution frame. Failed movement retains the current attachment.
+
+The optional legal-host query includes a legal current host. Selecting it does
+nothing: no attach event, link change or timestamp change (CR 701.3b–c).
+Game.attachmentHostIsLegal factors the existing enchant/equip/fortify checks from
+canAttach; canAttach still requires an actual move. Required attachment-choice
+callers retain their other-host behavior. All moves still use Game.Attach,
+existing enchant restrictions, protection, timestamps and layer updates.
+Shroud and hexproof do not prevent the nontargeted choice. Return cannot inherit
+either visit. Phasing suspends movement. Waiting queries do not offer, select,
+move or consume RNG. Pending stack copies, games and factories retain separate
+saved contexts. No payment, replacement-order or simultaneous-batch rule changes.
+
+RON: `PlayerMayAction(playerRef,
+AttachPermanentToAPermanent(attachmentRef, filter))` in ordinary resolving
+ActionLists, including accepted nested sequences, PlayerActions and delayed
+bodies. Existing typed reference and contextual collection compilers validate
+operands. The compiler adds no result binding for subsequent TheChosenPermanent
+reads. Costs, static rules, source-entry and draw replacement bodies reject.
+Other PlayerMayAction action families, invalid arities and out-of-scope/wrong-type
+references reject at declaration time. Inventory assigns player_reference and
+action roles to the wrapper's operands.
+
+RON owns spelling, lexical scope and per-factory lowering. Mage owns optional
+choice, legality and exact visits. Existing AttachedBecomesTapped event bindings,
+ControllerOfWithLKI, AttachPermanentToChoice, permanentChoice, capture/clone frames,
+protection, destruction/regeneration and stack state-action timing are reused.
+The supported shape has no card-name branch or Go-card fallback.
+
+### Rules evidence and source correction
+
+fetchset -check -card Kudzu passed; its complete local rulings were read through
+data/rulings/index.json. All three are WotC rulings, with no Scryfall notes:
+other players' lands (2004-10-04), ordinary Aura death outside this resolving
+ability (2005-08-01), and nontargeted attachment (2008-04-01).
+The evaluated alternatives' complete local ruling files were also read.
+
+Local Oracle in data/LEA.json says “When enchanted land becomes tapped, destroy
+it. That land's controller may attach this Aura to a land of their choice.”
+The six identical Kudzu records used HostPermanent in the body for both destruction
+and the controller read. That follows the Aura's current host after a pending
+reattachment and contradicts “it” / “That land”. Both body reads now use the
+existing Trigger_ThatPermanent event binding in LEA/LEB/2ED/3ED/CED/CEI.
+The event filter still watches HostPermanent. CR 603.2, 608.2c/h/k and 400.7 establish
+the saved land visit and its current or last-known controller. A returned land
+cannot be destroyed by the old trigger. Changing Aura or trigger control cannot
+replace the land's controller. The correction was tested against the old source:
+the reattachment assertion failed after the adapter existed and passed after
+all six source records changed.
+
+CR 303.4, 701.3, 702.16/18/11 and 704.3–4/704.5m supply attachment legality and
+resolution timing. A destroyed host leaves the Aura available for the remaining
+instruction. Successful movement saves it. Decline/no host leaves it for state
+actions at the end of resolution. Indestructibility and regeneration do not skip
+the independent later attachment instruction.
+
+Vocabulary was regenerated with the repository RON parser, preserving compact
+format: six hashes and moved example positions; HostPermanent 346 -> 334 and
+Trigger_ThatPermanent 44 -> 56. No syntax signature was added or removed.
+The loader baseline was refreshed to the final collection result.
+
+### Failing-first and card-to-test mapping
+
+Native tests first failed compilation for the missing MayAttachPermanentToChoice
+API after correcting a fixture target name. New RON gameplay tests first failed
+at unsupported PlayerMayAction. After implementation, the pending-reattachment
+case failed on the old source, proving the source defect. A separate added
+current-host test failed before separating legal hosts from actual moves.
+All focused tests pass. Fixture expectations were corrected for pending copied
+triggers, phased sources and explicit cloned decision players; no rule assertion
+was removed. Existing collection assertions now require the exact six-record gain.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Kudzu, all six reprints | TestRONOptionalAttachmentKudzu | Complete corrected records: paid cast/entry, unpaid rollback, host tap and resolution-time offer, accept/decline/no host, other player's lands, protection/shroud/hexproof, regeneration and indestructibility, same-host no-op. |
+| Saved tapping land and controller | Same suite: reattach, host-control, aura-control, host-return, host-phase, phase-cycle, source-left/return/phase, copy, clone, countered | Event visit survives reattachment and source departure; LKI selects the land controller; returned visits cannot supply the source or land; pending copies and clones keep independent context. |
+| Independent records | TestRONOptionalAttachmentInstances | Two factory instances, two hosts and two opposing choosers retain their own triggers and results. |
+| Scoped and delayed actions | TestRONOptionalAttachmentDelayedScope | Real synthetic RON spell targets an Aura; PlayerActions captures ActionPlayer; delayed body keeps that player through Aura control change; waiting query makes no offer. |
+| Native optional choice and recheck | TestOptionalAttachmentContracts | Decline/no candidate, protection, shroud/hexproof, attachment phase/return, host return or protection during choices, chooser control change after offer. |
+| Current legal host | TestOptionalAttachmentCurrentHost | One legal current host permits acceptance and makes no attach event or duplicate link. |
+| Definition and waiting contracts | TestOptionalAttachmentDeclarations, Waiting; TestRONOptionalAttachmentInvalid | Nil/unbound operands, wrong roles/arity, forbidden contexts and escaped local results reject; waiting queries do not execute or use RNG; a pending clone resolves without changing the original. |
+| Reused attachment/event services | TestAttachmentMove*, TestRONAttachmentMove*, TestRONHostTap* | Required host movement, enchant limits, shared timestamps/static subjects, exact visits, event transitions, ability removal, targets and payments retain their existing evidence. |
+
+Compilation advances from 927 to 928 accepted names and 2,320 to 2,326 records.
+Kudzu adds complete RON gameplay coverage for one distinct card. Compilation and
+gameplay are separate measurements. No accepted record regressed. API and rules
+contract documentation describe only the optional attachment behavior established
+here. No Go card, generator or broad DSL function was removed; their complete
+loading, gameplay and startup gates remain unmet.
+
+### Verification and collection result
+
+- Baseline make build and go test ./pkg/mage/dsl/ron -count=1: pass.
+- Focused go test ./pkg/mage/dsl/ron -run TestRONOptionalAttachment -count=1:
+  pass, including complete records, instances, delayed scope and invalid declarations.
+- Native TestOptionalAttachment* and TestAttachmentMove*: pass, count=1.
+- Final make build and go vet ./...: pass.
+- Final go test ./pkg/mage/... -short -count=1: pass.
+- Final go test ./... -short -count=1 and make test: pass.
+- make lint: pass, zero issues. Review found no unrelated edits or automatic
+  changes that require another code check.
+- git diff --check: pass.
+- Final go run ./cmd/loadcards -json: expected exit 1, valid JSON; 2,326 compiled /
+  119 rejected records, 928 accepted / 58 rejected names. A parsed fresh-baseline
+  comparison confirms that only the six Kudzu diagnostics disappear. All 119
+  remaining diagnostics are identical; no new diagnostic was added.
+
+No check or environment blocker remains. Refreshing the source snapshot's older
+loader baseline also removes the prior slice's stale Divine Intervention issue
+and advances Vesuvan's diagnostics to the optional-copy gap. Neither is counted
+as a gain here. The six source hashes and the full parser vocabulary were
+refreshed. Collection rejection is expected; no partial registry is published.
+The commit uses the prior ledger's per-command commit.gpgsign=false workaround
+without changing repository config.
+Changed files: mage attachment_move.go, composable_target.go, game.go and the
+new optional_attachment_test.go; RON attachment lowering, compiler dispatch,
+PlayerActions and inventory roles, new optional gameplay/validation tests,
+required attachment and three collection assertion files; all six Kudzu RON
+reprints; doc.go, API/rules contracts, vocabulary snapshot and this ledger.
+
+### Remaining work and ranked next candidates
+
+1. Channel's actual temporary player-granted life-payment mana action. Establish
+   explicit activation and real colorless production with payment-window, solver,
+   restrictions, life affordability and rollback contracts. The existing generic
+   spell-cost substitution is not sufficient. Eventual one name / six records.
+2. Tracked resolving copiable rule replacement for Vesuvan Doppelganger. First
+   establish full runtime rule/static replacement and continued text; then retain
+   ThisAbility and lower optional targeted copying. Prerequisite alone gives zero;
+   eventual one name / six records. Keep independent repeated ability instances.
+
+The remaining loader diagnostics are the fresh inventory for further comparison.
+Complete RON gameplay, runtime cutover, Go-card/generator deletion and unused DSL
+cleanup remain incomplete. This run stops after OPTIONAL-PLAYER-ATTACHMENT.
