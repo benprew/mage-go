@@ -22608,5 +22608,40 @@ and exemption clauses together from all five Lich records, paid and failed nativ
 casting, queued clones, negative life, phasing, departure, independent factories,
 ability removal, uninterrupted resolution, rejection cases and inventory roles.
 Complete Lich records still reject later unsupported rules; this is clause-level
-coverage only. No new Lich gain replacement, sacrifice result or loss action is
-claimed.
+coverage only. That slice did not establish the gain replacement, sacrifice result or loss
+action. The next section establishes the gain replacement.
+
+## Static life-gain replacement with card draws
+
+`DrawInsteadOfLifeGain(subject PlayerRef) ContinuousEffect` installs through
+`WithStaticAbility`. Definition validation rejects nil and unbound subjects and
+nonpermanent sources. A fresh declaration identifies each factory instance.
+The rule uses the source's exact battlefield visit and current static abilities.
+Its typed subject reads the current controller. Phasing and ability removal stop
+the rule; phase-in and restoration can restore it. Departure stops the rule and
+return supplies a new visit. Copied cards and cloned games retain separate state
+(CR 113.6, 611.3, 702.26b, 707).
+
+Only positive proposed life gain matches (CR 119.10). The rule joins the shared
+replacement candidate list. The affected player chooses, and application checks
+the current source, ability, subject and amount again (CR 616.1, 616.2). Multiple
+sources cannot replace the same gain twice: the selected rule consumes the gain.
+Legacy amount modifiers retain their existing preprocessing order.
+
+The selected rule saves the event's player and amount before drawing. Source
+control changes or departure during a draw do not truncate or redirect the saved
+instruction. Each individual draw uses `PlayerDrawCard`, including draw
+replacements, event ancestry, hand visits, events and empty-library loss
+(CR 121.2, 614.5–6, 616.2). No life gain, gain event or positive gain result is
+produced. Nested replacement frames restore their outer bindings. Candidate
+queries make no choices, draws, life changes, layer passes or registrations.
+
+Evidence: `TestLifeGainDraw*` covers current control, positive amounts, phasing,
+ability removal/restoration, stale visits, copy entry, clones, replacement choice,
+changed amount and zero amounts, prior and selected ability removal, nested draws,
+empty-library loss, committed draws after departure, gain results and pure queries.
+`TestRONLifeGainDraw*` covers Lich's entry, loss exemption and gain replacement
+from all five records together, paid/failed casting, pending clones, independent
+factories, RON gain instructions, invalid declarations and inventory roles.
+RON supports only the exact You-to-proposed-amount draw form on permanents.
+The full Lich record still rejects later sacrifice and loss operations.

@@ -17021,5 +17021,37 @@ must perform the check before expecting terminal state.
 
 `TestRONLifeTotalLoss*` supplies gameplay evidence for Lich's first two unchanged
 clauses in all five reprints and for synthetic complete supported declarations.
-Lich's later gain replacement, mandatory sacrifice result and loss actions still
-block its complete record. This adapter does not establish complete-card coverage.
+Lich's mandatory sacrifice result and loss actions still block its complete
+record; the gain replacement is established in the next section. This adapter does not establish complete-card coverage.
+
+## RON life-gain replacement with draws
+
+Permanent cards accept exactly:
+
+```text
+ReplaceWouldGainLife(PlayerWouldGainLife(You), [DrawNumberCards(WouldGainLife_LifeAmount)])
+```
+
+The event and draw operation each have one argument. `You` and the amount are
+strict symbols. Other subjects, values, combined operations, resolving contexts
+and nonpermanent sources reject. The amount cannot escape its replacement.
+Inventory roles are `life_gain_replacement_event`, `player_reference`,
+`life_gain_replacement_operation` and `life_gain_replacement_value`.
+
+Each factory creates `DrawInsteadOfLifeGain(You) ContinuousEffect` through
+`WithStaticAbility`. The engine reads the current controller and current static
+abilities of the exact source visit. Phasing, departure and ability removal stop
+the rule. A phase cycle or restored ability can restore it; return creates a new
+visit. Copy entry and game clones retain independent source state.
+
+The shared replacement pipeline replaces positive life gain immediately. The
+gaining player chooses between applicable replacements, which recheck current
+state. Once selected, the rule draws the proposed amount for the saved player,
+even if the source changes during a draw. Each draw uses the shared draw service
+and can itself be replaced. No life gain or positive life-gain result is recorded.
+The legacy life-gain amount modifiers keep their existing preprocessing contract.
+
+`TestRONLifeGainDraw*` executes Lich's first three unchanged clauses together in
+all five reprints, native casting, independent instances and RON gain resolution.
+Its mandatory sacrifice results and loss actions remain unsupported. This is
+clause coverage, with no additional complete-card coverage.

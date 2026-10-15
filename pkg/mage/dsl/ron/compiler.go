@@ -690,6 +690,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileFilteredEntry(n)
 	case "ReplaceWouldDestroy":
 		return compileStaticDestructionReplacement(n)
+	case "ReplaceWouldGainLife":
+		return compileLifeGainDrawReplacement(n)
 	case "ReplaceWouldDraw":
 		return compileDrawReplacement(n, ctx)
 	case "ReplaceWouldBeginDrawStep":

@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [DrawInsteadOfLifeGain] replaces positive life gain with individual draws.
+// Use [WithStaticAbility]. The typed subject reads the current source controller.
+// Current abilities and exact source visits supply replacement candidates.
+// Phasing and ability removal suspend the rule. Return starts a fresh visit.
+// Shared replacements supply affected-player choices and live rechecks.
+// The selected rule saves the player and amount before any draw. Source changes
+// during those draws cannot change that instruction. Each draw can be replaced.
+// No life is gained. Copies and game clones keep separate source state.
+// RON accepts ReplaceWouldGainLife(PlayerWouldGainLife(You),
+// [DrawNumberCards(WouldGainLife_LifeAmount)]) on permanent cards.
+// The proposed amount is local to that operation. Other forms remain unsupported.
+// This establishes Lich's gain clause; sacrifice and loss actions still reject.
+//
 // [PreventLifeTotalLossStatic] stops one player's nonpositive-life game loss.
 // Use [WithStaticAbility]. You reads the current source controller. Departure,
 // phasing and ability removal stop the rule through the shared source lifecycle.

@@ -8,19 +8,18 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **919 accepted / 67 rejected names**
 (986 total), **2,299 compiled / 146 rejected records** (2,445 total).
-The latest slice is **STATIC-LIFE-TOTAL-LOSS-EXEMPTION**.
-RON accepts PlayerEffect(You, [DoesntLoseTheGameForHaving0OrLessLife]).
-A reusable live static rule prevents only life-total state-based game loss.
-Recorded loss now determines IsAlive; state-based batches save loss decisions
-before permanent changes. Other loss causes and clone loss state remain exact.
-Control, phasing, removal/restoration, copies, return, simultaneous decisions,
-queries and paid/failed casting have native and RON evidence.
-Lich's entry and exemption execute together in all five reprints; later rules
-still reject. Actual gain is **zero names / zero records**, matching the estimate.
-Complete-card coverage is unchanged. Only Lich's five diagnostics advance to
-ReplaceWouldGainLife. No RON source changed. All required validation passed;
-lint reported zero issues. Existing terminal-state fixtures now check state-based
-loss; the scenario tool uses the shared exemption query.
+The latest slice is **STATIC-LIFE-GAIN-DRAW-REPLACEMENT**.
+RON accepts the permanent-source You life-gain event with one proposed-amount
+card draw operation. DrawInsteadOfLifeGain supplies a reusable typed static rule.
+Current control, exact visits, phasing, ability removal, copies and clones apply.
+The shared replacement pipeline supplies choices and live rechecks; individual
+draws retain nested replacement ancestry and empty-library loss behavior.
+Lich's first three clauses execute together in all five unchanged reprints.
+Actual gain is **zero names / zero records**, matching the estimate; complete-card
+coverage is unchanged. Exactly five diagnostics advance to mandatory plural
+sacrifice payment. No RON source changed. All required checks passed, including
+full tests, build, vet, lint (zero issues) and post-format engine/RON tests.
+Unrelated README and fetchset changes remain preserved and excluded.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -18050,3 +18049,149 @@ Changed files: new engine `pkg/mage/life_total_loss.go` and
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement static life-total loss exemption`.
 This run stops after STATIC-LIFE-TOTAL-LOSS-EXEMPTION.
+
+## 2026-10-14 — STATIC-LIFE-GAIN-DRAW-REPLACEMENT
+
+### Candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The loader produced valid JSON and expected exit 1 for collection rejection:
+919 accepted / 67 rejected unique names; 2,299 compiled / 146 rejected records.
+README.md, cmd/fetchset/main.go and untracked cmd/fetchset/main_test.go were
+already changed. They are preserved and excluded from this slice.
+
+Complete RON records and nested forms were inspected for the three ranked
+candidates. Reprints count once in this comparison.
+
+| Candidate | Distinct affected cards | Estimated full-card gains | Other blockers | Downstream capability | Estimated effort |
+| --- | --- | --- | --- | --- | --- |
+| #1: static life gain replaced with draws | Lich (five records) | 0 names / 0 records | Mandatory plural sacrifice payment, unpaid loss, graveyard loss | Completes Lich's third clause and joins its existing entry/exemption prerequisites; adds a reusable live typed life-gain replacement | Small: one strict adapter, static engine rule, lifecycle and replacement tests |
+| #2: per-death result iteration | Glyph of Reincarnation (one record) | 0 | IsAfterCombat casting window | Saves simultaneous death results for sequential return choices, with exact blocking history and former controllers | Medium: result frames, iteration, owner-controlled entry and simultaneous-death tests |
+| #3: copy-effect ability grants | Vesuvan Doppelganger (six records) | 0 | Recursive resolving copy changes and ThisAbility retention | Copiable upkeep declarations and retained copy exceptions | Large: fresh declaration builders, recursive binding identity and copy-layer tests |
+
+Candidate #1 is dependency-ready and is the smallest complete unblocking
+prerequisite among the ranked candidates. None of these candidates offers an
+immediate multi-card unlock. The selection follows the ready prerequisite rather
+than first-error counts. The selected slice is only static life gain replaced
+with draws. No dependent sacrifice, death iteration or copy-grant adapter is added.
+
+### Exact contract, dependencies and reuse boundary
+
+RON accepts this complete top-level shape on permanent cards:
+
+```text
+ReplaceWouldGainLife(PlayerWouldGainLife(You), [DrawNumberCards(WouldGainLife_LifeAmount)])
+```
+
+The event and operation are one-argument tuples. You and the proposed amount are
+strict symbols. Other players, values, operation lists, action contexts and spell
+sources reject during compilation. The amount is local to this replacement;
+ordinary resolving values cannot read it. Inventory descendants have explicit
+life_gain_replacement_event, player_reference, life_gain_replacement_operation
+and life_gain_replacement_value roles, including within rejected full records.
+
+New engine signature:
+
+- `DrawInsteadOfLifeGain(subject PlayerRef) ContinuousEffect`, installed through
+  `WithStaticAbility`.
+
+RON owns spelling and context checks and creates a fresh rule in each factory.
+The engine owns the typed subject, live source visit and replacement behavior.
+Definition validation rejects nil/unbound subjects and nonpermanent sources.
+The existing printed static wrapper, layer lifecycle, current runtime abilities,
+entry-copy definition builders and continuous-effect cloning are reused.
+Current control supplies You. Phasing and ability removal suspend the rule;
+phase-in or restoration can restore it. Return creates a new visit. Old rule
+candidates cannot match it. LKI cannot supply a departed static rule.
+
+The old lichLifeGainReplacement prototype fixes a player at registration and
+checks only the visit and phasing. It cannot express the live static contract.
+Its legacy callers remain intact; RON uses the new typed static rule. No Go card
+factory or card-name branch is involved. No global result slot or alternate
+replacement, draw, life, zone, payment or event service is introduced.
+
+Positive LifeGainAction events join the shared replacement pipeline. The gaining
+player chooses between applicable replacements. Application rechecks current
+control, ability, visit and positive amount. A selected rule saves the gaining
+player and amount, then calls PlayerDrawCard once for each card. Source changes
+during those draws do not truncate the saved instruction. Each draw can be
+replaced; scoped draw ancestry restores its outer frame. Empty-library draws
+still cause state-based loss. The consumed gain supplies no life, gain event or
+positive gain result. Existing legacy amount modifiers retain their preprocessing
+contract. Candidate queries do not draw, gain life, choose, register or run layers.
+
+Local data/LEA.json confirms the unchanged Oracle clause. CR 119.10, 121.2,
+614.5–6, 616.1–2, 113.6, 611.3 and 702.26b supply the positive-event, draw,
+replacement and source-lifecycle contracts. No source-data defect or environmental
+failure was found. No RON source changed, so vocabulary regeneration is not
+needed. Runtime cutover and Go-card/DSL removal gates remain closed.
+
+### Failing-first and card-to-test evidence
+
+Before implementation, TestRONLifeGainDrawLich failed at unsupported rule
+ReplaceWouldGainLife for all five reprints; CastingAndInstances failed at the
+same rule. Native tests failed to compile for DrawInsteadOfLifeGain and its new
+replacement type. The later inventory test first failed on four unknown roles
+before those roles were added. One test-only player reference name was corrected
+before verification. The empty-library test was corrected to perform the shared
+state-based check; its loss assertion remains intact.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Lich; LEA:140, LEB/2ED/CED/CEI:141 | TestRONLifeGainDrawLich | First three unchanged clauses together from complete records, zero-life survival, actual draws, alternate owner, current control, phasing and clones; complete records still reject later clauses |
+| Lich casting and independent factories | TestRONLifeGainDrawCastingAndInstances | Failed payment preserves hand, life and stack; paid native casting, pending clones, entry timing, independent instances, departure and phasing |
+| RON declarations and ordinary gain instructions | TestRONLifeGainDrawInvalid, InventoryAndResolution | Strict shapes, unbound/out-of-context amount reads, nonpermanent sources, explicit inventory roles, native resolution of two RON gain instructions and zero actual gain |
+| Engine lifecycle and copies | TestLifeGainDrawLifecycle, DeclarationsAndCopies | Positive/zero/negative amounts, current control, removal/restoration, phasing, stale visits, separate game clones, entry copies and invalid native definitions |
+| Replacement ordering, rechecks and nested instructions | TestLifeGainDrawOrderingAndRechecks, SelectedRuleRemoval, NestedDraws | Affected-player choices, doubled/zero proposals, earlier control/ability changes, selected rule removal, independent competing sources, nested gain/draw replacements, frame restoration and empty-library loss |
+| Committed instruction, results and pure queries | TestLifeGainDrawCommittedAmountAndQueries | Source departure on first draw cannot truncate three committed draws; zero actual gain result; later gain is ordinary; repeated candidate/clone queries leave state unchanged |
+
+Compilation and complete-card gameplay gains are zero, as estimated. Clause
+coverage adds Lich's third rule together with its entry and exemption rules across
+all five reprints. Synthetic supported records and native engine tests establish
+reusable behavior; they do not count as complete inventory cards.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONLifeGainDraw' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestLifeGainDraw' -count=1`: pass, including
+  the final run after lint.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, 0 issues. The only automatic change was import grouping
+  in the new engine test. Final `go test ./pkg/mage/dsl/ron -count=1` passed,
+  including the accepted-record and gameplay regression suite.
+- `git diff --check`: pass after code, documentation and final ledger changes.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 for atomic
+  collection rejection; **919 accepted / 67 rejected names**, **2,299 compiled /
+  146 rejected records**, matching the fresh baseline. Rejected record keys are
+  identical. Exactly five diagnostics changed: each Lich record advanced from
+  `unsupported rule (ReplaceWouldGainLife)` at column 282 to `unsupported
+  mandatory sacrifice cost (SacrificeNumberPermanents)` at column 450. Every
+  other diagnostic is unchanged. No accepted record was lost.
+
+Unrelated user files were compared with their pre-lint contents and are unchanged.
+No environment blocker remains. Collection gameplay, runtime loading, Go-card and
+generator deletion, obsolete DSL cleanup and native startup remain incomplete.
+No unused DSL function or Go definition was removed; the removal gate is closed.
+
+### Ranked next candidates
+
+1. Mandatory plural sacrifice payment: Lich's
+   MustCost(SacrificeNumberPermanents(Trigger_AmountOfDamageDealt, IsNonToken)).
+   Estimate zero full-card gains until LoseTheGame works. Reuse the optional
+   plural-sacrifice service and required-payment result scopes. Audit partial
+   mandatory payment, exact nontoken choices, simultaneous sacrifice and failed
+   payment results before adapting it.
+2. Per-death result iteration for Glyph of Reincarnation. Estimate zero until
+   IsAfterCombat works. Exact blocking history and former-controller references
+   exist; add simultaneous death results and local iteration frames.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero until
+   recursive resolving copy changes and ThisAbility retention work. Reuse the
+   upkeep parser and copy builders; audit copiable declarations and exceptions.
+
+Changed files: new pkg/mage/life_gain_draw.go and life_gain_draw_test.go;
+new pkg/mage/dsl/ron/life_gain_draw.go and life_gain_draw_test.go;
+pkg/mage/dsl/ron/compiler.go and inventory.go; pkg/mage/doc.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement life-gain replacement with draws`.
+This run stops after STATIC-LIFE-GAIN-DRAW-REPLACEMENT.
