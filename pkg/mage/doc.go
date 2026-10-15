@@ -1,5 +1,20 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [RequiredSacrificeNumberOrElse] reads one count at resolution and requires
+// that many matching permanents controlled by its typed payer. The shared
+// transaction selects distinct exact visits and moves them simultaneously.
+// Insufficient resources or invalid choices cause no partial payment. Phased
+// subjects cannot pay. The source can pay if it matches. Zero and negative
+// counts succeed without choices. Replacements can change the written actions
+// while payment succeeds. Each call keeps its own branch result. Copies and
+// clones keep separate payments. Waiting queries retain source reads in the
+// payer, amount and branches without making payment.
+// RON accepts resolving MustCost(SacrificeNumberPermanents(value, filter))
+// with an adjacent If or Unless using CostWasPaid or CostWasntPaid. Existing
+// resolution values supply event amounts and source LKI. Filters use the
+// reference-free sacrifice grammar. Entry and draw replacements reject.
+// Lich's payment now lowers; its loss operations still need adapters.
+//
 // [DrawInsteadOfLifeGain] replaces positive life gain with individual draws.
 // Use [WithStaticAbility]. The typed subject reads the current source controller.
 // Current abilities and exact source visits supply replacement candidates.

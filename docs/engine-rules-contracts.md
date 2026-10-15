@@ -22645,3 +22645,48 @@ from all five records together, paid/failed casting, pending clones, independent
 factories, RON gain instructions, invalid declarations and inventory roles.
 RON supports only the exact You-to-proposed-amount draw form on permanents.
 The full Lich record still rejects later sacrifice and loss operations.
+
+## Mandatory plural sacrifice payment
+
+`RequiredSacrificeNumberOrElse(player PlayerRef, amount ResolutionValue,
+filter PermanentFilter, paid, unpaid ResolvingEffect) ResolvingEffect` saves the
+payer and reads the amount once when applied. The payer must control enough
+present matching permanents to pay the full cost. The source can pay if it
+matches. Nonpositive counts succeed without choices. An absent payer does
+nothing. At least one branch and an explicit nonzero filter are required;
+nil or unbound player/value declarations fail definition validation.
+
+The existing resolution payment service and `SacrificeNMatchingIncludingSourceCost`
+provide full affordability, distinct exact visits, locked choices, rechecks,
+transaction rollback and simultaneous sacrifice. Invalid, returned, phased or
+newly uncontrolled selected visits cannot pay. Sacrifice uses owner destinations;
+regeneration and indestructibility do not prevent it. Exile and cancellation
+replacements can change the actions while the cost remains paid (CR 118.11).
+Insufficient resources cannot start payment and cause no partial sacrifices
+(CR 118.3, 118.12). Count evaluation uses CR 107.1b and 608.2h; shared sacrifice,
+object identity and phasing use CR 701.21a, 400.7 and 702.26b.
+
+RON accepts `MustCost(SacrificeNumberPermanents(value, filter))` followed
+immediately by `If` or `Unless` with the strict symbol `CostWasPaid` or
+`CostWasntPaid` and a nonempty action list. This is an ordinary resolving-body
+form for spells, activated abilities, triggers and delayed bodies. Values use
+the existing resolution grammar, including bound damage-event amounts, arithmetic
+and permanent power with exact LKI. Filters use the reference-free sacrifice
+filter grammar, including `IsNonToken`, `And` and `Or`. Entry and draw replacement
+bodies, `IfElse`, unbound values, empty filters, separated continuations and
+repeated result reads reject. Other payment forms keep their existing contracts.
+
+RON owns syntax and scope; the engine owns the typed payer, amount and payment.
+Each invocation has its own branch result. Nested and adjacent payments cannot
+replace it. Factory instances, stack copies and clones use separate frames.
+Waiting delayed queries retain source reads from the payer, amount and branches
+without choices or payment. No global result slot is used.
+
+Evidence: native `TestRequiredSacrificeNumberPayment`, `BatchAndAmount` and
+`Definition`; RON `TestRONRequiredSacrificeNumberLich`, `Branches`, `Invalid`,
+`Contexts`, `LocalResults`, `WaitingAndLKI` and `NontokenAndInventory`.
+The Lich tests read complete unchanged records from LEA, LEB, 2ED, CED and CEI,
+then test its first three rules with the actual damage trigger/payment and a
+supported diagnostic body in place of `LoseTheGame`. Full records still reject
+at that loss action. This establishes payment coverage, not complete Lich gameplay.
+No RON source changed and no full inventory card is newly accepted.

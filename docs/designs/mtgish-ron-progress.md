@@ -8,18 +8,18 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **919 accepted / 67 rejected names**
 (986 total), **2,299 compiled / 146 rejected records** (2,445 total).
-The latest slice is **STATIC-LIFE-GAIN-DRAW-REPLACEMENT**.
-RON accepts the permanent-source You life-gain event with one proposed-amount
-card draw operation. DrawInsteadOfLifeGain supplies a reusable typed static rule.
-Current control, exact visits, phasing, ability removal, copies and clones apply.
-The shared replacement pipeline supplies choices and live rechecks; individual
-draws retain nested replacement ancestry and empty-library loss behavior.
-Lich's first three clauses execute together in all five unchanged reprints.
+The latest slice is **REQUIRED-PLURAL-SACRIFICE-PAYMENT**.
+RON lowers resolving MustCost(SacrificeNumberPermanents(value, filter)) with
+an adjacent If or Unless payment-result branch. RequiredSacrificeNumberOrElse
+reads the count once and reuses the shared sacrifice payment transaction.
+Full affordability, exact choices, simultaneous movement, replacements, source
+LKI, delayed queries, copies and clones have native and RON test evidence.
+Lich's damage-payment clause now lowers in all five unchanged reprints.
 Actual gain is **zero names / zero records**, matching the estimate; complete-card
-coverage is unchanged. Exactly five diagnostics advance to mandatory plural
-sacrifice payment. No RON source changed. All required checks passed, including
-full tests, build, vet, lint (zero issues) and post-format engine/RON tests.
-Unrelated README and fetchset changes remain preserved and excluded.
+coverage is unchanged. Five diagnostics advance to LoseTheGame. The exact-source
+graveyard trigger is also still a compiler gap. No RON source changed.
+Build, vet, engine short tests, full tests and final lint (zero issues) pass.
+The post-format RON suite passes. The working tree was clean at the start.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -18195,3 +18195,162 @@ pkg/mage/dsl/ron/compiler.go and inventory.go; pkg/mage/doc.go;
 docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
 Commit title: `feat(ron): implement life-gain replacement with draws`.
 This run stops after STATIC-LIFE-GAIN-DRAW-REPLACEMENT.
+
+## 2026-10-14 — REQUIRED-PLURAL-SACRIFICE-PAYMENT
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The initial loader emitted valid
+JSON and exited 1 for atomic collection rejection: 919 accepted / 67 rejected
+unique names, 2,299 compiled / 146 rejected records, 986 names / 2,445 records.
+This was collection rejection, not a build or test failure.
+
+The three ranked candidates were compared from complete records and nested forms:
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers / downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| Mandatory plural sacrifice | Lich | 0 | LoseTheGame and exact-source graveyard trigger remain; typed dynamic-count mandatory payment becomes reusable | Small–medium; one adapter, one engine wrapper and payment/context tests |
+| Per-death result iteration | Glyph of Reincarnation | 0 | IsAfterCombat remains; shared simultaneous death results and local member frames enable its resurrection instructions | Large; death-result capture, former-controller reads and iteration frames |
+| Copiable ability grants | Vesuvan Doppelganger | 0 | Recursive resolving copy changes and ThisAbility remain; copiable trigger declarations enable its repeated copy changes | Large; declaration rebuilding, copy exceptions and ability identity |
+
+Candidate 1 is dependency-ready. Its count and nontoken filter already lower in
+other contexts; fixed plural sacrifice already has shared transaction mechanics.
+It gives a smaller complete prerequisite than either other ranked candidate,
+without combining multiple new subsystems. None of these candidates promises
+an immediate complete-card unlock. The exact-source graveyard event gap was
+confirmed in the graveyard compiler and its rejection tests during this run;
+LoseTheGame alone will not complete Lich. Reprints count once.
+
+### Exact supported contract and reuse boundary
+
+RON accepts this ordinary resolving-body pair:
+
+```text
+MustCost(SacrificeNumberPermanents(value, filter)),
+If/Unless(CostWasPaid/CostWasntPaid, [actions])
+```
+
+The cost has exactly two arguments, the payment exactly one, and the adjacent
+continuation exactly two. Conditions are strict symbols. Bodies must be
+nonempty. Values use the existing resolution grammar, including bound
+Trigger_AmountOfDamageDealt, integer values, arithmetic and permanent power with
+exact source LKI. Filters use the reference-free sacrifice grammar, including
+IsNonToken and nonempty And/Or. Unbound values, Other(ThisPermanent), malformed
+arities, empty groups, separated or reused result clauses and IfElse reject.
+Entry and draw replacement contexts reject. Spells, activated abilities,
+ordinary triggers and delayed resolving bodies are supported. Existing optional
+and announcement payments retain their current restrictions.
+
+New engine signature:
+
+- `RequiredSacrificeNumberOrElse(player PlayerRef, amount ResolutionValue,
+  filter PermanentFilter, paid, unpaid ResolvingEffect) ResolvingEffect`.
+
+RON owns spelling, role, scope and continuation validation. Each factory builds
+its own bound values and branches. The engine saves the typed payer, reads the
+count once, and uses tryResolutionCostPayment with required=true and a fresh
+SacrificeNMatchingIncludingSourceCost. No optional offer occurs. Each call
+selects its own branch; no result slot or mutable declaration state is shared.
+A nonpositive count succeeds without choices. An absent payer does nothing.
+Definition validation rejects nil/unbound inputs, a zero filter and no branches.
+
+The existing transaction supplies full affordability, distinct exact visits,
+locked choices, control/phasing/identity rechecks and rollback. Insufficient
+resources cannot start payment, so no partial sacrifice occurs. A returned
+selected visit cannot replace an old choice; a matching current source can pay.
+Shared sacrifice handling supplies simultaneous movement, source-departure
+snapshots, owner destinations, replacement choices and observations.
+Indestructibility and regeneration cannot prevent sacrifice. Exile and
+cancellation replacements can change the written actions while payment succeeds.
+Waiting delayed queries inspect payer, amount and branches without payment and
+retain exact source references. Source LKI, independent factories, queued copies
+and game clones use the existing binding and lifecycle services.
+
+Rules evidence: local data/LEA.json and all Lich wotc rulings, especially the
+simultaneous-sacrifice ruling; no scryfall note is used as an Oracle ruling.
+`go run ./cmd/fetchset -check -card Lich` passed before implementation.
+CR 118.3 and 118.12 establish full payment at resolution; 118.11 establishes
+modified payment; 107.1b and 608.2h establish nonpositive counts and one-time
+information reads; 701.21a, 400.7 and 702.26b establish sacrifice, visits and
+phasing. No source-data defect or environment failure was found. No RON source
+changed, so vocabulary regeneration is not needed. Existing inventory roles
+already describe all new descendants, including rejected complete records.
+
+### Failing-first tests and card-to-test mapping
+
+Native tests first failed to compile for RequiredSacrificeNumberOrElse. The RON
+Lich and branch tests first failed with unsupported mandatory sacrifice cost
+(SacrificeNumberPermanents). No production implementation preceded those failures.
+The first native run also exposed a missing zero-filter declaration check,
+which was added. The cancellation expectation was corrected to CR 118.11 and
+the established shared cost behavior; it now asserts successful payment with
+only the unreplaced sacrifice moving. The batch observer excludes the
+transaction's validation clone and asserts complete movement plus pre-departure
+snapshots in the actual game. Lich's test chooser was made explicit so it selects
+creatures rather than its legally eligible source.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Lich; LEA:140, LEB/2ED/CED/CEI:141 | TestRONRequiredSacrificeNumberLich | Complete records read first; first three rules plus actual damage event/payment lower together; supported diagnostic body replaces only unsupported loss; two simultaneous owner-graveyard payments, no offer, saved damage amount and clone isolation |
+| Lich nontoken payment | TestRONRequiredSacrificeNumberNontokenAndInventory | Insufficient nontoken resources preserve all permanents; tokens, phased and opposing permanents cannot pay; unpaid branch executes; rejected complete-record descendants retain resolution_cost, value and permanent_filter roles |
+| RON branches, contexts and local results | TestRONRequiredSacrificeNumberBranches, Contexts, LocalResults | All four If/Unless polarities, nonpositive counts, matching source payment, spells/activations/upkeep/delays, source departure/return/phasing/control, copied controllers, pending clones and nested/adjacent independent outcomes |
+| RON declarations and waiting source reads | TestRONRequiredSacrificeNumberInvalid, WaitingAndLKI | Invalid shapes and scopes reject; repeated waiting queries make no payment; departed source power uses exact LKI and ignores a stronger returned visit |
+| Native payment and transaction | TestRequiredSacrificeNumberPayment | Full/missing resources, wrong control, phasing, duplicate invalid choice, stale phase/return/control during selection, owner destinations, exile/cancellation replacements, indestructibility, regeneration, nonpositive counts and clone isolation |
+| Native batch and declarations | TestRequiredSacrificeNumberBatchAndAmount, Definition | Count fixed before choices change it; simultaneous source departure and queued triggers; nil/unbound declarations, missing filter and missing branches reject |
+
+Actual compilation gain is zero names / zero records, matching the estimate.
+Complete-card gameplay coverage is unchanged. Payment-clause evidence is added
+for Lich across all five unchanged reprints; no test claims complete Lich
+execution. Full records still reject unsupported loss and later graveyard syntax.
+
+### Validation and collection result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONRequiredSacrificeNumber' -count=1`:
+  pass, including the final run after the lint fixes.
+- `go test ./pkg/mage -run '^TestRequiredSacrificeNumber' -count=1`: pass,
+  including stale-choice and one-time count tests and the final lint-fix run.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- Initial `make lint` found two prealloc issues in the new tests. Both victim
+  slices now have explicit capacity 2. Focused RON and native tests passed again.
+  Final `make lint`: pass, 0 issues. Automatic formatting only regrouped imports
+  in the native test; that change was reviewed. The post-format full
+  `go test ./pkg/mage/dsl/ron -count=1` passed, including accepted-card regressions.
+- `git diff --check`: pass after code, API documentation and final ledger edits.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 for atomic
+  collection rejection; **919 accepted / 67 rejected names**, **2,299 compiled /
+  146 rejected records**, matching the fresh baseline. Rejected record keys are
+  identical. Exactly five diagnostics changed: each Lich record advanced from
+  `unsupported mandatory sacrifice cost (SacrificeNumberPermanents)` at column
+  450 to `unsupported action (LoseTheGame)` at column 540. Every other diagnostic
+  is unchanged. No accepted record was lost.
+
+No environment blocker remains. All working-tree changes belong to this slice.
+Collection gameplay, runtime cutover, Go-card and generator deletion, DSL cleanup
+and native startup remain incomplete. No Go definition or DSL service was removed;
+the removal gates remain closed.
+
+### Ranked next candidates
+
+1. Explicit resolving LoseTheGame with a typed player and existing game-loss
+   service. Lich is the unique current consumer. Estimate zero complete cards
+   until its exact-source graveyard event also lowers. Test queued controller,
+   loss exemptions, recorded loss, copies and clones. This is the next small
+   dependency on Lich's path; do not combine its separate event adapter silently.
+2. Per-death result iteration for Glyph of Reincarnation. Estimate zero until
+   IsAfterCombat works. Use simultaneous destruction results, exact blocking
+   history, former-controller references and separate iteration frames.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero until
+   recursive resolving copy changes and ThisAbility retention work. Reuse the
+   upkeep parser and copy builders; preserve copiable declarations and exceptions.
+
+Changed files: new pkg/mage/resolution_sacrifice_number.go and its test;
+new pkg/mage/dsl/ron/required_sacrifice_number.go and its test;
+pkg/mage/dsl/ron/optional_payment.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+Configured GPG signing required an interactive prompt. The waiting signer was
+stopped; the commit uses a per-command signing override without changing Git
+configuration. Required validation checks all passed.
+Commit title: `feat(ron): implement mandatory plural sacrifice payment`.
+This run stops after REQUIRED-PLURAL-SACRIFICE-PAYMENT.
