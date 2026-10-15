@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentsGivenCountersBy] reads counter placement history for an exact source
+// and each exact recipient visit. Only positive placements after replacements
+// and caps enter history. Counter removal and cleanup do not erase it. Phasing
+// suspends recipient selection. Return cannot inherit either object's history.
+// Shared single, batch, entry and payment services record placements. Resolving
+// effects retain their saved source visit through departure and return. Clones
+// and payment trials keep separate history. Raw ID APIs read a current source.
+// RON accepts PermanentPutACounterOfTypeOnIt(permanentRef, counter) in ordinary
+// resolving collections. Waiting queries retain source reads without placement.
+// Tomb still needs removal history and its required one-land removal procedure.
+//
 // [AtEach] saves a step subscription for the rest of the game.
 // Each match queues a new body with the saved controller and typed references.
 // Cleanup, source departure, phasing and control changes do not cancel it.
@@ -7,7 +18,7 @@
 // separate results. Existing information services supply exact source LKI.
 // RON accepts CreateTrigger with AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))
 // and a nonempty ActionList in ordinary resolving bodies. No new targets are
-// declared in that body. Cyclopean Tomb still needs counter history and removal.
+// declared in that body. Cyclopean Tomb still needs removal history and its removal procedure.
 //
 // [UntilPermanentHasCounter] saves one watched visit and its counter condition.
 // It captures layer recipients and values through the shared resolving service.
@@ -19,7 +30,7 @@
 // RON accepts ForAsLongAsPermanentHasACounterOfTypeOnIt(EachablePermanent,
 // counter) in ordinary resolving singular layer actions. The duration binds
 // EachablePermanent to the recipient. SetLandType uses shared subtype layers.
-// Cyclopean Tomb's activated clauses execute. Its history and upkeep removal
+// Cyclopean Tomb's activated clauses execute. Its removal history and upkeep removal
 // still require separate contracts.
 //
 // [GraveyardCreatureEnchantTarget] declares a graveyard creature enchant rule.

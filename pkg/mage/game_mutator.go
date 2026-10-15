@@ -718,6 +718,10 @@ func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int
 }
 
 func (g *Game) addCountersWithReplacementLimit(perm *Permanent, ct CounterType, n int, sourceID uuid.UUID, onEntry bool, limit *int) {
+	g.addCountersFrom(perm, ct, n, sourceID, onEntry, limit, g.counterPlacementSource(sourceID))
+}
+
+func (g *Game) addCountersFrom(perm *Permanent, ct CounterType, n int, sourceID uuid.UUID, onEntry bool, limit *int, source capturedPermanent) {
 	if perm == nil || n <= 0 {
 		return
 	}
@@ -759,11 +763,16 @@ func (g *Game) addCountersWithReplacementLimit(perm *Permanent, ct CounterType, 
 	}
 	if amount > 0 {
 		target.AddCounter(aca.CounterType(), amount)
+		g.recordCounterPlacement(source, target, aca.CounterType(), amount)
 	}
 }
 
 // AddCountersTogether prepares each placement before it changes any counters.
 func (g *Game) AddCountersTogether(perms []*Permanent, ct CounterType, n int, sourceID uuid.UUID) {
+	g.addCountersTogetherFrom(perms, ct, n, sourceID, g.counterPlacementSource(sourceID))
+}
+
+func (g *Game) addCountersTogetherFrom(perms []*Permanent, ct CounterType, n int, sourceID uuid.UUID, source capturedPermanent) {
 	if n <= 0 {
 		return
 	}
@@ -794,9 +803,11 @@ func (g *Game) AddCountersTogether(perms []*Permanent, ct CounterType, n int, so
 		}
 	}
 	for _, p := range prepared {
-		if target := g.FindPermanent(p.id); target != nil && target.incarnationID == p.incarnation {
+		if target := g.FindPermanent(p.id); target != nil && !target.PhasedOut && target.incarnationID == p.incarnation {
 			live := g.MutablePermanent(p.id)
-			live.AddCounter(p.counter, cappedCounterAmount(live, p.counter, p.amount))
+			amount := cappedCounterAmount(live, p.counter, p.amount)
+			live.AddCounter(p.counter, amount)
+			g.recordCounterPlacement(source, live, p.counter, amount)
 		}
 	}
 }

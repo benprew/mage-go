@@ -85,7 +85,8 @@ func (e *addCountersEffect) Apply(ctx *EffectContext) error {
 			amount = min(amount, room)
 		}
 		if amount > 0 {
-			ctx.Game.AddCountersWithReplacement(perm, e.ct, amount, ctx.SourceID, false)
+			source, _ := (sourceRef{}).informationIdentity(ctx)
+			ctx.Game.addCountersFrom(perm, e.ct, amount, ctx.SourceID, false, nil, source)
 		}
 	}
 	return nil

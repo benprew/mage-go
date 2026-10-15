@@ -23356,4 +23356,46 @@ and exact source information after return and cleanup. `TestRONPersistentStep*`
 covers real Tomb subscription projections, saved target visits, phasing/return,
 countering, pending clones, declaration boundaries, inventory roles and failed
 activation payment. No replacement ordering or simultaneous-operation contract
-changes. Complete Tomb counter history and removal remain unsupported.
+changes. Complete Tomb removal history and its procedure remain unsupported.
+
+### Exact-source counter placement history
+
+`PermanentsGivenCountersBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet`
+is a pure query over exact source and recipient visits and counter kind. Its
+source must support typed information identity. Definition validation checks the
+source, candidates, bindings and counter bounds. The query uses saved identity
+without requiring a departed source to be available for an action. Waiting delayed
+source inspection retains explicit source reads without performing placements.
+
+CR 122.1 makes same-kind counters interchangeable. History records that a source
+put counters on a permanent, not ownership of individual counters. CR 122.6
+includes entry placements. CR 400.7 prevents history inheritance after return;
+CR 122.2 does not classify departure as counter removal. Cyclopean Tomb's WotC
+ruling of 2008-08-01 confirms the exact source instance and that a later removed
+mire counter need not have come from that source. No removal procedure is added
+by this contract.
+
+Shared single, bounded, batch, entry and payment counter services record only
+actual positive placements after replacements and caps, using the final recipient
+and counter kind. Typed resolving effects capture the source before replacement
+choices; departure or return during those choices cannot replace that visit.
+Existing raw ID APIs snapshot a currently present or entering source at the call.
+Direct `Permanent.AddCounter` is a low-level bypass without attribution.
+
+Batch replacement preparation precedes all counter changes and history writes.
+A recipient that phases out before commit receives neither counters nor history,
+matching the single placement rule. Existing replacement order, choices and caps
+remain. History is private to the zone system and copied for game clones and
+payment trials. Failed payment preparation or commit cannot publish trial history.
+Cleanup, counter removal, source control changes, ability loss and phasing do not
+clear history. Phased recipients are absent from results until phase-in; return
+creates a different visit for either side.
+
+`TestCounterPlacementHistoryLifecycle`, `Declarations`, `Replacements`, `Waiting`
+and `EntryAndTransaction` cover identity, source departure/return, recipient
+return, phasing, cleanup, counter-kind separation, candidate filters, saved
+references, pure queries, entry, clones, payment rollback, prevented/zero/capped
+placements, redirection and replacement-time source/recipient transitions.
+`TestRONCounterPlacementHistory*` covers real Tomb projections, announcement and
+resolution timing, illegal targets, stack copies, pending clones, invalid syntax,
+unsupported contexts and inventory roles. Full Tomb remains unsupported.

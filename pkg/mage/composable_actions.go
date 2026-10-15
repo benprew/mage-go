@@ -1162,7 +1162,8 @@ func (e *counterEachEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	amount := e.amount.resolveValue(ctx)
-	ctx.Game.AddCountersTogether(selected, e.counter, amount, ctx.SourceID)
+	source, _ := (sourceRef{}).informationIdentity(ctx)
+	ctx.Game.addCountersTogetherFrom(selected, e.counter, amount, ctx.SourceID, source)
 	return nil
 }
 

@@ -54,7 +54,8 @@ func (e *boundedCountersEffect) Apply(ctx *EffectContext) error {
 	}
 	chosen = min(chosen, max(e.limit-live.Counters[e.counter], 0))
 	if chosen > 0 {
-		ctx.Game.addCountersWithReplacementLimit(live, e.counter, chosen, ctx.SourceID, false, &e.limit)
+		source, _ := (sourceRef{}).informationIdentity(ctx)
+		ctx.Game.addCountersFrom(live, e.counter, chosen, ctx.SourceID, false, &e.limit, source)
 	}
 	return nil
 }

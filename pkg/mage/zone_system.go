@@ -26,6 +26,7 @@ type ZoneSystem struct {
 	phaseInformation       map[uuid.UUID]*PermanentLKI
 	// Delayed abilities can read an old attachment after turn cleanup.
 	departedAttachments      map[uuid.UUID]capturedPermanent
+	counterPlacements        map[counterPlacementKey]bool
 	departedCounters         map[uuid.UUID][core.NumCounters]int
 	castFromExilePermissions []CastableFromExilePermission
 	exileInsteadCards        map[uuid.UUID]uuid.UUID
@@ -43,6 +44,7 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	clone := ZoneSystem{
 		departedAttachments: maps.Clone(zs.departedAttachments),
 		departedCounters:    maps.Clone(zs.departedCounters),
+		counterPlacements:   maps.Clone(zs.counterPlacements),
 	}
 
 	// Share battlefield permanents copy-on-write. Cap-limiting forces appends in

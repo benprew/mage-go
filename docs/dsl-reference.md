@@ -17717,4 +17717,30 @@ Cyclopean Tomb's five records supply the real source-death event and persistent
 upkeep declaration in `TestRONPersistentStepTomb`. Only the unsupported removal
 body is replaced by a life-gain probe in these tests. This is subscription
 coverage, not complete Tomb gameplay. Complete records still reject at
-`AllCountersOfTypeFromAPermanent`; source history and removal need separate work.
+`AllCountersOfTypeFromAPermanent`; removal history and its procedure need separate work.
+
+### RON counter placement history
+
+`PermanentPutACounterOfTypeOnIt(permanentRef, counter)` selects current permanent
+visits that received a positive placement of that counter kind from the exact
+source visit. It is supported in ordinary resolving contextual collections,
+including `And` and `Or`. Permanent references use existing lexical bindings;
+counter kinds use the strict permanent counter grammar. Missing bindings,
+malformed arguments, payment declarations, static layers, entry replacements
+and draw replacement bodies reject.
+
+The adapter lowers to
+`PermanentsGivenCountersBy(source PermanentRef, counter core.CounterType, candidates PermanentSet) PermanentSet`.
+The engine records final placements after replacements and counter caps. Removal
+of counters does not remove history. Cleanup, source departure, control changes
+and phasing preserve it. Phased recipients do not match until phase-in. Returned
+sources and recipients cannot inherit earlier visits. Copies, delayed frames,
+game clones and payment trials keep their existing identity and isolation rules.
+Raw ID placement APIs can identify only a current source; typed resolving effects
+carry the saved source visit. Direct `Permanent.AddCounter` remains a low-level
+bypass and cannot establish source history.
+
+`TestRONCounterPlacementHistoryTomb` projects all five real Tomb records: the
+activation and placement filter are unchanged; the unsupported removal operation
+is replaced by a tap probe and its removal-history filter is omitted. These are
+history tests, not complete card coverage. Full records continue to reject.
