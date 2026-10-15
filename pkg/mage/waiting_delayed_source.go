@@ -438,6 +438,7 @@ func (e *untilEffect) refersToSourcePermanent() bool {
 		return m != nil && (permanentRefReadsSourcePermanent(m.subject) ||
 			permanentSetReadsSourcePermanent(m.subjects) ||
 			playerRefReadsSourcePermanent(m.controller) ||
+			playerRefReadsSourcePermanent(m.triggerPlayer) ||
 			resolutionValueReadsSourcePermanent(m.power) ||
 			resolutionValueReadsSourcePermanent(m.toughness))
 	})

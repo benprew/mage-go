@@ -2,7 +2,6 @@ package ron
 
 import (
 	"github.com/benprew/mage-go/pkg/mage"
-	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 func compileLastingAbilityGrants(n Node, ctx scope, subject permanentReferencePlan, parts []Node) (effectFactory, error) {
@@ -27,13 +26,11 @@ func compileLastingAbilityGrants(n Node, ctx scope, subject permanentReferencePl
 		for _, ability := range abilities {
 			switch ability.Name {
 			case "TriggerA":
-				build, err := compileRecipientUpkeepAbility(ability)
+				build, err := compileLastingUpkeepGrant(ability, ctx, subject)
 				if err != nil {
 					return nil, err
 				}
-				builds = append(builds, func(bindings instanceBindings) mage.Effect {
-					return mage.Until(core.Indefinite, mage.TriggeredAbilityModification(subject.build(bindings), build()))
-				})
+				builds = append(builds, build)
 			case "If":
 				if err := arity(ability, 2); err != nil {
 					return nil, err

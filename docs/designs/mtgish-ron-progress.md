@@ -8,15 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **922 accepted / 64 rejected names**
 (986 total), **2,306 compiled / 139 rejected records** (2,445 total).
-The latest slice is **NON-AURA-ENTRY-RESULT**.
-RON lowers departed-Aura returns as non-Aura enchantments and supplies a local
-exact entrant to later instructions. Mage owns entry type/subtype changes,
-replacement reads, exact visits, layer order and clone state. Copied Aura
-abilities can return physical nonenchantment cards with the correct entry type.
-Takklemaggot's fallback return fragment now executes; enchant removal and
-retained-player grants still reject. Estimated and actual gain: zero names and
-records. No accepted record regressed. No RON source changed.
-Build, vet, short/full tests, focused tests and lint pass.
+The latest slice is **RETAINED-PLAYER-UPKEEP-GRANT**.
+RON lowers lasting acquired upkeep triggers with a bound outer player.
+Mage captures that player and the exact recipient at grant resolution.
+The new ability uses its recipient for ThisPermanent and You; its event
+bindings remain local. Control changes, phasing, return, source LKI, waiting
+queries, repeated grants, stack copies and clones have contract tests.
+Takklemaggot's retained-player grant fragment executes; enchant removal still
+rejects. Estimated and actual gain: zero names and records. No accepted record
+regressed. No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,10 +25,11 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Enchant removal and retained-player grants:** Takklemaggot now has both
-   return forms and an exact successful entrant. It still needs enchant ability
-   removal and a grant that retains the dead host's controller. Reassess a shared
-   grant prerequisite first. Eventual one name / one record.
+1. **Enchant ability changes:** Takklemaggot now has both return forms, an exact
+   successful entrant and its retained-player upkeep grant. Its remaining
+   enchant removal must combine with that grant. Compare shared enchant
+   services with Animate Dead's graveyard enchant and replacement grant needs.
+   Eventual one Takklemaggot name / one record; no Animate Dead unlock yet.
 2. **Counter snapshots and exact exile-entry continuations:** Tawnos's Coffin
    needs saved counters, a successful single-card entrant and source lifecycle
    lowering. Estimate zero immediate gains for either prerequisite; eventual one name.
@@ -19716,3 +19717,141 @@ Commit title: `feat(ron): implement non-Aura entry results`.
 Signing is disabled for this invocation, consistent with the prior ledger's
 interactive signing-key limitation. Repository signing configuration is unchanged.
 This run stops after NON-AURA-ENTRY-RESULT.
+
+## 2026-10-15 — RETAINED-PLAYER-UPKEEP-GRANT
+
+### Baseline and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with valid collection diagnostics:
+2,306 compiled / 139 rejected records and 922 accepted / 64 rejected names.
+This was expected atomic collection rejection, not a build or test failure.
+The ledger's first ranked candidate was evaluated first. Complete records and
+nested forms were read for all three candidates; reprints count once.
+
+| Candidate | Distinct affected cards | Estimated immediate full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Retained-player acquired upkeep grant, from candidate 1 | Takklemaggot (one record) | 0 | Enchant ability removal and its combination with AddAbility remain. Captured-player grants unblock its final fallback trigger; the shared engine filter can serve other event types without donor bindings in recipient bodies. | Small to medium: one typed capture extension, one RON adapter, native and real-record fragment tests |
+| Saved counter snapshot, candidate 2 | Tawnos's Coffin (one record) | 0 | Exact single exiled-card entry/result, noted-counter entry application, source leave/untap event alternatives remain. Snapshots feed that entry and the attached Aura continuation. | Medium to large: typed counter result, departed-target/LKI capture, delayed and entry integration |
+| Copiable ability grants, candidate 3 | Vesuvan Doppelganger (six records) | 0 | Recursive resolving copy effects, retained ThisAbility and target declarations remain. The grant must become part of copiable values and survive repeated copying. | Large: copy definition/provenance, ability identity, recursion and cloning |
+
+Candidate 1 was dependency-ready and provided the smallest complete unblocking
+prerequisite. No compared prerequisite offered an immediate multi-card unlock.
+This run implements only the retained-player grant capability, not enchant
+mutation or either other candidate. It keeps event-player selection separate
+from recipient context and can complete in one run.
+
+All local rulings for these three cards were read through the rulings index.
+`go run ./cmd/fetchset -check -card <name>` passed for each. All entries are
+Wizards rulings; no Scryfall notes were treated as rules. Relevant shared rules
+are CR 400.7, 603.2b/3a, 611.2c/d, 613.1f and 702.26. No source defect or
+environment failure was found. No RON source changed, so no vocabulary refresh
+was needed. Targeted vocabulary queries covered AddAbilityVariable,
+LosesAbility, NoteCountersOnPermanent, AtTheBeginningOfAPlayersUpkeep,
+SinglePlayer and ControllerOfDeadPermanent.
+
+### Supported contract and reuse boundary
+
+Mage adds
+`TriggeredAbilityForPlayerModification(subject PermanentRef, player PlayerRef, ability *GenericTriggered) ContinuousModification`.
+With `Until(Indefinite, ...)`, it saves the player and exact recipient when the
+grant resolves. A missing player makes no grant. Definition validation rejects
+nil/unbound players and retains existing subject/trigger/body validation. The
+captured UUID filter is combined with existing trigger conditions without
+changing the prototype. Repeated installations receive independent filters and
+identities. Mage reuses layer capture, exact visits, granted trigger installation,
+event capture, APNAP stacking, ability removal, phasing, delayed saved frames
+and game cloning. Waiting delayed-source inspection now includes the typed
+player's source reads; it never installs a grant.
+
+RON accepts ordinary resolving
+`CreatePermanentLayerEffect(permanentRef, [AddAbility([TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(playerRef)), body)])])`.
+Other supported, bound player references read the outer action scope at grant
+resolution. The pre-existing strict `You` form retains its recipient-controller
+meaning at event time. Every granted body starts with a fresh permanent scope:
+ThisPermanent and You use the recipient, and Trigger_ThatPlayer reads the new
+upkeep event. Donor bindings cannot escape into the body. Existing lists can
+combine these grants with supported conditional untap grants. Static Aura-host
+grants keep their existing compiler path. Entry/draw replacements, unsupported
+events and mixed enchant-removal/grant lists still reject.
+
+No new cost rollback, replacement ordering or simultaneous-operation policy is
+needed: this capability installs a characteristic effect after resolution.
+Existing callers, Go cards, generators and the broad DSL remain. No fallback,
+partial registry, name branch, global last-action state or declaration panic
+was added. The runtime/removal gates remain closed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation at the missing
+TriggeredAbilityForPlayerModification signature. RON tests then failed at the
+unsupported granted upkeep player reference ControllerOfDeadPermanent. Both
+passed after implementation. A later synthetic recipient test initially used
+a nonexistent test call; it was corrected to ActivateAbilityByIndex without
+changing an engine rule.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Takklemaggot LEG:256 fallback fragment | TestRONRetainedPlayerGrant | Real required choice and non-Aura return followed by its unchanged acquired trigger/body; dead-host controller differs from host owner and Aura controller; correct upkeep player and damage; control, phasing/cycle, leave/return, pending clone and producer stack copy |
+| Recipient versus captured player | TestRONRetainedPlayerGrantRecipient | ControllerOfPermanent(ThisPermanent) is saved at installation; after control changes, the old controller's upkeep grants life to the recipient's current controller through You |
+| Invalid RON | TestRONRetainedPlayerGrantInvalid | Missing death producer, tuple spelling of the strict death-player symbol, absent attachment scope and donor binding escape into the new body reject |
+| Native lifecycle and isolation | TestRetainedPlayerGrant | Event-player binding, change of control, phasing/cycle, return, later ability removal, queued departure, repeated independent grants and installed game clone |
+| Native declaration validation | TestRetainedPlayerGrantDeclarations | Nil/unbound retained players reject before gameplay |
+| Native delayed source contract | TestRetainedPlayerGrantWaitingLKI | Exact saved recipient, donor departure, source-controller LKI, pure repeated waiting queries and recipient You |
+
+The real-record probe removes only the unsupported LosesAbility modification
+from its test AST. It retains the actual return, player capture, new trigger
+and damage body. This is fragment gameplay evidence, not a full-card claim.
+The unchanged production record still rejects at
+`LEG.lines.ron:256:874: unsupported lasting ability modification (LosesAbility)`.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONRetainedPlayerGrant' -count=1`
+  and `go test ./pkg/mage -run '^TestRetainedPlayerGrant' -count=1`: pass.
+- `make build` and `go vet ./...`: pass after the completed implementation.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass for the full repository.
+- `make lint`: pass, 0 issues. Automatic import grouping in the new private
+  condition file was reviewed; no unrelated files changed.
+- `go test ./... -short -count=1`: pass after lint, as required by the native
+  engine skill; this includes the focused suites and preserved RON callers.
+- `git diff --check`: pass, including the final API documentation and ledger.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 for atomic
+  collection rejection. A parsed comparison asserts that the entire report is
+  identical to the fresh baseline, including every rejected record and message.
+  Counts remain 922 accepted / 64 rejected names and 2,306 compiled / 139
+  rejected records. No accepted record regressed. There is no environment blocker.
+
+Actual gain: **0 names / 0 records**, equal to the estimate. Gameplay evidence
+increases for retained-player acquired upkeep grants and Takklemaggot's fallback
+fragment; complete-card gameplay coverage does not increase. Complete collection
+gameplay, runtime loading, startup, Go-card/generator deletion and unused DSL
+cleanup remain incomplete. No removal gate was reached.
+
+Changed files: `pkg/mage/composable_continuous.go`, `retained_event_player.go`,
+`retained_player_grant_test.go`, `waiting_delayed_source.go`, `doc.go`;
+`pkg/mage/dsl/ron/lasting_grant.go`, `retained_player_grant.go`,
+`retained_player_grant_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Enchant ability mutation and mixed removal/grant lowering. Takklemaggot now
+   has its retained-player grant. Compare a shared enchant service with Animate
+   Dead before selection. Takklemaggot's eventual gain is one name / one record;
+   Animate Dead also needs graveyard attachment, replacement enchant grants,
+   exact entrant linkage and delayed source departure. Do not silently include
+   enchant removal in non-Aura entry.
+2. Coffin counter snapshots, followed by exact single exile-entry results and
+   source leave/untap adapters. Zero gains for snapshots alone; eventual one
+   name / one record.
+3. Copiable ability grants for Vesuvan Doppelganger, followed by recursive
+   resolving copies and ThisAbility retention. Zero gains for grants alone;
+   eventual one name / six records.
+
+Commit title: `feat(ron): implement retained-player upkeep grants`.
+Signing is disabled for this invocation, consistent with the prior ledger's
+interactive signing-key limitation. Repository signing configuration is unchanged.
+This run stops after RETAINED-PLAYER-UPKEEP-GRANT.

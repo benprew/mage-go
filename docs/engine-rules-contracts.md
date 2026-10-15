@@ -23045,3 +23045,43 @@ and the complete-record
 `TestRONDeathResultReturnGlyph` and `TestRONDeathResultReturnInstances`.
 Existing `TestCombatTiming*` and `TestSpellCastingCondition*` retain their
 window, payment-path and definition-validation contracts.
+
+
+## Retained event player in an acquired upkeep trigger
+
+`TriggeredAbilityForPlayerModification(subject PermanentRef, player PlayerRef,
+ability *GenericTriggered) ContinuousModification` adds an event-player filter
+to a granted trigger. `Until(Indefinite, ...)` captures the typed player and
+exact recipient at resolution. The filter is combined with the prototype's
+existing conditions. An unresolved player produces no grant. Nil or unbound
+player declarations fail definition validation. The prototype is not changed.
+
+The recipient supplies the source and current controller. Its new event
+bindings remain local to the granted ability. Control changes do not change
+the captured player. Phasing suspends the grant; phase-in preserves it.
+Leave/return cannot inherit it. Ability removal follows layer order. A queued
+trigger retains its captured event after departure. Repeated grants, stack
+copies and game clones keep separate installed conditions. Waiting delayed
+queries retain source reads in the player reference without executing the
+grant. CR 400.7, 603.2b/3a, 611.2c/d, 613.1f and 702.26 apply.
+
+In ordinary resolving bodies, RON accepts
+`CreatePermanentLayerEffect(permanentRef, [AddAbility([TriggerA(
+AtTheBeginningOfAPlayersUpkeep(SinglePlayer(playerRef)), body)])])`.
+The existing `SinglePlayer(You)` form still follows the recipient's current
+controller at event time. Other supported, bound player references use the
+outer resolving scope and are captured at installation. The granted body uses
+a fresh permanent-source scope: `ThisPermanent`, `You` and `Trigger_ThatPlayer`
+refer to the recipient and new upkeep event. Donor event bindings cannot escape
+into that body. Existing AddAbility lists may combine these triggers with the
+already supported acquired conditional untap rules. Entry/draw replacements,
+other events, and mixed removal/grant modifications still reject.
+
+Evidence: native `TestRetainedPlayerGrant`, `Declarations`, `WaitingLKI` and
+RON `TestRONRetainedPlayerGrant`, `Invalid`, `Recipient`. The real Takklemaggot
+LEG:256 fallback is tested with only its unsupported enchant-removal
+modification removed from the test AST. That probe verifies the retained dead
+host controller, distinct owner/controller, returned recipient, control changes,
+phasing, return, pending clones and stack copies. This is fragment evidence;
+the unchanged complete record still rejects at `LosesAbility`. No new cost,
+replacement-ordering or simultaneous-operation policy is introduced.

@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TriggeredAbilityForPlayerModification] adds a typed event-player limit.
+// [Until] saves the player and exact recipient when the grant starts.
+// The player limit does not change when either permanent changes controller.
+// The recipient supplies This and You. Event bindings stay in the new ability.
+// Phasing suspends the grant. Return cannot inherit it. Clones stay separate.
+// Waiting queries retain source reads without installing a grant.
+// RON accepts SinglePlayer(playerRef) in lasting acquired upkeep triggers.
+// You retains its current-recipient meaning. Other references are saved when
+// the grant resolves. Donor bindings cannot enter the granted action body.
+// Takklemaggot's retained-player grant executes; enchant removal still rejects.
+//
 // [EnterWithoutSubtype] removes one subtype from an exact entrant in layer 4.
 // Entry replacements read the removal. Copy choices cannot erase it.
 // Later layer effects use timestamp order. Phasing preserves the visit.
@@ -11,7 +22,7 @@
 // That return and attached returns can supply a local exact entrant result.
 // Shared [ReturnCardToBattlefieldInto] clears failed results and saves visits.
 // Delayed bodies and clones keep separate frames. Takklemaggot's return now
-// executes; its enchant removal and retained-player upkeep grant still reject.
+// executes; its enchant removal still rejects.
 //
 // [ChoosePermanentForPlayerOrElse] selects a branch after a required choice.
 // Shared choice rules save the chooser and exact visit. Empty results cannot

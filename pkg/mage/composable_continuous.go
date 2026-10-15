@@ -49,6 +49,8 @@ type layerModification struct {
 	ability               *ActionDefinition
 	trigger               *GenericTriggered
 	triggerGrant          bool
+	triggerPlayer         PlayerRef
+	retainTriggerPlayer   bool
 }
 
 func (*layerModification) continuousModification()            {}
@@ -195,6 +197,12 @@ func TriggeredAbilityModification(subject PermanentRef, ability *GenericTriggere
 	return &layerModification{subject: subject, trigger: ability, triggerGrant: true, layer: LayerAbility}
 }
 
+// TriggeredAbilityForPlayerModification saves the event player when the grant starts.
+// The recipient supplies the source and controller of the granted ability.
+func TriggeredAbilityForPlayerModification(subject PermanentRef, player PlayerRef, ability *GenericTriggered) ContinuousModification {
+	return &layerModification{subject: subject, trigger: ability, triggerGrant: true, triggerPlayer: player, retainTriggerPlayer: true, layer: LayerAbility}
+}
+
 // ActivatedModesModification gives a permanent a modal activated ability in layer 6.
 // Install it with Until, UntilSourceLeaves, or While. Each mode declares its targets.
 func ActivatedModesModification(subject PermanentRef, costs CostGroup, options ...ModalActivationOption) ContinuousModification {
@@ -279,6 +287,9 @@ func (m *layerModification) inspectDefinition() definitionNode {
 	}
 	if m.triggerGrant {
 		n.children = append(n.children, definitionEdge{"trigger", grantedTriggerDefinition{m.trigger}})
+	}
+	if m.retainTriggerPlayer {
+		n.children = append(n.children, definitionEdge{"event-player", m.triggerPlayer})
 	}
 	if m.ability != nil {
 		n.children = append(n.children, definitionEdge{"ability", grantedActivationDefinition{m.ability}})
@@ -426,6 +437,15 @@ func (m *layerModification) captureMembers(ctx *EffectContext, members []*Perman
 		}
 		if m.ability != nil || m.trigger != nil {
 			v.ability, v.trigger, v.grantID = m.ability, m.trigger, uuid.New()
+		}
+		if m.retainTriggerPlayer {
+			player, ok := m.triggerPlayer.resolvePlayer(ctx)
+			if !ok || v.trigger == nil {
+				continue
+			}
+			ability := *v.trigger
+			ability.AndConditionData(retainedEventPlayer{player})
+			v.trigger = &ability
 		}
 		if m.layer == LayerPT {
 			if !m.isSwitch {
