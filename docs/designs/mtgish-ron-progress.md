@@ -8,14 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **922 accepted / 64 rejected names**
 (986 total), **2,306 compiled / 139 rejected records** (2,445 total).
-The latest slice is **GRAVEYARD-HAND-SUCCESS**.
-RON lowers required PutGraveyardCardIntoHand with adjacent If, Unless or IfElse
-payment-result branches in ordinary resolving bodies. Native movement selects
-one branch only after the exact graveyard card reaches its owner's hand.
-Nested instructions, waiting frames, stack copies and clones keep local results.
-Puppet Master's complete LEG record now executes, including its successful-return
-payment gate and exact departed-Aura visit. Estimated and actual gain: one name
-and one record. No accepted record regressed. No RON source changed.
+The latest slice is **REQUIRED-LEGAL-AURA-CHOICE**.
+RON lowers required permanent choices with adjacent payment-result branches.
+The success branch receives an exact local choice. Aura host-death choices can
+use the saved departed Aura's legal hosts with the resolving entry controller.
+Mage reuses required choice, attachment legality and per-resolution bindings.
+Takklemaggot's choice and attached-return fragment now execute; non-Aura return
+and retained-player grants still reject. Estimated and actual gain: zero names
+and records. No accepted record regressed. No RON source changed.
 Build, vet, short/full tests, focused tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -25,9 +25,9 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Required legal attachment choice:** Takklemaggot has native explicit
-   attachment and departed-Aura capture. Still needs CanBeEnchantedByDeadGuest,
-   required choice success/failure, non-Aura entry and a retained-player grant.
+1. **Non-Aura return and exact entrant:** Takklemaggot has required legal
+   choice, native explicit attachment and departed-Aura capture. Still needs
+   non-Aura entry, an exact entrant result and a retained-player grant.
    Estimate zero immediate gains for choice alone; eventual one name / one record.
 2. **Counter snapshots and exact exile-entry continuations:** Tawnos's Coffin
    needs saved counters, a successful single-card entrant and source lifecycle
@@ -19381,3 +19381,154 @@ and its tests, `optional_payment.go`, `departed_aura_card_test.go`,
 Commit title: `feat(ron): implement graveyard hand success continuations`.
 Signing is disabled for this invocation because the preceding ledger records an interactive signing-key requirement. Repository signing configuration is unchanged.
 This run stops after GRAVEYARD-HAND-SUCCESS.
+
+## 2026-10-15 — REQUIRED-LEGAL-AURA-CHOICE
+
+### Selection and dependencies
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1
+for atomic collection rejection: 922 accepted / 64 rejected names,
+2,306 compiled / 139 rejected records. This was no build or environment failure.
+The complete RON records and all local rulings were read for each candidate.
+Reprints count once in the name column.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Required legal attachment choice | Takklemaggot | 0 now; eventual 1 name / 1 record | Non-Aura entry and a retained-player ability grant remain. Completes required choice success/failure and exact departed-Aura legality, with a shared typed choice continuation. | Small to medium |
+| Saved counters and single exile entry | Tawnos's Coffin | 0 for either prerequisite; eventual 1 name / 1 record | Counter snapshots, successful exact entrant and source leave/untap lifecycle adapters remain. Enables counter-preserving linked returns and later Aura entry. | Medium for counters; larger for the full continuation |
+| Copy-effect ability grants | Vesuvan Doppelganger | 0 for grants alone; eventual 1 name / 6 records | Recursive resolving copies and ThisAbility retention remain. Enables copiable trigger identity and independent repeated grants. | Large |
+
+Candidate #1 was dependency-ready and was the smallest complete prerequisite.
+All three candidates have one distinct card and no immediate full-card gain;
+the compared alternatives offer no dependency-ready multi-card completion.
+This implements the whole required-choice/legality context, rather than starting
+Coffin's larger counter/entry/lifecycle chain or Doppelganger's recursive copies.
+The native required-choice continuation is reusable outside Aura returns.
+The implement-engine skill supplied the native workflow. No removed card skill
+was used. No Go card definition supplied requirements or fallback execution.
+
+`fetchset -check` passed for Takklemaggot, Tawnos's Coffin and Vesuvan
+Doppelganger. Their complete local files contain wotc rulings; no scryfall notes
+were treated as wotc rulings. Takklemaggot's 2009-10-01 ruling requires the dead
+creature's controller to choose a legal host at resolution, even if another
+player controls it. Shroud is legal and protection from black is illegal.
+The 2008-05-01 ruling keeps the Aura's prior controller on return.
+Rules read: CR 303.4, 400.7 (especially 400.7f), 608.2d–f and 701.3.
+No source defect was found or corrected. No RON source changed; the vocabulary
+snapshot does not need a refresh.
+
+### Contract and reuse boundary
+
+- Native signatures:
+  `ChoosePermanentForPlayerOrElse(player PlayerRef, subjects PermanentSet, result *PermanentChoiceBinding, chosen, notChosen ResolvingEffect) ResolvingEffect`;
+  `LegalHostsForAuraCard(card CardRef, controller PlayerRef, hosts PermanentSet) PermanentSet`.
+- RON accepts `PlayerMustCost(playerRef, ChooseAPermanent(collection))` with
+  adjacent `If`, `Unless` or `IfElse` and strict `CostWasPaid` / `CostWasntPaid`.
+  Written branches must be nonempty. Only ordinary resolving contexts lower.
+  Entry and draw replacements reject. The new singular and player-keyed choice
+  exist only in the success branch. Nested choices restore outer scope. Neither
+  the result condition nor the new choice escapes the adjacent continuation.
+- In an Aura host-death body, exactly
+  `And([collection, CanBeEnchantedByDeadGuest])` filters against the exact captured
+  departed-Aura card with the resolving controller as its entry controller.
+  The second operand must be a strict symbol. Other forms and contexts reject.
+- Mage owns required choice, saved chooser, exact visits, fallback answers,
+  attachment legality, branch execution, frames and cloning. RON owns spelling,
+  context, branch scope and fresh instance bindings. The choice syntax spends
+  no resources and adds no cost transaction or rollback policy.
+- Shared `ChoosePermanentForPlayer` supplies required choices and clears empty
+  results. `PermanentChosenIn` reads the exact visit. The new branch reads
+  presence, never LKI, to decide success. Shared attachment checks read a
+  prospective permanent without entry replacements, movement or events.
+  The explicit entry service rechecks legality when the selected card enters.
+  The owner, chooser and entry controller remain distinct.
+- Shroud and hexproof permit this non-target choice. Protection, enchant limits,
+  enchantment prohibitions and phasing apply. Stale or missing Aura visits,
+  tokens and non-Aura cards supply no legal hosts. A full phase cycle preserves
+  a host visit. Return cannot substitute a new saved host or Aura visit.
+- Waiting queries preserve source reads and captured cards without choices or
+  movement. Stack copies and clones retain separate resolution frames.
+  Existing LKI and replacement ordering are unchanged. No global action-result
+  slot, game-time declaration panic or partial production registry was added.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests first failed compilation at the two missing signatures, after
+fixture API corrections. RON tests failed at the unsupported required
+ChooseAPermanent cost, including the real LEG record fragment. Both pass after
+implementation. The chooser fixture embeds BasePlayer to preserve the engine's
+zone-visit protocol. The delayed fixture uses the resolving controller rather
+than a live controller lookup on a departed source. No engine behavior was
+expanded to accommodate those fixtures.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Takklemaggot LEG:256, required-choice and attached-return fragment | `TestRONRequiredPermanentChoice` | Actual record's chooser, legal filter and success return; owner/controller separation, choice only at resolution, required choice among both players' creatures, shroud, protection, no host, phased host, stale Aura, copy and clone isolation |
+| Native legal-host contract | `TestAuraHostChoice`, `TestAuraHostChoiceController` | Exact Aura visit, missing/stale card, non-Aura, current type, shroud/hexproof/protection, enchant prohibition, phasing/cycle, prospective controller distinct from owner and chooser, no entry side effects, repeated empty choice cannot reuse success |
+| Native declaration and delayed frames | `TestAuraHostChoiceInvalid`, `TestAuraHostChoiceWaiting` | Nil/unbound declarations and absent branches reject; pure waiting queries, saved card/source, delayed return, independent copies and clones |
+| RON lexical scope and branch execution | `TestRONRequiredPermanentChoiceBranches`, `TestRONRequiredPermanentChoiceNested` | Positive/negative branch polarity, success binding, nested failure cannot overwrite outer choice, independent results, delayed old host cannot act on a returned visit |
+| RON invalid declarations | `TestRONRequiredPermanentChoiceInvalid`, `TestRONRequiredPermanentChoiceInvalidAuraFilter` | Invalid arity and conditions, empty/nonadjacent branches, escaped or failure-only choice, malformed legal filter, absent Aura/death scope, unsupported entry/draw replacement contexts |
+| Existing collection and payment assertions | `TestRONPermanentChoiceRecordsAndInventory`, `TestRONRequiredPlayerPaymentInvalid` | Full Takklemaggot still rejects at its later non-Aura entry; invalid required-choice arity still rejects |
+
+The full record remains rejected at
+`LEG.lines.ron:256:776: expected 1 positional arguments (EntersAsNonAuraEnchantment)`.
+The fragment replaces only the unsupported failure branch with a test life
+marker; it is not a complete-card gameplay claim. Non-Aura entry, successful
+entrant binding and retained-player grants remain separate capabilities.
+No production record was weakened or skipped. No Go definitions, generators or
+DSL functions were removed; cutover and removal gates remain closed.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONRequiredPermanentChoice' -count=1`:
+  pass, including a repeat after lint.
+- `go test ./pkg/mage -run '^TestAuraHostChoice' -count=1`: pass, including
+  a repeat after lint.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. The first broader run found
+  two obsolete assertions: Takklemaggot's former first diagnostic and rejection
+  of the now-supported required choice. The diagnostic now requires its next
+  blocker. The invalid payment case now checks an invalid choice arity; the new
+  positive tests establish the supported form.
+- `make test`: pass for the full repository.
+- `make lint`: pass, 0 issues. Automatic import formatting was reviewed; no
+  unrelated files changed. Focused checks passed again after formatting.
+- `go test ./... -short -count=1`: pass after lint, as required by the native skill.
+- `git diff --check`: pass, including the final ledger and API documentation.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 for atomic
+  collection rejection. Counts remain 922 accepted / 64 rejected names and
+  2,306 compiled / 139 rejected records. A parsed comparison asserts unchanged
+  accepted/rejected record sets and exactly one changed diagnostic, Takklemaggot.
+  No previously accepted record regressed. There is no environment blocker.
+
+Actual gain: **0 names / 0 records**, equal to the estimate. Gameplay coverage
+increases for the required-choice prerequisite and real Takklemaggot fragment;
+complete-card gameplay coverage does not increase. Complete collection gameplay,
+runtime loading, embedded startup, Go-card/generator deletion and unused DSL
+cleanup remain incomplete.
+
+Changed files: `pkg/mage/aura_host_choice.go` and its tests,
+`waiting_delayed_source.go`, `doc.go`; `pkg/mage/dsl/ron/required_permanent_choice.go`
+and its tests, `required_player_payment.go`, `required_player_payment_test.go`,
+`permanent_choice_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Takklemaggot's non-Aura return with an exact successful entrant binding.
+   Required legal choice, departed-Aura capture and explicit attached entry now
+   exist. Retained-player ability grants still remain after that prerequisite.
+   Estimate zero immediate gains for entry alone; eventual one name / one record.
+2. Coffin's saved counter snapshots, then exact single exile entry continuation.
+   Keep the successful entrant and counter snapshot in mage. Source leave/untap
+   lifecycle adapters remain. Estimate zero gains per prerequisite, eventual
+   one name / one record.
+3. Copy-effect ability grants for Vesuvan Doppelganger, followed by recursive
+   resolving copies and ThisAbility retention. Estimate zero gains for grants
+   alone, eventual one name / six records. Reassess shared work before selection.
+
+Commit title: `feat(ron): implement required legal Aura host choices`.
+Signing is disabled for this invocation, consistent with the prior ledger's
+interactive signing-key limitation. Repository signing configuration is unchanged.
+This run stops after REQUIRED-LEGAL-AURA-CHOICE.

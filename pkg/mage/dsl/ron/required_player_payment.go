@@ -11,6 +11,9 @@ func compileRequiredPlayerPayment(payment, continuation Node, ctx scope) (effect
 		return nil, err
 	}
 	cost := payment.Args[1]
+	if cost.Name == "ChooseAPermanent" {
+		return compileRequiredPermanentChoice(cost, continuation, player, ctx)
+	}
 	if cost.Kind != Symbol || cost.Name != "DiscardACard" {
 		return nil, unsupported(cost, "required player payment cost")
 	}

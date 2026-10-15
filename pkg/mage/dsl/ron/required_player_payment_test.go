@@ -146,7 +146,7 @@ func TestRONRequiredPlayerPaymentInvalid(t *testing.T) {
 	for _, body := range []string{
 		`PlayerMustCost`, `PlayerMustCost()`, `PlayerMustCost(You)`, `PlayerMustCost(You,DiscardACard)`,
 		strings.Replace(pair, "You,", "Ref_TargetPermanent,", 1), strings.Replace(pair, "You,", "WouldDrawACard_ThatPlayer,", 1),
-		strings.Replace(pair, "DiscardACard", "DiscardACard()", 1), strings.Replace(pair, "DiscardACard", "ChooseAPermanent(IsCardtype(Creature))", 1),
+		strings.Replace(pair, "DiscardACard", "DiscardACard()", 1), strings.Replace(pair, "DiscardACard", "ChooseAPermanent(IsCardtype(Creature),You)", 1),
 		strings.Replace(pair, "CostWasPaid", "CostWasPaid()", 1), strings.Replace(pair, "CostWasPaid", "You", 1),
 		strings.Replace(pair, "[GainLife(Integer(1))]", "[]", 1), strings.Replace(pair, "[GainLife(Integer(2))]", "[]", 1),
 		strings.Replace(pair, "IfElse", "GainLife(Integer(1)),IfElse", 1), pair + `,If(CostWasPaid,[GainLife(Integer(100))])`,

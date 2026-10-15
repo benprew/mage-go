@@ -1,5 +1,48 @@
 # Engine rules contracts
 
+## Required permanent choices and legal Aura hosts
+
+`ChoosePermanentForPlayerOrElse(player PlayerRef, subjects PermanentSet,
+result *PermanentChoiceBinding, chosen, notChosen ResolvingEffect)` makes a
+required non-target choice, then selects one branch. At least one branch is
+required. Shared choice handling saves the chooser and an exact permanent visit,
+clears an empty result, and supplies a legal fallback for a declined or invalid
+answer. Repeated calls cannot use an old result. Resolution frames, delayed
+bodies, stack copies and game clones retain separate bindings.
+
+`LegalHostsForAuraCard(card CardRef, controller PlayerRef, hosts PermanentSet)`
+reads the exact current card and filters present hosts through shared attachment
+legality. The prospective entry controller supplies enchant restrictions, not
+the card owner or chooser. It creates no entry, replacement, movement or event.
+Shroud and hexproof do not prohibit this choice. Protection, enchant limits,
+phasing, and enchantment prohibitions still apply. A missing or stale card,
+a token or a non-Aura supplies no hosts. Entry later checks legality again.
+Waiting queries retain source reads without making choices or moving cards.
+CR 303.4, 400.7f, 608.2d and 701.3 establish this contract.
+
+RON accepts `PlayerMustCost(playerRef, ChooseAPermanent(collection))` with an
+adjacent `If`, `Unless`, or `IfElse` using strict `CostWasPaid` or `CostWasntPaid`.
+Written branches must be nonempty. Only the success branch receives the new
+`TheChosenPermanent` and player-keyed choice. Nested branches restore the outer
+choice; later instructions cannot read the local result. Ordinary resolving
+contexts are supported; entry and draw replacement contexts reject.
+
+In an Aura host-death body, the collection
+`And([collection, CanBeEnchantedByDeadGuest])` uses the exact departed Aura card
+and the resolving controller as its prospective entry controller. The strict
+symbol must be the second of exactly two operands. Other legal-Aura predicate
+contexts reject. This lowers Takklemaggot's required attachment choice and its
+existing attached-return success branch. Its non-Aura return and retained-player
+ability grant still reject; the complete card has no new gameplay claim.
+Its 2009-10-01 wotc ruling specifies the dead creature's controller as chooser,
+a required legal choice at resolution, and no targeting.
+
+`TestAuraHostChoice*` covers native legality, controller separation, exact visits,
+validation, waiting queries, copies and clones. `TestRONRequiredPermanentChoice*`
+covers the real LEG record fragment, choice timing, branch polarity, local
+bindings, nested and delayed results, invalid declarations, copies and clones.
+
+
 ## Graveyard-to-hand success continuations
 
 `ReturnCardToHandOrElse(card CardRef, moved, notMoved ResolvingEffect)` moves
@@ -69,8 +112,9 @@ RON accepts these exact shapes in ordinary resolving bodies:
 
 RON owns these spellings, list shapes and lexical reference checks. Mage owns
 host visits, legality, replacements, batch entry, movement and attachment.
-`CanBeEnchantedByDeadGuest`, required creature choice, non-Aura return, noted
-counters and Coffin's single-card return remain separate adapters. Animate
+Required creature choice and `CanBeEnchantedByDeadGuest` now use the
+required-choice contract above. Non-Aura return, noted counters and Coffin's
+single-card return remain separate adapters. Animate
 Dead's graveyard attachment and later on-battlefield attachment are separate
 contexts. These complete records remain rejected; no partial registry is used.
 

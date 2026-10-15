@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ChoosePermanentForPlayerOrElse] selects a branch after a required choice.
+// Shared choice rules save the chooser and exact visit. Empty results cannot
+// supply an old choice. [LegalHostsForAuraCard] reads the exact current Aura
+// card and its prospective entry controller through shared attachment rules.
+// Shroud and hexproof permit the choice. Protection and enchant limits apply.
+// The query makes no entry or move. Entry checks legality again.
+// Waiting queries retain source reads. Copies and clones keep separate frames.
+// RON accepts required ChooseAPermanent with adjacent payment-result branches.
+// Only the success branch receives the new choice. Aura host-death bodies
+// accept And([collection, CanBeEnchantedByDeadGuest]) for the saved Aura visit.
+// This supplies Takklemaggot's choice prerequisite. Its complete record rejects.
+// Entry and draw replacement contexts need separate adapters.
+//
 // [ReturnCardToHandOrElse] moves one exact graveyard visit to its owner's hand.
 // Success selects one branch after the move. Stale visits and tokens cannot move.
 // Each call keeps its own result. Copies and clones use separate saved frames.

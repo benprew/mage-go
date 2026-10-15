@@ -292,7 +292,7 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 				continue
 			}
 			if name == "Takklemaggot" {
-				blocker = "unsupported required player payment cost (ChooseAPermanent)"
+				blocker = "EntersAsNonAuraEnchantment"
 			}
 			if err == nil || !strings.Contains(err.Error(), blocker) {
 				t.Fatalf("%s: expected %s, got %v", name, blocker, err)

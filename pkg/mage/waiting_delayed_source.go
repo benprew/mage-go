@@ -212,6 +212,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 		return permanentRefReadsSourcePermanent(s.subject)
 	case attachedAurasSet:
 		return permanentRefReadsSourcePermanent(s.host)
+	case auraCardHostSet:
+		return playerRefReadsSourcePermanent(s.controller) || permanentSetReadsSourcePermanent(s.hosts)
 	case attachmentHostSet:
 		return permanentSetReadsSourcePermanent(s.hosts)
 	case blockersOfSet:
