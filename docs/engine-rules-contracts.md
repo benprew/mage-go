@@ -22761,3 +22761,44 @@ reprints, control changes, owner/controller distinction, departure and return,
 ability removal, phasing, graveyard replacement, copies, clones, gain-to-draw
 and simultaneous source/payment departure. Existing graveyard-card source
 trigger tests retain their capture contract.
+
+## Exact death results and collective graveyard returns
+
+`CreatureDeathsInto(*PermanentSetBinding)` adds an instance-local visit result
+to `DestroyEach` or `DestroyEachWithoutRegeneration`. Existing simultaneous
+zone-change handling supplies creature status before departures and exact
+battlefield identities. Regeneration, indestructibility, phasing and replaced
+exile destinations exclude subjects. Tokens that die supply a member. Empty
+instructions clear their result. Duplicate, nil and unnamed results fail
+validation. No global last-action state is used.
+
+`ReturnChosenGraveyardCardsForEachPermanent(subjects *PermanentSetBinding,
+member *PermanentBinding, graveyard PlayerRef, filter CardFilter)
+ResolvingEffect` reads the saved visits, including absent visits. It gives each
+member a separate permanent-binding frame and restores the outer frame. Typed
+player queries, including `ControllerWhenLastBlockedThisTurn`, can read exact
+history after departure. Each member requests one required card choice from the
+specified graveyard. The resolving controller chooses; a selected card cannot be
+selected again. Tokens cannot return. Choices retain exact graveyard visits.
+All choices precede entry. Shared `enterSavedGraveyardCards` prepares entry in
+APNAP owner order, rechecks visits and restrictions, then registers all entrants
+before observations. Owner control, entry replacements, Aura legality, departure
+notifications and fresh X use the existing batch service. Cancelled entry keeps
+the card in its graveyard. Returned visits cannot replace saved choices. Game
+clones copy result slices through the existing resolution frame clone.
+
+RON accepts only the adjacent destruction/one-owner-return loop shape described
+in the DSL reference. Its member-local last-block expression uses the existing
+pure history query. Other loop bodies reject. The current Glyph record still
+rejects its casting predicate, so the extracted complete spell body establishes
+clause coverage only. There is no new payment or replacement-ordering pipeline.
+
+Rules: CR 400.7, 608.2c–f, 608.2h, 700.4, 701.8, 701.19 and 702.26b.
+Glyph of Reincarnation's two local wotc rulings require all affected creatures to
+reach their graveyards before choices and permit the newly dead cards to return.
+`TestDeathResultReturn`, `BatchAndVisits`, `HistoricalMembers` and `Declarations`
+cover exclusions, tokens, simultaneous observation, insufficient cards, failed
+entry, changed visits, history, binding restoration and clones.
+`TestRONDeathResultReturnGlyph`, `Instances`, `Contexts` and `Invalid` exercise
+the real spell body, two factories, copies, changed control, last-block history,
+target legality, return, phasing and strict declarations.

@@ -350,6 +350,8 @@ func effectReadsSourcePermanent(effect Effect) bool {
 func playerRefReadsSourcePermanent(ref PlayerRef) bool {
 	var subject PermanentRef
 	switch r := ref.(type) {
+	case lastBlockedController:
+		return permanentRefReadsSourcePermanent(r.attacker) || permanentRefReadsSourcePermanent(r.blocker)
 	case permanentControllerRef:
 		subject = r.subject
 	case permanentOwnerRef:

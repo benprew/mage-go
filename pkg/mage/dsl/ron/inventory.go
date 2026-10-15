@@ -1935,6 +1935,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ControllerOfAbility" && len(n.Args) == 1 {
 			return "ability_reference"
 		}
+		if n.Name == "ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn" && len(n.Args) == 2 {
+			return "permanent_reference"
+		}
 		if (n.Name == "ControllerOfPermanent" || n.Name == "OwnerOfPermanent") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

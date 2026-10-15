@@ -8,15 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **920 accepted / 66 rejected names**
 (986 total), **2,304 compiled / 141 rejected records** (2,445 total).
-The latest slice is **EXACT-SOURCE-GRAVEYARD-EVENT**.
-RON lowers SinglePermanent(ThisPermanent) in the graveyard event adapter.
-PermanentDies().SourceOnly() reuses departure snapshots and event captures.
-All five unchanged Lich reprints now compile and execute all five rules.
-Tests cover gain-to-draw, paid survival, unpaid loss, simultaneous source
-payment, former controller, owner bindings, return, phasing, ability removal,
-destination replacement, copies and clones. Invalid declarations reject.
-Actual gain is **one name / five records**, matching the estimate.
-No RON source changed. Build, vet, short/full tests and lint pass.
+The latest slice is **DEATH-RESULT-GRAVEYARD-RETURN**.
+RON pairs destruction with one owner-control creature-card return for each death.
+Exact death visits and local member frames retain last-block controller history.
+Shared graveyard batch entry makes all choices before simultaneous entry.
+Glyph of Reincarnation's unchanged spell body now executes; IsAfterCombat
+still blocks its complete record. Compilation coverage gains zero names/records,
+as estimated. Gameplay evidence gains its complete spell body, not full-card
+coverage. No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,14 +24,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Death-result iteration:** Glyph of Reincarnation needs exact death members
-   and per-member result frames. Block history and former controller services
-   exist; IsAfterCombat still blocks a complete-card gain.
+1. **Postcombat casting predicate:** Glyph of Reincarnation now has a complete
+   spell-body adapter. IsAfterCombat is the remaining compiler blocker; estimate
+   one complete name / one record. Establish actual combat completion history,
+   skipped combat and additional-combat timing before lowering the predicate.
 2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
    grants, recursive resolving copy changes and ThisAbility retention. The
    upkeep parser is reusable; estimate zero immediate full-card gains.
-3. **Postcombat casting predicate:** Glyph of Reincarnation needs IsAfterCombat.
-   Exact death-result iteration still blocks its complete record.
+3. **Graveyard attachment prerequisites:** Compare Animate Dead's graveyard Aura
+   and departure links with Puppet Master and Takklemaggot before sizing a shared
+   attachment lifecycle slice. Complete-card gains depend on their nested rules.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -18626,3 +18627,173 @@ Only this slice is staged. Git signing is disabled for this commit only because
 the configured key requires an interactive prompt, as recorded in the prior
 entry; repository configuration is unchanged.
 Commit title: `feat(ron): implement exact-source graveyard events`.
+
+
+## 2026-10-15 — DEATH-RESULT-GRAVEYARD-RETURN
+
+### Environment and candidate comparison
+
+The starting working tree was clean. Baseline `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Baseline loader output was
+valid JSON with expected exit 1 for collection rejection: 920 accepted / 66
+rejected unique names; 2,304 compiled / 141 rejected records, out of 2,445.
+Collection rejection was not a build or test failure.
+
+The three ranked candidates were compared from complete records, including
+nested bodies. Reprints count once:
+
+| Candidate | Distinct affected cards | Estimated complete unlocks | Other blockers | Downstream capability / effort |
+| --- | --- | --- | --- | --- |
+| Death-result iteration, ranked first | Glyph of Reincarnation (LEG:104) | 0 names / 0 records | IsAfterCombat | Exact death visits, per-member historical players, distinct graveyard choices and collective entry; medium, one supported loop body |
+| Copy-effect ability grants | Vesuvan Doppelganger (LEA, LEB, 2ED, 3ED, CED, CEI) | 0 names / 0 records | Recursive resolving copy changes and ThisAbility retention | Copiable upkeep grants and retained ability identity; large, several interacting contracts |
+| Postcombat casting predicate | Glyph of Reincarnation (LEG:104) | 0 names / 0 records before this slice | Death-result return body | Actual combat completion and additional-combat windows; small to medium, but would leave the body unsupported |
+
+Ranked candidate 1 was dependency-ready and is the unblocking prerequisite for
+the only remaining Glyph spell-body gap. All compared candidates had zero
+immediate complete-card gains. Its reusable result and batch services give more
+execution progress than the timing adapter alone, at much less effort than the
+copy recursion work. Fresh diagnostics list no additional unique consumer of
+this death-loop spelling; no multi-card unlock is inferred from frequency.
+No other slice was started.
+
+### Contract, dependencies and supported context
+
+New engine signatures:
+
+- `CreatureDeathsInto(binding *PermanentSetBinding) DestroyEachResultOption`.
+- `ReturnChosenGraveyardCardsForEachPermanent(subjects *PermanentSetBinding,
+  member *PermanentBinding, graveyard PlayerRef, filter CardFilter)
+  ResolvingEffect`.
+
+The result option is accepted by `DestroyEach` and
+`DestroyEachWithoutRegeneration`. It uses the shared simultaneous destruction
+result and existing instance-local permanent-set resolution frames. It saves
+exact battlefield visits for creatures that actually reach a graveyard, including
+tokens. Regeneration, indestructibility, phasing and replaced destinations exclude
+members. Empty results clear previous values; duplicate/nil/unnamed declarations
+reject. Clone support uses existing copied result slices.
+
+The return service saves the member list, gives each player query a separate
+permanent-binding frame, and restores outer bindings. Typed references can read
+block history after departure. The resolving controller makes one required choice
+per member, excluding previously chosen cards and tokens. Exact graveyard visits
+are saved before movement. The shared graveyard batch-entry implementation was
+factored into `enterSavedGraveyardCards`; existing All Hallow's Eve callers keep
+the same behavior. APNAP entry preparation, owner control, entry replacements,
+Aura checks, fresh X, final legality rechecks and simultaneous observations are
+reused. Failed entry does not select again. No new payment or replacement system
+was introduced. Waiting source-read detection now includes last-block references.
+
+RON accepts ordinary resolving action sequences with an adjacent
+`DestroyEachPermanent(collection)/1` or `DestroyEachPermanentNoRegen(collection)/1`
+and `ActionForEachPermanentThatDiedThisWay([return])/1`. The list must contain
+exactly one `ReturnACardFromPlayersGraveyardToBattlefield(
+IsCardtype(Creature), playerRef, [EntersUnderOwnersControl])/3`. The owner-control
+operation is a strict symbol. Other bodies and entry operations reject rather
+than acquire sequential semantics. Missing/nonadjacent producers, wrong arities,
+unbound references, escaping members, entry contexts and draw replacements reject.
+
+Within this body,
+`ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn(
+EachablePermanent, blockerRef)/2` reuses the existing pure
+`ControllerWhenLastBlockedThisTurn` engine reference. Its member must be the strict
+local symbol and its blocker a bound singular permanent reference. The member is
+not supplied by an ordinary permanent loop. Bindings are fresh per factory; plans contain no game state. RON spelling and lexical checks stay in ron; the engine has no card-name
+branch, fallback registry or global last-action state.
+
+Complete Glyph and all six Vesuvan records were read for selection. Both complete
+local ruling files were read, including every Vesuvan ruling; all entries are
+wotc rulings. Glyph's two rulings require all deaths before return choices and
+permit returning the newly dead creatures. Wall of Wood's complete fixture record
+and explicit empty ruling array were read. Rulings checks passed for Glyph of
+Reincarnation and Wall of Wood. Local LEG Oracle text confirms the destruction,
+no-regeneration, historical-controller and owner-control clauses. Relevant rules
+are CR 400.7, 608.2c–f/h, 700.4, 701.8, 701.19 and 702.26b. The targeted vocabulary
+snapshot confirms one occurrence each of the loop, last-block player expression
+and IsAfterCombat. No source defect was found. No RON changed; no vocabulary
+refresh was needed. The implement-engine skill supplied the native contract
+workflow. Cutover and deletion gates remain closed, so no Go definition,
+generator or unused DSL export was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed to compile because `CreatureDeathsInto` and
+`ReturnChosenGraveyardCardsForEachPermanent` did not exist. After correcting a
+fixture map-field assignment, RON tests failed at the exact unsupported
+`ActionForEachPermanentThatDiedThisWay` node in Glyph's unchanged spell body.
+Production changes followed these expected failures. Later fixture corrections
+set synthetic owners and moved additional block declarations before casting:
+`ExecuteBlockers` resolves the stack, so it cannot establish new history while
+leaving a test spell pending. No production rule was changed to fit a fixture.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Glyph of Reincarnation, LEG:104 spell body | TestRONDeathResultReturnGlyph | Both unchanged spell-body actions; two deaths, historical versus current control, last-block update, owner control, regeneration exclusion, phased/returned attackers, phase cycle, indestructibility, exile/replaced destination, illegal/returned target, copies and pending clone |
+| Glyph clause factory identity | TestRONDeathResultReturnInstances | Two factory instances and opposing targets/players; returned creatures have fresh visits |
+| RON declarations and contexts | TestRONDeathResultReturnInvalid, TestRONDeathResultReturnContexts | Missing/nonadjacent producer, malformed loop/body/entry, unbound and escaping members; nonresolving, entry and replacement rejection |
+| Native death results | TestDeathResultReturn | Regeneration versus no-regeneration, indestructibility, phasing, tokens, member restoration, definition validation and clone independence |
+| Native collective return | TestDeathResultReturnBatchAndVisits | All deaths and choices precede entry; complete-batch observations, insufficient cards, failed entry, changed graveyard visit, replaced death, result reset and saved-result clone isolation |
+| Native historical identity | TestDeathResultReturnHistoricalMembers | Distinct member controllers after death and blocker departure; pure source-read detection |
+| Native declarations | TestDeathResultReturnDeclarations | Nil, unnamed, duplicate and missing result; nil member/player/filter |
+| Shared existing batch service | TestGraveyardBatchEntry family and full suite | Existing simultaneous owner entry, APNAP ordering, X isolation, replacement/recheck and notification behavior remain |
+
+The full Glyph record still rejects IsAfterCombat. Its complete spell body has
+new gameplay evidence with only that casting restriction removed from the test
+AST. Compilation acceptance and full-card gameplay coverage both gain **zero**,
+matching the estimate; clause coverage gains one unique card. No other rejected
+card is claimed as supported.
+
+### Validation and collection result
+
+- Baseline `make build`: pass. Baseline
+  `go test ./pkg/mage/dsl/ron -short -count=1`: pass.
+- `go run ./cmd/fetchset -check -card "Glyph of Reincarnation"` and the same
+  command for `"Wall of Wood"`: pass.
+- `go test ./pkg/mage/dsl/ron -run '^TestRONDeathResultReturn' -count=1`:
+  pass, including real spell-body gameplay, instances, contexts and invalid forms.
+- `go test ./pkg/mage -run '^TestDeathResultReturn|^TestGraveyardBatchEntry'
+  -count=1`: pass, including shared batch regressions.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass for all engine packages.
+- `make test`: pass for the full repository.
+- Initial `make lint` found four test-slice preallocation issues. Those were
+  corrected; both focused commands above passed again. Automatic formatting only
+  reordered imports in the new engine file and was reviewed. Final `make lint`:
+  pass, **0 issues**. No unrelated file changed.
+- `git diff --check`: pass before loader validation and after final ledger edits.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 from atomic
+  collection rejection. **920 accepted / 66 rejected names**, **2,304 compiled /
+  141 rejected records**. The parsed JSON is exactly equal to baseline, including
+  every diagnostic. Glyph still reports `unsupported casting window condition
+  (IsAfterCombat)` at LEG:104:161. No accepted record regressed.
+
+There is no environment or validation blocker. Actual compilation gain is zero
+names / records, matching the estimate. Full-card gameplay gains zero; the
+complete Glyph spell body gains clause evidence. Full collection gameplay,
+runtime loading, native embedded startup, Go-card/generator removal and DSL
+cleanup remain incomplete.
+
+Changed files: pkg/mage/composable_actions.go, death_result_return.go,
+death_result_return_test.go, definition.go, doc.go, graveyard_batch_entry.go,
+waiting_delayed_source.go and zone_change_batch.go;
+pkg/mage/dsl/ron/death_result_return.go, death_result_return_test.go,
+inventory.go, optional_payment.go, permanent_loop.go and player_scope.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Only these slice files are staged. Commit signing is disabled for this commit
+only because the configured key requires an interactive prompt, as recorded in
+the preceding ledger entry; repository configuration is unchanged.
+Commit title: `feat(ron): implement death-result graveyard returns`.
+
+### Ranked next candidates
+
+1. Postcombat casting predicate for Glyph of Reincarnation. Its unchanged spell
+   body now executes. Estimate one complete name / one record, subject to fresh
+   full-record validation. Include skipped combat, end-of-combat priority and
+   additional combats; do not infer completion from step enum order alone.
+2. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero complete
+   gains until recursive resolving copies and ThisAbility retention execute.
+3. Reassess shared graveyard attachment/lifecycle prerequisites across Animate
+   Dead, Puppet Master and Takklemaggot from their complete records before sizing
+   the next multi-card capability. These records were not selected or changed.
+
+This run stops after DEATH-RESULT-GRAVEYARD-RETURN.

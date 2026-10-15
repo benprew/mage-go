@@ -33,9 +33,6 @@ type preparedGraveyardEntry struct {
 
 func (*graveyardCreatureEntryEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
-	savedX := g.resolution.X()
-	g.resolution.SetX(0)
-	defer g.resolution.SetX(savedX)
 	byOwner := make(map[uuid.UUID][]capturedCard)
 	seen := make(map[uuid.UUID]bool)
 	for _, player := range g.players {
@@ -48,7 +45,14 @@ func (*graveyardCreatureEntryEffect) Apply(ctx *EffectContext) error {
 			byOwner[player.PlayerID()] = append(byOwner[player.PlayerID()], capturedCard{id: card.ID(), visit: visit, zone: core.ZoneGraveyard})
 		}
 	}
-	prepared := make([]preparedGraveyardEntry, 0, len(seen))
+	return g.enterSavedGraveyardCards(ctx, byOwner)
+}
+
+func (g *Game) enterSavedGraveyardCards(ctx *EffectContext, byOwner map[uuid.UUID][]capturedCard) error {
+	savedX := g.resolution.X()
+	g.resolution.SetX(0)
+	defer g.resolution.SetX(savedX)
+	prepared := make([]preparedGraveyardEntry, 0)
 	for _, owner := range []Player{g.ActivePlayerObj(), g.NonActivePlayerObj()} {
 		var cards []Card
 		visits := make(map[uuid.UUID]capturedCard)

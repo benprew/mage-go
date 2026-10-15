@@ -257,6 +257,15 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			i++
 			continue
 		}
+		if (part.Name == "DestroyEachPermanent" || part.Name == "DestroyEachPermanentNoRegen") && i+1 < len(parts) && parts[i+1].Name == "ActionForEachPermanentThatDiedThisWay" {
+			effect, err := compileDeathResultReturn(part, parts[i+1], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			effects = append(effects, effect)
+			i++
+			continue
+		}
 		if (part.Name == "DestroyEachPermanent" || part.Name == "DestroyEachPermanentNoRegen") && i+1 < len(parts) && hasDestructionCount(parts[i+1]) {
 			effect, err := compileDestructionCount(part, parts[i+1], ctx)
 			if err != nil {

@@ -6,7 +6,10 @@ import (
 	"github.com/benprew/mage-go/pkg/mage"
 )
 
-type permanentLoopPlan struct{ name string }
+type permanentLoopPlan struct {
+	name        string
+	deathResult bool
+}
 
 func compilePermanentLoop(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 2); err != nil {

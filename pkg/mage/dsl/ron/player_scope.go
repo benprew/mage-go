@@ -7,6 +7,8 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	blockAttacker       *permanentReferencePlan
+	blockDefender       *permanentReferencePlan
 	lifeSubject         *lifeSubjectPlan
 	highestLife         bool
 	active              bool
@@ -98,6 +100,21 @@ type instanceBindings struct {
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
+	if n.Name == "ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn" {
+		if err := arity(n, 2); err != nil {
+			return playerReferencePlan{}, err
+		}
+		if ctx.permanentLoop == nil || !ctx.permanentLoop.deathResult || n.Args[0].Kind != Symbol || n.Args[0].Name != "EachablePermanent" {
+			return playerReferencePlan{}, problem(n, "last-block controller requires a death-result member")
+		}
+		attacker, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return playerReferencePlan{}, err
+		}
+		defender, err := compilePermanentRef(n.Args[1], ctx)
+		return playerReferencePlan{blockAttacker: &attacker, blockDefender: &defender}, err
+	}
+
 	if n.Name == "ControllerOfAbility" {
 		if err := arity(n, 1); err != nil {
 			return playerReferencePlan{}, err
@@ -214,6 +231,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.blockAttacker != nil {
+		return mage.ControllerWhenLastBlockedThisTurn(p.blockAttacker.build(bindings), p.blockDefender.build(bindings))
+	}
+
 	if p.lifeSubject != nil {
 		return mage.FromPlayer(bindings.lifeSubjects[p.lifeSubject])
 	}

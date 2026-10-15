@@ -43,6 +43,7 @@ func (g *Game) DestroyPermanents(permanents []*Permanent) {
 
 type destructionResult struct {
 	creatureDeaths int
+	visits         []capturedPermanent
 	destroyed      int
 }
 
@@ -111,11 +112,13 @@ func (g *Game) moveGraveyardBatch(destroyed, direct []*Permanent, cannotRegenera
 					g.performPermanentGraveyardAction(item.move)
 					if item.move.destination == ZoneGraveyard && item.creature {
 						result.creatureDeaths++
+						result.visits = append(result.visits, capturedPermanent{current.ID(), current.incarnationID})
 					}
 					continue
 				}
 				if item.creature {
 					result.creatureDeaths++
+					result.visits = append(result.visits, capturedPermanent{current.ID(), current.incarnationID})
 				}
 				g.putPermanentIntoGraveyard(current)
 				result.destroyed++

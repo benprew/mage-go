@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CreatureDeathsInto] saves exact creature visits from one destruction batch.
+// Regeneration, indestructibility, phasing and other destinations exclude visits.
+// Tokens that die count. Return cannot change the saved visit.
+// [ReturnChosenGraveyardCardsForEachPermanent] binds each saved member while
+// it reads a typed graveyard player. The effect controller chooses distinct
+// matching cards before any entry. Shared entry rules return the chosen visits
+// together under their owners' control. Failed entry keeps the card in its
+// graveyard. Each member frame restores the outer bindings. Clones stay separate.
+// RON pairs destruction with ActionForEachPermanentThatDiedThisWay and one
+// creature-card return under its owner's control. The last-block controller
+// expression reads EachablePermanent and one bound blocker in that body.
+// Other loop bodies reject. Glyph of Reincarnation still needs IsAfterCombat.
+//
 // [PermanentDies] with SourceOnly matches the source's move to a graveyard.
 // It permits noncreatures and retains departure owner and controller bindings.
 // Duplicate and conflicting source restrictions fail definition validation.

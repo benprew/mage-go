@@ -7662,11 +7662,10 @@ must still be live and phased in. Invalid arity, unbound references, player
 references and cross-rule reads are declaration errors. Inventory gives the
 operand a permanent-reference role even below unsupported delayed actions.
 
-Target-filter use, including Glyph of Delusion's dependent second target, is
-still unsupported. After-combat casting, death-result
-loops and the RON last-block controller expression remain separate gaps. The
+After-combat casting remains a separate gap. The death-result graveyard-return
+shape and last-block expression are documented below. The
 engine's typed `ControllerWhenLastBlockedThisTurn` supplies the controller
-history prerequisite. Glyph of Delusion and Glyph of Reincarnation still reject;
+history prerequisite. Glyph of Reincarnation still rejects;
 Glyph of Doom uses the bounded schedule described below. Tests
 of extracted clauses do not claim complete gameplay coverage for those cards.
 
@@ -17171,3 +17170,41 @@ reprints, control changes, owner/controller distinction, departure and return,
 ability removal, phasing, graveyard replacement, copies, clones, gain-to-draw
 and simultaneous source/payment departure. Existing graveyard-card source
 trigger tests retain their capture contract.
+
+## RON death-result graveyard returns
+
+An ordinary resolving action list accepts this adjacent pair:
+
+```text
+DestroyEachPermanentNoRegen(collection),
+ActionForEachPermanentThatDiedThisWay([
+  ReturnACardFromPlayersGraveyardToBattlefield(
+    IsCardtype(Creature),
+    ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn(
+      EachablePermanent, Ref_TargetPermanent),
+    [EntersUnderOwnersControl])])
+```
+
+`DestroyEachPermanent` is also accepted. Only creature visits that move to a
+graveyard in that instruction supply members, including tokens. The body must
+contain exactly one creature-card return with the strict owner-control symbol.
+Other bodies, entry operations, intervening actions, missing producers, invalid
+arities and entry/replacement contexts reject. Existing typed player references
+can supply the graveyard. The last-block expression requires the current death
+member as its first operand and a bound permanent reference as its second.
+`EachablePermanent` is local to this body; nested ordinary permanent loops do
+not supply a death-result member.
+
+The native APIs are `CreatureDeathsInto(*PermanentSetBinding)
+DestroyEachResultOption` and `ReturnChosenGraveyardCardsForEachPermanent(
+*PermanentSetBinding, *PermanentBinding, PlayerRef, CardFilter) ResolvingEffect`.
+The result uses existing permanent-set resolution frames. The return service
+reads each member's player with a separate frame, saves distinct exact graveyard
+visits, then uses shared batch entry under owner control. All destruction
+precedes all choices, and all choices precede entry. Failed entry does not cause
+another selection. Return, copies and clones cannot substitute another visit.
+The last-block player adapter reuses `ControllerWhenLastBlockedThisTurn`.
+
+Glyph of Reincarnation's unchanged spell body has gameplay evidence. Its complete
+record still rejects `IsAfterCombat`; this slice does not establish full-card
+coverage. No RON source or Go card definition changes.

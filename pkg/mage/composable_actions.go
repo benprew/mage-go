@@ -564,6 +564,7 @@ type destroyEachEffect struct {
 	subjects         PermanentSet
 	cannotRegenerate bool
 	creatureDeaths   *NumberBinding
+	deathVisits      *PermanentSetBinding
 	graveyardMoves   *NumberBinding
 	optionCount      int
 	invalidOption    bool
@@ -584,6 +585,21 @@ func CreaturesDiedThisWayInto(binding *NumberBinding) DestroyEachResultOption {
 func (creaturesDiedThisWayOption) destroyEachResultOption() {}
 func (o creaturesDiedThisWayOption) applyDestroyEachResult(e *destroyEachEffect) {
 	e.creatureDeaths = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
+
+type creatureDeathVisitsOption struct{ binding *PermanentSetBinding }
+
+// CreatureDeathsInto saves exact creature visits moved to a graveyard by this instruction.
+func CreatureDeathsInto(binding *PermanentSetBinding) DestroyEachResultOption {
+	return creatureDeathVisitsOption{binding}
+}
+func (creatureDeathVisitsOption) destroyEachResultOption() {}
+func (o creatureDeathVisitsOption) applyDestroyEachResult(e *destroyEachEffect) {
+	e.deathVisits = o.binding
 	e.optionCount++
 	if o.binding == nil {
 		e.invalidOption = true
@@ -646,7 +662,16 @@ func (e *destroyEachEffect) Apply(ctx *EffectContext) error {
 			ctx.Game.resolution.numberBindings[e.graveyardMoves] = 0
 		}
 	}
+	if e.deathVisits != nil {
+		if ctx.Game.resolution.createdTokenBindings == nil {
+			ctx.Game.resolution.createdTokenBindings = make(map[*PermanentSetBinding][]capturedPermanent)
+		}
+		ctx.Game.resolution.createdTokenBindings[e.deathVisits] = nil
+	}
 	deaths := ctx.Game.destroyPermanents(e.subjects.resolvePermanents(ctx), e.cannotRegenerate)
+	if e.deathVisits != nil {
+		ctx.Game.resolution.createdTokenBindings[e.deathVisits] = deaths.visits
+	}
 	if e.creatureDeaths != nil {
 		ctx.Game.resolution.numberBindings[e.creatureDeaths] = deaths.creatureDeaths
 	}
@@ -665,6 +690,10 @@ func (e *destroyEachEffect) inspectDefinition() definitionNode {
 		n.problem = "supply a non-nil destruction result binding"
 	} else if e.optionCount > 1 {
 		n.problem = "supply the destruction result binding only once"
+	}
+	if e.deathVisits != nil {
+		n.bindingWrite = e.deathVisits
+		n.children = append(n.children, definitionEdge{"creature visits", e.deathVisits})
 	}
 	if e.creatureDeaths != nil {
 		n.bindingWrite = e.creatureDeaths
