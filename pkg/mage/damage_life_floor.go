@@ -141,7 +141,10 @@ func (g *Game) applyDamageLifeResults(batch *damageBatch) {
 		}
 		action := &damageLifeLossAction{playerID: id, amount: losses[id], life: player.Life() + gains[id]}
 		losses[id] = 0
-		if result, ok := g.effects.ApplyReplacements(action, g).(*damageLifeLossAction); ok {
+		if !g.CanLoseLife(id) {
+			continue
+		}
+		if result, ok := g.effects.ApplyReplacements(action, g).(*damageLifeLossAction); ok && g.CanLoseLife(id) {
 			losses[id] = result.amount
 		}
 	}

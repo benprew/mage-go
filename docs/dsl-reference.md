@@ -18549,3 +18549,29 @@ return, ability removal,
 clones, shared declarations, dependencies, LKI, layer order and state actions.
 The local WotC ruling on Titania's Song supplies the summoning-sickness contract;
 CR 302.6, 611.3, 613.1d/f/g, 613.4b, 613.6–8 and 702.26 supply the shared rules.
+
+## RON life-total exchange
+
+`ExchangeLifeTotalWithPlayer(playerRef)` exchanges the current single action
+player's life total with the referenced player's total. Bare actions use `You`.
+`PlayerAction` and `PlayerActions` supply an explicit single-player scope.
+The operand uses the existing typed player grammar, including singular player
+targets. Each factory builds references from its own bindings.
+
+The adapter accepts ordinary resolving spell, activation, trigger and delayed
+bodies. It rejects malformed arity, unbound or incompatible player references,
+costs, entry operations and draw replacement bodies. Inventory gives the operand
+the `player_reference` role. RON does not implement life changes itself;
+`mage.ExchangeLifeTotals` supplies eligibility, replacement preparation,
+simultaneous ordinary life changes and events. Its contract is in
+[engine-rules-contracts.md](engine-rules-contracts.md#life-total-exchange-2026-10-15).
+
+`TestRONLifeExchangeRecord` executes the complete LEG Mirror Universe record:
+failed unpaid cast, paid casting, upkeep and opponent target restrictions,
+failed-payment preservation, tap/sacrifice costs, source departure and pending
+clone resolution. `ScopeAndCopies` covers bare and explicit player scopes and
+independent stack copies. `Delayed` covers saved targets and controller after
+source departure, current life totals at execution and clone isolation.
+`Invalid` and `Collection` cover declaration rejection,
+typed inventory, native definition validation and atomic registry rejection.
+No RON source correction or vocabulary snapshot change was required.

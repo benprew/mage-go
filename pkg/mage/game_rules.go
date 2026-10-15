@@ -12,6 +12,8 @@ import (
 // Channel, Sanctuary, and minimum life. It is owned by EffectManager and
 // exposed as a public field.
 type GameRules struct {
+	cantGainLife             map[uuid.UUID]bool
+	cantLoseLife             map[uuid.UUID]bool
 	activationCostModifiers  []activationCostModifier
 	spellCostTaxes           []spellCostTax
 	ManaConversion           map[Color]Color             // from color -> to color (Sunglasses of Urza)
@@ -80,6 +82,8 @@ func NewGameRules() *GameRules {
 
 // ResetPerCycle resets all state that is recomputed each Apply() cycle.
 func (r *GameRules) ResetPerCycle() {
+	clear(r.cantGainLife)
+	clear(r.cantLoseLife)
 	r.LandUntapMax = -1
 	r.ArtifactUntapMax = -1
 	r.CreatureUntapMax = -1

@@ -1,5 +1,20 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ExchangeLifeTotals] saves both typed players and their current life totals.
+// A prohibited gain or loss stops the complete exchange. Life replacements
+// run in turn order before either ordinary life change. Events follow both
+// changes and carry actual amounts. Equal totals and absent players do nothing.
+// [Game.CanGainLife] and [Game.CanLoseLife] read current layer-cycle permission.
+// [GameRules.AddCantGainLife] and [GameRules.AddCantLoseLife] set that permission.
+// Life payments, direct life changes and damage life loss use these checks.
+// Direct life loss uses [LifeLossAction] through shared replacement services.
+// Damage retains its separate damage and life-result replacement contracts.
+// Source information queries make no choices. Pending and delayed bodies keep
+// exact source visits and their resolving player. Copies and clones stay separate.
+// RON accepts ExchangeLifeTotalWithPlayer(playerRef) in ordinary resolving bodies,
+// including single-player actions and delayed bodies. Entry and draw replacements
+// reject. The complete Mirror Universe record has cast and activation evidence.
+//
 // [AnimateArtifactsUntilCleanupAfterExit] animates current noncreature artifacts.
 // Each member loses all abilities and has base P/T equal to its mana value.
 // Shared layer services keep each selection through layers 4, 6 and 7b.

@@ -1230,6 +1230,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return "permanent_reference"
 			}
+		case "ExchangeLifeTotalWithPlayer":
+			if len(n.Args) == 1 {
+				return "player_reference"
+			}
 		case "ExchangeOwnershipOfTwoCards":
 			if len(n.Args) == 2 {
 				return "card_reference"

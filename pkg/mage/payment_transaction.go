@@ -166,7 +166,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		}
 	}
 	if tx.lifeLoss > 0 {
-		if player.Life() < tx.lifeLoss {
+		if player.Life() < tx.lifeLoss || !validation.CanLoseLife(tx.controller) {
 			return fmt.Errorf("cannot pay %d life", tx.lifeLoss)
 		}
 		validation.PlayerLoseLife(player, tx.lifeLoss)
@@ -506,6 +506,16 @@ func (tx *costPaymentTransaction) Commit() error {
 }
 
 func (tx *costPaymentTransaction) commit() (commitErr error) {
+	if !tx.game.CanLoseLife(tx.controller) {
+		if tx.lifeLoss > 0 {
+			return fmt.Errorf("cannot pay life")
+		}
+		for _, cost := range tx.costs {
+			if LifePaymentAmount(cost) > 0 {
+				return fmt.Errorf("cannot pay life")
+			}
+		}
+	}
 	tx.paidNumbers = nil
 	tx.paidCards = nil
 	tx.revealedHandCards = nil

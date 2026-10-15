@@ -81,6 +81,9 @@ func (e *resolutionActionPayment) prepareResolutionAction(ctx *EffectContext) (p
 }
 
 func (p preparedResolutionAction) available(g *Game) bool {
+	if p.kind == resolutionGainLife && p.amount > 0 && !g.CanGainLife(p.id) {
+		return false
+	}
 	if p.incarnation == uuid.Nil {
 		return g.GetPlayer(p.id) != nil
 	}

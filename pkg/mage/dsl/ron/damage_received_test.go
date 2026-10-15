@@ -329,7 +329,12 @@ func TestRONDamageReceivedReprintsAndInventory(t *testing.T) {
 	if err != nil || complete == nil || len(complete.RegisteredCardNames()) != 2 {
 		t.Fatalf("supported records failed loading: %v", err)
 	}
-	files["unsupported.ron"] = &fstest.MapFile{Data: damageReceivedRecord(t, "LEG", "Mirror Universe")}
+	files["exchange.ron"] = &fstest.MapFile{Data: damageReceivedRecord(t, "LEG", "Mirror Universe")}
+	complete, err = LoadFS(files, "*.ron")
+	if err != nil || complete == nil || len(complete.RegisteredCardNames()) != 3 {
+		t.Fatalf("supported exchange failed loading: %v", err)
+	}
+	files["unsupported.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Unsupported",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[UnsupportedRule])`)}
 	if partial, err := LoadFS(files, "*.ron"); err == nil || partial != nil {
 		t.Fatal("partial registry published")
 	}

@@ -24480,3 +24480,45 @@ return, ability removal,
 clones, shared declarations, dependencies, LKI, layer order and state actions.
 The local WotC ruling on Titania's Song supplies the summoning-sickness contract;
 CR 302.6, 611.3, 613.1d/f/g, 613.4b, 613.6–8 and 702.26 supply the shared rules.
+
+## Life-total exchange (2026-10-15)
+
+`ExchangeLifeTotals(first, second PlayerRef) ResolvingEffect` resolves both
+players once, saves their current life totals and prepares the required gain
+and loss before committing either ordinary life change (CR 119.5, 701.12a/c).
+Equal totals, the same player, or an absent participant do nothing. Negative
+life totals remain valid inputs. An amount outside the engine integer range
+returns an error before changing life.
+
+`Game.CanGainLife` and `Game.CanLoseLife` are pure eligibility queries.
+`GameRules.AddCantGainLife` and `AddCantLoseLife` register prohibitions for the
+current layer cycle. Reset clears them and clones copy their maps. Continuous
+rules must register them again during layer calculation; normal layer updates
+handle source control, departure, phasing and ability removal. An exchange
+that requires a prohibited gain or loss does nothing to either player
+(CR 119.7–8). Ordinary gains, direct losses, damage life loss, life costs,
+life-paid mana offers/planning and resolution gain payments use these checks.
+Zero life payment remains legal. Payment validation and commit recheck life
+permission before spending resources.
+
+The exchange prepares replacements in APNAP order, with both original totals
+still available. Existing gain modifiers and replacement choices apply.
+`NewLifeLossAction(source, player, amount)` supplies direct life losses to the
+same replacement manager. Direct loss instructions share this preparation and
+report actual amounts. Damage retains its existing damage-specific replacement
+and life-floor service; it is not converted into a direct-loss instruction.
+Replacements may change or replace an eligible exchange's individual life
+changes, including life gain replaced with draws. They do not cancel its other
+leg. Ordinary gain/loss mutations finish before life events are dispatched.
+Damage prevention does not stop a direct exchange loss.
+
+The effect stores immutable typed references, with source-read declarations for
+waiting delayed queries. Those queries make no choices and do not read life.
+Existing captured frames preserve exact source LKI after departure, return or
+phasing. Stack copies and cloned games use their own current life totals.
+
+Evidence: native `TestLifeExchangeTotals`, `Restrictions`,
+`ReplacementsAndObservations`, `InvalidAndMissing`, `RestrictionServices`,
+`RestrictionLifetimeAndRollback`, `ReplacedLossAndGain` and
+`DelayedSourceIdentity` and `ReplacementOrder`. RON mappings are in the DSL
+reference and ledger.

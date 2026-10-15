@@ -1355,16 +1355,23 @@ func (g *Game) playersLoseLife(players []Player, amount int) int {
 		return 0
 	}
 	lost := 0
-	for _, p := range players {
+	losses := make([]int, len(players))
+	for i, p := range players {
+		losses[i] = g.prepareLifeLoss(p, amount)
+	}
+	for i, p := range players {
 		before := p.Life()
-		p.LoseLife(amount)
+		p.LoseLife(losses[i])
 		lost += before - p.Life()
 	}
-	for _, p := range players {
+	for i, p := range players {
+		if losses[i] <= 0 {
+			continue
+		}
 		g.FireEvent(GameEvent{
 			Type:     EvtLifeLost,
 			PlayerID: p.PlayerID(),
-			Amount:   amount,
+			Amount:   losses[i],
 		})
 	}
 	return lost
@@ -1422,7 +1429,7 @@ func (g *Game) applyLifeGain(p Player, amount int) int {
 }
 
 func (g *Game) prepareLifeGain(p Player, amount int) int {
-	if amount <= 0 {
+	if amount <= 0 || !g.CanGainLife(p.PlayerID()) {
 		return 0
 	}
 	amount = g.ApplyLifeGainModifiers(p.PlayerID(), amount)
@@ -1431,7 +1438,7 @@ func (g *Game) prepareLifeGain(p Player, amount int) int {
 	}
 	action := NewLifeGainAction(uuid.Nil, p.PlayerID(), amount)
 	result := g.effects.ApplyReplacements(action, g)
-	if gain, ok := result.(*LifeGainAction); ok && gain.Amount() > 0 {
+	if gain, ok := result.(*LifeGainAction); ok && gain.Amount() > 0 && g.CanGainLife(p.PlayerID()) {
 		return gain.Amount()
 	}
 	return 0

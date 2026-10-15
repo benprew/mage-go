@@ -59,7 +59,7 @@ type PlayerManaAbilityInfo struct {
 // GetPlayerManaAbilities lists affordable permissions without spending resources.
 func (g *Game) GetPlayerManaAbilities(player uuid.UUID) []PlayerManaAbilityInfo {
 	p := g.GetPlayer(player)
-	if p == nil || g.resolution.resolvingController != uuid.Nil {
+	if p == nil || !g.CanLoseLife(player) || g.resolution.resolvingController != uuid.Nil {
 		return nil
 	}
 	var result []PlayerManaAbilityInfo
@@ -104,7 +104,7 @@ func (g *Game) activatePlayerManaAbility(player, id uuid.UUID) error {
 
 func (g *Game) appendPlayerManaSources(player uuid.UUID, sources []manaSourceInfo) []manaSourceInfo {
 	p := g.GetPlayer(player)
-	if p == nil {
+	if p == nil || !g.CanLoseLife(player) {
 		return sources
 	}
 	for _, a := range g.playerManaAbilities {
@@ -118,7 +118,7 @@ func (g *Game) appendPlayerManaSources(player uuid.UUID, sources []manaSourceInf
 
 func (g *Game) playerLifeManaCapacity(player uuid.UUID) int {
 	p := g.GetPlayer(player)
-	if p == nil {
+	if p == nil || !g.CanLoseLife(player) {
 		return 0
 	}
 	capacity := 0

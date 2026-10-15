@@ -1484,6 +1484,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ExchangeLifeTotalWithPlayer":
+		build, err := compileLifeExchange(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ExchangeOwnershipOfTwoCards":
 		build, err := compileCardOwnershipExchange(n, ctx)
 		if err != nil {
@@ -2072,6 +2078,10 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "ExchangeLifeTotalWithPlayer" {
+		build, err := compileLifeExchange(n, ctx)
+		return []effectFactory{build}, err
+	}
 	if n.Name == "SacrificePermanent" {
 		if !ctx.resolving || ctx.drawReplacementBody {
 			return nil, problem(n, "explicit-player sacrifice requires an ordinary resolving body")

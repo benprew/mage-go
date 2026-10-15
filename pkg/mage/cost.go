@@ -420,13 +420,16 @@ func LifePaymentAmount(cost Cost) int {
 
 func (c *lifePayCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
-	return p != nil && c.amount >= 0 && (c.amount == 0 || p.Life() >= c.amount)
+	return p != nil && c.amount >= 0 && (c.amount == 0 || p.Life() >= c.amount && g.CanLoseLife(controller))
 }
 
 func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
+	}
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay life")
 	}
 	g.PlayerLoseLife(p, c.amount)
 	return nil

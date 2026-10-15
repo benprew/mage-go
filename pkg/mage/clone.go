@@ -558,6 +558,8 @@ func cloneGameRules(gr *GameRules) *GameRules {
 	}
 	// Clone all maps.
 	clone.ManaConversion = cloneColorColorMap(gr.ManaConversion)
+	clone.cantGainLife = maps.Clone(gr.cantGainLife)
+	clone.cantLoseLife = maps.Clone(gr.cantLoseLife)
 	clone.SpellCostIncreases = cloneColorIntMap(gr.SpellCostIncreases)
 	clone.spellCostTaxes = slices.Clone(gr.spellCostTaxes)
 	clone.activationCostModifiers = slices.Clone(gr.activationCostModifiers)

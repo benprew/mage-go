@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **940 accepted / 46 rejected names**
-(986 total), **2,354 compiled / 91 rejected records** (2,445 total).
-The latest slice is **STICKY-ARTIFACT-ANIMATION**.
-RON lowers the complete sticky noncreature-artifact animation shape into native
-layer services. Exact source visits and member selections stay separate.
-Source departure retains the same evolving effect and timestamp until cleanup;
-phasing suspends the live source. Both complete Titania's Song records have
-paid-cast and gameplay evidence. Estimated and actual gain: one name / two
-records. Collection loading still rejects atomically. Runtime cutover, Go-card
-removal and DSL cleanup remain gated by complete support and startup.
+Latest measured result (2026-10-15): **941 accepted / 45 rejected names**
+(986 total), **2,355 compiled / 90 rejected records** (2,445 total).
+The latest slice is **LIFE-TOTAL-EXCHANGE**.
+RON lowers a resolving life-total exchange to typed native life services.
+Both totals are saved before replacement preparation; ordinary life changes
+finish before events. Shared eligibility blocks an impossible exchange in full.
+The complete Mirror Universe record has casting and activation gameplay evidence.
+Estimated and actual gain: one name / one record. Collection loading still
+rejects atomically. Runtime cutover, Go-card removal and unused DSL cleanup
+remain gated by complete support and startup.
 
 ## Ranked next candidates
 
@@ -24,13 +24,22 @@ Reassess with fresh loader and complete-record evidence. Count reprints once.
 1. **Forced mana activation and saved mana:** Drain Power, eventual one name /
    six records. Saved lost-mana results are complete. Isolate legal activation
    offers, arbitrary costs, variable output choices and transactional rechecks.
-2. **Shared damage replacement prerequisites:** reassess Personal Incarnation
-   and Nova Pentacle before selecting a bounded shared contract. Nova Pentacle's
-   unbound chosen-source read requires a source/scope audit before unlock claims.
-3. **Life-total exchange:** Mirror Universe, one name / one record. Establish
-   atomic gain/loss restrictions and replacement behavior before its adapter.
+2. **Damage redirection:** Personal Incarnation and Nova Pentacle, eventual two
+   names / seven records. Personal Incarnation needs finite redirection and all
+   six death-loss rounding defects repaired; Nova Pentacle needs its missing
+   damage-source choice and the redirect adapter. Reassess shared prerequisites.
+3. **Discard replacement decisions:** Library of Leng, one name / six records.
+   Audit effect-versus-cost discard cause and hidden-card destination choices;
+   its no-maximum-hand-size clause is already supported.
 
 ## Dependencies and source blockers
+
+- Personal Incarnation's six source records round its death-trigger life loss
+  down. Local LEA Oracle requires rounding up. Repair the complete reprint group
+  with the card's implementation evidence; do not reverse shared rounding logic.
+- Nova Pentacle reads `TheChosenDamageSource` without a producer. Local LEG
+  Oracle and WotC rulings require a resolution-time choice. Its source repair
+  and missing redirection adapter are separate blockers.
 
 - Reuse `TapAnyNumberEach`, `PlayerNumbersBinding` and `PlayerNumber` for optional
   tap results. The RON producer requires one conjunctive ActionPlayer controller
@@ -25201,3 +25210,178 @@ repository signing configuration is unchanged.
 There are still 46 rejected names / 91 rejected records. Complete collection
 gameplay, runtime loading, application cutover, Go-card and obsolete generator
 removal, and unused DSL cleanup remain gated. This run stops after this slice.
+
+## 2026-10-15 — LIFE-TOTAL-EXCHANGE
+
+### Selection and baseline
+
+The working tree was clean at the start. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh collection loading returned
+valid JSON and expected exit 1: 2,354 compiled / 91 rejected records,
+940 accepted / 46 rejected unique names. This was collection rejection,
+not a build or test failure. Reprints were counted once when comparing work.
+
+| Candidate | Distinct affected cards | Estimated complete-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: forced mana activation | Drain Power, six identical complete records | 0 for a bounded offer-only prerequisite; eventual 1 name / 6 records | Saved lost-mana transfer is ready. Legal offers still need arbitrary activation costs, variable output/X choices, activation order and transactional rechecks. This supports the complete forced instruction, but is not a ready compiler adapter. | High; several interacting payment/decision contracts |
+| Ranked #2: shared damage redirection | Personal Incarnation (six records), Nova Pentacle (one) | 0 for an unproved shared prerequisite; eventual 2 names / 7 records after source repairs | Personal Incarnation needs finite damage redirection; owner-only activation and death-player/life arithmetic adapters exist. Its death loss also has a rounding source defect. Nova Pentacle needs its missing source-choice producer plus player-to-permanent redirection. Reusing source snapshots and replacement services does not make these separate shapes one ready multi-card slice. | High; bounded finite redirection could be a later prerequisite |
+| Ranked #3: life-total exchange | Mirror Universe, one complete LEG record | 1 name / 1 record | Targeting, own-upkeep restriction, tap/sacrifice payment and source departure already exist. Atomic life exchange needs eligibility and life replacement preparation. Enables reusable typed life exchange and direct-loss amount replacement. | Moderate; one complete engine operation with a narrow RON adapter |
+
+Selected LIFE-TOTAL-EXCHANGE. No compared multi-card contract was dependency-ready
+within one complete slice. Forced activation's missing offer/choice contracts
+cannot be replaced with first-ability selection or simple tapping. The selected
+slice has a concrete full-record result and a shared engine boundary. The
+pre-edit contract was: save both totals, reject an ineligible exchange as a
+whole, prepare replacements before ordinary life changes, dispatch events after
+both changes, preserve source/payment/clone behavior, and reject invalid RON.
+
+### Supported shape and engine boundary
+
+RON accepts `ExchangeLifeTotalWithPlayer(playerRef)` in ordinary resolving
+spell, activation, trigger and delayed bodies. Bare actions use `You`;
+`PlayerAction` and `PlayerActions` supply one explicit action player. Existing
+typed player references and per-instance bindings select both participants.
+Costs, entry operations, draw replacement bodies, wrong arity, incompatible
+references and unbound targets/events reject before gameplay. Inventory marks
+the operand `player_reference`. RON owns syntax, scope and lowering only.
+
+Native API: `ExchangeLifeTotals(first, second PlayerRef) ResolvingEffect`.
+It resolves both participants once and saves their totals before any ordinary
+life mutation. Missing/same participants and equal totals do nothing. Negative
+life totals remain valid. Unrepresentable differences return an error before
+changing state. Shared replacement services prepare gain/loss in APNAP order.
+Both ordinary mutations finish before life events. Replacement-modified or
+replaced gains/losses retain the other leg's committed amount; actual amounts
+supply events. Damage prevention and damage-only life floors do not redefine
+this direct life exchange.
+
+The missing eligibility prerequisite is included in this operation's contract:
+`Game.CanGainLife(uuid.UUID) bool`, `Game.CanLoseLife(uuid.UUID) bool`,
+`GameRules.AddCantGainLife(uuid.UUID)` and `AddCantLoseLife(uuid.UUID)`.
+The last two register current layer-cycle flags. Reset clears them; clones
+copy their maps. Layer recalculation handles continuous-source control,
+phasing, ability removal and departure. The lifecycle tests explicitly apply
+layers after raw phase operations, as required for cycle-based rule state.
+Ordinary gains, direct losses, damage life loss, life costs, life-paid mana
+queries/planning and resolution gain payments use the same eligibility checks.
+Positive life costs recheck before resource mutation; zero payment remains legal.
+`NewLifeLossAction(source, player uuid.UUID, amount int) *LifeLossAction` sends
+direct loss through the existing affected-player replacement manager. Damage
+retains its distinct damage/life-result pipeline and uses loss eligibility.
+No new card-specific replacement, payment, event or source-identity system exists.
+
+Existing typed references, captured source incarnations, LKI, delayed frames,
+stack copies, clone isolation, payment transactions, upkeep conditions, target
+legality, gain modifiers, draw replacements and event dispatch remain in use.
+No Go-card fallback, production registry exception, card-name branch or global
+action-result slot was added. No DSL API or Go card definition was removed;
+their design removal gates remain unmet.
+
+### Requirements and source evidence
+
+Read the complete Mirror Universe LEG RON record, both complete local WotC
+rulings and local LEG Oracle data. `go run ./cmd/fetchset -check -card
+"Mirror Universe"` passed. There are no local Scryfall notes. Oracle requires
+upkeep-only activation, tap/sacrifice, target opponent and life-total exchange.
+CR 107.1b, 119.3–10, 701.12a/c, 608.2h and 616.1 establish the numeric,
+eligibility, snapshot, simultaneous-change and replacement-choice contracts.
+
+Candidate audit also read all complete Drain Power and Personal Incarnation
+reprints, the complete Nova Pentacle record and all local rulings for those
+cards. The four Drain Power WotC rulings require choices among mana abilities
+and variable outputs; they do not permit a simplified forced-tap adapter.
+Two source blockers were confirmed and deferred outside this slice:
+
+- All six Personal Incarnation records use
+  `LoseLife(HalfRoundedDown(LifeTotalOfPlayer(LoseLife_ThatPlayer)))`.
+  Local LEA Oracle says its owner loses half their life, rounded **up**.
+  Correct all six together before claiming full-card support. Its 2007 WotC
+  ruling about negative life does not justify reversing the rounding operation.
+- Nova Pentacle reads `TheChosenDamageSource` without a producer. Local LEG
+  Oracle and the 2009-10-01 WotC ruling require choosing the source at resolution.
+  Preserve the distinction between this source defect and the missing redirect
+  adapter. Its opponent-choice target timing is a separate existing contract.
+
+Mirror Universe needed no source correction. No RON asset changed, so the
+vocabulary snapshot did not need a refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+The complete record test first failed with `unsupported action
+(ExchangeLifeTotalWithPlayer)`. Native tests first failed to compile because
+`ExchangeLifeTotals` and life-prohibition registration did not exist. A later
+service regression failed because life-paid mana remained available under a
+loss prohibition; it now passes with shared eligibility. Scoped-player testing
+also caught the `PlayerActions` admission boundary, which now lowers the same
+native operation. Final review added a failing regression for damage life-result
+replacements running before a life-loss prohibition. The eligibility check now
+stops that proposed life loss before replacement selection.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Mirror Universe, complete LEG record | `TestRONLifeExchangeRecord` | Failed unpaid and paid casting; upkeep/target rejection preserves source; tap/sacrifice activation; resolution after sacrifice; pending clone resolves independently |
+| Typed scope and independent copies | `TestRONLifeExchangeScopeAndCopies` | Bare, explicit single-player and scoped action bodies; two copies exchange current totals separately |
+| Strict declarations and atomic loading | `TestRONLifeExchangeInvalid`, `Collection` | Invalid contexts/arity/refs; definition validation; inventory role; invalid collection preserves registry |
+| Both life totals | `TestLifeExchangeTotals`, `InvalidAndMissing` | Both exchange directions, equal, zero and negative life; invalid definitions, same and absent players |
+| Eligibility and payment services | `TestLifeExchangeRestrictions`, `RestrictionServices`, `RestrictionLifetimeAndRollback` | Whole-exchange rejection; ordinary gains/losses, damage and life costs; zero payment; life-paid mana offers/solver; cloned maps, phase cycles, ability removal, cleanup, departure; stale payment preserves mana/life |
+| Replacement and event contracts | `TestLifeExchangeReplacementsAndObservations`, `ReplacedLossAndGain`, `ReplacementOrder` | Both totals saved before replacements; event sees both changes; actual gain trigger; gain replaced with draws, loss changed/cancelled, damage prevention irrelevant; affected player selects competing replacement order |
+| Exact delayed source information | `TestLifeExchangeDelayedSourceIdentity`, `TestRONLifeExchangeDelayed` | Waiting query is pure; departed/returned source cannot supply another controller; phased source retains information; saved resolving player; independent pending clone |
+| Accepted collection and loader regression | Definition-plan, inventory, numeric-consumer and `TestRONDamageReceivedReprintsAndInventory` | Counts advance one record; formerly unsupported Mirror Universe now loads; explicitly invalid rule retains atomic-rejection assertion |
+
+New full-card gameplay evidence is one unique name, Mirror Universe. Compilation
+and gameplay coverage are separate measurements; no remaining card is called
+complete from its first diagnostic alone.
+
+### Verification and measured coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONLifeExchange -count=1`: passed,
+  including the final post-lint run.
+- `go test ./pkg/mage -run TestLifeExchange -count=1`: passed, including
+  delayed identity, competing replacement order and the final prohibition
+  ordering regression. Final post-lint run passed.
+- `make build`: passed. `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed for all engine packages
+  after the fixture update and again after the final eligibility guard.
+- `make test`: passed for the full repository after both changes.
+- `make lint`: passed twice with **0 issues**. Reviewed automatic changes;
+  no unrelated source changed. Final focused tests passed after lint.
+- `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,355 compiled / 90 rejected records**, **941 accepted / 45 rejected names**.
+  Exact JSON comparison removes only Mirror Universe's LEG line 174 diagnostic.
+  All other 90 diagnostics remain identical and in the same order. No new
+  rejection was added. The collection still rejects atomically.
+
+Estimated and actual gain: **one unique name / one record**, with complete
+Mirror Universe gameplay evidence. There was no source correction in this slice.
+The initial engine short-suite failure was a stale test fixture using Mirror
+Universe as its rejection example; the test now asserts its acceptance and keeps
+atomic rejection coverage with an explicit invalid declaration. No expected
+engine behavior was weakened.
+
+Changed files: new native `pkg/mage/life_exchange.go` and
+`life_exchange_test.go`; native `game.go`, `game_rules.go`, `clone.go`, `cost.go`,
+`payment_transaction.go`, `player_life_mana.go`, `resolution_action_payment.go`,
+`damage_life_floor.go` and `doc.go`; new RON `life_exchange.go` and
+`life_exchange_test.go`; RON `compiler.go`, `player_actions.go`, `inventory.go`,
+`inventory_test.go`, `definition_plan_test.go`, `numeric_consumers_test.go` and
+`damage_received_test.go`; API/rules references and this ledger.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers/transactions for Drain Power: eventual
+   one name / six records. Isolate arbitrary costs, variable output choices,
+   ordering and activation rechecks before the complete forced instruction.
+2. Finite damage-redirection contract for Personal Incarnation, and a fresh
+   source/scope audit of Nova Pentacle: eventual two names / seven records.
+   Personal Incarnation's six rounding defects and Nova Pentacle's missing
+   source choice must be repaired with their complete implementation evidence.
+3. Discard replacement decisions for Library of Leng: one name / six records.
+   Its no-maximum-hand-size clause is already supported. Reassess the shared
+   discard pipeline, effect-versus-cost cause and hidden-card destination choice
+   before selecting its exact replacement context.
+
+Complete collection gameplay, runtime loading/cutover, Go-card and obsolete
+Go-set generator removal, and unused DSL cleanup remain unfinished. Stop after
+this slice. The slice commit uses command-local `commit.gpgsign=false`, consistent
+with prior entries; repository signing configuration is unchanged.
