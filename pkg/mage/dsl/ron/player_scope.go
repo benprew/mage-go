@@ -43,6 +43,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	lostMana             map[*lostManaPlan]*mage.LostManaBinding
 	exileCounts          map[*exileControllerCountsPlan]*mage.PlayerNumbersBinding
 	copyAbilities        map[*copyAbilityPlan]*mage.TriggeredAbilityBinding
 	counterSnapshots     map[*counterSnapshotPlan]*mage.CounterSnapshotBinding

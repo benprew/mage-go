@@ -386,6 +386,7 @@ type capturedDelayedBody struct {
 	names              map[*CardNameBinding]string
 	numbers            map[*NumberBinding]int
 	manaTypes          map[*ManaTypesBinding][]Color
+	lostMana           map[*LostManaBinding][]Mana
 	targets            map[*targetDeclaration][]capturedPermanent
 	sourceIncarnation  uuid.UUID
 	x                  int
@@ -418,6 +419,9 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	outerNumbers := state.numberBindings
 	state.numberBindings = maps.Clone(e.numbers)
 	defer func() { state.numberBindings = outerNumbers }()
+	outerLostMana := state.lostManaBindings
+	state.lostManaBindings = cloneLostManaBindings(e.lostMana)
+	defer func() { state.lostManaBindings = outerLostMana }()
 	outerManaTypes := state.manaTypesBindings
 	state.manaTypesBindings = cloneManaTypesBindings(e.manaTypes)
 	defer func() { state.manaTypesBindings = outerManaTypes }()
@@ -1361,6 +1365,7 @@ func captureDelayedBody(ctx *EffectContext, body ResolvingEffect) *capturedDelay
 		names:              maps.Clone(ctx.Game.resolution.cardNameBindings),
 		numbers:            maps.Clone(ctx.Game.resolution.numberBindings),
 		manaTypes:          cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),
+		lostMana:           cloneLostManaBindings(ctx.Game.resolution.lostManaBindings),
 		targets:            cloneDelayedTargets(ctx.targetBindings),
 		sourceIncarnation:  ctx.sourceIncarnation,
 		x:                  ctx.Game.resolution.X(),

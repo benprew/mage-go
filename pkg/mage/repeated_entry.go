@@ -116,6 +116,7 @@ func (s *ResolutionState) installRoundBindings(frame ResolutionState) {
 	s.wordPairBindings = frame.wordPairBindings
 	s.cardNameBindings = frame.cardNameBindings
 	s.manaTypesBindings = frame.manaTypesBindings
+	s.lostManaBindings = frame.lostManaBindings
 	s.damageSourceBindings = frame.damageSourceBindings
 	s.damageResultsBindings = frame.damageResultsBindings
 	s.damageResultBindings = frame.damageResultBindings

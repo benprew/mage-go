@@ -6,6 +6,10 @@ import (
 )
 
 func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "AddMana" && len(n.Args) > 0 && n.Args[0].Name == "TheManaLostThisWay" {
+		return compileLostManaConsumer(n, ctx)
+	}
+
 	if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
 		return compilePlayerMana(n, ctx)
 	}

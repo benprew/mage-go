@@ -8,12 +8,13 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **934 accepted / 52 rejected names**
 (986 total), **2,347 compiled / 98 rejected records** (2,445 total).
-The latest slice is **HAND-LIBRARY-CHOICE**.
-RON lowers Conch Horn's complete FEM record through a required hand choice
-at resolution and exact-visit movement to the owner's library top. Ordinary
-draw replacements run before the choice; draw triggers wait until resolution
-finishes. Source sacrifice, copies and clones use the saved resolving player.
-Estimated and actual gain: one name / one record, with complete RON gameplay.
+The latest slice is **SAVED-LOST-MANA**.
+RON lowers `AddMana(TheManaLostThisWay)` after an ordinary resolving
+`LoseUnspentMana`, with typed donor/recipient scope and per-instance results.
+The engine retains full mana values and restrictions under CR 106.13, without
+new production. This completes the saved-result prerequisite for Drain Power;
+forced legal mana activation remains unsupported. Estimated and actual gain:
+zero names / records. Mana Short and Power Sink gameplay remains covered.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -22,8 +23,8 @@ DSL cleanup remain gated by complete support and startup.
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
 1. **Forced mana activation and saved mana:** Drain Power, eventual one name /
-   six records. First isolate legal activation choices, arbitrary costs and
-   variable output; then capture exact lost mana in typed results.
+   six records. Saved lost-mana results are complete. Next isolate legal
+   activation choices, arbitrary costs and variable output, then connect the complete instruction.
 2. **Sticky animation and ability removal:** Titania's Song, one name / two
    records. It needs evolving layer membership and a post-source duration.
 
@@ -24094,3 +24095,153 @@ The requested commit uses the prior documented command-local
 52 unique names / 98 records still reject. Complete RON gameplay, runtime
 loading and application cutover, Go-card/generator removal and unused DSL
 cleanup remain incomplete. Stop after HAND-LIBRARY-CHOICE.
+
+## 2026-10-15 — SAVED-LOST-MANA
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline loader exited 1 with
+valid collection diagnostics: 2,347 compiled / 98 rejected records,
+934 accepted / 52 rejected unique names. This was collection rejection,
+not a build or test failure.
+
+Started with ranked candidate #1, forced activation and saved mana for Drain
+Power. Read all six complete Drain Power records and both complete Titania's
+Song records. Also read all six complete Mana Short and Power Sink records
+for the existing loss path. Targeted vocabulary searches confirmed the six
+`ActivateAManaAbilityOfEachPermanentAndLoseUnspentMana` / `TheManaLostThisWay`
+pairs and two `EachPermanentStickyLayerEffect` rules. Nested forms, rather
+than first errors, determine these estimates.
+
+| Candidate | Distinct affected cards | Estimated complete-card gain | Remaining blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Full forced mana activation, ranked #1 | Drain Power | 1 name / 6 records after both prerequisites | Requires legal activation choices, arbitrary costs, variable output, ordering and saved exact mana; existing automatic mana solver offers a narrower contract | Large; split into complete prerequisites |
+| Saved mana result, dependency within #1, selected | Drain Power; existing loss paths in Mana Short and Power Sink | 0 names / 0 records now | Completes the strict lost-mana consumer and shared result storage; Drain Power then needs forced activation only. Existing two names / 12 records supply regression evidence | Bounded; one typed result and RON sequence adapter with frame integration |
+| Sticky animation, ranked #2 | Titania's Song | 1 name / 2 records | Needs evolving layer membership, ability removal, recipient mana-value P/T and duration after source departure; no later syntax in its complete record | Large layer/lifecycle contract |
+
+The first candidate is a compound capability. Selected its dependency-ready
+saved-result prerequisite as one complete vertical slice. The broader forced
+activation shape cannot reuse the solver's restricted source offers as a legal
+arbitrary-cost choice service. This run does not silently approximate it.
+There is no remaining multi-name unlock among these ranked candidates; the
+selected shared result service also protects the two existing mana-loss cards.
+No single-card special case or source-data correction was introduced.
+
+Before edits, stated the contract and acceptance cases: one typed donor loses
+its exact current mana; a subsequent typed recipient receives the saved mana
+with restrictions intact. RON owns spelling, dominance and scope; mage owns
+pool movement and result lifetime. CR 106.13 makes this a transfer, rather than
+new mana production. Empty/absent donors clear results. Include declaration
+rejection, shadowing, copies/clones, source departure/phasing, delayed frames,
+loop isolation and failed activation payment.
+
+### Implemented contract and dependencies
+
+- Added `BindLostMana(name string) *LostManaBinding`.
+- Added `LoseUnspentManaInto(player PlayerRef, result *LostManaBinding)
+  ResolvingEffect` and `AddLostManaFor(player PlayerRef,
+  result *LostManaBinding) ResolvingEffect`.
+- Preserve complete `core.Mana` values, including restrictions. Use shared
+  `SnapshotPool`, `Clear` and `RestorePool`. Transfer appends after existing
+  recipient mana and does not call production, spending or activation services.
+  Production history is unchanged. Self-transfer is valid.
+- Nil operands, empty binding names, unbound player references and reads without
+  a producer fail definition validation. Absent donors and empty pools save an
+  empty result; absent recipients receive nothing.
+- Added a typed result map to resolution state, deep map/slice cloning, clear,
+  direct effect frames, permanent/card/damage iteration frames, delayed capture
+  and repeated-entry round restoration. Payment trials use the shared game
+  clone. Independent producers and factory instances have distinct bindings.
+- Exact RON shape: strict `LoseUnspentMana`, optionally inside
+  `PlayerAction(playerRef, LoseUnspentMana)`, followed in an ordinary resolving
+  sequence by strict `AddMana(TheManaLostThisWay)`. The consumer also supports
+  explicit `PlayerAction`. Default recipient uses the outer player scope,
+  normally You, rather than inheriting an explicit donor scope.
+- `PlayerActions` supports the sequence locally. A result produced inside that
+  body cannot escape to its outer sequence. A later producer shadows the older
+  result, even when it removes nothing. Optional producers cannot supply an
+  outer result. Unsupported producers remain errors.
+- Entry/draw replacement bodies, costs, layers, unbound/forward reads,
+  argument-bearing symbols and `AddManaRepeated` variants reject. Existing
+  loss instructions without consumers retain their previous lowering.
+- No forced activation adapter was added. All six complete Drain Power records
+  remain rejected. No Go definitions, generators or broad DSL APIs were removed;
+  cutover/removal gates remain unmet.
+
+`fetchset -check -card` passed for Drain Power, Mana Short and Power Sink before
+implementation. Read their complete local ruling files: respectively four,
+three and three WotC rulings; no Scryfall notes. Also read Titania's Song's one
+WotC ruling for comparison. CR 106.1–6, 106.12–13, 605.1–5 and 608.2c–g establish
+mana types, restrictions, transfer, production, activation and resolution order.
+No source defect was found or corrected. RON source and vocabulary hashes did
+not change.
+
+### Failing-first evidence and mappings
+
+Native tests first failed compilation on missing `BindLostMana`,
+`LoseUnspentManaInto`, `AddLostManaFor` and result storage. The first RON test
+fixture used a nonexistent parse helper; corrected it to the existing
+`nameScopeNode` helper before implementation. RON gameplay then failed with
+`unsupported mana production (TheManaLostThisWay)`. The implementation passes
+those tests without weakening the assertions.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Drain Power saved-mana prerequisite | `TestRONLostManaTransfer`, `SpellAndShadowing` | Real parsed RON spell/ability instructions, explicit donor/recipient, retained restrictions, nested scope, empty loss and lexical shadowing; no full-card claim |
+| Mana Short, six complete records | Existing `TestRONManaDenialManaShort` | Paid cast, invalid/unpaid rollback, resolution timing, land selection, correct lost pool and pending clone |
+| Power Sink, six complete records | Existing `TestRONManaDenialPowerSink`, `PowerSinkCopy` | Paid/declined/unaffordable/X=0 branches, counter outcome, saved spell controller and copies |
+| All 12 accepted regression records | `TestRONLostManaExistingRecords` | Fresh factory construction from complete records |
+| Copies and source lifetime | `TestRONLostManaCopyAndSource`, `Contexts` | Sacrifice cost, saved resolving controllers, ability copy and phased source |
+| Strict declarations | `TestRONLostManaInvalid`, `Contexts`; native `TestLostManaDeclarations` | Dominance, result scope, optional producer, malformed forms, replacement/static/cost rejection, nil/unbound declarations |
+| Exact mana identity and independent state | `TestLostManaTransfer`, `Frames` | Mixed mana/restrictions, self-transfer, absent/empty donor reset, production history, live/pending clone isolation, result-slice isolation, delayed capture and direct-frame cleanup |
+| Production and transaction boundary | `TestLostManaTransferIsNotProduction`, `LoopAndPaymentIsolation` | No production replacement or tap/stack action, loop-local result, cloned trial isolation and failed activation without result mutation |
+
+### Verification and loader comparison
+
+Focused native/RON tests and Mana Short/Power Sink regressions passed with
+`-count=1`. `make build` and `go vet ./...` passed. Final engine/full-suite,
+lint and loader results follow below.
+
+- `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed for the whole repository.
+- Implement-engine's additional `go test ./... -short -count=1`: passed.
+- First `make lint` found one `prealloc` issue in the new RON producer. Replaced
+  the slice literal with a capacity-sized slice and appended the producer.
+  Focused native/RON regressions, `make build` and `go vet ./...` passed again.
+  Final `make lint`: passed, zero issues. No unrelated automatic edits occurred.
+- `git diff --check`: passed. Focused checks were repeated after final lint.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON;
+  **2,347 compiled / 98 rejected records**, **934 accepted / 52 rejected names**.
+  Parsed baseline and final reports are exactly equal, including every issue
+  position and message. Drain Power still rejects at
+  `2ED.lines.ron:69:279: unsupported value (And)`.
+
+Actual compilation gain matches the prerequisite estimate: zero names / zero
+records. New syntax and engine contracts have gameplay tests, but no new
+complete-card gameplay mapping is claimed. The two accepted regression names
+and their 12 records remain supported. No environment blocker or pre-existing
+required-check failure occurred.
+
+Changed files: native `lost_mana.go` and tests; RON `lost_mana.go` and tests,
+`compiler.go`, `player_scope.go`, `optional_payment.go`, `player_actions.go`,
+`land_mana.go`, `mana_production.go`; native `resolution_state.go`, `effect.go`,
+`composable_actions.go`, `composable_conditions.go`, `repeated_entry.go`;
+`pkg/mage/doc.go`, both API/rules-contract docs and this ledger. All changes
+belong to this slice. The commit uses the prior documented command-local
+`commit.gpgsign=false` override without changing repository/global settings.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation for Drain Power: eventual one name / six
+   records. Build legal offers for arbitrary activation costs and variable
+   output, let the affected player choose ability/output/order, recheck exact
+   visits and legality, then connect the completed saved-mana producer/consumer.
+   Saved results are no longer a missing dependency.
+2. Sticky layer membership and post-source duration for Titania's Song: one
+   name / two records. Establish dependencies, ability removal and individual
+   mana-value P/T before adapting its complete rule.
+
+52 unique names / 98 records still reject. Complete RON gameplay, runtime
+loading, application cutover, Go-card/generator removal and unused DSL cleanup
+remain incomplete. Stop after SAVED-LOST-MANA.

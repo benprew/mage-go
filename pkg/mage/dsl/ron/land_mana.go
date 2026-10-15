@@ -123,6 +123,10 @@ func usesManaAction(n Node) bool {
 }
 
 func compilePlayerMana(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "AddMana" && len(n.Args) > 0 && n.Args[0].Name == "TheManaLostThisWay" {
+		return compileLostManaConsumer(n, ctx)
+	}
+
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}

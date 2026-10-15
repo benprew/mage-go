@@ -24202,3 +24202,46 @@ global action result is needed. Clones and copies use their own current zones.
 `TestHandLibraryChoiceIdentity`, `PlayerAndDeclarations` and
 `ReturnedOnlyAndWaiting` cover choices, identity, events, owner destination,
 empty/absent players, retained library visits, LKI, queries and clone isolation.
+
+
+### Saved lost mana and transfer
+
+`BindLostMana(name string) *LostManaBinding` declares an exact mana result.
+`LoseUnspentManaInto(player PlayerRef, result *LostManaBinding) ResolvingEffect`
+empties that player's current pool and records every `core.Mana` value.
+`AddLostManaFor(player PlayerRef, result *LostManaBinding) ResolvingEffect`
+appends those saved values to the recipient's pool. CR 106.13 requires the
+restrictions to remain. This transfer does not produce new mana, invoke mana
+production replacements, record production, spend mana, or activate abilities.
+Existing recipient mana stays in its original order. The same player can be
+both donor and recipient. Empty or absent donors clear the result; absent
+recipients receive nothing. Definition validation rejects nil players/results,
+empty binding names and reads without a producer on every path.
+
+RON supports strict `AddMana(TheManaLostThisWay)` after a strict
+`LoseUnspentMana` symbol in the same ordinary resolving action sequence.
+`PlayerAction(playerRef, LoseUnspentMana)` chooses a donor; explicit
+`PlayerAction(playerRef, AddMana(TheManaLostThisWay))` chooses a recipient.
+Unscoped instructions use the current player scope, normally You. A later
+loss shadows an earlier one, including an empty loss. `PlayerActions` permits
+these sequences inside its local player scope; its local result cannot escape
+to an outer sequence. Optional producers cannot dominate an outer read.
+Entry/draw replacements, costs, layers, unbound reads, argument-bearing result
+symbols and repeated-mana variants reject. Forced mana activation is separate:
+Drain Power's complete six records still reject until that contract exists.
+
+The result lives in resolution state. Shared effect frames clear and restore
+it; permanent/card/damage loops isolate each member. Delayed bodies copy saved
+values, and round frames restore them. Game clones and payment trials copy
+result maps and slices. Pending spell/ability copies run their own producers
+with their own saved resolving controllers. Source departure and phasing do
+not change that controller. Existing `LoseUnspentManaFor` callers remain valid.
+No RON source, Go card definition or production registry changed.
+
+Evidence: native `TestLostManaTransfer`, `Declarations`, `Frames`,
+`TransferIsNotProduction` and `LoopAndPaymentIsolation`; RON
+`TestRONLostManaTransfer`, `Invalid`, `SpellAndShadowing`, `CopyAndSource` and
+`Contexts`. Existing `TestRONManaDenialManaShort` and `PowerSink` exercise the
+complete six reprints each, with payment, timing, departed spell controllers,
+copy and clone regressions. This prerequisite adds syntax and engine contract
+coverage; it adds no complete-card compiler or gameplay unlock.

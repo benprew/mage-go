@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [LoseUnspentManaInto] saves the full removed mana in a [LostManaBinding].
+// [AddLostManaFor] transfers those values to a typed player (CR 106.13).
+// Restrictions remain. The transfer does not produce new mana, apply production
+// replacements, spend mana or activate an ability. Empty and absent players
+// clear a producer result. Separate frames, loops, delayed bodies, clones and
+// payment trials keep separate results. Definition checks require a producer.
+// RON accepts AddMana(TheManaLostThisWay) after LoseUnspentMana in an ordinary
+// action sequence. PlayerAction selects the donor or recipient. PlayerActions
+// keeps local results inside its body. New losses replace the lexical result.
+// Entry and draw replacement bodies reject this shape. Drain Power still needs
+// forced legal mana activation; its complete records remain unsupported.
+//
 // [PutChosenHandCardOnLibrary] requires one current hand card at resolution.
 // The typed player chooses. Empty hands and absent players make no choice.
 // Invalid choices use a valid original candidate. Saved hand visits exclude

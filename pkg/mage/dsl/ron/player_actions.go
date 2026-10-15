@@ -34,7 +34,15 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 	ctx.actionPlayer = plan
 	ctx.player = playerReferencePlan{action: plan}
 	actions := make([]effectFactory, 0, len(parts))
-	for _, part := range parts {
+	for i, part := range parts {
+		if lostManaProducer(part) && hasLostManaRead(parts[i+1:]) {
+			build, err := compileLostManaProducer(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			actions = append(actions, build)
+			break
+		}
 		if part.Name == "MayAction" && len(part.Args) == 1 && (part.Args[0].Name == "DrawACard" || part.Args[0].Name == "SearchLibrary") {
 			build, optionalErr := compileOptionalTapChoice(part, ctx)
 			if optionalErr != nil {
@@ -49,7 +57,7 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 				return nil, nil, nil, unsupported(part, "scoped counter removal")
 			}
 		case "CreateFutureTrigger", "AttachPermanentToAPermanent", "PlayerMayAction", "GainControlOfPermanent":
-		case "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
+		case "AddMana", "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
 		default:
 			return nil, nil, nil, unsupported(part, "scoped player action")
 		}

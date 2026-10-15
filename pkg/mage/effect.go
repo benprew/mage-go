@@ -155,6 +155,9 @@ func applyEffectWithCardSetCaptures(g *Game, e Effect, sourceID, controller uuid
 	if e == nil || g.drawn {
 		return nil
 	}
+	savedLostMana := g.resolution.lostManaBindings
+	g.resolution.lostManaBindings = nil
+	defer func() { g.resolution.lostManaBindings = savedLostMana }()
 	savedNumbers := g.resolution.numberBindings
 	g.resolution.numberBindings = maps.Clone(numbers)
 	defer func() { g.resolution.numberBindings = savedNumbers }()

@@ -14,6 +14,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if lostManaProducer(part) && hasLostManaRead(parts[i+1:]) {
+			build, err := compileLostManaProducer(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if part.Name == "Exile" && hasExileControllerCountRead(parts[i+1:]) {
 			build, err := compileExileControllerCounts(part, parts[i+1:], ctx)
 			if err != nil {
