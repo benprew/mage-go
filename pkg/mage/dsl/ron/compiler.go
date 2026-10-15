@@ -2007,7 +2007,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	case "ReturnNumberCardsFromPlayersGraveyardToHand":
 		build, err := compileGraveyardHandReturn(n, ctx)
 		return []effectFactory{build}, err
-	case "LoseTheGame", "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -2124,6 +2124,9 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	if n.Name == "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType" || n.Name == "RevealHandAndDiscardACardOfTypeAtRandom" {
 		return compileRandomHandDiscard(n, ctx)
+	}
+	if n.Name == "PutACardFromHandOnTopOfLibrary" {
+		return compileHandLibraryChoice(n, ctx)
 	}
 	if n.Name == "PutTopOfLibraryInHand" || n.Name == "PutTopOfLibraryInGraveyard" {
 		return compileLibraryTopMove(n, ctx)

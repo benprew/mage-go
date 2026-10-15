@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PutChosenHandCardOnLibrary] requires one current hand card at resolution.
+// The typed player chooses. Empty hands and absent players make no choice.
+// Invalid choices use a valid original candidate. Saved hand visits exclude
+// returned objects. Canonical cards move to their owners' library tops.
+// The move emits a zone event after completion, without discard or reveal.
+// Source departure and phasing keep the saved resolving player. Waiting queries
+// make no choice. Copies and clones keep separate hands and library state.
+// RON accepts PutACardFromHandOnTopOfLibrary in ordinary resolving bodies with
+// single-player scope. Entry/draw replacement and all-player bodies reject.
+// The complete Conch Horn FEM record has cast, payment and resolution evidence.
+//
 // [ExileEachWithControllerCounts] saves actual exile counts by former controller.
 // Exact visits and controllers are saved before batch replacement choices.
 // Duplicate, absent, returned and phased subjects cannot add a count.

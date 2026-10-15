@@ -18287,3 +18287,27 @@ instance, then lowers through `mage.ExileEachWithControllerCounts` and
 `mage.DrawEachPlayerNumber`. Other filters and count consumers, unbound or delayed
 reads, exile modifiers and entry/draw replacement bodies reject. The complete
 Martyr's Cry DRK record is covered by `TestRONExileControllerCountsMartyrsCry`.
+
+## Required hand choice to library top
+
+`mage.PutChosenHandCardOnLibrary(player mage.PlayerRef) mage.ResolvingEffect`
+requires one current hand choice and moves that exact visit to its owner's
+library top. Empty hands make no choice. Required-choice normalization,
+canonical cards, saved visits, shared zone services and post-move events live
+in mage; RON spelling and lexical player scope remain in the compiler.
+
+RON accepts the strict symbol `PutACardFromHandOnTopOfLibrary` in ordinary
+resolving spell, activated, triggered and delayed bodies. Default scope is You;
+`PlayerAction` and nested `PlayerActions` use their existing typed player scope.
+Arguments, costs, layers, entry and draw replacement bodies, and
+`EachPlayerAction` reject. This slice establishes one player's required choice;
+a simultaneous multi-player choice batch needs its own contract.
+
+`TestRONHandLibraryChoiceConchHorn` covers the complete FEM record through paid
+casting, failed activation rollback, mana/tap/sacrifice costs, two draws and one
+put-back, copied abilities with a different controller and pending game clones.
+`ReplacedDraws` checks existing and empty hands after replaced draws.
+`DrawTiming` checks choice of an existing card and draw-trigger timing. `Scopes`,
+`Contexts`, `Invalid` and `LoadAndInventory` check scoped players, source phasing
+and departure, resolution timing, declaration rejection, independent factories,
+inventory compilation and atomic collection rejection.

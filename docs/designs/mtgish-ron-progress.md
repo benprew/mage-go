@@ -6,13 +6,13 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **933 accepted / 53 rejected names**
-(986 total), **2,346 compiled / 99 rejected records** (2,445 total).
-The latest slice is **EXILE-CONTROLLER-COUNTS**.
-RON lowers Martyr's Cry's complete DRK record through actual simultaneous
-exile counts and ordinary per-player draws. Saved controllers and exact visits
-precede replacements. Tokens count; canceled, redirected and phased moves do
-not. Typed number frames keep producers, copies and clones separate.
+Latest measured result (2026-10-15): **934 accepted / 52 rejected names**
+(986 total), **2,347 compiled / 98 rejected records** (2,445 total).
+The latest slice is **HAND-LIBRARY-CHOICE**.
+RON lowers Conch Horn's complete FEM record through a required hand choice
+at resolution and exact-visit movement to the owner's library top. Ordinary
+draw replacements run before the choice; draw triggers wait until resolution
+finishes. Source sacrifice, copies and clones use the saved resolving player.
 Estimated and actual gain: one name / one record, with complete RON gameplay.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
@@ -21,13 +21,10 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Hand-to-library choice:** Conch Horn, one name / one FEM record. Its fixed
-   payment, source sacrifice and two-card draw already have shared contracts;
-   add the required legal hand choice and library placement after the draw.
-2. **Forced mana activation and saved mana:** Drain Power, eventual one name /
+1. **Forced mana activation and saved mana:** Drain Power, eventual one name /
    six records. First isolate legal activation choices, arbitrary costs and
    variable output; then capture exact lost mana in typed results.
-3. **Sticky animation and ability removal:** Titania's Song, one name / two
+2. **Sticky animation and ability removal:** Titania's Song, one name / two
    records. It needs evolving layer membership and a post-source duration.
 
 ## Dependencies and source blockers
@@ -23952,3 +23949,148 @@ No removal was attempted while the design's gates remain unmet.
 53 unique names / 99 records still reject. Complete RON gameplay, runtime
 loading and application cutover, Go-card/generator removal and unused DSL
 cleanup remain incomplete. Stop after EXILE-CONTROLLER-COUNTS.
+
+## 2026-10-15 — HAND-LIBRARY-CHOICE
+
+### Fresh baseline and selection
+
+The working tree was clean. `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+`go run ./cmd/loadcards -json` exited 1 with valid JSON: 2,346 compiled /
+99 rejected records, 933 accepted / 53 rejected unique names. This was expected
+collection rejection, with no build, test or environment failure.
+
+Read the latest ranked candidates and all complete records, including nested
+forms and identical reprints. Targeted vocabulary evidence shows one symbol
+occurrence of `PutACardFromHandOnTopOfLibrary`, on Conch Horn.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream benefit | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Required hand-to-library choice | Conch Horn | One name / one FEM record | Fixed payment, tap, sacrifice and two draws already work. Adds a reusable required hidden-zone choice and exact hand-to-library move. No other full-record blocker. | Small: one engine effect, strict player-scoped adapter, native contracts and complete RON gameplay. |
+| Forced legal mana activation | Drain Power | Zero for this prerequisite; eventual one name / six records | Must cover the affected player's legal activation decisions, arbitrary costs and variable output. Typed actual lost-mana production and its AddMana consumer remain separate. Enables the complete land-activation/mana-transfer procedure. | Large: payment windows, activation enumeration, choices and arbitrary costs, then saved mana results. |
+| Sticky animation and ability removal | Titania's Song | One name / two records after the complete contract | Requires evolving layer membership, dependency interactions, ability removal, per-recipient mana-value P/T and duration after source departure. Enables reusable sticky layer effects. | Large: shared layer lifecycle and dependency tests before lowering the complete form. |
+
+The ranked first candidate is dependency-ready. The three candidates each affect
+one distinct name; reprints do not establish multi-card value. Selected the
+small complete hand-choice operation after comparison. The other candidates
+need larger independent engine contracts. No useful multi-card capability was
+identified among these three. Estimated gain was one name / one record.
+
+Contract before edits: a specified player must choose one current hand card at
+resolution, if one exists, and put that exact visit on its owner's library top.
+RON owns spelling and scope; mage owns required choice, identity and movement.
+Acceptance includes empty hands, invalid choices, returned visits, owners,
+post-move events, source sacrifice/phasing/LKI, copied abilities, pending clones,
+replacement-modified draws, draw-trigger timing and payment rollback.
+
+### Implemented contract and reuse
+
+- Added `mage.PutChosenHandCardOnLibrary(player PlayerRef) ResolvingEffect`.
+  Nil and unbound declarations fail definition validation. An absent runtime
+  player or empty hand makes no choice and moves nothing.
+- The shared `ChooseCardFromHand` interface receives current hand candidates.
+  Original visits are saved before the choice. A selected ID resolves to its
+  canonical current card. Nil, foreign and stale choices use a valid original
+  candidate in hand order. If none remains, no card moves. A returned visit
+  cannot replace an original one, and a forged card cannot supply its data.
+- Reused `handOperationPlayer`, shared hand visits and departure information,
+  `RemoveFromHand`, `SetLibrary`, definition edges and source-read inspection.
+  The canonical card moves to the owner's library top. Existing retained
+  library order/visits remain intact under the shared visibility rules.
+- One hand-to-library `EvtZoneChange` fires after movement. This instruction
+  does not discard, reveal, draw, search or shuffle. Discard/draw replacements
+  do not apply to it. Earlier draws still use shared draw replacements.
+- No new global result, binding family, payment mechanism or zone subsystem.
+  Saved resolving controllers, source LKI, copied abilities, delayed bodies
+  and independent game clones use existing services.
+- Exact RON shape: strict symbol `PutACardFromHandOnTopOfLibrary`, in ordinary
+  resolving spell, activated, triggered (including source entry) and delayed
+  action bodies. Default player is You. `PlayerAction` and nested
+  `PlayerActions` retain their typed player scope. Arguments, costs, layers,
+  entry replacement bodies and draw replacement bodies reject.
+- `EachPlayerAction` remains unsupported for this symbol. A simultaneous
+  multi-player choice batch requires a separate contract; this slice supplies
+  one player's choice only.
+- `go run ./cmd/fetchset -check -card "Conch Horn"` passed before edits.
+  Read its complete local ruling file: one WotC ruling dated 2004-10-04, no
+  Scryfall notes. Local FEM Oracle text requires two draws, then a card from
+  hand on top. CR 400.2–3, 400.7, 401.2, 608.2c–d, 113.7a, 117.2e and 603.3
+  establish identity, destination, timing and source independence.
+
+No source defect was found or corrected. No RON source changed, so the
+vocabulary source/hash snapshot needs no refresh. No Go card definitions,
+generators or broad DSL APIs changed. Removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on the missing
+`PutChosenHandCardOnLibrary` API. Real Conch Horn gameplay first failed on
+unsupported `PutACardFromHandOnTopOfLibrary`. Additional scope tests exposed
+missing nested PlayerActions routing. A source-entry-trigger test exposed the
+overly broad `enteringSource` guard; the adapter now requires resolving scope
+and excludes draw replacement bodies. Entry replacement declarations still
+reject. An experimental all-player scope case was retained as a rejection test
+because this slice does not establish simultaneous multi-player choices.
+
+Corrected test fixtures to set a departing source's owner, use LoadFS's real
+registry API and respect AddToHand's owner invariant. The owner-destination
+contract fixture changes ownership only after hand setup. No production gate
+or gameplay assertion was weakened.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Conch Horn, complete FEM record | `TestRONHandLibraryChoiceConchHorn` | Paid cast, failed activation rollback, mana/tap/self-sacrifice costs, two draws then one put-back, different-controller ability copy and pending clone |
+| Replacement-modified draws | `TestRONHandLibraryChoiceReplacedDraws` | Both draws replaced by life gain; existing hand card still required, empty hand makes no put-back |
+| Same-resolution choice and triggers | `TestRONHandLibraryChoiceDrawTiming` | Choice sees three cards after two draws, can return an existing card, sees sacrificed source, draw triggers resolve after put-back |
+| Player scope and supported bodies | `TestRONHandLibraryChoiceScopes`, `Contexts` | Default You, PlayerAction, target player, nested ActionPlayer, phased source, spell, source-entry trigger, delayed departed source, resolution-time hand |
+| Strict declarations and collection publication | `TestRONHandLibraryChoiceInvalid`, `LoadAndInventory` | Tuple/argument, unbound player, cost, static, entry/draw replacement and all-player rejection; separate factory instances, inventory compilation and atomic load failure |
+| Required choice and exact visits | `TestHandLibraryChoiceIdentity` | First and second choices, nil/foreign fallback, forged-card normalization, returned/removed visits, valid remaining choice, empty hand, post-move event, no discard/reveal, retained library visit |
+| Typed players and independent games | `TestHandLibraryChoicePlayerAndDeclarations` | Owner destination, absent player, nil/unbound definition rejection and clone isolation |
+| LKI and pure waiting queries | `TestHandLibraryChoiceReturnedOnlyAndWaiting` | Sole returned visit cannot move; repeated waiting queries make no choice; source return under another controller cannot replace delayed source LKI |
+
+### Verification and loader comparison
+
+Focused native and RON tests passed with `-count=1`. `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test` and the
+implement-engine skill's additional `go test ./... -short -count=1` passed.
+Four pinned assertions in three RON test files now require 2,347 compiled /
+98 rejected records. These assertions remain exact.
+
+Final lint, post-lint checks and loader evidence are recorded below.
+
+- `make lint`: passed, zero issues. Reviewed automatic edits: import ordering
+  in the two new test files only; no semantic changes or unrelated edits.
+- Repeated `go test ./pkg/mage -run TestHandLibraryChoice -count=1` and
+  `go test ./pkg/mage/dsl/ron -run TestRONHandLibraryChoice -count=1` after lint:
+  passed. `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON,
+  **2,347 compiled / 98 rejected records**, **934 accepted / 52 rejected names**.
+  Parsed baseline/final diagnostic sets: only Conch Horn's FEM diagnostic was
+  removed; no other diagnostic was added or changed. Example remaining gap:
+  Drain Power, `2ED.lines.ron:69:279: unsupported value (And)`.
+
+Actual gain matches the estimate: one unique name / one record now compiles,
+plus one complete RON gameplay mapping. Compilation and gameplay coverage are
+separate. Collection loading still rejects atomically because other gaps remain.
+No environment blocker or pre-existing required-check failure was found.
+
+Changed files: native `hand_library_choice.go` and tests; RON
+`hand_library_choice.go` and tests, `compiler.go`, `player_actions.go` and the
+three pinned-count test files; `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. All required checks passed.
+The requested commit uses the prior documented command-local
+`commit.gpgsign=false` override without changing repository/global settings.
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation for Drain Power: zero immediate full-card
+   unlocks for that prerequisite, eventual one name / six records. Respect
+   legal activation choices, arbitrary costs and variable mana output. Then
+   implement typed actual lost-mana results and the AddMana consumer.
+2. Sticky layer membership and post-source duration for Titania's Song:
+   one name / two records after the complete shared contract. Preserve layer
+   dependencies, ability removal and recipient-specific mana-value P/T.
+
+52 unique names / 98 records still reject. Complete RON gameplay, runtime
+loading and application cutover, Go-card/generator removal and unused DSL
+cleanup remain incomplete. Stop after HAND-LIBRARY-CHOICE.

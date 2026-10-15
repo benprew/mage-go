@@ -24172,3 +24172,33 @@ Evidence: `TestExileControllerCountsBatch`, `Replacements`, `Order`, `Competing`
 `IndependentProducers`. The real DRK record has complete cast-and-resolution
 evidence, including stolen creatures, tokens, phasing, protected characteristics,
 failed payment, stack copies and game clones.
+
+## Required hand choice to library top
+
+`PutChosenHandCardOnLibrary(player PlayerRef) ResolvingEffect` reads the typed
+player's current hand at resolution and requires one choice when that hand is
+nonempty. Absent players and empty hands have no effect and make no choice.
+The shared `ChooseCardFromHand` interface receives the candidates. A nil,
+foreign or stale answer uses the first valid original candidate, as with other
+required engine choices. The effect saves each original hand visit before the
+choice; a returned card cannot supply that visit. It resolves the selected ID
+to the canonical current card, so a forged card cannot supply characteristics.
+If no original visit remains, no card moves.
+
+The effect removes the card from that hand and prepends it to its owner's
+library (CR 400.3, 400.7, 401.2, 608.2c–d). Shared `RemoveFromHand` and
+`SetLibrary` maintain departure information, visits and library visibility.
+The hand-to-library zone event fires after the complete move. This is neither
+a discard nor a reveal, draw, search or shuffle. Discard and draw replacements
+do not apply to this instruction. Earlier draws still use the ordinary draw
+replacement pipeline; the choice reads the hand after those draws. Conch Horn's
+WotC ruling of 2004-10-04 confirms that no player acts between its draws and
+put-back, and draw triggers wait for ability resolution to finish.
+
+Nil and unbound player declarations reject. Source references retain the shared
+waiting-source and LKI contracts. Source sacrifice, return, control change or
+phasing does not redirect a saved resolving player. No new mutable binding or
+global action result is needed. Clones and copies use their own current zones.
+`TestHandLibraryChoiceIdentity`, `PlayerAndDeclarations` and
+`ReturnedOnlyAndWaiting` cover choices, identity, events, owner destination,
+empty/absent players, retained library visits, LKI, queries and clone isolation.
