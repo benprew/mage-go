@@ -24657,3 +24657,37 @@ Native `TestForcedManaCostsAndOrder`, `Rechecks`, `RollbackAndBoundaries`,
 `TestRONForcedManaRecords`, `Invalid`, `CopiesAndInstances` and `PendingSource`
 cover complete records, strict declarations, per-instance results, self targets,
 copies, clones, source departure, phasing and control changes.
+
+## Exact-source damage prevention until cleanup
+
+`PreventDamageByThisTurn(source PermanentRef) ResolvingEffect` saves the
+source's exact permanent identity at resolution. A typed information reference
+can retain an absent source from a pending or delayed body. Definition checks
+reject nil, unbound and non-information references. No global action result or
+choice is needed.
+
+The instruction installs the shared source prevention replacement with
+`allDamage` enabled and an end-of-turn duration. Existing combat-only callers
+retain their original behavior. Matching compares both permanent ID and
+incarnation, using the damage action's source information. The rule prevents
+all matching combat and noncombat packets to players and damageable permanents,
+without consumption. Return cannot inherit the rule. Control changes and phase
+cycles preserve identity. A damage instruction that retains the old source can
+still supply matching damage after departure or phasing.
+
+Shared damage services handle simultaneous results, replacement order,
+unpreventable damage and lifelink. Prevented damage supplies no damage result
+or lifelink gain. Unpreventable damage leaves the rule available. Cleanup
+removes the rule separately in each clone.
+
+The existing source replacement supplies its exact visit to
+`Game.WaitingPreventionPermanentSources`. Pending delayed bodies declare direct
+source reads to `Game.WaitingDelayedPermanentSources`. Queries install no rule,
+make no choices and cannot substitute a returned source.
+
+Rules: CR 120.2–3, 400.7, 609.7, 611.2, 615.1–6, 615.12, 616.1 and 702.26.
+Evidence: native `TestSourceDamagePreventionIdentity`, `Declarations`,
+`DelayedLKI`, `OrderingAndUnpreventable`; RON
+`TestRONSourceDamagePreventionKryShield`, `Instances`, `Delayed`, `Invalid`
+and `Inventory`. The complete Kry Shield record has paid-cast, activation
+payment and resolution evidence. No Oracle or RON source change is required.

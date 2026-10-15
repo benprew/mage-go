@@ -219,18 +219,19 @@ type combatSourcePreventionReplacement struct {
 	replacementBase
 	preventedID uuid.UUID
 	incarnation uuid.UUID
+	allDamage   bool
 }
 
 func (r *combatSourcePreventionReplacement) Matches(a Action, _ GameReader) bool {
 	var source DamageSource
 	switch action := a.(type) {
 	case *DamageToPlayerAction:
-		if !action.IsCombatDamage() {
+		if !r.allDamage && !action.IsCombatDamage() {
 			return false
 		}
 		source = action.DamageSource()
 	case *DamageToCreatureAction:
-		if !action.IsCombatDamage() {
+		if !r.allDamage && !action.IsCombatDamage() {
 			return false
 		}
 		source = action.DamageSource()

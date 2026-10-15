@@ -165,7 +165,7 @@ func TestRONTargetingAbilityRecords(t *testing.T) {
 		{"ARN", "Ali Baba"}, {"LEB", "Dwarven Demolition Team"}, {"FEM", "Dwarven Lieutenant"},
 		{"ARN", "Elephant Graveyard"}, {"FEM", "Fungal Bloom"}, {"DRK", "Goblin Digging Team"},
 		{"DRK", "Goblin Wizard"}, {"FEM", "Icatian Lieutenant"}, {"ATQ", "Mishra's Factory"},
-		{"FEM", "Orcish Captain"}, {"FEM", "Thrull Champion"},
+		{"FEM", "Orcish Captain"}, {"FEM", "Thrull Champion"}, {"LEG", "Kry Shield"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			factory, err := Compile(staticBaseRecord(t, tc.set, tc.name))
@@ -189,7 +189,7 @@ func TestRONTargetingAbilityRecords(t *testing.T) {
 			}
 		})
 	}
-	for _, tc := range []struct{ set, name string }{{"DRK", "Reflecting Mirror"}, {"LEG", "Kry Shield"}} {
+	for _, tc := range []struct{ set, name string }{{"DRK", "Reflecting Mirror"}} {
 		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil {
 			t.Fatalf("published incomplete %s", tc.name)
 		}

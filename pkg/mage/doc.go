@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventDamageByThisTurn] saves one exact permanent visit until cleanup.
+// Both combat and noncombat damage use shared prevention services.
+// Departure keeps the saved source. Return creates a different visit.
+// Control changes and phase cycles keep the same identity.
+// Waiting queries retain exact references without installing rules.
+// Delayed bodies can install prevention for their saved absent source.
+// Clones keep separate rules and cleanup. Unpreventable damage keeps the rule.
+// RON accepts DamageWouldBeDealtByPermanent with one PreventThatDamage
+// operation and UntilEndOfTurn in ordinary resolving bodies.
+// The complete Kry Shield record has cast, payment and resolution evidence.
+//
 // [ActivateManaAbilityOfEach] saves matching visits controlled by one player.
 // That player chooses the order, ability and output. Each visit can supply
 // one activation. Shared activation services check costs and resolve mana

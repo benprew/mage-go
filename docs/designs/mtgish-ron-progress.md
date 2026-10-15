@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **944 accepted / 42 rejected names**
-(986 total), **2,368 compiled / 77 rejected records** (2,445 total).
-The latest slice is **FORCED-MANA-ACTIVATION**.
-RON lowers forced land mana activation, pool loss and the saved mana result.
-Native activation keeps exact visits and one successful activation per source.
-The affected player chooses order, ability, colors and variable output.
-All six complete Drain Power records have paid-cast and resolution evidence.
-Estimated and actual gain: one name / six records. Collection loading still
+Latest measured result (2026-10-15): **945 accepted / 41 rejected names**
+(986 total), **2,369 compiled / 76 rejected records** (2,445 total).
+The latest slice is **EXACT-SOURCE-DAMAGE-PREVENTION**.
+RON lowers all damage prevention from one typed permanent until cleanup.
+Native prevention saves exact visits and retains absent-source information.
+Shared damage services handle combat, noncombat, batches and replacements.
+The complete Kry Shield record has paid-cast and activation gameplay evidence.
+Estimated and actual gain: one name / one record. Collection loading still
 rejects atomically. Runtime cutover, Go-card removal and unused DSL cleanup
 remain gated by complete support and startup.
 
@@ -24,9 +24,10 @@ Reassess with fresh loader and complete-record evidence. Count reprints once.
 1. **Finite damage redirection:** Personal Incarnation, eventual one name / six
    records. Needs finite packet splitting, owner references and all six death-loss
    rounding defects repaired. Nova Pentacle is complete.
-2. **Temporary source damage prevention:** Kry Shield and Heroism, eventual two
-   names / two records. Compare exact-source prevention with filtered combat
-   prevention and its source-controller payment gate; these need separate shapes.
+2. **Resolving prevention selection/payment:** Heroism, eventual one name / one
+   record. Establish resolution-time selection and per-creature controller
+   payment. Its nested RON payment conflicts with the local timing ruling.
+   Kry Shield exact-source prevention is complete.
 
 ## Dependencies and source blockers
 
@@ -25832,5 +25833,149 @@ configuration remains unchanged.
    2 names / 2 records across separate exact-source and filtered/payment shapes.
 
 Stop after this slice. Forty-two names / 77 records still reject. Complete
+collection gameplay, runtime cutover, Go-card and obsolete generator removal,
+and unused DSL cleanup remain unfinished.
+
+## 2026-10-15 — EXACT-SOURCE-DAMAGE-PREVENTION
+
+### Baseline, candidates and selection
+
+The working tree was clean at `495bd737`. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with valid JSON and
+2,368 compiled / 77 rejected records, 944 accepted / 42 rejected names.
+This was expected atomic collection rejection, not a build or environment failure.
+
+Read the complete six Personal Incarnation records and the complete Kry Shield
+and Heroism records, including nested forms. Reprints count once. The latest
+entry ranked finite redirection first and the two source prevention shapes next.
+
+| Candidate | Distinct names and estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, finite redirection | Personal Incarnation; eventual 1 name / 6 records, zero from an adapter alone | Missing finite packet splitting and ordinary owner references; the self-death owner binding is also unavailable. Owner activation permission already exists. All six death-loss expressions require rounding corrections. A shared splitting contract must preserve damage causes, replacement order and simultaneous outcomes. | High; several prerequisites and a data correction, larger than this slice |
+| Exact-source prevention, selected | Kry Shield; 1 name / 1 record | Bound targets, control filter, mana/tap costs and mana-value toughness modification already work. Extend the native exact-source prevention replacement to cover noncombat damage. This supplies a reusable unlimited source shield, delayed source reads and waiting references. | One run; small production change with native and full-record interaction tests |
+| Conditional collection prevention | Heroism; eventual 1 name / 1 record, zero from the exact-source adapter alone | Needs resolution-time selection and a separate payment for each selected creature's controller. The RON places payment in the prevention body, while the local WotC ruling requires payment when the ability resolves. Source semantics must be resolved before lowering; damage-time payment would be wrong. | High; independent choice/payment and snapshot contract, plus source review |
+
+Ranked #1 was not dependency-ready as a complete adapter. Selected the ready
+exact-source shape from ranked #2. The apparent two-card source prevention
+family has separate exact-reference and resolving collection/payment contracts;
+one adapter cannot claim both unlocks. No credible shared two-card unlock was
+found among the ranked candidates. This slice implements only the exact-source
+shape and its engine service. It does not begin finite redirection or Heroism.
+
+### Contract, dependencies and reuse boundary
+
+Native `PreventDamageByThisTurn(source PermanentRef) ResolvingEffect` saves
+one exact source visit at resolution through `permanentInformationReference`.
+Definition checks reject nil, unbound and non-information references. A saved
+source from a pending or delayed body can install the rule after departure.
+Both combat and noncombat damage from that visit are prevented until cleanup.
+Return creates a different visit. Control changes and phase cycles keep identity.
+The rule does not require the source to keep its former abilities or types.
+
+The existing `combatSourcePreventionReplacement` gains `allDamage bool`.
+Existing callers keep their combat-only default. The new operation enables
+all damage and reuses exact source matching, the shared prevention marker,
+replacement choices, unpreventable damage handling, damage batches, outcomes,
+lifelink, cloning and end-of-turn expiry. No second damage pipeline is added.
+Existing `waitingPreventionPermanents` supplies the installed source reference.
+The new instruction declares direct source reads to waiting delayed queries.
+Queries do not install rules, make choices or substitute returned sources.
+
+RON `compileSourceDamagePrevention(Node, scope) (effectFactory, error)` accepts:
+`CreatePreventDamageUntil(DamageWouldBeDealtByPermanent(permanentRef),
+[PreventThatDamage], UntilEndOfTurn)` in ordinary resolving bodies, including
+delayed bodies. `compileCombatPrevention` validates outer arity before dispatch.
+The source uses `compilePermanentRef` and per-factory `instanceBindings`.
+Missing/extra operands, unbound or incompatible references, other operations,
+other durations, nonresolving, entry and draw replacement contexts reject.
+Inventory gives the event operand the `permanent_reference` role.
+
+RON spelling, roles and lexical scopes remain in `ron`; damage mechanics remain
+in `mage`. The complete LEG Kry Shield record uses this instruction with the
+existing target, payment and temporary-value services. No Go definition, broad
+DSL API or production registry path was removed. Cutover gates remain unmet.
+There is no card-name branch, Go fallback, global result, game-time declaration
+panic or partial production registry. RON source bytes remain unchanged, so no
+vocabulary source refresh is required.
+
+### Rules, source evidence and failing-first tests
+
+Read local Oracle text and all local rulings for all three comparison cards.
+Kry Shield has an explicit empty rulings array. Heroism has two WotC rulings,
+and Personal Incarnation has three; there are no Scryfall notes for these cards.
+`go run ./cmd/fetchset -check -card "Kry Shield"` passed before implementation.
+CR 120.2–3, 400.7, 609.7, 611.2, 615.1–6, 615.12, 616.1 and 702.26 establish
+source identity, damage results, duration, prevention, ordering and phasing.
+
+Before production changes, all complete-record cases in
+`TestRONSourceDamagePreventionKryShield` failed on unsupported
+`DamageWouldBeDealtByPermanent`. After fixing the test's keyword qualifier,
+native tests failed only because `PreventDamageByThisTurn` was undefined.
+The native return test later used its actual prior life total because the
+returned source's lifelink correctly changes that total. The synthetic delayed
+RON fixture uses an artifact because the fixture helper supplies no creature
+P/T. Neither correction weakens a gameplay assertion.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Kry Shield, complete LEG record | `TestRONSourceDamagePreventionKryShield`: unpaid/paid cast, mana/tap activation costs, rollback, creature/control/shroud legality, no effect before resolution, +0/+mana-value toughness, pending illegal/phased/returned targets, issuer departure/return/phasing/control, installed source return/control/shroud/phase cycle, simultaneous player/permanent packets, other-source exclusion, pending and installed clones, expiry |
+| Distinct factories and copies | `TestRONSourceDamagePreventionInstances`, `Copy`: independent complete-record targets, values and installed sources, pending clone, copied activation with a different controller and target, native cleanup of both effects |
+| Pending source and lexical references | `TestRONSourceDamagePreventionDelayed`, native `TestSourceDamagePreventionDelayedLKI`: waiting source reads, query purity, source departure and return before resolution, exact absent-source damage, independent delayed clones |
+| Engine source mechanics | `TestSourceDamagePreventionIdentity`: combat and noncombat batches, prevention with no lifelink gain, repeated damage, departure/return/phasing/control, waiting identity and independent cloned expiry |
+| Replacement interaction | `TestSourceDamagePreventionOrderingAndUnpreventable`: recipient chooses either prevention/redirection order; redirected damage is still prevented; unpreventable damage is dealt and does not consume the rule |
+| Declarations and inventory | `TestRONSourceDamagePreventionInvalid`, `Inventory`, native `TestSourceDamagePreventionDeclarations`: malformed events/operations/durations, unbound/wrong references and invalid contexts reject; source operand has the correct role |
+
+Source findings: no defect in Kry Shield. Personal Incarnation's six
+`HalfRoundedDown` death losses still disagree with local Oracle's rounded-up
+loss and remain deferred. Heroism's 2004-10-04 WotC ruling requires payment
+when the ability resolves, and its other ruling says payment does not bypass
+other prevention. Its nested prevention-time payment form needs a source and
+contract decision before implementation. No card source was changed here.
+
+### Verification and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONSourceDamagePrevention
+  -count=1` and `go test ./pkg/mage -run TestSourceDamagePrevention -count=1`:
+  passed, including after lint. The post-lint RON run also includes the two
+  updated fixture regressions.
+- `make build` and `go vet ./...`: passed, including after adding copy tests
+  and updating the old unsupported-card fixtures.
+- `go test ./pkg/mage/... -short -count=1`: passed. Its first run identified
+  two old tests that required Kry Shield to reject. The target-identity test
+  now includes Kry Shield among supported records, and the atomic-loading test
+  uses still-unsupported Heroism. The strict rejection assertions remain.
+- `make test`: passed for the full repository after those fixture updates.
+- `make lint`: passed, **0 issues**. Reviewed automatic changes: only import
+  sorting in the two new test files. Both affected focused suites passed again.
+- `git diff --check`: passed before and after the final ledger update.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,369 compiled / 76 rejected records**, **945 accepted / 41 rejected names**.
+  An exact ordered comparison confirms only Kry Shield's diagnostic disappeared
+  from the baseline; every other diagnostic is unchanged. Atomic collection
+  rejection remains active. No environment or validation blocker remains.
+
+Estimated and actual gains agree: **one unique name / one record**.
+Compilation and complete RON gameplay remain separate measurements. The existing
+definition-plan, inventory and numeric collection expectations advance by one;
+no existing gameplay test was removed or weakened.
+
+Changed files: native `pkg/mage/source_damage_prevention.go`, its test,
+`replacement.go` and `doc.go`; RON `source_damage_prevention.go`, its test,
+`combat_prevention.go`, `inventory.go`, `definition_plan_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`,
+`matching_permanent_exile_cost_test.go` and `targeting_ability_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No unrelated work changed.
+
+### Remaining gaps and ranked next candidates
+
+1. Finite damage redirection for Personal Incarnation: eventual 1 name / 6
+   records. Start with shared packet splitting or ordinary owner references;
+   verify the self-death owner binding and correct all six death-loss roundings.
+2. Heroism resolving prevention selection/payment: eventual 1 name / 1 record.
+   Establish resolution-time per-creature payment and exact selected source
+   visits. Resolve the RON timing defect with the local WotC ruling first.
+
+Stop after this slice. Forty-one names / 76 records still reject. Complete
 collection gameplay, runtime cutover, Go-card and obsolete generator removal,
 and unused DSL cleanup remain unfinished.

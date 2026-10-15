@@ -209,7 +209,7 @@ func TestRONMatchingPermanentExileCostStrictLoad(t *testing.T) {
 	if err != nil || report.Compiled != 1 {
 		t.Fatal("inventory rejected supported declaration", err)
 	}
-	for _, entry := range []struct{ set, name string }{{"LEG", "Kry Shield"}} {
+	for _, entry := range []struct{ set, name string }{{"FEM", "Heroism"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + entry.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)

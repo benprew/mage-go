@@ -18635,3 +18635,24 @@ Copies and clones have separate local activation state. X belongs to each
 activation; the enclosing resolution's X is preserved. Use
 `LoseUnspentManaInto` and `AddLostManaFor` to save and transfer the actual pool
 after these activations, without a second mana-production event.
+
+### Exact-source damage prevention until cleanup
+
+`CreatePreventDamageUntil(DamageWouldBeDealtByPermanent(permanentRef),
+[PreventThatDamage], UntilEndOfTurn)` accepts one bound permanent reference
+in an ordinary resolving body, including delayed bodies. Entry and draw
+replacement bodies reject. Missing or extra operands, other operations and
+other durations reject. The operand has inventory role `permanent_reference`.
+
+The adapter builds `mage.PreventDamageByThisTurn(PermanentRef)`. It saves one
+exact visit when the instruction resolves. Both combat and noncombat damage
+from that visit are prevented until cleanup, including damage supplied after
+source departure. A returned permanent has a different visit. Later control,
+target restrictions and source ability removal do not change the saved rule.
+The shared damage service controls replacement order and unpreventable damage.
+
+The complete LEG Kry Shield record combines this instruction with its existing
+target, mana/tap costs and mana-value toughness modification.
+`TestRONSourceDamagePreventionKryShield`, `Instances`, `Delayed`, `Invalid`
+and `Inventory` cover complete gameplay, separate factories and clones,
+source LKI, declarations and semantic roles.
