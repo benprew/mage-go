@@ -8,18 +8,16 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **919 accepted / 67 rejected names**
 (986 total), **2,299 compiled / 146 rejected records** (2,445 total).
-The latest slice is **REQUIRED-PLURAL-SACRIFICE-PAYMENT**.
-RON lowers resolving MustCost(SacrificeNumberPermanents(value, filter)) with
-an adjacent If or Unless payment-result branch. RequiredSacrificeNumberOrElse
-reads the count once and reuses the shared sacrifice payment transaction.
-Full affordability, exact choices, simultaneous movement, replacements, source
-LKI, delayed queries, copies and clones have native and RON test evidence.
-Lich's damage-payment clause now lowers in all five unchanged reprints.
+The latest slice is **EXPLICIT-RESOLVING-GAME-LOSS**.
+RON lowers the strict LoseTheGame symbol in ordinary resolving player scopes.
+LoseGameFor resolves a typed player and reuses Player.SetLost. It records loss
+without changing life and bypasses the life-total loss exemption.
+Lich's first four unchanged rules now execute together in all five reprints,
+including paid survival and unpaid loss. Queued controllers, copies, clones,
+source LKI, waiting queries and invalid declarations have test evidence.
 Actual gain is **zero names / zero records**, matching the estimate; complete-card
-coverage is unchanged. Five diagnostics advance to LoseTheGame. The exact-source
-graveyard trigger is also still a compiler gap. No RON source changed.
-Build, vet, engine short tests, full tests and final lint (zero issues) pass.
-The post-format RON suite passes. The working tree was clean at the start.
+coverage is unchanged. Five diagnostics advance to the exact-source graveyard
+filter. No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -18354,3 +18352,139 @@ stopped; the commit uses a per-command signing override without changing Git
 configuration. Required validation checks all passed.
 Commit title: `feat(ron): implement mandatory plural sacrifice payment`.
 This run stops after REQUIRED-PLURAL-SACRIFICE-PAYMENT.
+
+## 2026-10-14 — EXPLICIT-RESOLVING-GAME-LOSS
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader JSON reported
+2,299 compiled / 146 rejected records, 919 accepted / 67 rejected unique names.
+The command exited 1 for collection rejection, not a build failure. The registry
+remains atomic. Complete candidate records and nested forms were read from RON;
+Go card definitions were not used as requirements. The vocabulary has ten
+LoseTheGame symbols, all in Lich's two clauses across five reprints.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers / downstream value | Full implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Explicit resolving loss, ranked #1 | Lich | 0 | Exact-source graveyard filter still rejects; supplies both unpaid payment and future graveyard loss bodies | Small: typed resolving action, two compiler routes, validation, identity and gameplay tests |
+| Per-death result iteration, ranked #2 | Glyph of Reincarnation | 0 | IsAfterCombat still rejects; needs simultaneous destruction results, former blocking-controller reads and isolated iteration frames | Large: new result producer, iteration frame and historical references |
+| Copy-effect ability grants, ranked #3 | Vesuvan Doppelganger | 0 | Recursive resolving copy changes and ThisAbility retention remain; supplies copy-granted upkeep ability declarations | Large: copiable ability identities, exceptions, recursive changes and lifecycle tests |
+
+Candidate #1 is dependency-ready and is the next prerequisite on Lich's path.
+The prompt directs selection of that ready prerequisite. It has the smallest
+credible effort among the ranked candidates. No claim of a multi-card unlock is
+made: each candidate has one distinct blocked consumer. Reprints count once.
+The slice stops before the separate exact-source graveyard event adapter.
+
+### Established contract and reuse boundary
+
+Engine signature: `LoseGameFor(subject PlayerRef) ResolvingEffect`.
+RON accepts only the zero-argument **symbol** `LoseTheGame` in ordinary resolving
+bodies, including spells, activated abilities, triggers, delayed bodies and
+payment continuations. `PlayerAction` and `PlayerActions` supply their explicit
+player. The default scope supplies `You`, the resolving controller. Tuple aliases,
+arguments, unbound player references, entry and replacement operations reject.
+
+RON owns spelling and player scope. The engine resolves the typed player once
+and calls the existing `Player.SetLost`. It does not change life, poison or
+library state. The existing recorded-loss queries and clone extraction remain
+the authority. The life-total exemption cannot stop explicit loss. Positive life
+cannot reverse recorded loss. An absent player does nothing; definition
+validation rejects nil and unbound players. No general loss-prohibition service
+is introduced by this slice.
+
+Queued abilities retain their resolving controller after source control changes,
+phasing, departure or return. Copies use their own resolving controller.
+Factories build fresh typed bindings. Clones retain independent loss state.
+Explicit source operands use existing exact-visit and departure-controller LKI.
+Waiting delayed queries retain those reads without executing loss or choices.
+No payment, zone, replacement, event, clone or terminal-state subsystem is copied.
+The existing sacrifice transaction supplies affordability, simultaneous movement
+and rollback; this slice only supplies its loss continuation.
+
+Rules evidence: CR 104.3e (effect loss), contrasted with CR 104.3b (life-total
+state-based loss), and the existing typed-reference/lifecycle contracts.
+Complete local Lich rulings were read, including the wotc explicit-loss ruling
+and its distinction between life-total exemptions and general loss prohibitions.
+No scryfall note was treated as a wotc ruling. The complete local Oracle text
+in data/LEA.json agrees with the unchanged RON. `go run ./cmd/fetchset -check
+-card Lich` passed before implementation. No source defect or missing ruling
+was found. No RON source changed, so no vocabulary snapshot refresh is needed.
+No Go card definition, generator or DSL export was removed; removal gates remain
+closed. The implement-engine skill was used for the reusable engine action.
+
+### Failing-first tests and card-to-test mapping
+
+The native tests first failed to compile with undefined `LoseGameFor`.
+The RON tests first failed with unsupported action (LoseTheGame), including
+both payment outcomes in each of Lich's five reprints. Production changes followed
+those failures. The first implementation run exposed test fixture mistakes:
+Opponent is a player filter, so scoped tests now use a bound target; the next
+full-record diagnostic is the nested SinglePermanent filter, not its parent
+trigger name. These corrections preserve strict compilation and gameplay tests.
+The former payment test's rejection assertion now checks that precise next gap.
+Copies resolve only the top object in the test, so no test asks the convenience
+stack runner to execute another object after a terminal loss.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Lich; LEA:140, LEB/2ED/CED/CEI:141 | TestRONLoseGameLich | First four unchanged rules together; damage binds amount; full payment sacrifices two and survives at -2; insufficient payment sacrifices none and loses despite exemption; pending clone isolation; full records retain explicit rejection |
+| Native typed player loss | TestLoseGameFor | Positive, zero and negative life; life-total exemption; immediate recorded loss, game-over and winner; unchanged life; later gain cannot reverse loss; distinct clone/controller |
+| Native declarations and absence | TestLoseGameForDefinition | Nil and unbound references reject definition validation; an unresolved player causes no loss |
+| RON scopes and declarations | TestRONLoseGameScopes, Invalid | Default resolving controller and explicit singular/list target-player scopes; tuple aliases, arguments, unbound action/event players, entry and replacement bodies reject |
+| Queued source lifecycle | TestRONLoseGameQueuedIdentity | Live, departed, returned, phased and changed-control source retain queued controller; copied trigger uses its own controller; clones isolate recorded loss |
+| Delayed source reads and LKI | TestRONLoseGameWaiting | Repeated pure waiting queries retain exact old source after return under opponent; departure controller loses at delayed resolution; clone stays independent |
+| Spell and factory instances | TestRONLoseGameSpell | Two fresh factory instances; target player loses only at resolution; caster and life totals remain unchanged |
+
+Actual gain is zero complete names / zero records, matching the estimate.
+Complete-card gameplay coverage is unchanged. Lich gains real unpaid-loss branch
+coverage across all five reprints. Its fifth rule still rejects the exact-source
+graveyard filter, so no complete Lich execution is claimed.
+
+### Ranked next candidates
+
+1. Exact-source graveyard event filter for Lich:
+   `WhenAPermanentIsPutIntoAPlayersGraveyard(SinglePermanent(ThisPermanent),
+   AnyPlayer)`. Estimate one complete unique card / five records now that the
+   resolving loss body works. Reuse departure snapshots; test former controller,
+   simultaneous source/payment departure, return identity, phasing, copies and
+   clones. This is a separate event adapter, not part of this run.
+2. Per-death result iteration for Glyph of Reincarnation. Estimate zero complete
+   cards until IsAfterCombat also lowers. Preserve simultaneous destruction
+   results, exact blocking history, former controller and separate member frames.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero complete
+   cards until recursive resolving copy changes and ThisAbility retention work.
+   Preserve copiable declarations, color exceptions and independent identities.
+
+### Validation and collection result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONLoseGame' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestLoseGameFor' -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, 0 issues. Automatic formatting left no further code
+  changes. The resulting implementation and test imports were reviewed.
+- Post-lint `go test ./... -short -count=1`: pass, including all RON tests,
+  native engine tests and accepted-card regressions.
+- `git diff --check`: pass before and after the final documentation updates.
+- Final `go run ./cmd/loadcards -json`: valid JSON, expected exit 1 from atomic
+  collection rejection. **919 accepted / 67 rejected names; 2,299 compiled /
+  146 rejected records**, unchanged from baseline. Rejected record keys are
+  identical. Exactly five diagnostics changed: all Lich reprints advance from
+  unsupported action (LoseTheGame), column 540, to unsupported graveyard event
+  permanent filter (SinglePermanent), column 608. Every other diagnostic is
+  unchanged; no accepted record was lost.
+
+No environment failure or validation blocker remains. Collection gameplay,
+runtime cutover, Go-card/generator removal, DSL cleanup and native embedded
+startup remain incomplete. Only this slice's files are staged. Git signing is
+disabled for this commit only because the configured key requires an interactive
+prompt, as recorded by the prior run; repository configuration is unchanged.
+
+Changed files: new pkg/mage/lose_game.go and lose_game_test.go;
+new pkg/mage/dsl/ron/lose_game_test.go; pkg/mage/dsl/ron/compiler.go,
+player_actions.go and required_sacrifice_number_test.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+Commit title: `feat(ron): implement explicit resolving game loss`.
+This run stops after EXPLICIT-RESOLVING-GAME-LOSS.

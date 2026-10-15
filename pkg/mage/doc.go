@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [LoseGameFor] records immediate game loss for one typed player.
+// Life-total loss exemptions cannot prevent it. Life and poison do not change.
+// An absent subject does nothing. Copies use their own resolving controller.
+// Clones keep separate recorded loss. Later life gain cannot reverse loss.
+// Definition checks reject nil or unbound players. Waiting queries retain
+// explicit source reads without recording loss.
+// RON accepts the strict LoseTheGame symbol in ordinary resolving bodies,
+// including explicit player action scopes. Entry and replacement bodies reject.
+// Lich's unpaid damage-payment branch now executes in all five reprints.
+// Its exact-source graveyard event still needs an adapter.
+//
 // [RequiredSacrificeNumberOrElse] reads one count at resolution and requires
 // that many matching permanents controlled by its typed payer. The shared
 // transaction selects distinct exact visits and moves them simultaneously.

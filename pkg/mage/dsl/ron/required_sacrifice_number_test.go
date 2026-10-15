@@ -56,7 +56,7 @@ func TestRONRequiredSacrificeNumberLich(t *testing.T) {
 			if len(clone.GetPlayer(b.PlayerID()).Graveyard())+len(clone.GetPlayer(a.PlayerID()).Graveyard()) != 2 {
 				t.Fatal("clone lost event amount")
 			}
-			if _, err := Compile(staticBaseRecord(t, set, "Lich")); err == nil || !strings.Contains(err.Error(), "LoseTheGame") {
+			if _, err := Compile(staticBaseRecord(t, set, "Lich")); err == nil || !strings.Contains(err.Error(), "unsupported graveyard event permanent filter (SinglePermanent)") {
 				t.Fatalf("full record diagnostic: %v", err)
 			}
 		})

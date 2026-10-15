@@ -1951,7 +1951,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	case "ReturnNumberCardsFromPlayersGraveyardToHand":
 		build, err := compileGraveyardHandReturn(n, ctx)
 		return []effectFactory{build}, err
-	case "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "LoseTheGame", "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -2011,6 +2011,17 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "LoseTheGame" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "LoseTheGame requires a symbol")
+		}
+		if ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "LoseTheGame requires an ordinary resolving body")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.LoseGameFor(ctx.player.build(bindings))
+		}}, nil
+	}
 	if n.Name == "GainControlOfPermanent" {
 		build, err := compileIndefiniteControl(n, ctx)
 		if err != nil {

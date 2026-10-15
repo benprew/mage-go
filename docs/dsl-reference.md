@@ -17100,3 +17100,36 @@ then test its first three rules with the actual damage trigger/payment and a
 supported diagnostic body in place of `LoseTheGame`. Full records still reject
 at that loss action. This establishes payment coverage, not complete Lich gameplay.
 No RON source changed and no full inventory card is newly accepted.
+
+
+## Explicit resolving game loss
+
+`LoseGameFor(subject PlayerRef) ResolvingEffect` resolves one typed player and
+records loss through `Player.SetLost` (CR 104.3e). This does not change life,
+poison, or library state and does not wait for a state-based action. The
+life-total exemption in CR 104.3b cannot prevent it. `IsAlive`, `IsGameOver`,
+`Winner` and cloned games read the existing recorded loss. Later life gain
+cannot reverse it. An absent player does nothing; definition validation rejects
+nil and unbound player declarations. This slice adds no general loss prohibition.
+
+RON accepts the strict symbol `LoseTheGame` in ordinary resolving bodies:
+spells, activated abilities, triggers, delayed triggers and payment branches.
+The current typed player scope supplies the subject; the default is `You`, the
+resolving controller. `PlayerAction` and `PlayerActions` use their explicit
+player. Tuple aliases, arguments, unbound player references, entry operations
+and replacement operations reject. RON owns spelling and scope; the engine owns
+the loss. There is no global action result or card-name rule.
+
+Queued abilities retain their resolving controller through source departure,
+return, phasing and control changes. Stack copies use their own controller.
+Each factory builds its own player bindings; clones keep separate loss state.
+Delayed source queries retain exact player-operand source reads without
+executing loss. A returned source cannot replace departure controller LKI.
+
+Evidence: native `TestLoseGameFor` and `TestLoseGameForDefinition`; RON
+`TestRONLoseGameLich`, `Scopes`, `Invalid`, `QueuedIdentity`, `Waiting` and
+`Spell`. Lich's first four unchanged rules execute together from LEA, LEB, 2ED,
+CED and CEI. Sufficient simultaneous payment preserves life at -2 and avoids
+explicit loss; insufficient payment makes no partial sacrifices and records
+loss despite the life-total exemption. This is clause coverage. Complete Lich
+records still reject the exact-source graveyard event filter.
