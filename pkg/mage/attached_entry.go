@@ -22,6 +22,8 @@ type battlefieldEntryOptions struct {
 	invalid                    bool
 	withoutSubtype             *enterWithoutSubtypeOption
 	withoutSubtypeCount        int
+	historySource              PermanentRef
+	historySourceCount         int
 }
 
 func newBattlefieldEntryOptions(options []BattlefieldEntryOption) battlefieldEntryOptions {
@@ -40,7 +42,7 @@ func (e battlefieldEntryOptions) inspect(node *definitionNode) {
 	if e.invalid {
 		node.problem = "supply non-nil entry options"
 	}
-	if e.tappedCount > 1 || e.attachedCount > 1 || e.withoutSubtypeCount > 1 || e.savedCountersCount > 1 {
+	if e.tappedCount > 1 || e.attachedCount > 1 || e.withoutSubtypeCount > 1 || e.savedCountersCount > 1 || e.historySourceCount > 1 {
 		node.problem = "supply one entry option of each kind"
 	}
 	if e.savedCountersCount > 0 {
@@ -59,6 +61,12 @@ func (e battlefieldEntryOptions) inspect(node *definitionNode) {
 	}
 	if e.attachedCount > 0 {
 		node.children = append(node.children, definitionEdge{"entry-host", e.host})
+	}
+	if e.historySourceCount > 0 {
+		node.children = append(node.children, definitionEdge{"entry-source", e.historySource})
+		if _, ok := e.historySource.(permanentInformationReference); !ok {
+			node.problem = "entry source requires an exact information reference"
+		}
 	}
 }
 

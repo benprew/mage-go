@@ -8,14 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **925 accepted / 61 rejected names**
 (986 total), **2,313 compiled / 132 rejected records** (2,445 total).
-The latest slice is **REQUIRED-COUNTER-REMOVAL-HISTORY**.
-RON lowers AllCountersOfTypeFromAPermanent as a required resolution-time choice
-and PermanentHasNotRemovedACounterOfTypeFromIt as an exact-visit history query.
-Mage records actual positive resolving removals and fixed/X/chosen payments.
-Clones and payment trials keep separate history; failed payments publish none.
-All five complete Cyclopean Tomb records now compile and have RON gameplay tests.
-Estimated and actual complete-card gain: one unique name / five records.
-No RON source changed. All other loader diagnostics remain unchanged.
+The latest slice is **FORWARD-ENTRY-LINKAGE**.
+RON lowers PutOntoBattlefieldByPermanent(ThisPermanent) in resolving graveyard
+Aura collections. Typed graveyard returns in that scope record exact source and
+entrant visits before entry observations. Queries can precede the return.
+Mage supplies an explicit entry option and a pure query for graveyard and exile
+entry, with separate history for clones and payment trials.
+All six Animate Dead records have new linked-filter clause evidence. Full-card
+compilation and gameplay gains are zero, as estimated; other adapters remain.
+No RON source changed. Loader counts and diagnostics remain unchanged.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and native startup.
 
@@ -23,9 +24,10 @@ DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Source-to-return linkage:** Animate Dead needs a forward exact returned-host
-   link before its lasting enchant grant, then presence and departure-player
-   adapters. Estimate zero immediate gains, eventual one name / six records.
+1. **Lasting linked enchant grant:** Animate Dead can now query exact returned
+   hosts. It still needs graveyard-enchant removal and a lasting linked enchant
+   grant in its entry trigger, then source presence, attachment/result-context
+   and departure-player adapters. Zero immediate gains; eventual one / six.
 2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
    recursive resolving copies and ThisAbility retention. One prerequisite
    estimates zero immediate gains, eventual one name / six records.
@@ -21258,3 +21260,161 @@ counter_state.go, player_actions.go, inventory.go, counter_history_test.go,
 persistent_step_test.go, definition_plan_test.go, inventory_test.go and
 numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
 and this ledger. This run stops after REQUIRED-COUNTER-REMOVAL-HISTORY.
+
+## 2026-10-15 — FORWARD-ENTRY-LINKAGE
+
+### Selection and baseline
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 with
+valid JSON: 2,445 records, 2,313 compiled and 132 rejected, covering 986 names,
+925 accepted and 61 rejected. This is collection rejection, not a build failure.
+No partial registry was installed. No environment blocker was found.
+
+Complete records and nested forms were inspected for these ranked candidates;
+reprints count once. Targeted vocabulary inspection found six occurrences of
+`PutOntoBattlefieldByPermanent/1`, all for Animate Dead.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Forward exact source-to-entrant linkage | Animate Dead | 0 now; eventual 1 name / 6 records | Required by the enchant restriction installed before the return. Remaining: graveyard-enchant removal, lasting linked enchant grant, entry-trigger source-presence condition, returned-result/attachment context and departure-player capture. | Moderate: shared entry option, exact-visit history, pure query, one resolving collection adapter and lifecycle tests |
+| Copiable upkeep grants | Vesuvan Doppelganger | 0 now; eventual 1 / 6 | Entry `CopyEffects([KeepColor, AddAbility(...)])` also contains targeted optional resolving copy, recursive `CopyEffects`, and `AddAbilityVariable(ThisAbility)`. A copiable grant is only the first prerequisite. | Larger: copied ability construction, target isolation, retained ability identity and recursive copy tests |
+| Actual last-counter removal event | Divine Intervention | 0 for the event alone; eventual 1 / 1 | Requires removal-player attribution, a last-counter event at actual removal, source/player event filtering and `DrawTheGame`. Removal history alone is insufficient. | Moderate to large: event capture/timing across removal paths, payments and replacements, then a separate game-result action |
+
+The first ranked candidate is dependency-ready and is a required unblocking
+prerequisite. The compared candidates have one eventual unique-card gain each;
+none establishes a multi-card full-record gain. The selected slice completes the
+shared entry linkage contract without combining the remaining Aura contracts.
+Conch Horn's hand-to-library-top symbol was also checked during selection; it
+occurs on only that card and does not justify replacing this prerequisite.
+The native option also supports shared owner-controlled exile entry, so future
+adapters can reuse the same exact-visit relation without another history system.
+
+### Implemented contract and ownership
+
+Native signatures:
+
+- `RecordEntryFrom(source PermanentRef) BattlefieldEntryOption`
+- `PermanentsEnteredWithSource(source PermanentRef, candidates PermanentSet) PermanentSet`
+
+The option captures an exact information identity before entry choices. Typed
+singular graveyard returns, their saved-result form, and owner-controlled exile
+entry accept the option. Only successful registered entrants establish a link.
+Every exile batch member is registered and linked before entry observations.
+The graveyard path with this option reuses attachment entry's ordering: remove
+the card, register, record history, attach if specified, then observe entry and
+notify graveyard departure. This avoids the legacy unattached path's premature
+zone event. Existing callers without the new option retain their current path.
+Failed, stale, prohibited and cancelled linked returns record no relation or
+entry observation. Copy entry and other entry options still use shared services.
+
+The query is live and pure. It can be constructed/read before the producer,
+then read after it, including from a later delayed body. History belongs to the
+zone system, keyed by both exact visits. Cleanup, source departure, ability loss
+and control changes do not erase it. Phasing suspends recipient selection until
+phase-in. Return cannot inherit either identity. Source information uses existing
+saved frames and LKI contracts. Clones and speculative payment trials copy the
+history map. Query and producer source reads use shared delayed-source inspection.
+There is no global last-result slot, card-name branch or declaration-time game.
+Nil/unbound/non-information sources, nil candidates and duplicate source options
+fail native declaration validation.
+
+RON accepts exactly `PutOntoBattlefieldByPermanent(ThisPermanent)` in resolving
+graveyard-Aura contextual collections, including `And`/`Or`, source entry-trigger
+bodies and delayed bodies. `enteringSource` identifies the source entry trigger
+here; it is not an entry replacement. The adapter therefore permits this
+resolving context. Typed graveyard returns in the scope receive
+`RecordEntryFrom(This)`. Other source references, non-graveyard-Aura scopes,
+costs, static/enchant grants, entry replacement operations and draw replacement
+bodies reject. Inventory labels the operand `permanent_reference`.
+RON owns spelling, scope and option construction. Mage owns registration,
+attachment, entry replacements, source identity, history, queries and cloning.
+There is no RON spelling for the native entry option.
+
+CR 400.7 establishes new visits after zone changes; CR 608.2c preserves resolving
+instruction order. CR 303.4 and 303.4j require attachment legality against the
+actual enchant restriction. All local Animate Dead rulings were read. The WotC
+2016-06-08 rulings establish the returned creature as a new object, and prohibit
+moving the Aura to another creature unless that Aura puts it onto the battlefield.
+These are WotC rulings, not Scryfall notes. The complete RON record also includes
+protection/attachment, presence and delayed sacrifice behavior, which is not
+claimed by this slice. `go run ./cmd/fetchset -check -card "Animate Dead"` passed.
+No source defect was found and no RON source changed. No vocabulary snapshot
+refresh is needed. API and rules-contract documentation describe this slice.
+
+### Failing-first evidence and card-to-test mapping
+
+The first native test run failed to compile because both public signatures were
+absent. The first RON test run rejected the real linked predicate in all six
+projections as an unsupported permanent filter. Later tests found the premature
+graveyard entry event; the linked path now uses the shared attachment ordering.
+Fixture corrections supplied exact captured graveyard target visits, definition
+plans for copy fixtures, a land prohibition after observer entry resets layers,
+and trigger placement before stack copying. These corrections retain the
+asserted identity, entry-ordering and isolation contracts.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Animate Dead, LEA/LEB/2ED/3ED/CED/CEI | `TestRONEntryHistoryAnimateDead` | Each full record remains rejected. Each projection uses the real linked enchant filter in tap probes before and after its real return instruction. Only the returned creature matches. LEA copies the trigger; all six test pending clones. |
+| Forward delayed relation | `TestRONEntryHistoryDelayed` | Query is installed before the return, waiting reads are pure, Aura departure and cleanup retain the source link, and the later body finds the returned creature. |
+| Strict syntax and lexical contexts | `TestRONEntryHistoryInvalid`, `ContextsAndInventory` | Arity, symbol and source errors; non-Aura/static/cost/entry/draw contexts; typed inventory role. |
+| Visit and game isolation | `TestEntryHistoryLifecycle` | Repeated reads, recipient phasing, source return, cleanup, unlinked recipient reentry, populated-map clone writes and separate game histories. |
+| Definition checks | `TestEntryHistoryDeclarations` | Nil/unbound subjects and candidates; nil/unbound/duplicate source options. |
+| Successful and failed entry | `TestEntryHistoryEntryCommit` | Prohibited/stale/cancelled entry, legal/illegal attachment, tapped entry, entry copy, source return/phasing during entry choices, pre-observation history and pending clone isolation. |
+| Simultaneous entry and retained source | `TestEntryHistoryExileBatchAndWaiting` | Two exile entrants are linked before either event. Delayed inspection retains the departed source after cleanup without writes. Phasing and clones select their own exact current visits. |
+
+These tests add clause evidence for one unique card across six records. They do
+not establish complete Animate Dead gameplay. Estimated and actual complete-card
+compiler gains are both zero; complete-card gameplay gain is also zero. The
+remaining nested contracts explain that result. Existing accepted-record tests
+remain unchanged and pass in the full suite.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONEntryHistory' -count=1`
+  and `go test ./pkg/mage -run '^TestEntryHistory' -count=1`: pass after the
+  final fixture corrections, including trigger copying and populated-map clones.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1` and `make test`: pass.
+- The engine skill's additional `go test ./... -short -count=1`: pass.
+- `make lint`: pass, 0 issues. SHA-256 comparison of every changed code and
+  API-documentation file before and after lint found no automatic modifications.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON;
+  **2,313 compiled / 132 rejected records**, **925 accepted / 61 rejected names**.
+  Parsed JSON assertions show the entire final report equals the fresh baseline,
+  including every diagnostic. Accepted records did not regress. The collection
+  still rejects atomically and publishes no partial registry.
+
+No validation, source-data or environment blocker remains for this slice.
+Estimated and actual complete-card gains are both zero. New clause evidence
+covers one name / six records; it does not change complete-card gameplay counts.
+No RON source or vocabulary snapshot changed. All checks passed before commit.
+The first commit attempt waited for interactive GPG pinentry. Its signing child
+was terminated without creating a commit. The completed commit uses a per-command
+`commit.gpgsign=false` override, as recorded for the prior slice; repository
+configuration is unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Lasting linked enchant grant for Animate Dead: reuse this exact-entry query,
+   remove its graveyard enchant declaration and install the linked creature
+   enchant declaration before the return. Also inspect the entry-trigger scope
+   boundary. Zero immediate full-record gains; eventual one name / six records
+   after presence, attachment/result-context and departure-player adapters.
+2. Copiable upkeep grants for Vesuvan Doppelganger, followed by retained
+   `ThisAbility` and recursive resolving copies. Zero immediate gains; eventual
+   one name / six records. Reassess shared prerequisites before selection.
+3. Actual last-counter removal events for Divine Intervention, followed by
+   `DrawTheGame`. One eventual name / one record. Preserve actual removal-player
+   attribution and payment isolation; counter history is not the event contract.
+
+The collection still rejects atomically. Runtime cutover, complete collection
+gameplay, native startup, Go-card/generator deletion and unused DSL cleanup
+remain gated. No Go definition, DSL function or authoring instruction was removed.
+Changed files: native entry_history.go and entry_history_test.go,
+attached_entry.go, composable_actions.go, effect_cards.go, linked_exile_entry.go,
+waiting_delayed_source.go, zone_system.go and doc.go; RON entry_history.go and
+entry_history_test.go, contextual_collection.go, graveyard_return.go and
+inventory.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+This run stops after FORWARD-ENTRY-LINKAGE.

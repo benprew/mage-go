@@ -7,6 +7,8 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "PutOntoBattlefieldByPermanent":
+		return compileEntryHistory(n, ctx)
 	case "PermanentPutACounterOfTypeOnIt", "PermanentHasNotRemovedACounterOfTypeFromIt":
 		return compileCounterHistory(n, ctx)
 	case "TheCreatedTokens":

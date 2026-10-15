@@ -23445,3 +23445,56 @@ fixed/X/chosen payments, pure affordability, trial preparation and stale commits
 choice fallback, empty sets, shroud, stale choices, scoped players, syntax,
 contexts and inventory roles. Existing duration, placement and persistent-step
 tests retain their narrower interaction coverage.
+
+
+### Forward source-to-entrant linkage
+
+`RecordEntryFrom(source PermanentRef) BattlefieldEntryOption` saves an exact
+information identity before entry choices. Typed `ReturnCardToBattlefield`,
+`ReturnCardToBattlefieldInto` and owner-controlled exile entry accept this option.
+Successful entries record the source and entrant visits after registration and
+before entry observations. Exile batches record every entrant before any entry
+observation. Failed, prohibited, stale and cancelled entries record nothing.
+The option composes with attachment, tapped entry, counters and entry copying.
+Nil, unbound, non-information and duplicate source declarations fail validation.
+Entry choices cannot substitute a returned source visit. Existing callers that
+omit this option keep their current path and do not establish this link.
+
+`PermanentsEnteredWithSource(source PermanentRef, candidates PermanentSet) PermanentSet`
+is a pure query. It can be built and read before an entry instruction, then read
+again after that instruction. It selects current exact entrant visits recorded
+for the exact source, with current candidate filters. Cleanup, control changes,
+ability loss and source departure do not clear the relation. Source identity can
+come from a saved frame after departure. Phased recipients do not match until
+phase-in; neither source nor recipient return inherits a previous relation.
+Game clones and payment trials copy the history map. Delayed source inspection
+retains explicit reads without entry, choices or history writes.
+
+CR 400.7 separates battlefield visits. CR 608.2c orders resolving instructions;
+CR 303.4 and 303.4j require the actual enchant restriction at attachment time.
+Animate Dead's local WotC rulings dated 2016-06-08 identify the returned creature
+as a new object and forbid attachment to another creature unless the Aura puts
+that creature onto the battlefield. The forward query supplies the relation
+needed by a restriction installed before the return. This slice does not install
+that restriction or implement the complete card.
+
+RON accepts `PutOntoBattlefieldByPermanent(ThisPermanent)` in ordinary resolving
+graveyard-Aura contextual collections, including `And`/`Or`, source entry-trigger
+bodies and delayed bodies. Typed graveyard returns in this scope add
+`RecordEntryFrom(This)`. The source operand has the `permanent_reference`
+inventory role. Other references, non-graveyard-Aura scopes, costs, static
+enchant grants, entry replacements and draw replacements remain rejected.
+There is no RON spelling for the native option. Other entry producers do not
+receive implicit attribution from this adapter.
+
+`TestEntryHistoryLifecycle`, `Declarations`, `EntryCommit` and
+`ExileBatchAndWaiting` cover exact visits, failed entry, attachment legality,
+entry copying, source changes during entry, event ordering, simultaneous exile
+entry, delayed queries, phasing, cleanup and clone isolation.
+`TestRONEntryHistoryAnimateDead` projects each of the six complete records:
+it uses the real linked enchant filter in resolving tap probes before and after
+the real graveyard-return instruction. LEA also copies the trigger. These are
+clause tests, not complete-card gameplay evidence. `TestRONEntryHistoryDelayed`
+installs the query before the return and executes it after Aura departure and
+cleanup. `Invalid` and `ContextsAndInventory` cover strict syntax, unsupported
+contexts and operand roles. Every full Animate Dead record still rejects.

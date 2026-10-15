@@ -33,7 +33,7 @@ func (e *exileEntryEffect) inspectDefinition() definitionNode {
 	return node
 }
 func (e *exileEntryEffect) refersToSourcePermanent() bool {
-	if permanentRefReadsSourcePermanent(e.entry.host) {
+	if permanentRefReadsSourcePermanent(e.entry.host) || permanentRefReadsSourcePermanent(e.entry.historySource) {
 		return true
 	}
 	if set, ok := e.subjects.(linkedExileSet); ok {
@@ -57,6 +57,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 
 func (e *exileEntryEffect) apply(ctx *EffectContext) bool {
 	g := ctx.Game
+	entrySource := e.entry.captureHistorySource(ctx)
 	if e.saveResult {
 		delete(g.resolution.permanentBindings, e.result)
 	}
@@ -182,6 +183,7 @@ func (e *exileEntryEffect) apply(ctx *EffectContext) bool {
 	}
 	for _, entry := range entered {
 		g.registerBattlefieldEntry(entry.permanent, nil, uuid.Nil)
+		g.recordBattlefieldEntrySource(entrySource, entry.permanent)
 		if e.saveResult {
 			if g.resolution.permanentBindings == nil {
 				g.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)

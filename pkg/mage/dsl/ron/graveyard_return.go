@@ -194,10 +194,14 @@ func compileGraveyardReturnInto(n Node, ctx scope, result *returnedPermanentPlan
 		return nil, unsupported(entry, "graveyard battlefield entry")
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		if result != nil {
-			return mage.ReturnCardToBattlefieldInto(card.build(bindings), controller.build(bindings), bindings.returnedPermanents[result])
+		var options []mage.BattlefieldEntryOption
+		if ctx.graveyardEnchant {
+			options = append(options, mage.RecordEntryFrom(mage.This))
 		}
-		return mage.ReturnCardToBattlefield(card.build(bindings), controller.build(bindings))
+		if result != nil {
+			return mage.ReturnCardToBattlefieldInto(card.build(bindings), controller.build(bindings), bindings.returnedPermanents[result], options...)
+		}
+		return mage.ReturnCardToBattlefield(card.build(bindings), controller.build(bindings), options...)
 	}, nil
 }
 

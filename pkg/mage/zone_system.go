@@ -28,6 +28,7 @@ type ZoneSystem struct {
 	departedAttachments      map[uuid.UUID]capturedPermanent
 	counterPlacements        map[counterHistoryKey]bool
 	counterRemovals          map[counterHistoryKey]bool
+	entryHistory             map[entryHistoryKey]bool
 	departedCounters         map[uuid.UUID][core.NumCounters]int
 	castFromExilePermissions []CastableFromExilePermission
 	exileInsteadCards        map[uuid.UUID]uuid.UUID
@@ -47,6 +48,7 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 		departedCounters:    maps.Clone(zs.departedCounters),
 		counterPlacements:   maps.Clone(zs.counterPlacements),
 		counterRemovals:     maps.Clone(zs.counterRemovals),
+		entryHistory:        maps.Clone(zs.entryHistory),
 	}
 
 	// Share battlefield permanents copy-on-write. Cap-limiting forces appends in

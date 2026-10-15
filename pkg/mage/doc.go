@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [RecordEntryFrom] saves an exact source before graveyard or exile entry choices.
+// Successful entries record both visits before entry observations. Failed entries
+// record nothing. [PermanentsEnteredWithSource] reads the current matching visits.
+// The query can precede entry. Cleanup and source departure do not erase history.
+// Phasing suspends recipient selection. Return cannot inherit either visit.
+// Clones and payment trials keep separate maps. Waiting queries make no entry.
+// RON accepts PutOntoBattlefieldByPermanent(ThisPermanent) in resolving
+// graveyard-Aura collections, including source entry triggers and And/Or lists.
+// Graveyard returns in that scope record the source through the shared service.
+// Static enchant grants, other source references and replacement bodies reject.
+// This supplies forward host linkage for Animate Dead. Its full record still
+// needs the lasting enchant grant, source-presence and departure-player adapters.
+//
 // [PermanentsWithoutCountersRemovedBy] reads exact source and recipient visits.
 // Only positive removals by resolving counter effects and counter payments enter
 // history. Zero removal and zone departure do not enter history. Cleanup keeps it.

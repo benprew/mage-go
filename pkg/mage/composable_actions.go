@@ -2888,7 +2888,7 @@ func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *returnCardToBattlefieldEffect) refersToSourcePermanent() bool {
-	return enchantedCardReadsSource(e.card) || playerRefReadsSourcePermanent(e.controller) || permanentRefReadsSourcePermanent(e.entry.host)
+	return enchantedCardReadsSource(e.card) || playerRefReadsSourcePermanent(e.controller) || permanentRefReadsSourcePermanent(e.entry.host) || permanentRefReadsSourcePermanent(e.entry.historySource)
 }
 func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}
@@ -2900,6 +2900,7 @@ func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
 	return node
 }
 func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
+	entrySource := e.entry.captureHistorySource(ctx)
 	if e.saveResult {
 		delete(ctx.Game.resolution.permanentBindings, e.result)
 	}
@@ -2922,7 +2923,7 @@ func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	attachment := e.entry.captureAttachment(ctx)
-	permanent := returnGraveyardCardToBattlefieldWithOptions(ctx.Game, card.ID(), controller, controller, e.entry.captureCounters(ctx), attachment)
+	permanent := returnGraveyardCardToBattlefieldWithHistory(ctx.Game, card.ID(), controller, controller, e.entry.captureCounters(ctx), attachment, entrySource)
 	if e.saveResult && permanent != nil {
 		if ctx.Game.resolution.permanentBindings == nil {
 			ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)

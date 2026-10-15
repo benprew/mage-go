@@ -504,6 +504,10 @@ func returnGraveyardCardToBattlefieldWithAttachment(g *Game, cardID, controller,
 }
 
 func returnGraveyardCardToBattlefieldWithOptions(g *Game, cardID, controller, actor uuid.UUID, options battlefieldEntryOptions, attachment *entryAttachment) *Permanent {
+	return returnGraveyardCardToBattlefieldWithHistory(g, cardID, controller, actor, options, attachment, capturedPermanent{})
+}
+
+func returnGraveyardCardToBattlefieldWithHistory(g *Game, cardID, controller, actor uuid.UUID, options battlefieldEntryOptions, attachment *entryAttachment, source capturedPermanent) *Permanent {
 	var prepared *Permanent
 	defer func() { g.discardUnregisteredEntrySubtype(prepared) }()
 	for _, player := range g.players {
@@ -521,18 +525,23 @@ func returnGraveyardCardToBattlefieldWithOptions(g *Game, cardID, controller, ac
 				return nil
 			}
 
-			if attachment != nil && perm == nil {
+			if (attachment != nil || source.incarnation != uuid.Nil) && perm == nil {
 				return nil
 			}
-			if attachment != nil && perm != nil {
-				host, legal := attachment.resolve(g, perm)
-				if !legal {
-					return nil
+			if attachment != nil || source.incarnation != uuid.Nil {
+				var host capturedPermanent
+				if attachment != nil {
+					var legal bool
+					host, legal = attachment.resolve(g, perm)
+					if !legal {
+						return nil
+					}
 				}
 				if _, ok := player.RemoveFromGraveyard(cardID); !ok {
 					return nil
 				}
 				g.registerBattlefieldEntry(perm, nil, uuid.Nil)
+				g.recordBattlefieldEntrySource(source, perm)
 				if host.id != uuid.Nil {
 					g.Attach(perm.ID(), host.id)
 				}
@@ -548,6 +557,7 @@ func returnGraveyardCardToBattlefieldWithOptions(g *Game, cardID, controller, ac
 				return nil
 			}
 			g.registerBattlefieldEntry(perm, nil, uuid.Nil)
+			g.recordBattlefieldEntrySource(source, perm)
 			g.completeBattlefieldEntry(perm, controller, actor, 0)
 			return perm
 		}
