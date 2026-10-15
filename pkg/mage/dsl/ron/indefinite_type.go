@@ -21,7 +21,7 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 	}
 	for _, part := range parts {
 		if part.Name == "IsACopyOfPermanent" {
-			return compileResolvingCopy(n, ctx, subject, parts)
+			return compileResolvingCopy(n, ctx, subject, parts, false)
 		}
 	}
 	for _, part := range parts {

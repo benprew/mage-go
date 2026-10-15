@@ -8,14 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **929 accepted / 57 rejected names**
 (986 total), **2,332 compiled / 113 rejected records** (2,445 total).
-The latest slice is **RESOLVING-COPY-REPLACEMENT**.
-RON lowers one resolving permanent copy with no exceptions or retained colors.
-Mage replaces complete copied rules and static registrations for an exact visit.
-Status, counters, damage, control, attachments and pending abilities remain.
-Word changes continue through form changes and expire separately in clones.
-Six Vesuvan Doppelganger reprints have resolving-copy clause evidence.
-Estimated and actual full-card gains are zero; optional copying and ThisAbility
-retention still block the complete records. All required checks now pass.
+The latest slice is **OPTIONAL-RESOLVING-COPY**.
+RON lowers MayAction around a single ordinary resolving permanent copy with
+no exceptions or retained colors. Mage checks both exact visits before offering
+the decision to the saved action player, then uses the shared copy operation.
+Decline keeps existing rules and does not stop later resolving instructions.
+All six Vesuvan Doppelganger reprints have optional-copy clause evidence.
+Estimated and actual full-card gains are zero; ThisAbility retention still
+blocks the complete records. The six diagnostics now identify that boundary.
+All required checks pass; collection rejection remains expected.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -23,10 +24,10 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Retain the invoking copied ability and optional resolving copying:**
+1. **Retain the invoking copied ability:**
    Vesuvan Doppelganger; reuse complete runtime copy replacement and upkeep
-   targets. Preserve each independent ThisAbility declaration through repeated
-   self-copying. Eventual one name / six records; no other syntax gap observed.
+   targets and optional resolving copying. Preserve each independent ThisAbility
+   declaration through repeated self-copying. Eventual one name / six records; no other syntax gap observed.
 2. **Forced mana activation and saved mana:** Drain Power; use contextual land
    selection, each land's legal mana choices, exact mana removal and typed results.
    Eventual one name / six records. Reuse shared planning/production services.
@@ -22983,3 +22984,164 @@ without changing repository configuration.
 
 Complete RON gameplay, runtime loading/cutover, Go-card/generator deletion and
 unused DSL cleanup remain incomplete. Stop after RESOLVING-COPY-REPLACEMENT.
+
+
+## 2026-10-15 — OPTIONAL-RESOLVING-COPY
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 for
+collection rejection, with valid JSON: 2,332 compiled / 113 rejected records,
+929 accepted / 57 rejected names. This was not a build or test failure.
+Complete records were read for all six Vesuvan Doppelganger and Drain Power
+reprints and both Titania's Song records. The Air Elemental and Grizzly Bears
+donor records were also read. Targeted vocabulary inspection confirmed six
+ThisAbility uses, six forced-mana operations, two sticky layers and nested
+MayAction/CopyEffects shapes. Reprints count once below.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream capability | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: optional resolving copy and invoking-ability retention | Vesuvan Doppelganger | 0 for this prerequisite; eventually 1 name / 6 records | Copy replacement and targeted upkeep already work. Optional resolution needs one adapter and engine decision. ThisAbility requires an independent per-instance ability declaration contract, including repeated self-copy and copying another Doppelganger | Small for optional copy; medium/large for invoking-ability identity and recursive declaration validation |
+| Forced legal mana activation and saved removed mana | Drain Power | Eventually 1 name / 6 records | Needs the target player's legal choice for each qualifying land, forced activation at resolution, exact removed mana and a typed continuation result. Enables shared forced-mana and transfer procedures | Large: payment/production choices, illegal abilities, replacements, result scope and rollback interactions |
+| Sticky animation and post-source duration | Titania's Song | Eventually 1 name / 2 records | Needs membership carried across type, ability and P/T layers and continued effects after source exit until cleanup. Enables other source-linked layer lifetimes | Medium/large: evolving membership, layer dependencies, source removal and clone lifecycle |
+
+Selected the dependency-ready optional resolving-copy prerequisite from ranked
+candidate #1. The complete ranked candidate contains two distinct contracts;
+this run implements one complete syntax/context rather than coupling optional
+choice to unresolved invoking-ability identity. None of the three candidates
+provides a bounded multi-name unlock. This prerequisite reuses complete copy
+replacement and provides the smallest credible step toward finishing the
+ranked six-record consumer. ThisAbility remains a strict declaration error.
+Estimated immediate gain was zero names/records, matching the actual gain.
+No second capability slice was started.
+
+### Contract, exact shapes and reuse boundary
+
+New native API:
+
+`MayCopyPermanent(player PlayerRef, recipient, subject PermanentRef,
+keepColors bool) ResolvingEffect`
+
+The existing resolvingCopyEffect now supports an optional typed player. Both
+exact operands must resolve to present, unphased visits before a choice is
+offered. Missing operands make no choice; LKI cannot make an impossible copy
+available. The selected player decides at resolution. You uses the saved
+ability controller, even if source control has changed. Direct native callers
+can supply another typed player. Decline changes nothing and permits subsequent
+instructions. Accept calls the existing BecomeCopyOfPermanent operation.
+There is no mutable decision state in the declaration or factory.
+
+RON accepts only:
+
+- `MayAction(CreatePermanentLayerEffect(permanentRef,
+  [IsACopyOfPermanent(permanentRef, NoCopyEffects)]))`
+- The same form with `CopyEffects([KeepColor])`.
+
+These are ordinary resolving action bodies, including targeted activations and
+acquired upkeep triggers. Existing lexical reference rules apply. No player
+scope, copy exception or replacement context was broadened. Entry/draw
+replacement bodies, malformed arities/kinds, unbound/wrong references, mixed
+modifications and AddAbilityVariable(ThisAbility) reject. Diagnostics now name
+the unsupported copy modification instead of stopping at MayAction.
+
+RON owns spelling, syntax, context and instance reference lowering. Mage owns
+operand legality, the decision and snapshot/rule replacement. Reuse includes
+CopyPermanent's exact visits, CaptureCopiableValues, retained copiable colors,
+validated definitions, text continuation, layer/static replacement, source LKI
+inspection, stack copying and game cloning. Existing mandatory-copy callers
+keep their behavior. No cost, replacement-order or simultaneous-operation
+contract changes. No Go-card fallback, partial registry or card-name branch was
+introduced. No Go definitions, generators or broad DSL functions were removed;
+their removal gates remain unmet.
+
+### Rules and source evidence
+
+Local complete rulings were read for Vesuvan Doppelganger, Drain Power and
+Titania's Song. The donor files for Air Elemental and Grizzly Bears explicitly
+contain empty rulings arrays. Vesuvan and both donors passed fresh
+`go run ./cmd/fetchset -check -card "Card Name"` before implementation.
+WotC rulings were kept distinct from Scryfall notes; no note established a rule.
+CR 603.3d establishes target selection before resolution; CR 608.2d establishes
+resolution choices and excludes impossible options. CR 707.2–5 and 707.9c–d
+supply the reused copy and retained-color rules. The Vesuvan WotC rulings require
+a target even when the optional copy will be declined, separate entry copying
+from targeting, and preserve existing copy state on decline.
+
+No source-data defect was found or corrected. All RON sources and their hashes
+are unchanged, so no vocabulary source snapshot refresh was required. The
+snapshot's historical first diagnostics predate this optional-action adapter;
+the fresh loader measurements below identify the new boundary.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation for missing MayCopyPermanent. Initial
+test fixture references for the end-step event and explicit player were fixed
+before implementation; the repeated red run failed only on the missing API.
+RON gameplay and real-clause tests failed with unsupported optional action
+(CreatePermanentLayerEffect). No production implementation preceded these red
+runs. The resulting green tests preserve the new assertions.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Vesuvan Doppelganger, LEA/LEB/2ED/3ED/CED/CEI | TestRONOptionalCopyVesuvanClause | Real-record paid cast and entry copy; upkeep target before choice; decline keeps the rule for a later upkeep; accept copies P/T/keyword and retains blue. Fixture removes only AddAbilityVariable(ThisAbility). Full records remain rejected |
+| Air Elemental | TestRONOptionalCopyGameplay, VesuvanClause | Complete donor RON; optional targeted resolution, both supported modification shapes, decline, target legality, timing and exact identity |
+| Grizzly Bears | TestRONOptionalCopyVesuvanClause | Complete initial donor RON; decline preserves the copied form and acquired upkeep rule |
+| Native optional decision | TestOptionalCopyDecision, ExplicitPlayer | Declaration makes no choice; accept/decline self-copy; exact visit preserved; explicit typed player and saved ability controller differ from current source control |
+| Native validation and waiting LKI | TestOptionalCopyDeclarations, Waiting | Nil player/operands and unbound references reject; repeated waiting queries retain exact source information through phasing/departure without choosing or copying; missing source cannot offer a copy |
+| RON timing/identity and isolation | TestRONOptionalCopyGameplay | Shroud, all-illegal target resolution, target/source return and phasing, phase cycles, changed source control, stack copies and opposite clone decisions. Later instructions execute after decline or missing source; all-illegal targets stop the whole body |
+| RON shape/context boundaries | TestRONOptionalCopyInvalid | Invalid arities, symbols, unrelated/mixed layers, unbound references, ThisAbility, entry/draw replacement bodies |
+
+Existing native and RON resolving-copy tests retain the deeper status, damage,
+counters, attachment, static layer, text continuation, snapshot and provenance
+contracts. Inventory already walks MayAction's child as an action and needs no
+new role. Three older dependency tests plus the upkeep clause test were updated
+to require the new remaining AddAbilityVariable rejection rather than the
+completed optional-action rejection. No full-card test was weakened to accept
+a partial implementation.
+
+### Verification
+
+- Failing-first native `go test ./pkg/mage -run TestOptionalCopy -count=1`:
+  expected compilation failure for the missing MayCopyPermanent API.
+- Failing-first RON `go test ./pkg/mage/dsl/ron -run TestRONOptionalCopy -count=1`:
+  expected unsupported optional-action failures.
+- Final focused RON command above: pass. Native TestOptionalCopy and existing
+  TestResolvingCopy tests: pass. Broader copy/entry dependency tests: pass.
+- `make build`: pass.
+- `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass, including card packages and engine consumers.
+- `make lint`: pass, zero issues. Automatic changes were reviewed; no semantic
+  or unrelated change occurred. Final checks were repeated after strengthening
+  the clone continuation assertion, and all pass.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON;
+  2,332 compiled / 113 rejected records, 929 accepted / 57 rejected names.
+  A parsed comparison confirms the exact accepted/rejected record set is
+  unchanged. Only the six Vesuvan diagnostics changed, from unsupported
+  MayAction to unsupported resolving copy modification (AddAbilityVariable),
+  for example 2ED.lines.ron:263:543. All other diagnostics are unchanged.
+  The collection still rejects atomically; no accepted record regressed.
+- All RON source hashes still match the vocabulary snapshot.
+
+No environment or required-check blocker remains. Changed files: native
+resolving_copy.go and new optional_copy_test.go; RON resolving_copy.go,
+indefinite_type.go, tap_choice.go and new optional_copy_test.go; four existing
+copy/entry dependency tests; doc.go, API/rules contracts and this ledger.
+The descriptive commit uses the established per-command commit.gpgsign=false
+workaround without changing repository configuration.
+
+### Remaining work and ranked next candidates
+
+1. Retain the invoking copied ability for Vesuvan Doppelganger. Reuse completed
+   optional copying, copy replacement and targeted upkeep. Preserve independent
+   repeated instances, self-copy, another Doppelganger, copies and clones.
+   Eventual one name / six records; this is the remaining observed syntax gap.
+2. Forced legal mana activation and saved removed-mana results for Drain Power.
+   Eventual one name / six records; shared payment/production services remain.
+3. Sticky layer membership and post-source duration for Titania's Song.
+   Eventual one name / two records; establish a shared layer lifecycle contract.
+
+Complete RON gameplay, runtime cutover/loading, Go-card/generator deletion and
+unused DSL cleanup remain incomplete. Stop after OPTIONAL-RESOLVING-COPY.

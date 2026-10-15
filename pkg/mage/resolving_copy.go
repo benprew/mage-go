@@ -13,18 +13,35 @@ func CopyPermanent(recipient, subject PermanentRef, keepColors bool) ResolvingEf
 	return &resolvingCopyEffect{recipient: recipient, subject: subject, keepColors: keepColors}
 }
 
+// MayCopyPermanent lets the saved player choose a copy at resolution.
+// Both exact visits must be present before the choice is offered.
+func MayCopyPermanent(player PlayerRef, recipient, subject PermanentRef, keepColors bool) ResolvingEffect {
+	return &resolvingCopyEffect{recipient: recipient, subject: subject, keepColors: keepColors, optional: true, player: player}
+}
+
 type resolvingCopyEffect struct {
 	recipient, subject PermanentRef
 	keepColors         bool
+	optional           bool
+	player             PlayerRef
 }
 
-func (*resolvingCopyEffect) Text() string                 { return "become a copy of a permanent" }
+func (e *resolvingCopyEffect) Text() string {
+	if e.optional {
+		return "may become a copy of a permanent"
+	}
+	return "become a copy of a permanent"
+}
 func (*resolvingCopyEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *resolvingCopyEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-copy", Text: e.Text(), children: []definitionEdge{{"recipient", e.recipient}, {"subject", e.subject}}}
+	n := definitionNode{Role: "resolving-copy", Text: e.Text(), children: []definitionEdge{{"recipient", e.recipient}, {"subject", e.subject}}}
+	if e.optional {
+		n.children = append(n.children, definitionEdge{"player", e.player})
+	}
+	return n
 }
 func (e *resolvingCopyEffect) refersToSourcePermanent() bool {
-	return permanentRefReadsSourcePermanent(e.recipient) || permanentRefReadsSourcePermanent(e.subject)
+	return permanentRefReadsSourcePermanent(e.recipient) || permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.player)
 }
 func (e *resolvingCopyEffect) Apply(ctx *EffectContext) error {
 	recipient, ok := e.recipient.resolvePermanent(ctx)
@@ -34,6 +51,16 @@ func (e *resolvingCopyEffect) Apply(ctx *EffectContext) error {
 	subject, ok := e.subject.resolvePermanent(ctx)
 	if !ok {
 		return nil
+	}
+	if e.optional {
+		id, ok := e.player.resolvePlayer(ctx)
+		if !ok {
+			return nil
+		}
+		player := ctx.Game.GetPlayer(id)
+		if player == nil || !player.ChooseMayAbility(e.Text()) {
+			return nil
+		}
 	}
 	return ctx.Game.BecomeCopyOfPermanent(recipient, subject, e.keepColors)
 }

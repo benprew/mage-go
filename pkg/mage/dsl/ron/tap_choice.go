@@ -7,6 +7,9 @@ func compileOptionalTapChoice(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	action := n.Args[0]
+	if action.Name == "CreatePermanentLayerEffect" {
+		return compileOptionalResolvingCopy(action, ctx)
+	}
 	if action.Name == "SearchLibrary" {
 		return compileOptionalBoundedLibrarySearch(action, ctx)
 	}

@@ -13,7 +13,9 @@
 // RON accepts one IsACopyOfPermanent(ref, NoCopyEffects) or
 // IsACopyOfPermanent(ref, CopyEffects([KeepColor])) in an ordinary resolving
 // CreatePermanentLayerEffect. Other copy exceptions and replacement bodies
-// reject. ThisAbility retention and optional copying still need adapters.
+// reject. MayCopyPermanent supplies an optional resolution choice after both
+// visits are checked. RON accepts MayAction around these copy forms.
+// ThisAbility retention still needs a separate contract.
 //
 // [PlayerLifeManaThisTurn] saves a player permission until cleanup.
 // Positive fixed life payments add one fixed mana at mana-ability timing.

@@ -2,7 +2,7 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileResolvingCopy(n Node, ctx scope, recipient permanentReferencePlan, parts []Node) (effectFactory, error) {
+func compileResolvingCopy(n Node, ctx scope, recipient permanentReferencePlan, parts []Node, optional bool) (effectFactory, error) {
 	if ctx.enteringSource || ctx.drawReplacementBody {
 		return nil, problem(n, "copy replacement requires an ordinary resolving body")
 	}
@@ -30,12 +30,38 @@ func compileResolvingCopy(n Node, ctx scope, recipient permanentReferencePlan, p
 		if err != nil {
 			return nil, err
 		}
+		for _, operation := range operations {
+			if operation.Name != "KeepColor" {
+				return nil, unsupported(operation, "resolving copy modification")
+			}
+		}
 		if len(operations) != 1 || operations[0].Kind != Symbol || operations[0].Name != "KeepColor" {
 			return nil, problem(modifications, "resolving copy supports one KeepColor symbol")
 		}
 		keepColors = true
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if optional {
+			return mage.MayCopyPermanent(ctx.player.build(bindings), recipient.build(bindings), subject.build(bindings), keepColors)
+		}
 		return mage.CopyPermanent(recipient.build(bindings), subject.build(bindings), keepColors)
 	}, nil
+}
+
+func compileOptionalResolvingCopy(n Node, ctx scope) (effectFactory, error) {
+	if err := arity(n, 2); err != nil {
+		return nil, err
+	}
+	recipient, err := compilePermanentRef(n.Args[0], ctx)
+	if err != nil {
+		return nil, err
+	}
+	parts, err := list(n.Args[1])
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) != 1 || parts[0].Name != "IsACopyOfPermanent" {
+		return nil, problem(n, "optional layer action requires one resolving copy modification")
+	}
+	return compileResolvingCopy(n, ctx, recipient, parts, true)
 }

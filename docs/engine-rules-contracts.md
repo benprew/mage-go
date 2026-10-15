@@ -23934,3 +23934,49 @@ Evidence: native `TestResolvingCopyRulesAndIdentity`, `Declarations`,
 The six Vesuvan clause tests explicitly remove the two unsupported wrappers;
 they establish clause behavior, not full-card coverage. Complete Air Elemental,
 Bog Wraith, Grizzly Bears and Gauntlet of Might records provide donor evidence.
+
+
+## Optional resolving permanent copy
+
+`MayCopyPermanent(player PlayerRef, recipient, subject PermanentRef,
+keepColors bool) ResolvingEffect` offers a copy to the selected player at
+resolution. It shares exact-visit operand checks, snapshot capture, copy
+exceptions, complete rule replacement and text continuation with `CopyPermanent`.
+An absent or phased operand supplies no choice and no copy; LKI cannot replace
+that operand. A phase cycle preserves the visit. A returned permanent cannot
+supply an earlier visit. Self-copy is permitted. Missing players make no choice.
+Nil player/operand declarations and unbound target references fail validation.
+
+The decision is local to each invocation. Declaration, activation, target
+selection and waiting-source inspection do not ask for the decision or copy
+anything. The saved ability controller supplies You even after source control
+changes. Direct engine callers can supply another typed player. Decline leaves
+all rules in place; later resolving instructions still execute. Stack copies and
+game clones make independent decisions. Waiting queries retain source LKI without
+performing the optional action. No new costs, replacements, event ordering or
+simultaneous-operation rules are introduced.
+
+RON accepts `MayAction(CreatePermanentLayerEffect(permanentRef,
+[IsACopyOfPermanent(permanentRef, NoCopyEffects)]))` and the same form with
+`CopyEffects([KeepColor])`, in ordinary resolving action bodies. RON owns strict
+shape/context checks and lexical references. Mage owns the decision and copy.
+Entry/draw replacement bodies, mixed modifications and other copy exceptions
+reject. This is the optional resolving-copy prerequisite for Vesuvan
+Doppelganger; AddAbilityVariable(ThisAbility) still rejects. No full-card gain is
+claimed. Earlier copy sections describe the prerequisite state before this slice.
+
+CR 603.3d puts the trigger's target choice on the stack. CR 608.2d puts the
+optional decision at resolution and excludes impossible choices. CR 707.2–5 and
+707.9c–d supply the shared copy and retained-color rules. Local WotC Vesuvan
+rulings explicitly separate entry choices, trigger targets and resolution
+choices. No Scryfall notes or source corrections were used.
+
+Evidence: native `TestOptionalCopyDecision`, `Declarations`, `Waiting`,
+`ExplicitPlayer`; RON `TestRONOptionalCopyGameplay`, `Invalid`, `VesuvanClause`.
+Gameplay covers decline/accept, both modification shapes, continued instructions,
+all-illegal targets, shroud, target/source phasing, phase cycles, leave/return,
+source control, stack copies and opposite clone decisions. Clause tests use all
+six Vesuvan records and remove only AddAbilityVariable(ThisAbility), retaining
+the actual optional instruction. Complete Air Elemental and Grizzly Bears records
+supply donors. Existing resolving-copy tests retain snapshot, damage, counters,
+static layers, text, attachments and identity coverage.
