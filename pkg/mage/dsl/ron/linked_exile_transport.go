@@ -49,11 +49,25 @@ func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, args); err != nil {
 		return nil, err
 	}
+	var host *permanentReferencePlan
 	if args == 2 {
 		options := n.Args[1]
-		if options.Kind != List || len(options.Args) != 1 || options.Args[0].Kind != Symbol || options.Args[0].Name != "EntersUnderOwnersControl" {
-			return nil, problem(options, "supply only EntersUnderOwnersControl for linked battlefield entry")
+		if options.Kind != List || len(options.Args) < 1 || len(options.Args) > 2 || options.Args[0].Kind != Symbol || options.Args[0].Name != "EntersUnderOwnersControl" {
+			return nil, problem(options, "supply owner control and at most one explicit attachment")
 		}
+		if len(options.Args) == 2 {
+			ref, err := compileAttachedEntry(options.Args[1], ctx)
+			if err != nil {
+				return nil, err
+			}
+			host = &ref
+		}
+	}
+	entryOptions := func(bindings instanceBindings) []mage.BattlefieldEntryOption {
+		if host == nil {
+			return nil
+		}
+		return []mage.BattlefieldEntryOption{mage.EnterAttachedTo(host.build(bindings))}
 	}
 	set := n.Args[0]
 	if set.Kind == Symbol && set.Name == "TheOtherPermanentsExiledThisWay" {
@@ -68,7 +82,7 @@ func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
 				return mage.ReturnExiledCardsToOwnersHands(subjects)
 			}
 			if n.Name == "PutEachExiledCardOntoTheBattlefield" {
-				return mage.PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects)
+				return mage.PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects, entryOptions(bindings)...)
 			}
 			return mage.PutExiledCardsInOwnersGraveyards(subjects)
 		}, nil
@@ -95,7 +109,7 @@ func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
 			return mage.ReturnExiledCardsToOwnersHands(subjects)
 		}
 		if n.Name == "PutEachExiledCardOntoTheBattlefield" {
-			return mage.PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects)
+			return mage.PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects, entryOptions(bindings)...)
 		}
 		return mage.PutExiledCardsInOwnersGraveyards(subjects)
 	}, nil

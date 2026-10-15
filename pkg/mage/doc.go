@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [EnterAttachedTo] saves one exact host before card entry replacements.
+// Shared attachment rules read the entrant after copy changes. Shroud and
+// hexproof do not prohibit this entry. An illegal host keeps an Aura in its
+// original zone. Other permanents can enter unattached. Return cannot supply
+// an old host visit. Registration and attachment precede entry observations.
+// Graveyard returns and exile batches use the same typed entry option.
+// Delayed queries retain explicit source-host reads without moving cards.
+// RON accepts EntersAttachedToPermanent in resolving departed-Aura returns
+// and existing plural exile returns. Other entry lists need separate adapters.
+// This supplies a prerequisite for Takklemaggot and Tawnos's Coffin.
+// Their complete records still reject. Copies and clones keep separate state.
+//
 // [AttachedPermanentDies] accepts WithDepartedAuraCard with a typed card binding.
 // The exact Aura and host visits supply the capture. A simultaneous graveyard
 // move or an orphan-Aura state action supplies its first graveyard visit.

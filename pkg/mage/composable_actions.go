@@ -2854,29 +2854,12 @@ func (e *returnCardToHandEffect) Apply(ctx *EffectContext) error {
 }
 
 type returnCardToBattlefieldEffect struct {
-	card         CardRef
-	controller   PlayerRef
-	result       *PermanentBinding
-	saveResult   bool
-	optional     bool
-	entryTapped  bool
-	entryOptions int
-}
-
-// BattlefieldEntryOption changes how a card enters from a graveyard.
-type BattlefieldEntryOption interface {
-	battlefieldEntryOption()
-	applyBattlefieldEntry(*returnCardToBattlefieldEffect)
-}
-
-type enterTappedOption struct{}
-
-// EnterTapped makes the card enter tapped.
-func EnterTapped() BattlefieldEntryOption         { return enterTappedOption{} }
-func (enterTappedOption) battlefieldEntryOption() {}
-func (enterTappedOption) applyBattlefieldEntry(effect *returnCardToBattlefieldEffect) {
-	effect.entryTapped = true
-	effect.entryOptions++
+	card       CardRef
+	controller PlayerRef
+	result     *PermanentBinding
+	saveResult bool
+	optional   bool
+	entry      battlefieldEntryOptions
 }
 
 // ReturnCardToBattlefield puts the referenced graveyard card onto the battlefield.
@@ -2885,14 +2868,7 @@ func ReturnCardToBattlefield(card CardRef, controller PlayerRef, options ...Batt
 }
 
 func newReturnCardToBattlefieldEffect(card CardRef, controller PlayerRef, options ...BattlefieldEntryOption) *returnCardToBattlefieldEffect {
-	effect := &returnCardToBattlefieldEffect{card: card, controller: controller}
-	for _, option := range options {
-		if option == nil {
-			effect.entryOptions++
-			continue
-		}
-		option.applyBattlefieldEntry(effect)
-	}
+	effect := &returnCardToBattlefieldEffect{card: card, controller: controller, entry: newBattlefieldEntryOptions(options)}
 	return effect
 }
 
@@ -2922,7 +2898,7 @@ func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *returnCardToBattlefieldEffect) refersToSourcePermanent() bool {
-	return playerRefReadsSourcePermanent(e.controller)
+	return playerRefReadsSourcePermanent(e.controller) || permanentRefReadsSourcePermanent(e.entry.host)
 }
 func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}
@@ -2930,11 +2906,7 @@ func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
 		node.bindingWrite = e.result
 		node.children = append(node.children, definitionEdge{"result", e.result})
 	}
-	if e.entryOptions > 1 {
-		node.problem = "supply one entry option"
-	} else if e.entryOptions == 1 && !e.entryTapped {
-		node.problem = "supply a non-nil entry option"
-	}
+	e.entry.inspect(&node)
 	return node
 }
 func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
@@ -2959,7 +2931,8 @@ func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 			return nil
 		}
 	}
-	permanent := returnGraveyardCardToBattlefieldWithEntry(ctx.Game, card.ID(), controller, e.entryTapped)
+	attachment := e.entry.captureAttachment(ctx)
+	permanent := returnGraveyardCardToBattlefieldWithAttachment(ctx.Game, card.ID(), controller, controller, e.entry.tapped, attachment)
 	if e.saveResult && permanent != nil {
 		if ctx.Game.resolution.permanentBindings == nil {
 			ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)

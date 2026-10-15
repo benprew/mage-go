@@ -8,20 +8,28 @@ import (
 
 // PutExiledCardsOntoBattlefieldUnderOwnersControl moves saved exile visits together.
 // Entry choices cannot substitute a returned card or an absent Aura host.
-func PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects ExiledCardSet) ResolvingEffect {
-	return &exileEntryEffect{subjects: subjects}
+func PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects ExiledCardSet, options ...BattlefieldEntryOption) ResolvingEffect {
+	return &exileEntryEffect{subjects: subjects, entry: newBattlefieldEntryOptions(options)}
 }
 
-type exileEntryEffect struct{ subjects ExiledCardSet }
+type exileEntryEffect struct {
+	subjects ExiledCardSet
+	entry    battlefieldEntryOptions
+}
 
 func (*exileEntryEffect) Text() string {
 	return "put exiled cards onto the battlefield under their owners' control"
 }
 func (*exileEntryEffect) Properties() EffectProperties { return EffectProperties{Mass: true} }
 func (e *exileEntryEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", children: []definitionEdge{{"subjects", e.subjects}}}
+	node := definitionNode{Role: "resolving-effect", children: []definitionEdge{{"subjects", e.subjects}}}
+	e.entry.inspect(&node)
+	return node
 }
 func (e *exileEntryEffect) refersToSourcePermanent() bool {
+	if permanentRefReadsSourcePermanent(e.entry.host) {
+		return true
+	}
 	if set, ok := e.subjects.(linkedExileSet); ok {
 		return permanentRefReadsSourcePermanent(set.source)
 	}
@@ -38,6 +46,7 @@ type preparedExileEntry struct {
 
 func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
+	attachment := e.entry.captureAttachment(ctx)
 	savedX := g.resolution.X()
 	g.resolution.SetX(0)
 	defer g.resolution.SetX(savedX)
@@ -72,14 +81,20 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 			}
 			card := exiled.Card.Copy()
 			card.SetID(subject.id)
-			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller}, false)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller}, e.entry.tapped)
 			if perm == nil {
 				if failed != nil {
 					prepared = append(prepared, preparedExileEntry{subject: subject, failed: failed, owner: owner.PlayerID()})
 				}
 				continue
 			}
-			host, ok := g.chooseEntryAuraHost(perm, owner)
+			var host capturedPermanent
+			var ok bool
+			if attachment != nil {
+				host, ok = attachment.resolve(g, perm)
+			} else {
+				host, ok = g.chooseEntryAuraHost(perm, owner)
+			}
 			if !ok {
 				continue
 			}
@@ -108,7 +123,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 		}
 		if entry.host.id != uuid.Nil {
 			host := g.FindPermanent(entry.host.id)
-			if host == nil || host.PhasedOut || host.incarnationID != entry.host.incarnation || !g.canAttach(entry.permanent, host) {
+			if host == nil || host.PhasedOut || host.incarnationID != entry.host.incarnation || !g.canAttachEntering(entry.permanent, host) {
 				continue
 			}
 		}
@@ -164,7 +179,7 @@ func (g *Game) chooseEntryAuraHost(perm *Permanent, owner Player) (capturedPerma
 	}
 	var candidates []*Permanent
 	for _, host := range g.FilterBattlefield(AnyPermanent) {
-		if !host.PhasedOut && g.canAttach(perm, host) {
+		if !host.PhasedOut && g.canAttachEntering(perm, host) {
 			candidates = append(candidates, host)
 		}
 	}
@@ -183,7 +198,7 @@ func (g *Game) chooseEntryAuraHost(perm *Permanent, owner Player) (capturedPerma
 		}
 	}
 	host := g.FindPermanent(subject.id)
-	if host == nil || host.PhasedOut || host.incarnationID != subject.incarnation || !g.canAttach(perm, host) {
+	if host == nil || host.PhasedOut || host.incarnationID != subject.incarnation || !g.canAttachEntering(perm, host) {
 		return capturedPermanent{}, false
 	}
 	return subject, true

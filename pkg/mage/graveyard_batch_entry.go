@@ -89,7 +89,7 @@ func (g *Game) enterSavedGraveyardCards(ctx *EffectContext, byOwner map[uuid.UUI
 		}
 		if entry.host.id != uuid.Nil {
 			host := g.FindPermanent(entry.host.id)
-			if host == nil || host.PhasedOut || host.incarnationID != entry.host.incarnation || !g.canAttach(entry.permanent, host) {
+			if host == nil || host.PhasedOut || host.incarnationID != entry.host.incarnation || !g.canAttachEntering(entry.permanent, host) {
 				continue
 			}
 		}

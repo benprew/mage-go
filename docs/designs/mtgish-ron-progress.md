@@ -8,13 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **921 accepted / 65 rejected names**
 (986 total), **2,305 compiled / 140 rejected records** (2,445 total).
-The latest slice is **DEPARTED-AURA-GRAVEYARD-VISIT**.
-RON lowers ReturnDeadGuestGraveyardCardToHand in resolving Aura host-death
-bodies. Native event capture saves the exact Aura graveyard visit after a
-simultaneous departure or an orphan-Aura state action (CR 400.7f). Returned
-hosts cannot restore old attachments. Copies and clones keep saved visits.
-Puppet Master and Takklemaggot have prerequisite fragment gameplay evidence;
-their complete records still reject. Coverage gain is zero, as estimated.
+The latest slice is **EXPLICIT-ENTRY-ATTACHMENT**.
+RON lowers EntersAttachedToPermanent in departed-Aura graveyard returns and
+existing grouped/linked plural exile returns. Native entry options save exact
+host visits, use shared legality after copy replacements, and attach before
+entry observations. Copies, clones and delayed frames retain separate state.
+Takklemaggot and Tawnos's Coffin have entry-clause gameplay evidence; their
+complete records still reject at earlier blockers. Coverage gain is zero,
+as estimated. The final loader report is identical to the completed baseline.
 No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -24,18 +25,17 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Explicit Aura entry attachment and legality:** shared service for
-   Takklemaggot and Tawnos's Coffin. Estimate zero immediate full-card gains;
-   both retain other return, choice and lifecycle blockers. Check the related
-   Animate Dead attachment path without merging all three lifecycles.
-2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
-   grants, recursive resolving copy changes and ThisAbility retention. Estimate
+1. **Required zone-move success continuations:** compare Puppet Master's
+   graveyard-to-hand return with Coffin's single-card exile entry. Estimate one
+   immediate name / one record for Puppet Master; Coffin retains counters and
+   lifecycle blockers. Keep successful destination visits and local results.
+2. **Required legal attachment choice:** Takklemaggot can now use native explicit
+   entry attachment and departed-Aura capture. Its legal-choice filter, required
+   choice result and non-Aura return/player-grant branch still need adapters.
+   Estimate zero immediate gains for the choice prerequisite; eventual one name.
+3. **Copy-effect ability grants:** Vesuvan Doppelganger still needs copiable
+   upkeep grants, recursive resolving copies and ThisAbility retention. Estimate
    zero immediate gains; eventual gain is one name / six records.
-3. **Required graveyard-to-hand payment:** Puppet Master's first return must
-   save success before offering its optional mana payment. The Aura identity
-   prerequisite and hand-return operation are now present. Estimate one complete
-   name / one record if the existing payment branch services cover all remaining
-   requirements. Reassess this single-card completion against shared work.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -19095,3 +19095,171 @@ configuration remains unchanged.
    Compare this completion with useful shared work before selecting it.
 
 This run stops after DEPARTED-AURA-GRAVEYARD-VISIT.
+
+## 2026-10-15 — EXPLICIT-ENTRY-ATTACHMENT
+
+### Baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before implementation. The loader
+returned valid JSON and exit 1 for atomic collection rejection: **921 accepted /
+65 rejected names**, **2,305 compiled / 140 rejected records**, out of 986 names
+and 2,445 records. The completed baseline matches the prior summary. An early
+status update read a stale temporary loader report before the baseline command
+finished; that was corrected after checking the completed baseline and final
+report. The baseline report timestamp precedes implementation.
+
+The latest ranked candidate was dependency-ready after the departed-Aura binding
+slice. Complete records, nested forms and local rulings were inspected before
+selection. Reprints are counted once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Explicit entry attachment | Takklemaggot; Tawnos's Coffin | 0 names / 0 records | Takklemaggot still needs required legal choice, non-Aura return and retained-player grants. Coffin still needs noted counters, single-card return success and delayed untap/leave lifecycle. One exact-host entry service supports both. Animate Dead's related graveyard and on-battlefield attachment paths are separate. | Medium: one shared entry option, two origin paths, two compiler contexts and contract tests |
+| Copy ability grants | Vesuvan Doppelganger | 0 immediately; eventual 1 name / 6 records | Copiable upkeep grants, recursive resolving copies and ThisAbility retention remain. This enables reusable copy exceptions. | Large relative to one run's bounded entry service |
+| Required graveyard-to-hand payment | Puppet Master | Likely 1 name / 1 record | Exact Aura capture and return exist; the host-card return must save success before optional mana payment. Existing continuations need verification. | Small to medium; single-card completion |
+
+Selected **EXPLICIT-ENTRY-ATTACHMENT** because it provides a concrete shared
+prerequisite for two unique cards with existing typed host and card identities.
+It does not merge their unimplemented return/choice lifecycles. The acceptance
+contract was fixed before editing: capture one exact host without targeting,
+use the entrant after replacements, keep an illegal Aura in its original zone,
+attach before entry observations, and preserve independent copies/clones.
+
+### Signatures, ownership and dependencies
+
+New native API:
+
+- `EnterAttachedTo(host PermanentRef) BattlefieldEntryOption`.
+- `PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects ExiledCardSet,
+  options ...BattlefieldEntryOption) ResolvingEffect` extends the existing
+  constructor without changing existing call sites.
+- `ReturnCardToBattlefield` and `ReturnCardToBattlefieldInto` retain their
+  existing signatures and accept this option. One `EnterTapped` can accompany
+  one attachment option. Nil, duplicate and unbound declarations reject.
+
+Supported RON shapes, in ordinary resolving bodies only:
+
+- `ReturnDeadGuestGraveyardCardToBattlefield([EntersUnderPlayersControl(playerRef),
+  EntersAttachedToPermanent(permanentRef)])` in an Aura host-death body. The
+  existing departed-Aura event binding supplies the exact graveyard visit.
+- `PutEachExiledCardOntoTheBattlefield(exiledSet, [EntersUnderOwnersControl,
+  EntersAttachedToPermanent(permanentRef)])` with existing grouped or linked
+  exile sets. The owner-only form remains supported. The list order and arity
+  are strict. Other entry operations and incompatible or unbound reads reject.
+
+RON owns syntax, context and per-factory reference lowering. Mage owns card and
+host visits, replacement preparation, legality, zone movement and attachment.
+The implementation reuses the existing entry pipeline, shared `canAttach`,
+protection/enchant restrictions, `Game.Attach`, exact card bindings, exile batch,
+entry observation and delayed-frame services. It introduces no card-name branch,
+Go fallback, production partial registry or global action-result slot.
+
+The instruction saves its host before entry replacements. A scoped entry query
+makes the prepared entrant visible to shared legality checks, then restores the
+prior entry context. This is required when entry copying changes color, type or
+enchant restrictions. The same query is used by existing choice-based entry and
+both batch rechecks. An illegal or undefined host prevents Aura entry; ordinary
+permanents, Equipment and Fortification can instead enter unattached under
+CR 301.5e, 301.6 and 303.4h–i. Shroud/hexproof do not prohibit entry attachment;
+protection and enchant prohibitions do. Card and host return cannot supply saved
+visits. A phase cycle retains a host visit; an absent phased host is unavailable.
+All successful exile batch members are registered and attached before entry
+observations. No new payment, rollback or replacement-order policy is introduced.
+
+All four Takklemaggot wotc rulings, all six Coffin wotc rulings, and Animate
+Dead's five wotc rulings were read. Puppet Master's and Vesuvan Doppelganger's
+complete ruling files were read for candidate comparison; no scryfall notes were
+substituted for wotc rulings. `fetchset -check` passed for Takklemaggot, Tawnos's
+Coffin and Animate Dead before implementation. Rules used: CR 301.5e, 301.6,
+303.4c–j, 400.7, 614.12, 701.3a–c, 702.16c–d and 702.26b–d. No source defect
+was found or corrected. No RON source changed, so no vocabulary snapshot refresh
+is needed. Inventory argument roles now identify attachment operations and their
+typed host reads. The implement-engine skill supplied the native workflow.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests failed compilation because `EnterAttachedTo` and variadic exile
+entry options did not exist. An initial fixture used an unavailable opponent
+alias; it was corrected to the existing typed resolving player. The corrected
+Takklemaggot probe failed at the unsupported return action before its adapter
+was added. The first probe had an extra AST index and was corrected before
+recording that expected failure. The Coffin probe failed at its unsupported
+entry list. A later copy-color contract failed because protection read the
+physical graveyard card; it passed after the scoped entrant query was added.
+A creature-Aura fixture was corrected to retain both Enchantment and Creature
+types, since a creature without Enchantment does not retain the Aura subtype.
+
+| Card / contract | Tests | Evidence |
+| --- | --- | --- |
+| Shared exact entry host | `TestAttachedEntry` | Both graveyard and exile origins; shroud, hexproof, protection, enchant prohibition, wrong/missing/phased hosts, phase cycle, host/card return during entry choices, rejected entry, nonattachment permanents, legal/illegal Equipment, creature Auras, independent owner/controller and clone state |
+| Entry-copy legality | `TestAttachedEntryCopyReplacements` | Aura to artifact, artifact to Aura, changed enchant restriction and black-to-white copy against protection from black; both origins |
+| Simultaneous entry | `TestAttachedEntryBatch` | Two Auras enter attached and tapped before observations; a later entry operation invalidates an earlier prepared host, leaving both Auras exiled |
+| Delayed source identity | `TestAttachedEntryWaiting` | Pure waiting queries retain the host, clones resolve independently, and host return invalidates only the original saved visit |
+| Invalid native declarations | `TestAttachedEntryInvalid` | Nil host/option, repeated attachment option and unbound host reject for both constructors |
+| Takklemaggot LEG:256 | `TestRONAttachedEntryGuest` | Exact original attached-return clause and original host-death/enchant declarations; test choice replaces the unsupported required legal-choice payment. Covers owner/controller separation, stack copy, clone, changed graveyard visit and absent host |
+| Tawnos's Coffin ATQ:67 | `TestRONAttachedEntryCoffin` | Exact original plural-return clause, including ThePermanentPutOnTheBattlefieldThisWay. Supported grouped exile and a test graveyard-return producer supply its bindings. The original single-card exile return/counters/lifecycle are not claimed |
+| Complete synthetic linked entry | `TestRONAttachedEntryLinked` | Separate exile and return activations use a source link and a resolving choice; Aura returns under its owner's control attached to a creature with shroud |
+| RON declaration boundaries | `TestRONAttachedEntryInvalid`, `TestRONAttachedEntryLinkedInvalid`, `TestRONAttachedEntryInventory` | Wrong event, malformed operations/lists, incompatible and unbound references reject; inventory reports the action, entry operation and typed permanent reference |
+
+Both real-record tests first assert that the complete record still rejects.
+Fragments are test-only capability evidence, not full-card gameplay coverage.
+The required legal-choice filter and non-Aura branch are not silently omitted
+from production. Existing callers and tests remain in use. No Go definition,
+generator or DSL API was removed; the runtime cutover/removal gates stay closed.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONAttachedEntry' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestAttachedEntry|^TestReturnCardToBattlefieldTappedValidation|^TestGraveyardBatchEntry|^TestLinkedExileEntry' -count=1`: pass.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. The first run found an existing
+  assertion requiring the duplicate-option diagnostic to contain “one entry
+  option”; the implementation now preserves that text. No assertion changed.
+- `make test`: pass for the full repository. The final build, vet, short and
+  full checks ran again after the linked RON test and lint fixes.
+- First `make lint`: three test-style findings (two capacity hints and one
+  redundant type). These were fixed. Final `make lint`: pass, **0 issues**.
+  Automatic import formatting was reviewed; no unrelated file changed.
+- `git diff --check`: pass, including the final ledger update.
+- Final `go run ./cmd/loadcards -json`: valid JSON and expected exit 1 for
+  collection rejection. A parsed comparison asserts that the entire final
+  report equals the completed baseline: **921 accepted / 65 rejected names**,
+  **2,305 compiled / 140 rejected records**. No accepted record or diagnostic
+  changed. Takklemaggot still rejects at LEG:256:479 on required ChooseAPermanent;
+  Tawnos's Coffin still rejects at ATQ:67:479 on NoteCountersOnPermanent.
+
+There is no outstanding validation or environment blocker.
+
+Actual gain: **0 names / 0 records**, matching the estimate. Native entry
+attachment and two real-card entry clauses now have gameplay evidence. Complete
+RON gameplay, atomic collection success, runtime cutover, embedded startup,
+Go-card/generator removal and unused DSL cleanup remain incomplete.
+
+Changed files: `pkg/mage/attached_entry.go` and `attached_entry_test.go`,
+`composable_actions.go`, `effect_cards.go`, `graveyard_batch_entry.go`,
+`linked_exile_entry.go`, `doc.go`; `pkg/mage/dsl/ron/attached_entry.go` and
+`attached_entry_test.go`, `compiler.go`, `inventory.go`,
+`linked_exile_transport.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Required zone-move success continuations. Inspect Puppet Master's required
+   graveyard-to-hand return and Coffin's required single-card exile entry as
+   related consumers before selecting the exact primitive. Estimated Puppet
+   Master completion: 1 name / 1 record; Coffin retains counters/lifecycle gaps.
+   Keep actual successful moves, exact destination visits and branch-local
+   results in mage. Do not treat an attempted move as success.
+2. Required legal attachment choice for Takklemaggot. Native explicit attachment
+   and Aura graveyard capture now exist. Still needs CanBeEnchantedByDeadGuest,
+   required choice success/failure and the non-Aura branch/retained-player grant.
+   Estimate zero immediate gains for the choice prerequisite; eventual one name.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Estimate zero immediate
+   gains until recursive resolving copies and ThisAbility retention execute;
+   eventual one name / six records. Reassess against remaining shared work.
+
+The commit title is `feat(ron): implement explicit entry attachment`.
+Signing is disabled for this invocation because the prior entry records an
+interactive signing-key requirement. Repository signing configuration is
+unchanged. This run stops after EXPLICIT-ENTRY-ATTACHMENT.

@@ -1723,6 +1723,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ReturnDeadGuestGraveyardCardToBattlefield":
+		build, err := compileDepartedAuraAttachedEntry(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ReturnDeadGuestGraveyardCardToHand":
 		if n.Kind != Symbol || ctx.hostDeath == nil || !ctx.aura || !ctx.resolving || ctx.drawReplacementBody {
 			return nil, unsupported(n, "departed Aura return context")

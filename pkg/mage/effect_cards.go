@@ -496,6 +496,10 @@ func returnGraveyardCardToBattlefieldWithEntry(g *Game, cardID, controller uuid.
 }
 
 func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, actor uuid.UUID, tapped bool) *Permanent {
+	return returnGraveyardCardToBattlefieldWithAttachment(g, cardID, controller, actor, tapped, nil)
+}
+
+func returnGraveyardCardToBattlefieldWithAttachment(g *Game, cardID, controller, actor uuid.UUID, tapped bool, attachment *entryAttachment) *Permanent {
 	for _, player := range g.players {
 		for _, card := range player.Graveyard() {
 			if card.ID() != cardID {
@@ -508,6 +512,26 @@ func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, acto
 			}
 			if perm == nil && failed == nil {
 				return nil
+			}
+
+			if attachment != nil && perm == nil {
+				return nil
+			}
+			if attachment != nil && perm != nil {
+				host, legal := attachment.resolve(g, perm)
+				if !legal {
+					return nil
+				}
+				if _, ok := player.RemoveFromGraveyard(cardID); !ok {
+					return nil
+				}
+				g.registerBattlefieldEntry(perm, nil, uuid.Nil)
+				if host.id != uuid.Nil {
+					g.Attach(perm.ID(), host.id)
+				}
+				g.completeBattlefieldEntryFrom(perm, controller, actor, 0, ZoneGraveyard)
+				g.FireEvent(GameEvent{Type: EvtCardsLeftGraveyard, PlayerID: player.PlayerID(), Amount: 1})
+				return perm
 			}
 			if _, ok := g.MoveFromGraveyard(player.PlayerID(), cardID, ZoneBattlefield); !ok {
 				return nil

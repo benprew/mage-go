@@ -1,5 +1,56 @@
 # DSL reference
 
+## Explicit attachment during card entry
+
+`EnterAttachedTo(host PermanentRef) BattlefieldEntryOption` supplies one exact
+host for `ReturnCardToBattlefield`, `ReturnCardToBattlefieldInto`, or
+`PutExiledCardsOntoBattlefieldUnderOwnersControl`. These constructors retain
+existing callers; the exile constructor now accepts variadic entry options.
+`EnterTapped` can be combined with one attachment option. Nil options, nil or
+unbound hosts, and duplicate options fail definition validation.
+
+The instruction saves the host visit before entry replacements and choices.
+After preparation, shared attachment legality reads the prepared entrant,
+including entry-copy type, color and enchant restrictions. The query restores
+any prior entering-permanent context. It does not target, so shroud and hexproof
+do not prohibit the attachment. Protection, enchant limits and enchantment
+prohibitions still apply. An absent, phased, returned or illegal host keeps an
+Aura in its original zone. A nonattachment permanent enters unattached;
+Equipment or Fortification with an illegal host also enters unattached
+(CR 301.5e, 301.6, 303.4h–i). A phased host is absent; a complete phase cycle
+retains the saved visit. Changed card visits cannot enter.
+
+Registration and attachment precede entry observations. Exile batches prepare
+all entrants and recheck saved hosts before movement; all successful entrants
+are registered and attached before their entry observations. Owner and entry
+controller remain separate. Delayed bodies save the host reference in their
+own frame. Waiting queries retain explicit source-host reads without moving
+cards. Copies and game clones retain separate bindings and zone state.
+
+RON accepts these exact shapes in ordinary resolving bodies:
+
+- `ReturnDeadGuestGraveyardCardToBattlefield([EntersUnderPlayersControl(playerRef),
+  EntersAttachedToPermanent(permanentRef)])` in an Aura host-death body. It uses
+  the existing departed-Aura card binding. Other return-entry lists reject.
+- `PutEachExiledCardOntoTheBattlefield(exiledSet, [EntersUnderOwnersControl,
+  EntersAttachedToPermanent(permanentRef)])` for the existing grouped or linked
+  exile sets. The existing owner-only form remains supported.
+
+RON owns these spellings, list shapes and lexical reference checks. Mage owns
+host visits, legality, replacements, batch entry, movement and attachment.
+`CanBeEnchantedByDeadGuest`, required creature choice, non-Aura return, noted
+counters and Coffin's single-card return remain separate adapters. Animate
+Dead's graveyard attachment and later on-battlefield attachment are separate
+contexts. These complete records remain rejected; no partial registry is used.
+
+Evidence: `TestAttachedEntry`, `TestAttachedEntryInvalid`,
+`TestAttachedEntryCopyReplacements`, `TestAttachedEntryBatch`,
+`TestAttachedEntryWaiting`, and `TestRONAttachedEntry*`. The RON record probes
+execute Takklemaggot's exact attached-return clause and Tawnos's Coffin's exact
+plural-return clause. They replace earlier unsupported procedures with explicit
+test producers; they do not establish complete-card gameplay.
+
+
 ## Aura graveyard visits after host death
 
 `AttachedPermanentDies().WithDepartedAuraCard(card *CardBinding)` produces a

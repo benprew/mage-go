@@ -1202,6 +1202,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "ante_card_filter"
 			}
+		case "ReturnDeadGuestGraveyardCardToBattlefield":
+			if len(n.Args) == 1 {
+				return "entry_operation"
+			}
+		case "PutEachExiledCardOntoTheBattlefield":
+			if len(n.Args) == 2 {
+				return []string{"card_reference", "entry_operation"}[index]
+			}
 		case "PutGraveyardCardOntoBattlefield":
 			if len(n.Args) == 2 {
 				return []string{"card_reference", "entry_operation"}[index]
@@ -1498,6 +1506,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "entry_operation":
+		if n.Name == "EntersAttachedToPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if n.Name == "LoseLife" && len(n.Args) == 1 {
 			return "entry_value"
 		}
