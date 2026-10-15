@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ExileEachWithControllerCounts] saves actual exile counts by former controller.
+// Exact visits and controllers are saved before batch replacement choices.
+// Duplicate, absent, returned and phased subjects cannot add a count.
+// Tokens count. Cancellation and other destinations do not count.
+// Shared replacements run in turn order before any batch departure.
+// [DrawEachPlayerNumber] reads both counts before ordinary draw actions.
+// Number frames keep separate producers, copies, clones and payment trials.
+// RON accepts a resolving EachPermanent exile and the per-player creature-count
+// draw used by Martyr's Cry. The selection must guarantee creatures.
+// Other count filters, consumers, delayed reads and replacement bodies reject.
+// The complete DRK record has cast, exile and draw gameplay evidence.
+//
 // [SpellCast] with AfterFirstInstant matches a caster's second and later instants.
 // Successful casts save CastInstantOrdinal from the shared turn tracker.
 // Casts before source entry count. Other spell types and stack copies do not.

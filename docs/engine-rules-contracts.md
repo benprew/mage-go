@@ -24125,3 +24125,50 @@ to track each player's instant count separately; no source correction is needed.
 Evidence: `TestSpellCastOrdinalHistory`, `FailedCast`, `Pending`, `Snapshot`,
 `Invalid`, `CloneHistoryAndControl`, and RON `TestRONSpellCastOrdinalDruid`,
 `Lifecycle`, `Bindings`, `Phasing`, `Invalid`, `Inventory`.
+
+## Exile counts by former controller
+
+`ExileEachWithControllerCounts(subjects PermanentSet,
+result *PlayerNumbersBinding) ResolvingEffect` selects exact battlefield visits
+and saves each visit's controller before replacement choices. The shared batch
+service removes duplicate visits and excludes absent, returned and phased
+subjects. It applies replacements in APNAP order before any batch departure,
+then rechecks each visit. Cancellation and a destination other than exile add
+no count. Tokens that leave for exile count; they need not remain in exile.
+Indestructibility, regeneration, shroud and hexproof do not prevent this move.
+
+The batch reuses `permanentGraveyardAction` with an exile destination, the shared
+replacement pipeline, `performPermanentGraveyardAction` and zone-change batches.
+Existing `Game.ExilePermanents` callers retain their signature and now use the
+same replacement checks. Singular exile and linked exile keep their existing
+paths; this slice does not add a general RON exile replacement declaration.
+
+Each execution resets both player counts. `PlayerNumber` can read the saved
+historical count after the exiled card leaves exile or changes controller.
+Number frames supply independent copies, pending actions, clones and payment
+trials. No current exile-zone scan supplies the count.
+
+`DrawEachPlayerNumber(result *PlayerNumbersBinding) ResolvingEffect` reads both
+saved counts before drawing, then uses ordinary draw actions in APNAP order.
+Each draw keeps the normal draw replacement contract. Definition validation
+requires a named binding and a producer before each read.
+
+RON supports `Exile([EachPermanent(collection)], [])` followed in the same
+ordinary resolving sequence by `EachPlayerAction(AnyPlayer,
+DrawNumberCards(NumPermanentsOfTypeExiledThisWay(And([IsCardtype(Creature),
+ControlledByAPlayer(SinglePlayer(ActionPlayer))]))))`. The producer selection
+must guarantee `IsCardtype(Creature)` through a conjunctive filter. Other count
+filters, consumers, delayed reads and entry/draw replacement bodies reject.
+A new producer supplies a new lexical binding. Branch-local results cannot
+escape their branch. Each factory call builds fresh bindings.
+
+Rules: CR 400.6–7, 406.2, 608.2c/e/f/i, 614.5, 616.1, 111.7 and 702.26b.
+Martyr's Cry's local WotC ruling limits the affected objects to battlefield
+creatures. There are no Scryfall notes in its local ruling file.
+
+Evidence: `TestExileControllerCountsBatch`, `Replacements`, `Order`, `Competing`,
+`IdentityAndHistory`, `DrawReplacement`, `Declarations`; and
+`TestRONExileControllerCountsMartyrsCry`, `Invalid`, `LoadAndInventory`,
+`IndependentProducers`. The real DRK record has complete cast-and-resolution
+evidence, including stolen creatures, tokens, phasing, protected characteristics,
+failed payment, stack copies and game clones.

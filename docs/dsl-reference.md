@@ -18270,3 +18270,20 @@ spell copies and the controller's own spells. `Lifecycle`, `Bindings`, `Phasing`
 pending events, copies, clones, scopes, strict declarations and atomic loading.
 Native `TestSpellCastOrdinal*` covers history before entry, turn reset, failed
 casting, source ability removal, controller changes and clone history isolation.
+
+### Saved exile counts per player
+
+RON accepts the ordinary resolving sequence
+`Exile([EachPermanent(collection)], [])` followed by
+`EachPlayerAction(AnyPlayer, DrawNumberCards(NumPermanentsOfTypeExiledThisWay(
+And([IsCardtype(Creature), ControlledByAPlayer(SinglePlayer(ActionPlayer))]))))`.
+The producer's collection must require creatures. The saved count uses actual
+exile movement and each creature's former controller, including tokens.
+Returned or phased visits cannot supply a saved subject. Replacement cancellation
+and redirection away from exile do not count. The draw uses ordinary replacements.
+
+The compiler creates a fresh `PlayerNumbersBinding` for each producer and factory
+instance, then lowers through `mage.ExileEachWithControllerCounts` and
+`mage.DrawEachPlayerNumber`. Other filters and count consumers, unbound or delayed
+reads, exile modifiers and entry/draw replacement bodies reject. The complete
+Martyr's Cry DRK record is covered by `TestRONExileControllerCountsMartyrsCry`.

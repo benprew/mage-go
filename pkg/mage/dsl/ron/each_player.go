@@ -49,6 +49,13 @@ func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		amount := action.Args[0]
+		if amount.Name == "NumPermanentsOfTypeExiledThisWay" {
+			build, err := compileExileControllerCountDraw(amount, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return []effectFactory{build}, nil
+		}
 		if amount.Name == "Integer" && amount.Kind == Tuple && len(amount.Args) == 1 && amount.Args[0].Kind == IntegerNode && amount.Args[0].Integer < 0 {
 			return nil, problem(amount, "all-player draw amount must be a nonnegative integer")
 		}

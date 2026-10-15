@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -158,20 +160,54 @@ func (g *Game) BouncePermanentsToHand(permanents []*Permanent) {
 
 // ExilePermanents moves one group of battlefield objects to exile.
 func (g *Game) ExilePermanents(permanents []*Permanent) {
+	g.exilePermanents(permanents)
+}
+
+func (g *Game) exilePermanents(permanents []*Permanent) []exiledPermanentFact {
 	if len(permanents) == 0 {
-		return
+		return nil
 	}
+	var result []exiledPermanentFact
 	g.withZoneChangeBatch(func() {
-		seen := make(map[uuid.UUID]bool, len(permanents))
+		type candidate struct {
+			action *permanentGraveyardAction
+			fact   exiledPermanentFact
+		}
+		var selected []candidate
+		seen := make(map[uuid.UUID]bool)
 		for _, p := range permanents {
 			if p == nil || seen[p.ID()] {
 				continue
 			}
 			current := g.FindPermanent(p.ID())
-			if current != nil && current.incarnationID == p.incarnationID && !current.PhasedOut {
-				seen[p.ID()] = true
-				g.ExilePermanent(current)
+			if current == nil || current.incarnationID != p.incarnationID || current.PhasedOut {
+				continue
+			}
+			seen[p.ID()] = true
+			selected = append(selected, candidate{action: &permanentGraveyardAction{subject: current.ID(), incarnation: current.incarnationID, destination: ZoneExile}, fact: exiledPermanentFact{visit: capturedPermanent{current.ID(), current.incarnationID}, controller: current.ControllerID()}})
+		}
+		order := make(map[uuid.UUID]int)
+		for i, id := range EachPlayer.resolvePlayers(&EffectContext{Game: g}) {
+			order[id] = i
+		}
+		slices.SortStableFunc(selected, func(a, b candidate) int { return order[a.fact.controller] - order[b.fact.controller] })
+		for i := range selected {
+			selected[i].action, _ = g.effects.ApplyReplacements(selected[i].action, g).(*permanentGraveyardAction)
+		}
+		for _, item := range selected {
+			action := item.action
+			if action == nil {
+				continue
+			}
+			current := g.FindPermanent(action.subject)
+			if current == nil || current.PhasedOut || current.incarnationID != action.incarnation {
+				continue
+			}
+			g.performPermanentGraveyardAction(action)
+			if action.destination == ZoneExile && action.subject == item.fact.visit.id && action.incarnation == item.fact.visit.incarnation {
+				result = append(result, item.fact)
 			}
 		}
 	})
+	return result
 }

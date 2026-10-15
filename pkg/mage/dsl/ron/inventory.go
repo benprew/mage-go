@@ -1818,6 +1818,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "NumPermanentsOfTypeExiledThisWay" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "LifeTotalOfPlayer" && len(n.Args) == 1 {
 			return "player_reference"
 		}

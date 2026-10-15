@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	exileCounts          *exileControllerCountsPlan
 	copyAbility          *copyAbilityPlan
 	graveyardEnchant     bool
 	counterSnapshot      *counterSnapshotPlan

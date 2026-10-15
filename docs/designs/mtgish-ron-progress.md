@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **932 accepted / 54 rejected names**
-(986 total), **2,345 compiled / 100 rejected records** (2,445 total).
-The latest slice is **INSTANT-CAST-ORDINAL-EVENT**.
-RON lowers the opponent nonfirst-instant TriggerA through shared cast-event
-bindings and a native historical ordinal filter. Ichneumon Druid's complete
-LEG record now has paid-cast and damage gameplay evidence. Cast history before
-entry counts; failed casts and stack copies do not. Pending bodies and clones
-keep separate event facts. Estimated and actual gain: one name / one record.
+Latest measured result (2026-10-15): **933 accepted / 53 rejected names**
+(986 total), **2,346 compiled / 99 rejected records** (2,445 total).
+The latest slice is **EXILE-CONTROLLER-COUNTS**.
+RON lowers Martyr's Cry's complete DRK record through actual simultaneous
+exile counts and ordinary per-player draws. Saved controllers and exact visits
+precede replacements. Tokens count; canceled, redirected and phased moves do
+not. Typed number frames keep producers, copies and clones separate.
+Estimated and actual gain: one name / one record, with complete RON gameplay.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -21,15 +21,14 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Forced mana activation and saved mana:** Drain Power; use contextual land
-   selection, each land's legal mana choices, exact mana removal and typed results.
-   Eventual one name / six records. Reuse shared planning/production services.
-2. **Sticky animation and ability removal:** Titania's Song; capture the correct
-   evolving layer membership and retain effects until cleanup after source exit.
-   Eventual one name / two records; needs a shared sticky layer contract.
-3. **Saved exile results:** Martyr's Cry; capture actual exiled creature visits
-   and their former controllers for per-player draw counts. Eventual one name /
-   one record; reuse simultaneous exile and per-player result services.
+1. **Hand-to-library choice:** Conch Horn, one name / one FEM record. Its fixed
+   payment, source sacrifice and two-card draw already have shared contracts;
+   add the required legal hand choice and library placement after the draw.
+2. **Forced mana activation and saved mana:** Drain Power, eventual one name /
+   six records. First isolate legal activation choices, arbitrary costs and
+   variable output; then capture exact lost mana in typed results.
+3. **Sticky animation and ability removal:** Titania's Song, one name / two
+   records. It needs evolving layer membership and a post-source duration.
 
 ## Dependencies and source blockers
 
@@ -23790,3 +23789,166 @@ Removal gates remain unmet.
 54 unique names / 100 records still reject. Complete RON gameplay, runtime
 loading and application cutover, Go-card/generator removal and unused DSL
 cleanup remain incomplete. Stop after INSTANT-CAST-ORDINAL-EVENT.
+
+## 2026-10-15 — EXILE-CONTROLLER-COUNTS
+
+Status: complete and validated for this slice. Stop after this slice.
+Complete migration and removal gates remain unmet.
+
+### Fresh baseline and candidate selection
+
+The working tree was clean. `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before implementation.
+`go run ./cmd/loadcards -json` exited 1 with valid collection diagnostics:
+2,345 compiled / 100 rejected records, 932 accepted / 54 rejected unique names.
+This was collection rejection, not a build or test failure.
+
+Read AGENTS.md, the engine API reference, execution design, the top status block
+and latest ledger entry, targeted vocabulary signatures, complete RON records
+and local WotC rulings for all three ranked candidates. Identical reprints were
+inspected together and counted once. No Go card definitions supplied requirements.
+
+| Candidate | Distinct affected names; estimated full unlocks | Other blockers and downstream benefit | Estimated full implementation/test effort |
+| --- | --- | --- | --- |
+| Forced mana activation / saved mana | Drain Power; eventual 1 name / 6 records, 0 from either prerequisite alone | Legal ability choice per land, arbitrary activation costs, variable production and exact lost-mana capture remain separate missing contracts; enables forced activations and typed mana results | Large; needs a narrower legal-activation prerequisite before a complete adapter |
+| Sticky animation | Titania's Song; 1 name / 2 records | Current layer services need evolving membership and a duration that continues after source departure; enables other static effects with retained membership and lifetime | Large; layer dependencies, ability removal and source-loss lifecycle require substantial native tests |
+| Saved actual exile counts | Martyr's Cry; 1 name / 1 record | Existing simultaneous exile and player-number frames exist; add replacement-aware outcomes and former-controller counts, then ordinary draws; improves shared batch exile callers | Small to medium; one cohesive producer/result/consumer contract |
+
+Candidate #1 was not ready as a bounded complete RON action: selecting only
+untapped fixed-output lands would violate its WotC rulings. All three candidates
+have one unique-card unlock; the six Drain Power reprints are not six cards.
+Selected #3 for the largest credible unique-card gain within one run. Its shared
+batch result prerequisite and per-player draws fit one complete vertical slice.
+No inspected candidate offered an immediate multi-card unlock.
+
+### Exact contracts, dependencies and reuse
+
+- Native API:
+  `ExileEachWithControllerCounts(subjects PermanentSet,
+  result *PlayerNumbersBinding) ResolvingEffect` and
+  `DrawEachPlayerNumber(result *PlayerNumbersBinding) ResolvingEffect`.
+- The producer selects exact present, unphased visits, deduplicates subjects and
+  saves their controllers before replacement choices or movement. It resets both
+  player counts on each execution. Tokens count although they do not persist in
+  the engine's exile storage. Ownership does not select the drawing player.
+- Factored `Game.ExilePermanents` through private `exilePermanents`, which returns
+  actual departure facts. It now sends exile-destination `permanentGraveyardAction`
+  proposals through the existing replacement pipeline in APNAP order, before
+  any departure. Shared `performPermanentGraveyardAction` performs the moves.
+  Cancellation, redirection away from exile and stale visits add no count.
+  All existing batch callers keep their signature. Singular and linked exile
+  paths are unchanged and are not claimed as new replacement adapters.
+- The shared zone-change batch supplies simultaneous trigger observations and
+  LKI. Indestructibility, regeneration and target protection do not prevent
+  exile. Saved counts remain historical after zone/control changes.
+- Reused `PlayerNumbersBinding`, `PlayerNumber`, number-frame copying/cloning,
+  definition binding dominance, `EachPlayer` order and ordinary draw actions.
+  Both draw amounts are read before any draw replacement runs. No global slot,
+  new resolution map, alternate zone system or card-name branch was added.
+- Exact RON producer: `Exile([EachPermanent(collection)], [])` in an ordinary
+  resolving action sequence. The collection must conjunctively guarantee
+  `IsCardtype(Creature)` for the supported consumer.
+- Exact RON consumer: `EachPlayerAction(AnyPlayer,
+  DrawNumberCards(NumPermanentsOfTypeExiledThisWay(And([IsCardtype(Creature),
+  ControlledByAPlayer(SinglePlayer(ActionPlayer))]))))`.
+  ActionPlayer denotes the member whose saved count supplies that draw. It is
+  not a general player reference introduced into the surrounding sequence.
+- A private plan and fresh per-factory player-number binding connect producer
+  and continuation. Later producers bind separate results. Results cannot be
+  read before production or escape a branch. Other filters, count consumers,
+  delayed reads, modifiers and entry/draw replacement contexts reject.
+- Inventory assigns `permanent_filter` to the count filter and preserves its
+  nested player-filter/reference roles. Atomic collection publication is intact.
+- `go run ./cmd/fetchset -check -card "Martyr's Cry"` passed before edits. Its
+  complete local ruling file has one WotC ruling (battlefield creatures only),
+  with no Scryfall notes. Local DRK Oracle text requires one draw per creature
+  actually exiled for its former controller. CR 400.6–7, 406.2, 608.2c/e/f/i,
+  614.5, 616.1, 111.7 and 702.26b establish the engine contract.
+
+Source defects: none found or changed for this slice. No RON source changed;
+the vocabulary source/hash snapshot needs no refresh. Its dated loader snapshot
+is not the current loader evidence. No environment blocker was found.
+
+### Failing-first tests and card-to-test mappings
+
+Native tests first failed compilation solely on the missing
+`ExileEachWithControllerCounts` API after correcting a test-only player-ref name.
+Real RON gameplay failed on unsupported `NumPermanentsOfTypeExiledThisWay`.
+Additional native order and inventory tests then failed on missing APNAP order
+and the result-filter role before those implementations. A test tried to cast a
+second sorcery with a nonempty stack; corrected the fixture to resolve each cast
+at legal timing. Inventory signatures separate declaration contexts, so the role
+assertion checks the exact count-expression context instead of combining counts
+from different contexts. No production assertion or collection gate was weakened.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Martyr's Cry, complete DRK record | `TestRONExileControllerCountsMartyrsCry` | Paid cast and failed-payment rollback; stolen white creature, own white creature, white token, black survivor, phased creature, shroud, indestructibility and regeneration; exact 1/2 draws; copied spell and independent game clone |
+| Separate RON instances and producers | `TestRONExileControllerCountsIndependentProducers` | Two factory instances and two producers in each body; later empty batches draw zero |
+| Source lifetime | `TestRONExileControllerCountsSourceDeparture` | A RON activated creature exiles itself and continues with both saved draw counts |
+| Native simultaneous results | `TestExileControllerCountsBatch` | Duplicate subjects, former controller versus owner, tokens, phasing, regeneration, indestructibility, complete-batch event observations, empty reset and clone isolation |
+| Replacement results and order | `TestExileControllerCountsReplacements`, `Order`, `Competing` | All replacement checks precede departures; cancellation and graveyard redirection count zero; APNAP subjects; affected controller chooses competing replacements and later applicability is rechecked |
+| Identity and historical information | `TestExileControllerCountsIdentityAndHistory` | Saved returned visit cannot supply subject; later exile departure, battlefield return and controller change do not change counts |
+| Draw replacement and definitions | `TestExileControllerCountsDrawReplacement`, `Declarations` | Ordinary draw replacement sees both players; named, nonnil results, legal subjects and producer-before-read validation |
+| Strict RON boundaries | `TestRONExileControllerCountsInvalid`, `LoadAndInventory` | Unbound/read-before-producer/branch leakage, unsupported player/filter/consumer/modifier/duration; fresh actions; exact inventory role; failed collection load preserves the registry |
+
+### Verification and loader comparison
+
+- Focused RON `go test ./pkg/mage/dsl/ron -run TestRONExileControllerCounts
+  -count=1` and native `go test ./pkg/mage -run TestExileControllerCounts
+  -count=1`: passed. Added source-departure evidence and repeated focused RON,
+  build and vet checks before broader tests.
+- `make build` and `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed across the repository, including retained Go cards and
+  DSL callers. Four pinned assertions in three RON test files now require
+  2,346 compiled / 99 rejected records.
+
+- The first `make lint` found one `prealloc` issue in the new continuation.
+  Added the requested capacity allocation. Automatic lint changes only reordered
+  imports. Repeated both focused groups, `make build` and `go vet ./...`: passed.
+- The implement-engine skill's additional `go test ./... -short -count=1`
+  passed after the allocation fix, including the complete engine short suite.
+
+- Final `make lint`: passed, zero issues. Reviewed all source changes and
+  repeated both focused groups after lint: passed. No unrelated automatic edits.
+- Final `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON,
+  **2,346 compiled / 99 rejected records**, **933 accepted / 53 rejected names**.
+  Parsed the baseline/final issue sets and confirmed the sole removed diagnostic.
+  Example remaining gap: Drain Power,
+  `2ED.lines.ron:69:279: unsupported value (And)`.
+- All required checks passed. The requested commit uses the prior documented
+  command-local `commit.gpgsign=false` override; repository/global configuration
+  is unchanged.
+
+The fresh loader removed only Martyr's Cry's DRK diagnostic. No diagnostic was
+added or changed for any other record. Actual gain matches the estimate:
+one unique name / one record compiled, plus one complete RON gameplay mapping.
+Compilation counts and gameplay evidence remain separate measures.
+
+Changed files: native `exile_controller_counts.go`, its tests and
+`zone_change_batch.go`; RON `exile_controller_counts.go`, its tests,
+`compiler.go`, `player_scope.go`, `optional_payment.go`, `each_player.go`,
+`inventory.go` and the three pinned-count test files; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+No RON data, Go card definitions, generators or broad DSL functions changed.
+No removal was attempted while the design's gates remain unmet.
+
+### Remaining gaps and ranked next candidates
+
+1. Required hand-to-library choice for Conch Horn: one name / one FEM record.
+   Its complete record has fixed mana, tap and self-sacrifice costs, two draws,
+   then `PutACardFromHandOnTopOfLibrary`. The final choice/placement adapter is
+   the visible remaining blocker. Reuse exact hand visits and library movement;
+   preserve the choice after source sacrifice and after replacement-modified draws.
+2. Forced legal mana activation, followed by saved lost-mana results for Drain
+   Power: eventual one name / six records. A prerequisite must cover the target
+   player's legal activation choices, arbitrary costs and variable output;
+   fixed untapped-land approximations remain invalid.
+3. Sticky layer membership and post-source duration for Titania's Song: one
+   name / two records. Keep layer dependencies and ability removal exact.
+
+53 unique names / 99 records still reject. Complete RON gameplay, runtime
+loading and application cutover, Go-card/generator removal and unused DSL
+cleanup remain incomplete. Stop after EXILE-CONTROLLER-COUNTS.
