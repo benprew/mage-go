@@ -17579,6 +17579,26 @@ Entry replacement operations, draw replacement bodies, source-zone rules and
 spell sources reject this shape. The event introduces no player or permanent
 binding in its body. `ControllerOfLeavingPermanent` needs a separate typed
 capture adapter. Existing delayed action rules and lexical bindings still apply.
-Coffin's required single exile-entry continuation and Animate Dead's graveyard
-Aura contracts remain unsupported. `TestRONDelayedLeaveUntap*` maps these event
-prerequisites without claiming full-card execution.
+Coffin's required single exile-entry continuation is supported below. Animate
+Dead's graveyard Aura contracts remain unsupported. `TestRONDelayedLeaveUntap*`
+maps the event prerequisites; `TestRONSingleExileEntry*` covers complete Coffin.
+
+## RON single exile entry and success continuation
+
+Ordinary resolving bodies accept
+`MustCost(PutExiledCardOntoBattlefield(singleGroup,
+[EntersUnderOwnersControl, ...options]))` immediately followed by `If`, `Unless`
+or `IfElse` with the strict `CostWasPaid` or `CostWasntPaid` symbol. The producer
+must be a lexically bound singular grouped-exile result. Owner control is the
+first option. Optional strict `EntersTapped` and `EntersWithNotedCounters` symbols
+may each occur once; noted counters require a preceding snapshot in scope.
+Empty branches, unsupported options and entry/draw replacement contexts reject.
+
+Only the success branch receives the new
+`ThePermanentPutOnTheBattlefieldThisWay` binding. It can supply the host for
+`EntersAttachedToPermanent` in plural exile entry. Failure and later outer actions
+cannot use the new result. Branches preserve outer lexical bindings. The engine
+service `PutExiledCardOntoBattlefieldOrElse` owns exact visits, actual entry,
+result clearing, owner control and shared entry mechanics. Tawnos's Coffin now
+executes its complete unchanged ATQ record. `TestRONSingleExileEntry*` provides
+syntax, gameplay and scope evidence.

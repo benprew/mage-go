@@ -13,8 +13,10 @@ func PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects ExiledCardSet, opt
 }
 
 type exileEntryEffect struct {
-	subjects ExiledCardSet
-	entry    battlefieldEntryOptions
+	subjects   ExiledCardSet
+	entry      battlefieldEntryOptions
+	result     *PermanentBinding
+	saveResult bool
 }
 
 func (*exileEntryEffect) Text() string {
@@ -23,6 +25,10 @@ func (*exileEntryEffect) Text() string {
 func (*exileEntryEffect) Properties() EffectProperties { return EffectProperties{Mass: true} }
 func (e *exileEntryEffect) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "resolving-effect", children: []definitionEdge{{"subjects", e.subjects}}}
+	if e.saveResult {
+		node.bindingWrite = e.result
+		node.children = append(node.children, definitionEdge{"result", e.result})
+	}
 	e.entry.inspect(&node)
 	return node
 }
@@ -45,7 +51,15 @@ type preparedExileEntry struct {
 }
 
 func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
+	e.apply(ctx)
+	return nil
+}
+
+func (e *exileEntryEffect) apply(ctx *EffectContext) bool {
 	g := ctx.Game
+	if e.saveResult {
+		delete(g.resolution.permanentBindings, e.result)
+	}
 	var proposed []*Permanent
 	defer func() {
 		for _, p := range proposed {
@@ -163,6 +177,12 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 	}
 	for _, entry := range entered {
 		g.registerBattlefieldEntry(entry.permanent, nil, uuid.Nil)
+		if e.saveResult {
+			if g.resolution.permanentBindings == nil {
+				g.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)
+			}
+			g.resolution.permanentBindings[e.result] = capturedPermanent{entry.permanent.ID(), entry.permanent.incarnationID}
+		}
 	}
 	for _, entry := range entered {
 		if entry.host.id != uuid.Nil {
@@ -178,7 +198,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 	for _, entry := range entered {
 		g.finishRetainedEntry(entry.permanent)
 	}
-	return nil
+	return len(entered) > 0
 }
 
 func (g *Game) chooseEntryAuraHost(perm *Permanent, owner Player) (capturedPermanent, bool) {

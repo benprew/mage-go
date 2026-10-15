@@ -80,8 +80,8 @@ func TestRONAttachedEntryGuest(t *testing.T) {
 
 func TestRONAttachedEntryCoffin(t *testing.T) {
 	record := repositoryRecord(t, "ATQ", "Tawnos's Coffin", "coffin.ron")
-	if _, err := Compile(record); err == nil {
-		t.Fatal("incomplete record accepted")
+	if _, err := Compile(record); err != nil {
+		t.Fatal(err)
 	}
 	var entry Node
 	var walk func(Node)

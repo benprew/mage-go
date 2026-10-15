@@ -23208,4 +23208,33 @@ old information but cannot supply a live installation. The RON
 Coffin and Animate Dead event ASTs, installation timing, independent copied
 installations, trigger and nested contexts, saved grouped exile/counter frames,
 clone isolation, pure waiting queries, invalid declarations and inventory roles.
-These tests establish a prerequisite; neither full card has new gameplay coverage.
+These event tests establish a prerequisite. Single exile-entry tests below
+add complete Coffin gameplay coverage. Animate Dead still needs graveyard Aura
+contracts.
+
+## Single exile entry with an exact result and continuation
+
+`PutExiledCardOntoBattlefieldOrElse(card CardRef, result *PermanentBinding,
+entered, notEntered ResolvingEffect, options ...BattlefieldEntryOption)
+ResolvingEffect` uses the shared exile-entry pipeline for one saved visit under
+its owner's control. At least one branch and a non-nil result are required.
+Definition validation permits the new result in the success branch only.
+An absent, stale, token or nonpermanent card cannot enter. Failed entry clears
+an earlier result and selects failure. Entry cancellation retains the shared
+pipeline's destination. The result saves the exact new battlefield incarnation
+before entry observations. A departure during observations cannot reverse
+success; subsequent result reads still require that exact live visit.
+
+Entry options retain the shared replacement, copy, counter, tapped-entry and
+attachment contracts. No separate entry rules or payment transaction is added.
+CR 400.4a, 400.7j, 603.7 and 614.12 apply. Aura reattachment uses CR 303.4f/i;
+protection and enchant limits apply, while shroud does not prohibit entry.
+Existing delayed captures supply waiting queries, stack copies and clone
+isolation. Entry success is a local return value, not a shared last-action slot.
+
+Evidence: `TestExileEntryContinuation`, `Declarations`, `Observations`;
+`TestRONSingleExileEntryCoffin`, `Branches`, `WaitingInstances`, `UntapChoice`,
+`Invalid`, `Contexts`, `Inventory`. The complete unchanged Coffin record has
+RON gameplay evidence, including optional untap, early source departure, tokens,
+stale exile visits, owner control, counters, tapped entry, Aura legality, phase
+cycles, pending copies/clones and independent waiting installations.

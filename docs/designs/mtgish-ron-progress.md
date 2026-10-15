@@ -6,37 +6,33 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **923 accepted / 63 rejected names**
-(986 total), **2,307 compiled / 138 rejected records** (2,445 total).
-The latest slice is **DELAYED-SOURCE-LEAVE-UNTAP**.
-RON lowers future source leave and untap events and their two-member union.
-Mage consumes one subscription at the first matching future event for one exact
-visit. Shared delayed frames retain bindings, source/controller facts, copies
-and clones. Tests cover timing, phasing, return, stun and simultaneous departure.
-Coffin now rejects at required single exile-entry payment. Animate Dead still
-needs graveyard Aura contracts and a typed departure-controller capture adapter.
-Estimated and actual gain: zero complete names / records. Both cards' unchanged
-event clauses have new RON gameplay evidence. No accepted record regressed.
-No RON source changed. Complete-card gameplay coverage is unchanged.
-
-The loader still rejects the collection atomically. Runtime cutover, Go-card
-removal and DSL cleanup remain gated by complete support and native startup.
+Latest measured result (2026-10-15): **924 accepted / 62 rejected names**
+(986 total), **2,308 compiled / 137 rejected records** (2,445 total).
+The latest slice is **SINGLE-EXILE-ENTRY-CONTINUATION**.
+RON lowers required single grouped exile entry with owner control, optional
+entry tapped status and saved counters, and an adjacent success/failure branch.
+Mage reuses shared exile entry and saves the exact entrant before observations.
+Only success receives the new entrant binding. Failed entry clears the result.
+Tawnos's Coffin now compiles and has complete-record RON gameplay coverage.
+Estimated and actual gain: one complete name / record. No accepted record regressed.
+No RON source changed. Animate Dead still needs graveyard Aura contracts;
+Vesuvan Doppelganger still needs copiable ability grants and recursive copies.
+The collection still rejects atomically. Runtime cutover, Go-card removal and
+DSL cleanup remain gated by complete support and native startup.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Exact single exile-entry success/result:** Coffin's saved counters and
-   source leave/untap union are now available. Implement owner control, tapped
-   entry, counter restoration, exact entrant result and required success
-   continuation. Estimated gain: one name / one record after the complete shape.
-2. **Graveyard Aura attachment:** Animate Dead still needs exact graveyard hosts,
-   return linkage, acquired linked enchant declarations, presence condition and
-   departure-controller capture. First prerequisite estimates zero immediate
-   gains; eventual one name / six records. Reassess shared uses before selecting.
-3. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
-   recursive resolving copies and ThisAbility retention. First prerequisite
+1. **Graveyard Aura attachment:** Animate Dead needs exact graveyard hosts,
+   entry linkage, linked enchant grants, a presence condition and departure-player
+   capture. One prerequisite estimates zero immediate gains; eventual one name /
+   six records. Reassess shared uses before selecting.
+2. **Copiable ability grants:** Vesuvan Doppelganger needs copiable upkeep grants,
+   recursive resolving copies and ThisAbility retention. One prerequisite
    estimates zero immediate gains; eventual one name / six records.
+3. **Counter-bound duration:** Cyclopean Tomb needs exact source/counter lifetime
+   and delayed upkeep removal. Inspect all nested forms before estimating unlocks.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -20335,3 +20331,155 @@ interactive signing-key limitation. Repository configuration is unchanged.
    eventual 1 name / 6 records.
 
 This run stops after DELAYED-SOURCE-LEAVE-UNTAP.
+
+## 2026-10-15 — SINGLE-EXILE-ENTRY-CONTINUATION
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and RON package tests passed.
+The initial loader exited 1 with valid collection-rejection JSON: 2,307 compiled /
+138 rejected records, 923 accepted / 63 rejected names. This was not a build or
+test failure. Complete ATQ Coffin and LEA Animate Dead/Doppelganger records,
+including nested actions, were read. Their local ruling files were read through
+the exact-name index. Targeted vocabulary checks covered
+PutExiledCardOntoBattlefield, EnchantGraveyardCard and AddAbilityVariable.
+Reprints count once below.
+
+| Candidate | Distinct affected names | Estimated complete gains | Other blockers and downstream reuse | Effort |
+| --- | --- | --- | --- | --- |
+| Single exile entry with result and continuation | Tawnos's Coffin | 1 name / 1 record | All prerequisites now exist: grouped exile, saved counters, attachment entry and delayed source-event union. Adds reusable actual-entry continuation and typed result over the shared exile-entry pipeline | Medium; complete in this run |
+| Graveyard Aura attachment | Animate Dead | 0 for first prerequisite; eventual 1 name / 6 records | Exact graveyard host, entry linkage, acquired linked enchant declaration, presence condition and departure-controller capture still needed. Enables graveyard attachment behavior | Large for complete card; medium per prerequisite |
+| Copiable ability grants and recursive copies | Vesuvan Doppelganger | 0 for first prerequisite; eventual 1 name / 6 records | Copiable upkeep grant, recursive resolving copy, KeepColor and explicit ThisAbility retention. Existing AddAbilityVariable uses by Urza's Avenger and Gabriel Angelfire are already supported and are not new unlocks | Large for complete card; medium per prerequisite |
+
+Selected the first ranked candidate. It is dependency-ready and completes a card
+whose reusable prerequisites were established by several preceding slices.
+The alternatives have no complete gains for one prerequisite. No multi-name
+unlock was identified among these dependency candidates. The shared entry and
+continuation contract stays reusable; no card-specific policy enters mage.
+Acceptance cases were stated before editing: real Coffin gameplay, owner/tapped
+entry, counters, attachments, exact visits, failed entry, copies/clones, scope
+and invalid declarations. `go run ./cmd/fetchset -check -card "Tawnos's Coffin"`
+passed. All six Coffin rulings are wotc rulings; there are no local scryfall notes.
+CR 400.4a, 400.7j, 303.4, 603.7 and 614.12 establish the shared contract.
+
+### Contract and reuse boundary
+
+New engine signature:
+`PutExiledCardOntoBattlefieldOrElse(card CardRef, result *PermanentBinding,
+entered, notEntered ResolvingEffect, options ...BattlefieldEntryOption)
+ResolvingEffect`.
+
+One exact saved exile visit returns under its current owner's control. Missing,
+stale, token and nonpermanent subjects fail. Shared exile entry retains copy,
+replacement, counter, tapped-entry, host-choice and attachment behavior. Entry
+operation failure retains its existing graveyard destination. Failed entry
+clears the result. Successful registration saves the new incarnation before
+observations. Actual entry selects success even if an observation removes the
+entrant; later result reads still require its exact live visit. Success is a
+local return value. Definition validation exposes the result only inside the
+success sequence. Nil/unbound inputs, no branches, failure-branch result reads
+and escaped new results reject.
+
+RON signature:
+`MustCost(PutExiledCardOntoBattlefield(singularGroupedExileReference,
+[EntersUnderOwnersControl, ...options]))`, with an immediately adjacent
+`If`, `Unless` or `IfElse` using strict `CostWasPaid`/`CostWasntPaid` symbols.
+Owner control is required first. Optional EntersTapped and
+EntersWithNotedCounters symbols can each occur once. Noted counters require a
+lexically preceding snapshot. Only success introduces the new
+ThePermanentPutOnTheBattlefieldThisWay reference. Existing outer bindings stay
+available. Per-instance returned-permanent plans reuse the existing typed
+PermanentBinding and cloned compiler maps. Inventory records card-reference and
+entry-operation argument roles for the resolution cost.
+
+Ordinary resolving grouped-exile bodies, including delayed bodies, support the
+shape. Entry and draw replacement contexts reject. Ungrouped references, plural
+subjects, unknown/duplicate entry options, absent snapshots, empty branches,
+invalid result conditions and result escape reject at compilation. No fallback,
+partial registry, global last-action slot or game-time declaration panic was
+added. Existing plural entry callers retain their API and simultaneous behavior.
+No new payment transaction, replacement-order rule or simultaneous-operation
+policy was needed. No source-data defect was found or corrected.
+
+### Failing-first evidence and card-to-test mapping
+
+The native test first failed compilation at the new API after fixture API names
+were corrected. The real Coffin test failed at the expected unsupported mandatory
+PutExiledCardOntoBattlefield diagnostic with the dispatch absent. Inventory tests
+then failed at missing typed argument roles before the adapter was added.
+Additional fixtures exposed setup errors: Coffin's activation is index 1 after
+its static ability; an illegal-Aura probe initially offered an unintended legal
+host; the optional-untap probe needed a real owner on its saved creature. Those
+fixtures were corrected without changing production rules. The illegal-Aura
+return probe changes the saved card's protection in exile before return.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Complete unchanged ATQ:67 Tawnos's Coffin | TestRONSingleExileEntryCoffin | Leave/untap, early source departure, tokens, stale exile visits, owner-controlled tapped return, saved P/T counters, Aura reattachment, new protection, phase cycle, pending clone and copied delayed trigger |
+| Coffin's optional untap rule | TestRONSingleExileEntryUntapChoice | Declined native untap keeps exile; accepted native untap causes the return on the next priority step |
+| Coffin activation legality/payment | TestRONSingleExileEntryAnnouncement | Insufficient mana and shrouded target reject with no tap, mana loss, exile or delayed installation |
+| Waiting frames and instances | TestRONSingleExileEntryWaitingInstances | Two factory instances/controllers keep different saved cards/counters; repeated pure queries retain visits; waiting clone and independently triggered installations do not overlap |
+| Syntax and scope | TestRONSingleExileEntryBranches, Invalid, Contexts, Inventory | Branch polarity, artifact entry, exact entrant read, invalid forms, context rejection and typed syntax roles |
+| Native entry and result lifecycle | TestExileEntryContinuation | Owner control, tapped entry, stale visit/token/nonpermanent/illegal-Aura failure and clearing an old result |
+| Native declarations | TestExileEntryContinuationDeclarations | Nil/unbound input, absent branches, success-only binding dominance and result escape |
+| Native entry observations | TestExileEntryContinuationObservations | Counter replacement and tapped status precede observations; cancelled entry fails; departure during observation cannot reverse actual entry success |
+
+Existing counter-snapshot and attached-entry tests now require full Coffin
+compilation instead of asserting its former gap. Collection assertions in
+DefinitionPlan, Inventory and NumericConsumer tests now require 2,308/137.
+Compilation and gameplay are separate measurements: one complete name gains
+both compilation and the mapped full-record gameplay evidence above.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONSingleExileEntry' -count=1`
+  and `go test ./pkg/mage -run '^TestExileEntryContinuation' -count=1`: pass.
+- Final `make build` and `go vet ./...`: pass.
+- Final `go test ./pkg/mage/... -short -count=1` and `make test`: pass.
+- The initial broader RON run failed only at four exact collection-count
+  assertions, which now require the measured gain. No behavior assertion was
+  weakened. Initial lint reported one preallocation issue in the two-instance
+  test. Both local slices now have capacity two; no suppression was added.
+- Final `make lint`: pass, 0 issues. Formatter changes were import grouping in
+  the new tests. Focused, build, vet, short and full checks were repeated after
+  those changes and the preallocation fix. SHA-256 comparison of all 13 changed
+  or new Go files proves the final lint pass changed none of the checked code.
+- Final `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON;
+  **2,308 compiled / 137 rejected records**, **924 accepted / 62 rejected names**
+  from 2,445 records / 986 names. A parsed baseline comparison asserts that
+  Coffin's ATQ:67 diagnostic is the only removed rejection and that every other
+  rejection key and diagnostic is identical. No accepted record regressed.
+
+Actual gain is **1 name / 1 record**, matching the estimate. Complete-card
+RON gameplay coverage also gains Coffin through the mappings above; compilation
+counts alone do not establish that coverage. No source defect or environment
+failure remains. RON source is unchanged, so no vocabulary refresh is required.
+Complete collection gameplay, atomic runtime loading, application cutover,
+Go-card/generator removal and DSL cleanup remain gated. No Go definition or DSL
+function was removed, and existing callers were preserved.
+
+Changed files: `pkg/mage/exile_entry_continuation.go`,
+`exile_entry_continuation_test.go`, `linked_exile_entry.go`, `doc.go`;
+`pkg/mage/dsl/ron/single_exile_entry.go`, `single_exile_entry_test.go`,
+`optional_payment.go`, `inventory.go`, `attached_entry_test.go`,
+`counter_snapshot_test.go`, `definition_plan_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Commit title: `feat(ron): implement single exile entry continuation`.
+Signing is disabled for this commit invocation, following the prior recorded
+interactive signing-key limitation. Repository configuration is unchanged.
+
+### Ranked next candidates
+
+1. Exact graveyard Aura attachment and host identity for Animate Dead. Estimate
+   zero immediate gains for one prerequisite; eventual 1 name / 6 records. Linked
+   enchant grant, presence condition and departure-controller capture remain.
+2. Copiable ability grants and recursive copies for Vesuvan Doppelganger. Keep
+   ThisAbility identity explicit. Estimate zero immediate gains for one
+   prerequisite; eventual 1 name / 6 records.
+3. Counter-bound lifetime for Cyclopean Tomb. Inspect the complete return/removal
+   procedure and shared duration consumers before estimating a full-card gain.
+
+This run stops after SINGLE-EXILE-ENTRY-CONTINUATION.

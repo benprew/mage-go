@@ -340,6 +340,9 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "PutExiledCardOntoBattlefield" {
+		return compileSingleExileEntry(payment.Args[0], continuation, ctx)
+	}
 	if len(payment.Args) > 0 && payment.Args[len(payment.Args)-1].Name == "PayManaForEach" {
 		return compileRepeatedManaPayment(payment, continuation, ctx)
 	}

@@ -772,6 +772,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "cost", "resolution_cost":
+		if role == "resolution_cost" && n.Name == "PutExiledCardOntoBattlefield" && len(n.Args) == 2 {
+			return []string{"card_reference", "entry_operation"}[index]
+		}
 		if role == "resolution_cost" && n.Name == "AnteAPermanent" && len(n.Args) == 1 {
 			return "ante_payment_subject"
 		}

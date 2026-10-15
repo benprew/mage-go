@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PutExiledCardOntoBattlefieldOrElse] returns one exact exile visit under its
+// owner's control and selects a branch from actual entry. Failed entry clears
+// the typed result. Only the success body receives the new entrant binding.
+// Shared exile entry supplies replacements, counters, tapped status and Aura
+// legality before entry observations. A later departure cannot erase success.
+// Delayed frames, stack copies and game clones keep separate saved visits.
+// RON accepts required single grouped exile entry with owner control, optional
+// tapped entry and saved counters, followed by an adjacent result branch.
+// The entrant result is local to success. Coffin's complete record executes.
+// Entry and draw replacement contexts require separate adapters.
+//
 // [WhenLeaves], [WhenUntaps] and [WhenLeavesOrUntaps] watch one exact visit.
 // The union consumes one subscription at the first matching future event.
 // Cleanup preserves it. Earlier events cannot replay. Return cannot match.
@@ -7,7 +18,7 @@
 // Shared delayed frames keep bindings, copies and clones separate.
 // RON accepts the source leave and untap events and their two-member Or union
 // in ordinary resolving permanent-source bodies. The body gets no event players.
-// Coffin still needs single exile-entry continuation. Animate Dead still needs
+// Coffin uses single exile-entry continuation. Animate Dead still needs
 // graveyard Aura contracts and a departure-controller capture adapter.
 //
 // [BindCounterSnapshot] declares saved counts for all counter kinds.
@@ -20,7 +31,7 @@
 // RON accepts resolving NoteCountersOnPermanent and a strict
 // EntersWithNotedCounters symbol in owner-controlled plural exile returns.
 // Branch-local captures cannot escape. Factories keep separate bindings.
-// Coffin still needs single-entry continuations. Its event union is supported.
+// Coffin uses single-entry continuations and the source event union.
 //
 // [RemoveCreatureEnchant] removes fixed [CreatureEnchantTarget] declarations.
 // [Until] saves the exact recipient. Layer 6 removes its enchant restriction.
@@ -77,7 +88,7 @@
 // RON accepts required PutGraveyardCardIntoHand with adjacent If, Unless or
 // IfElse payment-result branches in ordinary resolving bodies. Entry and draw
 // replacements reject. This completes Puppet Master's LEG record. Exile entry
-// continuations need a separate adapter and an exact entrant result.
+// uses PutExiledCardOntoBattlefieldOrElse with an exact entrant result.
 //
 // [EnterAttachedTo] saves one exact host before card entry replacements.
 // Shared attachment rules read the entrant after copy changes. Shroud and
