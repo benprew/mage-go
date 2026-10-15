@@ -1056,6 +1056,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "WhenPermanentLeavesTheBattlefield" || n.Name == "WhenPermanentBecomesUntapped") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "persistent_step_event":
+		if n.Name == "AtTheBeginningOfAPlayersUpkeep" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 	case "delayed_step_event":
 		if (n.Name == "AtTheBeginningOfPlayersNextUpkeep" || n.Name == "AtTheBeginningOfPlayersNextMainPhase") && len(n.Args) == 1 {
 			return "player_reference"
@@ -1151,6 +1155,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreateFutureReplaceWouldDraw":
 			if len(n.Args) == 2 {
 				return []string{"future_draw_replacement_event", "action"}[index]
+			}
+		case "CreateTrigger":
+			if len(n.Args) == 2 {
+				return []string{"persistent_step_event", "actions"}[index]
 			}
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {

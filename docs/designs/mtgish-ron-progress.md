@@ -8,14 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **924 accepted / 62 rejected names**
 (986 total), **2,308 compiled / 137 rejected records** (2,445 total).
-The latest slice is **COUNTER-BOUND-LAYER-DURATION**.
-RON lowers recipient-bound counter lifetimes and basic-land type changes in
-ordinary resolving singular layer actions. Mage saves exact watched visits and
-counter-zero/phase transitions, with immediate instruction-boundary expiry.
-All five Cyclopean Tomb activated clauses validate and have RON gameplay tests.
-Native tests cover phasing, identity, counter replacement, payment and clones.
+The latest slice is **PERSISTENT-UPKEEP-SUBSCRIPTION**.
+RON lowers CreateTrigger with a fixed creator-controller upkeep and a nonempty
+ordinary resolving body. Mage retains the subscription through cleanup and
+source changes, with separate captured frames for each trigger, copy and clone.
+All five Cyclopean Tomb subscription declarations have projected RON tests;
+the unsupported counter-removal body is replaced by a probe in those tests.
 Estimated and actual complete-card gain: zero names / records. Complete Tomb
-still needs persistent upkeep subscriptions, counter history and removal.
+still needs exact source-counter history and its required removal procedure.
 No RON source changed. Other accepted records retain their existing coverage.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and native startup.
@@ -24,9 +24,10 @@ DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Persistent upkeep and counter history:** Cyclopean Tomb now reaches
-   CreateTrigger. It still needs a repeated upkeep subscription, exact-source
-   placement/removal history and its removal procedure. Choose one prerequisite;
+1. **Counter history and removal:** Cyclopean Tomb now reaches
+   AllCountersOfTypeFromAPermanent. Persistent upkeep is complete. Exact-source
+   placement/removal history and the required land-removal procedure remain.
+   Choose one dependency-ready prerequisite;
    estimate zero immediate gains, eventual one name / five records.
 2. **Source-to-return linkage:** Animate Dead needs a forward exact returned-host
    link before its lasting enchant grant, then presence and departure-player
@@ -20812,3 +20813,138 @@ Commit title: `feat(ron): implement counter-bound layer duration`.
 The commit invocation disables signing under the previously recorded interactive
 signing-key limitation. Repository configuration is unchanged.
 This run stops after COUNTER-BOUND-LAYER-DURATION.
+
+## 2026-10-15 — PERSISTENT-UPKEEP-SUBSCRIPTION
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `go test ./pkg/mage/dsl/ron -count=1`
+and `make build` passed. Fresh `go run ./cmd/loadcards -json` exited 1 with
+2,308 compiled / 137 rejected records and 924 accepted / 62 rejected unique
+names. This is expected atomic collection rejection, not a build failure.
+Complete records and nested forms were inspected for the three ranked candidates;
+all five affected Tomb records were read. Reprints count once below.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Persistent upkeep subscription | Cyclopean Tomb | 0 now; eventual 1 name / 5 records | Exact-source counter placement/removal history and required land selection/removal remain; supplies the independent lifetime needed to run that procedure every upkeep | Small: shared step capture plus an explicit cleanup lifetime; recurrence, identity, timing, copies and clones |
+| Forward source-to-return linkage | Animate Dead | 0 now; eventual 1 name / 6 records | Link must exist before the lasting enchant grant; presence condition and departure-controller adapters also remain; enables the exact-host enchant grant and sacrifice continuation | Medium: forward binding, entry failure and attachment legality, returned visits and LKI |
+| Copiable upkeep grants | Vesuvan Doppelganger | 0 now; eventual 1 name / 6 records | Recursive resolving copy and ThisAbility retention remain; enables copy inheritance of the granted upkeep ability | Medium/large: copy-value grants, recursive definitions, text rebinding and duplicate instances |
+
+Candidate 1 is dependency-ready and is the ledger's first unblocking prerequisite.
+It has the smallest complete implementation and test boundary. The WotC Tomb
+ruling of 2008-08-01 expressly requires upkeep triggers for the rest of the game.
+The other compared candidates also provide no immediate full-card gain and need
+more coupled contracts. No additional slice was started.
+
+Before edits, the stated contract was: save the creator's controller and typed
+frame at resolution; queue a new body at each matching future upkeep; retain the
+subscription through cleanup and source departure/control/phasing; keep target
+visits, stack copies and clones separate. Acceptance included invalid declarations,
+creation/detection/resolution timing, saved identity and repeated execution.
+
+### Supported signatures, engine reuse and rules
+
+Native API:
+`AtEach(pattern DelayedStepPattern, body ResolvingEffect) ResolvingEffect`.
+This reuses nextStepEffect, capturedDelayedBody, definition validation, delayed
+step matching, pending trigger placement, source incarnation, stack copying and
+clone handling. It sets Persistent and a separate private survivesCleanup flag.
+Existing Persistent callers still expire at cleanup; AtNext and AtNextThisTurn
+retain their existing lifetimes. Each body execution copies its saved binding
+maps. Source control, phasing, ability changes or departure cannot cancel an
+already-created subscription. A countered instance cannot consume the subscription.
+
+RON accepts exactly
+`CreateTrigger(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), ActionList(actions))`
+with a nonempty list in ordinary resolving bodies. You identifies the controller
+saved at subscription creation. The existing delayed-body scope permits captured
+references without new targets. Other events/players, malformed symbols/arity,
+empty bodies, entry/draw replacements and payment declarations reject. Inventory
+assigns persistent_step_event, player_filter and existing player_reference roles.
+RON owns spelling and scope. Mage owns lifetime, events and captured state.
+
+CR 603.7a, 603.7c–e and 400.7 supply creation, controller, source and exact visits.
+The card's explicit indefinite duration supplies recurrence rather than CR
+603.7b's default one-shot behavior. Local rulings are WotC entries; no Scryfall
+notes were used as rules. `go run ./cmd/fetchset -check -card "Cyclopean Tomb"`
+passed. Local data/LEA.json Oracle text requires all mire counters from one land;
+the future removal adapter must preserve that requirement and both source-history
+filters. The dated ruling's example does not authorize a different procedure.
+No source defect was corrected, and no RON source changed. The vocabulary
+snapshot needs no refresh.
+
+### Failing-first evidence and test mapping
+
+Native tests failed compilation for missing AtEach after fixture API corrections.
+RON tests then failed with unsupported CreateTrigger in all five real Tomb
+subscription declarations. Implementation resolves both failures. Later fixture
+corrections supplied owners, used current game permanent pointers after payment,
+and used PowerOfWithLKI for explicit LKI reads; assertions were retained.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Cyclopean Tomb in LEA/LEB/2ED/CED/CEI | TestRONPersistentStepTomb | Real source-death event and unchanged upkeep declaration, source departure, deferred creation, three upkeeps, wrong-player exclusion, cleanup and clone independence; only the unsupported removal body is replaced with a life-gain probe |
+| Saved target visits | TestRONPersistentStepCapturedTarget | RON spell capture, no new upkeep targets, action suspension while phased, resumption after phase-in, leave/return exclusion, control changes, countering, stack copies and pending clones |
+| Definition/context/inventory boundary | TestRONPersistentStepInvalid, TestRONPersistentStepBoundaries | Arity/symbol/player/event/body errors, unbound event amount, nonresolving and entry/draw contexts, typed inventory roles; complete unmodified Tomb still rejects at AllCountersOfTypeFromAPermanent |
+| Payment timing | TestRONPersistentStepPayment | Unpayable activation leaves no subscription or stack object; paid activation installs only on resolution |
+| Native lifetime and validation | TestPersistentStepLifecycle, TestPersistentStepDeclarations | Repeated matching events, creation/detection/resolution timing, cleanup, departure, saved amount, clones, nil pattern/body rejection |
+| Independent captures and controllers | TestPersistentStepIndependentFrames | Shared declaration with separate saved amounts/controllers, source control and phase changes, stack copies, repeated cleanup and separate subscriptions |
+| Exact source information | TestPersistentStepSourceLKI | Waiting queries are pure and retain the original visit; explicit LKI reads survive source return and cleanup across multiple upkeeps |
+
+This adds subscription-level RON gameplay evidence for one unique card across
+five projected records. It adds **zero complete-card gameplay coverage**. Actual
+full-card gain is **0 names / 0 records**, matching the estimate. Full Tomb must
+continue to reject until counter history and the complete removal procedure work.
+No card-name branches, Go fallbacks, partial production registries, global result
+slots, declaration panics or skipped rules were added. No replacement ordering
+or simultaneous-operation service was changed.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONPersistentStep' -count=1`
+  and `go test ./pkg/mage -run '^TestPersistentStep' -count=1`: pass.
+  The RON tests were repeated after lint formatting and passed again.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`, `make test` and the engine skill's
+  additional `go test ./... -short -count=1`: pass.
+- `make lint`: pass, 0 issues. SHA-256 comparison of all Go files before/after
+  lint found only import grouping in the new RON persistent_step_test.go.
+  The affected focused tests passed after that change. No suppression was added.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON,
+  **2,308 compiled / 137 rejected records**, **924 accepted / 62 rejected names**,
+  from 2,445 records / 986 names. A parsed baseline comparison asserts identical
+  rejection keys and compilation totals. Exactly five messages changed, all
+  Cyclopean Tomb, from unsupported CreateTrigger to unsupported counter removal
+  instruction AllCountersOfTypeFromAPermanent. Every other diagnostic is
+  unchanged. No accepted record regressed; loading still rejects atomically.
+
+No environment failure or required-check blocker was found. Compilation progress
+and complete-card gameplay coverage remain separate: both full-card counts are
+unchanged. The measured diagnostic advance matches the prerequisite estimate.
+The commit invocation disables signing under the previously recorded interactive
+signing-key limitation; repository configuration is unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Exact-source counter placement/removal history for Cyclopean Tomb, followed
+by a required one-land all-mire-counter removal procedure. The first diagnostic
+is now AllCountersOfTypeFromAPermanent. Choose a dependency-ready history
+prerequisite; do not implement its filters as name-based policy. Estimate zero
+immediate gains; eventual one name / five records.
+2. Forward exact returned-host linkage before Animate Dead's lasting enchant
+grant, followed by presence and departure-controller adapters. Estimate zero
+immediate gains; eventual one name / six records.
+3. Copiable upkeep grants for Vesuvan Doppelganger, followed by ThisAbility and
+recursive resolving copies. Estimate zero immediate gains; eventual one name /
+six records.
+
+Runtime cutover, complete collection gameplay, Go-card/generator removal and DSL
+cleanup remain gated. Existing Go definitions and callers remain. No unused DSL
+function removal was attempted because the cutover gate is not satisfied.
+
+Changed files: native composable_conditions.go, trigger_system.go, doc.go and new
+persistent_step_test.go; RON compiler.go, inventory.go and new persistent_step.go
+and persistent_step_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. This run stops after PERSISTENT-UPKEEP-SUBSCRIPTION.

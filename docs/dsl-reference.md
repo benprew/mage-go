@@ -17692,3 +17692,29 @@ service `PutExiledCardOntoBattlefieldOrElse` owns exact visits, actual entry,
 result clearing, owner control and shared entry mechanics. Tawnos's Coffin now
 executes its complete unchanged ATQ record. `TestRONSingleExileEntry*` provides
 syntax, gameplay and scope evidence.
+
+
+### RON persistent upkeep subscriptions
+
+`CreateTrigger(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+ActionList(actions))` accepts a nonempty list in ordinary resolving bodies.
+It lowers to `AtEach(YourUpkeep, Sequence(effects...))`. The upkeep player and
+ability controller are saved at creation. Each future matching upkeep queues a
+new trigger; the body does not run during creation or detection. Cleanup,
+source departure, phasing, ability removal and later control changes do not
+cancel the subscription. Countering one trigger does not cancel future triggers.
+
+The body uses the existing delayed-body scope and capture service. Typed target
+references retain exact visits without new targeting at upkeep. A phased subject
+cannot be acted on; phase-in permits later actions on the same visit. Leaving
+and returning cannot replace a saved visit. Information operations use their
+existing LKI contracts. Each resolution restores separate binding maps. Stack
+copies use their resolving controller; game clones keep independent results.
+Other event/player shapes, new body targets, entry replacements, draw replacements
+and payment declarations remain unsupported.
+
+Cyclopean Tomb's five records supply the real source-death event and persistent
+upkeep declaration in `TestRONPersistentStepTomb`. Only the unsupported removal
+body is replaced by a life-gain probe in these tests. This is subscription
+coverage, not complete Tomb gameplay. Complete records still reject at
+`AllCountersOfTypeFromAPermanent`; source history and removal need separate work.

@@ -10,6 +10,7 @@ import (
 
 // DelayedTrigger keeps a saved ability until its event or duration ends.
 type DelayedTrigger struct {
+	survivesCleanup      bool
 	alternateEventType   EventType
 	targetingAbilityID   uuid.UUID
 	modes                []Mode
@@ -154,7 +155,7 @@ func (ts *TriggerSystem) ClearUnseenArmed(seen map[stateTriggerKey]bool) {
 func (ts *TriggerSystem) ClearEndOfTurn() {
 	kept := ts.delayed[:0]
 	for _, dt := range ts.delayed {
-		if !dt.Persistent && !dt.expiresAtCleanup {
+		if (!dt.Persistent || dt.survivesCleanup) && !dt.expiresAtCleanup {
 			kept = append(kept, dt)
 		}
 	}

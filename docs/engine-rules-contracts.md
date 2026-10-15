@@ -23328,3 +23328,32 @@ Evidence: `TestExileEntryContinuation`, `Declarations`, `Observations`;
 RON gameplay evidence, including optional untap, early source departure, tokens,
 stale exile visits, owner control, counters, tapped entry, Aura legality, phase
 cycles, pending copies/clones and independent waiting installations.
+
+
+### Persistent step subscriptions
+
+`AtEach(pattern DelayedStepPattern, body ResolvingEffect) ResolvingEffect`
+creates an indefinite delayed subscription. It reuses `AtNext` definition
+validation, captured typed frames, source incarnation, saved controller, pending
+queue, stack copies and clone handling. Detection queues each matching future
+event without consuming the subscription. Cleanup keeps it. Existing raw
+`DelayedTrigger.Persistent` callers retain their turn-limited cleanup behavior;
+the new service sets a separate internal cleanup lifetime.
+
+CR 603.7a and 603.7c–e establish creation, identity, source and controller.
+Cyclopean Tomb's WotC ruling dated 2008-08-01 expressly establishes recurrence
+for the rest of the game; CR 603.7b's default one-shot rule does not override
+this explicit duration. Source control changes, departure, phasing and ability
+removal do not cancel an independently created subscription. An event before
+creation cannot replay. Each match waits for stack placement and resolution.
+Countering a pending instance cannot cancel the subscription. Saved frames are
+copied for each execution, so one body cannot overwrite later captures.
+
+`TestPersistentStepLifecycle`, `Declarations`, `IndependentFrames` and `SourceLKI`
+cover recurrence, cleanup, player matching, timing, source departure/control/
+phasing, independent saved numbers, stack copies, clones, invalid definitions,
+and exact source information after return and cleanup. `TestRONPersistentStep*`
+covers real Tomb subscription projections, saved target visits, phasing/return,
+countering, pending clones, declaration boundaries, inventory roles and failed
+activation payment. No replacement ordering or simultaneous-operation contract
+changes. Complete Tomb counter history and removal remain unsupported.

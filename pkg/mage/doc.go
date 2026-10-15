@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AtEach] saves a step subscription for the rest of the game.
+// Each match queues a new body with the saved controller and typed references.
+// Cleanup, source departure, phasing and control changes do not cancel it.
+// A countered trigger does not cancel later matches. Copies and clones keep
+// separate results. Existing information services supply exact source LKI.
+// RON accepts CreateTrigger with AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))
+// and a nonempty ActionList in ordinary resolving bodies. No new targets are
+// declared in that body. Cyclopean Tomb still needs counter history and removal.
+//
 // [UntilPermanentHasCounter] saves one watched visit and its counter condition.
 // It captures layer recipients and values through the shared resolving service.
 // No counter at resolution starts no effect. Last-counter removal, departure

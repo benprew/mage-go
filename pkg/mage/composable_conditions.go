@@ -233,6 +233,7 @@ func (o interveningIfOption) applyDelayedStep(e *nextStepEffect) {
 }
 
 type nextStepEffect struct {
+	repeats          bool
 	expiresAtCleanup bool
 	modes            []Mode
 	condition        StateCondition
@@ -252,6 +253,12 @@ func AtNext(pattern DelayedStepPattern, body ResolvingEffect, options ...Delayed
 		option.applyDelayedStep(e)
 	}
 	return e
+}
+
+// AtEach creates a trigger for every matching future step for the rest of the game.
+// Each trigger retains the controller and references saved at creation.
+func AtEach(pattern DelayedStepPattern, body ResolvingEffect) ResolvingEffect {
+	return &nextStepEffect{pattern: pattern, body: body, repeats: true}
 }
 
 // AtNextThisTurn creates one trigger for the next matching step this turn.
@@ -296,6 +303,9 @@ func AtNextModes(pattern DelayedStepPattern, options ...ModalDelayedStepOption) 
 }
 
 func (e *nextStepEffect) Text() string {
+	if e.repeats {
+		return "at each matching future turn step"
+	}
 	if e.expiresAtCleanup {
 		return "at the next matching turn step this turn"
 	}
@@ -330,6 +340,8 @@ func (e *nextStepEffect) inspectDefinition() definitionNode {
 func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 	dt := e.pattern.delayedStep(ctx.Controller)
 	dt.expiresAtCleanup = e.expiresAtCleanup
+	dt.Persistent = e.repeats
+	dt.survivesCleanup = e.repeats
 	body := captureDelayedBody(ctx, e.body)
 	dt.interveningCondition = e.condition
 	if e.condition != nil && e.body != nil {
