@@ -13,8 +13,8 @@ import (
 
 func TestRONAttachedEntryGuest(t *testing.T) {
 	record := repositoryRecord(t, "LEG", "Takklemaggot", "guest.ron")
-	if _, err := Compile(record); err == nil {
-		t.Fatal("incomplete record accepted")
+	if _, err := Compile(record); err != nil {
+		t.Fatal(err)
 	}
 	rules := record.Fields["Rules"]
 	death := rules.Args[2]

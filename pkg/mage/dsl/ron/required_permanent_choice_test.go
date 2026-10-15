@@ -23,8 +23,8 @@ func TestRONRequiredPermanentChoice(t *testing.T) {
 	for _, state := range []string{"legal", "shroud", "protection", "empty", "phased", "stale-aura", "copy", "clone"} {
 		t.Run(state, func(t *testing.T) {
 			record := repositoryRecord(t, "LEG", "Takklemaggot", "choice.ron")
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete record accepted")
+			if _, err := Compile(record); err != nil {
+				t.Fatal(err)
 			}
 			rules := record.Fields["Rules"]
 			death := rules.Args[2]

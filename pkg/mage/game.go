@@ -1741,6 +1741,9 @@ func auraHostIsLegalForController(auraCard Card, host *Permanent, g *Game, contr
 		return false
 	}
 	targets := auraCard.CastTargets()
+	if aura := g.FindPermanent(auraCard.ID()); aura != nil && aura.creatureEnchantRemoved {
+		targets = targetsWithoutCreatureEnchant(targets)
+	}
 	if len(targets) == 0 {
 		return true
 	}

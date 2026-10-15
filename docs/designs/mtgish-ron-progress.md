@@ -6,17 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **922 accepted / 64 rejected names**
-(986 total), **2,306 compiled / 139 rejected records** (2,445 total).
-The latest slice is **RETAINED-PLAYER-UPKEEP-GRANT**.
-RON lowers lasting acquired upkeep triggers with a bound outer player.
-Mage captures that player and the exact recipient at grant resolution.
-The new ability uses its recipient for ThisPermanent and You; its event
-bindings remain local. Control changes, phasing, return, source LKI, waiting
-queries, repeated grants, stack copies and clones have contract tests.
-Takklemaggot's retained-player grant fragment executes; enchant removal still
-rejects. Estimated and actual gain: zero names and records. No accepted record
-regressed. No RON source changed. Build, vet, short/full tests and lint pass.
+Latest measured result (2026-10-15): **923 accepted / 63 rejected names**
+(986 total), **2,307 compiled / 138 rejected records** (2,445 total).
+The latest slice is **FIXED-CREATURE-ENCHANT-REMOVAL**.
+RON lowers fixed creature-enchant removal alone or with existing lasting grants.
+Mage removes the typed declaration in layer 6 from one exact recipient visit.
+Shared attachment legality reads the result. Other abilities and enchant
+restrictions remain. Expiry, phasing, return, clones and source LKI have tests.
+Takklemaggot's complete unchanged record now executes both return branches,
+upkeep counters and retained-player damage, including lifecycle and stack copies.
+Estimated and actual gain: one name / one record. No accepted record regressed.
+No RON source changed. Build, vet, short/full tests and lint pass.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,17 +25,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Enchant ability changes:** Takklemaggot now has both return forms, an exact
-   successful entrant and its retained-player upkeep grant. Its remaining
-   enchant removal must combine with that grant. Compare shared enchant
-   services with Animate Dead's graveyard enchant and replacement grant needs.
-   Eventual one Takklemaggot name / one record; no Animate Dead unlock yet.
-2. **Counter snapshots and exact exile-entry continuations:** Tawnos's Coffin
-   needs saved counters, a successful single-card entrant and source lifecycle
-   lowering. Estimate zero immediate gains for either prerequisite; eventual one name.
-3. **Copy-effect ability grants:** Vesuvan Doppelganger still needs copiable
-   upkeep grants, recursive resolving copies and ThisAbility retention.
-   Estimate zero immediate gains; eventual one name / six records.
+1. **Coffin counter snapshots:** Tawnos's Coffin needs saved counters, a
+   successful single-card exile entrant and source leave/untap adapters.
+   Snapshots alone estimate zero gains; eventual one name / one record.
+2. **Copy-effect ability grants:** Vesuvan Doppelganger needs copiable upkeep
+   grants, recursive resolving copies and ThisAbility retention.
+   Grants alone estimate zero gains; eventual one name / six records.
+3. **Graveyard Aura attachments:** Animate Dead needs exact graveyard hosts,
+   entry linkage and acquired linked enchant declarations. Fixed creature-enchant
+   removal is available; its other contracts remain. Eventual one name / six
+   records, with zero gains from the first prerequisite alone.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -19855,3 +19854,152 @@ Commit title: `feat(ron): implement retained-player upkeep grants`.
 Signing is disabled for this invocation, consistent with the prior ledger's
 interactive signing-key limitation. Repository signing configuration is unchanged.
 This run stops after RETAINED-PLAYER-UPKEEP-GRANT.
+
+## 2026-10-15 — FIXED-CREATURE-ENCHANT-REMOVAL
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1
+with valid JSON: 922 accepted / 64 rejected unique names, 2,306 compiled /
+139 rejected records. This was atomic collection rejection, not a build failure.
+Complete records were inspected for Takklemaggot (LEG:256), Animate Dead
+(LEA:4), Tawnos's Coffin (ATQ:67) and Vesuvan Doppelganger (LEA:262), including
+all nested operations. Loader reprint validation found no conflicting records.
+Reprints count once in the comparison.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Fixed enchant removal with existing lasting grants | Takklemaggot; Animate Dead | 1 name / 1 record (Takklemaggot); 0 for Animate Dead | Takklemaggot's other adapters are ready. Shared typed declaration removal and computed attachment legality establish a narrow enchant service. Animate Dead still needs graveyard attachments, acquired linked enchant declarations, exact entrant linkage and delayed departure | Small/medium: one layer operation, declaration adapter, lifecycle/legality and complete-record tests |
+| Saved counter snapshots | Tawnos's Coffin | 0 immediately; eventual 1 name / 1 record | Needs exact successful single exile entrant and source leave/untap lowering after snapshots. A saved counter value is a prerequisite for returning this exile group with noted counters | Medium: typed immutable counter result, LKI after exile, independent delayed frames, entry integration |
+| Copiable trigger grants | Vesuvan Doppelganger | 0 immediately; eventual 1 name / 6 records | Still needs recursive resolving copies and ThisAbility retention. Copiable grants must survive subsequent copying without sharing resolving state | Large: copy-value construction, recursive plans, ability identity and copy tests |
+
+Candidate 1 is dependency-ready and finishes a real record within one cohesive
+slice. No compared candidate has an immediate multi-name unlock; the other two
+are prerequisites with zero gains and more new contracts. Selection follows the
+latest ledger ranking and preserves the shared engine/compiler boundary. Only
+fixed creature-enchant removal and its combination with existing lasting grants
+are implemented. No second slice was started.
+
+Targeted vocabulary queries covered Enchant, EnchantPermanent, LosesAbility,
+NoteCountersOnPermanent and AddAbilityVariable. All four cards' complete local
+rulings were read through `data/rulings/index.json`; all are Wizards rulings.
+`go run ./cmd/fetchset -check -card <name>` passed for each. No Scryfall note
+was treated as an authoritative rule. Relevant contracts are CR 303.4c/j,
+400.7, 611.2c, 613.1f and 702.5. No source defect or environment failure was
+found. No RON source changed; no vocabulary snapshot refresh was required.
+
+### Exact contract and reuse boundary
+
+Mage adds `RemoveCreatureEnchant(subject PermanentRef) ContinuousModification`
+and `(*Permanent).HasCreatureEnchantAbility() bool`. The removal applies to the
+fixed declaration created by `CreatureEnchantTarget()`, including repeated
+instances. It does not infer arbitrary opaque filters. `Until(duration, ...)`
+captures the exact recipient and applies removal in layer 6. A missing recipient
+or absent fixed declaration has no effect. Nil and unbound subjects fail native
+definition validation. Other enchant declarations, unrelated abilities, Aura
+subtype, printed card rules and copiable values stay unchanged.
+
+The computed removal is reset before each layer pass and read by the shared
+Aura attachment legality service. Expiry restores restrictions. An incompatible
+attachment then goes to the graveyard at the next state action. Phasing suspends
+the visit and phase-in permits the same removal on the next layer pass. Return
+cannot inherit an old visit's effect. Game clones keep separate computed state
+and expiry. Existing exact-visit capture, layer duration, copy-on-write state,
+source LKI, and waiting delayed-source inspection are reused. Explicit
+HostOfPermanent(This) reads retain the departed donor without executing a query.
+
+RON accepts ordinary resolving
+`CreatePermanentLayerEffect(permanentRef,
+[LosesAbility(Enchant(IsCardtype(Creature)))])`, alone or in a list with the
+existing supported AddAbility conditional untap/upkeep grants. Creature is a
+strict symbol; malformed arities, other enchant filters and unbound references
+reject. Entry and draw replacement contexts reject. Each factory uses its own
+bindings; the existing acquired trigger adapter supplies its fresh recipient
+scope. No new payment, replacement ordering or simultaneous-operation policy is
+needed for this layer operation. Graveyard enchant declarations and replacement
+enchant grants still need separate contracts and adapters.
+
+### Failing-first evidence and card-to-test mapping
+
+New native and RON tests first failed compilation at the missing
+RemoveCreatureEnchant and HasCreatureEnchantAbility signatures. After the
+implementation, tests exposed fixture issues: unset host ownership, stale
+permanent pointers after clone/trigger observations, and an implicit attachment
+reference in an explicit-source waiting query. Tests now use an owned host,
+current game lookups and HostOfPermanent(This), respectively. The phase-cycle
+assertion follows the shared layer-pass contract. No production rule was
+changed to accommodate a fixture.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Takklemaggot complete LEG:256 record | TestRONCreatureEnchantRemoval | Original host upkeep counter; dead host owner differs from controller; required shroud-compatible creature choice and attached return; reattached controller's upkeep counter; empty choice returns a non-Aura enchantment without enchant creature; retained player's upkeep damage |
+| Takklemaggot complete record lifecycle | TestRONCreatureEnchantRemovalLifecycle | Control change, phasing/cycle, leave/return, pending game clone and producer stack copy use the unchanged full record; returned object has no creature-enchant declaration |
+| Invalid RON and contexts | TestRONCreatureEnchantRemovalInvalid, Contexts | Strict shape/arity/type rejection; entry and draw replacement rejection; absent declaration is not granted |
+| Native layer/identity contract | TestCreatureEnchantRemoval, Declarations | Exact visit, phase/cycle, leave/return, expiry, clone isolation, preserved other enchant restriction and unrelated trigger; nil/unbound subjects reject |
+| Native attachment contract | TestCreatureEnchantRemovalAttachmentLegality | Printed creature restriction blocks land; removed restriction permits attachment and survives state checks; expiry restores restriction and causes the Aura state action |
+| Native delayed source contract | TestCreatureEnchantRemovalWaitingLKI | Repeated waiting queries retain departed donor, do not execute removal, and later resolve the exact saved host through LKI |
+
+Existing prerequisite probes remain. Their stale full-record rejection
+assertions now require successful compilation; the Coffin rejection is retained.
+The old invalid enchant-removal case now uses the still-unsupported Land form.
+Exact collection-count assertions advance by one record. These changes retain
+existing gameplay checks while recognizing the newly supported declaration.
+
+### Validation and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run '^TestRONCreatureEnchantRemoval' -count=1`
+  and `go test ./pkg/mage -run '^TestCreatureEnchantRemoval' -count=1`: pass.
+- `make build`, `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass for the full repository.
+- `make lint`: pass, 0 issues. Automatic import grouping in the new test files
+  was reviewed. No unrelated file changed.
+- Post-lint `go test ./... -short -count=1`: pass, including the focused suites,
+  accepted-record rebuilds, collection invariants and preserved Go callers.
+- `git diff --check`: pass, including the final documentation and ledger.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with valid JSON.
+  Counts: 923 accepted / 63 rejected names, 2,307 compiled / 138 rejected
+  records. A parsed baseline comparison asserts that the sole removed issue is
+  `LEG.lines.ron:256:874: unsupported lasting ability modification (LosesAbility)`
+  for Takklemaggot; all other issue records are exactly unchanged. No accepted
+  record regressed. Remaining candidate diagnostics include Animate Dead's
+  EnchantGraveyardCard, Coffin's NoteCountersOnPermanent and Doppelganger's
+  entry CopyEffects AddAbility. There is no environment blocker.
+
+Actual gain: **1 name / 1 record**, equal to the estimate. Complete-record
+RON gameplay evidence increases by Takklemaggot; compilation and gameplay are
+reported separately. The loader still rejects all remaining unsupported records
+atomically. Complete collection gameplay, runtime startup/cutover, Go-card and
+generator deletion, and unused DSL cleanup remain incomplete. Existing callers
+and engine services remain; no removal gate was reached. No fallback, partial
+registry, card-name branch, game-time declaration panic or global result slot
+was introduced.
+
+Changed files: `pkg/mage/creature_enchant_removal.go`, its native tests,
+`card.go`, `composable_continuous.go`, `effect_manager.go`, `game.go`, `doc.go`;
+`pkg/mage/dsl/ron/creature_enchant_removal.go` and its tests,
+`lasting_grant.go`, `indefinite_type.go`, prerequisite assertions in
+`attached_entry_test.go`, `departed_aura_card_test.go`, `lasting_keyword_test.go`,
+`permanent_choice_test.go`, `required_permanent_choice_test.go`,
+`required_player_payment_test.go`, collection assertions in
+`definition_plan_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Coffin counter snapshots. Reassess its saved-counter/LKI contract before
+   exact single exile-entry results and source leave/untap adapters. Snapshots
+   alone estimate zero gains; eventual Tawnos's Coffin is one name / one record.
+2. Copiable ability grants for Vesuvan Doppelganger, then recursive resolving
+   copies and ThisAbility retention. Grants alone estimate zero gains; eventual
+   one name / six records.
+3. Graveyard Aura attachment and exact linked enchant declarations for Animate
+   Dead. The fixed creature-enchant service is established, but graveyard host
+   identity, entry linkage and acquired enchant predicates need separate work.
+   One adapter alone estimates zero gains; eventual one name / six records.
+
+Commit title: `feat(ron): implement fixed creature-enchant removal`.
+Signing is disabled for this invocation, as in the prior run, to avoid the
+recorded interactive signing-key limitation. Repository configuration is unchanged.
+This run stops after FIXED-CREATURE-ENCHANT-REMOVAL.

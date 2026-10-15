@@ -25,6 +25,9 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 		}
 	}
 	for _, part := range parts {
+		if part.Name == "LosesAbility" && len(part.Args) == 1 && part.Args[0].Name == "Enchant" {
+			return compileLastingAbilityGrants(n, ctx, subject, parts)
+		}
 		if part.Name == "AddAbility" && len(part.Args) == 1 && part.Args[0].Kind == List {
 			for _, ability := range part.Args[0].Args {
 				if ability.Name == "If" || ability.Name == "TriggerA" {

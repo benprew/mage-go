@@ -189,8 +189,8 @@ func TestRONRequiredPlayerPaymentTakklemaggotContext(t *testing.T) {
 	for _, mode := range []string{"normal", "return-host", "return-aura", "copy", "clone", "empty"} {
 		t.Run(mode, func(t *testing.T) {
 			record := staticBaseRecord(t, "LEG", "Takklemaggot")
-			if _, err := Compile(record); err == nil {
-				t.Fatal("unsupported choice and Aura return must remain rejected")
+			if _, err := Compile(record); err != nil {
+				t.Fatal(err)
 			}
 			rule := record.Fields["Rules"].Args[2]
 			actions, err := Parse(strings.NewReader(`[PlayerMustCost(ControllerOfDeadPermanent,DiscardACard),IfElse(CostWasPaid,[PlayerAction(ControllerOfDeadPermanent,GainLife(Integer(3)))],[PlayerAction(ControllerOfDeadPermanent,GainLife(Integer(7)))]) ]`), "supported-payment.ron")

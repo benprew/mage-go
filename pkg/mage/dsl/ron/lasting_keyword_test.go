@@ -207,7 +207,7 @@ func TestRONLastingKeywordInvalid(t *testing.T) {
 		`EachPermanentLayerEffect(IsCardtype(Creature),[LosesAbility(TheChosenAbility)])`,
 		`EachPermanentLayerEffect(IsCardtype(Creature),[LosesAbility(AnyBandsWithOthers)])`,
 		`Activated(PayMana([]),ActionList([CreatePermanentLayerEffect(Ref_TargetPermanent,[LosesAbility(Flying)])]))`,
-		`Activated(PayMana([]),ActionList([CreatePermanentLayerEffect(ThisPermanent,[LosesAbility(Enchant(IsCardtype(Creature)))])]))`,
+		`Activated(PayMana([]),ActionList([CreatePermanentLayerEffect(ThisPermanent,[LosesAbility(Enchant(IsCardtype(Land)))])]))`,
 		`Activated(PayMana([]),ActionList([CreatePermanentLayerEffect(Trigger_ThatCreature,[LosesAbility(Defender)])]))`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[`+rule+`])`), "invalid.ron")

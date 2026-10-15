@@ -26,6 +26,7 @@ type layerModification struct {
 	protectionGrant       bool
 	removeKeyword         bool
 	removeLandwalk        bool
+	removeCreatureEnchant bool
 	removeBandsWithOther  bool
 	removeAbilities       bool
 	cantBeBlocked         bool
@@ -127,6 +128,12 @@ func RemoveEachKeyword(subjects PermanentSet, keyword Attr) ContinuousModificati
 // RemoveLandwalk removes all landwalk abilities from a permanent in layer 6.
 func RemoveLandwalk(subject PermanentRef) ContinuousModification {
 	return &layerModification{subject: subject, removeLandwalk: true, layer: LayerAbility}
+}
+
+// RemoveCreatureEnchant removes declarations made with CreatureEnchantTarget.
+// Other enchant restrictions and printed card rules stay unchanged.
+func RemoveCreatureEnchant(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, removeCreatureEnchant: true, layer: LayerAbility}
 }
 
 // RemoveAbilities removes all abilities from one permanent in layer 6.
@@ -353,6 +360,9 @@ func (m *layerModification) description() string {
 		if m.ability != nil {
 			return "grant activated ability"
 		}
+		if m.removeCreatureEnchant {
+			return "remove enchant creature"
+		}
 		if m.removeLandwalk {
 			return "remove all landwalk"
 		}
@@ -397,6 +407,7 @@ type capturedModification struct {
 	protectionGrant       bool
 	removeKeyword         bool
 	removeLandwalk        bool
+	removeCreatureEnchant bool
 	removeBandsWithOther  bool
 	removeAbilities       bool
 	cantBeBlocked         bool
@@ -427,7 +438,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 func (m *layerModification) captureMembers(ctx *EffectContext, members []*Permanent) []capturedModification {
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, bandsQuality: m.bandsQuality, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeBandsWithOther: m.removeBandsWithOther, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, bandsQuality: m.bandsQuality, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeCreatureEnchant: m.removeCreatureEnchant, removeBandsWithOther: m.removeBandsWithOther, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -532,6 +543,8 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			installGrantedTrigger(p, v.trigger, v.grantID)
 		} else if v.ability != nil {
 			installGrantedActivation(p, v.ability, v.grantID)
+		} else if v.removeCreatureEnchant {
+			p.creatureEnchantRemoved = true
 		} else if v.removeLandwalk {
 			for _, keyword := range landwalkKeywords() {
 				g.effects.RevokeAttr(p.ID(), keyword)
@@ -895,7 +908,7 @@ func propertiesFromModifications(modifications []*layerModification) EffectPrope
 		if v, ok := m.toughness.(fixedValue); ok && !m.setBasePT {
 			p.ToughnessBoost += v.n
 		}
-		if m.removeKeyword || m.removeLandwalk || m.removeAbilities {
+		if m.removeKeyword || m.removeLandwalk || m.removeAbilities || m.removeCreatureEnchant {
 			p.Outcome = OutcomeDetriment
 		} else if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword

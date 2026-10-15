@@ -2,6 +2,7 @@ package ron
 
 import (
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 func compileLastingAbilityGrants(n Node, ctx scope, subject permanentReferencePlan, parts []Node) (effectFactory, error) {
@@ -10,6 +11,14 @@ func compileLastingAbilityGrants(n Node, ctx scope, subject permanentReferencePl
 	}
 	var builds []effectFactory
 	for _, part := range parts {
+		if part.Name == "LosesAbility" {
+			build, err := compileCreatureEnchantRemoval(part, subject)
+			if err != nil {
+				return nil, err
+			}
+			builds = append(builds, func(bindings instanceBindings) mage.Effect { return mage.Until(core.Indefinite, build(bindings)) })
+			continue
+		}
 		if part.Name != "AddAbility" {
 			return nil, unsupported(part, "lasting ability modification")
 		}

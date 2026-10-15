@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [RemoveCreatureEnchant] removes fixed [CreatureEnchantTarget] declarations.
+// [Until] saves the exact recipient. Layer 6 removes its enchant restriction.
+// Other abilities and enchant restrictions remain. Printed and copiable rules
+// stay unchanged. Expiry restores the restriction on the next layer pass.
+// Phasing preserves the visit. Return cannot inherit removal. Clones stay separate.
+// [Permanent.HasCreatureEnchantAbility] reads the computed fixed declaration.
+// RON accepts LosesAbility(Enchant(IsCardtype(Creature))) in ordinary resolving
+// CreatePermanentLayerEffect lists, alone or with supported acquired upkeep grants.
+// Entry and draw replacements reject. Takklemaggot's complete record executes.
+// Graveyard enchant declarations and replacement enchant grants need adapters.
+//
 // [TriggeredAbilityForPlayerModification] adds a typed event-player limit.
 // [Until] saves the player and exact recipient when the grant starts.
 // The player limit does not change when either permanent changes controller.
@@ -9,7 +20,7 @@
 // RON accepts SinglePlayer(playerRef) in lasting acquired upkeep triggers.
 // You retains its current-recipient meaning. Other references are saved when
 // the grant resolves. Donor bindings cannot enter the granted action body.
-// Takklemaggot's retained-player grant executes; enchant removal still rejects.
+// Takklemaggot's complete record uses the fixed enchant-removal service.
 //
 // [EnterWithoutSubtype] removes one subtype from an exact entrant in layer 4.
 // Entry replacements read the removal. Copy choices cannot erase it.
@@ -22,7 +33,7 @@
 // That return and attached returns can supply a local exact entrant result.
 // Shared [ReturnCardToBattlefieldInto] clears failed results and saves visits.
 // Delayed bodies and clones keep separate frames. Takklemaggot's return now
-// executes; its enchant removal still rejects.
+// executes with its later fixed enchant removal.
 //
 // [ChoosePermanentForPlayerOrElse] selects a branch after a required choice.
 // Shared choice rules save the chooser and exact visit. Empty results cannot
@@ -34,7 +45,7 @@
 // RON accepts required ChooseAPermanent with adjacent payment-result branches.
 // Only the success branch receives the new choice. Aura host-death bodies
 // accept And([collection, CanBeEnchantedByDeadGuest]) for the saved Aura visit.
-// This supplies Takklemaggot's choice prerequisite. Its complete record rejects.
+// Takklemaggot uses this choice in its complete record.
 // Entry and draw replacement contexts need separate adapters.
 //
 // [ReturnCardToHandOrElse] moves one exact graveyard visit to its owner's hand.
@@ -65,7 +76,7 @@
 // Pending clones keep separate captures. Stack copies retain the saved card.
 // RON accepts ReturnDeadGuestGraveyardCardToHand in resolving Aura host-death
 // bodies. Shared card movement returns it to its owner's hand. This supplies a
-// prerequisite for Puppet Master and Takklemaggot; complete records still reject.
+// prerequisite used by the complete Puppet Master and Takklemaggot records.
 //
 // [CreatureDeathsInto] saves exact creature visits from one destruction batch.
 // Regeneration, indestructibility, phasing and other destinations exclude visits.

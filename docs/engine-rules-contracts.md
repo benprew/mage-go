@@ -36,9 +36,9 @@ host-death scopes reject. There is no shared last-entry result.
 
 Takklemaggot's LEG fallback return fragment now executes with separate owner
 and controller. Its later enchant removal and retained-player upkeep grant
-remain unsupported; its full record still rejects. `TestRONNonAuraEntry*`
+now execute; see Fixed creature-enchant removal below. `TestRONNonAuraEntry*`
 uses the real fallback entry with a test counter continuation in place of that
-unsupported grant. It covers stale Aura visits, copies, clones, phasing,
+grant. It covers stale Aura visits, copies, clones, phasing,
 departure, result clearing, waiting queries and invalid declarations.
 `TestEntryWithoutSubtype*` covers native graveyard/exile entry, cancellation,
 changed visits during choices, projected replacements, actual entry copying,
@@ -23075,13 +23075,55 @@ a fresh permanent-source scope: `ThisPermanent`, `You` and `Trigger_ThatPlayer`
 refer to the recipient and new upkeep event. Donor event bindings cannot escape
 into that body. Existing AddAbility lists may combine these triggers with the
 already supported acquired conditional untap rules. Entry/draw replacements,
-other events, and mixed removal/grant modifications still reject.
+other events and other mixed removal/grant modifications reject. Fixed
+creature-enchant removal can accompany these grants; see below.
 
 Evidence: native `TestRetainedPlayerGrant`, `Declarations`, `WaitingLKI` and
 RON `TestRONRetainedPlayerGrant`, `Invalid`, `Recipient`. The real Takklemaggot
-LEG:256 fallback is tested with only its unsupported enchant-removal
+LEG:256 fallback is tested with its enchant-removal
 modification removed from the test AST. That probe verifies the retained dead
 host controller, distinct owner/controller, returned recipient, control changes,
 phasing, return, pending clones and stack copies. This is fragment evidence;
-the unchanged complete record still rejects at `LosesAbility`. No new cost,
-replacement-ordering or simultaneous-operation policy is introduced.
+the complete record now executes through fixed creature-enchant removal below.
+No new cost, replacement-ordering or simultaneous-operation policy is introduced.
+
+
+## Fixed creature-enchant removal
+
+`RemoveCreatureEnchant(subject PermanentRef) ContinuousModification` removes
+all fixed creature-enchant declarations made with `CreatureEnchantTarget()`.
+Use `Until(duration, ...)` to capture one exact recipient at resolution. The
+operation runs in layer 6. It preserves other enchant declarations, other
+abilities, the Aura subtype, printed card rules and copiable values. A subject
+without the fixed declaration is unchanged. Nil and unbound subjects fail
+validation. `Permanent.HasCreatureEnchantAbility() bool` reads the computed
+fixed declaration; phased subjects are absent. Layer passes restore the printed
+restriction before ordered effects. Expiry restores it; a phase cycle preserves
+the removal; leave/return starts a new visit. Game clones keep separate results.
+
+Shared Aura attachment legality reads this computed removal. Removing the
+restriction permits a previously disallowed permanent host. Restoring it makes
+an incompatible attachment illegal at the next state action. Other enchant
+restrictions still apply. Existing source information and delayed-query services
+retain explicit `HostOfPermanent(This)` reads without executing a waiting body.
+CR 303.4c/j, 400.7, 611.2c, 613.1f and 702.5 apply.
+
+RON supports ordinary resolving
+`CreatePermanentLayerEffect(permanentRef,
+[LosesAbility(Enchant(IsCardtype(Creature)))])` and lists that combine this
+removal with the existing acquired conditional-untap and upkeep-trigger forms.
+`Creature` must be a strict symbol. The compiler owns syntax and scope checks;
+mage owns exact visits, layer state and attachment legality. Entry and draw
+replacement bodies reject this form. Graveyard enchant declarations, other
+filters, acquired enchant declarations and other mixed layer forms remain
+unsupported. This service does not implement Animate Dead's graveyard attachment.
+
+Evidence: native `TestCreatureEnchantRemoval`, `Declarations`,
+`AttachmentLegality`, `WaitingLKI`; RON `TestRONCreatureEnchantRemoval`,
+`Lifecycle`, `Invalid`, `Contexts`. Takklemaggot's complete unchanged LEG:256
+record now compiles and executes. Both return branches, host-upkeep counters,
+required shroud-compatible host choice, enchant removal and retained-player
+damage have full-record gameplay evidence. Full-record lifecycle cases include
+control changes, phasing, return, producer stack copies and pending clones.
+Earlier fragment tests remain as separate contract tests. No new payment,
+replacement-order or simultaneous-operation policy is introduced.
