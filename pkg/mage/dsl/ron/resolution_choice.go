@@ -2,6 +2,70 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
+func compileCheckableAbilityChoice(n, continuation Node, ctx scope) (effectFactory, error) {
+	if !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+		return nil, problem(n, "keyword removal choice requires an ordinary resolving body")
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	options, err := list(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
+	if len(options) < 2 {
+		return nil, problem(n, "ability choice requires at least two alternatives")
+	}
+	if continuation.Name != "CreatePermanentLayerEffectUntil" {
+		return nil, unsupported(continuation, "keyword removal choice continuation")
+	}
+	if err := arity(continuation, 3); err != nil {
+		return nil, err
+	}
+	if continuation.Args[2].Kind != Symbol || continuation.Args[2].Name != "UntilEndOfTurn" {
+		return nil, unsupported(continuation.Args[2], "keyword removal choice duration")
+	}
+	modifications, err := list(continuation.Args[1])
+	if err != nil {
+		return nil, err
+	}
+	if len(modifications) != 1 || modifications[0].Name != "LosesAbility" {
+		return nil, problem(continuation, "keyword removal choice requires one LosesAbility continuation")
+	}
+	removal := modifications[0]
+	if err := arity(removal, 1); err != nil {
+		return nil, err
+	}
+	if removal.Args[0].Kind != Symbol || removal.Args[0].Name != "TheChosenAbility" {
+		return nil, problem(removal, "keyword removal choice must use TheChosenAbility")
+	}
+	plans := make([]effectFactory, len(options))
+	labels := make([]string, len(options))
+	seen := map[string]bool{}
+	for i, option := range options {
+		keyword, err := compileTemporaryKeyword(option)
+		if err != nil {
+			return nil, err
+		}
+		label := keyword.String()
+		if seen[label] {
+			return nil, problem(option, "duplicate ability choice")
+		}
+		seen[label] = true
+		// Each branch has a fixed keyword, so copies cannot share a saved choice.
+		branch := continuation
+		branch.Args = append([]Node(nil), continuation.Args...)
+		removal.Args = []Node{option}
+		branch.Args[1].Args = []Node{removal}
+		plans[i], err = compileTemporaryLayer(branch, ctx)
+		if err != nil {
+			return nil, err
+		}
+		labels[i] = label
+	}
+	return buildResolutionChoiceFor(plans, labels, ctx.player), nil
+}
+
 func compileActionChoice(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err

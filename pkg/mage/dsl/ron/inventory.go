@@ -1110,7 +1110,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ChooseAnAction" && len(n.Args) == 1 {
 			return "action"
 		}
-		if n.Name == "ChooseAnAbility" && len(n.Args) == 1 {
+		if (n.Name == "ChooseAnAbility" || n.Name == "ChooseACheckableAbility") && len(n.Args) == 1 {
 			return "keyword"
 		}
 		switch n.Name {
@@ -1681,6 +1681,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "AddAbility", "LosesAbility":
 			if len(n.Args) == 1 {
+				if n.Name == "LosesAbility" && n.Args[0].Kind == Symbol && n.Args[0].Name == "TheChosenAbility" {
+					return "ability_reference"
+				}
 				return "keyword"
 			}
 		}

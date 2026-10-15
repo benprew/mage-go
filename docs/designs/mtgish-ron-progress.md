@@ -6,17 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-15): **936 accepted / 50 rejected names**
-(986 total), **2,349 compiled / 96 rejected records** (2,445 total).
-The latest slice is **MODAL-TAP-TRIGGER**.
-RON lowers choose-one action bodies on source-tap and Aura-host-tap events.
-Each mode has separate targets and retains the event scope. Existing native
-modal trigger, legality, copy, clone and LKI services execute the bodies.
-The complete Relic Bind record has paid-cast and both-mode gameplay evidence.
-Estimated and actual gain: one name / one record. Nonmodal tap-trigger
-regressions remain covered. Collection loading still rejects atomically.
-Runtime cutover, Go-card removal and DSL cleanup remain gated by complete
-support and startup.
+Latest measured result (2026-10-15): **937 accepted / 49 rejected names**
+(986 total), **2,350 compiled / 95 rejected records** (2,445 total).
+The latest slice is **CHECKABLE-KEYWORD-REMOVAL**.
+RON lowers a resolution-time fixed-keyword choice and its adjacent temporary
+removal continuation. Native choice, targeting, layer-6 removal, copy, clone,
+combat and cleanup services execute each independent branch.
+The complete Urborg record has land-play, mana and both-choice gameplay evidence.
+Estimated and actual gain: one name / one record. Existing keyword removal and
+ability-choice grant regressions remain covered. Collection loading still
+rejects atomically. Runtime cutover, Go-card removal and DSL cleanup remain
+gated by complete support and startup.
 
 ## Ranked next candidates
 
@@ -24564,3 +24564,145 @@ single-card adapter. Relic Bind is no longer a next candidate. The complete
 collection still cannot load, and runtime cutover, Go-card deletion, obsolete
 Go-set generation removal and broad DSL cleanup gates remain unmet.
 Stop after this slice.
+
+
+## 2026-10-15 — CHECKABLE-KEYWORD-REMOVAL
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The baseline loader
+returned the expected collection-rejection exit 1 with 2,349 compiled / 96
+rejected records and 936 accepted / 50 rejected names. This was not a build or
+test failure. Inspected complete Drain Power, Titania's Song and Urborg records,
+including nested forms, and targeted vocabulary signatures. Read the complete
+local WotC rulings for all three. None has Scryfall notes. Before implementation,
+`go run ./cmd/fetchset -check -card 'Urborg'` passed.
+
+| Candidate | Distinct affected names; estimated full unlocks | Dependencies, other blockers and downstream value | Full effort estimate |
+| --- | --- | --- | --- |
+| Forced mana activation and saved mana, ranked first | Drain Power; eventual 1 name / 6 records; offers alone unlock 0 | Lost-mana transfer exists. Legal ability offers, arbitrary-cost transactions, variable-output choices and activation-order rechecks are still needed. Its four rulings require choices by the affected player. The prerequisite would support the complete forced-activation instruction without a second executor. | Large; several engine contracts and cost, choice and rollback suites. Not a dependency-ready adapter. |
+| Sticky animation | Titania's Song; eventual 1 name / 2 records | Complete records require evolving noncreature-artifact membership, type addition, ability removal, per-member mana-value P/T and continuation through cleanup after source departure. Shared layer lifecycle and dependency services must precede the full adapter. | Large; membership, ordering and post-source duration contracts. |
+| Resolution-time keyword removal choice, selected | Urborg; 1 name / 1 record | Native land play, black mana, tap costs, creature targets, resolution choices, fixed keyword removal and duration already exist. Only the choice-to-removal adapter is missing. Supplies reusable fixed-keyword and concrete-landwalk choices in ordinary resolving bodies. | Small; compiler integration, invalid declarations, real-card lifetimes and native combat tests. |
+
+No compared complete record offers a dependency-ready multi-name unlock.
+Selected the third candidate because one adapter completes a full card with
+existing engine contracts. Did not implement partial forced activations or
+partial sticky behavior. Counts treat reprints as one name.
+
+### Supported shape, boundary and engine reuse
+
+Supported adjacent declarations:
+`ChooseACheckableAbility([keyword, keyword, ...])`, followed by
+`CreatePermanentLayerEffectUntil(subject, [LosesAbility(TheChosenAbility)],
+UntilEndOfTurn)`. At least two distinct fixed keywords are required. The existing
+temporary keyword grammar includes concrete landwalk forms, such as
+`Landwalk(IsLandType(Swamp))`. The continuation must contain exactly one removal.
+Other durations, wildcards, parameterized abilities, entry operations, draw
+replacement bodies, unbound references and escaping chosen-ability reads reject.
+
+New compiler signature:
+`compileCheckableAbilityChoice(n, continuation Node, ctx scope)
+(effectFactory, error)`. The action-sequence adapter consumes only the adjacent
+continuation. Each choice becomes an immutable concrete-keyword branch using
+`compileTemporaryLayer`. Branches build with the same per-instance bindings as
+the enclosing targets. No mutable chosen-ability result is introduced.
+`buildResolutionChoiceFor` preserves the explicit player scope. The existing
+ChooseAnAbility grant adapter retains its former shape and tests.
+
+RON owns spelling, arity, scope, diagnostics and branch lowering. Engine mechanics
+reuse `ChooseAtResolution`, `ResolutionOption`, `Until`, `RemoveKeyword`, exact
+permanent references, activation transactions, target legality, stack copying,
+game cloning, native combat and cleanup. No new engine executor, API, state slot
+or duplicated life cycle was needed. Inventory now reports choice operands as
+keywords and the removal's TheChosenAbility operand as an ability reference.
+
+CR 608.2b/d places target rechecks before the resolution choice. Both keyword
+options remain available even if the creature lacks them, as Urborg's rulings
+require. Copies choose separately; invalid chooser responses retain the existing
+engine fallback to the first option. Pending abilities retain their controller
+and source information after departure, return, phasing, control changes or
+ability removal. Returned targets cannot supply old visits. Layer 6 removal
+uses CR 611.2a/c and 613.1f and lasts through cleanup. Removing first strike does
+not remove double strike. CR 510.4 and 702.7c retain strike history after first
+strike damage. CR 509.1 and 702.14c make swampwalk removal useful before blockers
+are declared; it does not insert blockers after declaration.
+
+No replacement ordering, damage batch or simultaneous-operation contract changes.
+Tap-cost failures retain resources and the stack. No source-data defect or RON
+source change was needed, so the vocabulary snapshot does not need regeneration.
+No fallback, partial production registry, Go-card deletion, generator removal or
+DSL function removal is part of this slice; removal gates remain unmet.
+
+### Failing-first tests and card mappings
+
+Wrote complete-record gameplay, invalid declarations and collection tests first.
+After fixing test helper API names, confirmed the intended assertion failure:
+`LEG.ron:283:278: unsupported action (ChooseACheckableAbility)`.
+Additional combat fixtures use the landwalk evasion service and native blocker
+validation; the pairwise CanBlock helper alone does not check landwalk.
+No expected gameplay result was weakened.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Urborg, complete LEG record | `TestRONCheckableAbilityUrborg` | Native land play and legendary metadata, immediate black mana, both choices, absent keywords, illegal-target and tapped-source rollback, no announcement choice, resolution-only choice, unrelated abilities and second recipient preserved |
+| Urborg lifetimes | Same test, source/target/control/phase/copy/clone cases | Saved controller after source departure/return/control/phase/ability removal; target phase cycle, phased and returned visits, current shroud, independent copied choices, pending clone isolation, installed phase cycle and return, cleanup expiry |
+| Urborg combat rulings | `TestRONCheckableAbilityCombat` | Native first strike and normal damage steps, removal before and after first strike damage, double strike preserved, swampwalk removal before and after blocker declaration |
+| Per-instance choice and targets | `TestRONCheckableAbilityInstances` | Separate factory targets, two pending spells with separate recipients, choices made at their individual resolutions |
+| Invalid declarations and scopes | `TestRONCheckableAbilityInvalid` | Missing/short/duplicate choices, tuple keywords, rampage and wildcard rejection, wrong or combined continuation, invalid duration, undeclared targets, escaped chosen result, entry/draw replacement/nonresolving context rejection |
+| Strict full-record loading and inventory | `TestRONCheckableAbilityCollection` | Complete unmodified Urborg record loads atomically in a test registry; valid synthetic shape loads; action, keyword, ability-reference and land-subtype roles retained |
+| Existing choice and layer contracts | `TestRONResolutionChoice*`, `TestRONTemporaryKeyword*` | Existing grants, fixed removal, timestamps, waiting references, exact visits and cleanup remain covered |
+
+Updated exact inventory/definition-plan assertions from 2,349/96 to 2,350/95 and
+added Urborg to supported-card rejection guards. Compilation progress and new
+full-card gameplay coverage both increase by one card; other accepted records
+are not newly claimed as gameplay-tested.
+
+### Verification and actual coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCheckableAbility -count=1`: passed.
+  The checkable-ability, temporary-keyword and resolution-choice tests also passed
+  together before and after the test-expression cleanup, with `-count=1`.
+- `make build`: passed. `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed, including exact whole-collection
+  assertions and all existing RON package regressions.
+- `make test`: passed for the complete repository.
+- `make lint`: first pass **0 issues**. Conflicting equivalent staticcheck
+  edits to one test Boolean expression were skipped. Rewrote that expression as
+  an explicit conditional and reran the affected tests successfully.
+  The final full lint pass passed with **0 issues** and no warnings. Reviewed
+  the final diff: no unrelated files or behavior changed.
+- `git diff --check`: passed.
+- `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,350 compiled / 95 rejected records**, **937 accepted / 49 rejected names**.
+  Exact JSON diagnostic comparison removes only Urborg's
+  `unsupported action (ChooseACheckableAbility)` at LEG line 283, column 278.
+  All other 95 diagnostics are unchanged; no new diagnostic is present.
+  The final post-lint loader run confirmed these counts and the same exact
+  diagnostic comparison.
+
+Actual gain is **one unique name / one record**, exactly the estimate. New
+full-card gameplay coverage is Urborg. Compilation alone does not establish
+other records' gameplay coverage. No source defect or environment failure was
+found. Native startup and removal completion criteria remain unmet.
+The slice commit uses command-local `commit.gpgsign=false`, as in prior slices;
+repository signing configuration is unchanged.
+
+Changed files: `pkg/mage/dsl/ron/resolution_choice.go`, `optional_payment.go`,
+`inventory.go`, new `checkable_ability_test.go`, `inventory_test.go`,
+`definition_plan_test.go`, `numeric_consumers_test.go`; `pkg/mage/doc.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+
+### Remaining gaps and ranked next candidates
+
+1. Forced legal mana activation offers, then Drain Power: eventual one name /
+   six records. Establish legal ability choices, arbitrary cost transactions,
+   variable output and activation-order rechecks before the full instruction.
+2. Sticky animation and post-source duration for Titania's Song: eventual one
+   name / two records. Establish evolving layer membership, dependencies and
+   continuation through cleanup after source departure.
+
+Urborg is no longer a candidate. Complete RON gameplay and collection loading,
+runtime startup/cutover, Go-card deletion, obsolete Go-set generation removal and
+unused DSL cleanup remain unfinished. Stop after this slice.

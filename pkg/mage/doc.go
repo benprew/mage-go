@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON accepts ChooseACheckableAbility with at least two distinct fixed keywords,
+// followed by one temporary LosesAbility(TheChosenAbility) operation.
+// The duration must be UntilEndOfTurn in an ordinary resolving body.
+// [ChooseAtResolution] asks the saved player when the body resolves.
+// Both options remain available if the subject lacks those abilities.
+// Each branch uses [RemoveKeyword] and [Until] with its own typed subject.
+// Copies choose separately. Clones keep separate targets and layer effects.
+// Source departure does not end the pending ability or installed removal.
+// The complete Urborg record has land-play, mana and both-choice evidence.
+//
 // RON accepts Modal_ChooseOne with at least two action bodies in a
 // WhenAPermanentBecomesTapped trigger for ThisPermanent or HostPermanent.
 // Each mode has separate targets. Host modes can read Trigger_ThatPermanent.

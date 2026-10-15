@@ -24319,3 +24319,41 @@ CR 700.2f–g requires copies to retain the chosen mode. The RON adapter reuses
 `GenericTriggered.WithModes` and the existing modal trigger menu, announcement,
 copy and target legality services. It adds no payment, replacement, zone or
 simultaneous-operation contract and makes no change to native engine mechanics.
+
+## RON resolution-time keyword removal choice
+
+`ChooseACheckableAbility([keyword, keyword, ...])` accepts at least two distinct
+fixed keywords from the temporary keyword grammar, including a concrete landwalk
+form such as `Landwalk(IsLandType(Swamp))`. It requires an adjacent
+`CreatePermanentLayerEffectUntil(subject, [LosesAbility(TheChosenAbility)],
+UntilEndOfTurn)` in an ordinary resolving action sequence. There must be exactly
+one removal modification. Unbound references, duplicate choices, parameterized
+abilities such as rampage, wildcard groups such as `AnyLandwalk`, other durations,
+entry operations and draw replacement bodies reject during compilation.
+
+RON lowers the choice to fixed branches of `ChooseAtResolution`, using typed
+per-instance references and the existing `Until` and `RemoveKeyword` engine
+services. No mutable chosen-ability slot is needed. The selected player chooses
+at resolution (CR 608.2d). Neither branch requires the subject to have the keyword;
+removing an absent ability is legal. This is a resolution choice, so copies choose
+independently. Target checks precede the choice (CR 608.2b). Source departure,
+control change, phasing or ability removal cannot change a pending ability's
+saved controller. An illegal, phased or returned target makes a sole-target
+ability fail to resolve without a choice.
+
+Removal applies in layer 6 through cleanup (CR 611.2a/c and 613.1f). It keeps the
+recipient's exact visit, survives a phase cycle, cannot follow a returned card,
+and removes all instances of the selected keyword. Timestamp order permits a
+later grant to restore it. Removing first strike leaves double strike intact;
+removal after first strike damage does not grant a second assignment
+(CR 510.4 and 702.7c). Swampwalk removal changes block legality before declaration;
+it does not insert blockers after declaration (CR 509.1 and 702.14c).
+
+Evidence: `TestRONCheckableAbilityUrborg` uses the complete LEG record for native
+land play, immediate black mana, tap-cost rollback, both removal choices, absent
+abilities, source/target lifetimes, copies, clones and cleanup.
+`TestRONCheckableAbilityCombat` checks first strike, double strike and swampwalk
+through native combat steps. `TestRONCheckableAbilityInstances`, `Invalid` and
+`Collection` check independent factories, resolution timing, scope rejection,
+strict loading and inventory roles. Existing `TestRONTemporaryKeyword*` and
+`TestRONResolutionChoice*` retain the shared layer and choice contracts.

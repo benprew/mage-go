@@ -296,11 +296,15 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			i++
 			continue
 		}
-		if part.Name == "ChooseAnAbility" {
+		if part.Name == "ChooseAnAbility" || part.Name == "ChooseACheckableAbility" {
 			if i+1 == len(parts) {
 				return nil, nil, problem(part, "ability choice requires an adjacent layer continuation")
 			}
-			effect, err := compileAbilityChoice(part, parts[i+1], ctx)
+			compileChoice := compileAbilityChoice
+			if part.Name == "ChooseACheckableAbility" {
+				compileChoice = compileCheckableAbilityChoice
+			}
+			effect, err := compileChoice(part, parts[i+1], ctx)
 			if err != nil {
 				return nil, nil, err
 			}
