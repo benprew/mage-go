@@ -17963,3 +17963,33 @@ clones. `TestRONExactPlayerSacrificeInstances` separates two saved entrants and
 clones. `PlayerScope` tests a wrong explicit player and a current-controller read.
 `Invalid` tests declaration rejection. Existing entry, grant, attachment and
 sacrifice suites retain the deeper shared service contracts.
+
+## Copiable triggered ability addition
+
+`CopyAddTriggeredAbility(build func() *GenericTriggered) CopyModification`
+adds one rule during the copy process. The builder must be pure and supply fresh
+abilities, targets and bindings without saved source, controller or choices.
+Copy modification validation uses `NewCardDefinitionPlan` to check independent
+builds, binding dominance and declaration validity. The shared snapshot builder
+adds the rule before entry replacements and observations. Subsequent copies
+keep the addition (CR 707.9a). Ordinary layer-6 removal does not change it.
+The recipient supplies the source and controller; pending triggers keep their
+saved controller and exact source visit. Phasing and return use shared identity.
+
+RON accepts `CopyEffects([AddAbility([TriggerA(
+AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), body)])])` in optional entry
+copies. It composes with `KeepColor`, `AddCardtypes` and repeated additions.
+Each AddAbility requires exactly one trigger. The body uses the existing
+resolving grammar in a fresh permanent scope; it may declare its own targets
+and event bindings. Donor attachment, targets and payment results cannot enter
+that scope. Targets are chosen when the trigger enters the stack. Body actions
+run on resolution. Other events, player filters and `AddAbilityVariable` reject.
+This adapter does not add optional resolving copy actions or retain ThisAbility.
+Existing text-revision context gates remain; this API adds no new text context.
+
+Evidence: native `TestCopyTriggeredAbilitySnapshots`, `Invalid` and `EntryOrder`;
+RON `TestRONCopyUpkeepGameplay`, `Targets`, `Lifecycle`, `Invalid` and
+`VesuvanClause`. The six real Vesuvan records remain rejected at their optional
+resolving copy action. Clause tests replace only that unsupported MayAction with
+a target tap to exercise their entry copy, retained color, upkeep grant and target
+binding together. This is prerequisite evidence, not complete-card gameplay.

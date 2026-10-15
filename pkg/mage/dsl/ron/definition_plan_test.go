@@ -210,7 +210,7 @@ func TestRONDefinitionPlanCopyConsumerBoundaries(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-			} else if err == nil || !strings.Contains(err.Error(), "AddAbility") {
+			} else if err == nil || !strings.Contains(err.Error(), "unsupported optional action (CreatePermanentLayerEffect)") {
 				t.Fatalf("copy consumer: %v", err)
 			}
 		}

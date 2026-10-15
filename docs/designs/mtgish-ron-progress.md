@@ -8,16 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-15): **926 accepted / 60 rejected names**
 (986 total), **2,319 compiled / 126 rejected records** (2,445 total).
-The latest slice is **EXPLICIT-PLAYER-EXACT-SACRIFICE**.
-RON lowers `PlayerAction(playerRef, SacrificePermanent(permanentRef))` in
-ordinary resolving bodies, including delayed source departure. Mage supplies
-`SacrificeFor` through shared exact-visit sacrifice, replacements and events.
-The selected player must control the present, unphased visit at resolution.
-All six Animate Dead records now read the returned creature's current controller,
-correcting the departing-Aura controller source defect. Complete-record gameplay
-covers all clauses together, control timing, protection, exact identity, phasing,
-copies and clones. Full-card compiler and gameplay gains are one unique name /
-six records, as estimated. All required checks pass; no accepted record regressed.
+The latest slice is **COPIABLE-UPKEEP-GRANT**.
+RON lowers one controller-upkeep TriggerA in each AddAbility copy operation.
+Mage supplies CopyAddTriggeredAbility with validated fresh rule builders.
+Recipient source, controller, targets and bindings remain independent across
+copies, repeated additions, phasing and game clones. Entry replacements and
+observations see the added rules. All six Vesuvan Doppelganger records now
+reach the unsupported optional resolving copy action. Estimated and actual
+full-card gains are zero; this is prerequisite and clause-gameplay evidence.
+All required checks pass; no accepted record regressed.
 The collection still rejects atomically. Runtime cutover, Go-card removal and
 DSL cleanup remain gated by complete support and startup.
 
@@ -25,15 +24,15 @@ DSL cleanup remain gated by complete support and startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Copiable upkeep grants:** Vesuvan Doppelganger needs copiable upkeep grants,
-   recursive resolving copies and ThisAbility retention. A prerequisite slice
-   estimates zero immediate gains, eventual one name / six records.
+1. **Resolving copiable copies and ThisAbility retention:** complete the remaining
+   Vesuvan Doppelganger copy contracts, preserving text, exact visits, per-instance
+   targets and repeated ability instances. Eventual one name / six records.
 2. **Counter-removal event:** Divine Intervention needs an actual attributed
    last-counter removal event with its player binding, plus DrawTheGame.
    One eventual name / one record; retain attribution and payment isolation.
-3. **Shared player choices:** Reassess nested PlayerMayAction forms, including
-   Kudzu. Complete-record and downstream-blocker evidence is required before
-   estimating unlocks or selecting the supported shape.
+3. **Explicit-player attachment choice:** Kudzu needs its optional attachment
+   choice and Aura survival through the resolving host-destruction window.
+   One eventual name / six records. PlayerMayAction has no other unique user.
 
 Heroism's payment-time source defect is recorded below. Do not implement its
 current replacement-time payment as an Oracle-faithful full-card adapter.
@@ -22046,3 +22045,157 @@ assets; `pkg/mage/composable_target.go`, `definition.go`,
 `compiler.go`, `exact_player_sacrifice_test.go`, five retained Aura clause test
 files and three collection-count test files; API/rules docs, vocabulary snapshot
 and this ledger. This run stops after EXPLICIT-PLAYER-EXACT-SACRIFICE.
+
+## 2026-10-15 — COPIABLE-UPKEEP-GRANT
+
+### Environment, comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The baseline loader
+exited 1 with valid JSON: **2,319 compiled / 126 rejected records** and
+**926 accepted / 60 rejected unique names**. This is collection rejection,
+not a build or test failure. All 2,445 records and 986 names remain in scope.
+
+Complete records and local rulings were read for the three ranked candidates.
+Vesuvan's six identical reprints were inspected. Targeted vocabulary evidence
+shows six PlayerMayAction occurrences, all Kudzu, and one attributed last-counter
+event, Divine Intervention. Nested forms determine the estimates below.
+
+| Candidate | Distinct cards and records | Estimated full-card gain | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Copiable upkeep grants | Vesuvan Doppelganger; six records | Zero now; eventual one name / six records | Required first copy-rule prerequisite; optional resolving IsACopyOfPermanent and AddAbilityVariable(ThisAbility) remain. Enables recipient-local target/event bindings and repeated copiable rule instances for recursive copies. | Small adapter and native fresh-builder contract; medium identity, target and entry-order tests. |
+| Attributed actual last-counter event | Divine Intervention; one record | Zero for the event alone; eventual one / one | Needs DrawTheGame after the event. Attribution must survive controller changes, actual positive removals and speculative payment isolation. | Medium event plumbing and removal/payment tests; separate terminal-outcome work. |
+| Explicit-player optional attachment choice | Kudzu; six records | Zero for a generic optional wrapper; eventual one / six with attachment and survival contracts | Host tap already lowers. Needs explicit-player legal host choice, departed-host information and Aura survival through the host-destruction resolution window. PlayerMayAction has no other unique source user. | Medium-to-large attachment/lifecycle work plus player decisions. |
+
+Candidate 1 is dependency-ready and is an unblocking prerequisite, as ranked
+in the previous entry. It has a smaller coherent boundary than the alternatives.
+The zero immediate gain was stated before editing. This run implements only
+copiable rule addition and its upkeep adapter; no recursive copy adapter was
+started. No full-card unlock is inferred from first-error frequency.
+
+`go run ./cmd/fetchset -check -card 'Vesuvan Doppelganger'` passed before edits.
+All local Vesuvan rulings are `wotc`; there are no `scryfall` notes in its file.
+The targeted contract follows CR 707.2, 707.5 and 707.9a, with ordinary trigger,
+resolution, visit and phasing rules. No Oracle or RON source defect was found or
+corrected. No RON asset changed, so the source vocabulary snapshot was retained.
+
+### Exact shape, contract and reuse boundary
+
+Mage adds:
+
+```go
+func CopyAddTriggeredAbility(build func() *GenericTriggered) CopyModification
+```
+
+The pure builder must return fresh declarations without saved game state.
+`validateCopyModification` uses `NewCardDefinitionPlan` to validate independent
+builds and binding dominance. Nil builders/abilities, panics, unbound reads and
+reused abilities or targets reject before gameplay. The existing
+`CopiableValues.WithModifications` builder adds the rule to fresh definitions.
+Later builds and copies retain it under CR 707.9a. Existing donor rules remain;
+repeated additions stay separate. The recipient supplies source and controller.
+Ordinary ability removal does not change the copiable snapshot. Default entry
+replacements and entry observations see the added rule. Shared simultaneous
+entry gives each entrant its own source and declarations.
+
+RON accepts the following operation in CopyEffects for optional entry copying:
+
+```text
+AddAbility([TriggerA(
+  AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), body)])
+```
+
+Each AddAbility contains exactly one trigger. Multiple operations can compose
+with each other, KeepColor and AddCardtypes. The compiler reuses
+`compileRecipientUpkeepAbility` and `compileBoundStepAbility`, with a fresh
+permanent scope. The existing resolving-body grammar supplies actions, local
+target groups and event bindings. Donor attachments, targets and payment results
+cannot enter the new scope. Declaration errors retain source positions.
+Inventory traversal now gives the nested AddAbility body the rule role.
+
+Shared entry-copy replacements, definition plans, snapshots, trigger detection,
+target legality, pending frames, copies, phasing and clones supply execution.
+No parallel copy, event, target or zone subsystem was added. No game-time
+production declaration panic, global action result, card-name branch or partial
+registry was introduced. Existing factory purity rules still apply. Existing
+text-revision context gates remain; no new text-change context is claimed.
+Payment rollback and simultaneous movement retain their existing contracts.
+
+Other events/player filters, AddAbilityVariable(ThisAbility), optional resolving
+copy actions and live copy layers remain unsupported. All six complete Vesuvan
+records now reject at `unsupported optional action (CreatePermanentLayerEffect)`
+instead of the outer AddAbility operation. This keeps the whole production
+collection rejected atomically. No Go definition or broad DSL function was
+removed; cutover and removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+After test-fixture API corrections, the native tests failed compilation only
+at undefined CopyAddTriggeredAbility. The RON gameplay test failed at the exact
+unsupported AddAbility copy modification. Both passed after implementation.
+Later target tests initially used optional TapPermanent, which is outside the
+existing MayAction grammar. Their fixtures now use ordinary target tapping;
+this run does not add an unrelated optional-action adapter. Phase assertions
+use FindPermanentIncludingPhased because FindPermanent excludes phased objects.
+
+| Card or contract | Tests | Evidence |
+| --- | --- | --- |
+| Native copy snapshots | `TestCopyTriggeredAbilitySnapshots` | Independent ability/target/binding identities; later copies; phasing; layer-6 removal excluded from copiable values. |
+| Native declaration checks | `TestCopyTriggeredAbilityInvalid` | Nil builder/ability, reused ability, fresh abilities with a shared target, unbound saved permanent and panicking builder reject in snapshots and entry declarations. |
+| Native entry order and batch | `TestCopyTriggeredAbilityEntryOrder` | Added source-entry triggers exist before ordinary replacements and observations; two simultaneous entrants queue separate triggers for their controller. |
+| Recipient source and pending frames | `TestRONCopyUpkeepGameplay` | Recipient-local This and You; other player's upkeep does not trigger; pending clone resolves independently; source departure retains pending life gain; declined copy on return retains no old grant. |
+| Target timing and legality | `TestRONCopyUpkeepTargets` | Target chosen at trigger placement; present, shrouded, returned, phased and phase-cycle targets; pending source departure/control; stack copies and independent cloned resolution. |
+| Copiable grant lifecycle | `TestRONCopyUpkeepLifecycle` | Later entry copy retains grant; repeated additions trigger separately; current control governs future upkeep; phasing, phase cycles, ability removal and departure. |
+| Invalid RON declarations | `TestRONCopyUpkeepInvalid` | Symbol/arity/list errors, empty or keyword grant, wrong event-player filter, donor attachment/target/payment reads and unbound ThisAbility reject. |
+| Vesuvan Doppelganger, LEA/LEB/2ED/3ED/CED/CEI | `TestRONCopyUpkeepVesuvanClause` | Complete records first assert the remaining blocker. Clause projections replace only the unsupported MayAction copy body with a target tap, preserving real entry copy, color exception, upkeep trigger and target declaration. Casting/payment timing and recipient target binding execute through mage. These are clause tests, not complete-card gameplay. |
+| Retained copy consumers | `TestRONCopyColorDependencies`, `TestRONDefinitionPlanCopyConsumerBoundaries`, `TestRONOptionalEntryCopyDependencies` | Clone and Copy Artifact remain accepted; Vesuvan must reject at the new exact nested blocker. |
+
+Estimated and actual full-card gain: **zero unique names / zero records**.
+Gameplay evidence advances for the supported grant clause in all six Vesuvan
+records. Full-card compiler and gameplay coverage remain unchanged.
+
+### Validation and final collection evidence
+
+- Baseline `make build` and full RON package tests: pass.
+- Failing-first native and RON results are recorded above.
+- Final focused `go test ./pkg/mage/dsl/ron -run '^TestRONCopyUpkeep' -count=1`:
+  pass. Full `go test ./pkg/mage/dsl/ron -count=1`: pass.
+- Final native `go test ./pkg/mage -run '^TestCopyTriggeredAbility' -count=1`:
+  pass, including declaration independence and batch entry ordering.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass for the entire repository, including card, loader, inventory,
+  engine and interactive/AI regressions.
+- `make lint`: pass, 0 issues. Pre/post hashes show no automatic Go-file edits.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, valid JSON;
+  **2,319 compiled / 126 rejected records**, **926 accepted / 60 rejected names**.
+  Parsed comparison against this run's fresh baseline asserts identical record
+  counts and rejected record identities. Exactly six Vesuvan diagnostics advance
+  from AddAbility to the optional CreatePermanentLayerEffect action. Every other
+  diagnostic is unchanged. No accepted record regressed.
+
+No environment or validation blocker remains. All required checks pass before
+commit. As in the previous entry, the commit uses per-command
+`commit.gpgsign=false` for the recorded pinentry problem; repository signing
+settings remain unchanged.
+
+### Remaining work and ranked next candidates
+
+1. Resolving copiable copies and ThisAbility retention for Vesuvan Doppelganger.
+   Preserve text, exact source/subject visits, copiable exceptions, local targets
+   and repeated instances. Eventual one unique name / six records; determine the
+   smallest complete prerequisite before editing.
+2. Actual attributed last-counter removal for Divine Intervention, followed by
+   DrawTheGame. Zero event-only gain; eventual one name / one record. Retain
+   positive actual removal facts, event-time player attribution and payment-trial
+   isolation.
+3. Explicit-player optional legal attachment choice for Kudzu, with its Aura
+   survival contract during resolving destruction. Eventual one / six; a plain
+   PlayerMayAction wrapper cannot establish full-card support.
+
+Complete RON gameplay, runtime loading, Go-card/generator removal and broad DSL
+cleanup remain gated. Changed files: mage `copy_triggered_ability.go`,
+`copy_triggered_ability_test.go` and `doc.go`; RON `entry_copy.go`, `inventory.go`,
+`copy_upkeep_test.go` and the three retained copy-consumer test files; API/rules
+contract documentation and this ledger. This run stops after COPIABLE-UPKEEP-GRANT.

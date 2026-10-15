@@ -23674,3 +23674,32 @@ clones. `TestRONExactPlayerSacrificeInstances` separates two saved entrants and
 clones. `PlayerScope` tests a wrong explicit player and a current-controller read.
 `Invalid` tests declaration rejection. Existing entry, grant, attachment and
 sacrifice suites retain the deeper shared service contracts.
+
+## Copiable triggered ability addition
+
+`CopyAddTriggeredAbility(build func() *GenericTriggered) CopyModification`
+adds a fresh triggered rule within the existing copy snapshot process, before
+entry replacements and observations (CR 707.2, 707.5, 707.9a). Validation uses
+the shared definition-plan checks: nil, panic, unbound reads, saved state and
+reused declarations reject before gameplay. Builders obey the same purity and
+fresh-declaration contract as card factories. Existing rules remain, and repeated
+additions remain separate instances. The snapshot's builds and later copies
+receive independent abilities, targets and bindings.
+
+The copied recipient supplies source and controller. Current control governs
+future upkeep detection. Pending triggers keep event-time control and exact
+source/target visits (CR 113.7a, 603.2–3, 603.3d, 608.2b). Departure, return,
+phasing, layer-6 ability removal and game clones use the existing services
+(CR 400.7, 613.1f, 702.26). Ordinary ability removal changes no copiable rule.
+Shared batch entry completes replacements before observing the added rules;
+each entrant keeps its own source. No counter, payment or simultaneous movement
+contract changes. Existing text-revision eligibility gates remain in force.
+
+Evidence: `TestCopyTriggeredAbilitySnapshots`, `Invalid`, `EntryOrder` and RON
+`TestRONCopyUpkeepGameplay`, `Targets`, `Lifecycle`, `Invalid`, `VesuvanClause`.
+Coverage includes a copied pending trigger, independent clone resolution,
+control changes, absent/returned/phased targets, phase cycles, retained pending
+source behavior, repeated additions, later copies, default replacement order,
+simultaneous entry and entry-trigger observation. The Vesuvan clause tests
+cover all six reprints but replace the unsupported optional copy body with a
+target tap. Full-card acceptance and gameplay are unchanged.

@@ -56,6 +56,24 @@ func compileCopyModifications(n Node) (*copyModificationPlan, error) {
 			modifications.keepColors = true
 			continue
 		}
+		if part.Name == "AddAbility" {
+			if err := arity(part, 1); err != nil {
+				return nil, err
+			}
+			abilities, err := list(part.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			if len(abilities) != 1 || abilities[0].Name != "TriggerA" {
+				return nil, problem(part, "supply one copied upkeep trigger")
+			}
+			build, err := compileRecipientUpkeepAbility(abilities[0])
+			if err != nil {
+				return nil, err
+			}
+			modifications.operations = append(modifications.operations, mage.CopyAddTriggeredAbility(build))
+			continue
+		}
 		if part.Name != "AddCardtypes" {
 			return nil, unsupported(part, "entry copy modifications")
 		}

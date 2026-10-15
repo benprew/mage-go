@@ -2342,7 +2342,14 @@
 // modified types in a validated snapshot with fresh rules for each build.
 // Later copies keep these types; ordinary type layers do not enter the snapshot.
 // Type additions keep abilities and the entry rules' original identities.
-// Color exceptions, added abilities and live copy layers need separate services.
+// Use [CopyAddTriggeredAbility] to add a rule during the copy process.
+// Its pure builder supplies fresh abilities, targets and bindings for each copy.
+// Definition checks reject saved game state and shared declarations.
+// The recipient supplies the rule source and controller. Later copies keep
+// the rule. Ordinary ability removal cannot change these copiable values.
+// RON accepts one controller-upkeep TriggerA in each AddAbility copy operation.
+// Its body has a fresh permanent scope. Donor bindings cannot enter that scope.
+// ThisAbility retention and resolving copy layers need separate services.
 //
 // CopiableValues.WithModifications keeps copy exceptions in text builders.
 // BuildTextChangedDefinition and BuildTextDefinitionRevision use fresh rules.

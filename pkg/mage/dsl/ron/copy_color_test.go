@@ -104,7 +104,7 @@ func TestRONCopyColorDependencies(t *testing.T) {
 				continue
 			}
 			count++
-			if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "AddAbility") {
+			if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "unsupported optional action (CreatePermanentLayerEffect)") {
 				t.Fatal("dependent card accepted or wrong blocker", err)
 			}
 		}

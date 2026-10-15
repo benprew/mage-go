@@ -1533,6 +1533,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "mana_production"
 		}
 	case "copy_modification":
+		if n.Name == "AddAbility" && len(n.Args) == 1 {
+			return "rule"
+		}
 		if n.Name == "CopyEffects" && len(n.Args) == 1 {
 			return "copy_modification"
 		}
