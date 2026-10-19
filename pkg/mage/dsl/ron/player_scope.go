@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	owner               bool
 	blockAttacker       *permanentReferencePlan
 	blockDefender       *permanentReferencePlan
 	lifeSubject         *lifeSubjectPlan
@@ -141,12 +142,12 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 			return playerReferencePlan{hostDeathController: ctx.delayedDeath}, nil
 		}
 	}
-	if n.Name == "ControllerOfPermanent" {
+	if n.Name == "ControllerOfPermanent" || n.Name == "OwnerOfPermanent" {
 		if err := arity(n, 1); err != nil {
 			return playerReferencePlan{}, err
 		}
 		permanent, err := compilePermanentRef(n.Args[0], ctx)
-		return playerReferencePlan{permanent: &permanent}, err
+		return playerReferencePlan{permanent: &permanent, owner: n.Name == "OwnerOfPermanent"}, err
 	}
 	if n.Name == "ControllerOfSpell" {
 		if err := arity(n, 1); err != nil {
@@ -301,6 +302,9 @@ func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
 		return mage.FromPlayer(bindings.landMana[p.landMana].player)
 	}
 	if p.permanent != nil {
+		if p.owner {
+			return mage.OwnerOfWithLKI(p.permanent.build(bindings))
+		}
 		return mage.ControllerOfWithLKI(p.permanent.build(bindings))
 	}
 	if p.draw != nil {

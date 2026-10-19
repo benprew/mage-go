@@ -92,6 +92,33 @@ func (r permanentInformationController) inspectDefinition() definitionNode {
 	return permanentInformationNode(r.subject, "player-ref", "controller with last-known information")
 }
 
+// OwnerOfWithLKI reads the exact visit's current or last known owner.
+func OwnerOfWithLKI(subject PermanentRef) PlayerRef {
+	return permanentInformationOwner{subject}
+}
+
+type permanentInformationOwner struct{ subject PermanentRef }
+
+func (permanentInformationOwner) playerRef()       {}
+func (permanentInformationOwner) damageRecipient() {}
+func (r permanentInformationOwner) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
+	p, lki := readPermanentInformation(r.subject, ctx)
+	if lki != nil {
+		return lki.Owner, ctx.Game.GetPlayer(lki.Owner) != nil
+	}
+	if p == nil {
+		return uuid.Nil, false
+	}
+	owner := p.Card.Owner()
+	return owner, ctx.Game.GetPlayer(owner) != nil
+}
+func (r permanentInformationOwner) resolveRecipient(ctx *EffectContext) (uuid.UUID, bool) {
+	return r.resolvePlayer(ctx)
+}
+func (r permanentInformationOwner) inspectDefinition() definitionNode {
+	return permanentInformationNode(r.subject, "player-ref", "owner with last-known information")
+}
+
 // PowerOfWithLKI reads current power or the power saved before departure.
 func PowerOfWithLKI(subject PermanentRef) ResolutionValue {
 	return permanentInformationValue{subject: subject}

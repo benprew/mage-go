@@ -6,6 +6,15 @@
 // RON accepts OwnedByAPlayer(Opponent) in permanent targets, including And.
 // Bronze Tablet has target-fragment evidence; its other operations still reject.
 //
+// [OwnerOfWithLKI] reads one exact permanent visit's owner.
+// Present visits supply current ownership. Departure and phase information
+// supply the saved owner. Return cannot replace the saved visit.
+// Waiting delayed queries retain source reads without resolving the player.
+// RON accepts OwnerOfPermanent(ref) through typed player references.
+// Existing delayed-death owner bindings and activation permissions remain.
+// Bronze Tablet has owner-payment fragment evidence after target exile.
+// Its complete record and Personal Incarnation still require other services.
+//
 // [PreventDamageByThisTurn] saves one exact permanent visit until cleanup.
 // Both combat and noncombat damage use shared prevention services.
 // Departure keeps the saved source. Return creates a different visit.
@@ -3440,8 +3449,8 @@
 // [PayActionOrElse] declares self reads in either body and direct [This] reads
 // in a [DamagePayment] source or recipient, or a [DestroyPayment] subject.
 // Queries do not prepare the payment. Typed player and amount reads also qualify.
-// [ControllerOf], [OwnerOf] and [ControllerOfWithLKI] of [This] declare the
-// saved source in payment players and direct life or draw subjects.
+// [ControllerOf], [OwnerOf], [OwnerOfWithLKI] and [ControllerOfWithLKI] of [This]
+// declare the saved source in payment players and direct life or draw subjects.
 // [LifeTotalOf], [HandSizeOf], [LifeGainedThisTurn], [DamageTakenThisTurn] and
 // [ArtifactDamageTakenThisTurn] retain these declarations in typed values.
 // Arithmetic reads both declarations without calculating a value.

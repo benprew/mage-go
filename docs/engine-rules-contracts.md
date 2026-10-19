@@ -24693,6 +24693,26 @@ Evidence: native `TestSourceDamagePreventionIdentity`, `Declarations`,
 and `Inventory`. The complete Kry Shield record has paid-cast, activation
 payment and resolution evidence. No Oracle or RON source change is required.
 
+## Permanent owner information through typed references
+
+`OwnerOfWithLKI(subject PermanentRef) PlayerRef` uses the shared exact-visit
+information service (CR 108.3, 400.7, 608.2h, 702.26). It accepts a source,
+attachment, saved permanent or singular permanent target. Definition validation
+rejects nil, unsupported and unbound subjects. Current ownership is independent
+of control. An absent visit supplies `PermanentLKI.Owner`, including the separate
+phase snapshot. The snapshot card pointer cannot supply ownership because the
+physical card can later change owner. Return and later departures cannot replace
+the original visit. Unknown information or absent players supply no player.
+
+The reference also serves as a damage recipient. Waiting delayed source queries
+retain direct source reads in player actions, values and payment consumers
+through `playerRefReadsSourcePermanent`. Queries do not resolve owners or execute
+actions. Existing `OwnerOf` remains live-only. No payment or replacement pipeline
+changes. `TestPermanentOwnerInformation` covers source, target, saved and attached
+subjects across control, ownership, departure, return, phasing and clones.
+`TestPermanentOwnerInformationInvalid` checks invalid declarations and unknown
+sources. RON gameplay evidence is mapped in the DSL reference.
+
 
 ## Opponent-owned permanent targets
 

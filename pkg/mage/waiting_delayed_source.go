@@ -365,6 +365,8 @@ func playerRefReadsSourcePermanent(ref PlayerRef) bool {
 		subject = r.subject
 	case permanentInformationController:
 		subject = r.subject
+	case permanentInformationOwner:
+		subject = r.subject
 	default:
 		return false
 	}

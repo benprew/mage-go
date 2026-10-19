@@ -4077,9 +4077,9 @@ object's current tapped state or its departure snapshot. Existing
 
 ## RON permanent information and singular exile
 
-In supported resolving action bodies, `ControllerOfPermanent(ref)` is a typed
-player reference. `PowerOfPermanent(ref)` and `ManaValueOfPermanent(ref)` are
-resolution values. They read the exact incarnation's current information, or
+In supported resolving action bodies, `ControllerOfPermanent(ref)` and
+`OwnerOfPermanent(ref)` are typed player references. `PowerOfPermanent(ref)`
+and `ManaValueOfPermanent(ref)` are resolution values. They read the exact incarnation's current information, or
 its saved departure/phase information. `ref` can be the local permanent target,
 a captured `Trigger_ThatPermanent`, `ThisPermanent` on a permanent, or
 `HostPermanent` on an Aura. An unbound or wrong-role reference fails compilation.
@@ -18657,6 +18657,23 @@ target, mana/tap costs and mana-value toughness modification.
 `TestRONSourceDamagePreventionKryShield`, `Instances`, `Delayed`, `Invalid`
 and `Inventory` cover complete gameplay, separate factories and clones,
 source LKI, declarations and semantic roles.
+
+## RON ordinary permanent owner reads
+
+`OwnerOfPermanent(permanentRef)` lowers to `mage.OwnerOfWithLKI` through the
+existing per-instance permanent reference plan. It accepts the same exact-visit
+subjects as controller information reads. Unbound, wrong-role and malformed
+references reject. Existing delayed-death event owner bindings take precedence.
+Activation permissions retain their live owner checks.
+
+Ordinary player actions and resolution-time payments can read the current owner
+of a present visit, or its saved departure/phase owner. This read does not move
+an absent object or follow a returned card. Waiting delayed queries declare
+source reads without making choices. `TestRONPermanentOwner` covers delayed
+source lifecycle and clones. `TestRONPermanentOwnerBronzeTabletPaymentFragment`
+uses Bronze Tablet's actual payment expression after a single-target exile,
+with a synthetic unrestricted target declaration and result probe. This is
+fragment evidence; Bronze Tablet and Personal Incarnation remain rejected as complete records.
 
 
 ## Opponent-owned permanent targets

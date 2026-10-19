@@ -25986,6 +25986,153 @@ Stop after this slice. Forty-one names / 76 records still reject. Complete
 collection gameplay, runtime cutover, Go-card and obsolete generator removal,
 and unused DSL cleanup remain unfinished.
 
+
+## 2026-10-15 — ORDINARY-PERMANENT-OWNER-INFORMATION
+
+### Fresh baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. Baseline collection
+loading returned expected exit 1: 2,369 compiled / 76 rejected records and
+945 accepted / 41 rejected unique names. Collection rejection was not a build
+or test failure. Complete Personal Incarnation reprints, Bronze Tablet, Heroism
+and Reincarnation records and their local rulings were read. Targeted vocabulary
+entries were inspected for OwnerOfPermanent and the two candidate damage events.
+Reprints count once in this comparison.
+
+| Candidate | Distinct affected names and estimated full-card gain | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Ranked #1 finite damage redirection | Personal Incarnation; eventual 1 name / 6 records, zero from an owner prerequisite alone | Finite packet splitting, ordinary owner information, self-death owner binding and six rounded-down death-loss defects. Enables finite recipient redirection. | Large for full card: shared split packets, simultaneous damage, competing replacements and death handling. |
+| Ordinary owner information, selected prerequisite of #1 | Personal Incarnation and Bronze Tablet; zero immediate full-card unlocks | Personal Incarnation retains the gaps above except ordinary owner reads. Bronze Tablet retains opponent-owner target filtering, paired exile results, two-branch life payment and ownership-result consumers. Reincarnation's delayed-death owner reference already works. Enables exact owner recipients and payments for two distinct cards. | Small: one native information reference, compiler lowering and delayed source declaration; two focused contract suites. |
+| Ranked #2 resolving prevention selection/payment | Heroism; eventual 1 name / 1 record | Local WotC ruling requires resolution-time payment; RON places payment in the future prevention body. Needs source correction, per-creature resolution selection/payment and saved prevention subjects. | Medium to large: selection/payment service, source evidence and payment/prevention lifecycle tests. |
+
+The ranked #1 full card is not dependency-ready. Its ordinary owner prerequisite
+wins because it also serves Bronze Tablet. Heroism remains a separate one-card
+capability with a source timing defect. This run completes only the shared owner
+information shape; it does not implement packet splitting or another payment form.
+
+### Contract, boundaries and dependencies
+
+Native `OwnerOfWithLKI(subject PermanentRef) PlayerRef` uses the shared
+`permanentInformationReference`, `readPermanentInformation` and
+`permanentInformationNode` services. Supported subjects are source, attachment,
+saved permanent and singular permanent target references. Current visits supply
+current ownership independently of control. Departure and phase snapshots supply
+`PermanentLKI.Owner`, not `Snapshot.Card.Owner()`: a later physical card ownership
+change must not rewrite the old visit's owner. Missing identities and absent
+players supply no player. A player reference also supplies a damage recipient.
+No information read makes an absent visit available for mutation.
+
+`playerRefReadsSourcePermanent` includes the new native reference. Existing
+waiting delayed services therefore declare direct source reads through player
+actions, values and payment consumers without resolving players, making choices
+or changing state. Clones retain independent ownership, phase and delayed state.
+Existing live-only `OwnerOf` and owner activation permission APIs are unchanged.
+No payment, zone, replacement, event or simultaneous-operation pipeline changed.
+
+RON `compilePlayerRef(Node, scope) (playerReferencePlan, error)` now accepts
+ordinary `OwnerOfPermanent(permanentRef)` with exactly one typed permanent operand.
+The existing per-instance permanent plan builds `mage.OwnerOfWithLKI`.
+`ThisPermanent`, a local target, a saved event/member and Aura host use their
+existing scope and identity checks. Malformed, unbound and wrong-role references
+reject during compilation. Existing delayed-death owner bindings take precedence;
+`OwnerOfDeadPermanent` is not broadened to unsupported self-death contexts.
+All RON spelling and lexical scope stay in `ron`; reusable information mechanics
+stay in `mage`. Inventory already assigns OwnerOfPermanent's operand the
+permanent-reference role, so no inventory adapter change is needed.
+
+No RON source changed; vocabulary source hashes remain valid. No Go card,
+production registry, broad DSL API or generator was changed or removed. No
+card-name branch, Go fallback, global result slot or partial registry was added.
+
+### Rules, source evidence and failing-first tests
+
+CR 108.3, 400.7, 608.2h and 702.26 establish ownership, exact visits, information
+reads and phasing. Local Personal Incarnation rulings distinguish owner from
+controller. Bronze Tablet's WotC rulings include copy ownership, controlled
+opponent Tablets, life-payment legality, target departure and source departure.
+Heroism's two WotC rulings establish payment timing and independent prevention.
+Reincarnation's three WotC rulings establish delayed timing, choosing player,
+owner-controlled entry and new visits. None of these local files has Scryfall
+notes. Preimplementation `fetchset -check -card` passed for Personal Incarnation
+and Bronze Tablet.
+
+Before production edits, `TestRONPermanentOwner` failed on the unsupported
+OwnerOfPermanent player reference. Native tests, after fixing their core enum
+qualifier, failed because OwnerOfWithLKI did not exist. The first implementation
+used the snapshot card's owner. Returned-visit tests correctly failed and led to
+using the separately saved LKI owner. These assertions were retained.
+
+| Card or contract | Test mapping and limits |
+| --- | --- |
+| Personal Incarnation ordinary owner operand prerequisite | Native source information and synthetic delayed RON source tests cover its owner-versus-controller distinction and exact visit. No complete-record gameplay claim; redirection and death handling remain unsupported. |
+| Bronze Tablet owner-payment expression | `TestRONPermanentOwnerBronzeTabletPaymentFragment` extracts the actual payment AST from the complete ATQ record. A synthetic unrestricted target and single-target exile precede that expression; a synthetic paid-result probe follows it. Both accept and decline use the exiled visit's owner, with no payment at activation. A pending clone remains unchanged. The original opponent-owner filter and IfElse life-payment consumer reject and are explicitly outside this slice. This is fragment evidence, not a complete Bronze Tablet test. |
+| Native owner information | `TestPermanentOwnerInformation`: source, target, saved and attached subjects across live ownership/control differences, actual ante ownership changes, departure, return with different ownership, phasing, phase cycle and clones. Player and damage-recipient reads agree. Absent subjects remain unavailable for actions. |
+| Clone isolation | `TestPermanentOwnerInformationCloneIsolation`: actual ante ownership change affects only the live game, then departure and clone phase information keep their independent owners. |
+| RON delayed lifecycle | `TestRONPermanentOwner`: separate factory builds, saved exact sources, current and absent subjects, changed-owner returned visit, phase information, repeated pure waiting queries and independently resolved clones. |
+| Declaration rejection | `TestRONPermanentOwnerInvalid` rejects missing/extra operands, symbol versus tuple, wrong roles and unbound target, host and event references. `TestPermanentOwnerInformationInvalid` rejects nil and undeclared target/saved references, and reads no owner for an unknown source. |
+
+There is no source correction. Personal Incarnation's six HalfRoundedDown death
+losses and Heroism's nested payment timing remain documented defects. Exploration
+of Bronze Tablet exposed additional adapter blockers for its original
+OwnedByAPlayer(Opponent) target and IfElse life-payment form; neither was silently
+implemented or accepted. Cost rollback, allocation, replacement ordering and
+simultaneous movement retain existing shared contracts; this slice adds an
+information read and does not change those operations.
+
+### Verification and measured result
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONPermanentOwner -count=1`
+  and native `go test ./pkg/mage -run TestPermanentOwnerInformation -count=1`:
+  passed before and after lint.
+- `make build` and `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test`: passed for all
+  packages. The engine skill's final `go test ./... -short -count=1` also passed
+  after lint. No test was removed or weakened.
+- `make lint`: passed, **0 issues**. Reviewed automatic edits: import sorting in
+  the two new test files only. Both affected focused suites passed again.
+- `git diff --check`: passed before final collection loading and after the
+  ledger update.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, valid JSON,
+  **2,369 compiled / 76 rejected records**, **945 accepted / 41 rejected names**.
+  The entire parsed JSON, including every ordered diagnostic, equals the fresh
+  baseline exactly. Collection rejection remains atomic. No validation blocker
+  remains. The commit signing environment failed as recorded below.
+
+Estimated and actual full-card gains agree: **zero names / zero records**.
+The completed shared prerequisite has native lifecycle and RON fragment gameplay
+coverage for ordinary owner reads; it does not establish complete gameplay for
+Personal Incarnation or Bronze Tablet. Accepted records retain their previous
+compilation status. Source bytes and vocabulary snapshot remain unchanged.
+
+Changed files: `pkg/mage/composable_information.go`,
+`permanent_owner_information_test.go`, `waiting_delayed_source.go`, `doc.go`;
+RON `player_scope.go` and `permanent_owner_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Only this slice is staged for
+its descriptive implementation commit.
+
+Commit attempt: `git commit -m "feat(ron): implement permanent-owner-information"`
+failed with exit 128. The configured GPG signer launched curses pinentry, then
+reported `gpg: signing failed: Timeout` and `fatal: failed to write commit object`.
+No commit was created. Signing was not disabled. All nine slice files remain
+staged and reviewable; the signing prompt must succeed to create the commit.
+
+### Remaining gaps and ranked next candidates
+
+1. Finite packet splitting/redirection for Personal Incarnation: eventual one
+   name / six records. Ordinary owner information is now available. Implement
+   shared finite damage allocation before the self-death owner binding and the
+   six source rounding corrections needed for the complete card.
+2. Bronze Tablet ownership/exile result prerequisites: one name / one record.
+   Owner payments now have an information reference. Compare reusable paired
+   exile results, opponent-owner target filtering and two-branch life payments
+   against other remaining records before selecting a slice.
+3. Heroism resolution-time selection/payment: one name / one record. Resolve
+   the RON timing defect with the local WotC ruling before implementation.
+
+Stop after this slice. Complete collection gameplay, runtime loading, Go-card
+and obsolete generator removal, and unused DSL cleanup remain gated.
+
 ## OPPONENT-OWNED-PERMANENT-TARGET — 2026-10-15
 
 ### Selection and scope
