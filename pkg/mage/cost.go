@@ -489,6 +489,8 @@ func (c *tapMatchingCost) Text() string { return c.text }
 
 // discardCost requires discarding cards from hand.
 type discardCost struct {
+	facts          []CardPaymentFact
+	factValues     []int
 	amount         int
 	differentNames bool
 	lastDrawn      bool
@@ -604,6 +606,7 @@ func (c *discardCost) inspectDefinition() definitionNode {
 		n.bindingWrites = append(n.bindingWrites, c.paidCards)
 		n.children = append(n.children, definitionEdge{"paid cards", c.paidCards})
 	}
+	c.inspectFacts(&n)
 	return n
 }
 
@@ -665,6 +668,7 @@ func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 
 func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	c.results = nil
+	c.factValues = nil
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -709,10 +713,17 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		action.requiresCharacteristics = c.differentNames || !c.filter.IsZero()
 		actions = append(actions, action)
 	}
-	events := g.discardActionsTogetherWithEvents(actions, true)
+	var events []GameEvent
+	var facts []int
+	if len(c.facts) == 0 {
+		events = g.discardActionsTogetherWithEvents(actions, true)
+	} else {
+		events, facts = g.discardActionsTogetherWithFacts(actions, true, c.facts)
+	}
 	if len(events) != c.amount {
 		return fmt.Errorf("cannot pay chosen discard")
 	}
+	c.factValues = facts
 	if c.captureCards {
 		for _, event := range events {
 			if event.DiscardedCardVisit != uuid.Nil {
@@ -931,7 +942,7 @@ func (c *eitherCost) inspectDefinition() definitionNode {
 		if mill, ok := option.(*millCost); ok && mill.capture {
 			n.problem = "paid mill count requires a direct cost"
 		}
-		if discard, ok := option.(*discardCost); ok && (discard.captureCards || discard.captureCard) {
+		if discard, ok := option.(*discardCost); ok && (discard.captureCards || discard.captureCard || len(discard.facts) > 0) {
 			n.problem = "paid discard cards require a direct cost"
 		}
 		if exile, ok := option.(*exileFromGraveyardCost); ok && exile.paidRequired {

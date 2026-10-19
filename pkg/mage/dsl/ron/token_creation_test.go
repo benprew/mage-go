@@ -217,7 +217,7 @@ func TestRONTokenCreationInvalid(t *testing.T) {
 	for _, bad := range []string{
 		`CreateTokens([], [])`, `CreateTokens([` + saprolingRON + `,` + saprolingRON + `], [])`, `CreateTokens([` + saprolingRON + `], [Tapped])`,
 		strings.Replace(valid, `PT(1, 1)`, `PT(ValueX, 1)`, 1), strings.Replace(valid, `Colors([Green])`, `Colors([Colorless])`, 1),
-		strings.Replace(valid, `[], [Creature]`, `[Legendary], [Creature]`, 1), strings.Replace(valid, `[Creature]`, `[Sorcery]`, 1),
+		strings.Replace(valid, `[], [Creature]`, `[Legendary, Legendary], [Creature]`, 1), strings.Replace(valid, `[Creature]`, `[Sorcery]`, 1),
 		strings.Replace(valid, `[Creature]`, `[Creature, Creature]`, 1), strings.Replace(valid, `Saproling`, `Island`, 1),
 		strings.Replace(valid, `SubtypesList([Saproling]), []`, `SubtypesList([Saproling]), [GainLife(Integer(1))]`, 1),
 		`CreateTokens([NumberTokens(ValueX, ` + saprolingRON + `)], [])`,

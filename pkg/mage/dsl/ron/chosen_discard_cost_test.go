@@ -320,13 +320,8 @@ func TestRONChosenDiscardCostStrictBoundaries(t *testing.T) {
 	if _, err := Compile(chosenDiscardRecord(t, "ATQ", "Mishra's War Machine")); err != nil {
 		t.Fatal(err)
 	}
-	for _, tc := range []struct{ set, name, gap string }{
-		{"LEG", "Land's Edge", "DiscardedCardPassesFilter"},
-	} {
-		n := chosenDiscardRecord(t, tc.set, tc.name)
-		if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s boundary: %v", tc.name, err)
-		}
+	if _, err := Compile(chosenDiscardRecord(t, "LEG", "Land's Edge")); err != nil {
+		t.Fatal(err)
 	}
 	src := `Card(Name:"Supported",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(DiscardACard,ActionList([GainLife(Integer(1))]))])`
 	files := fstest.MapFS{"valid.ron": {Data: []byte(src)}}

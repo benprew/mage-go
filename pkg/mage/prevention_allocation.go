@@ -63,6 +63,7 @@ func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Actio
 	applied := make([]map[ReplacementEffect]bool, len(actions))
 	for i := range applied {
 		applied[i] = make(map[ReplacementEffect]bool)
+		setDamageOrigin(actions[i], i)
 	}
 	for {
 		var candidates []damageReplacementCandidate
@@ -98,7 +99,8 @@ func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Actio
 					source, nextSource := replacement.(*sourcePreventionReplacement)
 					_, redirect := replacement.(*selectedSourceRedirectReplacement)
 					_, expansion := replacement.(damageEventExpander)
-					if shield || redirect || expansion || (nextSource && source.capturesSourceIdentity()) {
+					_, finite := replacement.(*finiteDamageRedirectReplacement)
+					if shield || redirect || expansion || finite || (nextSource && source.capturesSourceIdentity()) {
 						if seenShields[replacement] {
 							continue
 						}
@@ -134,6 +136,8 @@ func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Actio
 		switch replacement := selected.replacement.(type) {
 		case damageBatchReplacement:
 			replacement.replaceDamageBatch(actions, applied, selected.index, g)
+		case *finiteDamageRedirectReplacement:
+			actions, applied = replacement.splitDamageEvent(actions, applied, g)
 		case damageEventExpander:
 			originalCount := len(actions)
 			actions, applied = replacement.expandDamageEvent(actions, applied, g)
@@ -162,6 +166,7 @@ func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Actio
 			actions[selected.index] = keepDamageCause(actions[selected.index], replacement.Replace(actions[selected.index], g))
 		}
 	}
+	mergeDamageDescendants(actions)
 	return actions, outcomes
 }
 
@@ -238,4 +243,32 @@ func (r *preventionShieldReplacement) allocateBatch(actions []Action, applied []
 		budget -= prevented
 		actions[i] = damageActionWithAmount(action, amount-prevented)
 	}
+}
+
+// Portions of one input must not create duplicate source damage events.
+func mergeDamageDescendants(actions []Action) {
+	for i, action := range actions {
+		if action == nil {
+			continue
+		}
+		for j, prior := range actions[:i] {
+			if prior == nil || damageOrigin(action) != damageOrigin(prior) || !damageActionSource(action).SameObject(damageActionSource(prior)) || !sameDamageRecipient(action, prior) {
+				continue
+			}
+			actions[j] = damageActionWithAmount(prior, damageActionAmount(prior)+damageActionAmount(action))
+			actions[i] = nil
+			break
+		}
+	}
+}
+func sameDamageRecipient(first, second Action) bool {
+	switch a := first.(type) {
+	case *DamageToPlayerAction:
+		b, ok := second.(*DamageToPlayerAction)
+		return ok && a.PlayerID() == b.PlayerID() && a.IsCombatDamage() == b.IsCombatDamage()
+	case *DamageToCreatureAction:
+		b, ok := second.(*DamageToCreatureAction)
+		return ok && a.PermanentID() == b.PermanentID() && a.recipientIncarnation == b.recipientIncarnation && a.IsCombatDamage() == b.IsCombatDamage()
+	}
+	return false
 }

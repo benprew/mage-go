@@ -6,6 +6,20 @@ func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
+	if n.Args[0].Name == "Trigger_ThoseDefendingPlayers" {
+		if n.Args[0].Kind != Symbol || ctx.attackGroup == nil {
+			return nil, problem(n.Args[0], "defending player collection requires an attack group event")
+		}
+		ctx.player = playerReferencePlan{defender: ctx.attackGroup}
+		if n.Args[1].Name == "SeparatePermanentsIntoNamedPiles" {
+			build, err := compileNamedPermanentPartition(n.Args[1], ctx)
+			return []effectFactory{build}, err
+		}
+		return compilePlayerEffect(n.Args[1], ctx)
+	}
+	if n.Args[0].Name == "PaidCost" {
+		return compilePaidPlayersAction(n, ctx)
+	}
 	if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
 		return nil, unsupported(n.Args[0], "player action collection")
 	}
@@ -42,7 +56,7 @@ func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, problem(action, "DiscardHand requires a symbol")
 		}
 		return []effectFactory{func(instanceBindings) mage.Effect {
-			return mage.DiscardEach(mage.EachPlayer)
+			return (mage.WholeHandDiscardInstruction{Subjects: mage.EachPlayer}).Effect()
 		}}, nil
 	case "DrawNumberCards":
 		if err := arity(action, 1); err != nil {
@@ -64,7 +78,7 @@ func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.DrawEach(mage.EachPlayer, value(bindings))
+			return (mage.PlayerDrawInstruction{Subjects: mage.EachPlayer, Amount: value(bindings)}).Effect()
 		}}, nil
 	default:
 		return nil, unsupported(action, "all-player action")

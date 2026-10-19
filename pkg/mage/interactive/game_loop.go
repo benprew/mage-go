@@ -208,6 +208,10 @@ func RunGameLoopContext(ctx context.Context, g *mage.Game, humanIdx int, aiActio
 
 	// --- Main turn loop ---
 	for g.CurrentTurn() <= 100 {
+		if !g.TryBeginTurn() {
+			g.AdvanceToNextTurn()
+			continue
+		}
 		for _, step := range core.AllSteps() {
 			if ctx.Err() != nil {
 				return

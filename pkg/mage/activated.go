@@ -184,6 +184,9 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
+	activationManaReceipt             *ActivationManaBinding
+	activationManaReceiptXOnly        bool
+	activationManaReceiptOptions      int
 	spellSacrificeManaValue           *NumberBinding
 	spellSacrificeContinuationOptions int
 	spellTextContinuation             bool
@@ -192,6 +195,8 @@ type ActionDefinition struct {
 	textRevisionDefinition            Card
 	activationManaX                   *activationManaX
 	activationManaXOptions            int
+	activationMinimumX                int
+	activationMinimumXOptions         int
 	activationHistory                 *ActivationHistoryBinding
 	activationHistoryOptions          int
 	BaseAbility
@@ -293,6 +298,19 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
 func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
+	if a.activationManaX != nil && a.activationManaX.fromSpell {
+		p := g.FindPermanent(a.source)
+		if p == nil || p.PhasedOut || a.activationManaX.spell == nil {
+			return false
+		}
+		for _, id := range g.possibleTargetsWithX(a.activationManaX.spell, controller, g.AbilityTargetSource(p.Card, a, a.targets), 0) {
+			x, ok := a.activationManaX.value(g, a.source, id)
+			if ok && a.canActivateWithX(controller, g, x) {
+				return true
+			}
+		}
+		return false
+	}
 	x := g.resolution.X()
 	if a.activationManaX != nil {
 		var ok bool
@@ -300,6 +318,16 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		if !ok {
 			return false
 		}
+	}
+	return a.canActivateWithX(controller, g, x)
+}
+
+func (a *ActionDefinition) canActivateWithX(controller uuid.UUID, g *Game, x int) bool {
+	if a.activationMinimumXOptions > 0 {
+		if a.activationManaX != nil && x < a.activationMinimumX {
+			return false
+		}
+		x = max(x, a.activationMinimumX)
 	}
 	if hasTargetDependencies(a.targets) {
 		p := g.FindPermanent(a.source)

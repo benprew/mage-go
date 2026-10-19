@@ -33,8 +33,12 @@ func TestRONSourceCardPayment(t *testing.T) {
 
 func TestRONSourceCardTempestRequirement(t *testing.T) {
 	record := staticBaseRecord(t, "LEG", "Tempest Efreet")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "PutCardFromHandIntoPlayersHand") {
-		t.Fatal("expected next independent blocker", err)
+	factory, err := Compile(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Tempest Efreet", factory()); err != nil {
+		t.Fatal(err)
 	}
 }
 

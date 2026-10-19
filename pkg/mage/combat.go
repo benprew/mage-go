@@ -10,11 +10,12 @@ import (
 
 // Combat manages the combat phase.
 type Combat struct {
-	Groups               []*CombatGroup
-	Attackers            map[uuid.UUID]bool
-	AttackerIncarnations map[uuid.UUID]uuid.UUID
-	FirstStruck          map[uuid.UUID]bool
-	Bands                map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
+	assignmentEligibility map[capturedPermanent]bool
+	Groups                []*CombatGroup
+	Attackers             map[uuid.UUID]bool
+	AttackerIncarnations  map[uuid.UUID]uuid.UUID
+	FirstStruck           map[uuid.UUID]bool
+	Bands                 map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
 
 	// AttackedAlone records the single creature declared as an attacker during
 	// the most recent declare-attackers step, if exactly one was declared. Used
@@ -45,6 +46,7 @@ func NewCombat() *Combat {
 }
 
 func (c *Combat) Reset() {
+	c.assignmentEligibility = nil
 	c.Groups = nil
 	c.Attackers = make(map[uuid.UUID]bool)
 	c.AttackerIncarnations = nil
@@ -326,6 +328,9 @@ func (c *Combat) DealsDamageInStep(p *Permanent, isFirstStrikeStep bool) bool {
 
 // Strike eligibility must remain recorded when assignment is suppressed.
 func (c *Combat) assignsDamageInStep(g *Game, p *Permanent, firstStrike bool) bool {
+	if c.assignmentEligibility != nil {
+		return c.assignmentEligibility[capturedPermanent{p.ID(), p.incarnationID}] && g.effects.noCombatAssignmentRules[p.ID()] != p.incarnationID
+	}
 	eligible := c.DealsDamageInStep(p, firstStrike)
 	return eligible && g.effects.noCombatAssignmentRules[p.ID()] != p.incarnationID
 }
@@ -426,6 +431,10 @@ func (p *combatDamagePlan) permanent(g *Game, recipient *Permanent, amount int, 
 // old Game.DoCombatDamage method and operates on the Combat receiver so the
 // logic lives alongside the rest of the combat state.
 func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
+	previousEligibility := c.assignmentEligibility
+	c.assignmentEligibility = make(map[capturedPermanent]bool)
+	defer func() { c.assignmentEligibility = previousEligibility }()
+	c.prepareFaceUpAssignments(g, isFirstStrikeStep)
 	if c.needsSharedBandAssignment(g) {
 		c.resolveSharedBandDamage(g, isFirstStrikeStep)
 		return
@@ -854,4 +863,40 @@ func snapshotCombatOpponents(source *Permanent, g GameReader) []capturedPermanen
 		}
 	}
 	return result
+}
+
+func (c *Combat) prepareFaceUpAssignments(g *Game, firstStrike bool) {
+	seen := make(map[uuid.UUID]bool)
+	var attackers, blockers []uuid.UUID
+	for _, group := range c.Groups {
+		attacker := g.FindPermanent(group.AttackerID)
+		if attacker == nil || attacker.PhasedOut || !attacker.HasType(TypeCreature) {
+			continue
+		}
+		if incarnation := c.AttackerIncarnations[attacker.ID()]; incarnation != uuid.Nil && incarnation != attacker.incarnationID {
+			continue
+		}
+		c.assignmentEligibility[capturedPermanent{attacker.ID(), attacker.incarnationID}] = c.DealsDamageInStep(attacker, firstStrike)
+		if !group.Blocked && !g.isValidDefender(group.DefenderID) {
+			continue
+		}
+		if !group.Blocked || len(liveNormalBlockers(g, group)) > 0 || attacker.HasKeyword(Trample) {
+			attackers = append(attackers, attacker.ID())
+		}
+		for _, blocker := range liveNormalBlockers(g, group) {
+			c.assignmentEligibility[capturedPermanent{blocker.ID(), blocker.incarnationID}] = c.DealsDamageInStep(blocker, firstStrike)
+			blockers = append(blockers, blocker.ID())
+		}
+	}
+	for _, id := range append(attackers, blockers...) {
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+		p := g.FindPermanent(id)
+		if p == nil || p.PhasedOut || !p.HasType(TypeCreature) || combatDamageValue(p, g) <= 0 || !c.assignsDamageInStep(g, p, firstStrike) {
+			continue
+		}
+		g.effects.ApplyReplacements(&assignDamageAction{capturedPermanent{p.ID(), p.incarnationID}}, g)
+	}
 }

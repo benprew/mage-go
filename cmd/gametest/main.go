@@ -398,6 +398,10 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 	// Main turn loop.
 	loopStart := time.Now()
 	for g.CurrentTurn() <= maxTurns {
+		if !g.TryBeginTurn() {
+			g.AdvanceToNextTurn()
+			continue
+		}
 		for _, step := range core.AllSteps() {
 			// Combat preview.
 			if !quiet && step == core.CombatDamage && len(g.CombatGroups()) > 0 {

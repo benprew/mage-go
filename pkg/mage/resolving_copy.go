@@ -142,6 +142,9 @@ func (g *Game) becomeCopyOfPermanent(recipient, subject *Permanent, keepColors b
 
 func (g *Game) replaceResolvingCopyRules(subject *Permanent, card Card, retainTimestamp bool) {
 	p := g.MutablePermanent(subject.ID())
+	if p.FaceDown && isFaceDownCard(p.Card) {
+		card = newFaceDownCard(card)
+	}
 	old, fresh := NewPermanent(p.Card, p.ControllerID()), NewPermanent(card, p.ControllerID())
 	abilities := slices.Clone(fresh.RuntimeAbilities)
 	for _, ability := range p.RuntimeAbilities {

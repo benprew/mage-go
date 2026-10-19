@@ -4,11 +4,37 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 type drawReplacementPlan struct{ name string }
 
+type scopedDrawReplacementPlan struct {
+	window  mage.DrawReplacementWindow
+	player  *drawReplacementPlan
+	actions []effectFactory
+}
+
+func (p scopedDrawReplacementPlan) build() mage.CardOption {
+	bindings := instanceBindings{drawReplacements: map[*drawReplacementPlan]*mage.PlayerBinding{p.player: mage.BindPlayer(p.player.name)}}
+	effects := make([]mage.Effect, len(p.actions))
+	for i, build := range p.actions {
+		effects[i] = build(bindings)
+	}
+	return mage.WithAbility(mage.Static(mage.ReplaceDraw(p.window, bindings.drawReplacements[p.player], mage.Sequence(effects...))))
+}
+
 func compileDrawReplacement(n Node, ctx scope) (optionFactory, error) {
+	plan, err := compileScopedDrawReplacementPlan(n, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return plan.build, nil
+}
+
+func compileScopedDrawReplacementPlan(n Node, ctx scope) (*scopedDrawReplacementPlan, error) {
+	if n.Name != "ReplaceWouldDraw" {
+		return nil, unsupported(n, "draw replacement")
+	}
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
-	if !ctx.permanent {
+	if !ctx.permanent || ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
 		return nil, unsupported(n, "draw replacement source")
 	}
 	event := n.Args[0]
@@ -42,12 +68,5 @@ func compileDrawReplacement(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	return func() mage.CardOption {
-		bindings := instanceBindings{drawReplacements: map[*drawReplacementPlan]*mage.PlayerBinding{plan: mage.BindPlayer(plan.name)}}
-		effects := make([]mage.Effect, len(actions))
-		for i, build := range actions {
-			effects[i] = build(bindings)
-		}
-		return mage.WithAbility(mage.Static(mage.ReplaceDraw(window, bindings.drawReplacements[plan], mage.Sequence(effects...))))
-	}, nil
+	return &scopedDrawReplacementPlan{window: window, player: plan, actions: actions}, nil
 }

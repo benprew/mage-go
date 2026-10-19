@@ -7,6 +7,10 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	targetController    *targetControllerPlayerPlan
+	discardCause        *discardCauseEventPlan
+	recipientController *damageTargetPlan
+	sourceDeathOwner    *sourceDeathOwnerPlan
 	owner               bool
 	blockAttacker       *permanentReferencePlan
 	blockDefender       *permanentReferencePlan
@@ -44,6 +48,19 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	castResults          map[*castResultPlan]*mage.DamageSourceBinding
+	chosenHandCards      map[*chosenHandCardPlan]*mage.CardBinding
+	namedPiles           map[*namedPilesPlan][]mage.NamedPermanentPile
+	selectedPiles        map[*selectedPilePlan]*mage.PermanentSetBinding
+	paidPlayers          map[*paidPlayersPlan]*mage.PlayerSetBinding
+	chosenCastSpells     map[*castSpellChoicePlan]*mage.DamageSourceBinding
+	permanentLists       map[*permanentListPlan]*mage.PermanentSetBinding
+	discardCauses        map[*discardCauseEventPlan]*mage.PlayerBinding
+	graveyardTargets     map[*graveyardTargetsPlan]*mage.GraveyardCardTargetsBinding
+	discardFacts         map[*discardFactPlan][]*mage.NumberBinding
+	resolutionTokens     map[*resolutionTokensPlan]*mage.CreatedTokensBinding
+	linkedExilePayments  map[*linkedExilePaymentPlan]*mage.NumberBinding
+	sourceDeathOwners    map[*sourceDeathOwnerPlan]*mage.PlayerBinding
 	lostMana             map[*lostManaPlan]*mage.LostManaBinding
 	exileCounts          map[*exileControllerCountsPlan]*mage.PlayerNumbersBinding
 	copyAbilities        map[*copyAbilityPlan]*mage.TriggeredAbilityBinding
@@ -82,6 +99,7 @@ type instanceBindings struct {
 	entryActors          map[*landEntryEventPlan]*mage.PlayerBinding
 	exiles               map[*exilePaymentPlan]*mage.NumberBinding
 	defenders            map[*sourceCombatPlayerPlan]*mage.PlayerBinding
+	activationMana       *mage.ActivationManaBinding
 	activationHistory    *mage.ActivationHistoryBinding
 	deathCards           map[*deathCardPlan]*mage.CardBinding
 	actionPlayers        map[*playerActionsPlan]*mage.PlayerBinding
@@ -109,6 +127,14 @@ type instanceBindings struct {
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
+	if n.Name == "PlayerOrControllerOfPermanent" {
+		if err := arity(n, 1); err != nil {
+			return playerReferencePlan{}, err
+		}
+		target, err := compileDamageTargetRef(n.Args[0], ctx)
+		return playerReferencePlan{recipientController: target}, err
+	}
+
 	if n.Name == "ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn" {
 		if err := arity(n, 2); err != nil {
 			return playerReferencePlan{}, err
@@ -147,6 +173,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 			return playerReferencePlan{}, err
 		}
 		permanent, err := compilePermanentRef(n.Args[0], ctx)
+		if err == nil && n.Name == "ControllerOfPermanent" && permanent.kind == permanentTarget {
+			return playerReferencePlan{targetController: &targetControllerPlayerPlan{target: permanent.target}}, nil
+		}
 		return playerReferencePlan{permanent: &permanent, owner: n.Name == "OwnerOfPermanent"}, err
 	}
 	if n.Name == "ControllerOfSpell" {
@@ -158,6 +187,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "Trigger_ControllerOfThatSpellOrAbility":
+			if ctx.discardCauseEvent != nil {
+				return playerReferencePlan{discardCause: ctx.discardCauseEvent}, nil
+			}
 		case "LoseLife_ThatPlayer":
 			if ctx.lifeSubject != nil {
 				ctx.lifeSubject.referenced = true
@@ -223,8 +256,15 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 				return playerReferencePlan{deathController: ctx.graveyardEvent}, nil
 			}
 		case "OwnerOfDeadPermanent":
+			if ctx.sourceDeathOwner != nil {
+				return playerReferencePlan{sourceDeathOwner: ctx.sourceDeathOwner}, nil
+			}
 			if ctx.hostDeath != nil {
 				return playerReferencePlan{hostDeathOwner: ctx.hostDeath}, nil
+			}
+		case "EachablePlayer":
+			if ctx.eachablePlayer != nil {
+				return *ctx.eachablePlayer, nil
 			}
 		case "ActionPlayer":
 			if ctx.actionPlayer != nil {
@@ -246,6 +286,19 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.targetController != nil {
+		return p.targetController.build(bindings)
+	}
+	if p.discardCause != nil {
+		return mage.FromPlayer(bindings.discardCauses[p.discardCause])
+	}
+	if p.recipientController != nil {
+		return mage.PlayerOrControllerOfDamageTarget(bindings.recipients[p.recipientController])
+	}
+
+	if p.sourceDeathOwner != nil {
+		return mage.FromPlayer(bindings.sourceDeathOwners[p.sourceDeathOwner])
+	}
 	if p.landPlay != nil {
 		return mage.FromPlayer(bindings.landPlayPlayers[p.landPlay])
 	}

@@ -41,6 +41,6 @@ func compileFinitePrevention(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(operations[0], "finite prevention operation")
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.PreventNextDamage(recipient(bindings), amount(bindings))
+		return (mage.FuturePreventionInstruction{Recipient: recipient(bindings), Amount: amount(bindings)}).Effect()
 	}, nil
 }

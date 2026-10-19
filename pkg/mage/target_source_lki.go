@@ -109,3 +109,19 @@ func (g *Game) triggerTargetSource(pt *pendingTrigger) Card {
 	}
 	return g.resolutionTargetSource(&StackObject{TargetSource: card, SourceID: pt.sourceID, sourceIncarnation: pt.sourceIncarnation, IsAbility: true})
 }
+
+// Source exclusion must not apply to a later battlefield visit of the same card.
+func targetSourceIsPermanent(source Card, permanent *Permanent) bool {
+	if source == nil || permanent == nil || source.ID() != permanent.ID() {
+		return false
+	}
+	if view, ok := source.(targetSourceLKI); ok {
+		if view.spell {
+			return false
+		}
+		if view.incarnation != uuid.Nil {
+			return view.incarnation == permanent.incarnationID
+		}
+	}
+	return true
+}

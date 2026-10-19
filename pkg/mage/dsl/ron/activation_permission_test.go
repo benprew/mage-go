@@ -345,8 +345,8 @@ func TestRONActivationPermissionStrictLoad(t *testing.T) {
 		t.Fatal("unsupported collection changed installed registry")
 	}
 	landEdge := hostUntapRecord(t, "LEG", "Land's Edge")
-	if _, err := Compile(landEdge); err == nil || !strings.Contains(err.Error(), "DiscardedCardPassesFilter") {
-		t.Fatal("Land's Edge must retain its independent discarded-card result gap", err)
+	if _, err := Compile(landEdge); err != nil {
+		t.Fatal("Land's Edge must compile with its discarded-card result", err)
 	}
 	report, err := InspectFS(fstest.MapFS{"a.ron": {Data: []byte(record)}}, "*.ron")
 	if err != nil || report.Compiled != 1 {

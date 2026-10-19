@@ -15,7 +15,9 @@ func (r *instructionDamagePrevention) Matches(action Action, _ GameReader) bool 
 	return r.amount > 0 && damageActionAmount(action) > 0
 }
 func (r *instructionDamagePrevention) Replace(action Action, _ *Game) Action {
-	return damageActionWithAmount(action, max(0, damageActionAmount(action)-r.amount))
+	prevented := min(r.amount, damageActionAmount(action))
+	r.amount -= prevented
+	return damageActionWithAmount(action, damageActionAmount(action)-prevented)
 }
 func (*instructionDamagePrevention) IsActive(GameReader) bool   { return true }
 func (r *instructionDamagePrevention) Clone() ReplacementEffect { cp := *r; return &cp }

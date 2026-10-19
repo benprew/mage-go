@@ -25,6 +25,13 @@ func compileMixedDamageRecipients(n Node, ctx scope) (func(instanceBindings) mag
 				return nil, problem(part, "duplicate permanent recipient set")
 			}
 			permanents, err = compileDamageHistoryPermanents(part.Args[0], ctx)
+		case "Player":
+			if players != nil {
+				return nil, problem(part, "duplicate player recipient set")
+			}
+			var player playerReferencePlan
+			player, err = compilePlayerRef(part.Args[0], ctx)
+			players = func(bindings instanceBindings) mage.PlayerSet { return mage.OnePlayer(player.build(bindings)) }
 		case "EachPlayer":
 			if players != nil {
 				return nil, problem(part, "duplicate player recipient set")
@@ -97,10 +104,7 @@ func compileDamageHistoryPlayers(n Node, ctx scope) (playerSetFactory, error) {
 		return nil, err
 	}
 	if history == nil {
-		if n.Kind != Symbol || n.Name != "AnyPlayer" {
-			return nil, unsupported(n, "damage player set filter")
-		}
-		return func(instanceBindings) mage.PlayerSet { return mage.EachPlayer }, nil
+		return compileDamageOutcomePlayers(n, ctx)
 	}
 	source, err := compileGameDamageHistorySource(*history, ctx)
 	if err != nil {
@@ -131,11 +135,7 @@ func compileDamageHistoryPermanents(n Node, ctx scope) (permanentSetFactory, err
 		return nil, err
 	}
 	if history == nil {
-		filter, err := compileFilter(n)
-		if err != nil {
-			return nil, err
-		}
-		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(filter) }, nil
+		return compileContextualCollection(n, ctx)
 	}
 	source, err := compileGameDamageHistorySource(*history, ctx)
 	if err != nil {

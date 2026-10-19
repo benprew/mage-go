@@ -58,23 +58,25 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 
 // Game is the central game state and engine.
 type Game struct {
-	drawn               bool
-	players             []Player
-	playerManaAbilities []installedPlayerManaAbility
-	playerPayments      []installedPlayerPayment
-	publicReveals       []PublicCardReveal
-	libraryLooks        map[uuid.UUID][]PublicCardReveal
-	handLooks           map[uuid.UUID][]PublicCardReveal
-	anteEnabled         bool
-	originalOwners      map[uuid.UUID]uuid.UUID
-	anteResult          []OwnershipChange
-	anteSettled         bool
-	zones               ZoneSystem
-	stack               *Stack
-	combat              *Combat
-	effects             *EffectManager
-	layer2Controllers   map[uuid.UUID]uuid.UUID
-	mana                ManaSystem
+	outsideGame             map[uuid.UUID][]outsideGameCard
+	drawn                   bool
+	players                 []Player
+	playerManaAbilities     []installedPlayerManaAbility
+	oneSpellManaPermissions []oneSpellManaPermission
+	playerPayments          []installedPlayerPayment
+	publicReveals           []PublicCardReveal
+	libraryLooks            map[uuid.UUID][]PublicCardReveal
+	handLooks               map[uuid.UUID][]PublicCardReveal
+	anteEnabled             bool
+	originalOwners          map[uuid.UUID]uuid.UUID
+	anteResult              []OwnershipChange
+	anteSettled             bool
+	zones                   ZoneSystem
+	stack                   *Stack
+	combat                  *Combat
+	effects                 *EffectManager
+	layer2Controllers       map[uuid.UUID]uuid.UUID
+	mana                    ManaSystem
 
 	// TurnSystem owns turn, step, active player, extra turns, scheduling, and untap skips.
 	turns TurnSystem
@@ -218,22 +220,27 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 	return g.zones.FindPermanent(id)
 }
 
-// PhaseOut phases the permanent with the given ID out of the battlefield, along
-// with any Auras and Equipment attached to it (CR 702.26f, "phasing out
-// indirectly"). Counters, attachments, and other on-permanent state are
-// retained while phased out (CR 702.26d). It returns the IDs that were phased
-// out — the permanent followed by its attachments — so the caller can later
-// phase exactly that set back in with PhaseIn.
+// PhaseOut changes the subject and its indirect attachment group to phased out.
+// Auras, Equipment and Fortifications keep their status, counters and attachments.
+// The returned IDs identify the group for a later PhaseIn call (CR 702.26g).
 func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 	// Information queries need the state before the group becomes absent.
-	if source := g.FindPermanent(id); source != nil {
-		g.zones.capturePhaseInformation(source, g)
-		for _, p := range g.zones.battlefield {
-			if !p.PhasedOut && p.AttachedTo == id && (p.HasSubType("Aura") || p.HasSubType("Equipment")) {
-				g.zones.capturePhaseInformation(p, g)
+	var capture func(uuid.UUID)
+	captured := make(map[uuid.UUID]bool)
+	capture = func(id uuid.UUID) {
+		p := g.FindPermanent(id)
+		if p == nil || captured[id] {
+			return
+		}
+		captured[id] = true
+		g.zones.capturePhaseInformation(p, g)
+		for _, attachment := range g.zones.battlefield {
+			if attachment.AttachedTo == id && (attachment.HasSubType("Aura") || attachment.HasSubType("Equipment") || attachment.HasSubType("Fortification")) {
+				capture(attachment.ID())
 			}
 		}
 	}
+	capture(id)
 	phased := g.zones.PhaseOut(id)
 	expired := false
 	for _, permanentID := range phased {
@@ -633,6 +640,13 @@ func (g *Game) completeBattlefieldEntryFrom(perm *Permanent, controller, actor u
 }
 
 func (g *Game) observeBattlefieldEntryFrom(perm *Permanent, controller, actor uuid.UUID, castColorsSpent int, origin Zone) {
+	if !perm.IsToken {
+		entryActor := actor
+		if entryActor == uuid.Nil {
+			entryActor = controller
+		}
+		g.trackers.Turn.recordNontokenEntry(entryActor)
+	}
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {
@@ -893,6 +907,17 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 	if !perm.FaceDown {
 		return
 	}
+	if original := faceDownOriginal(perm.Card); original != nil {
+		restored := original.Copy()
+		restored.SetID(perm.ID())
+		restored.SetOwner(perm.Card.Owner())
+		perm.Card = restored
+		fresh := NewPermanent(restored, perm.ControllerID())
+		fresh.baseAttrs[AttrSummonSick] = perm.baseAttrs[AttrSummonSick]
+		perm.baseAttrs = fresh.baseAttrs
+		perm.printedAbilityAttrs = fresh.printedAbilityAttrs
+	}
+	perm.turnedFaceUp = true
 	perm.FaceDown = false
 	perm.BasePTOverride = nil
 	// Restore original abilities from the card
@@ -928,6 +953,9 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Snapshot LKI before any state mutation so death/leave-triggers can
 	// read the dying permanent's controller, types, and P/T after the move.
 	g.captureLKI(perm)
+	if perm.FaceDown {
+		g.revealFaceDownCard(perm.Card)
+	}
 	g.RemoveFromCombat(perm.ID())
 
 	// Remove continuous effects sourced from this permanent
@@ -956,6 +984,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	g.zones.RemovePermanent(perm.ID())
 
 	if g.triggers.zoneBatch == nil {
+		g.finishPhaseUntilWaits()
 		g.effects.Apply(g)
 	}
 	// Leave-zone trigger dispatch (CR 603.6c) happens in the destination-
@@ -1045,8 +1074,8 @@ func (g *Game) TapPermanent(perm *Permanent) {
 	if perm == nil {
 		return
 	}
-	perm = g.MutablePermanent(perm.ID())
-	if perm == nil || perm.Tapped {
+	perm = g.preparePermanentTap(perm)
+	if perm == nil {
 		return
 	}
 	perm.Tapped = true
@@ -1059,15 +1088,17 @@ func (g *Game) TapPermanent(perm *Permanent) {
 
 // tapPermanentsTogether makes each tap visible before it sends tap events.
 func (g *Game) tapPermanentsTogether(permanents []*Permanent) {
+	var prepared []*Permanent
 	for _, permanent := range permanents {
+		if p := g.preparePermanentTap(permanent); p != nil {
+			prepared = append(prepared, p)
+		}
+	}
+	for _, permanent := range prepared {
 		g.MutablePermanent(permanent.ID()).Tapped = true
 	}
-	for _, permanent := range permanents {
-		g.FireEvent(GameEvent{
-			Type:     EvtTapped,
-			SourceID: permanent.ID(),
-			PlayerID: permanent.ControllerID(),
-		})
+	for _, permanent := range prepared {
+		g.FireEvent(GameEvent{Type: EvtTapped, SourceID: permanent.ID(), PlayerID: permanent.ControllerID()})
 	}
 }
 
@@ -1302,6 +1333,7 @@ func (g *Game) PlayerDiscardByCost(p Player, cardID, sourceID uuid.UUID) (Card, 
 }
 
 func (g *Game) playerDiscardAction(action *DiscardAction) (Card, bool) {
+	g.snapshotDiscardCause(action)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return nil, false
@@ -1310,7 +1342,10 @@ func (g *Game) playerDiscardAction(action *DiscardAction) (Card, bool) {
 	if !ok {
 		return nil, false
 	}
-	return g.executeDiscard(discard)
+	proposal := *discard
+	proposal.handVisit = action.handVisit
+	proposal.discardEvent = action.discardEvent
+	return g.executeDiscard(&proposal)
 }
 
 func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
@@ -1318,7 +1353,7 @@ func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
 	if !ok {
 		return nil, false
 	}
-	g.FireEvent(GameEvent{Type: EvtDiscard, SourceID: c.ID(), PlayerID: action.PlayerID(), DiscardedCardVisit: g.graveyardVisit(c.ID())})
+	g.FireEvent(g.completedDiscardEvent(action))
 	return c, true
 }
 
@@ -1336,6 +1371,8 @@ func (g *Game) moveDiscardedCard(action *DiscardAction) (Card, bool) {
 	}
 	if action.Destination() == ZoneLibrary {
 		p.SetLibrary(append([]Card{c}, p.Library()...))
+	} else if action.Destination() == ZoneExile {
+		g.ExileCard(c, action.ActionSource())
 	} else {
 		p.AddToGraveyard(c)
 	}
@@ -1449,6 +1486,10 @@ func (g *Game) prepareLifeGain(p Player, amount int) int {
 // To: Hand}. Self-referencing leave triggers fire via the LKI snapshot's
 // captured abilities per CR 603.6c.
 func (g *Game) BouncePermanentToHand(perm *Permanent) {
+	g.bouncePermanentToHand(perm, false)
+}
+
+func (g *Game) bouncePermanentToHand(perm *Permanent, lockReturnedHand bool) {
 	if perm == nil {
 		return
 	}
@@ -1468,6 +1509,9 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 		// not added to a hand.
 		if p := g.GetPlayer(owner); p != nil {
 			p.AddToHand(card)
+			if lockReturnedHand {
+				g.lockReturnedHandCard(owner, card)
+			}
 		}
 	}
 	zoneEvt := GameEvent{
@@ -1511,8 +1555,9 @@ func (g *Game) counterStackObject(obj *StackObject) {
 		return
 	}
 	if obj.Card != nil && !obj.IsCopy {
+		card := g.revealFaceDownCard(obj.Card)
 		if owner := g.GetPlayer(obj.Card.Owner()); owner != nil {
-			owner.AddToGraveyard(obj.Card)
+			owner.AddToGraveyard(card)
 		}
 	}
 }
@@ -1919,6 +1964,11 @@ func (g *Game) FireEvent(evt GameEvent) {
 }
 
 func (g *Game) fireEvent(evt GameEvent, before *Game) {
+	if evt.Type == EvtDrawStep {
+		g.playerPayments = slices.DeleteFunc(g.playerPayments, func(p installedPlayerPayment) bool {
+			return p.drawDeadline && p.player == evt.PlayerID
+		})
+	}
 	defer g.CheckStateTriggers()
 	pendingBefore := len(g.triggers.Pending())
 	g.recordPerTurnEvent(&evt)
@@ -2013,6 +2063,13 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	var remaining []*DelayedTrigger
 	for _, dt := range g.triggers.Delayed() {
 		if dt.EventType == evt.Type || dt.alternateEventType != 0 && dt.alternateEventType == evt.Type {
+			if len(dt.leaveVisits) > 0 {
+				leaving := departureEventPermanent(&evt, observer)
+				if leaving == nil || !slices.Contains(dt.leaveVisits, capturedPermanent{leaving.ID(), leaving.incarnationID}) {
+					remaining = append(remaining, dt)
+					continue
+				}
+			}
 			if dt.damageReceived != nil && !dt.damageReceived.matches(&evt, g) {
 				remaining = append(remaining, dt)
 				continue
@@ -2086,6 +2143,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 			}
 			if dt.deathCapture != nil {
 				captures = dt.deathCapture.captureDetectedEvent(&evt, observer, dt.SourceID)
+				captures = append(captures, dt.deathCapture.captureDestinationEvent(&evt, g)...)
 				captures = append(captures, &eventPlayerCapture{binding: dt.deathCapture.controller, player: evt.PlayerID})
 			}
 			g.triggers.AddPending(&pendingTrigger{
@@ -2911,6 +2969,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		Zone:           ZoneHand,
 		Mana:           mc,
 		ChannelGeneric: g.effects.Rules.IsChannelActive(playerID),
+		PayingManaCost: true,
 		Costs:          totalCosts,
 		Targets:        targets,
 		XValue:         xValue,
@@ -3113,21 +3172,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 				continue
 			}
 		}
-		// Check mana (ignore X costs for now - those are always "castable" if base cost met)
-		mc := card.ManaCost()
-		checkMC := mc
-		if mc.HasX {
-			// For X spells, check if we can pay the non-X portion
-			checkMC = ManaCost{
-				Generic: mc.Generic,
-				White:   mc.White,
-				Blue:    mc.Blue,
-				Black:   mc.Black,
-				Red:     mc.Red,
-				Green:   mc.Green,
-			}
-		}
-		if !g.CanAfford(playerID, checkMC, SpellContextForCard(card)) {
+		if !g.CanPaySpellManaCost(playerID, card, 0) {
 			continue
 		}
 		// Spells with targets (e.g. auras) can't be cast if no legal targets exist
@@ -3360,13 +3405,16 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	saa, isSAA := inner.(*SimpleActivatedAbility)
 	if isSAA && saa.activationManaX != nil {
-		x, valid := saa.activationManaX.value(g, permanentID)
+		x, valid := saa.activationManaX.value(g, permanentID, targets...)
 		if !valid {
 			return fmt.Errorf("activation X requires a present source")
 		}
 		previousX := g.resolution.X()
 		g.resolution.SetX(x)
 		defer g.resolution.SetX(previousX)
+	}
+	if isSAA && saa.activationMinimumXOptions > 0 && g.resolution.X() < saa.activationMinimumX {
+		return fmt.Errorf("activation X must be at least %d", saa.activationMinimumX)
 	}
 	if perm.ControllerID() != playerID {
 		if !isSAA || !saa.IsAnyPlayerAbility() {
@@ -3472,7 +3520,9 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	hint := AutoTapHint{ActivationSource: perm.ID(), ActivationTapsSource: hasTapCost}
 	preparedCosts := g.prepareActionCosts(aa.Costs(), targets, g.resolution.X())
+	definition, captureReceipt := aa.(*ActionDefinition)
 	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
+		CaptureManaX:             captureReceipt && definition.activationManaReceiptXOnly,
 		Controller:               playerID,
 		SourceID:                 perm.ID(),
 		Costs:                    preparedCosts,
@@ -3518,6 +3568,17 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.targetExileCards = exileTargets
 	obj.targetAnteCards = anteTargets
 	obj.DamageDistribution = damageDistribution
+	if definition, ok := aa.(*ActionDefinition); ok && definition.activationManaReceipt != nil {
+		if capturedNumbers == nil {
+			capturedNumbers = make(map[*NumberBinding]int)
+		}
+		for color, binding := range definition.activationManaReceipt.amounts {
+			capturedNumbers[binding] = payment.paidMana[color]
+			if definition.activationManaReceiptXOnly {
+				capturedNumbers[binding] = payment.paidXMana[color]
+			}
+		}
+	}
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)
 	obj.revealedHandCards = slices.Clone(payment.revealedHandCards)

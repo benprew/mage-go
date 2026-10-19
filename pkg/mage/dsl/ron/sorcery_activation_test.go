@@ -85,7 +85,7 @@ func TestRONSorceryActivationRepositoryPrerequisites(t *testing.T) {
 		x              int
 	}{
 		{"DRK", "Gaea's Touch", "", 0},
-		{"LEB", "Illusionary Mask", "unsupported optional payment cost (ChooseACardInHand)", 3},
+		{"LEB", "Illusionary Mask", "", 3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			node := hostUntapRecord(t, tc.set, tc.name)

@@ -425,7 +425,12 @@ func (g *Game) CompleteBlockAssignments(defender uuid.UUID, proposed []BlockAssi
 
 func (g *Game) commitBlockAssignments(defender uuid.UUID, proposed []BlockAssignment) {
 	before := g.blockerPairsBeforeDeclaration()
-	assignments := g.CompleteBlockAssignments(defender, proposed)
+	var assignments []BlockAssignment
+	if g.turns.randomBlockingPiles {
+		assignments = g.randomBlockingAssignments(defender)
+	} else {
+		assignments = g.CompleteBlockAssignments(defender, proposed)
+	}
 	for _, assignment := range assignments {
 		blocker := g.FindPermanent(assignment.BlockerID)
 		g.combat.AddBlockerIncarnation(blocker.ID(), blocker.incarnationID, assignment.AttackerID)

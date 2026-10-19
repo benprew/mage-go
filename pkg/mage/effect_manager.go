@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 
 	"github.com/google/uuid"
@@ -33,7 +34,15 @@ type printedAbilityContinuousEffect struct {
 	ContinuousEffect
 	declaration *StaticAbilityHolder
 	acquired    bool
+	expiry      Duration
 	incarnation uuid.UUID
+}
+
+func (e *printedAbilityContinuousEffect) GetDuration() Duration {
+	if e.expiry != 0 {
+		return e.expiry
+	}
+	return e.ContinuousEffect.GetDuration()
 }
 
 func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
@@ -96,10 +105,16 @@ func (e *printedAbilityContinuousEffect) cloneEffect() ContinuousEffect {
 // effectSource provides SourceID/SetSourceID to all continuous effects.
 type effectSource struct {
 	sourceID uuid.UUID
+	identity uuid.UUID
 }
 
-func (s *effectSource) SourceID() uuid.UUID      { return s.sourceID }
-func (s *effectSource) SetSourceID(id uuid.UUID) { s.sourceID = id }
+func (s *effectSource) SourceID() uuid.UUID { return s.sourceID }
+func (s *effectSource) SetSourceID(id uuid.UUID) {
+	s.sourceID = id
+	if s.identity == uuid.Nil {
+		s.identity = uuid.New()
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Compositional continuous effect primitives
@@ -650,6 +665,10 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
+	em.applyWithRetainedControllers(g, nil)
+}
+
+func (em *EffectManager) applyWithRetainedControllers(g *Game, retained map[uuid.UUID]uuid.UUID) {
 	g.refreshResolvingCopyText()
 	g.resetPrintedLandwalkTextLayers()
 	g.resetPrintedProtectionTextLayers()
@@ -697,7 +716,7 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 			p.computedController = p.baseController
 		}
-		if p.FaceDown {
+		if p.FaceDown && !isFaceDownCard(p.Card) {
 			p = g.MutablePermanent(p.ID())
 			if p != nil {
 				p.resetComputedPT()
@@ -804,7 +823,7 @@ func (em *EffectManager) Apply(g *Game) {
 			em.syncAttrDeltas(g)
 		}
 	}
-	em.applyControlLayer(g)
+	em.applyControlLayer(g, retained)
 
 	// Apply the remaining layers in order. Layers 1 and 2 were applied above.
 	for _, layer := range []Layer{LayerCopy, LayerControl, LayerText, LayerType, LayerColor, LayerAbility, LayerPT} {
@@ -881,6 +900,42 @@ func (em *EffectManager) Apply(g *Game) {
 	em.syncAttrDeltas(g)
 
 	if controlStateMayChange {
+		var blocked map[uuid.UUID]uuid.UUID
+		for _, subject := range g.zones.battlefield {
+			if subject.PhasedOut {
+				continue
+			}
+			prior := controllersAtCycleStart[subject.ID()]
+			if subject.ControllerID() == prior {
+				continue
+			}
+			// An ended control effect must not keep a permanent under its control.
+			if subject.controlEffectID != uuid.Nil && !slices.Contains(subject.controlLayerEffects, subject.controlEffectID) {
+				continue
+			}
+			subject = g.MutablePermanent(subject.ID())
+			proposed := subject.ControllerID()
+			subject.computedController = prior
+			prohibited := g.retainedProtectionApplies(subject, true)
+			subject.computedController = proposed
+			if prohibited {
+				if blocked == nil {
+					blocked = make(map[uuid.UUID]uuid.UUID)
+				}
+				blocked[subject.ID()] = prior
+			}
+		}
+		if len(blocked) > 0 {
+			maps.Copy(blocked, retained)
+			for id, controller := range controllersAtCycleStart {
+				if p := g.MutablePermanent(id); p != nil {
+					p.computedController = controller
+				}
+			}
+			// Later layers must use the controllers that the rules permit.
+			em.applyWithRetainedControllers(g, blocked)
+			return
+		}
 		expired := false
 		for _, effect := range em.effects {
 			if control, ok := effect.(*controlContinuousEffect); ok {
@@ -932,6 +987,16 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 
 	for _, p := range g.zones.battlefield {
+		if _, blocked := retained[p.ID()]; !blocked && !p.PhasedOut {
+			winner := uuid.Nil
+			if len(p.controlLayerEffects) > 0 {
+				winner = p.controlLayerEffects[len(p.controlLayerEffects)-1]
+			}
+			if p.controlEffectID != winner {
+				p = g.MutablePermanent(p.ID())
+				p.controlEffectID = winner
+			}
+		}
 		g.syncAbilityContext(p)
 	}
 	g.syncManaSpendingPermissions()
@@ -960,10 +1025,16 @@ func (em *EffectManager) syncAttrDeltas(g *Game) {
 	}
 }
 
-func (em *EffectManager) applyControlLayer(g *Game) {
+func (em *EffectManager) applyControlLayer(g *Game, retained map[uuid.UUID]uuid.UUID) {
 	// Returning before touching permanents preserves their copy-on-write sharing
 	// in cloned search states, which keeps minimax clone allocations bounded.
 	if !em.hasControlLayerEffects() {
+		for _, p := range g.zones.battlefield {
+			if !p.PhasedOut && len(p.controlLayerEffects) > 0 {
+				p = g.MutablePermanent(p.ID())
+				p.controlLayerEffects = nil
+			}
+		}
 		g.layer2Controllers = nil
 		return
 	}
@@ -972,6 +1043,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 	for _, permanent := range g.zones.battlefield {
 		controllers[permanent.ID()] = permanent.baseController
 	}
+	maps.Copy(controllers, retained)
 
 	for range len(g.zones.battlefield) + 1 {
 		g.layer2Controllers = controllers
@@ -979,6 +1051,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 			permanent = g.MutablePermanent(permanent.ID())
 			if permanent != nil {
 				permanent.computedController = permanent.baseController
+				permanent.controlLayerEffects = nil
 			}
 		}
 		for _, effect := range em.effects {
@@ -986,6 +1059,11 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 				continue
 			}
 			_ = effect.ApplyContinuous(&EffectContext{Game: g})
+		}
+		for id, controller := range retained {
+			if p := g.MutablePermanent(id); p != nil {
+				p.computedController = controller
+			}
 		}
 		next := make(map[uuid.UUID]uuid.UUID, len(g.zones.battlefield))
 		stable := true
@@ -1006,6 +1084,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 		permanent = g.MutablePermanent(permanent.ID())
 		if permanent != nil {
 			permanent.computedController = permanent.baseController
+			permanent.controlLayerEffects = nil
 		}
 	}
 	for _, effect := range em.effects {
@@ -1015,6 +1094,11 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 		_ = effect.ApplyContinuous(&EffectContext{Game: g})
 	}
 	g.layer2Controllers = nil
+	for id, controller := range retained {
+		if p := g.MutablePermanent(id); p != nil {
+			p.computedController = controller
+		}
+	}
 }
 
 func (em *EffectManager) hasControlLayerEffects() bool {
@@ -1129,7 +1213,7 @@ func (em *EffectManager) prepareReplacements(action Action, g *Game, local ...Re
 		}
 		actions, gains := em.prepareDamageBatchReplacementsWithLocal([]Action{action}, g, local...)
 		if len(actions) > 1 {
-			return &expandedDamageAction{actions: actions, originalCount: 1}, gains
+			return &expandedDamageAction{actions: actions}, gains
 		}
 		return actions[0], gains
 	}
@@ -1137,6 +1221,7 @@ func (em *EffectManager) prepareReplacements(action Action, g *Game, local ...Re
 }
 
 func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, choose func([]ReplacementEffect, Action, *Game) int, local ...ReplacementEffect) (Action, []preventionLifeGain) {
+	local = append(local, g.deathReturnHandCandidates(action)...)
 	var outcomes []preventionLifeGain
 	applied := make(map[ReplacementEffect]bool)
 	for action != nil {
@@ -1187,11 +1272,8 @@ func (em *EffectManager) replacementCandidatesMatching(action Action, g *Game, a
 	seen := make(map[ReplacementEffect]bool)
 	for _, list := range [3][]ReplacementEffect{em.replacements, em.cycleReplacements, local} {
 		for _, r := range list {
-			if damageReplacementBlocked(action, g) {
-				additional, ok := r.(interface{ appliesToUnpreventableDamage() bool })
-				if !ok || !additional.appliesToUnpreventableDamage() {
-					continue
-				}
+			if damageReplacementProhibited(action, g, r) {
+				continue
 			}
 			if !applied[r] && !seen[r] && r.IsActive(g) && matches(r) {
 				candidates = append(candidates, r)

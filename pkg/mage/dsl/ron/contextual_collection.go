@@ -7,10 +7,27 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "InThePileChosenForPermanent":
+		return compileSelectedPileRef(n, ctx)
+	case "IsNamed":
+		plan, err := compileStaticPermanentFilter(n)
+		if err != nil {
+			return nil, err
+		}
+		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(plan.filter) }, nil
+	case "ThePermanentsList":
+		return compilePermanentListRef(n, ctx)
+	case "CouldntAttackThisTurn":
+		if n.Kind != Symbol || !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "attack eligibility history requires a symbol in an ordinary resolving collection")
+		}
+		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(mage.CouldntAttackThisTurn) }, nil
 	case "PutOntoBattlefieldByPermanent":
 		return compileEntryHistory(n, ctx)
 	case "PermanentPutACounterOfTypeOnIt", "PermanentHasNotRemovedACounterOfTypeFromIt":
 		return compileCounterHistory(n, ctx)
+	case "TheTokensCreatedThisWay":
+		return compileResolutionTokensRef(n, ctx)
 	case "TheCreatedTokens":
 		if n.Kind != Symbol || ctx.createdTokenLink == nil || !ctx.permanent || !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
 			return nil, problem(n, "created tokens require a linked permanent-source resolving collection")
@@ -75,14 +92,17 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
-		if n.Args[0].Name != "NotControlledSinceBeginningOfTurn" {
-			return nil, unsupported(n.Args[0], "control history exclusion")
+		legacy := n.Args[0].Kind == Symbol && n.Args[0].Name == "NotControlledSinceBeginningOfTurn"
+		if !legacy && (!ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody) {
+			return nil, problem(n, "collection exclusion requires an ordinary resolving body")
 		}
-		filter, err := compileCurrentTurnControlFilter(n.Args[0])
+		excluded, err := compileContextualCollection(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
-		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(mage.Not(filter)) }, nil
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.WithoutPermanents(mage.MatchingPermanents(mage.AnyPermanent), excluded(bindings))
+		}, nil
 	case "ControlledByPlayer":
 		if err := arity(n, 1); err != nil {
 			return nil, err
@@ -145,16 +165,7 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 			return mage.TappedForAbilitiesThisTurn(ref.build(bindings))
 		}, nil
 	case "WasBlockedByDefenderThisTurn":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		ref, err := compilePermanentRef(n.Args[0], ctx)
-		if err != nil {
-			return nil, err
-		}
-		return func(bindings instanceBindings) mage.PermanentSet {
-			return mage.BlockedByThisTurn(ref.build(bindings))
-		}, nil
+		return compileBlockedHistoryCollection(n, ctx)
 
 	case "SinglePermanent":
 		if err := arity(n, 1); err != nil {
@@ -197,6 +208,9 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		}, nil
 
 	case "And", "Or":
+		if isDeathCombatCollection(n) {
+			return compileDeathCombatCollection(n, ctx)
+		}
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}

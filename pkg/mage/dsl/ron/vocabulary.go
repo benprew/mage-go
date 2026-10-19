@@ -7,8 +7,10 @@ import (
 
 // Actions keeps target declarations with their action list.
 type Actions struct {
-	effects []mage.Effect
-	targets []mage.Target
+	targetBindings []mage.TargetBinding
+	options        []mage.ActionOption
+	effects        []mage.Effect
+	targets        []mage.Target
 }
 
 // ActionList keeps actions in resolution order.
@@ -42,7 +44,7 @@ func actionOptions(actions Actions) []mage.ActionOption {
 	for _, target := range actions.targets {
 		opts = append(opts, mage.WithTarget(target))
 	}
-	return opts
+	return append(opts, actions.options...)
 }
 
 // Integer supplies a fixed value to the engine.
@@ -53,7 +55,7 @@ func PayMana(cost core.ManaCost) mage.Cost { return &mage.ManaCostPayment{MC: co
 
 // IsCardtype tests the current type of a permanent.
 func IsCardtype(kind core.CardType) mage.PermanentFilter {
-	return mage.NewPermanentFilter(kind.String(), func(p *mage.Permanent, _ *mage.Game) bool { return p.HasType(kind) })
+	return mage.HasCardTypeFilter(kind)
 }
 
 // IsCreatureType tests a creature subtype.

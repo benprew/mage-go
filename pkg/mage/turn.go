@@ -13,7 +13,9 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 	if g.drawn {
 		return true
 	}
-	g.BeginActiveTurn()
+	if !g.TryBeginTurn() {
+		return false
+	}
 	g.turns.BuildNextTurn()
 	for {
 		step, ok := g.turns.PopNextStep()
@@ -104,6 +106,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		addEngineTiming(&engineTimingApplyEffectsNs, time.Since(phaseStart))
 	}
 
+	g.applyPendingTurnUntaps()
 	g.applyPendingStepLifeGains()
 
 	switch step {

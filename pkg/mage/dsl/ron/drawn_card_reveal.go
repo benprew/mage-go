@@ -22,6 +22,9 @@ func compileDrawnCardProducer(n Node, player playerReferencePlan, remaining []No
 	if n.Name == "RevealTheCardDrawnThisWay" && drawn == nil {
 		return nil, problem(n, "reveal requires a bound drawn card")
 	}
+	if n.Name == "RevealTheCardDrawnThisWay" {
+		drawn.referenced = true
+	}
 	plan := &handRevealPlan{name: n.Name + " " + n.Position.String()}
 	if n.Name == "DrawACard" {
 		ctx.drawnCard = plan
@@ -42,7 +45,11 @@ func compileDrawnCardProducer(n Node, player playerReferencePlan, remaining []No
 		bindings.handReveals[plan] = result
 		var producer mage.Effect
 		if n.Name == "DrawACard" {
-			producer = mage.DrawFor(player.build(bindings), mage.Fixed(1), mage.DrawCardInto(result))
+			if plan.referenced {
+				producer = mage.DrawFor(player.build(bindings), mage.Fixed(1), mage.DrawCardInto(result))
+			} else {
+				producer = (mage.DrawInstruction{Subject: player.build(bindings), Amount: mage.Fixed(1)}).Effect()
+			}
 		} else {
 			producer = mage.RevealHandCardInto(mage.FromCard(bindings.handReveals[drawn]), result)
 		}
@@ -60,6 +67,7 @@ func compileDrawnCardDiscard(n Node, ctx scope) ([]effectFactory, error) {
 		return nil, problem(n, "discard requires a bound drawn card symbol")
 	}
 	plan := ctx.drawnCard
+	plan.referenced = true
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
 		return mage.DiscardCardFromHandFor(ctx.player.build(bindings), mage.FromCard(bindings.handReveals[plan]))
 	}}, nil

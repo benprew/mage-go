@@ -86,15 +86,12 @@ func TestPermanentPaymentIdentityDelayAndClone(t *testing.T) {
 	g.PhaseOut(phased.ID())
 	result := BindPermanentSet("unpaid")
 	ctx := &EffectContext{Game: g, Controller: a.PlayerID()}
-	effect := OfferCostForEachPermanent(MatchingPermanents(IsLand), EachPlayer, Costs(LifePayCost(1)), result)
+	effect := (PermanentLifePaymentInstruction{Subjects: MatchingPermanents(IsLand), Amount: 1, Unpaid: result, Body: AtNext(EachEndStep, DestroyEach(FromPermanentSet(result)))}).Effect()
 	if err := effect.Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if len(FromPermanentSet(result).resolvePermanents(ctx)) != 1 {
 		t.Fatal("phased subject offered")
-	}
-	if err := AtNext(EachEndStep, DestroyEach(FromPermanentSet(result))).Apply(ctx); err != nil {
-		t.Fatal(err)
 	}
 	clone := g.Clone()
 	g.PhaseOut(subject.ID())
@@ -182,7 +179,7 @@ func TestPermanentPaymentSnapshotRecheckAndSimultaneous(t *testing.T) {
 		}
 		return false
 	}))), a.PlayerID())
-	effect := Sequence(OfferCostForEachPermanent(PermanentsControlledBy(You, IsLand), EachPlayer, Costs(LifePayCost(1)), result), DestroyEach(FromPermanentSet(result)))
+	effect := (PermanentLifePaymentInstruction{Subjects: PermanentsControlledBy(You, IsLand), Amount: 1, Unpaid: result, Body: DestroyEach(FromPermanentSet(result))}).Effect()
 	if err := effect.Apply(ctx); err != nil {
 		t.Fatal(err)
 	}

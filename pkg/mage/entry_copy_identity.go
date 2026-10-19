@@ -74,8 +74,21 @@ func isEntryCopyPermanent(card Card) bool {
 }
 
 func cardForBattlefieldDeparture(card Card) Card {
+	if original := faceDownOriginal(card); original != nil {
+		return departureCardIdentity(card, cardForBattlefieldDeparture(original))
+	}
 	if base, ok := card.(*BaseCard); ok && base != nil && base.departureCard != nil {
-		return base.departureCard
+		return departureCardIdentity(card, base.departureCard)
 	}
 	return card
+}
+
+func departureCardIdentity(subject, physical Card) Card {
+	if subject.ID() == physical.ID() && subject.Owner() == physical.Owner() {
+		return physical
+	}
+	result := physical.Copy()
+	result.SetID(subject.ID())
+	result.SetOwner(subject.Owner())
+	return result
 }

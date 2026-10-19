@@ -35,6 +35,15 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 	ctx.player = playerReferencePlan{action: plan}
 	actions := make([]effectFactory, 0, len(parts))
 	for i, part := range parts {
+		if part.Name == "PlayerMayCost" {
+			body, err := compileActionSequence(parts[i:], ctx)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			actions = append(actions, body...)
+			break
+		}
+
 		if lostManaProducer(part) && hasLostManaRead(parts[i+1:]) {
 			build, err := compileLostManaProducer(part, parts[i+1:], ctx)
 			if err != nil {
@@ -57,7 +66,7 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 				return nil, nil, nil, unsupported(part, "scoped counter removal")
 			}
 		case "CreateFutureTrigger", "AttachPermanentToAPermanent", "PlayerMayAction", "GainControlOfPermanent", "ExchangeLifeTotalWithPlayer":
-		case "AddMana", "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
+		case "PayLifeOrPutCardsDrawnThisTurnOnTopOfLibrary", "AddMana", "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
 		default:
 			return nil, nil, nil, unsupported(part, "scoped player action")
 		}
@@ -135,11 +144,10 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 			bindings.actionPlayers = make(map[*playerActionsPlan]*mage.PlayerBinding)
 		}
 		bindings.actionPlayers[plan] = binding
-		effects := make([]mage.Effect, 0, 1+len(actions))
-		effects = append(effects, mage.SnapshotPlayer(subject, binding))
+		effects := make([]mage.Effect, 0, len(actions))
 		for _, action := range actions {
 			effects = append(effects, action(bindings))
 		}
-		return mage.Sequence(effects...)
+		return (mage.SavedPlayerInstruction{Subject: subject, Binding: binding, Body: mage.Sequence(effects...)}).Effect()
 	}, ctx.chosenName, ctx.libraryReveal, nil
 }

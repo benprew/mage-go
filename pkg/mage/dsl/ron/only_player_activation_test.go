@@ -294,11 +294,10 @@ func TestRONOnlyPlayerActivationInvalidAndBoundaries(t *testing.T) {
 			t.Fatal("permission accepted outside supported context", rule)
 		}
 	}
-	for _, tc := range []struct{ set, name, gap string }{{"LEA", "Personal Incarnation", "unsupported selected-source redirection event"}} {
-		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s lost independent gap: %v", tc.name, err)
-		}
+	if _, err := Compile(hostUntapRecord(t, "LEA", "Personal Incarnation")); err != nil {
+		t.Fatal(err)
 	}
+
 	src := `Card(Name:"Valid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[ActivatedWithModifiers(PayMana([]),ActionList([GainLife(Integer(1))]),` + valid + `)])`
 	files := fstest.MapFS{"a.ron": {Data: []byte(src)}}
 	r := mage.NewRegistry()

@@ -40,6 +40,11 @@ func TestRONCollectionAttackTurnFestival(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			for range 2 {
+				if proof, known := g.InspectSpellDestruction(g.StackPeek(), nil); proof || !known {
+					t.Fatal("complete Festival tree is unknown or proves destruction")
+				}
+			}
 			if change == "copy" && g.CopyStackObjectDirect(g.StackPeek(), b.PlayerID(), false) == nil {
 				t.Fatal("copy failed")
 			}
@@ -114,6 +119,11 @@ func TestRONCollectionAttackTurnSirenClause(t *testing.T) {
 	a.ManaPool().Add(core.Blue, 1)
 	if err := g.CastSpellByID(a.PlayerID(), c.ID(), nil, 0); err != nil {
 		t.Fatal(err)
+	}
+	for range 2 {
+		if proof, known := g.InspectSpellDestruction(g.StackPeek(), nil); proof || !known {
+			t.Fatal("native attack clause is unknown or proves destruction")
+		}
 	}
 	g.ResolveStack()
 	p := g.PutOnBattlefield(mage.NewCreature("Late", "", 2, 3), b.PlayerID())

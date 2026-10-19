@@ -113,7 +113,7 @@ func retainPrintedActionState(p *Permanent, a *ActionDefinition) {
 }
 
 func sameActivatedTextContext(a, b *ActionDefinition) bool {
-	return a.timing == b.timing && a.stepOnly == b.stepOnly && a.stepMask == b.stepMask &&
+	return a.activationMinimumX == b.activationMinimumX && a.activationMinimumXOptions == b.activationMinimumXOptions && a.timing == b.timing && a.stepOnly == b.stepOnly && a.stepMask == b.stepMask &&
 		a.limits == b.limits && a.permission == b.permission && a.groupedTargets == b.groupedTargets &&
 		len(a.costs) == len(b.costs) && len(a.targets) == len(b.targets) && len(a.modes) == len(b.modes) &&
 		len(a.activationConds) == len(b.activationConds) && len(a.dslRestrictions) == len(b.dslRestrictions) &&

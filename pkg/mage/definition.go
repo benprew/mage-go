@@ -177,6 +177,17 @@ func describeDefinition(v any) definitionNode {
 		if e.textRevisionState && e.kind != ActionActivated {
 			n.problem = "text revision state requires an activated action"
 		}
+		if e.activationMinimumXOptions > 0 {
+			hasX := false
+			for _, cost := range e.costs {
+				if mana, ok := cost.(*ManaCostPayment); ok && mana.MC.HasX {
+					hasX = true
+				}
+			}
+			if e.kind != ActionActivated || e.activationMinimumXOptions != 1 || e.activationMinimumX <= 0 || !hasX {
+				n.problem = "supply one positive minimum X on an activated action with an X mana cost"
+			}
+		}
 		if e.activationManaXOptions > 0 {
 			hasX := false
 			for _, cost := range e.costs {
@@ -187,7 +198,32 @@ func describeDefinition(v any) definitionNode {
 			if e.kind != ActionActivated || e.activationManaXOptions != 1 || !hasX {
 				n.problem = "supply one defined mana X on an activated action with an X mana cost"
 			}
-			n.children = append(n.children, definitionEdge{"activationManaX", e.activationManaX})
+			if e.activationManaX != nil && e.activationManaX.fromSpell {
+				if len(e.targets) != 1 || e.activationManaX.spell == nil || e.targets[0] != e.activationManaX.spell.targetDeclaration || len(e.modes) != 0 || e.groupedTargets {
+					n.problem = "defined spell mana X requires one sole spell target"
+				}
+				if e.activationManaX.spell != nil {
+					if spec, ok := e.activationManaX.spell.spec.(*typedSpellTarget); !ok || spec.manaValueEqualX {
+						n.problem = "defined spell mana X requires an X-independent spell target"
+					}
+				}
+			}
+		}
+		if e.activationManaReceiptOptions > 0 {
+			if e.activationManaReceiptXOnly {
+				valid := len(e.costs) == 1
+				if valid {
+					payment, ok := e.costs[0].(*ManaCostPayment)
+					valid = ok && payment.MC.HasX && payment.MC.XCount == 1 && payment.MC.CMC() == 0
+				}
+				if !valid {
+					n.problem = "X receipt requires one pure X mana cost"
+				}
+			}
+			if e.kind != ActionActivated || e.activationManaReceipt == nil || e.activationManaReceiptOptions != 1 || len(e.modes) != 0 || canProduceMana(e.effects, e.targets) {
+				n.problem = "supply one mana receipt on a nonmodal nonmana activated ability"
+			}
+			n.children = append(n.children, definitionEdge{"activationManaReceipt", activationManaDeclaration{e.activationManaReceipt}})
 		}
 		if e.activationHistoryOptions > 0 {
 			if e.kind != ActionActivated || e.activationHistory == nil || e.activationHistoryOptions != 1 {
@@ -212,6 +248,9 @@ func describeDefinition(v any) definitionNode {
 			}
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
+		if e.activationManaXOptions > 0 {
+			n.children = append(n.children, definitionEdge{"activationManaX", e.activationManaX})
+		}
 		for i, cost := range e.costs {
 			if _, ok := cost.(*permanentManaCostPayment); ok {
 				if e.kind != ActionActivated {
@@ -267,7 +306,7 @@ func describeDefinition(v any) definitionNode {
 			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if discard, ok := cost.(*discardCost); ok && (discard.captureCard || discard.captureCards || discard.differentNames) {
+			if discard, ok := cost.(*discardCost); ok && (discard.captureCard || discard.captureCards || discard.differentNames || len(discard.facts) > 0) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if _, ok := cost.(*xLifePayCost); ok {
@@ -416,13 +455,20 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		entrySacrifices := 0
 		entryLifePayments := 0
+		entryGraveyardPayments := 0
 		for _, ability := range card.Abilities() {
+			if _, ok := UnwrapAbility(ability).(*entryGraveyardPaymentAbility); ok {
+				entryGraveyardPayments++
+			}
 			if _, ok := UnwrapAbility(ability).(*entryLifeAbility); ok {
 				entryLifePayments++
 			}
 			if _, ok := UnwrapAbility(ability).(*entrySacrificeAbility); ok {
 				entrySacrifices++
 			}
+		}
+		if entryGraveyardPayments > 1 {
+			return fmt.Errorf("%s: entry graveyard payment requires one declaration", name)
 		}
 		if entryLifePayments > 1 {
 			return fmt.Errorf("%s: entry life requires one declaration", name)
@@ -504,6 +550,7 @@ func ValidateCardDefinition(name string, card Card) error {
 		return fmt.Errorf("%s: %w", name, err)
 	}
 	historyOwners := make(map[*ActivationHistoryBinding]bool)
+	manaReceiptOwners := make(map[*ActivationManaBinding]bool)
 	var assigned map[savedBinding]bool
 	var names map[string]any
 	var targets map[*targetDeclaration]bool
@@ -537,6 +584,12 @@ func ValidateCardDefinition(name string, card Card) error {
 			}
 			active[value] = true
 			defer delete(active, value)
+		}
+		if action, ok := value.(*ActionDefinition); ok && action.activationManaReceipt != nil {
+			if manaReceiptOwners[action.activationManaReceipt] {
+				fail("activation mana receipt must belong to one ability")
+			}
+			manaReceiptOwners[action.activationManaReceipt] = true
 		}
 		n := describeDefinition(value)
 		if action, ok := value.(*ActionDefinition); ok && action.activationHistory != nil {
@@ -594,6 +647,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if n.problem != "" {
 			fail(n.problem)
 		}
+		if choice, ok := value.(*optionalHandChoice); ok && !nilDefinition(choice.result) && assigned[choice.result] {
+			fail("hand choice result requires a separate local binding")
+		}
 		if payment, ok := value.(*eligiblePlayerPayment); ok && payment.scopedPayer && !nilDefinition(payment.payer) && assigned[payment.payer] {
 			fail("payer binding requires a separate local declaration")
 		}
@@ -637,6 +693,13 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.captureTotalPower && !nilDefinition(sacrifice.paidTotalPower) && assigned[sacrifice.paidTotalPower] {
 			fail("duplicate paid total power binding")
+		}
+		if discard, ok := value.(*discardCost); ok {
+			for _, fact := range discard.facts {
+				if !nilDefinition(fact.Result) && assigned[fact.Result] {
+					fail("duplicate paid card fact binding")
+				}
+			}
 		}
 		if discard, ok := value.(*discardCost); ok && discard.captureCard && !nilDefinition(discard.paidCard) && assigned[discard.paidCard] {
 			fail("duplicate paid card binding")
@@ -697,6 +760,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			_, stateCapture := edge.value.(permanentSetState)
 			_, capture := edge.value.(activationCapture)
 			_, history := edge.value.(activationHistoryDeclaration)
+			_, manaReceipt := edge.value.(activationManaDeclaration)
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
 			_, paidPlural := edge.value.(*pluralSacrificeCost)
 			_, paidSource := edge.value.(*sourceCardCost)
@@ -712,7 +776,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
 			mill, paidMill := edge.value.(*millCost)
-			if !definitionSequential(value) && (!eventTrigger || (edge.name != "copy-ability" && edge.name != "source-card" && edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !paidCost && !paidPlural && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
+			if !definitionSequential(value) && (!eventTrigger || (edge.name != "copy-ability" && edge.name != "source-card" && edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !manaReceipt && !paidCost && !paidPlural && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
 				assigned = before
 			}
 		}

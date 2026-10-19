@@ -596,6 +596,8 @@ func choiceTitle(req *interactive.ChoiceRequest) (title, hint string) {
 		return fmt.Sprintf("Choose %d card(s) — %s", req.Amount, req.Reason), "(space=toggle, enter=confirm)"
 	case interactive.ChoiceManaColor:
 		return fmt.Sprintf("Choose mana color — %s", req.Reason), ""
+	case interactive.ChoiceCardFromOutsideGame:
+		return fmt.Sprintf("Choose a card from outside the game — %s", req.Reason), ""
 	case interactive.ChoiceCardFromLibrary:
 		return fmt.Sprintf("Search library — %s", req.Reason), ""
 	case interactive.ChoiceMay:

@@ -41,7 +41,7 @@ func (g *Game) captureHandDamageSource(viewer, visit uuid.UUID, rules bool) Dama
 		}
 		for _, card := range player.Hand() {
 			if visitor.handVisit(card.ID()) == visit {
-				return damageSourceFromHandCard(card, visit, rules || viewer == player.PlayerID() || g.IsHandRevealed(player.PlayerID()) || g.stack.handVisitRevealed(card.ID(), visit))
+				return damageSourceFromHandCard(card, visit, rules || viewer == player.PlayerID() || g.IsHandCardRevealed(player.PlayerID(), card.ID()) || g.stack.handVisitRevealed(card.ID(), visit))
 			}
 		}
 	}
@@ -64,7 +64,7 @@ func (p *BasePlayer) saveHandDeparture(card Card) {
 	}
 	p.departedHandSources[visit] = handDeparture{
 		source: damageSourceFromHandCard(card, visit, true),
-		public: p.handPublic || p.handStack.handVisitRevealed(card.ID(), visit),
+		public: p.handPublic || p.handRevealedVisits[card.ID()] == visit || p.handStack.handVisitRevealed(card.ID(), visit),
 	}
 }
 
@@ -180,10 +180,30 @@ func ChooseDamageSourceFromStackHandReferences(player PlayerRef, filter DamageSo
 
 func (p *BasePlayer) setHandPublic(public bool) { p.handPublic = public }
 
+func (p *BasePlayer) setHandRevealedVisits(visits map[uuid.UUID]uuid.UUID) {
+	p.handRevealedVisits = visits
+}
+
+func (p *BasePlayer) revealedHandVisits() map[uuid.UUID]uuid.UUID {
+	return p.handRevealedVisits
+}
+
 func (g *Game) syncHandVisibility() {
 	for _, player := range g.players {
 		if state, ok := player.(interface{ setHandPublic(bool) }); ok {
 			state.setHandPublic(g.IsHandRevealed(player.PlayerID()))
+		}
+		if state, ok := player.(interface{ setHandRevealedVisits(map[uuid.UUID]uuid.UUID) }); ok {
+			var visits map[uuid.UUID]uuid.UUID
+			for _, effect := range g.effects.effects {
+				if rule, ok := effect.(*handVisitPlayLock); ok && rule.player == player.PlayerID() && rule.IsActive(g) {
+					if visits == nil {
+						visits = make(map[uuid.UUID]uuid.UUID)
+					}
+					visits[rule.card] = rule.visit
+				}
+			}
+			state.setHandRevealedVisits(visits)
 		}
 	}
 }

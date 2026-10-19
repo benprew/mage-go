@@ -24,18 +24,18 @@ func compileTemporaryLayerDuration(n Node, ctx scope, subject permanentReference
 	}, nil
 }
 
-func compileCounterDurationLandType(n Node, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
+func compileBasicLandTypeModification(n Node, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
 	name := n.Args[0]
 	if name.Kind != Symbol {
-		return nil, unsupported(name, "counter-bound basic land type")
+		return nil, unsupported(name, "basic land type modification")
 	}
 	switch name.Name {
 	case "Plains", "Island", "Swamp", "Mountain", "Forest":
 	default:
-		return nil, unsupported(name, "counter-bound basic land type")
+		return nil, unsupported(name, "basic land type modification")
 	}
 	return func(bindings instanceBindings) mage.ContinuousModification {
 		return mage.SetSubtypeFamily(subject.build(bindings), mage.SubtypeLand, name.Name)

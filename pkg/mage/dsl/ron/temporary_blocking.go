@@ -40,6 +40,9 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}
+	if containsDeclarationName(n, "DamageDealtToItCantBePreventedOrRedirected") && (!ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody) {
+		return nil, problem(n, "damage prohibition requires an ordinary resolving body")
+	}
 	subject, err := compilePermanentRef(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
@@ -111,12 +114,15 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 			return mage.CantAttackDuringNextTurn(subject.build(bindings), player.build(bindings))
 		}, nil
 	}
+	if len(operations) == 1 && operations[0].Name == "CantBeBlockedExceptByDefenders" {
+		return compileRetainedBlockerEligibility(n, operations[0], subject, ctx)
+	}
 	if subject.kind != permanentTarget && subject.kind != permanentDamageTarget && subject.kind != permanentSource {
 		return nil, unsupported(n.Args[0], "temporary combat rule reference")
 	}
 	for _, operation := range operations {
 		switch operation.Name {
-		case "CantBeRegenerated", "CanBlockAnyNumberOfCreatures", "MustBlockEachAttacker":
+		case "CantBeRegenerated", "CanBlockAnyNumberOfCreatures", "MustBlockEachAttacker", "DamageDealtToItCantBePreventedOrRedirected":
 			return compileTemporaryRuleList(n, subject, operations)
 		}
 	}
@@ -178,6 +184,8 @@ func compileTemporaryRuleList(n Node, subject permanentReferencePlan, operations
 			return nil, unsupported(operation, "temporary rule operation")
 		}
 		switch operation.Name {
+		case "DamageDealtToItCantBePreventedOrRedirected":
+			modifications[i] = mage.ProhibitDamagePreventionAndRedirection
 		case "CantBeRegenerated":
 			modifications[i] = func(ref mage.PermanentRef) mage.ContinuousModification {
 				return mage.GrantKeywordModification(ref, core.CantRegenerate)

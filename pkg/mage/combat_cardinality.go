@@ -85,12 +85,7 @@ func (g *Game) cappedRequiredAttackers(player uuid.UUID, proposed []uuid.UUID, l
 			return
 		}
 		seen[p.ID()] = true
-		weight := blockingAttributeCount(p, core.AttrMustAttack)
-		for _, effect := range g.effects.effects {
-			if rule, ok := effect.(*turnAttackRule); ok && rule.require && rule.IsActive(g) && rule.matches(g, p) {
-				weight++
-			}
-		}
+		weight := g.attackRequirementWeight(p)
 		if len(g.effects.AttackCosts(p.ID())) > 0 && !preferred {
 			return
 		}

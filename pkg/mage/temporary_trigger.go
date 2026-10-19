@@ -1,7 +1,9 @@
 package mage
 
 // HasRampage reads current abilities, including temporary grants.
-var HasRampage = NewPermanentFilter("has rampage", func(p *Permanent, _ *Game) bool {
+var HasRampage = PermanentFilter{label: "has rampage", query: &permanentCollectionFilterNode{operation: collectionFilterRampage}, fn: permanentHasRampage}
+
+func permanentHasRampage(p *Permanent, _ *Game) bool {
 	for _, ability := range p.RuntimeAbilities {
 		trigger, ok := UnwrapAbility(ability).(*GenericTriggered)
 		if !ok {
@@ -14,4 +16,4 @@ var HasRampage = NewPermanentFilter("has rampage", func(p *Permanent, _ *Game) b
 		}
 	}
 	return false
-})
+}

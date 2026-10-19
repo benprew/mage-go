@@ -101,32 +101,33 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 		ManaPool:       snapshotManaPool(p.ManaPool()),
 	}
 
-	if showHand || g.IsHandRevealed(p.PlayerID()) {
-		for _, c := range p.Hand() {
-			power, toughness := g.CardPowerToughness(c)
-			cs := CardState{
-				ID:        c.ID(),
-				Name:      c.Name(),
-				ManaCost:  c.ManaCost().String(),
-				IsLand:    c.HasType(core.TypeLand),
-				Power:     power,
-				Toughness: toughness,
-				RulesText: buildRulesText(c),
-			}
-			for _, t := range c.Types() {
-				if cs.Types != "" {
-					cs.Types += " "
-				}
-				cs.Types += t.String()
-			}
-			for _, st := range c.SubTypes() {
-				if cs.SubTypes != "" {
-					cs.SubTypes += " "
-				}
-				cs.SubTypes += st
-			}
-			ps.Hand = append(ps.Hand, cs)
+	for _, c := range p.Hand() {
+		if !showHand && !g.IsHandCardRevealed(p.PlayerID(), c.ID()) {
+			continue
 		}
+		power, toughness := g.CardPowerToughness(c)
+		cs := CardState{
+			ID:        c.ID(),
+			Name:      c.Name(),
+			ManaCost:  c.ManaCost().String(),
+			IsLand:    c.HasType(core.TypeLand),
+			Power:     power,
+			Toughness: toughness,
+			RulesText: buildRulesText(c),
+		}
+		for _, t := range c.Types() {
+			if cs.Types != "" {
+				cs.Types += " "
+			}
+			cs.Types += t.String()
+		}
+		for _, st := range c.SubTypes() {
+			if cs.SubTypes != "" {
+				cs.SubTypes += " "
+			}
+			cs.SubTypes += st
+		}
+		ps.Hand = append(ps.Hand, cs)
 	}
 
 	for _, c := range p.Graveyard() {

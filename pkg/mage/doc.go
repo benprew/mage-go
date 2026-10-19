@@ -1,10 +1,1000 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WholeHandDiscardInstruction] retains one player or player collection.
+// Its inspector reads no hands and calls no player references. Execution uses
+// one shared discard batch, including replacements, ordering and later events.
+// Singular discards retain delayed source-controller reads. Pure spell inspection
+// validates complete native operands before legality gates and proofs. A prefix
+// with selected players blocks later destruction proofs; a supported suffix
+// preserves an earlier proof. Unknown operands remain unknown without actions.
+//
+// [PlayerDrawInstruction] retains one shared amount for a player collection.
+// Its inspector selects no players and reads no amounts. Execution uses
+// [DrawEach], individual draw replacements and active player order.
+// Pure spell inspection accepts complete native collections and fixed
+// nonnegative amounts. All children and bindings validate before proofs.
+// A positive prefix with present players blocks later destruction proofs;
+// zero amounts and empty sets permit them. Supported suffixes keep earlier
+// proofs. Unknown operands remain unknown without draws or state changes.
+//
+// [NextUntapInstruction] retains a fixed controller-untap restriction for one
+// typed permanent or a one-step restriction for a collection. Its inspector
+// reads no subjects and installs no rules. Execution uses shared visit capture,
+// current controller tracking, step counts, phasing and departure cleanup.
+// Pure spell inspection validates all native declarations before legality gates
+// and destruction proofs. A nonempty positive-count prefix blocks later proofs;
+// a zero count or empty set permits them. A supported suffix preserves a proof.
+// Opaque children and foreign bindings make the complete tree unknown.
+//
+// [GlobalCombatPreventionInstruction] retains all combat prevention until cleanup.
+// Its inspector accepts the exact native declaration without installing effects.
+// Execution uses [PreventAllCombatDamage] and the shared replacement service.
+// Pure spell inspection validates the whole tree before target legality gates.
+// A prevention prefix blocks later destruction proofs. A complete supported suffix
+// preserves an earlier proof. Unknown children remain unknown without callbacks.
+//
+// [ObjectColorInstruction] retains one fixed color on a native union target.
+// [InspectObjectColorInstruction] reads its declaration without changing state.
+// [InspectObjectTarget] selects exact stack identity or a permanent visit with
+// current native legality. Missing snapshots and opaque restrictions are unknown.
+// RON's two fixed-color branches retain this one union declaration per instance.
+// A legal color prefix blocks a later destruction proof; a complete supported
+// suffix keeps an earlier proof. Execution uses shared color and layer services.
+//
+// [TemporaryColorInstruction] retains a collection color replacement until cleanup.
+// Its inspector copies the color list without selecting members. An empty list
+// makes the members colorless. Execution uses shared layer 5, captured membership,
+// exact visits, timestamps and cleanup. Pure spell destruction inspection accepts
+// complete native contextual collections, including plural permanent targets.
+// A nonempty color prefix blocks later destruction proofs. A complete supported
+// suffix preserves an earlier proof. Unknown children and foreign bindings remain
+// unknown before target legality gates. No colors or game state change in inspection.
+//
+// [SavedPlayerInstruction] retains a player snapshot and its ordered body.
+// Its inspector reads no player or saved value. Pure spell inspection accepts
+// You or ActivePlayer before next-end-step destruction of native collections.
+// Saved collection reads must use that exact local binding. Native exclusions,
+// attack history and current-turn control history retain complete declarations.
+// Other saved scopes and target-dependent collections need separate contracts.
+// Scheduling cannot prove immediate destruction or block a later direct proof.
+// Execution uses the shared snapshot, delayed frame and destruction services.
+//
+// [TurnAttackRuleInstruction] retains a live collection attack rule until cleanup.
+// Require saves its player at resolution. Its inspector reads no operands.
+// Pure spell inspection accepts native permanent filters and You or ActivePlayer.
+// Opaque filters, saved players and player targets require other query contracts.
+// Attack rules do not prove direct destruction. A prefix blocks later proofs;
+// a complete supported suffix preserves an earlier proof. Execution uses the
+// shared live membership, combat legality, payment and cleanup services.
+//
+// [InspectContextualPermanentCollection] retains [BlockedByThisTurn] with a
+// complete native singular permanent target. Selection reads exact blocker and
+// attacker visits from shared turn history. It uses the supplied legal target
+// frame without callbacks, LKI reads or target rechecks. A present empty binding
+// selects no objects; a missing or malformed binding is unknown. Phased attackers
+// are absent. A phase cycle preserves history; a return creates a new visit.
+// Final cleanup clears history. Source and saved references need other native
+// inspection contracts.
+//
+// [CreatureDeathInstruction] retains a simultaneous destruction and its exact
+// creature-death result. [CreatureDeathReturnInstruction] retains a required
+// creature-card choice per saved visit, with owner control on entry. Their
+// inspectors do not read results, choose cards or change state. Pure spell
+// inspection validates preceding producers, exact member identities and native
+// historical blocker targets before target gates or destruction proofs. A return
+// continuation blocks later destruction proofs but preserves earlier proofs.
+// Execution uses the shared destruction, history, graveyard visit and entry rules.
+//
+// [NextCombatThisTurnInstruction.Effect] retains one end-of-combat schedule
+// before cleanup. [InspectNextCombatThisTurnInstruction] reads its body without
+// a trigger. Pure spell inspection accepts complete direct destruction bodies
+// with native singular targets or contextual collections. Every child and
+// binding must be known before target gates or proofs. Delayed bodies do not
+// prove immediate destruction or block later direct proofs. Inspection does
+// not select future members. Execution uses the shared delayed frame, history,
+// simultaneous destruction, replacement and cleanup services.
+//
+// [InspectPermanentTarget] and [InspectSpellTarget] retain native mana-value
+// restrictions against the inspected object's announced X. Permanent mana value
+// treats printed X as zero. Spell mana value includes each chosen X symbol.
+// Selection uses current costs and exact announced identities without reading
+// or changing the active resolution frame. Negative announced X is unknown.
+// [InspectPermanentTargetDeclaration] reads a singular native target declaration
+// without a resolving reference. Unknown filters and descendants still reject.
+// RON uses one typed mana-value-X plan for permanent and spell target lowering.
+// Spell Blast and Detonate support complete native inspection. Detonate's
+// controller recipient uses the same exact target and current legality checks.
+//
+// [TemporaryMixedLayerInstruction.Effect] retains singular keyword and P/T
+// changes through one until-end-of-turn operation with layer 6 and 7c parts.
+// Its inspector copies both lists without value reads. Values are saved before
+// installation. [NextEndStepInstruction.Effect] uses the shared one-shot delayed
+// frame. Its inspector retains the complete body without scheduling a trigger.
+// Pure spell inspection accepts complete native conditional destruction bodies
+// with exact permanent targets and native filters, including attack history.
+// Every child and declaration must be known before legality checks or proofs.
+// A delayed body cannot prove immediate destruction or change a later proof.
+// Mixed layers remain conservative barriers before later direct destruction.
+// Existing visit capture, LKI, phasing, cloning and cleanup services apply.
+//
+// [PermanentBranchInstruction.Effect] retains a permanent condition and both
+// resolution bodies. [InspectPermanentBranchInstruction] reads the declaration
+// without callbacks. Pure spell inspection accepts complete native layer-only
+// branches with exact native targets and native permanent filters, including
+// toughness comparisons and presence or absence of rampage. Both bodies must
+// be known. Inspection does not select a branch or predict characteristics.
+// A legal conditional prefix blocks later destruction proofs.
+// [TemporaryRampageInstruction.Effect] retains separate nonnegative rampage
+// grants until end of turn through the shared trigger and layer services.
+// [InspectTemporaryRampageInstruction] copies the amount list without grants.
+// Exact visits, resolution-time conditions, copies, clones and cleanup use
+// the existing services. Mixed layers and delayed bodies need other contracts.
+//
+// [TemporaryPTValueInstruction.Effect] retains singular P/T value adjustments
+// until end of turn. [InspectTemporaryPTValueInstruction] copies the declaration
+// without value reads or callbacks. Execution captures all amounts before one
+// shared layer 7c installation. Pure spell inspection accepts fixed values,
+// announced X, exact native target power, toughness and mana values, and native
+// subtraction and multiplication trees. It checks each value target before
+// legality gates or earlier proofs. Legal prefixes block later destruction
+// proofs; supported suffixes preserve earlier proofs. Mixed parents need
+// separate contracts. No future characteristics are predicted.
+//
+// [TemporaryKeywordInstruction.Effect] retains keyword grants until end of turn.
+// Exactly one subject form and a nonempty keyword list are required.
+// [InspectTemporaryKeywordInstruction] returns a copied declaration without
+// callbacks or layer installation. Execution shares layer 6, exact visit capture,
+// fixed collection membership and cleanup with [Until]. Pure spell inspection
+// accepts exact native targets and contextual collections. A legal nonempty
+// prefix blocks later destruction proofs; supported suffixes keep earlier proofs.
+// Mixed layers, protection and other triggered grants need separate query contracts.
+//
+// [TemporaryPTInstruction.Effect] retains fixed P/T changes until end of turn.
+// Exactly one subject form and a nonempty adjustment list are required.
+// [InspectTemporaryPTInstruction] reads copied native declarations without
+// callbacks or layer installation. Execution shares the existing layer 7c,
+// exact visit capture, fixed collection membership and cleanup services.
+// Pure spell inspection accepts exact native targets and contextual collections.
+// A legal nonempty prefix blocks later destruction proofs, even for zero
+// adjustments. Empty or illegal subjects permit later proofs. Supported suffixes
+// preserve earlier proofs. Dynamic, mixed and other duration forms need separate
+// inspection contracts. P/T changes do not prove direct destruction.
+//
+// [LibraryProcedureInstruction.Effect] retains a fixed private library look,
+// optional top ordering or an optional shuffle, with explicit player operands.
+// [InspectLibraryProcedureInstruction] reads these operands without library
+// access or choices. Pure spell inspection accepts You, ActivePlayer and exact
+// native player targets for both players. Complete trees and target identities
+// are checked before proofs. A legal procedure prefix blocks later destruction
+// proofs; an illegal operand skips it. Supported suffixes preserve earlier proofs.
+// Dynamic look counts and other procedures need separate query contracts.
+//
+// [GraveyardBattlefieldInstruction.Effect] retains a mandatory normal entry.
+// [InspectGraveyardBattlefieldInstruction] reads its card and controller without
+// moving cards or running entry replacements. Choices, result bindings and entry
+// options require separate contracts. Pure spell inspection accepts native
+// singular graveyard targets under You, with exact declaration and visit identity.
+// A legal entry prefix blocks later destruction proofs. An illegal prefix does
+// not. A supported suffix preserves earlier proofs. Queries do not use LKI,
+// run filter callbacks, make choices or change game state.
+//
+// [LibrarySearchInstruction.Effect] retains a complete single-card search.
+// [InspectLibrarySearchInstruction] reads its kind without reading a library.
+// Supported kinds move any card to hand or a basic land to the battlefield,
+// then shuffle. Execution uses existing search, choice and entry services.
+// Pure spell inspection accepts both kinds and reads no hidden card or choice.
+// A search prefix blocks later destruction proofs, even for an empty library.
+// A supported suffix preserves earlier proofs. Other search procedures remain
+// unknown. Native declarations retain no selected card or mutable frame.
+//
+// [NextMainPhaseInstruction] retains a one-shot next-main-phase body.
+// [InspectNextMainPhaseInstruction] reads that body without creating a trigger.
+// Spell destruction inspection accepts complete fixed-color mana bodies for You.
+// Amounts can use fixed values, saved X and bound spell mana values with LKI,
+// with native sums and products. Exact spell declarations must belong to the
+// inspected stack object. Unknown bodies or operands reject the complete tree
+// before target gates and earlier proofs. Inspection reads no mana value and
+// changes no frame, pool or schedule. A schedule prefix blocks later state
+// proofs; a supported suffix keeps earlier proofs. Execution uses [AtNext].
+//
+// [ManaProductionInstruction.Effect] builds native fixed-type or chosen-color mana.
+// [InspectManaProductionInstructions] retains complete native trees and operands.
+// Spell destruction inspection accepts fixed and announced-X amounts with native
+// player targets, You or ActivePlayer. It validates all operands before proofs.
+// Production alone cannot directly destroy a permanent. A legal prefix blocks
+// later state proofs. A supported suffix keeps earlier proofs. Queries do not
+// add mana, run replacements or read amounts. Saved casting-sacrifice values
+// use the producer contract below. Native one-color choices and creature/artifact
+// spell restrictions retain their declarations without choices or callbacks.
+// Fixed restricted batches keep one original event. Other saved amounts,
+// restrictions and delayed production need separate query contracts.
+//
+// [CounterInstruction.Effect] builds a native spell counter action.
+// [InspectCounterInstructions] retains complete native trees without callbacks.
+// [InspectSpellTarget] reads exact singular stack targets with native card-type
+// and color predicates and complete Boolean trees. Selection uses current spell
+// types, colors and exact stack identity. Departure and recasting cannot restore
+// an old target.
+// Missing declarations and zone snapshots remain unknown. No LKI is used.
+// Pure spell destruction inspection accepts these counter instructions. A legal
+// counter prefix blocks later destruction proofs. An illegal prefix permits
+// them when another target is legal. Supported suffixes preserve earlier proofs.
+// Countering cannot directly destroy a permanent. The query does not counter
+// spells, check counter outcomes, execute triggers or change game state.
+//
+// [ManaPaymentInstruction.Effect] retains an optional fixed or X mana cost,
+// its player and both branches. [InspectManaPaymentInstruction] reads these
+// operands without choices or amount reads. Execution uses shared transactions.
+// Spell destruction inspection accepts a native singular spell's controller,
+// fixed or X amounts, and complete counter branches for that exact target.
+// A branch can save that controller with LKI, tap native collections and remove
+// the saved player's unspent mana. Other branch children remain unknown.
+// All branches validate before legality gates or earlier proofs. A legal payment
+// prefix blocks later proofs, including zero costs. An illegal payer target
+// skips the payment. Supported suffixes preserve earlier destruction proofs.
+// [HasManaAbility] retains a native predicate and uses current ability classes.
+// Inspection does not pay costs, counter spells, tap lands or remove mana.
+//
+// [RandomDiscardInstruction] retains a typed player and amount.
+// [InspectRandomDiscardInstructions] reads complete native discard trees.
+// Inspection does not select hand cards, use random results or move cards.
+// Spell destruction inspection accepts fixed and X amounts with native players.
+// A legal discard prefix blocks later proofs. A supported suffix preserves them.
+// Execution uses the shared random selection and discard replacement batch.
+//
+// [Game.InspectSpellDestruction] checks native destruction, return, tap, damage,
+// draw, discard, counter, exile, life, mana loss and finite prevention trees on live instant and sorcery spells.
+// It checks every announced supported target
+// before it reads exact destruction destinations. Permanent targets can combine
+// card type, color, noncolor and subtype predicates. All illegal targets
+// prevent the whole spell from resolving. Illegal instructions are skipped when
+// another target is legal. Singular subjects keep declaration and visit identity;
+// collections use the current spell controller. Current layers are required.
+// A return can exclude exact watched visits from later destruction. Other
+// nonempty groups block later state proofs unless a tap or destruction prefix
+// cannot change state. Unknown trees and restrictions return unknown without callbacks,
+// choices, shield use or state changes. This bounded
+// query does not complete the broader prospective-spell contract for Equinox.
+//
+// [InspectDamageTarget] retains singular any-target and player-or-planeswalker
+// declarations. Opponent-only declarations exclude the current controller as
+// a player. They permit planeswalkers under either player. Pure selection uses
+// exact declarations, current legality and saved battlefield visits. Copies
+// use their own controller. Unknown wrappers and missing visits stay unknown.
+// Shared packet, singular damage and finite prevention queries use this policy.
+// Native live counts and half-counts use [InspectLivePermanentCount] for packets.
+// Other dynamic amounts need separate query contracts.
+//
+// [InspectPermanentTargets] retains native fixed or exact-X permanent groups.
+// [PermanentTargetsPredicate.Select] checks each announced visit with the same
+// rules as singular targets. Duplicate identities, wrong counts and missing
+// snapshots return unknown. Zero-count groups require the exact declaration in
+// the spell definition. No targets differs from all announced targets being illegal.
+// The spell query builds a complete legal target frame before it checks actions.
+// Contextual collections can use these groups and [FilterPermanentSet] without
+// callbacks. Missing frames remain unknown, including before an earlier proof.
+// Copies and clones keep declaration identity and use their current controller.
+// Optional counts require a separate contract. Native graveyard-count producers
+// use [DestructionResultInstruction] and [InspectDestructionResult]. A native
+// collection damage suffix can read that exact preceding number binding.
+// The complete tree rejects missing, forward or duplicate producers before
+// target gates and destruction proofs. Inspection never reads or predicts the
+// saved count. Execution retains actual simultaneous graveyard moves after
+// replacements. Other result kinds and arithmetic need separate contracts.
+//
+// [InspectPlayerTarget] retains a singular native player or opponent target,
+// including [TargetPlayerAttackedThisTurn].
+// [PlayerTargetPredicate.Select] checks the exact declaration and current player
+// presence without callbacks or LKI. Missing and repeated declarations return
+// unknown; an absent or ineligible player is an illegal target.
+// Contextual owner and controller collections can read these target bindings.
+// Selection reads current ownership, control, characteristics and visits. Supply
+// a resolving target frame; a missing binding cannot supply an empty-set proof.
+// The spell destruction query builds this frame after all target checks, before
+// it applies the all-illegal gate. Attack-history targets read the current
+// player history without callbacks. Opaque wrappers remain unknown.
+// Return order and changed-state proof limits still apply.
+//
+// [CollectionDamageInstruction.Effect] retains one simultaneous damage action.
+// [InspectCollectionDamageInstructions] reads complete native collection trees.
+// [InspectDamageRecipientCollection] accepts native player sets alone or with
+// complete contextual permanent collections. [InspectPlayerCollection] retains
+// all players, one player or opponents of You, ActivePlayer or a native player
+// target. Missing target frames remain unknown before target gates and proofs. Selection reads current keywords,
+// combat membership and exact visits without callbacks or LKI. Layers must be current.
+// [HasKeywordFilter] and [NotHasKeywordFilter] retain native keyword predicates.
+// Pure spell inspection accepts source damage with fixed or X amounts. Damage
+// alone does not destroy a permanent. A nonempty damage prefix blocks later
+// destruction proofs, including a zero amount. Empty sets permit later proofs.
+// Exact-count permanent target groups use [InspectPermanentTargets].
+// Native filters read current properties after target legality is checked.
+// Result bindings and division need separate contracts.
+//
+// [PacketDamageInstruction.Effect] retains one simultaneous native packet group.
+// [InspectPacketDamageInstructions] copies complete native groups without callbacks.
+// [InspectDamageRecipient] accepts singular any-target and native player targets,
+// the resolving controller and the active player. Selection keeps exact target
+// declarations and current legality. Missing bindings return unknown.
+// [ControllerOfWithLKI] of a complete native singular permanent target retains
+// that declaration. Selection reads current control after target legality checks.
+// Illegal targets supply no player. Inspection does not read target LKI or simulate
+// preceding destruction. Execution keeps the exact visit's current or last
+// controller through the shared information service. A legal damage prefix
+// blocks later destruction proofs; a supported suffix preserves earlier proofs.
+// Spell inspection accepts fixed or X source packets and singular player damage.
+// It checks all bindings before the all-illegal gate or any destruction proof.
+// Damage prefixes keep the existing changed-state barrier, even at zero damage.
+// Attack-history player targets use the shared native player query.
+// Packet counts and repeated half-count rounding use [InspectLivePermanentCount].
+// Its [LivePermanentCountPredicate.Read] checks current collection membership
+// without callbacks or LKI. Bound players need a complete target frame.
+// Saved recipients and other dynamic amounts need separate contracts.
+//
+// [FuturePreventionInstruction.Effect] retains one finite shield installation.
+// [InspectFuturePreventionInstructions] reads complete native installation trees
+// without callbacks or shield use. Execution uses [PreventNextDamage].
+// Pure spell inspection accepts fixed/X amounts with native any-target or
+// player targets, the resolving controller or the active player. It validates
+// all declarations before target gates or destruction proofs. Prevention alone
+// cannot directly destroy a permanent. A legal prevention prefix blocks later
+// destruction proofs, including at zero or negative amounts. An illegal target
+// is skipped when another target is legal. Supported suffixes keep earlier proofs.
+// Saved recipients, dynamic amounts and other shield forms need separate policies.
+//
+// [PermanentExileInstruction.Effect] retains one singular or simultaneous group
+// of battlefield exile actions. [InspectPermanentExileInstructions] reads complete
+// native trees without callbacks. Execution uses [Exile] and [ExileEach].
+// Pure spell inspection validates native target declarations and contextual
+// collections before target gates or proofs. Exile alone cannot directly destroy
+// a permanent. A nonempty exile prefix blocks later destruction proofs; an empty
+// selection permits them. Supported suffixes preserve earlier proofs. Inspection
+// does not move objects, use replacements or predict later state. Saved results,
+// linked exile and other zones require separate query contracts.
+//
+// [DrawInstruction.Effect] retains one singular native draw action.
+// [InspectDrawInstructions] reads complete native draw trees without callbacks.
+// Execution uses [DrawFor] and the shared per-card draw replacement service.
+// Pure spell inspection accepts fixed or X amounts with native player targets,
+// the resolving controller or the active player. It validates every binding
+// before target gates or proofs. Draw alone cannot directly destroy a permanent.
+// A legal draw prefix blocks later destruction proofs, even at zero or negative
+// amounts. A supported suffix preserves earlier proofs. Inspection does not
+// draw cards, use replacements, read hidden cards or predict a later state.
+// RON DrawACard saves a card result only when its exact scoped binding is read.
+// Saved results and other dynamic amounts require separate query contracts.
+//
+// [DamageResultInstruction.Effect] retains singular or simultaneous damage with
+// exact total and outcome declarations. [InspectDamageResultInstruction] reads
+// the complete producer without callbacks. Pure spell inspection accepts fixed/X
+// source damage and native recipients. A later native life action can read that
+// total or a singular producer through [ClampedDamageAmount]. Missing, forward,
+// duplicate and foreign declarations reject the complete tree before target gates.
+// Queries do not read outcomes, predict damage, use shields or run replacements.
+// Nonempty damage and legal life prefixes block later destruction proofs.
+// Opponent recipient collections use the shared pure player selection contract.
+//
+// [LifeInstruction.Effect] retains one singular native gain or loss action.
+// [InspectLifeInstructions] reads complete native trees without callbacks.
+// Result bindings require separate declarations. Execution uses shared life
+// replacements, permissions, history and events; damage prevention does not apply.
+// Pure spell inspection accepts fixed or X amounts with native player targets,
+// the resolving controller or the active player. All operands validate before
+// any proof or all-illegal gate. Life alone does not directly destroy a permanent.
+// A legal life prefix blocks later destruction proofs, even at zero or negative
+// amounts. An illegal subject is skipped when another target is legal.
+// [InspectPlayerDamageHistory] retains actual player damage totals from this
+// turn, artifact-source totals and nested doubling. [PlayerDamageHistoryPredicate.Read]
+// uses the same history as execution without reference callbacks. Native player
+// targets, You and ActivePlayer use complete legal frames. Missing frames are
+// unknown; absent players supply zero. Life and singular source damage trees
+// validate these operands before target gates or destruction proofs, without
+// reading totals or predicting damage. Singular permanent recipients reuse
+// [InspectPermanentTarget] for exact visit identity and current legality.
+// Other dynamic amounts, saved subjects and prevention need separate query contracts.
+//
+// [InspectTargetCharacteristicValue] retains native singular target power and
+// mana values. [TargetCharacteristicValuePredicate.Read] uses the exact visit's
+// current information or LKI without reference or filter callbacks. Layers must
+// be current. Missing or malformed frames are unknown; empty frames supply zero.
+// Pure spell inspection accepts these scalar amounts in native life gain/loss.
+// It validates bindings before target gates or proofs without reading values.
+// Legal life prefixes remain state barriers. Supported suffixes preserve proofs.
+// Source, saved, toughness and arithmetic values need separate query contracts.
+//
+// [PermanentLifeInstruction.Effect] retains controller life gain from the same
+// singular target's power or mana value. [InspectPermanentLifeInstruction] reads
+// the native declaration without callbacks. Execution uses exact visit information
+// from [ControllerOfWithLKI], [PowerOfWithLKI] and [ManaValueOfWithLKI]. A failed
+// destruction does not suppress life gain. Pure spell inspection validates the
+// target before any proof or all-illegal gate, without predicting the life value.
+// A legal prefix blocks later proofs, even at zero. A suffix preserves earlier
+// proofs. Owner, toughness, loss and saved results need separate query contracts.
+//
+// [ManaLossInstruction.Effect] retains one native unspent mana removal action.
+// [InspectManaLossInstructions] reads complete native trees without callbacks.
+// Saved mana results use separate declarations. Execution uses [LoseUnspentManaFor].
+// Pure spell inspection accepts native player targets, the resolving controller
+// and the active player. All bindings validate before target gates or proofs.
+// Mana loss cannot directly destroy a permanent. A legal mana loss prefix blocks
+// later destruction proofs, even with an empty pool. Supported suffixes preserve
+// earlier proofs. Saved subjects need separate query contracts.
+// Cloned players keep separate mana production history and payment history.
+//
+// [SingularDamageInstruction.Effect] retains one native damage instruction.
+// [InspectSingularDamageInstructions] reads complete native trees without callbacks.
+// Result bindings and instruction-local prevention require separate contracts.
+// [InspectDamageTarget] retains singular native damage target declarations.
+// [DamageTargetPredicate.Select] keeps player identity separate from permanent visits.
+// Permanent legality uses shared current characteristics and source LKI checks.
+// Different target domains and chooser wrappers remain unknown.
+// The spell destruction query accepts native source damage with fixed or X amounts
+// and these targets. Damage does not directly destroy a permanent (CR 120.5).
+// A legal damage prefix blocks later destruction proofs because damage can change
+// state. Even zero damage keeps this conservative barrier. Illegal recipients do
+// not block later proofs if another target is legal. No damage or shield is used.
+// These queries require current layers and do not complete Equinox's contract.
+//
+// [InspectPlayerHandSize] retains HandSizeOf with You, ActivePlayer or a native
+// singular player target. [PlayerHandSizePredicate.Read] reads the current hand
+// without reference callbacks. Missing frames are unknown; absent players supply
+// zero. Pure spell inspection accepts this amount in native singular source
+// damage. It validates bindings before target gates without reading hand sizes.
+// A legal damage prefix remains a barrier, including an empty hand. Execution
+// reads the hand at resolution and uses the shared damage service.
+//
+// [InspectPermanentTarget] retains a complete type, color and subtype singular target.
+// Boolean trees use current types, effective colors and subtypes without filter callbacks.
+// Colorless objects match noncolor predicates. Multicolor objects match each
+// color they have. Unknown descendants reject the complete declaration.
+// Required subtypes and complete subtype domains use the shared matcher.
+// Native you/opponent controller and owner domains use current target information
+// and the stack object's controller. Native selection uses the same matcher.
+// Tap status and current attacking or blocking membership retain complete Boolean trees.
+// Source exclusion uses the exact ability source visit, including saved source information.
+// A later visit of the same card is a different source.
+// Source-relative power and toughness targets use shared current or saved source power.
+// Missing exact source information returns unknown. Strict and inclusive limits stay distinct.
+// Fixed power equality, toughness equality and inclusive toughness limits retain
+// complete Boolean trees. Native filters and pure queries share current P/T reads.
+// Counters and continuous effects apply before selection. No target LKI is used.
+// The shared collection filters retain these same fixed numeric predicates.
+// Attachment target predicates retain complete current host filters. Both objects
+// must be present and unphased, with the exact attached host visit. Host control
+// restrictions use the stack controller. The host is not a target; its shroud
+// does not restrict selection. Reattachment reads the new current host.
+// History, combat relations and explicit player references need separate contracts.
+// [PermanentTargetPredicate.Select] reads its exact announced visit and current
+// legality. It uses shared source information and characteristic target checks.
+// Layers must be current. Typed unconditional spell and ability restrictions
+// use exact live sources and hosts without filter callbacks. Opaque target rules
+// and opaque protection return unknown. Selection does not predict destruction.
+// [AnyCardFilter], [HasCardTypeCardFilter], [HasColorCardFilter] and
+// [HasSubTypeCardFilter] retain characteristic predicates. [AndCardFilter] and
+// [OrCardFilter] retain complete Boolean trees and copy the supplied lists.
+// [CanTargetOnlySubtypeFilter] retains a pure target-declaration predicate.
+// Complete Boolean trees use the native subtype proof without filter callbacks.
+// Source views keep their existing declaration and selected-mode contracts.
+// RON retains these trees in static source filters. Conditional target rules
+// can use native turn and source attack history conditions with complete Boolean
+// trees. Opaque conditions remain unknown and their callbacks do not run.
+//
+// [InspectPermanentCollection] reads complete type, subtype and color collections,
+// including mixed predicates, unions and intersections. Color queries read
+// current effective colors without filter callbacks (CR 105.2, 613.1e).
+// [PermanentCollectionPredicate.Select] returns
+// exact current visits without collection or filter callbacks. Phased objects
+// are absent. Layers must be current; this query does not predict destruction.
+// RON retains these declarations in direct destruction groups.
+//
+// [InspectContextualPermanentCollection] retains complete type, subtype and
+// color collections with owner or controller restrictions for [You] or
+// [ActivePlayer], or complete singular player targets.
+// [ContextualPermanentCollectionPredicate.Select] reads current
+// visits from an explicit resolving context without callbacks or LKI.
+// Layers must be current and the resolving controller must be present.
+// Native [OpponentsOf] sets for [You] and [ActivePlayer] also retain complete
+// controller collections. Selection reads present opponents without callbacks;
+// ownership does not change membership. Unknown descendants reject the whole
+// query. This does not predict destruction.
+//
+// Native [IsAttacking] and [IsBlocking] filters retain current combat queries.
+// [Not], [And] and [Or] retain complete mixed characteristic and combat trees.
+// Contextual collection inspection reads shared combat membership without
+// callbacks. Phasing, departure and combat removal cannot supply old members.
+// The context-free collection inspector still rejects combat declarations.
+// RON retains IsAttacking, IsntAttacking and IsBlocking in these collections.
+//
+// [InspectContextualPermanentCollection] also retains [AttachmentsOn] over
+// complete supported current host collections, including nested attachments.
+// Selection checks the exact host incarnation without callbacks or LKI.
+// Both the host and attachment must be present and unphased. Reattachment
+// changes membership; a returned host cannot restore an old attachment.
+// RON retains AttachedToAPermanent through its existing collection adapter.
+// Singular and saved host references need separate inspection contracts.
+// This query does not predict ordered actions or destruction certainty.
+//
+// [InspectPermanentCardTypeFilter] reads complete typed card-type predicates.
+// [PermanentCardTypePredicate.Matches] tests a supplied type set without
+// callbacks or game state. Opaque Boolean children reject the whole query.
+// RON card-type filters retain these plans for pure analysis.
+//
+// [InspectReplacementActionDomains] reads complete proposal categories for
+// supported native damage, damage life loss, destruction, tap, assignment, draw
+// and life gain rules without callbacks.
+// Pure destruction inspection ignores rules with proven unrelated domains in
+// either list. Native face-up rules have damage, tap and assignment domains.
+// Native player damage caps match damage proposals. Native life floors match
+// only the life loss that results from damage. Neither matches destruction.
+// Native protection prevention and temporary permanent or player redirection
+// match only damage proposals. Their operands do not run during inspection.
+// Native scoped and future draw replacements match only individual draws.
+// Native life-gain-to-draw rules match only positive life gain proposals.
+// Their bodies and player operands do not run during inspection.
+// Unknown and nil rules remain unknown. Domain membership does
+// not establish activation, applicability, destination or sequential outcomes.
+//
+// [Game.InspectDestructionDestinations] reads all possible destinations for one
+// exact selected visit. It supports native regeneration, cancellation, saved
+// death exile and current death-return declarations. Competing rules retain
+// every possible destination without choices or callbacks. Live history rules
+// read exact damage visits and retained card type filters. Opaque rules,
+// opaque filters and custom activation conditions return unknown. Creature status
+// at damage controls native history regeneration restrictions. Tokens report
+// their proposed move before they cease to exist. This is not group-state analysis.
+//
+// [TapInstruction.Effect] builds a native tap, untap or optional singular choice.
+// Collections keep one simultaneous group. [InspectTapInstructions] retains
+// complete native trees without effect, operand or decision callbacks.
+// Result bindings and unknown children reject the complete tree.
+// Typed tap and untap instructions refresh layers after the full
+// transition group and its events, before the next instruction. Stun counter
+// removal also refreshes layers. Legacy actions and costs keep their contracts.
+// The spell destruction query accepts these instructions with native permanent
+// targets or pure contextual collections. They cannot prove direct destruction.
+// [Game.InspectTapStateChange] checks exact selected visits without callbacks.
+// Tap on tapped visits and untap on untapped visits permit later proofs because
+// they cannot change state. Other nonempty tap instructions return unknown
+// before later destruction. This includes optional choices and tapped visits
+// with stun counters. Empty and illegal subjects retain the resolution gate.
+// Untap on an untapped permanent does not remove stun counters. No later state
+// is projected.
+//
+// [DirectReturnInstruction.Effect] builds a native singular or simultaneous
+// return action. [InspectDirectReturn] retains complete return trees without
+// operand callbacks. RON lowers both owner-hand return forms to this declaration.
+// Pure spell inspection excludes returned exact visits from later destruction.
+// If watched visits remain after a nonempty return, later state is unknown.
+// Return-only tails cannot directly destroy a watched object. Selection reads
+// current layers, legality and exact visits before any state proof.
+//
+// [DirectDestructionInstruction.Effect] builds the native destruction action.
+// RON uses this descriptor for singular and simultaneous direct destruction.
+// [Game.InspectDestructionProposal] checks one exact, already selected visit.
+// It reports whether the proposed destruction continues, with a separate known
+// result. Typed regeneration and cancellation do not consume their uses.
+// Opaque replacements, local death-return rules and live regeneration filters
+// return unknown. Inspection calls no replacement or filter callbacks.
+// Layers must be current. This is not a sequential or zone-move prediction.
+// Equinox still needs those separate contracts before its query can execute.
+//
+// [Game.InspectDestructionStateChange] checks exact selected visits without
+// callbacks or shield use. Empty groups and current indestructible visits
+// cannot propose destruction. They permit later ordered and spell proofs.
+// All other visits retain a possible change, including canceled or regenerated
+// destruction. Invalid, phased and stale visits return unknown. Layers and
+// subject legality must be current. No later state is projected.
+//
+// [InspectOrderedDestruction] retains complete direct collection destruction
+// sequences. [OrderedDestructionPredicate.Certain] checks exact watched visits
+// against current simultaneous groups without callbacks or state changes.
+// Empty groups and groups of indestructible visits permit later analysis.
+// Other groups block it unless they already prove a watched graveyard move.
+// Regeneration can change state without moving an object. Unknown remains
+// distinct from a complete query with no proof. Singular references, source
+// resolution and target legality need separate contracts.
+//
+// [InspectDirectDestruction] reads complete destruction instruction trees.
+// It keeps typed subjects, simultaneous sets and regeneration restrictions.
+// Inspection calls no effects or operand callbacks. Unknown trees reject.
+// The declarations do not predict legality, replacements or destruction.
+// RON lowers the four direct destruction actions to these shared declarations.
+//
+// [TurnResolvedPermanentFaceUpBeforeAction] installs an exact saved-spell rule.
+// Before assignment, positive damage or tapping, its permanent turns face up.
+// The event continues through shared replacement rechecks and batch services.
+// Source departure cannot end it. Phasing suspends it; turning up ends it.
+// Copies, returned objects, payment trials and game clones keep separate state.
+// RON accepts the complete saved-cast CreateReplaceWouldMaskUntil shape.
+//
+// [CastHandCardFaceDownWithoutPayingInto] and
+// [MayCastHandCardFaceDownWithoutPayingInto] save the exact successful spell.
+// Failed and declined casts clear the result. [PermanentFromResolvedSpell]
+// reads only the permanent that spell becomes. Copies and later visits cannot
+// supply it. Control changes and face-up status keep it; phasing stops actions.
+// Information readers use exact phase and departure LKI. Shared frames keep
+// delayed bodies, copies and clones separate. RON binds
+// ThePermanentSpellResolvedThisWay only after its local cast producer.
+// [TurnResolvedPermanentFaceUpBeforeAction] supplies its face-up replacement.
+//
+// [MayCastHandCardFaceDownWithoutPaying] offers a separate cast choice for a
+// saved hand visit. It checks legality and costs before the offer and again
+// after acceptance. Declining does not spend mana, move or reveal the card.
+// RON accepts MayAction around the chosen-hand PT(2, 2) cast action in ordinary
+// resolving bodies. The choice does not cancel independent later instructions.
+//
+// [CastHandCardFaceDownWithoutPaying] casts a saved hand visit as a nameless,
+// colorless 2/2 creature spell with no mana cost or printed abilities.
+// Casting restrictions and external costs read these face-down characteristics.
+// Shared payment, stack, entry and zone services retain the physical identity.
+// Printed entry rules cannot apply. Face-down status precedes entry events.
+// [StackObject.IsFaceDown] exposes status. [Game.InspectFaceDownObject] gives
+// the controller a private copy, including while the permanent is phased out.
+// Public reveal history records departure and exposes remaining cards at game end.
+// Spell copies keep visible values without private identity or face-down status.
+// Permanent copies retain status and physical departure identity. Clones isolate
+// movement and reveal records. Continuous grants and summoning sickness apply.
+// RON accepts the chosen-hand cast action with PT(2, 2) in resolving bodies.
+// Face-up replacements use [TurnResolvedPermanentFaceUpBeforeAction].
+//
+// [WithActivationManaReceipt] saves actual mana types for one activation.
+// [WithActivationManaXReceipt] saves the X part of one pure X payment.
+// Fixed requirements receive mana first. Taxes do not enter the X receipt.
+// [ChooseHandCardWithActivationManaOrElse] checks a private hand choice against
+// that receipt. Hand X is zero; absent costs reject. Current spending rules
+// cannot change the saved types. Copies and clones retain separate results.
+// RON accepts ManaCostIsSubsetOfManaPaidForThisAbility in immediate optional
+// hand choices of nonmodal nonmana activations with one pure announced X cost.
+// Face-down casting uses [CastHandCardFaceDownWithoutPaying].
+// [TurnResolvedPermanentFaceUpBeforeAction] replaces assignment, damage and taps.
+//
+// [ChooseHandCardOrElse] offers a private choice from one player's hand.
+// A [CardBinding] saves the exact hand visit for the chosen branch only.
+// Selection does not move or reveal the card. Empty candidate sets and declined,
+// invalid or stale answers use the other branch. Current filters are checked
+// again after the choice. Candidate copies cannot change the live cards.
+// Nested calls restore outer bindings. Shared stack frames keep copies and
+// clones separate. [FromCard] cannot follow a returned card or read hand LKI.
+// RON accepts MayCost and PlayerMayCost with ChooseACardInHand in ordinary
+// resolving bodies. If, Unless and IfElse keep the result on paid paths.
+// Chosen hand visits can use [CastHandCardFaceDownWithoutPaying].
+//
+// [RandomizeBlockingPilesThisTurn] replaces blocker choices through cleanup.
+// Defenders choose optional piles before the shared RNG assigns attackers.
+// Extra blocking capacity permits extra piles. Empty piles are valid.
+// The shared combat planner checks assigned pairs without adding requirements.
+// Exact visits, group events, later combats and clones use the shared services.
+// RON accepts this game operation with UntilEndOfTurn in resolving bodies.
+// All five complete Camouflage records have casting and gameplay tests.
+//
+// [MaySkipYourTurnToUntap] replaces the current controller's turn by choice.
+// Use [Static] with a state condition and This or AttachedPermanent.
+// [Game.TryBeginTurn] applies turn replacements before a turn's actions.
+// The affected player selects the replacement order, including scheduled skips.
+// A paid skip saves an exact visit for untapping in the next actual turn.
+// Skipped turns and steps retain it. Source changes cannot cancel it.
+// The shared untap service checks stun counters and sends untap events.
+// Returned and phased-out subjects cannot untap. Clones keep separate results.
+// Native runners, application loops and gametest use this turn-start operation.
+// RON accepts the conditional source turn-skip and paid-untap shape.
+// All five complete Time Vault records have casting and gameplay tests.
+//
+// [RetainBlockerEligibility] saves eligible blocker visits at resolution.
+// [SavedBlockers] saves set membership; [CurrentBlockers] checks current properties.
+// [AllRetainedBlockers] and [AnyRetainedBlockers] combine those conditions.
+// [Until] and the shared combat service enforce the rule and its duration.
+// Source departure and ability removal do not end it. Phasing keeps saved visits.
+// Returned objects cannot inherit membership. Clones keep separate effects.
+// RON accepts the selected-pile blocker rule for a resolving loop member until
+// end of combat. Complete Raging River records have casting and gameplay tests.
+//
+// [ChooseNamedPermanentPile] saves the exact visits in one required pile choice.
+// Empty piles are valid choices. [FromPermanentSet] reads present members.
+// RON accepts named pile choices after a partition in resolving permanent loops.
+// Only the same loop member can read its selected pile in later instructions.
+// Shared frames keep choices separate through iterations, delays and clones.
+// Retained blocking rules use [RetainBlockerEligibility].
+//
+// [SeparatePermanentsIntoNamedPiles] saves exact battlefield visits in named
+// [PermanentSetBinding] results. Each visit goes into one pile. Piles can be
+// empty, and no member changes zones. [FromPermanentSet] reads present visits.
+// Shared resolution frames keep results separate through copies and delays.
+// RON accepts the partition action for saved attack-group defenders. Only its
+// collection filter can read EachablePlayer. Selected piles have scoped readers.
+//
+// RON spell-targeted activation grants use [GrantActivatedAbility],
+// [GrantEachActivatedAbility] and [ActivatedAbilityModification] with [WithTargets].
+// Each target and body share the recipient declaration scope. Announcement,
+// payment, resolution legality, copies and clones use the shared engine services.
+// Source changes do not change the saved ability controller. RON accepts one
+// TargetSpell declaration with fixed costs. Prospective destruction needs a
+// separate contract; the complete Equinox record remains unsupported.
+//
+// [MayAnteTopEach] collects optional choices in APNAP order before one ante batch.
+// [PlayerSetBinding] saves membership in the shared resolution frames.
+// [FromPlayerSet] reads that result without another offer. Ineligible library
+// tops cannot pay. Source departure and phasing do not cancel pending bodies.
+// [SetLifeTotalEach] uses shared life gain and loss replacements and permissions.
+// All ordinary life changes finish before their events. Copies and clones keep
+// separate results. RON accepts the fixed-total PaidCost continuation in an
+// ordinary resolving sequence after EachPlayerMayCost with library-top ante.
+//
+// [SpendAnyManaForOneSpellThisTurn] saves one optional player permission.
+// The printed mana cost can use any mana type. Added costs keep their normal
+// requirements. Shared cost locking applies reductions before this permission.
+// Each mana unit keeps its actual type and spending restriction. Acceptance
+// does not spend the permission until total payment succeeds. Cleanup ends it.
+// Source departure, phasing and ability removal do not end a saved permission.
+// Clones keep separate permissions. [Game.CanPaySpellManaCost] makes no choices
+// and checks the printed cost with X. [Game.GetCastableSpells] uses that query.
+// RON accepts MayActionOnce with AnySpell and UntilEndOfTurn in ordinary
+// resolving player effects. North Star has complete casting and gameplay tests.
+//
+// [ReturnToHandInsteadOfDyingWithPlayLock] replaces the source's death.
+// Shared replacement choices run before moves. Sacrifice remains a paid sacrifice.
+// The completed hand visit stays revealed and cannot be played until its owner's
+// next actual turn. A skipped turn cannot end the lock. Return and clones keep
+// separate visits. [Game.IsHandCardRevealed] exposes only the current public card.
+// RON supports the complete Firestorm Phoenix replacement and continuation.
+//
+// [ChooseSpellCastThisTurn] saves an exact cast from this turn at resolution.
+// Cast facts survive departure. Uncast copies cannot supply a choice.
+// [DamageDealtThisTurnBySource] reads actual damage from that spell identity.
+// Shared prevention and redirection apply before totals change. Separate casts
+// and copies keep separate totals. Cleanup clears history; clones copy it.
+// RON accepts a sorcery type and explicit caster in ordinary resolving lists.
+// The corrected complete Backdraft record has casting and gameplay tests.
+//
+// [MayDrawCardsThen] runs a body after the player accepts the draw instruction.
+// Replaced draws keep the accepted continuation. Successful draw events save
+// exact hand visits for this turn. Cleanup clears them; clones copy them.
+// [PayLifeOrReturnDrawnCards] selects all cards before per-card life payments.
+// Earlier draws count. Added cards and returned visits cannot supply a choice.
+// Shared payment and zone replacements apply. Library returns are not discards.
+// RON accepts fixed nonnegative counts and life in ordinary resolving bodies.
+// The corrected complete Sylvan Library record has cast and gameplay evidence.
+//
+// [StaticAbilityPayment] offers a static ability grant during resolution.
+// [PayActionOrElse] checks the saved visit again after the choice.
+// [AcquireStaticAbilityUntil] uses the existing layer 6 grant service.
+// A later ability removal can remove the granted attack restriction.
+// [AttacksWithoutTappingUntil] saves the affected player and source visit.
+// Its filter and condition read current state at attack declaration.
+// The rule can affect later creatures and survives ability removal.
+// Both attack paths use this rule without granting vigilance.
+// Phasing preserves the visit. A returned source cannot supply its condition.
+// RON supports Johan's complete optional grant and conditional attack tapping
+// until end of combat. Complete casting and gameplay have test evidence.
+//
+// [SnapshotPermanentSet] saves exact battlefield visits for later instructions.
+// [FromPermanentSet] selects present, unphased survivors of that result.
+// New members and returned objects cannot replace the saved visits. Phasing
+// preserves identity. Copies, clones and delayed bodies keep separate frames.
+// [ChangeEachController] uses the shared duration and control layers for a set.
+// All members are saved before control changes. Indefinite control survives
+// source departure and ability removal. Later control effects use timestamps.
+// RON accepts CreatePermanentsList(collection) and the lexical symbol
+// ThePermanentsList in ordinary resolving action lists. GainControlOfEachPermanent
+// uses the explicit action player. Complete Rohgahh gameplay covers payment,
+// the untargeted tap and control continuation, and the current-controller bonus.
+//
+// [ExileGraveyardAsEntersWithCounterChoice] requires one entry exile payment.
+// The entry controller selects exact graveyard visits before any move.
+// Failed selection prevents entry. Replacements can change or omit paid moves.
+// Only completed exile moves supply counters. Each card supplies one choice.
+// Shared counter replacements apply before entry observations. Noncast entry
+// has X equal to zero. Return and copies require separate payments and choices.
+// RON accepts one MustCost graveyard exile with a CostWasPaid IfElse entry
+// continuation, matching exile count, counter choices and failed graveyard entry.
+// The complete Frankenstein's Monster record has casting and gameplay tests.
+// Failed permanent spell entry uses shared zone replacements and zone events.
+//
+// [IfSacrificeWithManaValue] requires one matching sacrifice at resolution.
+// Shared payment saves its mana value before departure. Replacement moves do
+// not change the payment result. Only the paid body can read the saved value.
+// [SearchLibraryWithManaDifference] searches for one matching library card.
+// The player can find none. A positive mana value difference uses shared mana
+// payment. An unpaid find moves to its owner's graveyard through replacements.
+// Entry uses shared entry replacements. Exact library visits survive choices;
+// returned visits cannot replace them. Movement precedes one shuffle.
+// RON supports this complete artifact search and paid sacrifice continuation
+// in ordinary resolving bodies. Transmute Artifact has paid-cast gameplay tests.
+//
+// [WithActivationManaXFromSpell] fixes X from the sole spell target before payment.
+// Queries inspect legal spells without choices or changes to ambient X.
+// Stack mana value includes the spell's X. Shared costs supply rollback.
+// Copies keep payment X. Source departure and phasing cannot change it.
+// [IfSpellTargetsPlayer] checks current targets without departure information.
+// [ChangeSingleSpellTargetToPlayer] changes one target to another legal player.
+// The original spell supplies target restrictions and keeps its controller,
+// mode, X and allocation. Copies and clones keep separate targets.
+// RON accepts target-derived twice-mana-value X and these resolving activation
+// adapters. Complete Reflecting Mirror casting and gameplay have test evidence.
+//
+// [PreventNewAuraAttachmentsIf] keeps existing Auras on current subjects.
+// A former attachment cannot attach again while the condition holds.
+// [PreventControlGainsIf] keeps established control and blocks new control gains.
+// An ended control effect can restore default or earlier control.
+// Both rules read current subjects and source state. Phasing preserves visits.
+// Ability removal disables the rules. Clones keep separate effect state.
+// Control reconciliation applies later layers with the permitted controllers.
+// RON accepts these rules in conditional EachPermanentRuleEffect bodies.
+// Complete Guardian Beast has paid-cast and battlefield gameplay evidence.
+//
+// [PhaseOutUntilSourceLeaves] saves the source and subject battlefield visits.
+// Source departure returns the subject and its indirect attachment group.
+// The untap turn action cannot end the wait. An external phase-in cancels it.
+// A later phase cycle cannot inherit it. Clones keep separate waits and epochs.
+// Source phasing and ability removal do not end the wait. A source that left
+// before resolution cannot start it. Simultaneous source moves finish first.
+// The optional tap changes only the subject's phase-in status, with no tap event.
+// RON supports PhaseOutPermanentUntilWithEffects with a typed permanent,
+// UntilPermanentLeavesBattlefield(ThisPermanent) and TapAsPhasesIn in resolving
+// battlefield-source bodies, including entry triggers. Oubliette has complete
+// RON casting and gameplay evidence.
+//
+// [ThisCardDiscardedByOpponentEffect] saves the discard cause controller.
+// Discard proposals retain the hand visit and cause facts before replacements.
+// Resolving spells and abilities supply their saved controller and stack identity.
+// Public graveyard and exile visits can supply the discarded card's own ability.
+// Hidden library destinations cannot supply it. Costs and cleanup do not match.
+// All moves in a discard batch finish before events. Pending triggers, copies
+// and clones keep separate cause bindings after source departure or return.
+// RON accepts FromAnyZone around the self-card opponent-effect discard TriggerA.
+// Its action list can read Trigger_ControllerOfThatSpellOrAbility as a player.
+// The complete Psychic Purge record has paid-cast and discard gameplay tests.
+//
+// [ProhibitDamagePreventionAndRedirection] changes damage rules for one visit.
+// Install it with [Until] to retain the recipient until the stated duration ends.
+// Ability removal cannot remove this rule. The shared damage service checks
+// the current recipient before prevention or redirection. Prohibited damage
+// does not use shield capacity. Other damage replacements still apply.
+// Phasing keeps an installed rule. Return cannot inherit it. Clones keep
+// separate effects and shields. RON accepts the bare operation
+// DamageDealtToItCantBePreventedOrRedirected in ordinary resolving
+// CreatePermanentRuleEffectUntil lists with UntilEndOfTurn.
+// Whippoorwill uses a saved graveyard visit for its delayed exile.
+//
+// [CouldntAttackThisTurn] reads saved attack opportunities for one exact visit.
+// Both declaration paths record before costs, taps and attack events.
+// Shared restrictions, optional costs, limits and maximum requirements apply.
+// Extra combats add history. Skipped combats add none. Later haste cannot
+// create an earlier opportunity. Control and phasing keep the saved visit.
+// Return cannot inherit it. Clones keep separate maps. Final cleanup clears it.
+// RON accepts the bare symbol in ordinary resolving permanent collections.
+// Complete Season of the Witch gameplay covers both triggers and paid casting.
+//
+// [DeclareGraveyardCardTargets] selects cards in an earlier player's graveyard.
+// Zero cards is valid. Shared targets retain exact visits and copy counts.
+// [ReturnGraveyardCardsToLibraryTop] saves visits before replacements.
+// The selected chooser orders library moves. All moves finish before events.
+// Returned visits cannot replace saved visits. Owner zones still apply.
+// RON accepts this player and card group pair in ordinary spell bodies.
+// Complete Drafna's Restoration tests cover paid casting and ordered return.
+//
+// [TrySwapBlockingAssignments] checks two present blocking creature visits.
+// Each must be able to block the other creature's current attackers.
+// Tapping, evasion, protection, block restrictions, capacity and bands apply.
+// Block costs and declaration requirements do not apply. Failed checks keep
+// both assignments. Success removes both blockers and adds the complete batch.
+// Attackers stay blocked. New block and pair events see all new assignments.
+// Empty assignments remain valid after all their attackers leave combat.
+// RON accepts a fixed pair of opponent targets with ControlledByTheSamePlayer
+// and TrySwappingBlockAssignmentsOfTwoBlockingCreatures in resolving bodies.
+// [OnePlayer] supplies a typed singleton to existing damage batches.
+// Complete Sorrow's Path gameplay covers its swap and independent tap trigger.
+//
+// [MayHavePermanentBlockAttacker] offers a block during resolution.
+// The typed player chooses one present attacker for the exact blocker visit.
+// Declaration restrictions, costs and limits do not apply to this effect.
+// Shared combat services retain bands, block history and new block events.
+// The action does not repeat the blocker step or change declaration snapshots.
+// Absent, returned or phased visits cannot supply a block. Copies and clones
+// keep separate choices. Waiting queries retain explicit source references.
+// RON accepts MayAction(ChooseAnAttackingCreatureForBlockerToBlock(filter, ref))
+// in ordinary resolving bodies. Complete False Orders gameplay covers all
+// five records, casting, historical unblocking and the optional new block.
+//
+// [DamageReceivedThisTurnFromOtherSources] sums actual damage to one exact visit.
+// It excludes damage from that visit. [DamageSourceHasName] reads source names.
+// Historical source properties come from damage time under CR 608.2i.
+// Shared damage services record final positive amounts before damage events.
+// Phasing and marked damage removal keep history. Final cleanup clears it.
+// Copies, clones and delayed queries retain exact references and separate state.
+// RON accepts the named Other-source filter in ordinary resolving bodies.
+// DeadPermanentDealsDamage requires a source death event and uses shared LKI.
+// The complete Blazing Effigy record has paid-cast and chain-damage evidence.
+//
+// [TokenLegendary] gives a token declaration the legendary supertype.
+// Direct creation and definition factories retain this copiable value.
+// The legend rule ignores phased-out permanents. Players choose in turn order
+// before one batch moves the other legends to their owners' graveyards.
+// These moves are not destruction or sacrifice. RON accepts one Legendary
+// symbol in TokenWithPT and NamedTokenWithPT supertype lists.
+// Stangg has complete RON gameplay evidence with saved token sets and delays.
+//
+// [PayChosenExileOrElse] offers a subset of a typed permanent set at resolution.
+// Zero is a valid payment. All selected visits are checked before any move.
+// Shared exile services apply replacements in turn order and move one batch.
+// Replaced actions still pay the cost. Only actual exile moves supply the count.
+// Tokens count even when no card remains in exile. The set can include
+// permanents controlled by other players.
+// The count belongs to the paid branch. Nested payments restore prior results.
+// Copies, clones and delayed bodies retain separate state and source visits.
+// RON accepts MayCost(Exile([AnyNumberOfPermanents(TheCreatedTokens)],[]))
+// with an adjacent If or Unless payment continuation in permanent resolving
+// bodies. NumPermanentsExiledThisWay is bound only in that paid continuation.
+// Entry and draw replacement bodies reject. Complete Tetravus gameplay covers
+// both upkeep orders, casting, entry counters, token creation and token exile.
+
+// [PlayerOrControllerOfDamageTarget] reads a player or exact visit's controller.
+// Departed visits supply last known information. Return cannot replace a visit.
+// [CopySpellFor] copies a present spell under a typed player's control.
+// [MayCopySpellFor] adds a separate copy choice. Both permit new legal targets.
+// [ThisSpell] can supply the resolving spell, including a resolving copy.
+// Shared stack services retain choices and identity. Copies are not cast.
+// RON accepts these self-copy forms in ordinary spell bodies and PlayerAction.
+// The complete Chain Lightning record has paid-cast and copy-chain evidence.
+//
+// [SelectLibraryTopAndBottomRestRandomly] supplies private library selection.
+// One inspected card stays on top. The rest go to the bottom in a random order.
+// The count is read once. No card is drawn or moved to another zone.
+// Shared inspection, player choices and library services retain private facts.
+// [WithActivationMinimumX] checks announced X before costs are paid.
+// RON uses both services for the complete Aladdin's Lamp draw replacement.
+// Existing replacement rules retain saved X, source visits and separate uses.
+//
+// [PutHandCardInHandFor] moves one saved hand visit to its owner's hand.
+// [PutSourceCardInGraveyardFromAnywhere] finds the physical source across zones.
+// Both validate a typed destination player and apply the owner-zone rule.
+// Nonbattlefield moves use [CardZoneMoveAction] through shared replacements.
+// Rechecks exclude returned visits. Battlefield moves retain shared departure
+// rules, LKI and death events. Phased sources cannot move. Events follow placement.
+// RON accepts explicit player operands in ordinary resolving bodies.
+// The complete Tempest Efreet record has paid-cast and activation evidence.
+// Its missing graveyard player is corrected from local Oracle text.
+//
+// RON accepts one SetLandType(basicType) in CreatePermanentLayerEffectUntil
+// with UntilPermanentLeavesBattlefield(ThisPermanent) in resolving permanent
+// bodies. [UntilSourceLeaves] and [SetSubtypeFamily] keep the source and target
+// visits. Source phasing preserves the duration. Source departure ends it.
+// Shared land layers replace printed abilities and supply intrinsic mana.
+// Copies, clones, delayed queries and overlapping effects keep separate state.
+// Gaea's Liege has complete RON gameplay evidence across all six records.
+// [DefendingPlayerOf] reads a present exact attacker during two-player combat.
+// Live static counts use that player through shared collection services.
+// Declaration uses nonattacking P/T before the attacking branch applies.
+//
+// RON accepts CombatDamageWouldBeDealtByACreature(SinglePermanent(ref))
+// with one PreventThatDamage and UntilEndOfTurn in resolving bodies.
+// The saved visit uses [PreventCombatDamageByEachThisTurn]. A permanent loop
+// can offer a separate controller payment before it installs each rule.
+// Heroism selects red attackers and offers payments when its ability resolves.
+// Both paid casting and complete activation have RON gameplay evidence.
+//
 // [TargetOpponentOwns] checks current ownership at selection and resolution.
 // Control does not change the owner test. Shared target services retain exact
 // visits, phasing, protection, copied controllers and separate factory bindings.
 // RON accepts OwnedByAPlayer(Opponent) in permanent targets, including And.
-// Bronze Tablet has target-fragment evidence; its other operations still reject.
+// Bronze Tablet uses these checks in its complete RON gameplay tests.
+//
+// RON source-death bodies can read OwnerOfDeadPermanent as a typed player.
+// PermanentDies with SourceOnly and WithOwner saves this fact at detection.
+// Pending triggers, copies and clones keep that owner through later returns.
+// Repeated owner declarations fail definition validation.
+// All six complete Personal Incarnation records have paid-cast, activation
+// and death evidence. Life loss reads the owner's life at resolution and
+// rounds up. Nonpositive totals cause no loss.
+//
+// [RedirectNextDamageToPlayer] saves one exact subject, player and finite budget.
+// Damage can split between the subject and player until exhaustion or cleanup.
+// Shared replacements keep source facts, combat status and prior rule uses.
+// The subject's controller allocates simultaneous packets within legal bounds.
+// Both portions stay in one damage instruction and one simultaneous event.
+// Damage results include both portions. Separate added damage stays separate.
+// Phasing suspends redirection. Return cannot inherit the old visit's budget.
+// Waiting and delayed queries retain exact subjects without installing rules.
+// RON accepts a positive fixed next amount, Permanent(ref), and one player redirect.
+// This supplies Personal Incarnation's activation and its complete-card tests.
 //
 // [OwnerOfWithLKI] reads one exact permanent visit's owner.
 // Present visits supply current ownership. Departure and phase information
@@ -12,8 +1002,7 @@
 // Waiting delayed queries retain source reads without resolving the player.
 // RON accepts OwnerOfPermanent(ref) through typed player references.
 // Existing delayed-death owner bindings and activation permissions remain.
-// Bronze Tablet has owner-payment fragment evidence after target exile.
-// Its complete record and Personal Incarnation still require other services.
+// Bronze Tablet reads the saved owner after target exile.
 //
 // [PreventDamageByThisTurn] saves one exact permanent visit until cleanup.
 // Both combat and noncombat damage use shared prevention services.
@@ -25,6 +1014,17 @@
 // RON accepts DamageWouldBeDealtByPermanent with one PreventThatDamage
 // operation and UntilEndOfTurn in ordinary resolving bodies.
 // The complete Kry Shield record has cast, payment and resolution evidence.
+//
+// [ForcedManaLossInstruction.Effect] retains forced activations and mana loss.
+// [InspectForcedManaLossInstruction] reads their native operands without choices.
+// [LostManaInstruction] retains the exact saved loss or transfer declaration.
+// [InspectLostManaInstruction] reads no saved mana and changes no pool.
+// Spell destruction inspection validates native players, complete native filters
+// and exact preceding lost-mana producers before target gates or earlier proofs.
+// Legal forced activations and transfers block later state proofs. Supported
+// suffixes preserve earlier proofs. Queries do not inspect ability outcomes,
+// run payments, invoke replacements or change bindings, mana, history or RNG.
+// Execution uses the existing player snapshot, activation and transfer services.
 //
 // [ActivateManaAbilityOfEach] saves matching visits controlled by one player.
 // That player chooses the order, ability and output. Each visit can supply
@@ -735,6 +1735,20 @@
 // the existing NumberTokens wrapper and player scopes. This completes Dance
 // of Many. Copy modifications and lexical creation results need separate adapters.
 //
+// [WhenAnyLeaves] saves present visits from one permanent set at resolution.
+// The next member departure consumes one delayed trigger for the whole set.
+// Shared departure snapshots keep simultaneous moves and exact identities.
+// Cleanup, source departure and ability removal preserve the subscription.
+// Phasing causes no departure. Copies and clones keep separate saved frames.
+// Waiting source queries include the saved members without running the body.
+// [WhenLeaves] also saves a phased source visit for a later actual departure.
+// RON accepts TheTokensCreatedThisWay after one lexical CreateTokens producer
+// with a creature prototype. Later producers and other branches keep separate
+// results. Both delayed source-leave bodies and delayed token-set leave events
+// can retain the result. No event binding is added. Token-copy results and
+// combinations with persistent TheCreatedTokens links require separate adapters.
+// Complete Stangg gameplay covers paid casting and both delayed leave rules.
+//
 // [CreatedTokenLeaves] matches one linked token's exact departure visit.
 // Shared departure snapshots retain the link after the token leaves.
 // Simultaneous moves read the former battlefield. Each member triggers once.
@@ -743,7 +1757,7 @@
 // their source visit and controller through copies and separate game clones.
 // RON accepts TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens),
 // body) for one permanent-source producer. This event supplies no new binding.
-// Lexical delayed token events need separate adapters.
+// Lexical delayed token events use [WhenAnyLeaves] and saved result sets.
 //
 // [CreatedTokenLink] separates one token producer from other producers.
 // [CreateTokenCopiesLinked] saves the declaration and source visit on accepted
@@ -756,7 +1770,7 @@
 // RON accepts one permanent-source CreateTokens producer and TheCreatedTokens
 // in later resolving collections. Ambiguous producers and spell sources reject.
 // This supplies the links for Dance of Many and a Tetravus prerequisite.
-// Linked exile payments need separate adapters.
+// Optional linked exile payments use [PayChosenExileOrElse].
 //
 // [CanTargetOnlySubtypeFilter] reads every applicable target declaration.
 // [TargetSourceCanTargetOnlySubtype] requires a nonempty complete list and
@@ -1431,13 +2445,14 @@
 // A returned card cannot pay. All cards reach exile before zone events.
 // Copies do not pay again. Separate activations and clones keep their choices.
 // RON accepts fixed nonnegative counts and AnyPlayer in activation costs.
-// Entry payments, dynamic counts and plural result reads need separate adapters.
+// RON entry graveyard payment uses a separate declaration. Other dynamic
+// activation counts and plural payment reads need adapters.
 //
 // Permanent counters and exact departure snapshots use integer arrays.
 // [EntersWithNCounters] and the shared counter replacement service keep counts
 // above 255. Clones keep separate arrays. Phasing keeps counters; a zone return
 // starts new counters. RON fixed entry amounts accept nonnegative integers.
-// Announced entry X and entry payment results need separate adapters.
+// Typed entry X and entry payment rules use separate declarations.
 //
 // [AnnouncedXForEnteringPermanent] reads the entering spell's own X.
 // [EntersWithCounters] uses this typed entry value before entry events.
@@ -1446,7 +2461,7 @@
 // [EntersWithXCounters] uses the same entry facts. Phasing keeps counters;
 // return starts a new visit with zero X unless a new spell supplies it.
 // RON accepts ValueX in one EntersWithNumberCounters entry operation.
-// Entry payments and counter distribution need separate adapters.
+// Use [ExileGraveyardAsEntersWithCounterChoice] for entry exile and counters.
 //
 // [TargetSharesCardTypeWith] compares a target with an earlier singular target.
 // Both exact visits must be present and unphased. Current types supply the
@@ -1525,6 +2540,18 @@
 // RON accepts fixed mana, matching sacrifice and permanent damage options
 // in AnyPlayerMayCost, including nested Or lists in resolving bodies.
 // Entry, replacement and announcement payments keep separate contracts.
+//
+// [PermanentLifePaymentInstruction.Effect] retains fixed optional life offers,
+// an exact unpaid-set declaration and the ordered body. Execution uses the
+// shared payment transaction and resolution frame. Missing operands, unnamed
+// results and negative amounts return nil. The inspector makes no offers.
+// Pure spell inspection accepts complete collections without target reads and
+// direct destruction trees that read only this unpaid binding. It validates
+// every child before target gates or proofs. It does not predict payment choices.
+// Optional destruction supplies no certainty proof. An optional prefix blocks
+// later destruction proofs, including empty collections and zero life costs.
+// Supported suffixes preserve earlier direct proofs. Other continuations keep
+// their execution support but need separate pure inspection contracts.
 //
 // [OfferCostForEachPermanent] saves visits for which no eligible player pays.
 // Each visit needs its own complete payment. All offers precede later actions.
@@ -1809,7 +2836,14 @@
 // Each rule is consumed before its body runs. Generated draws keep event ancestry.
 // Bodies run immediately and restore the outer frame. Clones keep separate use.
 // RON lowers CreateFutureReplaceWouldDraw with a typed player and action list.
-// Library selection and outside-game entry need separate services.
+//
+// Use [Game.SetOutsideGameCards] to supply owned cards permitted by the game.
+// Outside cards have no game zone. [Game.OutsideGameCards] returns private copies.
+// [PutOutsideGameCardInHand] makes a required choice at resolution and checks
+// the saved pool membership before entry. Ante restrictions still apply.
+// [OutsideGameEntryAction] uses shared replacement ordering. Entry is not a draw.
+// RON accepts PutACardFromOutsideGameInHand(AnyCard) in resolving bodies.
+// Native human choices, AI choices and game clones keep the same contract.
 //
 // Use [ReplaceDraw] with [Static] for battlefield draw replacement rules.
 // [ControllerDrawStep] includes effect draws during the controller's draw step.
@@ -2456,6 +3490,16 @@
 // RON supports paired choice symbols in resolving action and player bodies.
 // Text changes require separate consumers and layer contracts.
 //
+// [UnlessManaPaidBeforeNextDraw] permits one payment before a player's next
+// actual draw step. Payment stops only its saved delayed ability. Failed
+// payments keep the permission. Cleanup and skipped steps keep the deadline.
+// The draw-step event ends payment before priority; the unpaid body uses the
+// shared delayed stack and saved references. Copies and clones stay separate.
+// RON accepts CreateFutureTrigger_UnlessPlayerPaysManaBefore with one
+// AtTheBeginningOfPlayersNextDrawStep, ActionList, the same player reference,
+// and fixed mana in ordinary resolving bodies. Nafs Asp has complete RON
+// casting, combat damage, payment and unpaid draw-step gameplay evidence.
+//
 // Use [PlayerManaPaymentThisTurn] for a repeatable player payment at instant timing.
 // The player and source references are saved when the permission starts.
 // [Game.GetPlayerPayments] lists affordable permissions without making choices.
@@ -2562,7 +3606,9 @@
 // Clones keep separate ownership and movement. The action reads the current
 // library top at resolution. It does not draw, reveal, shuffle or make choices.
 // Typed player operands declare explicit source reads to waiting delayed queries.
-// Two-card ownership exchanges and result-bound cards need separate adapters.
+// RON acquisition also accepts bound singular grouped-exile results.
+// Separate assignments do not require both cards. Saved visits exclude returns.
+// Bronze Tablet uses independent assignments for absent and stolen sources.
 //
 // Use [AnteCardsOwnedBy] for typed current-owner selection in shared ante.
 // [OtherAnteCards] excludes the physical source after its payment moves it.
@@ -3090,7 +4136,7 @@
 // Clones keep separate pending turns and the saved normal player.
 // The caller must finish the current turn before advancing. The service does
 // not execute steps, cleanup or turn replacements. Multiple-player grants and
-// turn-skip replacement declarations need separate adapters.
+// other turn-skip replacement declarations need separate adapters.
 //
 // Use [CantBeAttackedExceptByUntilNextTurn] for saved player protection.
 // Both players are read at resolution. Each attacker must pass the live filter.
@@ -3319,6 +4365,13 @@
 // Use [IfPermanentMatchesElse] to select one of two resolution bodies.
 // Use [UnlessPermanentMatches] for a body on a known nonmatching object.
 // Both read the condition once. Missing information runs neither body.
+// RON resolving collections accept ExceptFor(collection), including nested
+// sets and bound references. [WithoutPermanents] removes exact present visits.
+// Membership is read when the action resolves. Delays retain source and target
+// identities. A return cannot replace a saved visit. Phased visits are absent.
+// New exclusion forms require ordinary resolving bodies. Target filters keep
+// their existing forms. Attack eligibility uses saved declaration opportunities.
+//
 // [AttackedThisTurn] and [DidntAttackThisTurn] keep each incarnation separate.
 // Entering combat without an attack declaration does not satisfy attack history.
 // [TargetPlayerAttackedThisTurn] checks the player's history at target selection
@@ -3543,6 +4596,10 @@
 // The separate permission to remain tapped stays optional after target departure.
 //
 // Use [CantBeEnchantedExceptBy] with [Static] to permit one Aura on a subject.
+// Use [CantBeEnchanted] with [Static] to exclude all Auras from a subject.
+// Token definitions use [TokenAbilities] to keep this rule as copiable text.
+// RON accepts PermanentRuleEffect(ThisPermanent, [CantBeEnchanted]) in token
+// definitions. Each token supplies its own source for the restriction.
 // Use [AttachedPermanent] and [This] to exclude the granting Aura from the rule.
 // The rule checks casting and attachment legality. Illegal attached Auras move
 // to the graveyard as a state-based action; this action does not destroy them.
@@ -3624,6 +4681,11 @@
 // Use [DealDamageEachPlayer] for amounts that depend on each selected player.
 // Its player binding is local to the amount. All amounts are read before one
 // simultaneous damage batch. Replacement effects do not recalculate them.
+// [PlayerCollectionDamageInstruction] retains that local amount declaration.
+// [InspectRecipientPermanentCount] checks a native count with its exact member.
+// Its pure read uses a present recipient without changing resolution bindings.
+// Native spell inspection accepts these counts for source player damage.
+// Legal nonempty damage remains a barrier before later destruction proofs.
 // Use [DivideRoundDown] and [DivideRoundUp] with [Fixed] of two for half values.
 // [DeclareOpponentOrPlaneswalkerTarget] excludes the controller only from
 // the player targets. A copied spell checks against its own controller.
@@ -4192,7 +5254,11 @@
 // cancellation clears the result. Existing number frames keep copies, clones,
 // delayed bodies, loop frames and cleanup separate. RON lowers all-player
 // fixed-maximum discard and lexical result reads. Mind Bomb uses the shared
-// per-recipient damage service. Coin rounds use [RepeatHeadsOrTailsDamage].
+// per-recipient damage service. [DiscardUpToInstruction] retains the producer.
+// [InspectRecipientDiscardAmount] retains fixed subtraction from the exact
+// recipient's saved result. Spell inspection checks producer dominance without
+// reading counts or making choices. Nonempty discard groups block later proofs.
+// Coin rounds use [RepeatHeadsOrTailsDamage].
 //
 // Use [PermanentMatchesFilterWithLKI] for a source or attachment condition.
 // It reads the exact current object or its saved departure or phase information.
@@ -4252,6 +5318,15 @@
 // RON supports one creature filter, one bound player and one entry operation.
 // Delayed death bindings and death-result loops need separate adapters.
 //
+// [WhenDiesThisTurnWithCard] also saves the first graveyard visit at death.
+// The card binding belongs only to that delayed body. A later graveyard visit
+// cannot replace it. Tokens supply no card. Shared card-zone replacements
+// apply before exile. Zone events observe the final destination after movement.
+// Copies and clones keep separate captured card maps. RON accepts singular
+// exile of the watched reference or Trigger_ThatPermanent in that death body.
+// Trigger_ThatGraveyardCard supplies an explicit typed card reference there.
+// Complete Whippoorwill gameplay covers both actions, paid casting and activation.
+//
 // Use [WhenDiesThisTurnWithBindings] to save one watched death event.
 // The body gets separate permanent, owner and controller bindings.
 // Detection saves the exact visit and player facts before trigger placement.
@@ -4262,6 +5337,18 @@
 // RON lowers these reads in one UntilEndOfTurn delayed death ActionList.
 // OwnerOfPermanent and ControllerOfPermanent of Trigger_ThatPermanent read
 // the saved event players. Other owner contexts need separate adapters.
+//
+// [RequiredTapInstruction.Effect] retains a mandatory tap and separate branches.
+// [InspectRequiredTapInstruction] reads native operands without cost payment.
+// Spell destruction inspection accepts You, one native permanent target and
+// complete mana production branches. Both branches validate before target gates.
+// Native mana amounts can read the exact target mana value, fixed or announced-X
+// values, saved casting values and native addition or multiplication trees.
+// Queries validate target frames without reading values or predicting payment.
+// They do not tap, produce mana, run replacements or change bindings.
+// Payment and production prefixes block later state proofs. Supported suffixes
+// keep earlier proofs. Destruction branches and other payers remain unknown.
+// Execution retains the shared transaction, replaced payments and LKI reads.
 //
 // Use [RequiredTapOrElse] for mandatory payment with one saved permanent.
 // Each operation keeps its own paid and unpaid body. The shared transaction
@@ -4320,6 +5407,79 @@
 // fixed nonnegative count or TheLowestNumberOfCardsInHandAmongPlayers(AnyPlayer).
 // This count spelling is local to this resolving action. No result is saved.
 //
+// [CombatOpponentsWithLKI] reads an exact visit's combat opponents.
+// Present sources use current combat. Departed sources use saved relations.
+// Only present, unphased creatures of those opponent visits are selected.
+// Return cannot replace a saved source or opponent. Clones keep separate state.
+// RON accepts the pair BlockedDeadAttacker and WasBlockingDeadDefender in Or
+// in source-death resolving collections. The event binds the exact dying visit.
+// Shared simultaneous destruction retains replacements and forbids regeneration.
+// The complete Abu Ja'far record has paid-cast and combat-death evidence.
+//
+// [CastingRequirement] checks an intrinsic condition before a spell is cast.
+// It uses the shared casting checks without an instruction at resolution.
+// Copies that are cast repeat the check. Stack copies and resolution do not.
+// RON accepts CastEffect(CantBeCastUnless(NoPermanentsPassFilter(filter,
+// OnTheBattlefield))) on nonland permanents with a reference-free filter.
+// [BattlefieldHasNone] reads all present permanents, including tokens.
+// Phased permanents are absent. Cast rejection preserves payment resources.
+// The complete Tidal Influence record has casting and counter-cycle evidence.
+//
+// [CardPaymentFact] saves a filter result from one discard payment.
+// [DiscardCardCostWithFacts] uses shared payment and discard services.
+// Public destinations retain the match. An unrevealed hidden destination
+// supplies no match. Failed payment publishes no result. Later card movement
+// does not change the fact. Copies, clones and delays keep separate numbers.
+// RON accepts DiscardedCardPassesFilter in an activated resolving body with
+// exactly one DiscardACard cost. Complete Land's Edge has gameplay evidence.
+//
+// [CastSpellDuringLastTurn] and [PutNontokenPermanentDuringLastTurn] read
+// the typed player's last completed turn. Final cleanup saves the active
+// player's actions. Other turns and skipped turns keep that saved history.
+// Entry history uses the actor, even with a different entering controller.
+// Tokens and failed entries do not count. Later departure does not erase it.
+// Clones and payment trials keep separate current and saved maps.
+// [CantAttackEachIf] uses the shared live collection restriction at declaration.
+// RON accepts CantAttackAPlayer(ExceptFor(test)) in EachPermanentRuleEffect
+// on static permanents. The test is either supported last-turn activity or
+// a nonempty Or list. Complete Arboria has paid-cast and attack evidence.
+//
+// [Game.InspectSpellDestruction] accepts saved sacrifice mana values in
+// fixed-type mana production. The exact native additional cost must produce
+// the captured number before resolution. Native sums and products retain
+// their operands. Missing, foreign or overwritten bindings remain unknown.
+// The query uses the current printed spell definition after a text revision.
+// It does not pay costs, resolve values or add mana. Required tap branches,
+// restricted production and delayed production need separate query contracts.
+//
+// [GraveyardHandInstruction] retains one graveyard-to-hand return. Execution
+// uses shared graveyard movement and the card owner's hand. RON retains native
+// card-type filters for singular graveyard targets. [InspectGraveyardTarget]
+// checks the exact announced visit and current own or any graveyard scope.
+// [Game.InspectSpellDestruction] validates these declarations before legality
+// gates or earlier proofs. A legal return prefix blocks later state proofs.
+// A supported suffix preserves an earlier proof. No filter callback, movement,
+// replacement or LKI read runs during inspection. Optional and numeric targets,
+// event cards and battlefield returns need separate query contracts.
+//
+// [CombatSourcePreventionInstruction] retains all combat prevention from one
+// typed source until end of turn. [InspectCombatSourcePreventionInstruction]
+// reads the complete singular declaration without installing a replacement.
+// Execution captures the source visit and uses the shared replacement service.
+// Spell inspection validates the exact native target before legality gates.
+// A live prefix blocks later proofs; a supported suffix preserves earlier proofs.
+// Source sets, other durations and recipient prevention have separate contracts.
+//
+// [CreatureDeathCountInstruction] retains a creature-death count from one
+// simultaneous destruction. [InspectCreatureDeathCountInstruction] checks one
+// exact native producer without reading a count. Execution uses shared creature
+// last known information, replacement ordering and graveyard movement.
+// [Game.InspectSpellDestruction] accepts saved number sums in singular source
+// damage. Each saved number must have an exact preceding native producer.
+// Forward, foreign and duplicate declarations remain unknown. Inspection reads
+// no saved result and calls no amount operand. A supported damage suffix keeps
+// an earlier destruction proof. Complete Hellfire has RON gameplay evidence.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
@@ -4331,3 +5491,17 @@
 //   - docs/architecture-4plus1.md: 4+1 architectural view of the rules engine and subsystems.
 //   - pkg/mage/dsl: Public card-author export package providing the canonical authoring grammar.
 package mage
+
+// Native equal-division damage
+//
+// [EvenDamageInstruction] retains a source, recipient set and resolution total.
+// [InspectEvenDamageInstructions] reads complete native trees without callbacks.
+// Missing operands, result bindings and unknown children reject inspection.
+// Execution uses [DealDamageEvenlyToRecipients] and shared simultaneous damage.
+// [InspectDamageTargets] reads native fixed or optional damage target groups.
+// Its query checks exact visits, current legality and declared empty groups.
+// X bounds and chooser wrappers need separate query contracts.
+// [InspectSpellDestruction] accepts native fixed/X equal-division actions with
+// supported collections or legal target frames. Damage can cause state changes,
+// so a nonempty damage prefix blocks a later destruction proof. This query does
+// not divide amounts, deal damage, run replacements or predict state changes.

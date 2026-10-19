@@ -20,6 +20,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAnyNumberOfCreaturesAttack":
+		return compileAttackGroupTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent":
 		return compileLastCounterTrigger(trigger, n.Args[1], ctx)
 	case "WhenAnyNumberOfPermanentsAreOnTheBattlefield":
@@ -159,6 +161,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 }
 
 func compileSourceDeathCardTrigger(body Node, ctx scope) (optionFactory, error) {
+	ctx.sourceDeathOwner = &sourceDeathOwnerPlan{name: "OwnerOfDeadPermanent"}
 	ctx.deathCard = &deathCardPlan{name: "Trigger_ThatGraveyardCard"}
 	ctx.permanentEvent = &permanentEventPlan{name: "Trigger_ThatPermanent"}
 	plan, err := compileActions(body, ctx)
@@ -166,13 +169,15 @@ func compileSourceDeathCardTrigger(body Node, ctx scope) (optionFactory, error) 
 		return nil, err
 	}
 	return func() mage.CardOption {
+		owner := mage.BindPlayer(ctx.sourceDeathOwner.name)
 		card := mage.BindCard(ctx.deathCard.name)
 		permanent := mage.BindPermanent(ctx.permanentEvent.name)
 		actions := plan.buildWithBindings(instanceBindings{
-			deathCards: map[*deathCardPlan]*mage.CardBinding{ctx.deathCard: card},
-			tapped:     map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: permanent},
+			sourceDeathOwners: map[*sourceDeathOwnerPlan]*mage.PlayerBinding{ctx.sourceDeathOwner: owner},
+			deathCards:        map[*deathCardPlan]*mage.CardBinding{ctx.deathCard: card},
+			tapped:            map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: permanent},
 		})
-		pattern := mage.PermanentDies().SourceOnly().WithCard(card)
+		pattern := mage.PermanentDies().SourceOnly().WithOwner(owner).WithCard(card)
 		if ctx.permanentEvent.referenced {
 			pattern = pattern.WithPermanent(permanent)
 		}

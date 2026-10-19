@@ -166,7 +166,7 @@ func (e *attachedControlEffect) ApplyContinuous(ctx *EffectContext) error {
 	if reconciled, ok := g.layer2Controllers[source.ID()]; ok {
 		controller = reconciled
 	}
-	target.computedController = controller
+	setComputedController(target, controller, e.identity)
 	return nil
 }
 
@@ -174,13 +174,14 @@ func (e *controlContinuousEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	target := g.MutablePermanent(e.targetID)
 	if target != nil {
-		target.computedController = e.controllerID
+		setComputedController(target, e.controllerID, e.identity)
 	}
 	return nil
 }
 
-func setComputedController(target *Permanent, controller uuid.UUID) {
+func setComputedController(target *Permanent, controller, identity uuid.UUID) {
 	target.computedController = controller
+	target.controlLayerEffects = append(target.controlLayerEffects, identity)
 }
 
 func (e *controlContinuousEffect) cloneEffect() ContinuousEffect {
@@ -218,7 +219,8 @@ func (g *Game) ExchangeControl(firstID, secondID, sourceID uuid.UUID) bool {
 	}
 	firstController := first.ControllerID()
 	secondController := second.ControllerID()
-	if firstController == secondController || first.HasAttr(AttrCantChangeControl) || second.HasAttr(AttrCantChangeControl) {
+	if firstController == secondController || first.HasAttr(AttrCantChangeControl) || second.HasAttr(AttrCantChangeControl) ||
+		g.retainedProtectionApplies(first, true) || g.retainedProtectionApplies(second, true) {
 		return false
 	}
 	firstEffect := newControlContinuousEffect(ControlEffectSpec{
@@ -356,7 +358,7 @@ func ControlSourceByChosenPlayer() ContinuousEffect {
 	return FuncContinuousEffect(LayerControl, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		source := g.MutablePermanent(sourceID)
 		if source != nil && source.ChosenPlayer != uuid.Nil {
-			source.computedController = source.ChosenPlayer
+			setComputedController(source, source.ChosenPlayer, source.incarnationID)
 		}
 		return nil
 	})

@@ -97,7 +97,7 @@ func compileTargetedColor(n Node, ctx scope) (optionFactory, error) {
 	}
 	return func() mage.CardOption {
 		target := mage.DeclareSpellOrPermanentTarget("spell or permanent")
-		return mage.WithAbility(mage.Spell(mage.SetObjectColor(target, colors[0]), mage.WithTargets(target)))
+		return mage.WithAbility(mage.Spell((mage.ObjectColorInstruction{Subject: target, Color: colors[0]}).Effect(), mage.WithTargets(target)))
 	}, nil
 }
 

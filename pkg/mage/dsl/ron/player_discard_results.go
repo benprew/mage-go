@@ -38,7 +38,7 @@ func compilePlayerDiscardResults(n Node, remaining []Node, ctx scope) (effectFac
 		result := mage.BindPlayerNumbers(plan.name)
 		bindings.playerDiscards[plan] = result
 		effects := make([]mage.Effect, 0, 1+len(body))
-		effects = append(effects, mage.DiscardUpToEach(mage.EachPlayer, mage.Fixed(amount), result))
+		effects = append(effects, (mage.DiscardUpToInstruction{Subjects: mage.EachPlayer, Maximum: mage.Fixed(amount), Result: result}).Effect())
 		for _, build := range body {
 			effects = append(effects, build(bindings))
 		}

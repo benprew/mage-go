@@ -110,6 +110,20 @@ func TestRONDeathResultReturnGlyph(t *testing.T) {
 			if change == "clone" {
 				g = g.Clone()
 			}
+			collection, ok := mage.InspectPermanentCollection(mage.MatchingPermanents(mage.IsCreature))
+			if !ok {
+				t.Fatal("missing creature collection")
+			}
+			watched := collection.Select(g)
+			wantProof := change == "normal" || change == "control" || change == "clone" || change == "copy" || change == "phase-cycle" || change == "last-block"
+			for range 2 {
+				if certain, known := g.InspectSpellDestruction(g.StackPeek(), watched); certain != wantProof || known != (change != "replaced") {
+					t.Fatalf("wrong destruction proof %v/%v", certain, known)
+				}
+				if certain, known := g.InspectSpellDestruction(g.StackPeek(), nil); certain || known != (change != "replaced") {
+					t.Fatal("incomplete death-return tree")
+				}
+			}
 			g.ResolveStack()
 			returned := change == "normal" || change == "control" || change == "clone" || change == "copy" || change == "phase-cycle"
 			if (g.FindPermanent(replacement.ID()) != nil) != returned {

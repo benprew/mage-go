@@ -394,3 +394,8 @@ func (ai *AIPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g mag
 	topOrder, graveyard = ai.scryPlan(top, g)
 	return graveyard, topOrder
 }
+
+// ChooseCardFromOutsideGame selects a card for the same hand benefit as a search.
+func (ai *AIPlayer) ChooseCardFromOutsideGame(cards []mage.Card, reason string, g mage.GameReader) mage.Card {
+	return ai.ChooseCardFromLibrary(cards, reason, g)
+}

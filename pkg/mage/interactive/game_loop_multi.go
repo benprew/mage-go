@@ -204,6 +204,10 @@ func runMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels, sendSnapsh
 
 	// --- Main turn loop ---
 	for g.CurrentTurn() <= 100 {
+		if !g.TryBeginTurn() {
+			g.AdvanceToNextTurn()
+			continue
+		}
 		for _, step := range core.AllSteps() {
 			if disconnected {
 				return

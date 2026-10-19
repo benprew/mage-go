@@ -148,11 +148,11 @@ func (g *Game) checkStateBasedActions() bool {
 			}
 		}
 
-		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
-		// permanents with the same name, they choose one and sacrifice the rest.
-		var legendCounts map[uuid.UUID]map[string][]*Permanent // controller -> name -> perms
+		// All legend choices must finish before any permanent moves.
+		var legendCounts map[uuid.UUID]map[string][]*Permanent
+		var legendNames []string
 		for _, p := range g.zones.battlefield {
-			if p.Card.HasSuperType(SuperLegendary) {
+			if !p.PhasedOut && p.Card.HasSuperType(SuperLegendary) {
 				if legendCounts == nil {
 					legendCounts = make(map[uuid.UUID]map[string][]*Permanent)
 				}
@@ -160,22 +160,33 @@ func (g *Game) checkStateBasedActions() bool {
 					legendCounts[p.ControllerID()] = make(map[string][]*Permanent)
 				}
 				legendCounts[p.ControllerID()][p.Name()] = append(legendCounts[p.ControllerID()][p.Name()], p)
+				if !slices.Contains(legendNames, p.Name()) {
+					legendNames = append(legendNames, p.Name())
+				}
 			}
 		}
-		for ctrlID, byName := range legendCounts {
-			for _, perms := range byName {
+		var legendDepartures []*Permanent
+		for _, player := range []Player{g.ActivePlayerObj(), g.NonActivePlayerObj()} {
+			if player == nil {
+				continue
+			}
+			for _, name := range legendNames {
+				perms := legendCounts[player.PlayerID()][name]
 				if len(perms) > 1 {
-					player := g.GetPlayer(ctrlID)
 					keep := player.ChoosePermanent(perms, "legend rule: keep one", g)
+					if !slices.Contains(perms, keep) {
+						keep = perms[0]
+					}
 					for _, p := range perms {
 						if p != keep {
-							g.PutPermanentIntoGraveyard(p)
+							legendDepartures = append(legendDepartures, p)
 						}
 					}
 					actions = true
 				}
 			}
 		}
+		g.moveGraveyardBatch(nil, legendDepartures, false)
 
 		// MTG rule 704.5k: World rule — if two or more permanents have the World
 		// supertype, all except the most recent one are put into their owners' graveyards.

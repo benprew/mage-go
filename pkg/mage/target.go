@@ -939,40 +939,22 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 		if slices.ContainsFunc(controllers, func(id uuid.UUID) bool { return p.ControllerID() != id }) {
 			continue
 		}
-		if t.manaValueEqualX && p.Card.ManaCost().CMC() != g.resolution.X() {
+		if t.manaValueEqualX && !permanentTargetManaValueMatches(p, g.resolution.X()) {
 			continue
 		}
-		if t.excludeSource && sourceCard != nil && p.ID() == sourceCard.ID() {
+		if t.excludeSource && targetSourceIsPermanent(sourceCard, p) {
 			continue
 		}
-		if t.toughnessLessThanSourcePower {
-			power, ok := targetSourcePower(sourceCard, g)
-			if !ok || p.CurrentToughness(g) >= power {
-				continue
-			}
-		}
-		if t.powerLESourcePower {
-			power, ok := targetSourcePower(sourceCard, g)
-			if !ok || p.CurrentPower(g) > power {
-				continue
-			}
+		if matches, known := sourceRelativeTargetMatches(p, sourceCard, g, t.toughnessLessThanSourcePower, t.powerLESourcePower); !known || !matches {
+			continue
 		}
 		if t.attachedToControllerOnly {
-			host := g.FindPermanent(p.AttachedTo)
-			if host == nil || host.PhasedOut || host.ControllerID() != controller {
+			host := currentAttachmentHost(p, g)
+			if host == nil || host.ControllerID() != controller {
 				continue
 			}
 		}
-		if t.controllerOnly && p.ControllerID() != controller {
-			continue
-		}
-		if t.opponentOnly && p.ControllerID() == controller {
-			continue
-		}
-		if t.controllerOwned && p.Card.Owner() != controller {
-			continue
-		}
-		if t.opponentOwned && p.Card.Owner() == controller {
+		if !t.playerDomain().matches(p, controller) {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {

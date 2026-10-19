@@ -30,6 +30,10 @@ func compileLibraryInspection(n Node, ctx scope) (effectFactory, error) {
 	if operation.Kind != Symbol {
 		return nil, unsupported(operation, "library inspection ordering operation")
 	}
+	fixedCount := -1
+	if n.Args[1].Name == "Integer" {
+		fixedCount = n.Args[1].Args[0].Integer
+	}
 	reorder := false
 	switch operation.Name {
 	case "PutTheRemainingCardsOnTopOfLibraryInAnyOrder":
@@ -39,6 +43,9 @@ func compileLibraryInspection(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(operation, "library inspection ordering operation")
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if fixedCount >= 0 {
+			return (mage.LibraryProcedureInstruction{Chooser: mage.You, Library: player.build(bindings), Count: fixedCount, Reorder: reorder}).Effect()
+		}
 		return mage.LookAtLibraryTopNumber(mage.You, player.build(bindings), count(bindings), reorder)
 	}, nil
 }
@@ -69,6 +76,6 @@ func compileMayShuffleLibrary(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(action, "optional library action")
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.MayShuffleLibrary(mage.You, player.build(bindings))
+		return (mage.LibraryProcedureInstruction{Chooser: mage.You, Library: player.build(bindings), OptionalShuffle: true}).Effect()
 	}, nil
 }

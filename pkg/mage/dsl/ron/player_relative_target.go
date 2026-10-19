@@ -5,6 +5,9 @@ import "github.com/benprew/mage-go/pkg/mage"
 type permanentTargetOptionsFactory func(instanceBindings) []mage.PermanentTargetOption
 
 func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter, permanentTargetOptionsFactory, error) {
+	if _, _, err := validatePermanentTargetPlayerDomains(n); err != nil {
+		return mage.PermanentFilter{}, nil, err
+	}
 	if n.Name == "WasBlockedByDefenderThisTurn" {
 		return compileTargetBlockHistory(n, ctx)
 	}

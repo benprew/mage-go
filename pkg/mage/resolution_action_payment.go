@@ -19,6 +19,7 @@ const (
 	resolutionGainLife resolutionActionKind = iota
 	resolutionDamage
 	resolutionDestroy
+	resolutionStaticAbility
 )
 
 type resolutionActionPayment struct {
@@ -28,6 +29,7 @@ type resolutionActionPayment struct {
 	source    DamageSourceRef
 	recipient DamageRecipientRef
 	amount    ResolutionValue
+	grant     *acquireStaticEffect
 }
 
 // GainLifePayment uses the selected player's life gain as a resolution cost.
@@ -45,11 +47,17 @@ func DestroyPayment(subject PermanentRef) ResolutionActionPayment {
 	return &resolutionActionPayment{kind: resolutionDestroy, permanent: subject}
 }
 
+// StaticAbilityPayment offers a static ability with a duration as a resolution cost.
+func StaticAbilityPayment(subject PermanentRef, rule StaticRule, duration core.Duration) ResolutionActionPayment {
+	return &resolutionActionPayment{kind: resolutionStaticAbility, permanent: subject, grant: &acquireStaticEffect{subject: subject, rule: rule, duration: duration}}
+}
+
 type preparedResolutionAction struct {
 	kind            resolutionActionKind
 	id, incarnation uuid.UUID
 	source          DamageSource
 	amount          int
+	grant           *acquireStaticEffect
 }
 
 func (e *resolutionActionPayment) prepareResolutionAction(ctx *EffectContext) (preparedResolutionAction, bool) {
@@ -67,6 +75,13 @@ func (e *resolutionActionPayment) prepareResolutionAction(ctx *EffectContext) (p
 		if p := ctx.Game.FindPermanent(prepared.id); p != nil {
 			prepared.incarnation = p.incarnationID
 		}
+	case resolutionStaticAbility:
+		p, present := e.permanent.resolvePermanent(ctx)
+		if !present {
+			return prepared, false
+		}
+		prepared.id, prepared.incarnation, ok = p.ID(), p.incarnationID, true
+		prepared.grant = e.grant
 	case resolutionDestroy:
 		p, present := e.permanent.resolvePermanent(ctx)
 		if !present || p.HasAttr(core.Indestructible) {
@@ -74,7 +89,7 @@ func (e *resolutionActionPayment) prepareResolutionAction(ctx *EffectContext) (p
 		}
 		prepared.id, prepared.incarnation, ok = p.ID(), p.incarnationID, true
 	}
-	if ok && e.kind != resolutionDestroy {
+	if ok && (e.kind == resolutionGainLife || e.kind == resolutionDamage) {
 		prepared.amount = max(0, e.amount.resolveValue(ctx))
 	}
 	return prepared, ok
@@ -106,6 +121,8 @@ func (p preparedResolutionAction) pay(ctx *EffectContext) {
 		} else {
 			ctx.Game.damage.dealDamageToPermanentFromSourceOutcome(ctx.Game, ctx.Game.FindPermanent(p.id), p.amount, p.source)
 		}
+	case resolutionStaticAbility:
+		_ = p.grant.installOn(ctx, ctx.Game.FindPermanent(p.id))
 	case resolutionDestroy:
 		ctx.Game.destroyPermanents([]*Permanent{ctx.Game.FindPermanent(p.id)}, false)
 	}
@@ -118,6 +135,8 @@ func (e *resolutionActionPayment) inspectDefinition() definitionNode {
 		n.children = []definitionEdge{{"player", e.player}, {"amount", e.amount}}
 	case resolutionDamage:
 		n.children = []definitionEdge{{"source", damageSourceDefinition{e.source}}, {"recipient", e.recipient}, {"amount", e.amount}}
+	case resolutionStaticAbility:
+		n.children = []definitionEdge{{"grant", e.grant}}
 	case resolutionDestroy:
 		n.children = []definitionEdge{{"subject", e.permanent}}
 	}
@@ -149,6 +168,8 @@ func (e *resolutionActionPaymentEffect) Properties() EffectProperties {
 			mergeEffectProperties(&props, GainLifeFor(payment.player, payment.amount).Properties())
 		case resolutionDamage:
 			mergeEffectProperties(&props, DealDamageFrom(payment.source, payment.recipient, payment.amount).Properties())
+		case resolutionStaticAbility:
+			mergeEffectProperties(&props, payment.grant.Properties())
 		case resolutionDestroy:
 			mergeEffectProperties(&props, Destroy(payment.permanent).Properties())
 		}
@@ -183,6 +204,8 @@ func (p preparedResolutionAction) prompt(g *Game) string {
 		return fmt.Sprintf("gain %d life", p.amount)
 	case resolutionDamage:
 		return fmt.Sprintf("deal %d damage", p.amount)
+	case resolutionStaticAbility:
+		return "gain a static ability"
 	default:
 		return "destroy " + g.FindPermanent(p.id).Name()
 	}

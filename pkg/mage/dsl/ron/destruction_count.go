@@ -66,13 +66,18 @@ func compileDestructionCount(producer, continuation Node, ctx scope) (effectFact
 		}
 		result := mage.BindNumber("destruction count at " + producer.Position.String())
 		bindings.destructionCounts[plan] = result
-		option := mage.CreaturesDiedThisWayInto(result)
+		subjects := set(bindings)
+		var destroy mage.ResolvingEffect
 		if plan.name == "TheNumberOfPermanentsPutIntoAPlayersGraveyardThisWay" {
-			option = mage.PermanentsPutIntoGraveyardThisWayInto(result)
-		}
-		var destroy = mage.DestroyEach(set(bindings), option)
-		if producer.Name == "DestroyEachPermanentNoRegen" {
-			destroy = mage.DestroyEachWithoutRegeneration(set(bindings), option)
+			destroy = (mage.DestructionResultInstruction{
+				Subjects: subjects, Result: result,
+				CannotRegenerate: producer.Name == "DestroyEachPermanentNoRegen",
+			}).Effect()
+		} else {
+			destroy = (mage.CreatureDeathCountInstruction{
+				Subjects: subjects, Result: result,
+				CannotRegenerate: producer.Name == "DestroyEachPermanentNoRegen",
+			}).Effect()
 		}
 		effects := make([]mage.Effect, 0, 1+len(body))
 		effects = append(effects, destroy)

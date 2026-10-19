@@ -61,12 +61,10 @@ func compileLostManaProducer(n Node, remaining []Node, ctx scope) (effectFactory
 		effects := make([]mage.Effect, 0, 1+len(body))
 		ref := player.build(bindings)
 		if forced {
-			saved := mage.BindPlayer("forced mana player " + n.Position.String())
-			effects = append(effects, mage.SnapshotPlayer(ref, saved))
-			ref = mage.FromPlayer(saved)
-			effects = append(effects, mage.ActivateManaAbilityOfEach(ref, mage.IsLand))
+			effects = append(effects, (mage.ForcedManaLossInstruction{Subject: ref, Filter: mage.IsLand, Result: binding}).Effect())
+		} else {
+			effects = append(effects, (mage.LostManaInstruction{Subject: ref, Result: binding}).Effect())
 		}
-		effects = append(effects, mage.LoseUnspentManaInto(ref, binding))
 		for _, build := range body {
 			effects = append(effects, build(bindings))
 		}
@@ -85,6 +83,6 @@ func compileLostManaConsumer(n Node, ctx scope) ([]effectFactory, error) {
 		return nil, problem(n, "saved mana requires an ordinary resolving body")
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		return mage.AddLostManaFor(ctx.player.build(bindings), bindings.lostMana[ctx.lostMana])
+		return (mage.LostManaInstruction{Subject: ctx.player.build(bindings), Result: bindings.lostMana[ctx.lostMana], Restore: true}).Effect()
 	}}, nil
 }

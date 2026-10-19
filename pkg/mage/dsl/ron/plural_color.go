@@ -85,6 +85,6 @@ func compilePluralColor(n Node, ctx scope) (effectFactory, error) {
 		}
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.Until(core.EndOfTurn, mage.SetEachColors(bindings.permanentSets[ctx.permanentTargets], colors...))
+		return (mage.TemporaryColorInstruction{Subjects: bindings.permanentSets[ctx.permanentTargets], Colors: colors}).Effect()
 	}, nil
 }

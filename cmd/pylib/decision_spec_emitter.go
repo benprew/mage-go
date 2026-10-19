@@ -127,7 +127,7 @@ func pendingKindToDecisionType(kind string) (decisionType, bool) {
 		return decTypeDeclareAttackers, true
 	case "blockers":
 		return decTypeDeclareBlockers, true
-	case "permanent", "cards_from_hand", "card_from_library":
+	case "permanent", "cards_from_hand", "card_from_library", "card_from_outside_game":
 		return decTypeChooseTargets, true
 	case "may":
 		return decTypeMay, true

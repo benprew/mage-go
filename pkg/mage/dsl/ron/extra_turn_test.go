@@ -155,8 +155,8 @@ func TestRONExtraTurnTriggeredAndDelayed(t *testing.T) {
 func TestRONExtraTurnTimeVaultActivationPrerequisite(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "CED", "CEI"} {
 		record := staticBaseRecord(t, set, "Time Vault")
-		if _, err := Compile(record); err == nil {
-			t.Fatal("complete Time Vault must still reject its turn replacement")
+		if _, err := Compile(record); err != nil {
+			t.Fatal(err)
 		}
 		var activation Node
 		for _, rule := range record.Fields["Rules"].Args {

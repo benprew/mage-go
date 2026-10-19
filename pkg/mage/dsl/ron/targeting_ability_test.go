@@ -190,8 +190,8 @@ func TestRONTargetingAbilityRecords(t *testing.T) {
 		})
 	}
 	for _, tc := range []struct{ set, name string }{{"DRK", "Reflecting Mirror"}} {
-		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil {
-			t.Fatalf("published incomplete %s", tc.name)
+		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err != nil {
+			t.Fatal(err)
 		}
 	}
 }

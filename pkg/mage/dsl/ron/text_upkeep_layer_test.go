@@ -455,8 +455,20 @@ func TestRONTextUpkeepLayerInventory(t *testing.T) {
 			records++
 		}
 	}
-	if len(counts) != 69 || records != 136 {
+	if len(counts) != 73 || records != 140 {
 		t.Fatalf("declaration inventory: %d names / %d records", len(counts), records)
+	}
+	if counts["Rohgahh of Kher Keep"] != 1 {
+		t.Fatal("Rohgahh of Kher Keep record missing")
+	}
+	if counts["Season of the Witch"] != 1 {
+		t.Fatal("Season of the Witch record missing")
+	}
+	if counts["Tetravus"] != 1 {
+		t.Fatal("Tetravus record missing")
+	}
+	if counts["Tidal Influence"] != 1 {
+		t.Fatal("Tidal Influence record missing")
 	}
 	if counts["Forethought Amulet"] != 1 || counts["The Fallen"] != 1 || counts["Divine Intervention"] != 1 || counts["Dance of Many"] != 1 || counts["Cyclone"] != 1 || counts["Power Surge"] != 6 || counts["Shapeshifter"] != 1 || counts["The Abyss"] != 1 || counts["Psychic Allergy"] != 1 || counts["Mishra's War Machine"] != 2 || counts["Worms of the Earth"] != 1 || counts["Drop of Honey"] != 1 || counts["Mana Vortex"] != 1 || counts["Tourach's Gate"] != 1 || counts["Serendib Djinn"] != 1 || counts["Ebon Praetor"] != 1 || counts["Demonic Hordes"] != 6 || counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
 		t.Fatal("real subject reprints missing")

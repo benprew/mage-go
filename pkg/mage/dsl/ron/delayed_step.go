@@ -7,6 +7,9 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "WhenAPermanentLeavesTheBattlefield" {
+		return compileDelayedTokenSetLeave(n, ctx)
+	}
 	if event.Name == "Or" || event.Name == "WhenPermanentLeavesTheBattlefield" || event.Name == "WhenPermanentBecomesUntapped" {
 		return compileDelayedSourceEvent(n, ctx)
 	}
@@ -64,7 +67,13 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 			values[i] = build(bindings)
 		}
 		if event.Name == "AtNextEndOfCombatThisTurn" {
-			return mage.AtNextThisTurn(pattern, mage.Sequence(values...))
+			return (mage.NextCombatThisTurnInstruction{Body: mage.Sequence(values...)}).Effect()
+		}
+		if event.Name == "AtTheBeginningOfPlayersNextMainPhase" {
+			return (mage.NextMainPhaseInstruction{Body: mage.Sequence(values...)}).Effect()
+		}
+		if event.Name == "AtTheBeginningOfTheNextEndStep" {
+			return (mage.NextEndStepInstruction{Body: mage.Sequence(values...)}).Effect()
 		}
 		return mage.AtNext(pattern, mage.Sequence(values...))
 	}, nil

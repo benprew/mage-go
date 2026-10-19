@@ -28,6 +28,6 @@ func compileRandomDiscard(n Node, ctx scope) ([]effectFactory, error) {
 		}
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		return mage.DiscardAtRandom(ctx.player.build(bindings), amount(bindings))
+		return (mage.RandomDiscardInstruction{Subject: ctx.player.build(bindings), Amount: amount(bindings)}).Effect()
 	}}, nil
 }

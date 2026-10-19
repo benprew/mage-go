@@ -75,6 +75,6 @@ func compileDamagePackets(n Node, ctx scope) (effectFactory, error) {
 		for i, plan := range plans {
 			packets[i] = mage.DamagePacketTo(plan.recipient(bindings), plan.amount(bindings))
 		}
-		return mage.DealDamagePackets(source(bindings), packets...)
+		return (mage.PacketDamageInstruction{Source: source(bindings), Packets: packets}).Effect()
 	}, nil
 }

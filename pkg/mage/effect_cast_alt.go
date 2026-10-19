@@ -351,6 +351,11 @@ func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) boo
 			return false
 		}
 		permanentID = act.PermanentID()
+	case *permanentGraveyardAction:
+		if act.destination != ZoneGraveyard {
+			return false
+		}
+		permanentID = act.subject
 	default:
 		return false
 	}
@@ -372,6 +377,12 @@ func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) boo
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
+	if move, ok := a.(*permanentGraveyardAction); ok {
+		copyMove := *move
+		copyMove.destination = ZoneExile
+		copyMove.exileSource = r.sourceID
+		return &copyMove
+	}
 	if sacrifice, ok := a.(*SacrificePermanentAction); ok {
 		return sacrifice.WithExile(r.sourceID)
 	}

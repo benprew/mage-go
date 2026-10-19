@@ -88,11 +88,16 @@ func TestRONCurrentTurnControlTargets(t *testing.T) {
 }
 
 func TestRONCurrentTurnControlInvalid(t *testing.T) {
-	for _, filter := range []string{`ControlledSinceBeginningOfTurn()`, `ControlledSinceBeginningOfTurn(You)`, `NotControlledSinceBeginningOfTurn()`, `ExceptFor()`, `ExceptFor(NotControlledSinceBeginningOfTurn())`, `ExceptFor(NotControlledSinceBeginningOfTurn,IsTapped)`, `ExceptFor(ControlledSinceBeginningOfTurn)`, `ExceptFor(IsTapped)`} {
+	for _, filter := range []string{`ControlledSinceBeginningOfTurn()`, `ControlledSinceBeginningOfTurn(You)`, `NotControlledSinceBeginningOfTurn()`, `ExceptFor()`, `ExceptFor(NotControlledSinceBeginningOfTurn())`, `ExceptFor(NotControlledSinceBeginningOfTurn,IsTapped)`} {
 		for _, body := range []string{`Targeted([TargetPermanent(` + filter + `)],ActionList([TapPermanent(Ref_TargetPermanent)]))`, `ActionList([TapEachPermanent(` + filter + `)])`} {
 			if _, err := Compile(activePlayerControlRecord(t, body)); err == nil {
 				t.Fatalf("accepted %s", body)
 			}
+		}
+	}
+	for _, filter := range []string{`ExceptFor(ControlledSinceBeginningOfTurn)`, `ExceptFor(IsTapped)`} {
+		if _, err := Compile(activePlayerControlRecord(t, `Targeted([TargetPermanent(`+filter+`)],ActionList([TapPermanent(Ref_TargetPermanent)]))`)); err == nil {
+			t.Fatalf("accepted target exclusion %s", filter)
 		}
 	}
 }

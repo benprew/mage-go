@@ -12,6 +12,10 @@ import (
 // Turn trackers reset after the final cleanup step. They remain available during
 // cleanup priority. The reset preserves selected history, such as attackedLastTurn.
 type TurnTrackers struct {
+	castSpells                   []DamageSource
+	putNontoken                  map[uuid.UUID]bool
+	lastActivity                 map[uuid.UUID]lastTurnActivity
+	attackOpportunities          map[capturedPermanent]bool
 	untappedStartTurn            int
 	untappedStartPlayer          uuid.UUID
 	untappedStartVisits          map[capturedPermanent]bool
@@ -28,6 +32,7 @@ type TurnTrackers struct {
 	playerCastSpell              map[uuid.UUID]bool
 	playerAttacked               map[uuid.UUID]bool
 	cardsDrawn                   map[uuid.UUID]int
+	drawnHandVisits              map[drawnHandVisit]bool
 	cardsLeftGraveyard           map[uuid.UUID]int
 	cardsPutIntoExile            int
 	exileZoneChangesPending      map[uuid.UUID]int
@@ -124,6 +129,12 @@ func (t *TurnTrackers) RecordEvent(evt *GameEvent) {
 			t.cardsDrawn = make(map[uuid.UUID]int)
 		}
 		t.cardsDrawn[evt.PlayerID]++
+		if evt.DrawnCardID != uuid.Nil && evt.DrawnCardVisit != uuid.Nil {
+			if t.drawnHandVisits == nil {
+				t.drawnHandVisits = make(map[drawnHandVisit]bool)
+			}
+			t.drawnHandVisits[drawnHandVisit{evt.PlayerID, evt.DrawnCardID, evt.DrawnCardVisit}] = true
+		}
 	case EvtCardsLeftGraveyard:
 		if t.cardsLeftGraveyard == nil {
 			t.cardsLeftGraveyard = make(map[uuid.UUID]int)
@@ -297,6 +308,7 @@ func (t *TurnTrackers) IncrementCleanupPriorityRounds() {
 
 // ResetForNewTurn clears per-turn trackers and archives the active player's attacker history.
 func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
+	t.archiveActivity(activePlayerID)
 	if t.attackedLastTurn == nil {
 		t.attackedLastTurn = make(map[uuid.UUID]map[uuid.UUID]bool)
 	}
@@ -319,6 +331,8 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	t.playerCastSpell = nil
 	t.playerAttacked = nil
 	t.cardsDrawn = nil
+	t.castSpells = nil
+	t.drawnHandVisits = nil
 	t.cardsLeftGraveyard = nil
 	t.cardsPutIntoExile = 0
 	t.exileZoneChangesPending = nil
@@ -333,6 +347,7 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	t.attacked = make(map[uuid.UUID]bool)
 	t.attackedIncarnation = nil
 	t.attackedIncarnations = nil
+	t.attackOpportunities = nil
 	t.blocked = make(map[uuid.UUID][]uuid.UUID)
 	t.blockHistory = nil
 	t.paidTapHistory = nil
@@ -477,6 +492,8 @@ func (t *TurnTrackers) CleanupPriorityRounds() int {
 // Clone creates an independent deep copy of TurnTrackers.
 func (t *TurnTrackers) Clone() TurnTrackers {
 	c := TurnTrackers{
+		putNontoken:                  maps.Clone(t.putNontoken),
+		lastActivity:                 maps.Clone(t.lastActivity),
 		blockHistory:                 maps.Clone(t.blockHistory),
 		paidTapHistory:               maps.Clone(t.paidTapHistory),
 		abilityActivations:           maps.Clone(t.abilityActivations),
@@ -494,6 +511,7 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 		playerCastSpell:              cloneUUIDMap(t.playerCastSpell),
 		playerAttacked:               cloneUUIDMap(t.playerAttacked),
 		cardsDrawn:                   cloneUUIDMap(t.cardsDrawn),
+		drawnHandVisits:              maps.Clone(t.drawnHandVisits),
 		cardsLeftGraveyard:           cloneUUIDMap(t.cardsLeftGraveyard),
 		exileZoneChangesPending:      cloneUUIDMap(t.exileZoneChangesPending),
 		extraLandPlays:               cloneUUIDMap(t.extraLandPlays),
@@ -503,6 +521,7 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 		attacked:                     cloneUUIDBoolMap(t.attacked),
 		attackedIncarnation:          maps.Clone(t.attackedIncarnation),
 		attackedIncarnations:         maps.Clone(t.attackedIncarnations),
+		attackOpportunities:          maps.Clone(t.attackOpportunities),
 		blocked:                      cloneBlockedThisTurn(t.blocked),
 		instantsCast:                 cloneUUIDIntMap(t.instantsCast),
 		sorceriesCast:                cloneUUIDIntMap(t.sorceriesCast),
@@ -521,6 +540,10 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 			c.attackedLastTurnIncarnation[player] = maps.Clone(history)
 		}
 	}
+	for _, source := range t.castSpells {
+		c.castSpells = append(c.castSpells, cloneDamageSource(source))
+	}
+
 	return c
 }
 

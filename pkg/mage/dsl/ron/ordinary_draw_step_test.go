@@ -254,11 +254,11 @@ func TestRONOrdinaryDrawStepInventoryAndBoundaries(t *testing.T) {
 	if err := mage.ValidateCardDefinition("Armageddon Clock", clock()); err != nil {
 		t.Fatal(err)
 	}
-	for _, tc := range []struct{ set, name, gap string }{
-		{"LEG", "Sylvan Library", "DrawNumberCards"},
-	} {
-		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s remaining gap: %v", tc.name, err)
-		}
+	library, err := Compile(hostUntapRecord(t, "LEG", "Sylvan Library"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Sylvan Library", library()); err != nil {
+		t.Fatal(err)
 	}
 }

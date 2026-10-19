@@ -65,6 +65,9 @@ func compileGroupedExile(n Node, remaining []Node, ctx scope) (effectFactory, er
 			if err != nil {
 				return nil, err
 			}
+			if death := ctx.delayedDeath; death != nil && (ref.kind == permanentDeath && ref.death == death || death.watched != nil && ref == *death.watched) {
+				return nil, problem(subject, "delayed death graveyard exile requires one subject, not permanent groups")
+			}
 			plan.singular[i] = true
 			if ref.kind == permanentSource {
 				if plan.source >= 0 {

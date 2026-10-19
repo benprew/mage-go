@@ -89,7 +89,7 @@ func (r *continuedDamageReplacement) Replace(action Action, g *Game) Action {
 		return action
 	}
 	actions, _ := r.expandDamageEvent([]Action{action}, []map[ReplacementEffect]bool{{}}, g)
-	return &expandedDamageAction{actions: actions, originalCount: 1}
+	return &expandedDamageAction{actions: actions}
 }
 
 // damageEventExpander keeps new damage in the shared replacement pipeline.
@@ -129,6 +129,7 @@ func (r *continuedDamageReplacement) expandDamageEvent(actions []Action, applied
 	for _, packet := range packets {
 		damage := NewDamageToPlayerAction(r.spell.ID(), packet.player, packet.amount, false).withDamageSource(r.spell)
 		damage.cause = r.cause.clone()
+		damage.origin = -1
 		actions = append(actions, damage)
 		applied = append(applied, packet.used)
 	}
@@ -136,8 +137,7 @@ func (r *continuedDamageReplacement) expandDamageEvent(actions []Action, applied
 }
 
 type expandedDamageAction struct {
-	actions       []Action
-	originalCount int
+	actions []Action
 }
 
 func (a *expandedDamageAction) ActionSource() uuid.UUID {

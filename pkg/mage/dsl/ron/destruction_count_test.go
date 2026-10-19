@@ -51,6 +51,14 @@ func TestRONDestructionCountHellfire(t *testing.T) {
 			if scenario == "copy" && g.CopyStackObjectDirect(g.StackPeek(), b.PlayerID(), false) == nil {
 				t.Fatal("copy failed")
 			}
+			watch, _ := mage.InspectPermanentCollection(mage.MatchingPermanents(mage.IsCreature))
+			visits := watch.Select(g)
+			wantProof := scenario == "normal" || scenario == "copy"
+			for range 2 {
+				if proof, known := g.InspectSpellDestruction(g.StackPeek(), visits); !known || proof != wantProof {
+					t.Fatalf("complete Hellfire query = %v/%v, want %v/true", proof, known, wantProof)
+				}
+			}
 			clone := g.Clone()
 			g.ResolveStack()
 			damage := 3

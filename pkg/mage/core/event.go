@@ -77,11 +77,16 @@ type GameEvent struct {
 	DrawnCardID        uuid.UUID
 	DrawnCardVisit     uuid.UUID
 	DiscardedCardVisit uuid.UUID
-	PlayerID           uuid.UUID
-	Amount             int
-	CounterType        CounterType
-	CountersRemaining  int
-	Flag               bool // context-dependent
-	FromZone           Zone
-	ToZone             Zone
+	// Discard cause facts must survive replacement choices and source departure.
+	DiscardedHandVisit     uuid.UUID
+	DiscardCauseID         uuid.UUID
+	DiscardCauseController uuid.UUID
+	DiscardByEffect        bool
+	PlayerID               uuid.UUID
+	Amount                 int
+	CounterType            CounterType
+	CountersRemaining      int
+	Flag                   bool // context-dependent
+	FromZone               Zone
+	ToZone                 Zone
 }

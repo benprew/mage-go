@@ -2,6 +2,7 @@ package mage
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -10,6 +11,7 @@ import (
 
 // DelayedTrigger keeps a saved ability until its event or duration ends.
 type DelayedTrigger struct {
+	leaveVisits          []capturedPermanent
 	survivesCleanup      bool
 	alternateEventType   EventType
 	targetingAbilityID   uuid.UUID
@@ -213,6 +215,7 @@ func cloneDelayedTrigger(dt *DelayedTrigger) *DelayedTrigger {
 		return nil
 	}
 	clone := *dt
+	clone.leaveVisits = slices.Clone(dt.leaveVisits)
 	clone.modes = append([]Mode(nil), dt.modes...)
 	clone.Effects = append([]Effect(nil), dt.Effects...)
 	clone.targets = append([]Target(nil), dt.targets...)

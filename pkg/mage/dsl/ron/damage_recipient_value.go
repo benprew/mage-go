@@ -20,7 +20,7 @@ func compilePlayerRecipientDamage(n Node, ctx scope, source damageSourceFactory)
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.Effect {
-			return mage.DealDamageFrom(source(bindings), player.build(bindings), amount(bindings))
+			return (mage.SingularDamageInstruction{Source: source(bindings), Recipient: player.build(bindings), Amount: amount(bindings)}).Effect()
 		}, nil
 	}
 	players := recipient.Args[0]
@@ -41,6 +41,6 @@ func compilePlayerRecipientDamage(n Node, ctx scope, source damageSourceFactory)
 		if players.Name == "Opponent" {
 			subjects = mage.OpponentsOf(mage.You)
 		}
-		return mage.DealDamageEachPlayer(source(bindings), subjects, member, amount(bindings))
+		return (mage.PlayerCollectionDamageInstruction{Source: source(bindings), Subjects: subjects, Member: member, Amount: amount(bindings)}).Effect()
 	}, nil
 }

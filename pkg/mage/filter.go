@@ -14,8 +14,10 @@ import (
 // PermanentFilter is a labeled predicate on permanents.
 // The zero value matches all permanents.
 type PermanentFilter struct {
-	label string
-	fn    func(*Permanent, *Game) bool
+	label     string
+	fn        func(*Permanent, *Game) bool
+	cardTypes *permanentCardTypeNode
+	query     *permanentCollectionFilterNode
 }
 
 // Match reports whether p satisfies this filter.
@@ -41,8 +43,9 @@ func NewPermanentFilter(label string, fn func(*Permanent, *Game) bool) Permanent
 // CardFilter is a labeled predicate on cards.
 // The zero value matches all cards.
 type CardFilter struct {
-	label string
-	fn    func(Card) bool
+	label           string
+	fn              func(Card) bool
+	characteristics *cardCharacteristicNode
 }
 
 // Match reports whether c satisfies this filter.
@@ -66,32 +69,22 @@ func NewCardFilter(label string, fn func(Card) bool) CardFilter {
 }
 
 // AnyPermanent matches all permanents without restriction.
-var AnyPermanent = NewPermanentFilter("permanent", func(_ *Permanent, _ *Game) bool { return true })
+var AnyPermanent = permanentCardTypeFilter("permanent", &permanentCardTypeNode{operation: cardTypesAll})
 
 // IsCreature matches creature permanents.
-var IsCreature = NewPermanentFilter("creature", func(p *Permanent, _ *Game) bool {
-	return p.HasType(TypeCreature)
-})
+var IsCreature = permanentCardTypeFilter("creature", &permanentCardTypeNode{operation: cardTypesHas, kind: TypeCreature})
 
 // IsArtifact matches artifact permanents.
-var IsArtifact = NewPermanentFilter("artifact", func(p *Permanent, _ *Game) bool {
-	return p.HasType(TypeArtifact)
-})
+var IsArtifact = permanentCardTypeFilter("artifact", &permanentCardTypeNode{operation: cardTypesHas, kind: TypeArtifact})
 
 // IsEnchantment matches enchantment permanents.
-var IsEnchantment = NewPermanentFilter("enchantment", func(p *Permanent, _ *Game) bool {
-	return p.HasType(TypeEnchantment)
-})
+var IsEnchantment = permanentCardTypeFilter("enchantment", &permanentCardTypeNode{operation: cardTypesHas, kind: TypeEnchantment})
 
 // IsLand matches land permanents.
-var IsLand = NewPermanentFilter("land", func(p *Permanent, _ *Game) bool {
-	return p.HasType(TypeLand)
-})
+var IsLand = permanentCardTypeFilter("land", &permanentCardTypeNode{operation: cardTypesHas, kind: TypeLand})
 
 // IsPlaneswalker matches planeswalker permanents.
-var IsPlaneswalker = NewPermanentFilter("planeswalker", func(p *Permanent, _ *Game) bool {
-	return p.HasType(TypePlaneswalker)
-})
+var IsPlaneswalker = permanentCardTypeFilter("planeswalker", &permanentCardTypeNode{operation: cardTypesHas, kind: TypePlaneswalker})
 
 // IsLegendary matches legendary permanents.
 var IsLegendary = NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bool {
@@ -145,9 +138,11 @@ func NotOwnedBy(playerID uuid.UUID) PermanentFilter {
 // pick up a creature that became white earlier in the same Apply() pass via
 // a color-changing effect.
 func HasColorFilter(c Color) PermanentFilter {
-	return NewPermanentFilter(c.String(), func(p *Permanent, _ *Game) bool {
+	filter := NewPermanentFilter(c.String(), func(p *Permanent, _ *Game) bool {
 		return slices.Contains(p.Colors(), c)
 	})
+	filter.query = &permanentCollectionFilterNode{operation: collectionFilterColor, color: c}
+	return filter
 }
 
 // NotID returns a filter that excludes a specific permanent.
@@ -163,20 +158,24 @@ func Not(f PermanentFilter) PermanentFilter {
 	if f.label == "" {
 		label = ""
 	}
-	return NewPermanentFilter(label, func(p *Permanent, g *Game) bool {
+	result := NewPermanentFilter(label, func(p *Permanent, g *Game) bool {
 		return !f.Match(p, g)
 	})
+	result.cardTypes = composePermanentCardTypes(cardTypesNot, []PermanentFilter{f})
+	result.query = composePermanentCollectionFilters(collectionFilterNot, []PermanentFilter{f})
+	return result
 }
 
 // And combines filters with logical AND.
 func And(fs ...PermanentFilter) PermanentFilter {
+	fs = slices.Clone(fs)
 	parts := make([]string, 0, len(fs))
 	for _, f := range fs {
 		if f.label != "" {
 			parts = append(parts, f.label)
 		}
 	}
-	return NewPermanentFilter(strings.Join(parts, " "), func(p *Permanent, g *Game) bool {
+	result := NewPermanentFilter(strings.Join(parts, " "), func(p *Permanent, g *Game) bool {
 		for _, f := range fs {
 			if !f.Match(p, g) {
 				return false
@@ -184,17 +183,21 @@ func And(fs ...PermanentFilter) PermanentFilter {
 		}
 		return true
 	})
+	result.cardTypes = composePermanentCardTypes(cardTypesAll, fs)
+	result.query = composePermanentCollectionFilters(collectionFilterAll, fs)
+	return result
 }
 
 // Or combines filters with logical OR.
 func Or(fs ...PermanentFilter) PermanentFilter {
+	fs = slices.Clone(fs)
 	parts := make([]string, 0, len(fs))
 	for _, f := range fs {
 		if f.label != "" {
 			parts = append(parts, f.label)
 		}
 	}
-	return NewPermanentFilter(strings.Join(parts, " or "), func(p *Permanent, g *Game) bool {
+	result := NewPermanentFilter(strings.Join(parts, " or "), func(p *Permanent, g *Game) bool {
 		for _, f := range fs {
 			if f.Match(p, g) {
 				return true
@@ -202,13 +205,18 @@ func Or(fs ...PermanentFilter) PermanentFilter {
 		}
 		return false
 	})
+	result.cardTypes = composePermanentCardTypes(cardTypesAny, fs)
+	result.query = composePermanentCollectionFilters(collectionFilterAny, fs)
+	return result
 }
 
 // HasSubType returns a filter matching permanents with the given subtype.
 func HasSubType(subType string) PermanentFilter {
-	return NewPermanentFilter(subType, func(p *Permanent, _ *Game) bool {
+	filter := NewPermanentFilter(subType, func(p *Permanent, _ *Game) bool {
 		return p.HasSubType(subType)
 	})
+	filter.query = &permanentCollectionFilterNode{operation: collectionFilterSubtype, subtype: subType}
+	return filter
 }
 
 // Named returns a filter matching permanents with the given name.
@@ -219,14 +227,18 @@ func Named(name string) PermanentFilter {
 }
 
 // IsTapped matches tapped permanents.
-var IsTapped = NewPermanentFilter("tapped", func(p *Permanent, _ *Game) bool {
-	return p.Tapped
-})
+var IsTapped = PermanentFilter{
+	label: "tapped",
+	fn:    func(p *Permanent, _ *Game) bool { return p.Tapped },
+	query: &permanentCollectionFilterNode{operation: collectionFilterTapped},
+}
 
 // IsUntapped matches untapped permanents.
-var IsUntapped = NewPermanentFilter("untapped", func(p *Permanent, _ *Game) bool {
-	return !p.Tapped
-})
+var IsUntapped = PermanentFilter{
+	label: "untapped",
+	fn:    func(p *Permanent, _ *Game) bool { return !p.Tapped },
+	query: &permanentCollectionFilterNode{operation: collectionFilterNot, children: []*permanentCollectionFilterNode{{operation: collectionFilterTapped}}},
+}
 
 // IsEnchanted matches permanents with an Aura attached to them.
 var IsEnchanted = NewPermanentFilter("enchanted", func(p *Permanent, g *Game) bool {
@@ -244,27 +256,39 @@ func permanentIsEnchanted(p *Permanent, g GameReader) bool {
 }
 
 // IsAttacking matches creatures currently declared as attackers.
-var IsAttacking = NewPermanentFilter("attacking", func(p *Permanent, g *Game) bool {
-	return g.combat.IsAttacking(p.ID())
-})
+var IsAttacking = PermanentFilter{
+	label: "attacking",
+	fn: func(p *Permanent, g *Game) bool {
+		return g.combat != nil && g.combat.IsAttacking(p.ID())
+	},
+	query: &permanentCollectionFilterNode{operation: collectionFilterAttacking, contextual: true},
+}
 
 // IsBlocking matches creatures currently declared as blockers.
-var IsBlocking = NewPermanentFilter("blocking", func(p *Permanent, g *Game) bool {
-	return g.combat != nil && g.combat.IsBlocking(p.ID())
-})
+var IsBlocking = PermanentFilter{
+	label: "blocking",
+	fn: func(p *Permanent, g *Game) bool {
+		return g.combat != nil && g.combat.IsBlocking(p.ID())
+	},
+	query: &permanentCollectionFilterNode{operation: collectionFilterBlocking, contextual: true},
+}
 
 // HasKeywordFilter returns a filter matching permanents with the given keyword.
 func HasKeywordFilter(kw Keyword) PermanentFilter {
-	return NewPermanentFilter("with "+kw.String(), func(p *Permanent, _ *Game) bool {
+	filter := NewPermanentFilter("with "+kw.String(), func(p *Permanent, _ *Game) bool {
 		return p.HasKeyword(kw)
 	})
+	filter.query = &permanentCollectionFilterNode{operation: collectionFilterKeyword, keyword: kw}
+	return filter
 }
 
 // NotHasKeywordFilter returns a filter matching permanents without the given keyword.
 func NotHasKeywordFilter(kw Keyword) PermanentFilter {
-	return NewPermanentFilter("without "+kw.String(), func(p *Permanent, _ *Game) bool {
+	filter := NewPermanentFilter("without "+kw.String(), func(p *Permanent, _ *Game) bool {
 		return !p.HasKeyword(kw)
 	})
+	filter.query = composePermanentCollectionFilters(collectionFilterNot, []PermanentFilter{HasKeywordFilter(kw)})
+	return filter
 }
 
 // IsID returns a filter matching a specific permanent by ID.
@@ -314,16 +338,12 @@ var IsInstantOrSorceryCard = NewCardFilter("instant or sorcery card", func(c Car
 
 // HasColorCardFilter returns a CardFilter matching cards with the given color.
 func HasColorCardFilter(color Color) CardFilter {
-	return NewCardFilter(color.String()+" card", func(c Card) bool {
-		return slices.Contains(cardColors(c), color)
-	})
+	return typedCardFilter(color.String()+" card", &cardCharacteristicNode{operation: cardCharacteristicColor, color: color})
 }
 
 // HasSubTypeCardFilter returns a CardFilter matching cards with the given subtype.
 func HasSubTypeCardFilter(subType string) CardFilter {
-	return NewCardFilter(subType+" card", func(c Card) bool {
-		return c.HasSubType(subType)
-	})
+	return typedCardFilter(subType+" card", &cardCharacteristicNode{operation: cardCharacteristicSubtype, subtype: subType})
 }
 
 // IsPermanentCard matches cards with permanent types (Artifact, Creature, Enchantment, Land, Planeswalker).
@@ -333,14 +353,15 @@ var IsPermanentCard = NewCardFilter("permanent card", func(c Card) bool {
 
 // AndCardFilter returns a CardFilter that matches only if all provided filters match.
 func AndCardFilter(filters ...CardFilter) CardFilter {
-	return NewCardFilter("matching card", func(c Card) bool {
+	filters = slices.Clone(filters)
+	return CardFilter{label: "matching card", characteristics: composeCardCharacteristics(cardCharacteristicAll, filters), fn: func(c Card) bool {
 		for _, f := range filters {
 			if !f.Match(c) {
 				return false
 			}
 		}
 		return true
-	})
+	}}
 }
 
 // PrintedInSet returns a filter matching permanents whose card name was
@@ -367,23 +388,22 @@ func HasPowerGTE(n int) PermanentFilter {
 
 // HasPowerEqual matches permanents with current power equal to n.
 func HasPowerEqual(n int) PermanentFilter {
-	return NewPermanentFilter(fmt.Sprintf("with power %d", n), func(p *Permanent, g *Game) bool {
-		return p.CurrentPower(g) == n
-	})
+	return fixedNumericPermanentFilter(fmt.Sprintf("with power %d", n), collectionFilterPowerEqual, n)
 }
 
 // HasToughnessEqual matches permanents with current toughness equal to n.
 func HasToughnessEqual(n int) PermanentFilter {
-	return NewPermanentFilter(fmt.Sprintf("with toughness %d", n), func(p *Permanent, g *Game) bool {
-		return p.CurrentToughness(g) == n
-	})
+	return fixedNumericPermanentFilter(fmt.Sprintf("with toughness %d", n), collectionFilterToughnessEqual, n)
 }
 
 // HasToughnessGTE matches permanents with current toughness at least n.
 func HasToughnessGTE(n int) PermanentFilter {
-	return NewPermanentFilter(fmt.Sprintf("with toughness %d or greater", n), func(p *Permanent, g *Game) bool {
-		return p.CurrentToughness(g) >= n
-	})
+	return fixedNumericPermanentFilter(fmt.Sprintf("with toughness %d or greater", n), collectionFilterToughnessGTE, n)
+}
+
+func fixedNumericPermanentFilter(label string, operation permanentCollectionFilterOperation, limit int) PermanentFilter {
+	node := &permanentCollectionFilterNode{operation: operation, limit: limit}
+	return PermanentFilter{label: label, query: node, fn: node.matches}
 }
 
 // IsAuraOnLand matches Aura enchantments attached to land permanents.
@@ -409,8 +429,23 @@ func CreatedByFilter(id uuid.UUID) PermanentFilter {
 
 // IsAttachedTo matches permanents attached to a host that matches the filter.
 func IsAttachedTo(filter PermanentFilter) PermanentFilter {
-	return NewPermanentFilter("attached to "+filter.Text(), func(p *Permanent, g *Game) bool {
-		host := g.FindPermanent(p.AttachedTo)
-		return host != nil && !host.PhasedOut && filter.Match(host, g)
+	result := NewPermanentFilter("attached to "+filter.Text(), func(p *Permanent, g *Game) bool {
+		host := currentAttachmentHost(p, g)
+		return host != nil && filter.Match(host, g)
 	})
+	if child, ok := inspectContextualPermanentCollectionFilter(filter); ok {
+		result.query = &permanentCollectionFilterNode{operation: collectionFilterAttachment, children: []*permanentCollectionFilterNode{child}, contextual: true}
+	}
+	return result
+}
+
+func currentAttachmentHost(p *Permanent, g *Game) *Permanent {
+	if p == nil || p.PhasedOut || g == nil {
+		return nil
+	}
+	host := g.FindPermanent(p.AttachedTo)
+	if host == nil || host.PhasedOut || p.attachedIncarnation != host.incarnationID {
+		return nil
+	}
+	return host
 }

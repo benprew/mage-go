@@ -53,3 +53,31 @@ func spellFilterOnlyInstantsOrSorceries(n Node) bool {
 	}
 	return n.Name == "Or"
 }
+
+func compileResolvingSpellCopy(n Node, ctx scope) (effectFactory, error) {
+	if !ctx.resolving || ctx.permanent || ctx.activation || ctx.delayedStep || ctx.enteringSource || ctx.drawReplacementBody || ctx.discardCauseEvent != nil {
+		return nil, problem(n, "self copy requires an ordinary resolving spell body")
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	if n.Args[0].Kind != Symbol || n.Args[0].Name != "ThisSpell" {
+		return nil, unsupported(n.Args[0], "resolving self-copy reference")
+	}
+	return func(bindings instanceBindings) mage.Effect {
+		return mage.CopySpellFor(ctx.player.build(bindings), mage.ThisSpell)
+	}, nil
+}
+
+func compileOptionalResolvingSpellCopy(n Node, ctx scope) (effectFactory, error) {
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	inner := n.Args[0]
+	if _, err := compileResolvingSpellCopy(inner, ctx); err != nil {
+		return nil, err
+	}
+	return func(bindings instanceBindings) mage.Effect {
+		return mage.MayCopySpellFor(ctx.player.build(bindings), mage.ThisSpell)
+	}, nil
+}

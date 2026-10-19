@@ -10,8 +10,10 @@ func compileAnteExchangeAction(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if card.target == nil || !card.target.ante {
-		return nil, problem(n.Args[0], "ante action requires an ante card reference")
+	anteTarget := card.target != nil && card.target.ante
+	exileAcquisition := n.Name == "AcquireOwnershipOfCard" && card.exile != nil
+	if !anteTarget && !exileAcquisition {
+		return nil, problem(n.Args[0], "ownership requires an ante target or singular exile result; library exchange requires an ante target")
 	}
 	player, err := compilePlayerRef(n.Args[1], ctx)
 	if err != nil {

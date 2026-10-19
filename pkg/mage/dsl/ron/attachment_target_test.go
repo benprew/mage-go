@@ -292,8 +292,8 @@ func TestRONAttachmentTargetShapesAndInventory(t *testing.T) {
 		if strings.Contains(host, "IsCardtype(Creature)") && !strings.Contains(host, "IsCardtype(Land)") {
 			land = g.PutOnBattlefield(mage.NewCreature("Creature", "", 2, 6), a.PlayerID())
 		}
-		aura := g.PutOnBattlefield(mage.NewAura("Attachment", ""), b.PlayerID())
-		aura.AttachedTo = land.ID()
+		aura := g.PutOnBattlefield(mage.NewAura("Attachment", "", mage.WithCastTarget(mage.TargetPermanent())), b.PlayerID())
+		g.Attach(aura.ID(), land.ID())
 		card.SetOwner(a.PlayerID())
 		a.AddToHand(card)
 		if err := g.CastSpellByID(a.PlayerID(), card.ID(), []uuid.UUID{aura.ID()}, 0); err != nil {

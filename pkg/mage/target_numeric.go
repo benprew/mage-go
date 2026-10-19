@@ -41,10 +41,31 @@ func targetSourcePower(card Card, g *Game) (int, bool) {
 	if retained, ok := card.(targetSourceLKI); ok && retained.powerKnown {
 		return retained.power, true
 	}
+	if retained, ok := card.(targetSourceLKI); ok {
+		if retained.spell || retained.incarnation == uuid.Nil {
+			return 0, false
+		}
+		if p := g.FindPermanent(card.ID()); p != nil && !p.PhasedOut && p.incarnationID == retained.incarnation {
+			return p.CurrentPower(g), true
+		}
+		return 0, false
+	}
 	if p := g.FindPermanent(card.ID()); p != nil && !p.PhasedOut {
 		return p.CurrentPower(g), true
 	}
 	return 0, false
+}
+
+func sourceRelativeTargetMatches(permanent *Permanent, source Card, g *Game, toughnessLess, powerLE bool) (matches, known bool) {
+	if !toughnessLess && !powerLE {
+		return true, true
+	}
+	power, known := targetSourcePower(source, g)
+	if !known {
+		return false, false
+	}
+	return (!toughnessLess || permanent.CurrentToughness(g) < power) &&
+		(!powerLE || permanent.CurrentPower(g) <= power), true
 }
 
 // TargetManaValueEqualX checks current mana value against the announced X.
@@ -56,6 +77,10 @@ func (targetManaValueEqualXOption) permanentTargetOption()                  {}
 func (targetManaValueEqualXOption) applyPermanentTarget(t *PermanentTarget) { t.manaValueEqualX = true }
 func (targetManaValueEqualXOption) inspectDefinition() definitionNode {
 	return definitionNode{Role: "target-mana-value", Text: "mana value equals announced X"}
+}
+
+func permanentTargetManaValueMatches(permanent *Permanent, x int) bool {
+	return permanent.Card.ManaCost().CMC() == x
 }
 
 // DeclareSpellTargetManaValueX checks a spell's mana value against the announced X.

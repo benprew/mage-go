@@ -3,7 +3,14 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compilePlayerDamageHistory(n Node, ctx scope) (valueFactory, error) {
-	artifact := n.Name == "DamageDealtToPlayerThisTurnByPermanents"
+	artifact := false
+	switch n.Name {
+	case "DamageDealtToPlayerThisTurn":
+	case "DamageDealtToPlayerThisTurnByPermanents":
+		artifact = true
+	default:
+		return nil, unsupported(n, "player damage history value")
+	}
 	count := 1
 	if artifact {
 		count = 2

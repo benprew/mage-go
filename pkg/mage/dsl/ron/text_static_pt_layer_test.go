@@ -113,12 +113,6 @@ func TestRONTextStaticPTLayerRecords(t *testing.T) {
 				continue
 			}
 			factory, err := Compile(node)
-			if node.Fields["Name"].String == "Rohgahh of Kher Keep" {
-				if err == nil {
-					t.Fatal("unsupported continuation accepted")
-				}
-				continue
-			}
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -127,7 +121,7 @@ func TestRONTextStaticPTLayerRecords(t *testing.T) {
 			records++
 		}
 	}
-	if len(names) != 12 || records != 36 {
+	if len(names) != 13 || records != 37 {
 		t.Fatalf("unmapped records: %d / %v", records, names)
 	}
 }
@@ -165,12 +159,20 @@ func testStaticPTLayerRecord(t *testing.T, name string, factory mage.CardFactory
 	case "Kobold Taskmaster":
 		power, toughness = 1, 0
 		controlled = true
+	case "Rohgahh of Kher Keep":
+		power, toughness = 2, 2
+		controlled = true
 	case "Thrull Champion":
 	default:
 		t.Fatal("missing gameplay mapping", name)
 	}
 	subject := func(player mage.Player, c core.Color) *mage.Permanent {
 		card := textColorCard(c)
+		if name == "Rohgahh of Kher Keep" {
+			named := mage.NewCreature("Kobolds of Kher Keep", "", 1, 1)
+			named.SetColorOverride([]core.Color{c})
+			card = named
+		}
 		mage.WithSubTypes("Thrull", "Kobold")(card.(*mage.BaseCard))
 		return g.PutOnBattlefield(card, player.PlayerID())
 	}

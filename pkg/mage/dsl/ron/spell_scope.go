@@ -1,8 +1,6 @@
 package ron
 
 import (
-	"slices"
-
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -53,7 +51,7 @@ func compileSpellFilter(n Node) (mage.CardFilter, error) {
 
 func compileSpellCardFilter(n Node, targeting bool) (mage.CardFilter, error) {
 	if n.Kind == Symbol && n.Name == "AnySpell" {
-		return mage.NewCardFilter("any spell", func(mage.Card) bool { return true }), nil
+		return mage.AnyCardFilter(), nil
 	}
 	if err := arity(n, 1); err != nil {
 		return mage.CardFilter{}, err
@@ -68,15 +66,13 @@ func compileSpellCardFilter(n Node, targeting bool) (mage.CardFilter, error) {
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Aura" {
 			return mage.CardFilter{}, unsupported(n.Args[0], "spell enchantment subtype")
 		}
-		return mage.NewCardFilter("Aura spell", func(card mage.Card) bool {
-			return card.HasType(core.TypeEnchantment) && card.HasSubType("Aura")
-		}), nil
+		return mage.AndCardFilter(mage.HasCardTypeCardFilter(core.TypeEnchantment), mage.HasSubTypeCardFilter("Aura")), nil
 	case "IsCardtype":
 		kind, err := cardType(n.Args[0])
 		if err != nil {
 			return mage.CardFilter{}, err
 		}
-		return mage.NewCardFilter(kind.String()+" spell", func(card mage.Card) bool { return card.HasType(kind) }), nil
+		return mage.HasCardTypeCardFilter(kind), nil
 	case "IsColor":
 		value, err := color(n.Args[0])
 		if err != nil {
@@ -101,9 +97,7 @@ func compileSpellCardFilter(n Node, targeting bool) (mage.CardFilter, error) {
 		if n.Name == "And" {
 			return mage.AndCardFilter(filters...), nil
 		}
-		return mage.NewCardFilter("matching spell", func(card mage.Card) bool {
-			return slices.ContainsFunc(filters, func(filter mage.CardFilter) bool { return filter.Match(card) })
-		}), nil
+		return mage.OrCardFilter(filters...), nil
 	default:
 		return mage.CardFilter{}, unsupported(n, "spell target filter")
 	}
@@ -125,17 +119,18 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 		}
 	}
 	controlled := false
-	manaValueX := false
+	var manaValueX *manaValueXTargetPlan
 	var filters []mage.SpellFilter
 	for _, part := range parts {
 		if part.Name == "ManaValueIs" {
-			if manaValueX {
+			if manaValueX != nil {
 				return nil, "", problem(part, "supply one spell mana value restriction")
 			}
-			if err := compileManaValueXRestriction(part, ctx); err != nil {
+			plan, err := compileManaValueXRestriction(part, ctx)
+			if err != nil {
 				return nil, "", err
 			}
-			manaValueX = true
+			manaValueX = plan
 			continue
 		}
 		if part.Name == "TargetsAPermanent" {
@@ -154,7 +149,7 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 		}
 		filters = append(filters, filter)
 	}
-	if controlled && manaValueX {
+	if controlled && manaValueX != nil {
 		return nil, "", problem(n, "combined spell mana value and permanent target restrictions are not supported")
 	}
 	if len(filters) == 0 {
@@ -162,8 +157,8 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 	}
 	return func(instanceBindings) mage.Target {
 		name := ctx.targetNamespace + "Ref_TargetSpell"
-		if manaValueX {
-			return mage.DeclareSpellTargetManaValueX(name).WithFilter(mage.AllSpellFilters(filters...))
+		if manaValueX != nil {
+			return manaValueX.spellTarget(name).WithFilter(mage.AllSpellFilters(filters...))
 		}
 		if controlled {
 			return mage.DeclareSpellTargetTargetingControlledPermanent(name).WithFilter(mage.AllSpellFilters(filters...))

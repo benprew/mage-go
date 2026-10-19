@@ -477,6 +477,13 @@ func WhenDiesThisTurnWithBindings(subject PermanentRef, permanent *PermanentBind
 	return &delayedPermanentEventEffect{subject: subject, body: body, deathCapture: &capture}
 }
 
+// WhenDiesThisTurnWithCard also saves the first graveyard visit at death.
+// A later return to that graveyard cannot replace the saved visit.
+func WhenDiesThisTurnWithCard(subject PermanentRef, permanent *PermanentBinding, owner, controller *PlayerBinding, card *CardBinding, body ResolvingEffect) ResolvingEffect {
+	capture := PermanentDies().WithPermanent(permanent).WithOwner(owner).WithController(controller).WithCard(card)
+	return &delayedPermanentEventEffect{subject: subject, body: body, deathCapture: &capture}
+}
+
 // WhenLeavesThisTurn watches one battlefield object until this turn ends.
 func WhenLeavesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
 	return &delayedPermanentEventEffect{subject: subject, body: body, leaves: true}
@@ -543,14 +550,29 @@ func (e *delayedPermanentEventEffect) inspectDefinition() definitionNode {
 		if capture.permanent == nil || capture.owner == nil || capture.controller == nil || capture.owner == capture.controller {
 			n.problem = "delayed death: supply a permanent binding and separate owner and controller bindings"
 		}
-		n.children[1].value = Sequence(&eventPermanentCapture{binding: capture.permanent}, &eventPlayerCapture{binding: capture.owner}, &eventPlayerCapture{binding: capture.controller}, e.body)
+		captures := []ResolvingEffect{&eventPermanentCapture{binding: capture.permanent}, &eventPlayerCapture{binding: capture.owner}, &eventPlayerCapture{binding: capture.controller}}
+		if capture.captureCard {
+			if capture.card == nil {
+				n.problem = "delayed death: supply a card binding"
+			}
+			captures = append(captures, &eventCardCapture{binding: capture.card})
+		}
+		n.children[1].value = Sequence(append(captures, e.body)...)
 	}
 	return n
 }
 
 func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 	permanent, ok := e.subject.resolvePermanent(ctx)
-	if !ok || permanent.PhasedOut {
+	if !ok && e.once && e.leaves {
+		if reference, hasIdentity := e.subject.(permanentInformationReference); hasIdentity {
+			if identity, captured := reference.informationIdentity(ctx); captured {
+				permanent = ctx.Game.FindPermanentIncludingPhased(identity.id)
+				ok = permanent != nil && permanent.incarnationID == identity.incarnation
+			}
+		}
+	}
+	if !ok {
 		return nil
 	}
 	body := captureDelayedBody(ctx, e.body)

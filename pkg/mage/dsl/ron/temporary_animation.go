@@ -96,6 +96,13 @@ func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instance
 }
 
 func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if _, _, err := validatePermanentTargetPlayerDomains(n); err != nil {
+		return mage.PermanentFilter{}, nil, err
+	}
+	retained, handled, err := compileInspectableTargetFilter(n)
+	if err != nil {
+		return mage.PermanentFilter{}, nil, err
+	}
 	domain, err := compileTargetSubtypeDomain(n)
 	if err != nil {
 		return mage.PermanentFilter{}, nil, err
@@ -104,12 +111,21 @@ func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []ma
 	if err != nil {
 		return mage.PermanentFilter{}, nil, err
 	}
+	if handled {
+		filter = retained
+	}
 	return filter, append(options, mage.TargetWithDomain(domain)), nil
 }
 
 func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if option, handled, err := compilePermanentTargetPlayerOption(n); handled {
+		if err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		return mage.AnyPermanent, []mage.PermanentTargetOption{option}, nil
+	}
 	if n.Name == "PowerIs" && len(n.Args) == 1 && len(n.Args[0].Args) == 1 && n.Args[0].Args[0].Name == "PowerOfPermanent" {
-		return compileSourcePowerLETarget(n, ctx)
+		return compileSourceRelativePowerTarget(n, ctx)
 	}
 	if n.Name == "IsCreatureType" {
 		if err := arity(n, 1); err != nil {
@@ -128,35 +144,20 @@ func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, 
 		return mage.PermanentFilter{}, nil, problem(n, "target disjunction requires operands")
 	}
 	if n.Name == "ManaValueIs" {
-		if err := compileManaValueXRestriction(n, ctx); err != nil {
+		plan, err := compileManaValueXRestriction(n, ctx)
+		if err != nil {
 			return mage.PermanentFilter{}, nil, err
 		}
-		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetManaValueEqualX()}, nil
+		return mage.AnyPermanent, []mage.PermanentTargetOption{plan.permanentOption()}, nil
 	}
 	if n.Name == "ToughnessIs" && len(n.Args) == 1 && n.Args[0].Name == "LessThan" {
-		return compileSourcePowerTarget(n, ctx)
+		return compileSourceRelativePowerTarget(n, ctx)
 	}
 	if n.Name == "AttachedToAPermanent" {
 		return compileAttachmentTargetFilter(n)
 	}
 	if n.Name == "OwnedByAPlayer" {
-		if err := arity(n, 1); err != nil {
-			return mage.PermanentFilter{}, nil, err
-		}
-		player := n.Args[0]
-		if player.Kind == Symbol && player.Name == "Opponent" {
-			return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOpponentOwns()}, nil
-		}
-		if player.Name != "SinglePlayer" {
-			return mage.PermanentFilter{}, nil, unsupported(player, "permanent target owner")
-		}
-		if err := arity(player, 1); err != nil {
-			return mage.PermanentFilter{}, nil, err
-		}
-		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
-			return mage.PermanentFilter{}, nil, unsupported(player.Args[0], "permanent target owner")
-		}
-		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetYouOwn()}, nil
+		return mage.PermanentFilter{}, nil, unsupported(n.Args[0], "permanent target owner")
 	}
 	if n.Name == "ControlledByAPlayer" {
 		if err := arity(n, 1); err != nil {
@@ -170,32 +171,14 @@ func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, 
 			}
 			return mage.ControllerControls(filter), nil, nil
 		}
-		if player.Kind == Symbol && player.Name == "Opponent" {
-			return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOpponentControls()}, nil
-		}
-		if player.Name != "SinglePlayer" {
-			return mage.PermanentFilter{}, nil, unsupported(player, "permanent target controller")
-		}
-		if err := arity(player, 1); err != nil {
-			return mage.PermanentFilter{}, nil, err
-		}
-		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
-			return mage.PermanentFilter{}, nil, unsupported(player.Args[0], "permanent target controller")
-		}
-		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetYouControl()}, nil
+		return mage.PermanentFilter{}, nil, unsupported(player, "permanent target controller")
 	}
 	if n.Name == "Other" {
-		if err := arity(n, 1); err != nil {
-			return mage.PermanentFilter{}, nil, err
-		}
-		ref, err := compilePermanentRef(n.Args[0], ctx)
+		option, err := compileSourceExclusionTarget(n, ctx)
 		if err != nil {
 			return mage.PermanentFilter{}, nil, err
 		}
-		if ref.kind != permanentSource {
-			return mage.PermanentFilter{}, nil, unsupported(n.Args[0], "target exclusion")
-		}
-		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOtherThanSource()}, nil
+		return mage.AnyPermanent, []mage.PermanentTargetOption{option}, nil
 	}
 	if n.Name == "And" {
 		if err := arity(n, 1); err != nil {

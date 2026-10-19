@@ -57,8 +57,12 @@ func TestRONFutureDrawReplacementCardEvents(t *testing.T) {
 	for _, tc := range []struct{ set, name string }{{"ARN", "Aladdin's Lamp"}, {"3ED", "Aladdin's Lamp"}, {"ARN", "Ring of Ma'rûf"}} {
 		t.Run(tc.set+tc.name, func(t *testing.T) {
 			record := staticBaseRecord(t, tc.set, tc.name)
-			if _, err := Compile(record); err == nil {
-				t.Fatal("complete card still needs other capabilities")
+			factory, err := Compile(record)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = mage.ValidateCardDefinition(tc.name, factory()); err != nil {
+				t.Fatal(err)
 			}
 			installation := record.Fields["Rules"].Args[0].Args[1].Args[0].Args[0]
 			installation.Args[1] = nameScopeNode(t, `[GainLife(Integer(2)),DrawACard]`)
@@ -69,7 +73,7 @@ func TestRONFutureDrawReplacementCardEvents(t *testing.T) {
 			}
 			rule.Args[1].Args[0].Args = []Node{installation}
 			record.Fields["Rules"] = Node{Kind: List, Args: []Node{rule}}
-			factory, err := Compile(record)
+			factory, err = Compile(record)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -164,7 +164,7 @@ func TestRONPlayerChoiceInvalid(t *testing.T) {
 }
 
 func TestRONPlayerChoiceCompleteRecords(t *testing.T) {
-	for _, tc := range []struct{ set, name, blocker string }{{"LEG", "Backdraft", "ChooseASpellThatResolvedThisTurn"}} {
+	for _, tc := range []struct{ set, name string }{{"LEG", "Backdraft"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)
@@ -177,9 +177,12 @@ func TestRONPlayerChoiceCompleteRecords(t *testing.T) {
 		for _, node := range nodes {
 			if node.Fields["Name"].String == tc.name {
 				found = true
-				_, err := Compile(node)
-				if err == nil || !strings.Contains(err.Error(), tc.blocker) {
+				factory, err := Compile(node)
+				if err != nil {
 					t.Fatalf("%s: %v", tc.name, err)
+				}
+				if err := mage.ValidateCardDefinition(tc.name, factory()); err != nil {
+					t.Fatal(err)
 				}
 			}
 		}

@@ -10,7 +10,7 @@ func (g *Game) WaitingDelayedPermanentSources() []DamageSource {
 		if delayed == nil {
 			continue
 		}
-		var identities []capturedPermanent
+		identities := slices.Clone(delayed.leaveVisits)
 		addSourceReference := func(effect Effect) {
 			if reference, ok := effect.(delayedSourcePermanentReference); ok && reference.refersToSourcePermanent() && delayed.sourceCaptured {
 				identities = append(identities, capturedPermanent{delayed.SourceID, delayed.sourceIncarnation})
@@ -155,6 +155,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		subject = v.subject
 	case permanentManaValue:
 		subject = v.subject
+	case otherSourceDamageHistoryValue:
+		subject = v.subject
 	case permanentInformationValue:
 		subject = v.subject
 	case entryLifePaidValue:
@@ -228,6 +230,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 	case blockedAttackersOfSet:
 		return permanentRefReadsSourcePermanent(s.blocker)
 	case combatOpponentsSet:
+		return permanentRefReadsSourcePermanent(s.subject)
+	case combatOpponentsInformationSet:
 		return permanentRefReadsSourcePermanent(s.subject)
 	case turnDamageHistoryPermanents:
 		return damageReadsSourcePermanent(s.source) || permanentSetReadsSourcePermanent(s.candidates)
@@ -341,6 +345,8 @@ func actionPaymentReadsSourcePermanent(payment ResolutionActionPayment) bool {
 	case resolutionDamage:
 		player, _ := instruction.recipient.(PlayerRef)
 		return damageReadsSourcePermanent(instruction.source) || damageRecipientReadsSourcePermanent(instruction.recipient) || playerRefReadsSourcePermanent(player) || resolutionValueReadsSourcePermanent(instruction.amount)
+	case resolutionStaticAbility:
+		return permanentRefReadsSourcePermanent(instruction.permanent)
 	case resolutionDestroy:
 		_, self := instruction.permanent.(sourceRef)
 		return self
@@ -357,6 +363,8 @@ func effectReadsSourcePermanent(effect Effect) bool {
 func playerRefReadsSourcePermanent(ref PlayerRef) bool {
 	var subject PermanentRef
 	switch r := ref.(type) {
+	case attackerDefendingPlayer:
+		return permanentRefReadsSourcePermanent(r.attacker)
 	case lastBlockedController:
 		return permanentRefReadsSourcePermanent(r.attacker) || permanentRefReadsSourcePermanent(r.blocker)
 	case permanentControllerRef:
@@ -453,6 +461,8 @@ func (e *untilEffect) refersToSourcePermanent() bool {
 
 func playerSetReadsSourcePermanent(subjects PlayerSet) bool {
 	switch s := subjects.(type) {
+	case singlePlayerSet:
+		return playerRefReadsSourcePermanent(s.player)
 	case *opponentsRef:
 		return s != nil && playerRefReadsSourcePermanent(s.player)
 	case libraryRecyclePlayer:

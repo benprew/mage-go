@@ -2,19 +2,17 @@ package mage
 
 import (
 	"math/rand"
+	"slices"
 
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// UntapPermanent untaps the given permanent unless it has a stun counter
-// (CR 122.1g — "If a permanent with a stun counter would become untapped,
-// remove a stun counter from it instead. It doesn't untap.") If the
-// permanent has at least one stun counter, exactly one is removed and the
-// permanent stays tapped; no EvtBecameUntapped fires. Otherwise, if the
-// permanent is currently tapped it untaps and EvtBecameUntapped fires.
-// Returns true if the permanent actually untapped.
+// UntapPermanent untaps a tapped permanent unless it has a stun counter.
+// A stun counter replaces the transition with removal of one counter
+// (CR 122.1d). An untapped permanent keeps its counters (CR 701.26b).
+// This returns true and sends EvtBecameUntapped only after an actual untap.
 func (g *Game) UntapPermanent(p *Permanent) bool {
 	if p == nil {
 		return false
@@ -34,11 +32,11 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 }
 
 func (g *Game) untapWithoutEvent(p *Permanent) bool {
-	if p.Counters[Stun] > 0 {
-		p.RemoveCounter(Stun, 1)
+	if !p.Tapped {
 		return false
 	}
-	if !p.Tapped {
+	if p.Counters[Stun] > 0 {
+		p.RemoveCounter(Stun, 1)
 		return false
 	}
 	p.Tapped = false
@@ -83,8 +81,8 @@ func (g *Game) doUntap() {
 	// (excluding indirectly phased attachments whose host is still phased out).
 	var toPhaseIn []uuid.UUID
 	for _, p := range g.zones.battlefield {
-		if p.PhasedOut && p.ControllerID() == active.PlayerID() {
-			if !p.IsAttached() || g.FindPermanent(p.AttachedTo) != nil {
+		if p.PhasedOut && p.ControllerID() == active.PlayerID() && !g.phaseInHeld(p.ID()) {
+			if p.phasedWith == (capturedPermanent{}) {
 				toPhaseIn = append(toPhaseIn, p.ID())
 			}
 		}
@@ -194,10 +192,14 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 // 2. Rule 508.2: Second, the active player gets priority.
 func (g *Game) doDeclareAttackers() {
 	active := g.ActivePlayerObj()
+	g.ApplyContinuousEffects()
+	g.recordAttackOpportunities(active.PlayerID())
 	attackerIDs := active.DeclareAttackers(g)
 	defender := g.NonActivePlayerObj()
 
 	attackerIDs = g.completeRequiredAttackers(active.PlayerID(), attackerIDs, true)
+	// Save the tapping decisions before costs can change the condition.
+	untappedAttackers := g.attackTappingExemptions(attackerIDs)
 	declaredCount := 0
 
 	for _, id := range attackerIDs {
@@ -227,8 +229,7 @@ func (g *Game) doDeclareAttackers() {
 			continue
 		}
 
-		// Tap attacker (unless vigilance)
-		if !atk.HasKeyword(Vigilance) {
+		if !untappedAttackers[capturedPermanent{atk.ID(), atk.incarnationID}] {
 			g.TapPermanent(atk)
 		}
 
@@ -281,7 +282,10 @@ func (g *Game) doDeclareBlockers() {
 	nonActive := g.NonActivePlayerObj()
 	blockedBefore := g.blockedAttackersBeforeDeclaration()
 	pairsBefore := g.blockerPairsBeforeDeclaration()
-	assignments := nonActive.DeclareBlockers(g)
+	var assignments []BlockAssignment
+	if !g.turns.randomBlockingPiles {
+		assignments = nonActive.DeclareBlockers(g)
+	}
 	g.commitBlockAssignments(nonActive.PlayerID(), assignments)
 
 	// CR 506.5 — snapshot "blocks alone" once all blockers have been
@@ -335,9 +339,11 @@ func (g *Game) doCleanupActions() bool {
 		p.ManaPool().Clear()
 	}
 	// Remove end-of-turn effects and clear turn-scoped state
-	g.playerPayments = nil
+	g.playerPayments = slices.DeleteFunc(g.playerPayments, func(p installedPlayerPayment) bool { return !p.drawDeadline })
 	g.playerManaAbilities = nil
+	g.oneSpellManaPermissions = nil
 	g.effects.RemoveEndOfTurn()
+	g.turns.randomBlockingPiles = false
 	g.effects.removeNextTurnWindows(g.CurrentTurn())
 	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()
@@ -383,13 +389,7 @@ func (g *Game) doCleanupActions() bool {
 // Run executes the game until the stop condition.
 func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 	for !g.drawn && g.turns.Turn() <= maxTurns {
-		// Turn-skip (CR 500.11): if the active player's next turn is
-		// marked as skipped, consume the skip and advance past this turn
-		// without running any steps.
-		activeID := g.ActivePlayerObj().PlayerID()
-		if g.turns.ConsumeTurnSkip(activeID) {
-			// Fall through to the extra-turn / next-player logic below.
-		} else if g.RunTurn(stopTurn, stopStep) {
+		if g.RunTurn(stopTurn, stopStep) {
 			return
 		}
 		g.AdvanceToNextTurn()

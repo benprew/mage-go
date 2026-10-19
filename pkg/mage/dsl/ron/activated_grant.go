@@ -22,7 +22,20 @@ func compileActivatedGrant(n Node) (activatedGrantPlan, error) {
 		return activatedGrantPlan{}, unsupported(n.Args[0], "granted X cost")
 	}
 	if n.Args[1].Name != "ActionList" {
-		return activatedGrantPlan{}, unsupported(n.Args[1], "untargeted granted body")
+		body := n.Args[1]
+		if body.Name != "Targeted" || body.Kind != Tuple || len(body.Args) != 2 {
+			return activatedGrantPlan{}, unsupported(body, "granted activated body")
+		}
+		targets, err := list(body.Args[0])
+		if err != nil {
+			return activatedGrantPlan{}, err
+		}
+		if len(targets) != 1 || targets[0].Name != "TargetSpell" {
+			return activatedGrantPlan{}, unsupported(body.Args[0], "granted spell target")
+		}
+		if body.Args[1].Name != "ActionList" {
+			return activatedGrantPlan{}, unsupported(body.Args[1], "granted spell action list")
+		}
 	}
 	// The recipient cannot read the donor's bindings.
 	body, err := compileActions(n.Args[1], scope{permanent: true, activation: true})
@@ -32,18 +45,20 @@ func compileActivatedGrant(n Node) (activatedGrantPlan, error) {
 	if len(body.effects) == 0 {
 		return activatedGrantPlan{}, problem(n.Args[1], "granted body requires at least one action")
 	}
-	if len(body.targets) != 0 {
-		return activatedGrantPlan{}, unsupported(n.Args[1], "untargeted granted body")
-	}
 	return activatedGrantPlan{costs: costs, body: body}, nil
 }
 
-func (p activatedGrantPlan) build() (mage.CostGroup, mage.ResolvingEffect) {
+func (p activatedGrantPlan) build() (mage.CostGroup, mage.ResolvingEffect, []mage.GrantedActivationOption) {
 	costs := make([]mage.Cost, len(p.costs))
 	for i, build := range p.costs {
 		costs[i] = build()
 	}
-	return mage.Costs(costs...), mage.Sequence(p.body.build().effects...)
+	actions := p.body.build()
+	var options []mage.GrantedActivationOption
+	if len(actions.targetBindings) != 0 {
+		options = append(options, mage.WithTargets(actions.targetBindings...))
+	}
+	return mage.Costs(costs...), mage.Sequence(actions.effects...), options
 }
 
 func compileActivatedGrantModification(n Node, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
@@ -56,8 +71,8 @@ func compileActivatedGrantModification(n Node, subject permanentReferencePlan) (
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.ContinuousModification {
-		costs, body := plan.build()
-		return mage.ActivatedAbilityModification(subject.build(bindings), costs, body)
+		costs, body, options := plan.build()
+		return mage.ActivatedAbilityModification(subject.build(bindings), costs, body, options...)
 	}, nil
 }
 
@@ -93,8 +108,8 @@ func compileStaticActivatedGrant(n Node, parts []Node, ctx scope) (optionFactory
 			return nil, err
 		}
 		return func() mage.CardOption {
-			costs, body := plan.build()
-			return mage.WithAbility(mage.Static(mage.GrantEachActivatedAbility(subjects.build(), costs, body)).WithLayeredGrantTextRevision())
+			costs, body, options := plan.build()
+			return mage.WithAbility(mage.Static(mage.GrantEachActivatedAbility(subjects.build(), costs, body, options...)).WithLayeredGrantTextRevision())
 		}, nil
 	}
 	subject, err := compilePermanentRef(n.Args[0], ctx)
@@ -105,7 +120,7 @@ func compileStaticActivatedGrant(n Node, parts []Node, ctx scope) (optionFactory
 		return nil, unsupported(n.Args[0], "static grant subject")
 	}
 	return func() mage.CardOption {
-		costs, body := plan.build()
-		return mage.WithAbility(mage.Static(mage.GrantActivatedAbility(subject.build(instanceBindings{}), costs, body)))
+		costs, body, options := plan.build()
+		return mage.WithAbility(mage.Static(mage.GrantActivatedAbility(subject.build(instanceBindings{}), costs, body, options...)))
 	}, nil
 }

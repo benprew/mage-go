@@ -4,6 +4,7 @@ import "github.com/google/uuid"
 
 // DamageToPlayerAction represents damage about to be dealt to a player.
 type DamageToPlayerAction struct {
+	origin       int
 	cause        damageCause
 	source       uuid.UUID
 	sourceState  DamageSource
@@ -40,6 +41,7 @@ func (a *DamageToPlayerAction) WithAmount(amount int) *DamageToPlayerAction {
 
 // DamageToCreatureAction represents damage about to be dealt to a creature.
 type DamageToCreatureAction struct {
+	origin               int
 	cause                damageCause
 	recipientIncarnation uuid.UUID
 	source               uuid.UUID

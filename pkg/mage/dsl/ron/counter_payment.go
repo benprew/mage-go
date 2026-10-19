@@ -114,7 +114,7 @@ func compileBoundRepeatedMana(n Node, ctx scope) ([]effectFactory, error) {
 			if color == core.AnyColor {
 				return mage.AddManaOfAnyOneColor(value(bindings))
 			}
-			return mage.AddManaAmount(color, value(bindings))
+			return (mage.ManaProductionInstruction{Subject: mage.You, Color: color, Amount: value(bindings)}).Effect()
 		})
 	}
 	return effects, nil

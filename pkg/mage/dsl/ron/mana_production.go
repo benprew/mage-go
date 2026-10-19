@@ -52,6 +52,12 @@ func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if value.Name == "Plus" || value.Name == "Twice" {
+			var err error
+			dynamic, err = compileSavedManaAmount(value, ctx)
+			if err != nil {
+				return nil, err
+			}
 		} else if value.Name != "Integer" {
 			return nil, unsupported(value, "mana amount")
 		}
@@ -78,13 +84,39 @@ func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
 		effects = append(effects, func(bindings instanceBindings) mage.Effect {
 			if dynamic != nil {
 				value := mage.MultiplyValues(mage.Fixed(production.Amount), dynamic(bindings))
-				return mage.AddManaAmount(color, value)
+				return (mage.ManaProductionInstruction{Subject: mage.You, Color: color, Amount: value}).Effect()
 			}
-			if color == core.AnyColor {
-				return mage.AddManaOfAnyOneColor(mage.Fixed(amount))
-			}
-			return mage.AddMana(color, amount)
+			return (mage.ManaProductionInstruction{Subject: mage.You, Color: color, Amount: mage.Fixed(amount)}).Effect()
 		})
 	}
 	return effects, nil
+}
+
+func compileSavedManaAmount(n Node, ctx scope) (valueFactory, error) {
+	switch n.Name {
+	case "Plus":
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+	case "Twice", "Integer":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if n.Name == "Integer" {
+			if n.Args[0].Kind != IntegerNode || n.Args[0].Integer < 0 {
+				return nil, problem(n, "mana amount must be nonnegative")
+			}
+			return compileInstanceValue(n, ctx)
+		}
+	case "ManaValueOfTheSacrificedPermanent":
+		return compileInstanceValue(n, ctx)
+	default:
+		return nil, unsupported(n, "saved casting mana amount")
+	}
+	for _, arg := range n.Args {
+		if _, err := compileSavedManaAmount(arg, ctx); err != nil {
+			return nil, err
+		}
+	}
+	return compileInstanceValue(n, ctx)
 }

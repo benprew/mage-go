@@ -14,6 +14,7 @@ func TestWaitingDelayedCollectionCountReferences(t *testing.T) {
 		"blockers":    BlockersOf(This),
 		"blocked":     BlockedAttackersOf(This),
 		"combat":      BlockingOrBlockedBy(This),
+		"combat LKI":  CombatOpponentsWithLKI(This),
 		"history":     BlockedByThisTurn(This),
 		"excluded":    WithoutPermanent(MatchingPermanents(IsCreature), This),
 		"lowest":      LowestPower(SingletonPermanent(This)),
@@ -128,7 +129,7 @@ func TestWaitingDelayedCollectionCountLateRelations(t *testing.T) {
 	for name, set := range map[string]PermanentSet{
 		"auras": AttachedAuras(This), "attachments": AttachmentsOn(SingletonPermanent(This)),
 		"blockers": BlockersOf(This), "blocked": BlockedAttackersOf(This),
-		"combat": BlockingOrBlockedBy(This), "history": BlockedByThisTurn(This),
+		"combat": BlockingOrBlockedBy(This), "combat LKI": CombatOpponentsWithLKI(This), "history": BlockedByThisTurn(This),
 	} {
 		t.Run(name, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")

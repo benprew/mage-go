@@ -2,7 +2,24 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
+type lifeGainDrawPlan struct{ subject playerReferencePlan }
+
+func (p lifeGainDrawPlan) build() mage.CardOption {
+	return mage.WithStaticAbility(mage.DrawInsteadOfLifeGain(p.subject.build(instanceBindings{})))
+}
+
 func compileLifeGainDrawReplacement(n Node) (optionFactory, error) {
+	plan, err := compileLifeGainDrawPlan(n)
+	if err != nil {
+		return nil, err
+	}
+	return plan.build, nil
+}
+
+func compileLifeGainDrawPlan(n Node) (*lifeGainDrawPlan, error) {
+	if n.Name != "ReplaceWouldGainLife" {
+		return nil, unsupported(n, "life gain replacement")
+	}
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -30,5 +47,9 @@ func compileLifeGainDrawReplacement(n Node) (optionFactory, error) {
 	if amount.Kind != Symbol || amount.Name != "WouldGainLife_LifeAmount" {
 		return nil, unsupported(amount, "life gain replacement amount")
 	}
-	return func() mage.CardOption { return mage.WithStaticAbility(mage.DrawInsteadOfLifeGain(mage.You)) }, nil
+	subject, err := compilePlayerRef(event.Args[0], scope{})
+	if err != nil {
+		return nil, err
+	}
+	return &lifeGainDrawPlan{subject: subject}, nil
 }

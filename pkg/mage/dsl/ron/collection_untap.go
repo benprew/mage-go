@@ -2,7 +2,7 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileCollectionPermanentRule(n Node) (optionFactory, error) {
+func compileCollectionPermanentRule(n Node, ctx scope) (optionFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -14,6 +14,9 @@ func compileCollectionPermanentRule(n Node) (optionFactory, error) {
 		return nil, unsupported(n.Args[1], "collection permanent rule operations")
 	}
 	operation := operations[0]
+	if operation.Name == "CantAttackAPlayer" {
+		return compileLastTurnAttackRule(n, operation, ctx)
+	}
 	if operation.Name == "CantAttack" {
 		return compileCollectionAttackRule(n, operation)
 	}

@@ -133,6 +133,14 @@ func TestRONSavedActivePlayerSiren(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+				for range 2 {
+					if certain, known := g.InspectSpellDestruction(g.StackPeek(), nil); certain || !known {
+						t.Fatal("complete saved-player delayed tree is unknown or proves direct destruction")
+					}
+				}
+				if len(g.DelayedTriggers()) != 0 {
+					t.Fatal("inspection created a delay")
+				}
 				if change == "copy" && g.CopyStackObjectDirect(g.StackPeek(), b.PlayerID(), false) == nil {
 					t.Fatal("copy failed")
 				}
@@ -183,5 +191,21 @@ func TestRONSavedActivePlayerNative(t *testing.T) {
 	invalid := strings.Replace(strings.Replace(valid, "Saved", "Invalid", 1), "ActionPlayer", "ActionPlayer()", 1)
 	if err := LoadInto(registry, fstest.MapFS{"saved.ron": {Data: []byte(valid + invalid)}}, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 1 {
 		t.Fatal("invalid collection replaced registry")
+	}
+}
+
+func TestRONSavedPlayerInstructionLowering(t *testing.T) {
+	node := nameScopeNode(t, `PlayerActions(TheActivePlayer,[CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList([DestroyEachPermanent(ControlledByPlayer(ActionPlayer))]))])`)
+	build, err := compilePlayerActions(node, scope{resolving: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, ok := mage.InspectSavedPlayerInstruction(build(instanceBindings{}))
+	if !ok {
+		t.Fatal("lowering lost native declaration")
+	}
+	second, ok := mage.InspectSavedPlayerInstruction(build(instanceBindings{}))
+	if !ok || first.Subject != mage.ActivePlayer || second.Subject != mage.ActivePlayer || first.Binding == second.Binding {
+		t.Fatal("factory did not retain separate native player declarations")
 	}
 }

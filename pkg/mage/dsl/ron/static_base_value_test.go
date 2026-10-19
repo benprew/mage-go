@@ -215,12 +215,8 @@ func TestRONStaticBaseValueArithmeticAndCondition(t *testing.T) {
 	checkConditionalPT(t, g, p.ID(), 13, 13)
 }
 
-func TestRONStaticBaseValueCompleteRecordsStayRejected(t *testing.T) {
-	for _, tc := range []struct{ set, name, gap string }{
-		{"LEB", "Gaea's Liege", "ControlledByPlayer"},
-	} {
-		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s gap: %v", tc.name, err)
-		}
+func TestRONStaticBaseValueCompleteRecords(t *testing.T) {
+	if _, err := Compile(staticBaseRecord(t, "LEB", "Gaea's Liege")); err != nil {
+		t.Fatal(err)
 	}
 }

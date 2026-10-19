@@ -48,6 +48,12 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	if original.Card != nil && !original.IsAbility {
 		copiedCard = original.Card.Copy()
 		copiedCard.SetOwner(controller)
+		if base, ok := copiedCard.(*BaseCard); ok && base.faceDown {
+			base.faceDownOriginal = nil
+			base.faceDown = false
+			base.departureCard = nil
+			base.printedDefinitionPlan = nil
+		}
 	}
 
 	return g.copyStackObjectWithCard(original, controller, mayChooseNewTargets, copiedCard)

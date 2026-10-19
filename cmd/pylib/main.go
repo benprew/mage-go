@@ -481,6 +481,8 @@ func choicePendingKind(t interactive.ChoiceType) string {
 		return "cards_from_hand"
 	case interactive.ChoiceManaColor:
 		return "mana_color"
+	case interactive.ChoiceCardFromOutsideGame:
+		return "card_from_outside_game"
 	case interactive.ChoiceCardFromLibrary:
 		return "card_from_library"
 	case interactive.ChoiceMay:
@@ -834,7 +836,7 @@ func actionFromStepChoice(pending *apiPending, selectedCols []int64, maySelected
 			return actionRequest{}, fmt.Errorf("mana_color selected invalid option %d", selectedIdx)
 		}
 		return actionRequest{SelectedColor: pending.Options[selectedIdx].Color}, nil
-	case "permanent", "cards_from_hand", "card_from_library":
+	case "permanent", "cards_from_hand", "card_from_library", "card_from_outside_game":
 		if len(selectedCols) != 1 {
 			return actionRequest{}, fmt.Errorf("%s expects 1 selected column, got %d", pending.Kind, len(selectedCols))
 		}

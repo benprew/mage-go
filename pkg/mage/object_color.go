@@ -100,3 +100,11 @@ func permanentColorEffect(permanent *Permanent, colors []Color, sourceID uuid.UU
 	effect.SetSourceID(sourceID)
 	return effect
 }
+
+// A stack color change must not change the card after it leaves the stack.
+func spellCharacteristicCard(object *StackObject) Card {
+	if object.ColorOverride == nil {
+		return object.Card
+	}
+	return targetSourceLKI{Card: object.Card, colors: *object.ColorOverride, spell: true}
+}

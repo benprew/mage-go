@@ -7,6 +7,9 @@ import (
 )
 
 func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
+	if !ctx.resolving || ctx.drawReplacementBody {
+		return nil, problem(n, "delayed departure requires an ordinary resolving body")
+	}
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}
@@ -65,7 +68,8 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 	ctx.drawReplacementBody = false
 	ctx.delayedDeath = nil
 	if event.Name == "WhenAPermanentDies" {
-		ctx.delayedDeath = &hostDeathPlan{name: "Trigger_ThatPermanent"}
+		ctx.delayedDeath = &hostDeathPlan{name: "Trigger_ThatPermanent", watched: &ref}
+		ctx.deathCard = &deathCardPlan{name: "Trigger_ThatGraveyardCard"}
 	}
 	effects, err := compileActionSequence(parts, ctx)
 	if err != nil {
@@ -78,7 +82,12 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 			if bindings.hostDeaths == nil {
 				bindings.hostDeaths = make(map[*hostDeathPlan]hostDeathBindings)
 			}
+			bindings.deathCards = maps.Clone(bindings.deathCards)
+			if bindings.deathCards == nil {
+				bindings.deathCards = make(map[*deathCardPlan]*mage.CardBinding)
+			}
 			label := "DelayedDeath@" + n.Position.String()
+			bindings.deathCards[ctx.deathCard] = mage.BindCard(label + ".Card")
 			bindings.hostDeaths[ctx.delayedDeath] = hostDeathBindings{
 				permanent:  mage.BindPermanent(label + ".Permanent"),
 				owner:      mage.BindPlayer(label + ".Owner"),
@@ -91,7 +100,7 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 		}
 		if event.Name == "WhenAPermanentDies" {
 			death := bindings.hostDeaths[ctx.delayedDeath]
-			return mage.WhenDiesThisTurnWithBindings(watched, death.permanent, death.owner, death.controller, mage.Sequence(values...))
+			return mage.WhenDiesThisTurnWithCard(watched, death.permanent, death.owner, death.controller, bindings.deathCards[ctx.deathCard], mage.Sequence(values...))
 		}
 		return mage.WhenLeavesThisTurn(watched, mage.Sequence(values...))
 	}, nil

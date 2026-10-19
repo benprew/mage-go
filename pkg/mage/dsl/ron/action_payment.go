@@ -1,6 +1,9 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
+import (
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 func isResolutionActionPayment(n Node) bool {
 	if n.Name != "MayCost" && n.Name != "PlayerMayCost" {
@@ -10,7 +13,7 @@ func isResolutionActionPayment(n Node) bool {
 		return false
 	}
 	switch n.Args[len(n.Args)-1].Name {
-	case "GainLife", "HavePermanentDealDamage", "DestroyPermanent":
+	case "GainLife", "HavePermanentDealDamage", "DestroyPermanent", "CreatePermanentLayerEffectUntil":
 		return true
 	}
 	return false
@@ -83,6 +86,14 @@ func compileResolutionActionPayment(payment, continuation Node, ctx scope) (effe
 func compileResolutionPaymentAction(cost Node, ctx scope) (func(instanceBindings) mage.ResolutionActionPayment, error) {
 	var buildPayment func(instanceBindings) mage.ResolutionActionPayment
 	switch cost.Name {
+	case "CreatePermanentLayerEffectUntil":
+		subject, err := compileAttackRestrictionGrant(cost, ctx)
+		if err != nil {
+			return nil, err
+		}
+		buildPayment = func(bindings instanceBindings) mage.ResolutionActionPayment {
+			return mage.StaticAbilityPayment(subject.build(bindings), mage.CantAttack(mage.This), core.EndOfCombat)
+		}
 	case "GainLife":
 		if err := arity(cost, 1); err != nil {
 			return nil, err

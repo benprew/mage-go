@@ -480,9 +480,7 @@ func (tg *TestGame) Execute() {
 
 	maxTurns := tg.stopAt.turn + 5
 	for tg.Turn <= maxTurns {
-		// Turn-skip support (CR 500.11) via the engine schedule.
-		activeID := tg.ActivePlayerObj().PlayerID()
-		if tg.Schedule != nil && tg.Schedule.ConsumeTurnSkip(activeID) {
+		if !tg.TryBeginTurn() {
 			tg.advanceToNextTurn()
 			continue
 		}

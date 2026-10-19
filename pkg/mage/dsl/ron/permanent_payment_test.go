@@ -49,6 +49,12 @@ func TestRONPermanentPaymentCleansing(t *testing.T) {
 			if err := g.CastSpellByID(a.PlayerID(), card.ID(), nil, 0); err != nil {
 				t.Fatal(err)
 			}
+			for range 3 {
+				certain, known := g.InspectSpellDestruction(g.StackPeek(), nil)
+				if certain || !known {
+					t.Fatal("complete Cleansing tree does not support native inspection")
+				}
+			}
 			if a.offers+b.offers != 0 {
 				t.Fatal("offered before resolution")
 			}
@@ -197,5 +203,25 @@ func TestRONPermanentPaymentInventory(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("per-permanent cost lost its inventory role")
+	}
+}
+
+func TestRONPermanentPaymentNativeLowering(t *testing.T) {
+	node := nameScopeNode(t, ronPermanentPayment)
+	continuation := nameScopeNode(t, ronUnpaidDestroy)
+	build, err := compilePermanentPayment(node, []Node{continuation}, scope{resolving: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, ok := mage.InspectPermanentLifePaymentInstruction(build(instanceBindings{}))
+	if !ok {
+		t.Fatal("lowering lost native declaration")
+	}
+	second, ok := mage.InspectPermanentLifePaymentInstruction(build(instanceBindings{}))
+	if !ok || first.Amount != 1 || second.Amount != 1 || first.Unpaid == second.Unpaid {
+		t.Fatal("factories share unpaid result")
+	}
+	if _, ok := mage.InspectContextualPermanentCollection(first.Subjects); !ok {
+		t.Fatal("lost collection declaration")
 	}
 }

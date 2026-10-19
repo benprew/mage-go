@@ -166,9 +166,9 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 		role = "color_choice_reference"
 	}
 	if role == "permanent_collection" && n.Kind != List {
-		if n.Name == "Ref_TargetPermanents" {
+		if n.Name == "Ref_TargetPermanents" || n.Name == "TheCreatedTokens" || n.Name == "ThePermanentsList" {
 			role = "permanent_collection_reference"
-		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasTappedToPayForAbilitiesOfPermanent" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" && n.Name != "DealtDamageToPermanentThisTurn" && n.Name != "BandedWith" {
+		} else if n.Name != "And" && n.Name != "Or" && n.Name != "CouldntAttackThisTurn" && n.Name != "ExceptFor" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasTappedToPayForAbilitiesOfPermanent" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" && n.Name != "DealtDamageToPermanentThisTurn" && n.Name != "BandedWith" {
 			role = "permanent_filter"
 		}
 	}
@@ -223,6 +223,9 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 
 // Unknown roles prevent an unsupported parent from inventing a child's contract.
 func inventoryArgumentRole(n Node, role string, index int) string {
+	if role == "permanent_collection" && isDeathCombatCollection(n) {
+		return "death_combat_relation"
+	}
 	if (role == "player_filter" || role == "permanent_filter") && n.Name == "WasDealtDamageByPermanentThisGame" && len(n.Args) == 1 {
 		return "permanent_reference"
 	}
@@ -323,9 +326,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"static_entry_event", "static_entry_operation"}[index]
 			}
+		case "ReplaceWouldBeginATurn":
+			if len(n.Args) == 2 {
+				return []string{"turn_replacement_event", "turn_replacement_operation"}[index]
+			}
 		case "ReplaceWouldDestroy":
 			if len(n.Args) == 2 {
 				return []string{"destruction_replacement_event", "destruction_replacement_operation"}[index]
+			}
+		case "ReplaceWouldPutIntoGraveyard":
+			if len(n.Args) == 2 {
+				return []string{"temporary_death_replacement_event", "death_return_operation"}[index]
 			}
 		case "ReplaceWouldDiscard":
 			if len(n.Args) == 2 {
@@ -343,7 +354,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"event", "trigger_condition", "actions"}[index]
 			}
-		case "FromStack", "FromGraveyard", "FromExile":
+		case "FromStack", "FromGraveyard", "FromExile", "FromAnyZone":
 			if len(n.Args) == 1 {
 				return "rule"
 			}
@@ -375,6 +386,21 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "turn_replacement_event":
+		if n.Name == "PlayerWouldBeginTheirTurn" && len(n.Args) == 1 {
+			return "player_reference"
+		}
+	case "turn_replacement_operation":
+		if n.Name == "MayCost" && len(n.Args) == 1 {
+			return "turn_replacement_cost"
+		}
+		if n.Name == "If" && len(n.Args) == 2 {
+			return []string{"turn_replacement_payment_result", "turn_replacement_continuation"}[index]
+		}
+	case "turn_replacement_continuation":
+		if n.Name == "UntapPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
 		}
 	case "retained_entry_event":
 		if n.Name == "APlayerWouldPutAPermanentOnTheBattlefield" && len(n.Args) == 2 {
@@ -452,6 +478,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "APermanentWouldDie" && len(n.Args) == 1 {
 			return "permanent_collection"
 		}
+	case "death_return_operation":
+		if n.Name == "CreatePlayerEffectUntil" && len(n.Args) == 3 {
+			return []string{"player_reference", "returned_hand_rule", "duration"}[index]
+		}
+	case "returned_hand_rule":
+		if (n.Name == "PlaysWithCardInHandRevealed" || n.Name == "CantPlayCardInHand") && len(n.Args) == 1 {
+			return "card_reference"
+		}
 	case "future_draw_replacement_event":
 		if n.Name == "NextTimePlayerWouldDrawACardThisTurn" && len(n.Args) == 1 {
 			return "player_reference"
@@ -519,6 +553,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "condition":
+		if n.Name == "SpellPassesFilter" && len(n.Args) == 2 {
+			return []string{"spell_reference", "resolution_spell_filter"}[index]
+		}
+		if n.Name == "DiscardedCardPassesFilter" && len(n.Args) == 1 {
+			return "card_filter"
+		}
 		if n.Name == "ExiledCardPassesFilter" && len(n.Args) == 2 {
 			return []string{"card_reference", "card_filter"}[index]
 		}
@@ -628,8 +668,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "activation_condition"
 		}
 	case "activation_x_value":
+		if n.Name == "Twice" && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "ManaValueOfSpell" && len(n.Args) == 1 {
+			return "spell_reference"
+		}
 		if n.Name == "TheTotalNumberOfCountersOfTypeAmongPermanents" && len(n.Args) == 2 {
 			return []string{"permanent_counter_type", "permanent_filter"}[index]
+		}
+	case "resolution_spell_filter":
+		if n.Name == "TargetsPlayer" && len(n.Args) == 1 {
+			return "player_reference"
 		}
 	case "activation_limit_value":
 		if n.Name == "Integer" && len(n.Args) == 1 {
@@ -671,6 +721,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "casting_condition"
 		}
 	case "casting_condition":
+		if n.Name == "NoPermanentsPassFilter" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "zone"}[index]
+		}
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "casting_condition"
 		}
@@ -700,6 +753,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "TargetPlayerOrPermanent" && len(n.Args) == 2 {
 			return []string{"player_filter", "permanent_filter"}[index]
 		}
+		if n.Name == "NumberTargetGroupPermanents" && len(n.Args) == 3 {
+			return []string{"announcement_value", "permanent_filter", "target_group_restriction"}[index]
+		}
 		if n.Name == "NumberTargetPermanents" && len(n.Args) == 2 {
 			return []string{"announcement_value", "permanent_filter"}[index]
 		}
@@ -709,7 +765,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "permanent_filter"
 			case "TargetPlayer":
 				return "player_filter"
-			case "TargetGraveyardCard", "TargetAnteCard":
+			case "TargetGraveyardCard", "TargetAnteCard", "AnyNumberOfTargetGraveyardCards":
 				return "card_filter"
 			case "TargetAbility":
 				return "ability_filter"
@@ -726,6 +782,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "announcement_value"
 		}
 	case "search_instruction":
+		if n.Name == "IfElse" && len(n.Args) == 3 {
+			return []string{"search_condition", "search_instruction", "search_instruction"}[index]
+		}
+		if n.Name == "MayCost" && len(n.Args) == 1 {
+			return "resolution_cost"
+		}
 		if n.Name == "FindNumberCardsOfType" && len(n.Args) == 2 {
 			return []string{"value", "library_card_filter"}[index]
 		}
@@ -735,7 +797,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PutFoundCardsOntoBattlefield" && len(n.Args) == 1 {
 			return "search_entry_operation"
 		}
+	case "search_condition":
+		if n.Name == "ACardOfTypeWasFoundThisWay" && len(n.Args) == 1 {
+			return "library_card_filter"
+		}
 	case "library_card_filter":
+		if n.Name == "ManaValueIs" && len(n.Args) == 1 {
+			return "mana_value_comparison"
+		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
@@ -746,6 +815,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "damage_source_filter":
+		if n.Name == "Other" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+		if n.Name == "IsNamed" && len(n.Args) == 1 {
+			return "card_name"
+		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
@@ -804,17 +879,26 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "cost", "resolution_cost":
+		if role == "resolution_cost" && n.Name == "ChooseACardInHand" && len(n.Args) == 1 {
+			return "card_filter"
+		}
+		if role == "resolution_cost" && n.Name == "CreatePermanentLayerEffectUntil" && len(n.Args) == 3 {
+			return []string{"permanent_reference", "temporary_modification", "duration"}[index]
+		}
 		if role == "resolution_cost" && n.Name == "PutExiledCardOntoBattlefield" && len(n.Args) == 2 {
 			return []string{"card_reference", "entry_operation"}[index]
 		}
 		if role == "resolution_cost" && n.Name == "AnteAPermanent" && len(n.Args) == 1 {
 			return "ante_payment_subject"
 		}
-		if role == "resolution_cost" && n.Name == "GainLife" && len(n.Args) == 1 {
+		if role == "resolution_cost" && (n.Name == "GainLife" || n.Name == "DrawNumberCards") && len(n.Args) == 1 {
 			return "value"
 		}
 		if role == "resolution_cost" && n.Name == "HavePermanentDealDamage" && len(n.Args) == 3 {
 			return []string{"permanent_reference", "value", "recipient"}[index]
+		}
+		if role == "resolution_cost" && n.Name == "Exile" && len(n.Args) == 2 {
+			return []string{"exile_payment_selection", "exile_modifier"}[index]
 		}
 		if role == "cost" && n.Name == "Exile" && len(n.Args) == 2 {
 			return []string{"exile_payment_object", "replacement_operation"}[index]
@@ -892,6 +976,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"token_name", "token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_rule"}[index]
 		}
 	case "token_rule":
+		if n.Name == "PermanentRuleEffect" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "permanent_rule_operation"}[index]
+		}
 		if n.Name == "TriggerA" && len(n.Args) == 2 {
 			return []string{"event", "actions"}[index]
 		}
@@ -1051,6 +1138,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ExilesWithNumberCounters" && len(n.Args) == 2 {
 			return []string{"value", "card_counter_type"}[index]
 		}
+	case "exile_payment_selection":
+		if n.Name == "AnyNumberOfPermanents" && len(n.Args) == 1 {
+			return "permanent_collection"
+		}
 	case "exile_subject":
 		if n.Name == "APermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
@@ -1101,7 +1192,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "delayed_step_event":
-		if (n.Name == "AtTheBeginningOfPlayersNextUpkeep" || n.Name == "AtTheBeginningOfPlayersNextMainPhase") && len(n.Args) == 1 {
+		if (n.Name == "AtTheBeginningOfPlayersNextUpkeep" || n.Name == "AtTheBeginningOfPlayersNextMainPhase" || n.Name == "AtTheBeginningOfPlayersNextDrawStep") && len(n.Args) == 1 {
 			return "player_reference"
 		}
 	case "activation_history_condition":
@@ -1112,7 +1203,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "GreaterThanOrEqualTo" && len(n.Args) == 1 {
 			return "value"
 		}
+	case "one_spell_mana_action":
+		if n.Name == "CastASpellAndMaySpendManaAsThoughAnyTypeToPayManaCost" && len(n.Args) == 1 {
+			return "spell_filter"
+		}
 	case "temporary_player_operation":
+		if n.Name == "MayActionOnce" && len(n.Args) == 1 {
+			return "one_spell_mana_action"
+		}
+		if n.Name == "AttackingDoesntCauseCreaturesToTapIf" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "static_condition"}[index]
+		}
 		if n.Name == "MayPayLifeToProduceManaAsManaAbility" && len(n.Args) == 2 {
 			return []string{"value", "mana_production"}[index]
 		}
@@ -1123,6 +1224,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"metadata", "action"}[index]
 		}
 	case "action":
+		if n.Name == "ChooseNamedPileForPermanent" && len(n.Args) == 2 {
+			return []string{"metadata", "permanent_reference"}[index]
+		}
+		if n.Name == "ChooseASpellCastThisTurn" && len(n.Args) == 1 {
+			return "cast_spell_filter"
+		}
+		if n.Name == "TrySwappingBlockAssignmentsOfTwoBlockingCreatures" && len(n.Args) == 2 {
+			return "paired_target_member"
+		}
+
 		if n.Name == "ChooseACardName" && len(n.Args) == 1 {
 			return "card_name_catalog"
 		}
@@ -1165,6 +1276,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "player_reference"
 			}
+		case "LookAtTheTopNumberCardsOfLibrary":
+			if len(n.Args) == 2 {
+				return []string{"value", "library_ordering_operation"}[index]
+			}
 		case "LookAtTheTopNumberCardsOfPlayersLibrary":
 			if len(n.Args) == 3 {
 				return []string{"player_reference", "value", "library_ordering_operation"}[index]
@@ -1195,6 +1310,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"destruction_replacement_event", "destruction_replacement_operation"}[index]
 			}
+		case "PutACardFromOutsideGameInHand":
+			if len(n.Args) == 1 {
+				return "card_filter"
+			}
 		case "CreateFutureReplaceWouldDraw":
 			if len(n.Args) == 2 {
 				return []string{"future_draw_replacement_event", "action"}[index]
@@ -1202,6 +1321,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreateTrigger":
 			if len(n.Args) == 2 {
 				return []string{"persistent_step_event", "actions"}[index]
+			}
+		case "CreateFutureTrigger_UnlessPlayerPaysManaBefore":
+			if len(n.Args) == 4 {
+				return []string{"delayed_step_event", "actions", "player_reference", "mana_cost"}[index]
 			}
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {
@@ -1250,7 +1373,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return "card_reference"
 			}
-		case "AcquireOwnershipOfCard", "ExchangeAnteCardWithTopCardOfPlayersLibrary":
+		case "AcquireOwnershipOfCard", "ExchangeAnteCardWithTopCardOfPlayersLibrary", "PutCardFromHandIntoPlayersHand", "PutCardFromAnywhereIntoPlayersGraveyard":
 			if len(n.Args) == 2 {
 				return []string{"card_reference", "player_reference"}[index]
 			}
@@ -1265,6 +1388,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "ReturnACardFromPlayersGraveyardToBattlefield", "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield":
 			if len(n.Args) == 3 {
 				return []string{"graveyard_card_filter", "player_reference", "entry_operation"}[index]
+			}
+		case "ReturnGraveyardCardsToTopOfLibraryInAnyOrder":
+			if len(n.Args) == 1 {
+				return "card_collection_reference"
 			}
 		case "PutGraveyardCardIntoHand", "PutExiledCardIntoOwnersGraveyard":
 			if len(n.Args) == 1 {
@@ -1289,6 +1416,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreateReplaceWouldProduceManaUntil":
 			if len(n.Args) == 3 {
 				return []string{"mana_replacement_event", "mana_replacement_operation", "duration"}[index]
+			}
+		case "CreateGameEffect":
+			if len(n.Args) == 2 {
+				return []string{"duration", "temporary_game_operation"}[index]
 			}
 		case "CreatePlayerEffectUntil":
 			if len(n.Args) == 3 {
@@ -1405,6 +1536,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "resolving_modification"}[index]
 			}
+		case "PhaseOutPermanentUntilWithEffects":
+			if len(n.Args) == 3 {
+				return []string{"permanent_reference", "duration", "phase_in_operation"}[index]
+			}
 		case "CreatePermanentLayerEffectUntil":
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
@@ -1421,7 +1556,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_collection", "player_reference"}[index]
 			}
-		case "ControllersSacrificeEachPermanent", "TapEachPermanent", "UntapEachPermanent", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
+		case "CreatePermanentsList", "GainControlOfEachPermanent", "ControllersSacrificeEachPermanent", "TapEachPermanent", "UntapEachPermanent", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 			if len(n.Args) == 1 {
 				return "permanent_collection"
 			}
@@ -1448,6 +1583,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return "permanent_reference"
 			}
+		case "ChooseAnAttackingCreatureForBlockerToBlock":
+			if len(n.Args) == 2 {
+				return []string{"permanent_collection", "permanent_reference"}[index]
+			}
 		case "PermanentDoesntUntapDuringControllersNextNumberUntaps":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "value"}[index]
@@ -1456,9 +1595,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "ability_reference"
 			}
+		case "CopySpellAndMayChooseNewTargets":
+			if len(n.Args) == 1 {
+				return "spell_reference"
+			}
 		case "CopySpellAndMayChooseNewTargetsWithEffects":
 			if len(n.Args) == 2 {
 				return []string{"spell_reference", "resolving_modification"}[index]
+			}
+		case "ChangeTheTargetsOfSpellToAPlayer":
+			if len(n.Args) == 2 {
+				return []string{"spell_reference", "player_filter"}[index]
 			}
 		case "CounterSpell":
 			if len(n.Args) == 1 {
@@ -1472,7 +1619,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "value"
 			}
+		case "EachPlayerMayCost":
+			if len(n.Args) == 2 {
+				return []string{"player_filter", "resolution_cost"}[index]
+			}
+		case "SetLifeTotal":
+			if len(n.Args) == 1 {
+				return "value"
+			}
 		case "EachPlayerAction":
+			if len(n.Args) == 2 && index == 0 && (n.Args[0].Name == "PaidCost" || n.Args[0].Name == "Trigger_ThoseDefendingPlayers") {
+				return "player_collection_reference"
+			}
 			if len(n.Args) == 2 {
 				return []string{"player_filter", "player_action"}[index]
 			}
@@ -1503,6 +1661,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				}
 				return []string{"spell_reference", "value", "recipient"}[index]
 			}
+		case "DeadPermanentDealsDamage":
+			if len(n.Args) == 2 {
+				return []string{"value", "recipient"}[index]
+			}
 		case "SpellDealsDamage":
 			if len(n.Args) == 3 {
 				return []string{"spell_reference", "value", "recipient"}[index]
@@ -1520,6 +1682,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return []string{"permanent_reference", "value", "recipient"}[index]
 			}
 		case "GainLifeForEach":
+			if len(n.Args) == 2 {
+				return "value"
+			}
+		case "PayLifeOrPutCardsDrawnThisTurnOnTopOfLibrary":
 			if len(n.Args) == 2 {
 				return "value"
 			}
@@ -1586,7 +1752,28 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "AddCardtypes" && len(n.Args) == 1 {
 			return "card_type"
 		}
+	case "entry_cost":
+		if n.Name == "Exile" && len(n.Args) == 2 {
+			return []string{"entry_exile_selection", "exile_modifier"}[index]
+		}
+	case "entry_exile_selection":
+		if n.Name == "NumberCardsInGraveyards" && len(n.Args) == 2 {
+			return []string{"entry_value", "graveyard_card_filter"}[index]
+		}
+	case "entry_exile_value":
+		if n.Name == "NumberOfCardsOfTypeExiledThisWay" && len(n.Args) == 1 {
+			return "card_filter"
+		}
 	case "entry_operation":
+		if n.Name == "MustCost" && len(n.Args) == 1 {
+			return "entry_cost"
+		}
+		if n.Name == "IfElse" && len(n.Args) == 3 {
+			return []string{"condition", "entry_operation", "entry_operation"}[index]
+		}
+		if n.Name == "EntersWithNumberCombinationCountersOfChoice" && len(n.Args) == 2 {
+			return []string{"entry_exile_value", "permanent_counter_type"}[index]
+		}
 		if n.Name == "EntersAttachedToPermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
@@ -1715,6 +1902,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "value"
 			}
 		case "AddAbility", "LosesAbility":
+			if n.Name == "AddAbility" && len(n.Args) == 1 && containsDeclarationName(n, "PermanentRuleEffect") {
+				return "rule"
+			}
 			if len(n.Args) == 1 {
 				if n.Name == "LosesAbility" && n.Args[0].Kind == Symbol && n.Args[0].Name == "TheChosenAbility" {
 					return "ability_reference"
@@ -1754,6 +1944,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantAttackAPlayer" && len(n.Args) == 1 {
+			return "last_turn_attack_player_filter"
+		}
 		if n.Name == "CantHaveMoreThanNumberCountersOfType" && len(n.Args) == 2 {
 			return []string{"value", "permanent_counter_type"}[index]
 		}
@@ -1764,7 +1957,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "CantAttackUnlessCost" && len(n.Args) == 1 {
 			return "cost"
 		}
-		if n.Name == "CantBeEnchantedByAnEnchantment" && len(n.Args) == 1 {
+		if (n.Name == "CantBeEnchantedByAnEnchantment" || n.Name == "CantBeEnchantedAndDoesntRemove") && len(n.Args) == 1 {
 			return "aura_restriction_filter"
 		}
 		if n.Name == "CantBeTheTargetOfSpells" && len(n.Args) == 1 {
@@ -1778,6 +1971,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "CanBeBlockedAsThoughItDidntHave" && len(n.Args) == 1 {
 			return "keyword"
+		}
+	case "last_turn_attack_player_filter":
+		if (n.Name == "ExceptFor" || n.Name == "Or") && len(n.Args) == 1 {
+			return "last_turn_attack_player_filter"
+		}
+		if n.Name == "CastASpellDuringTheirLastTurn" && len(n.Args) == 1 {
+			return "spell_filter"
+		}
+		if n.Name == "PutAPermanentOnBattleDuringTheirLastTurn" && len(n.Args) == 1 {
+			return "permanent_filter"
 		}
 	case "aura_restriction_filter":
 		if n.Name == "And" && len(n.Args) == 1 {
@@ -1859,6 +2062,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "DamageDealtBySpellThisTurn" && len(n.Args) == 1 {
+			return "cast_spell_reference"
+		}
 		if n.Name == "NumPermanentsOfTypeExiledThisWay" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -1901,6 +2107,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ManaValueOfExiled" && len(n.Args) == 1 {
 			return "exile_payment_reference"
 		}
+		if n.Name == "TheAmountOfDamageDealtToPermanentThisTurnBySources" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "damage_source_filter"}[index]
+		}
 		if n.Name == "ManaValueOfSpell" && len(n.Args) == 1 {
 			return "spell_reference"
 		}
@@ -1930,6 +2139,22 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "SeparatePermanentsIntoNamedPiles" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "metadata"}[index]
+		}
+		if n.Name == "SetLifeTotal" && len(n.Args) == 1 {
+			return "value"
+		}
+		if n.Name == "GainControlOfEachPermanent" && len(n.Args) == 1 {
+			return "permanent_collection"
+		}
+		if n.Name == "MayAction" && len(n.Args) == 1 && n.Args[0].Name == "CopySpellAndMayChooseNewTargets" {
+			return "action"
+		}
+		if n.Name == "CopySpellAndMayChooseNewTargets" && len(n.Args) == 1 {
+			return "spell_reference"
+		}
+
 		if n.Name == forcedManaAction && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -1970,6 +2195,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "AddMana" && len(n.Args) == 1 {
 			return "mana_production"
 		}
+		if n.Name == "PayLifeOrPutCardsDrawnThisTurnOnTopOfLibrary" && len(n.Args) == 2 {
+			return "value"
+		}
 		if (n.Name == "MillNumberCards" || n.Name == "DrawNumberCards" || n.Name == "DiscardNumberCards" || n.Name == "DiscardNumberCardsAtRandom" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
 			return "value"
 		}
@@ -1978,10 +2206,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "recipient"}[index]
 		}
 	case "permanent_collection":
+		if n.Name == "InThePileChosenForPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if n.Name == "SinglePermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
-		if (n.Name == "And" || n.Name == "Or" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
+		if (n.Name == "And" || n.Name == "Or" || n.Name == "ExceptFor" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
 			return role
 		}
 		if (n.Name == "BandedWith" || n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "WasTappedToPayForAbilitiesOfPermanent" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
@@ -2039,13 +2270,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_reference"
 		}
 	case "player_reference":
+		if n.Name == "PlayerOrControllerOfPermanent" && len(n.Args) == 1 {
+			return "recipient"
+		}
+
 		if n.Name == "ControllerOfAbility" && len(n.Args) == 1 {
 			return "ability_reference"
 		}
 		if n.Name == "ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn" && len(n.Args) == 2 {
 			return "permanent_reference"
 		}
-		if (n.Name == "ControllerOfPermanent" || n.Name == "OwnerOfPermanent") && len(n.Args) == 1 {
+		if (n.Name == "ControllerOfPermanent" || n.Name == "OwnerOfPermanent" || n.Name == "PlayerOrControllerOfPlaneswalkerCreatureIsAttacking") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if n.Name == "ControllerOfSpell" && len(n.Args) == 1 {
@@ -2058,6 +2293,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "damage_cause_filter", "spell_damage_filter":
 		if n.Name == "TargetsPermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
+		}
+	case "cast_spell_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
+		if n.Name == "CastByPlayer" && len(n.Args) == 1 {
+			return "player_reference"
 		}
 	case "spell_filter":
 		if n.Name == "CanTargetOnly" && len(n.Args) == 1 {
@@ -2094,7 +2339,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "mana_value_comparison":
-		if n.Name == "EqualTo" && len(n.Args) == 1 {
+		if (n.Name == "EqualTo" || n.Name == "LessThanOrEqualTo") && len(n.Args) == 1 {
 			return "value"
 		}
 	case "toughness_comparison":
@@ -2117,6 +2362,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "InThePileChosenForPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if n.Name == "Not" && len(n.Args) == 1 {
 			return role
 		}
@@ -2230,7 +2478,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}
+	case "hand_card_set":
+		if n.Name == "SingleCardInHand" && len(n.Args) == 1 {
+			return "hand_card_reference"
+		}
+	case "discard_cause_filter":
+		if n.Name == "ControlledByAPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 	case "event":
+		if n.Name == "WhenASpellOrAbilityCausesAPlayerToDiscardACard" && len(n.Args) == 3 {
+			return []string{"discard_cause_filter", "player_filter", "hand_card_set"}[index]
+		}
 		if n.Name == "WhenAPlayerCastsTheirNthSpellInATurn" && len(n.Args) == 3 {
 			return []string{"player_filter", "cast_ordinal_comparison", "spell_filter"}[index]
 		}
@@ -2266,7 +2525,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "WhenAnyNumberOfPermanentsAreOnTheBattlefield", "WhenNoPermanentsAreOnTheBattlefield", "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentLeavesTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
+			case "WhenAnyNumberOfCreaturesAttack", "WhenAnyNumberOfPermanentsAreOnTheBattlefield", "WhenNoPermanentsAreOnTheBattlefield", "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentLeavesTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
 				return "permanent_filter"
 			case "WhenAPlayerDrawsACard", "WhenAPlayerIsDealtDamage", "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep", "AtTheBeginningOfAPlayersDrawStep", "AtTheBeginningOfCombatDuringAPlayersTurn":
 				return "player_filter"

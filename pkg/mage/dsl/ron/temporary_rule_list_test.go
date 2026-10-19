@@ -163,7 +163,7 @@ func TestRONTemporaryRuleListDeclarations(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	for _, ops := range []string{``, `CantBeRegenerated()`, `MustBlockEachAttacker(You)`, `CanBlockAnyNumberOfCreatures()`, `CantBeRegenerated,Flying`, `DamageDealtToItCantBePreventedOrRedirected`} {
+	for _, ops := range []string{``, `CantBeRegenerated()`, `MustBlockEachAttacker(You)`, `CanBlockAnyNumberOfCreatures()`, `CantBeRegenerated,Flying`, `DamageDealtToItCantBePreventedOrRedirected()`} {
 		src := fmt.Sprintf(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(Targeted([TargetPermanent(IsCardtype(Creature))],ActionList([CreatePermanentRuleEffectUntil(Ref_TargetPermanent,[%s],UntilEndOfTurn)])))])`, ops)
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")
 		if err != nil {

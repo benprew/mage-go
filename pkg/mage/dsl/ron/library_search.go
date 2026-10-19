@@ -5,7 +5,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func compileLibrarySearch(n Node) (effectFactory, error) {
+func compileLibrarySearch(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
@@ -20,6 +20,9 @@ func compileLibrarySearch(n Node) (effectFactory, error) {
 		return nil, unsupported(steps[2], "search shuffle instruction")
 	}
 	find, destination := steps[0], steps[1]
+	if destination.Name == "IfElse" {
+		return compileLibraryManaDifference(n, steps, ctx)
+	}
 	if find.Name == "FindAGenericCard" {
 		if find.Kind != Symbol {
 			return nil, unsupported(find, "unqualified search instruction")
@@ -27,7 +30,9 @@ func compileLibrarySearch(n Node) (effectFactory, error) {
 		if destination.Kind != Symbol || destination.Name != "PutFoundCardsIntoHand" {
 			return nil, unsupported(destination, "unqualified search destination")
 		}
-		return func(instanceBindings) mage.Effect { return mage.SearchLibraryToHand() }, nil
+		return func(instanceBindings) mage.Effect {
+			return (mage.LibrarySearchInstruction{Kind: mage.SearchAnyCardToHand}).Effect()
+		}, nil
 	}
 	if find.Name != "FindACardOfType" {
 		return nil, unsupported(find, "single-card search instruction")
@@ -35,7 +40,7 @@ func compileLibrarySearch(n Node) (effectFactory, error) {
 	if err := arity(find, 1); err != nil {
 		return nil, err
 	}
-	filter, err := compileBasicLandSearchFilter(find.Args[0])
+	_, err = compileBasicLandSearchFilter(find.Args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +57,9 @@ func compileLibrarySearch(n Node) (effectFactory, error) {
 	if len(entry) != 1 || entry[0].Kind != Symbol || entry[0].Name != "EntersNormally" {
 		return nil, unsupported(destination.Args[0], "search entry operations")
 	}
-	return func(instanceBindings) mage.Effect { return mage.SearchLibraryToBattlefield(filter) }, nil
+	return func(instanceBindings) mage.Effect {
+		return (mage.LibrarySearchInstruction{Kind: mage.SearchBasicLandToBattlefield}).Effect()
+	}, nil
 }
 
 func compileBasicLandSearchFilter(n Node) (mage.CardFilter, error) {

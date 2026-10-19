@@ -17,13 +17,27 @@ func PlayerManaPaymentThisTurn(player PlayerRef, mana core.ManaCost, body Resolv
 	return &playerPaymentInstallation{player: player, mana: mana, body: body}
 }
 
-type playerPaymentInstallation struct {
-	player PlayerRef
-	mana   core.ManaCost
-	body   ResolvingEffect
+// UnlessManaPaidBeforeNextDraw permits one payment before the player's next draw step.
+// Payment stops the saved delayed ability. A skipped step keeps the permission.
+func UnlessManaPaidBeforeNextDraw(player PlayerRef, mana core.ManaCost, unpaid ResolvingEffect) ResolvingEffect {
+	e := PlayerManaPaymentThisTurn(player, mana, unpaid).(*playerPaymentInstallation)
+	e.drawDeadline = true
+	return e
 }
 
-func (*playerPaymentInstallation) Text() string                 { return "permit a mana payment this turn" }
+type playerPaymentInstallation struct {
+	drawDeadline bool
+	player       PlayerRef
+	mana         core.ManaCost
+	body         ResolvingEffect
+}
+
+func (e *playerPaymentInstallation) Text() string {
+	if e.drawDeadline {
+		return "pay mana before the next draw step"
+	}
+	return "permit a mana payment this turn"
+}
 func (*playerPaymentInstallation) Properties() EffectProperties { return EffectProperties{} }
 func (e *playerPaymentInstallation) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "player-payment", Text: e.Text(), isolatedBindings: true, children: []definitionEdge{{"player", e.player}, {"body", e.body}}}
@@ -60,17 +74,28 @@ func (e *playerPaymentInstallation) Apply(ctx *EffectContext) error {
 	frame.manaTracking = false
 	frame.resolvingStackID = uuid.Nil
 	frame.resolvingCastContext = ctx.Game.resolution.resolvingCastContext.clone()
-	ctx.Game.playerPayments = append(ctx.Game.playerPayments, installedPlayerPayment{id: uuid.New(), player: player, mana: e.mana, body: e.body, context: saved, frame: frame})
+	id := uuid.New()
+	if e.drawDeadline {
+		body := captureDelayedBody(ctx, e.body)
+		ctx.Game.RegisterDelayedTrigger(&DelayedTrigger{
+			targetingAbilityID: id, EventType: core.EvtDrawStep, MatchPlayerID: player,
+			survivesCleanup: true, SourceID: ctx.SourceID, Controller: ctx.Controller,
+			sourceCaptured: true, sourceIncarnation: body.sourceIncarnation,
+			Effects: []Effect{body},
+		})
+	}
+	ctx.Game.playerPayments = append(ctx.Game.playerPayments, installedPlayerPayment{id: id, player: player, mana: e.mana, body: e.body, context: saved, frame: frame, drawDeadline: e.drawDeadline})
 	return nil
 }
 
 type installedPlayerPayment struct {
-	id      uuid.UUID
-	player  uuid.UUID
-	mana    core.ManaCost
-	body    ResolvingEffect
-	context EffectContext
-	frame   ResolutionState
+	drawDeadline bool
+	id           uuid.UUID
+	player       uuid.UUID
+	mana         core.ManaCost
+	body         ResolvingEffect
+	context      EffectContext
+	frame        ResolutionState
 }
 
 // PlayerPaymentInfo identifies a current payment permission.
@@ -89,13 +114,18 @@ func (g *Game) GetPlayerPayments(player uuid.UUID) []PlayerPaymentInfo {
 	var result []PlayerPaymentInfo
 	for _, payment := range g.playerPayments {
 		if payment.player == player && g.CanAfford(player, payment.mana, nil) {
-			result = append(result, PlayerPaymentInfo{ID: payment.id, SourceID: payment.context.SourceID, Description: payment.body.Text()})
+			description := payment.body.Text()
+			if payment.drawDeadline {
+				description = "pay " + payment.mana.String() + " before the next draw step"
+			}
+			result = append(result, PlayerPaymentInfo{ID: payment.id, SourceID: payment.context.SourceID, Description: description})
 		}
 	}
 	return result
 }
 
-// TakePlayerPayment pays one permission and applies its body without the stack.
+// TakePlayerPayment pays one permission without the stack.
+// A draw deadline payment stops its delayed ability. Other payments apply a body.
 // The caller must supply a time at which the player could cast an instant.
 func (g *Game) TakePlayerPayment(player, id uuid.UUID) error {
 	if g.resolution.resolvingController != uuid.Nil {
@@ -114,6 +144,11 @@ func (g *Game) TakePlayerPayment(player, id uuid.UUID) error {
 		}
 		if err := tx.Commit(); err != nil {
 			return err
+		}
+		if payment.drawDeadline {
+			g.playerPayments = slices.DeleteFunc(g.playerPayments, func(p installedPlayerPayment) bool { return p.id == id })
+			g.triggers.SetDelayed(slices.DeleteFunc(g.triggers.Delayed(), func(dt *DelayedTrigger) bool { return dt.targetingAbilityID == id }))
+			return nil
 		}
 		return payment.applyBody(g)
 	}

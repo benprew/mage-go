@@ -10,6 +10,7 @@ import (
 
 // DiscardAction represents a proposed discard.
 type DiscardAction struct {
+	discardEvent            GameEvent
 	source                  uuid.UUID
 	playerID                uuid.UUID
 	cardID                  uuid.UUID

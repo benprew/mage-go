@@ -9,6 +9,10 @@ import (
 )
 
 func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
+	return compileTokenCreationWithResult(n, ctx, nil)
+}
+
+func compileTokenCreationWithResult(n Node, ctx scope, result *resolutionTokensPlan) (effectFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -39,6 +43,9 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 		tokenNode = tokenNode.Args[1]
 	}
 	if tokenNode.Name == "TokenCopyOfPermanent" {
+		if result != nil {
+			return nil, unsupported(tokenNode, "saved token copy result")
+		}
 		if err := arity(tokenNode, 2); err != nil {
 			return nil, err
 		}
@@ -62,6 +69,9 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if result != nil {
+			return mage.CreateTokenCopiesInto(ctx.player.build(bindings), count(bindings), token(), bindings.resolutionTokens[result])
+		}
 		if ctx.createdTokenLink != nil {
 			return mage.CreateTokenCopiesLinked(ctx.player.build(bindings), count(bindings), token(), ctx.createdTokenLink)
 		}
@@ -126,8 +136,15 @@ func compileCreatureToken(n Node) (func() mage.TokenDefinition, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(supers) != 0 {
-		return nil, unsupported(n.Args[2], "token supertypes")
+	legendary := false
+	for _, super := range supers {
+		if super.Kind != Symbol || super.Name != "Legendary" {
+			return nil, unsupported(super, "token supertype")
+		}
+		if legendary {
+			return nil, problem(super, "token supertypes must be distinct")
+		}
+		legendary = true
 	}
 	entries, err := list(n.Args[3])
 	if err != nil {
@@ -186,6 +203,14 @@ func compileCreatureToken(n Node) (func() mage.TokenDefinition, error) {
 	var attrs []core.Attr
 	var abilities []func() mage.Ability
 	for _, entry := range entries {
+		if entry.Name == "PermanentRuleEffect" {
+			ability, err := compileTokenEnchantmentRule(entry)
+			if err != nil {
+				return nil, err
+			}
+			abilities = append(abilities, ability)
+			continue
+		}
 		if entry.Name == "BandsWithOthers" {
 			ability, err := compileTokenBandsAbility(entry)
 			if err != nil {
@@ -218,6 +243,9 @@ func compileCreatureToken(n Node) (func() mage.TokenDefinition, error) {
 		attrs = append(attrs, attr)
 	}
 	options := []mage.TokenOption{mage.TokenPT(pt.Args[0].Integer, pt.Args[1].Integer), mage.TokenTypes(types...)}
+	if legendary {
+		options = append(options, mage.TokenLegendary())
+	}
 	if len(colors) > 0 {
 		options = append(options, mage.TokenColors(colors...))
 	}

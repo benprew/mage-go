@@ -58,16 +58,17 @@ type battlefieldEntryContext struct {
 }
 
 type battlefieldEntryAction struct {
-	retained     map[filteredEntryKey]*retainedEntryReplacement
-	filtered     map[filteredEntryKey]*filteredEntryReplacement
-	context      battlefieldEntryContext
-	permanent    *Permanent
-	copies       map[entryCopyKey]*entryCopyReplacement
-	variants     map[entryCopyKey]*entryVariantReplacement
-	sacrifices   map[entryCopyKey]*entrySacrificeReplacement
-	lifePayments map[entryCopyKey]*entryLifeReplacement
-	lifeLosses   map[entryCopyKey]*entryLifeLossReplacement
-	textChanges  []TextChange
+	retained          map[filteredEntryKey]*retainedEntryReplacement
+	filtered          map[filteredEntryKey]*filteredEntryReplacement
+	context           battlefieldEntryContext
+	permanent         *Permanent
+	copies            map[entryCopyKey]*entryCopyReplacement
+	variants          map[entryCopyKey]*entryVariantReplacement
+	sacrifices        map[entryCopyKey]*entrySacrificeReplacement
+	lifePayments      map[entryCopyKey]*entryLifeReplacement
+	lifeLosses        map[entryCopyKey]*entryLifeLossReplacement
+	graveyardPayments map[entryCopyKey]*entryGraveyardPaymentReplacement
+	textChanges       []TextChange
 }
 
 func (a *battlefieldEntryAction) ActionSource() uuid.UUID { return a.permanent.ID() }
@@ -88,7 +89,26 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 	sacrificeIndex := 0
 	lifeIndex := 0
 	lossIndex := 0
+	graveyardIndex := 0
 	for _, ability := range a.permanent.RuntimeAbilities {
+		if payment, ok := UnwrapAbility(ability).(*entryGraveyardPaymentAbility); ok {
+			plan := base.definitionPlan
+			if plan != nil && plan.declarationOrigin != nil {
+				plan = plan.declarationOrigin
+			}
+			key := entryCopyKey{plan, graveyardIndex}
+			graveyardIndex++
+			if a.graveyardPayments == nil {
+				a.graveyardPayments = make(map[entryCopyKey]*entryGraveyardPaymentReplacement)
+			}
+			replacement := a.graveyardPayments[key]
+			if replacement == nil {
+				replacement = &entryGraveyardPaymentReplacement{replacementBase: replacementBase{sourceID: a.permanent.ID(), priority: ReplacementPriorityDefault}, ability: payment}
+				a.graveyardPayments[key] = replacement
+			}
+			result = append(result, replacement)
+			continue
+		}
 		if loss, ok := UnwrapAbility(ability).(*entryLifeLossAbility); ok {
 			plan := base.definitionPlan
 			if plan != nil && plan.declarationOrigin != nil {

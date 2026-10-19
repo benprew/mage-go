@@ -57,6 +57,10 @@ func (c *exileFromGraveyardCost) canPaySingleGraveyard(sourceID, controller uuid
 }
 
 func (c *exileFromGraveyardCost) chooseSingleGraveyard(sourceID, controller uuid.UUID, g *Game) error {
+	return c.chooseSingleGraveyardWithFallback(sourceID, controller, g, false)
+}
+
+func (c *exileFromGraveyardCost) chooseSingleGraveyardWithFallback(sourceID, controller uuid.UUID, g *Game, mandatory bool) error {
 	ids := c.eligibleGraveyards(sourceID, controller, g)
 	if len(ids) == 0 {
 		return fmt.Errorf("cannot pay matching single graveyard exile cost")
@@ -84,7 +88,10 @@ func (c *exileFromGraveyardCost) chooseSingleGraveyard(sourceID, controller uuid
 		chosen := payer.ChooseCardFromGraveyard(candidates, c.Text(), g)
 		index := slices.IndexFunc(candidates, func(card Card) bool { return chosen != nil && card.ID() == chosen.ID() })
 		if index < 0 {
-			return fmt.Errorf("invalid matching graveyard exile cost choice")
+			if !mandatory || len(candidates) == 0 {
+				return fmt.Errorf("invalid matching graveyard exile cost choice")
+			}
+			index = 0
 		}
 		chosen = candidates[index]
 		if i == 0 {

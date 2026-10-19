@@ -2,16 +2,6 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileSourcePowerLETarget(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
-	if err := sourcePowerLEShape(n); err != nil {
-		return mage.PermanentFilter{}, nil, err
-	}
-	if !ctx.permanent {
-		return mage.PermanentFilter{}, nil, problem(n, "source power target requires a permanent source")
-	}
-	return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetPowerLessThanOrEqualToSourcePower()}, nil
-}
-
 func sourcePowerLEShape(n Node) error {
 	if err := arity(n, 1); err != nil {
 		return err

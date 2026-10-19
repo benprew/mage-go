@@ -13,6 +13,11 @@ import (
 // extra turns queue, turn step scheduling and skips (CR 500.7–500.11), and
 // per-permanent untap skipping.
 type TurnSystem struct {
+	randomBlockingPiles  bool
+	attemptedTurn        int
+	attemptedTurnPlayer  uuid.UUID
+	turnSkipped          bool
+	pendingTurnUntaps    []capturedPermanent
 	drawStepDraws        int
 	combatTiming         combatTimingHistory
 	stepTurn             int
@@ -45,6 +50,11 @@ func NewTurnSystem() TurnSystem {
 // Clone creates an independent deep copy of TurnSystem.
 func (ts TurnSystem) Clone() TurnSystem {
 	clone := TurnSystem{
+		randomBlockingPiles:  ts.randomBlockingPiles,
+		attemptedTurn:        ts.attemptedTurn,
+		attemptedTurnPlayer:  ts.attemptedTurnPlayer,
+		turnSkipped:          ts.turnSkipped,
+		pendingTurnUntaps:    slices.Clone(ts.pendingTurnUntaps),
 		drawStepDraws:        ts.drawStepDraws,
 		combatTiming:         ts.combatTiming,
 		stepTurn:             ts.stepTurn,
@@ -76,6 +86,7 @@ func (ts *TurnSystem) Turn() int {
 // SetTurn overrides the current turn number.
 func (ts *TurnSystem) SetTurn(n int) {
 	if ts.turn != n {
+		ts.randomBlockingPiles = false
 		ts.drawStepDraws = 0
 		ts.combatTiming = combatTimingHistory{}
 		if ts.schedule != nil {
@@ -88,6 +99,7 @@ func (ts *TurnSystem) SetTurn(n int) {
 
 // IncrementTurn advances the turn number by 1.
 func (ts *TurnSystem) IncrementTurn() {
+	ts.randomBlockingPiles = false
 	ts.drawStepDraws = 0
 	ts.combatTiming = combatTimingHistory{}
 	if ts.schedule != nil {

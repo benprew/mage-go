@@ -13,11 +13,12 @@ import (
 // component, and proves the complete payment on a game clone before Commit
 // mutates live state.
 type spellPaymentTransaction struct {
-	game       *Game
-	card       Card
-	controller uuid.UUID
-	zone       Zone
-	payment    *costPaymentTransaction
+	game           *Game
+	card           Card
+	controller     uuid.UUID
+	zone           Zone
+	payment        *costPaymentTransaction
+	manaPermission uuid.UUID
 }
 
 type spellPaymentSpec struct {
@@ -31,6 +32,8 @@ type spellPaymentSpec struct {
 	XValue         int
 	AnyColor       bool
 	ChannelGeneric bool
+	PayingManaCost bool
+	manaPermission uuid.UUID
 }
 
 func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaymentTransaction, error) {
@@ -40,6 +43,9 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	player := g.GetPlayer(spec.Controller)
 	if player == nil {
 		return nil, ErrPlayerNotFound
+	}
+	if spec.PayingManaCost {
+		spec.manaPermission = g.chooseOneSpellMana(spec.Controller)
 	}
 	spellCtx := SpellContextForCard(spec.Card)
 	if spellCtx.XSpendingRestricted && (spec.XValue < 0 || (!spec.Mana.HasX && spec.XValue != 0)) {
@@ -63,11 +69,12 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 			return nil, fmt.Errorf("cannot pay total mana cost %s for %s: %w", totalMana, spec.Card.Name(), err)
 		}
 		return &spellPaymentTransaction{
-			game:       g,
-			card:       spec.Card,
-			controller: spec.Controller,
-			zone:       spec.Zone,
-			payment:    payment,
+			game:           g,
+			card:           spec.Card,
+			controller:     spec.Controller,
+			zone:           spec.Zone,
+			payment:        payment,
+			manaPermission: spec.manaPermission,
 		}, nil
 	}
 
@@ -111,11 +118,12 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	}
 
 	return &spellPaymentTransaction{
-		game:       g,
-		card:       spec.Card,
-		controller: spec.Controller,
-		zone:       spec.Zone,
-		payment:    payment,
+		game:           g,
+		card:           spec.Card,
+		controller:     spec.Controller,
+		zone:           spec.Zone,
+		payment:        payment,
+		manaPermission: spec.manaPermission,
 	}, nil
 }
 
@@ -158,6 +166,10 @@ func (g *Game) modifySpellTotalCostWithContext(spec spellPaymentSpec, total Mana
 	if spec.ChannelGeneric {
 		lifeLoss += total.Generic - restricted
 		total.Generic = restricted
+	}
+	if spec.manaPermission != uuid.Nil {
+		base := resolvedSpellManaCost(spec.Mana, spec.XValue)
+		total = relaxSpellManaCost(total, base, spec.Mana.XCount*spec.XValue, ctx)
 	}
 	if spec.AnyColor {
 		if ctx != nil {
@@ -275,9 +287,18 @@ func lockPaymentCostsWithManaPolicy(costs []Cost, sourceID, controller uuid.UUID
 // Commit moves the proposed card out of its source zone, activates the exact
 // prevalidated mana plan, and pays the locked total cost once.
 func (tx *spellPaymentTransaction) Commit() error {
+	if err := tx.checkOneSpellMana(); err != nil {
+		return err
+	}
 	if tx.game.removeCardFromZone(tx.controller, tx.card.ID(), tx.zone) == nil {
 		return fmt.Errorf("could not remove %s from %s", tx.card.Name(), tx.zone)
 	}
 	tx.game.resolution.SetLastCostReveal(nil)
-	return tx.payment.Commit()
+	if err := tx.payment.Commit(); err != nil {
+		return err
+	}
+	if tx.manaPermission != uuid.Nil {
+		tx.game.consumeOneSpellMana(tx.controller, tx.manaPermission)
+	}
+	return nil
 }

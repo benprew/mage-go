@@ -24,7 +24,7 @@ func compileTemporaryPower(n Node, subject permanentReferencePlan) (func(instanc
 	}, nil
 }
 
-func compileTemporaryPTX(n Node, ctx scope, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
+func compileTemporaryPTAdjustment(n Node, ctx scope, subject permanentReferencePlan) (func(instanceBindings) mage.PTValueAdjustment, error) {
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}
@@ -40,8 +40,8 @@ func compileTemporaryPTX(n Node, ctx scope, subject permanentReferencePlan) (fun
 	if err != nil {
 		return nil, err
 	}
-	return func(bindings instanceBindings) mage.ContinuousModification {
-		return mage.ModifyPT(subject.build(bindings), power(bindings), toughness(bindings))
+	return func(bindings instanceBindings) mage.PTValueAdjustment {
+		return mage.PTValueAdjustment{Power: power(bindings), Toughness: toughness(bindings)}
 	}, nil
 }
 

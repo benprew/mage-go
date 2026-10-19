@@ -1,14 +1,14 @@
 package mage
 
 // AttackedThisTurn keeps attack history separate for each permanent incarnation.
-var AttackedThisTurn = NewPermanentFilter("attacked this turn", func(p *Permanent, g *Game) bool {
+var AttackedThisTurn = PermanentFilter{label: "attacked this turn", fn: func(p *Permanent, g *Game) bool {
 	return p != nil && g != nil && g.HasAttackedThisTurnIncarnation(p.ID(), p.incarnationID)
-})
+}, query: &permanentCollectionFilterNode{operation: collectionFilterAttackedThisTurn}}
 
 // DidntAttackThisTurn excludes objects that declared an attack this turn.
-var DidntAttackThisTurn = NewPermanentFilter("did not attack this turn", func(p *Permanent, g *Game) bool {
+var DidntAttackThisTurn = PermanentFilter{label: "did not attack this turn", fn: func(p *Permanent, g *Game) bool {
 	return p != nil && g != nil && !AttackedThisTurn.Match(p, g)
-})
+}, query: composePermanentCollectionFilters(collectionFilterNot, []PermanentFilter{AttackedThisTurn})}
 
 type targetPlayerAttackedThisTurnOption struct{}
 

@@ -17,6 +17,11 @@ func CantAttackEach(subjects PermanentSet) StaticRule {
 	return cantAttackEachRule{subjects: subjects, condition: StateConditionFunc("always", []StateDependency{StateBattlefield}, func(StateReader, StateContext) bool { return true })}
 }
 
+// CantAttackEachIf checks a live condition before each attack declaration.
+func CantAttackEachIf(subjects PermanentSet, condition StateCondition) StaticRule {
+	return cantAttackEachRule{subjects: subjects, condition: condition}
+}
+
 // CantAttack prevents the current subject from attacking.
 // The rule remains separate from the subject's abilities.
 func CantAttack(subject PermanentRef) StaticRule {

@@ -51,6 +51,9 @@ func hasTargetDependencies(specs []Target) bool {
 		if nilDefinition(spec) {
 			return false
 		}
+		if _, ok := UnwrapTarget(spec).(*playerGraveyardTargets); ok {
+			return true
+		}
 		t, ok := UnwrapTarget(spec).(*PermanentTarget)
 		return ok && t != nil && (len(t.typeDependencies) != 0 || len(t.blockHistoryDependencies) != 0)
 	})
@@ -88,10 +91,20 @@ func (g *Game) targetBindingsQuery(specs []Target, chosen []uuid.UUID, visits ma
 	return &query
 }
 
-// PossibleTargetGroup reads one singular group after the supplied earlier choices.
+// PossibleTargetGroup reads one group after the supplied earlier choices.
+// A player target can precede one optional graveyard card collection.
 // The query does not choose targets or change the current resolution frame.
 // Each candidate must permit a complete selection for the remaining groups.
 func (g *Game) PossibleTargetGroup(controller uuid.UUID, card Card, specs []Target, group int, chosen []uuid.UUID, x int) []uuid.UUID {
+	if mixedPlayerGraveyardTargets(specs) {
+		if group < 0 || group >= len(specs) || len(chosen) != group {
+			return nil
+		}
+		if err := g.validateActionTargets(controller, card, specs[:group], chosen, x, "target prefix"); err != nil {
+			return nil
+		}
+		return g.targetBindingsQuery(specs[:group], chosen, nil, x).possibleTargetsWithX(specs[group], controller, card, x)
+	}
 	if group < 0 || group >= len(specs) || len(chosen) != group {
 		return nil
 	}
@@ -154,6 +167,14 @@ func (g *Game) hasLegalTargetSelection(controller uuid.UUID, card Card, specs []
 }
 
 func targetDependencyProblem(specs []Target) string {
+	if mixedPlayerGraveyardTargets(specs) {
+		return ""
+	}
+	for _, spec := range specs {
+		if _, ok := UnwrapTarget(spec).(*playerGraveyardTargets); ok {
+			return "graveyard collection requires an earlier singular player target"
+		}
+	}
 	if !hasTargetDependencies(specs) {
 		return ""
 	}
@@ -180,4 +201,19 @@ func targetDependencyProblem(specs []Target) string {
 		prior[b] = true
 	}
 	return ""
+}
+
+func mixedPlayerGraveyardTargets(specs []Target) bool {
+	if len(specs) != 2 {
+		return false
+	}
+	first, ok := specs[0].(*targetDeclaration)
+	if !ok {
+		return false
+	}
+	second, ok := UnwrapTarget(specs[1]).(*playerGraveyardTargets)
+	if !ok || second.player == nil {
+		return false
+	}
+	return second.player.targetDeclaration == first
 }

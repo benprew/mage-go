@@ -46,7 +46,7 @@ func CanTargetOnlySubtypeFilter(subtype string) CardFilter {
 	if subtype == "" || strings.TrimSpace(subtype) != subtype {
 		return CardFilter{}
 	}
-	return NewCardFilter("can target only "+subtype, func(source Card) bool { return TargetSourceCanTargetOnlySubtype(source, subtype) })
+	return typedCardFilter("can target only "+subtype, &cardCharacteristicNode{operation: cardCharacteristicTargetOnlySubtype, subtype: subtype})
 }
 
 func spellDeclarationSource(obj *StackObject, source Card) Card {

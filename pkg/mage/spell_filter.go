@@ -57,7 +57,7 @@ func (f SpellFilter) matches(g *Game, controller uuid.UUID, source Card, spell *
 	}
 	switch f.kind {
 	case "card":
-		return f.card.Match(spell.Card)
+		return f.card.Match(spellCharacteristicCard(spell))
 	case "single-target":
 		return len(spell.Targets) == 1
 	case "controller":
@@ -68,7 +68,7 @@ func (f SpellFilter) matches(g *Game, controller uuid.UUID, source Card, spell *
 				continue
 			}
 			for _, color := range permanent.Colors() {
-				if color >= core.White && color <= core.Green && HasColorCardFilter(color).Match(spell.Card) {
+				if color >= core.White && color <= core.Green && HasColorCardFilter(color).Match(spellCharacteristicCard(spell)) {
 					return true
 				}
 			}

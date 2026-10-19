@@ -167,17 +167,18 @@ func TestTypedAuraAttachedToCreatureYouControl(t *testing.T) {
 	auraOnMine := NewAura("Aura On Mine", "{W}")
 	auraOnMine.SetOwner(a.PlayerID())
 	auraOnMinePerm := g.PutOnBattlefield(auraOnMine, a.PlayerID())
-	auraOnMinePerm.AttachedTo = myCreaturePerm.ID()
+	g.Attach(auraOnMinePerm.ID(), myCreaturePerm.ID())
 
 	auraOnOpp := NewAura("Aura On Opp", "{W}")
 	auraOnOpp.SetOwner(a.PlayerID())
 	auraOnOppPerm := g.PutOnBattlefield(auraOnOpp, a.PlayerID())
-	auraOnOppPerm.AttachedTo = oppCreaturePerm.ID()
+	g.Attach(auraOnOppPerm.ID(), oppCreaturePerm.ID())
 
 	nonAura := NewEnchantment("Attached non-Aura", "")
 	nonAura.SetOwner(a.PlayerID())
 	nonAuraPerm := g.PutOnBattlefield(nonAura, a.PlayerID())
 	nonAuraPerm.AttachedTo = myCreaturePerm.ID()
+	nonAuraPerm.attachedIncarnation = myCreaturePerm.incarnationID
 
 	targetSpec := DeclarePermanentTarget("aura", And(IsEnchantment, HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())
 	possible := targetSpec.Possible(a.PlayerID(), nil, g)

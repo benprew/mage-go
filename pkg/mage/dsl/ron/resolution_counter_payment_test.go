@@ -173,11 +173,8 @@ func TestRONResolutionCounterFullRecords(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	for _, tc := range []struct{ set, name, blocker string }{{"ATQ", "Tetravus", "unsupported token keyword (PermanentRuleEffect)"}} {
-		n := hostUntapRecord(t, tc.set, tc.name)
-		if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), tc.blocker) {
-			t.Fatalf("%s: %v", tc.name, err)
-		}
+	if _, err := Compile(hostUntapRecord(t, "ATQ", "Tetravus")); err != nil {
+		t.Fatal(err)
 	}
 }
 

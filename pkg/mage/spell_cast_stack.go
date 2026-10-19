@@ -165,6 +165,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 
 	obj.DamageDistribution = maps.Clone(opts.DamageDistribution)
 	g.pushStack(obj)
+	g.trackers.Turn.castSpells = append(g.trackers.Turn.castSpells, damageSourceFromSpellObject(obj))
 	g.recordSpellCast(card, opts.Controller)
 	instantOrdinal := 0
 	if card.HasType(TypeInstant) {

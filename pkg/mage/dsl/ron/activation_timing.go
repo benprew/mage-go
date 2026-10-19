@@ -1,6 +1,8 @@
 package ron
 
 import (
+	"strconv"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -51,6 +53,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	ctx.exilePayment = exile
 	ctx.sourceCardPayment = &sourceCardPaymentPlan{}
+	ctx.discardFacts = &discardFactPlan{}
 	if ctx.pluralSacrifice != nil && ctx.pluralSacrifice.source {
 		ctx.sourceCardPayment.used = true
 	}
@@ -70,6 +73,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		}
 	}
 	ctx.activation = true
+	ctx.activationMana = &activationManaPlan{}
 	ctx.activationHistory = &activationHistoryPlan{}
 	var plan actionPlan
 	var modes []actionPlan
@@ -80,6 +84,12 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+	if count == 3 && hasTargetDefinedX(n.Args[2]) && (plan.spellTarget == nil || len(plan.targets) != 1 || modes != nil) {
+		return nil, problem(n.Args[2], "activation X requires its sole spell target")
+	}
+	if count == 3 && hasTargetDefinedX(n.Args[2]) {
+		plan.activationSpellManaX = true
 	}
 	if result := ctx.sacrificeSubtype; result != nil && result.subtype != "" {
 		if paid != nil {
@@ -103,8 +113,21 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 			}
 		}
 	}
+	if ctx.activationMana.used {
+		cost := n.Args[0]
+		if cost.Name != "PayManaX" || len(cost.Args) != 2 || cost.Args[0].Kind != List || len(cost.Args[0].Args) != 1 || cost.Args[0].Args[0].Kind != Symbol || cost.Args[0].Args[0].Name != "ManaCostX" || cost.Args[1].Kind != Symbol || cost.Args[1].Name != "ValueX" {
+			return nil, problem(cost, "mana subset requires one pure announced X payment")
+		}
+	}
+	if ctx.activationMana.used && (modes != nil || containsManaAction(n.Args[1])) {
+		return nil, problem(n, "mana receipt requires a nonmodal nonmana activation")
+	}
 	return func() mage.CardOption {
 		bindings := instanceBindings{sacrificeSubtypes: make(map[*sacrificeSubtypePlan]*mage.NumberBinding), counters: make(map[*counterPaymentPlan]*mage.NumberBinding), sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+		bindings.discardFacts = map[*discardFactPlan][]*mage.NumberBinding{ctx.discardFacts: make([]*mage.NumberBinding, len(ctx.discardFacts.filters))}
+		for i := range ctx.discardFacts.filters {
+			bindings.discardFacts[ctx.discardFacts][i] = mage.BindNumber("discard payment fact " + strconv.Itoa(i))
+		}
 		if ctx.pluralSacrifice != nil {
 			bindings.pluralSacrifices = map[*pluralSacrificePlan]pluralSacrificeBindings{ctx.pluralSacrifice: {power: mage.BindNumber("plural sacrifice power"), cards: mage.BindCards("plural sacrifice cards")}}
 		}
@@ -138,10 +161,17 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 			}
 			return mage.WithAbility(action)
 		}
+		if ctx.activationMana.used {
+			bindings.activationMana = mage.BindActivationMana("activation mana paid")
+		}
 		if ctx.activationHistory.used {
 			bindings.activationHistory = mage.BindActivationHistory("this activated ability")
 		}
-		options := actionOptions(plan.buildWithBindings(bindings))
+		actions := plan.buildWithBindings(bindings)
+		options := actionOptions(actions)
+		if ctx.activationMana.used {
+			options = append(options, mage.WithActivationManaXReceipt(bindings.activationMana))
+		}
 		options = append(options, mage.WithLayeredTextRevisionActivationState())
 		if ctx.activationHistory.used {
 			options = append(options, mage.WithActivationHistory(bindings.activationHistory))
@@ -158,6 +188,9 @@ func compileActivationModifiers(n Node, ctx scope) ([]mage.ActionOption, error) 
 	seenMaximum := false
 	seenSorcery := false
 	seenPermission := false
+	if countDeclarationName(n, "XCantBeZero") > 1 {
+		return nil, problem(n, "multiple X minimum declarations are not supported")
+	}
 	if countDeclarationName(n, "XIs") > 1 {
 		return nil, problem(n, "multiple X definitions are not supported")
 	}
@@ -174,6 +207,14 @@ func compileActivationModifiers(n Node, ctx scope) ([]mage.ActionOption, error) 
 
 func compileActivationModifier(n Node, ctx scope, during bool, seenMaximum, seenSorcery, seenPermission *bool) ([]mage.ActionOption, error) {
 	switch n.Name {
+	case "XCantBeZero":
+		if _, err := symbol(n); err != nil {
+			return nil, err
+		}
+		if !ctx.x {
+			return nil, problem(n, "XCantBeZero requires an X mana payment")
+		}
+		return []mage.ActionOption{mage.WithActivationMinimumX(1)}, nil
 	case "XIs":
 		return compileActivationManaX(n, ctx)
 	case "And":

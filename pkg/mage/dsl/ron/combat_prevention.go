@@ -61,10 +61,12 @@ func compileCombatPrevention(n Node, ctx scope) (effectFactory, error) {
 	}
 	if source != nil {
 		return func(bindings instanceBindings) mage.Effect {
-			return mage.PreventCombatDamageByThisTurn(source.build(bindings))
+			return (mage.CombatSourcePreventionInstruction{Subject: source.build(bindings)}).Effect()
 		}, nil
 	}
-	return func(instanceBindings) mage.Effect { return mage.PreventAllCombatDamage() }, nil
+	return func(instanceBindings) mage.Effect {
+		return (mage.GlobalCombatPreventionInstruction{}).Effect()
+	}, nil
 }
 
 func compileCombatPreventionUnion(n Node, ctx scope) (permanentReferencePlan, error) {

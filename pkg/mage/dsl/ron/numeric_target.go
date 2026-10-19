@@ -48,12 +48,17 @@ func compileFixedToughnessFilter(n Node) (mage.PermanentFilter, error) {
 	}
 }
 
-func compileSourcePowerTarget(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+func compileSourceRelativePowerTarget(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
 	if err := arity(n, 1); err != nil {
 		return mage.PermanentFilter{}, nil, err
 	}
 	comparison := n.Args[0]
-	if comparison.Name != "LessThan" {
+	powerLE := n.Name == "PowerIs"
+	if powerLE {
+		if err := sourcePowerLEShape(n); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+	} else if n.Name != "ToughnessIs" || comparison.Name != "LessThan" {
 		return mage.PermanentFilter{}, nil, unsupported(comparison, "source power comparison")
 	}
 	if err := arity(comparison, 1); err != nil {
@@ -73,23 +78,37 @@ func compileSourcePowerTarget(n Node, ctx scope) (mage.PermanentFilter, []mage.P
 	if ref.kind != permanentSource {
 		return mage.PermanentFilter{}, nil, unsupported(value.Args[0], "target source power reference")
 	}
-	return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetToughnessLessThanSourcePower()}, nil
+	option := mage.TargetToughnessLessThanSourcePower()
+	if powerLE {
+		option = mage.TargetPowerLessThanOrEqualToSourcePower()
+	}
+	return mage.AnyPermanent, []mage.PermanentTargetOption{option}, nil
 }
 
-func compileManaValueXRestriction(n Node, ctx scope) error {
+type manaValueXTargetPlan struct{}
+
+func (manaValueXTargetPlan) permanentOption() mage.PermanentTargetOption {
+	return mage.TargetManaValueEqualX()
+}
+
+func (manaValueXTargetPlan) spellTarget(name string) *mage.SpellTargetBinding {
+	return mage.DeclareSpellTargetManaValueX(name)
+}
+
+func compileManaValueXRestriction(n Node, ctx scope) (*manaValueXTargetPlan, error) {
 	if err := arity(n, 1); err != nil {
-		return err
+		return nil, err
 	}
 	comparison := n.Args[0]
 	if comparison.Name != "EqualTo" {
-		return unsupported(comparison, "target mana value comparison")
+		return nil, unsupported(comparison, "target mana value comparison")
 	}
 	if err := arity(comparison, 1); err != nil {
-		return err
+		return nil, err
 	}
 	value := comparison.Args[0]
 	if value.Kind != Symbol || value.Name != "ValueX" || !ctx.x {
-		return problem(value, "target mana value requires announced X")
+		return nil, problem(value, "target mana value requires announced X")
 	}
-	return nil
+	return &manaValueXTargetPlan{}, nil
 }

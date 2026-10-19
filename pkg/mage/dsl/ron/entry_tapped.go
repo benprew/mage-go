@@ -17,6 +17,9 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(operations) > 0 && operations[0].Name == "MustCost" {
+		return compileEntryGraveyardPayment(n)
+	}
 	if len(operations) == 2 && operations[0].Name == "ChooseAColor" {
 		return compileCombinedEntryChoice(n)
 	}

@@ -49,10 +49,8 @@ func compileDeathResultReturn(producer, loop Node, ctx scope) (effectFactory, er
 			bindings.permanentLoops = make(map[*permanentLoopPlan]*mage.PermanentBinding)
 		}
 		bindings.permanentLoops[plan] = member
-		var destroy = mage.DestroyEach(subjects(bindings), mage.CreatureDeathsInto(result))
-		if producer.Name == "DestroyEachPermanentNoRegen" {
-			destroy = mage.DestroyEachWithoutRegeneration(subjects(bindings), mage.CreatureDeathsInto(result))
-		}
-		return mage.Sequence(destroy, mage.ReturnChosenGraveyardCardsForEachPermanent(result, member, graveyard.build(bindings), mage.IsCreatureCard))
+		destroy := (mage.CreatureDeathInstruction{Subjects: subjects(bindings), Result: result, CannotRegenerate: producer.Name == "DestroyEachPermanentNoRegen"}).Effect()
+		ret := (mage.CreatureDeathReturnInstruction{Result: result, Member: member, Graveyard: graveyard.build(bindings)}).Effect()
+		return mage.Sequence(destroy, ret)
 	}, nil
 }

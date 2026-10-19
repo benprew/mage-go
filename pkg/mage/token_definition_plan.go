@@ -5,6 +5,8 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // TokenDefinitionFactory builds a token declaration without saved game state.
@@ -57,6 +59,9 @@ func buildTokenDeclaration(build TokenDefinitionFactory) (d *tokenDefinition, er
 func tokenDeclarationCard(d *tokenDefinition) *BaseCard {
 	card := NewToken(d.name, d.power, d.toughness, d.types, d.subtypes, d.keywords...)
 	card.colorOverride = slices.Clone(d.colors)
+	if d.legendary {
+		card.superTypes = []core.SuperType{core.SuperLegendary}
+	}
 	for _, ability := range d.abilities {
 		card.AddAbility(ability)
 	}
@@ -80,6 +85,9 @@ func createDefinitionTokenBatchLinked(g *Game, player uuid.UUID, count int, d *t
 		} else {
 			token := NewToken(d.name, d.power, d.toughness, d.types, d.subtypes, d.keywords...)
 			token.colorOverride = slices.Clone(d.colors)
+			if d.legendary {
+				token.superTypes = []core.SuperType{core.SuperLegendary}
+			}
 			for _, ability := range d.abilities {
 				token.AddAbility(cloneTokenAbility(ability))
 			}

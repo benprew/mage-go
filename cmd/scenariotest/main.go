@@ -223,6 +223,10 @@ func runOneGame(cfg gameConfig) (result scenario.GameResult) {
 	}()
 
 	for g.CurrentTurn() <= cfg.maxTurns && !timedOut {
+		if !g.TryBeginTurn() {
+			g.AdvanceToNextTurn()
+			continue
+		}
 		for _, step := range core.AllSteps() {
 			g.RunStepWithPriority(step)
 

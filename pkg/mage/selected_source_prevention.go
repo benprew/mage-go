@@ -35,13 +35,23 @@ func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, color
 	if hostID != uuid.Nil && obj.TargetZones[hostID] == ZoneGraveyard {
 		context.graveyardHost = capturedCard{id: hostID, visit: obj.targetIncarnations[hostID], zone: ZoneGraveyard}
 	}
-	permanent := g.prepareBattlefieldEntryWithContext(card, obj.Controller, obj.ColorOverride, context, false)
+	permanent, failed := g.prepareBattlefieldEntryResultWithContext(card, obj.Controller, obj.ColorOverride, context, false)
+	if failed != nil && !obj.IsCopy {
+		proposal := &CardZoneMoveAction{source: obj.SourceID, card: obj.Card.ID(), visit: obj.ID, from: ZoneStack, destination: ZoneGraveyard, owner: obj.Card.Owner()}
+		if obj.ExileOnLeaveStack || g.spellMarkedExileInstead(obj) {
+			proposal = proposal.WithExile(obj.Card.ID())
+		}
+		if result, ok := g.effects.ApplyReplacements(proposal, g).(*CardZoneMoveAction); ok && result != nil {
+			g.performCardZoneMove(result)
+		}
+	}
 	if permanent == nil {
-		if graveyardEnchantTarget(card) != nil && g.graveyardVisit(card.ID()) == uuid.Nil {
+		if failed == nil && graveyardEnchantTarget(card) != nil && g.graveyardVisit(card.ID()) == uuid.Nil {
 			g.cleanupSpell(obj)
 		}
 		return nil
 	}
+	permanent.resolvedSpellID = obj.ID
 	g.registerBattlefieldEntry(permanent, obj.ColorOverride, obj.SourceID)
 	g.continueSpellDamageReplacements(damageSourceFromSpellObject(obj), permanent)
 	g.continueSpellExileReplacement(damageSourceFromSpellObject(obj), permanent)

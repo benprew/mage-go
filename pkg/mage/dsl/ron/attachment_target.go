@@ -66,6 +66,9 @@ func compileAttachmentHostFilter(n Node, allowController bool) (mage.PermanentFi
 		}
 		return mage.Or(filters...), false, nil
 	}
+	if retained, handled, err := compileInspectableTargetFilter(n); handled {
+		return retained, false, err
+	}
 	filter, err := compileFilter(n)
 	return filter, false, err
 }

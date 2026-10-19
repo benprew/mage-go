@@ -25,30 +25,45 @@ func compileDamageHistorySource(n Node, ctx scope) (damageHistorySourcePlan, err
 	return damageHistorySourcePlan{ref, onlyCreatures}, err
 }
 
+type collectionDamageHistoryRulePlan struct {
+	ref    damageHistorySourcePlan
+	filter mage.PermanentFilter
+}
+
+func (plan collectionDamageHistoryRulePlan) build(bindings instanceBindings) mage.Effect {
+	if plan.ref.creaturesOnly {
+		return mage.CantRegenerateCreaturesDealtDamageByThisTurn(plan.ref.build(bindings))
+	}
+	return mage.CantRegenerateDealtDamageByThisTurn(plan.ref.build(bindings), plan.filter)
+}
+
 func compileCollectionDamageHistoryRule(n Node, ctx scope) (effectFactory, error) {
-	if err := arity(n, 3); err != nil {
+	plan, err := compileCollectionDamageHistoryRulePlan(n, ctx)
+	if err != nil {
 		return nil, err
+	}
+	return plan.build, nil
+}
+
+func compileCollectionDamageHistoryRulePlan(n Node, ctx scope) (collectionDamageHistoryRulePlan, error) {
+	if err := arity(n, 3); err != nil {
+		return collectionDamageHistoryRulePlan{}, err
 	}
 	ref, filter, err := compileDamageHistorySubjects(n.Args[0], ctx)
 	if err != nil {
-		return nil, err
+		return collectionDamageHistoryRulePlan{}, err
 	}
 	ops, err := list(n.Args[1])
 	if err != nil {
-		return nil, err
+		return collectionDamageHistoryRulePlan{}, err
 	}
 	if len(ops) != 1 || ops[0].Kind != Symbol || ops[0].Name != "CantBeRegenerated" {
-		return nil, problem(n.Args[1], "supply one CantBeRegenerated symbol")
+		return collectionDamageHistoryRulePlan{}, problem(n.Args[1], "supply one CantBeRegenerated symbol")
 	}
 	if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
-		return nil, unsupported(n.Args[2], "live damage-history duration")
+		return collectionDamageHistoryRulePlan{}, unsupported(n.Args[2], "live damage-history duration")
 	}
-	return func(bindings instanceBindings) mage.Effect {
-		if ref.creaturesOnly {
-			return mage.CantRegenerateCreaturesDealtDamageByThisTurn(ref.build(bindings))
-		}
-		return mage.CantRegenerateDealtDamageByThisTurn(ref.build(bindings), filter)
-	}, nil
+	return collectionDamageHistoryRulePlan{ref: ref, filter: filter}, nil
 }
 
 func compileDamageHistorySubjects(n Node, ctx scope) (damageHistorySourcePlan, mage.PermanentFilter, error) {

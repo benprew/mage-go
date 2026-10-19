@@ -412,16 +412,17 @@ func (g *Game) cleanupSpell(obj *StackObject) {
 		return
 	}
 
-	owner := obj.Card.Owner()
+	card := g.revealFaceDownCard(obj.Card)
+	owner := card.Owner()
 	if owner == uuid.Nil {
 		owner = obj.Controller
 	}
 	if obj.ExileOnLeaveStack || g.spellMarkedExileInstead(obj) {
-		g.ExileCard(obj.Card, obj.Card.ID())
+		g.ExileCard(card, card.ID())
 	} else {
 		p := g.GetPlayer(owner)
 		if p != nil {
-			p.AddToGraveyard(obj.Card)
+			p.AddToGraveyard(card)
 		}
 	}
 }

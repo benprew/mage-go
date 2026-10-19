@@ -81,6 +81,17 @@ func compileResolvingPermanentBranch(n Node, ctx scope) (effectFactory, error) {
 		if controlHistory {
 			return mage.UnlessPermanentCameUnderControlThisTurn(ref, controlPlayer.build(bindings), sequence)
 		}
+		if !ctx.permanent {
+			instruction := mage.PermanentBranchInstruction{Subject: ref, Filter: filter, Matching: sequence, Negate: n.Name == "Unless"}
+			if n.Name == "IfElse" {
+				other := make([]mage.Effect, len(alternatives))
+				for i, build := range alternatives {
+					other[i] = build(bindings)
+				}
+				instruction.Nonmatching = mage.Sequence(other...)
+			}
+			return instruction.Effect()
+		}
 		if n.Name == "Unless" {
 			return mage.UnlessPermanentMatches(ref, filter, sequence)
 		}

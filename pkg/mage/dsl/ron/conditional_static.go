@@ -54,6 +54,14 @@ func compileConditionalStaticBody(body Node, ctx scope, condition mage.StateCond
 	var layers []Node
 	var options []optionFactory
 	for _, rule := range rules {
+		if rule.Name == "EachPermanentRuleEffect" {
+			build, err := compileRetainedProtection(rule, condition)
+			if err != nil {
+				return nil, err
+			}
+			options = append(options, build)
+			continue
+		}
 		if rule.Name == "PermanentLayerEffect" || rule.Name == "EachPermanentLayerEffect" {
 			layers = append(layers, rule)
 			continue
@@ -97,6 +105,9 @@ func compileConditionalStaticPart(body Node, ctx scope, condition mage.StateCond
 	rules, err := list(body)
 	if err != nil {
 		return nil, err
+	}
+	if len(rules) == 1 && rules[0].Name == "ReplaceWouldBeginATurn" {
+		return compileTurnBeginReplacement(rules[0], condition)
 	}
 	if len(rules) == 1 && rules[0].Name == "ReplaceWouldDealDamage" {
 		return compileStaticDamageRedirect(rules[0], ctx, condition)
@@ -196,19 +207,9 @@ func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
 		if err != nil {
 			return nil, err
 		}
-		if n.Args[1].Name == "Or" && n.Args[0].Kind == Symbol && n.Args[0].Name == "ThisPermanent" {
-			history := n.Args[1]
-			if err := arity(history, 1); err != nil {
-				return nil, err
-			}
-			parts, err := list(history.Args[0])
-			if err != nil {
-				return nil, err
-			}
-			if len(parts) == 2 && parts[0].Kind == Symbol && parts[1].Kind == Symbol &&
-				((parts[0].Name == "AttackedThisTurn" && parts[1].Name == "BlockedThisTurn") ||
-					(parts[1].Name == "AttackedThisTurn" && parts[0].Name == "BlockedThisTurn")) {
-				return mage.SourceAttackedOrBlockedThisTurnCondition(), nil
+		if n.Args[0].Kind == Symbol && n.Args[0].Name == "ThisPermanent" {
+			if history, handled, err := compileSourceTurnHistoryCondition(n.Args[1]); handled || err != nil {
+				return history, err
 			}
 		}
 		if n.Args[1].Name == "AttackedDuringLastPlayersTurn" {

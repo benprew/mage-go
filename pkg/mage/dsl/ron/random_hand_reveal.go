@@ -6,7 +6,10 @@ import (
 	"github.com/benprew/mage-go/pkg/mage"
 )
 
-type handRevealPlan struct{ name string }
+type handRevealPlan struct {
+	name       string
+	referenced bool
+}
 
 func compileRevealedHandCardRef(n Node, ctx scope) (func(instanceBindings) mage.CardRef, error) {
 	if n.Kind != Symbol || n.Name != "TheCardRevealedFromHandThisWay" || ctx.handReveal == nil {

@@ -48,6 +48,9 @@ func (g *Game) IsSpellCastProhibited(playerID uuid.UUID, card Card) bool {
 	if card == nil || card.HasType(core.TypeLand) {
 		return false
 	}
+	if g.isHandVisitPlayLocked(playerID, card.ID()) {
+		return true
+	}
 	if g.effects.Rules.PlayerCantCastSpells(playerID) || g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
 		return true
 	}

@@ -21,7 +21,7 @@ func compileRestrictedRepeatedMana(n Node, ctx scope) ([]effectFactory, error) {
 		return nil, err
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		return mage.AddRestrictedManaOfAnyOneColor(value(bindings), restriction)
+		return (mage.ManaProductionInstruction{Subject: mage.You, Color: core.AnyColor, Amount: value(bindings), Restriction: restriction}).Effect()
 	}}, nil
 }
 

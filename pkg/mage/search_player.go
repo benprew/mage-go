@@ -270,3 +270,8 @@ func (sp *SearchPlayer) ChooseNumber(minimum, maximum int, reason string) int {
 
 // Compile-time check that SearchPlayer satisfies Player.
 var _ Player = (*SearchPlayer)(nil)
+
+// ChooseCardFromOutsideGame selects a card for the same hand benefit as a search.
+func (sp *SearchPlayer) ChooseCardFromOutsideGame(cards []Card, reason string, g GameReader) Card {
+	return sp.ChooseCardFromLibrary(cards, reason, g)
+}

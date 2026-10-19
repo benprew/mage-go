@@ -10,6 +10,7 @@ import (
 type SacrificePermanentAction struct {
 	permanentID, incarnation, exileSource uuid.UUID
 	destination                           core.Zone
+	lockReturnedHand                      bool
 }
 
 func (a *SacrificePermanentAction) ActionSource() uuid.UUID { return uuid.Nil }

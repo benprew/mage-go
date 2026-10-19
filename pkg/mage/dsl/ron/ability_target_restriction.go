@@ -1,8 +1,6 @@
 package ron
 
 import (
-	"slices"
-
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -50,7 +48,7 @@ func compileAbilitySourceFilter(n Node) (mage.CardFilter, error) {
 		if err != nil {
 			return mage.CardFilter{}, err
 		}
-		return mage.NewCardFilter(kind.String()+" source", func(card mage.Card) bool { return card.HasType(kind) }), nil
+		return mage.HasCardTypeCardFilter(kind), nil
 	case "IsColor":
 		value, err := color(n.Args[0])
 		if err != nil {
@@ -78,9 +76,7 @@ func compileAbilitySourceFilter(n Node) (mage.CardFilter, error) {
 		if n.Name == "And" {
 			return mage.AndCardFilter(filters...), nil
 		}
-		return mage.NewCardFilter("matching ability source", func(card mage.Card) bool {
-			return slices.ContainsFunc(filters, func(filter mage.CardFilter) bool { return filter.Match(card) })
-		}), nil
+		return mage.OrCardFilter(filters...), nil
 	default:
 		return mage.CardFilter{}, unsupported(n, "ability source filter")
 	}

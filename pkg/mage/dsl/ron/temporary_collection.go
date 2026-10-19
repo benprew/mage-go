@@ -36,8 +36,7 @@ func compileTemporaryCollection(n Node, ctx scope) (effectFactory, error) {
 	if len(parts) == 0 {
 		return nil, problem(n.Args[1], "supply at least one temporary modification")
 	}
-	type adjustment struct{ power, toughness int }
-	adjustments := make([]adjustment, len(parts))
+	adjustments := make([]mage.PTAdjustment, len(parts))
 	for i, part := range parts {
 		if part.Name != "AdjustPT" {
 			return nil, unsupported(part, "temporary collection modification")
@@ -46,12 +45,15 @@ func compileTemporaryCollection(n Node, ctx scope) (effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		adjustments[i] = adjustment{power, toughness}
+		adjustments[i] = mage.PTAdjustment{Power: power, Toughness: toughness}
 	}
 	return func(_ instanceBindings) mage.Effect {
+		if !ctx.permanent {
+			return (mage.TemporaryPTInstruction{Subjects: subjects.build(), Adjustments: adjustments}).Effect()
+		}
 		modifications := make([]mage.ContinuousModification, len(adjustments))
 		for i, value := range adjustments {
-			modifications[i] = mage.ModifyEachPT(subjects.build(), mage.Fixed(value.power), mage.Fixed(value.toughness))
+			modifications[i] = mage.ModifyEachPT(subjects.build(), mage.Fixed(value.Power), mage.Fixed(value.Toughness))
 		}
 		return mage.Until(core.EndOfTurn, modifications...)
 	}, nil
@@ -108,6 +110,9 @@ func compileTemporaryCollectionKeywords(n Node, ctx scope) (effectFactory, error
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if !ctx.permanent {
+			return (mage.TemporaryKeywordInstruction{Subjects: subjects(bindings), Keywords: keywords}).Effect()
+		}
 		modifications := make([]mage.ContinuousModification, len(keywords))
 		for i, keyword := range keywords {
 			modifications[i] = mage.GrantEachKeyword(subjects(bindings), keyword)

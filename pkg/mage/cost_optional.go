@@ -101,7 +101,7 @@ func (c *optionalCost) inspectDefinition() definitionNode {
 	if c.capture && c.prompt == "" {
 		n.problem = "supply optional payment prompt text"
 	}
-	if discard, ok := c.inner.(*discardCost); ok && (discard.captureCards || discard.captureCard) {
+	if discard, ok := c.inner.(*discardCost); ok && (discard.captureCards || discard.captureCard || len(discard.facts) > 0) {
 		n.problem = "paid discard cards require a direct cost"
 	}
 	if c.capture && c.inner != nil {

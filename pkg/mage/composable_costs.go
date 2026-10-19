@@ -949,7 +949,7 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) {
 			n.problem = "paid graveyard exile value requires an activated ability cost or spell additional cost"
 		}
-		if discard, ok := cost.(*discardCost); ok && (discard.captureCards || discard.captureCard) {
+		if discard, ok := cost.(*discardCost); ok && (discard.captureCards || discard.captureCard || len(discard.facts) > 0) {
 			n.problem = "paid discard cards require an activated ability cost or spell additional cost"
 		}
 		if exile, ok := cost.(*exileFromGraveyardCost); ok && exile.paidRequired {

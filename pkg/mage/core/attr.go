@@ -107,8 +107,8 @@ func IsKeywordAttr(a Attr) bool {
 // added or removed in layer 6. Type identity, combat capability, power/toughness
 // capability, and summoning sickness are not abilities.
 func IsAbilityAttr(a Attr) bool {
-	// A regeneration prohibition changes the rules, not the abilities of an object.
-	if a == CantRegenerate {
+	// These prohibitions change the rules, so ability removal cannot remove them.
+	if a == CantRegenerate || a == AttrDamageCantBePreventedOrRedirected {
 		return false
 	}
 	if IsKeywordAttr(a) {
@@ -127,8 +127,7 @@ func IsAbilityAttr(a Attr) bool {
 		AttrCantActivateNonManaAbilities,
 		AttrCantActivate,
 		AttrAssignsDamageEqualToToughness,
-		AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked,
-		AttrDamageCantBePreventedOrRedirected:
+		AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked:
 		return true
 	default:
 		return false

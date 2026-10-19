@@ -11,6 +11,8 @@ import (
 // DamageSystem manages damage execution, replacement and prevention coordination,
 // combat damage aggregation, per-turn/per-duel damage history, and damage reflection.
 type DamageSystem struct {
+	spellDamageAmounts                 map[uuid.UUID]int
+	turnPermanentDamageAmounts         []permanentDamageHistoryEntry
 	damageReflection                   map[uuid.UUID]damageReflectionEntry
 	damageDealtBy                      map[uuid.UUID]map[uuid.UUID]bool
 	damageDealtToPlayersByPermanent    map[uuid.UUID]map[uuid.UUID]bool
@@ -129,6 +131,11 @@ func (ds *DamageSystem) Clone() DamageSystem {
 		resolvingCombatDamage: ds.resolvingCombatDamage,
 		turnDamageRecipients:  maps.Clone(ds.turnDamageRecipients),
 	}
+	clone.spellDamageAmounts = maps.Clone(ds.spellDamageAmounts)
+	for _, entry := range ds.turnPermanentDamageAmounts {
+		entry.source = cloneDamageSource(entry.source)
+		clone.turnPermanentDamageAmounts = append(clone.turnPermanentDamageAmounts, entry)
+	}
 	if len(ds.damageReflection) > 0 {
 		clone.damageReflection = make(map[uuid.UUID]damageReflectionEntry, len(ds.damageReflection))
 		maps.Copy(clone.damageReflection, ds.damageReflection)
@@ -225,6 +232,8 @@ func (ds *DamageSystem) ClearEndOfTurn() {
 	ds.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool)
 	ds.turnDamageToCreatures = nil
 	ds.turnDamageRecipients = nil
+	ds.spellDamageAmounts = nil
+	ds.turnPermanentDamageAmounts = nil
 	ds.turnDamageToPlayers = make(map[capturedPermanent]map[uuid.UUID]bool)
 }
 
@@ -393,6 +402,7 @@ func (ds *DamageSystem) dealDamageToPlayerFromSource(g *Game, p Player, amount i
 }
 
 type damageOutcome struct {
+	parts             []damageOutcome
 	gainLimit         int
 	creatureRecipient bool
 	amount            int
@@ -404,7 +414,7 @@ type damageOutcome struct {
 func executeDamageOutcome(g *Game, action Action) damageOutcome {
 	if expanded, ok := action.(*expandedDamageAction); ok {
 		outcomes := g.damage.executePreparedDamageActions(g, expanded.actions)
-		return outcomes[0]
+		return summarizeDamageOutcomes(expanded.actions, outcomes, 0)
 	}
 	result := damageOutcome{}
 	if playerAction, ok := action.(*DamageToPlayerAction); ok {
@@ -495,6 +505,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 		g.damageLifeLoss(p, amount)
 	}
 	source := a.DamageSource()
+	ds.recordSpellDamage(source, amount)
 	isArtifact := source.HasType(TypeArtifact)
 	g.trackers.Turn.RecordDamageTaken(p.PlayerID(), amount, isArtifact)
 	if sourceID != uuid.Nil {
@@ -582,7 +593,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 			g.damageLifeGain(srcPlayer, amount)
 		}
 	}
-	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown {
+	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown && !isFaceDownCard(src.Card) {
 		g.turnFaceUp(src)
 	}
 	if reflectEntry, ok := ds.GetDamageReflection(p.PlayerID()); ok {
@@ -678,12 +689,11 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 			actions = append(actions, action)
 		}
 	}
-	originalCount := len(actions)
 	actions, gains := g.effects.prepareDamageBatchReplacements(actions, g)
 	all := ds.executePreparedDamageActions(g, actions, gains...)
 	var outcomes []damageOutcome
-	for _, outcome := range all[:originalCount] {
-		if outcome.amount > 0 {
+	for i, outcome := range all {
+		if damageOrigin(actions[i]) >= 0 && outcome.amount > 0 {
 			outcomes = append(outcomes, outcome)
 		}
 	}
@@ -701,7 +711,8 @@ func (ds *DamageSystem) executeDamageWithLifeResults(g *Game, action Action, gai
 	if expanded, ok := action.(*expandedDamageAction); ok {
 		actions = expanded.actions
 	}
-	return ds.executePreparedDamageActions(g, actions, gains...)[0]
+	outcomes := ds.executePreparedDamageActions(g, actions, gains...)
+	return summarizeDamageOutcomes(actions, outcomes, 0)
 }
 
 func (ds *DamageSystem) executePreparedDamageActions(g *Game, actions []Action, gains ...preventionLifeGain) []damageOutcome {
@@ -753,6 +764,10 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		ds.turnDamageRecipients = make(map[capturedPermanent]bool)
 	}
 	ds.turnDamageRecipients[capturedPermanent{perm.ID(), perm.incarnationID}] = true
+	ds.recordSpellDamage(a.DamageSource(), amount)
+	ds.turnPermanentDamageAmounts = append(ds.turnPermanentDamageAmounts, permanentDamageHistoryEntry{
+		recipient: capturedPermanent{perm.ID(), perm.incarnationID}, source: cloneDamageSource(a.DamageSource()), amount: amount,
+	})
 
 	if perm.HasType(TypePlaneswalker) {
 		perm.RemoveCounter(Loyalty, min(amount, perm.Counters[Loyalty]))
@@ -835,10 +850,10 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 			g.damageLifeGain(srcPlayer, amount)
 		}
 	}
-	if perm.FaceDown {
+	if perm.FaceDown && !isFaceDownCard(perm.Card) {
 		g.turnFaceUp(perm)
 	}
-	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown {
+	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown && !isFaceDownCard(src.Card) {
 		g.turnFaceUp(src)
 	}
 	return amount
@@ -916,8 +931,10 @@ func (g *Game) executeDamageAction(action Action) int {
 	case *expandedDamageAction:
 		outcomes := g.damage.executePreparedDamageActions(g, a.actions)
 		total := 0
-		for _, outcome := range outcomes[:a.originalCount] {
-			total += outcome.amount
+		for i, outcome := range outcomes {
+			if damageOrigin(a.actions[i]) >= 0 {
+				total += outcome.amount
+			}
 		}
 		return total
 	case *DamageToPlayerAction:
@@ -975,4 +992,33 @@ func (g *Game) flushCombatDamageAggregator() {
 // filter on source attributes (e.g., "non-Human creatures you control").
 func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int {
 	return g.damage.CombatDamageSourcesThisStep(controllerID, recipientID)
+}
+
+func summarizeDamageOutcomes(actions []Action, outcomes []damageOutcome, origin int) damageOutcome {
+	var parts []damageOutcome
+	for i, outcome := range outcomes {
+		if damageOrigin(actions[i]) == origin && outcome.amount > 0 {
+			parts = append(parts, outcome)
+		}
+	}
+	if len(parts) == 0 {
+		return damageOutcome{}
+	}
+	if len(parts) == 1 {
+		return parts[0]
+	}
+	result := damageOutcome{parts: parts, source: parts[0].source}
+	for _, part := range parts {
+		result.amount += part.amount
+	}
+	return result
+}
+func damageOutcomeParts(outcome damageOutcome) []damageOutcome {
+	if len(outcome.parts) > 0 {
+		return outcome.parts
+	}
+	if outcome.amount > 0 {
+		return []damageOutcome{outcome}
+	}
+	return nil
 }

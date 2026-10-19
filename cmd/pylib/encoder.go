@@ -1032,7 +1032,7 @@ func fillGameInfo(out []float32, state *apiGameState, pending *apiPending, persp
 }
 
 func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) *encodeError {
-	view.pendingKindID[batchIdx] = indexOrUnknown(pendingKinds[:], pending.Kind)
+	view.pendingKindID[batchIdx] = indexOrUnknown(pendingKinds[:], pendingEncodingKind(pending.Kind))
 	traceKind := traceKindForPending(pending)
 	view.traceKindID[batchIdx] = indexOrUnknown(traceKinds[:], traceKind)
 	if traceKind == "may" {
@@ -1311,7 +1311,7 @@ func traceKindForPending(pending *apiPending) string {
 		return "may"
 	case "mana_color":
 		return "choice_color"
-	case "cards_from_hand", "card_from_library", "permanent":
+	case "cards_from_hand", "card_from_library", "card_from_outside_game", "permanent":
 		return "choice_ids"
 	default:
 		return "choice_index"
@@ -1559,4 +1559,12 @@ func parsePositiveFloat(s string) float64 {
 		value = value*10 + float64(r-'0')
 	}
 	return value
+}
+
+// Both card choices use one dense category to preserve the numeric schema.
+func pendingEncodingKind(kind string) string {
+	if kind == "card_from_outside_game" {
+		return "card_from_library"
+	}
+	return kind
 }

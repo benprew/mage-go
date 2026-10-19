@@ -345,15 +345,11 @@ func TestRONCombatDefenderRecords(t *testing.T) {
 					t.Fatal(err)
 				}
 				factory, err := Compile(nodes[0])
-				if nodes[0].Fields["Name"].String == "Blaze of Glory" || nodes[0].Fields["Name"].String == "Floral Spuzzem" {
-					if err != nil {
-						t.Fatal(err)
-					}
-					if err := mage.ValidateCardDefinition(nodes[0].Fields["Name"].String, factory()); err != nil {
-						t.Fatal(err)
-					}
-				} else if err == nil || strings.Contains(err.Error(), "permanent target controller") {
-					t.Fatal("complete record must reject its remaining operation, after the target", err)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := mage.ValidateCardDefinition(nodes[0].Fields["Name"].String, factory()); err != nil {
+					t.Fatal(err)
 				}
 			}
 		}
@@ -362,8 +358,14 @@ func TestRONCombatDefenderRecords(t *testing.T) {
 		t.Fatal("record inventory changed", len(records))
 	}
 	files := fstest.MapFS{"records.ron": {Data: []byte(strings.Join(records, "\n"))}}
-	if registry, err := LoadFS(files, "*.ron"); err == nil || registry != nil {
-		t.Fatal("unsupported records produced a registry")
+	registry, err := LoadFS(files, "*.ron")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"Blaze of Glory", "False Orders", "Floral Spuzzem"} {
+		if _, err := registry.CreateCard(name); err != nil {
+			t.Fatal(err)
+		}
 	}
 	report, err := InspectFS(files, "*.ron")
 	if err != nil {

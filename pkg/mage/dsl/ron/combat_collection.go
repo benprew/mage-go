@@ -55,6 +55,9 @@ func compileCombatCollectionPrevention(n Node, ctx scope) (effectFactory, error)
 		return nil, err
 	}
 	collection := event.Args[0]
+	if collection.Name == "SinglePermanent" {
+		return compileSelectedCollectionPrevention(n, ctx)
+	}
 	if collection.Name != "Or" {
 		return nil, unsupported(collection, "combat prevention collection union")
 	}

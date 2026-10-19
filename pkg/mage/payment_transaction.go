@@ -14,6 +14,9 @@ import (
 // Preparation plans mana production and proves the complete payment on an
 // isolated game. Commit performs that same payment once on live state.
 type costPaymentTransaction struct {
+	paidXMana              [AnyColor + 1]int
+	manaX                  int
+	paidMana               [AnyColor + 1]int
 	game                   *Game
 	controller             uuid.UUID
 	sourceID               uuid.UUID
@@ -33,6 +36,7 @@ type costPaymentTransaction struct {
 }
 
 type costPaymentSpec struct {
+	ManaX                  int
 	Controller             uuid.UUID
 	SourceID               uuid.UUID
 	Mana                   ManaCost
@@ -109,6 +113,7 @@ func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *G
 		}
 	}
 	tx := &costPaymentTransaction{
+		manaX:                  spec.ManaX,
 		game:                   g,
 		controller:             spec.Controller,
 		sourceID:               spec.SourceID,
@@ -492,7 +497,8 @@ func (tx *costPaymentTransaction) Commit() error {
 		_, isAnte := cost.(*anteCost)
 		_, isSource := cost.(*sourceCardCost)
 		_, isExile := cost.(*matchingPermanentExileCost)
-		if random || isSacrifice || isPluralSacrifice || isPlacement || isAnte || isSource || isExile {
+		_, isDiscard := cost.(*discardCost)
+		if random || isSacrifice || isPluralSacrifice || isPlacement || isAnte || isSource || isExile || isDiscard {
 			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)
@@ -516,6 +522,8 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			}
 		}
 	}
+	tx.paidXMana = [AnyColor + 1]int{}
+	tx.paidMana = [AnyColor + 1]int{}
 	tx.paidNumbers = nil
 	tx.paidCards = nil
 	tx.revealedHandCards = nil
@@ -524,6 +532,8 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 	tx.paidTaps = nil
 	defer func() {
 		if commitErr != nil {
+			tx.paidXMana = [AnyColor + 1]int{}
+			tx.paidMana = [AnyColor + 1]int{}
 			tx.paidNumbers = nil
 			tx.paidCards = nil
 			tx.revealedHandCards = nil
@@ -647,7 +657,30 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 		player.ManaPool().ResetLastDrained()
 	}
 	if !tx.mana.IsZero() {
-		if err := player.ManaPool().Pay(tx.mana, tx.spellContext); err != nil {
+		if tx.manaX > 0 {
+			plan, ok := player.ManaPool().paymentPlan(tx.mana, tx.spellContext)
+			if !ok {
+				return fmt.Errorf("cannot pay locked mana cost")
+			}
+			fixed := tx.mana
+			fixed.Generic -= min(tx.manaX, fixed.Generic)
+			subset := NewManaPool()
+			subset.spendingPermissions = player.ManaPool().spendingPermissions
+			subset.ManaConversions = player.ManaPool().ManaConversions
+			for color, amount := range plan {
+				subset.Add(Color(color), amount)
+			}
+			assigned, ok := subset.paymentPlan(fixed, tx.spellContext)
+			if !ok {
+				return fmt.Errorf("cannot assign fixed mana requirements")
+			}
+			for color, amount := range plan {
+				tx.paidXMana[color] = amount - assigned[color]
+			}
+		}
+		receipt, err := player.ManaPool().payWithReceipt(tx.mana, tx.spellContext)
+		tx.paidMana = receipt
+		if err != nil {
 			return err
 		}
 	}
@@ -802,6 +835,14 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 				tx.paidCards[exile.paidCard] = capturedCard{id: exile.selected, visit: exiled.Visit, zone: ZoneExile}
 			}
 		}
+		if discard, ok := cost.(*discardCost); ok && len(discard.facts) > 0 {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			for i, fact := range discard.facts {
+				tx.paidNumbers[fact.Result] = discard.factValues[i]
+			}
+		}
 		if discard, ok := cost.(*discardCost); ok && discard.captureCards {
 			if tx.paidCardSets == nil {
 				tx.paidCardSets = make(map[*CardsBinding][]capturedCard)
@@ -870,6 +911,7 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 }
 
 type actionPaymentSpec struct {
+	CaptureManaX             bool
 	Controller               uuid.UUID
 	SourceID                 uuid.UUID
 	Costs                    []Cost
@@ -895,12 +937,14 @@ func (g *Game) prepareActionPaymentTransaction(spec actionPaymentSpec) (*costPay
 	}
 
 	var mana ManaCost
+	var manaX int
 	var nonMana []Cost
 	for _, cost := range locked {
 		switch payment := cost.(type) {
 		case *ManaCostPayment:
 			component := payment.MC
 			if component.HasX {
+				manaX += spec.XValue * max(1, component.XCount)
 				component.Generic += spec.XValue * max(1, component.XCount)
 				component.HasX = false
 				component.XCount = 0
@@ -913,11 +957,15 @@ func (g *Game) prepareActionPaymentTransaction(spec actionPaymentSpec) (*costPay
 		}
 	}
 
+	if !spec.CaptureManaX {
+		manaX = 0
+	}
 	if spec.ApplyActivationReduction {
 		mana = g.modifyActivationManaCost(spec.SourceID, mana)
 	}
 
 	return g.prepareCostPaymentTransaction(costPaymentSpec{
+		ManaX:            manaX,
 		Controller:       spec.Controller,
 		SourceID:         spec.SourceID,
 		Mana:             mana,

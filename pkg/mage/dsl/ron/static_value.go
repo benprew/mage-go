@@ -139,10 +139,7 @@ func compileStaticPTValue(n Node, ctx scope) (valueFactory, error) {
 		if containsAttachedCount(filter) {
 			return compileStaticAttachedAuraCount(filter, ctx)
 		}
-		if err := validateStaticCountFilter(filter); err != nil {
-			return nil, err
-		}
-		set, err := compileContextualCollection(filter, ctx)
+		set, err := compileStaticCountCollection(filter, ctx)
 		if err != nil {
 			return nil, err
 		}

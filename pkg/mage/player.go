@@ -131,6 +131,7 @@ type Player interface {
 	ChooseCardFromGraveyard(candidates []Card, reason string, g GameReader) Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
+	ChooseCardFromOutsideGame(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(minimum, maximum int, reason string) int
 
 	// ChooseString asks the player to pick one option from a string list,
@@ -179,6 +180,7 @@ type BasePlayer struct {
 	hand                     []Card
 	handVisits               map[uuid.UUID]uuid.UUID
 	handPublic               bool
+	handRevealedVisits       map[uuid.UUID]uuid.UUID
 	handStack                *Stack
 	departedHandSources      map[uuid.UUID]handDeparture
 	graveyard                []Card

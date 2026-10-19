@@ -131,11 +131,11 @@ func TestRONLifeTotalSourceFragments(t *testing.T) {
 		if err := mage.ApplyEffect(g, actions[0](instanceBindings{}), uuid.Nil, a.PlayerID(), nil); err != nil {
 			t.Fatal(err)
 		}
-		if a.Life() != 8 || b.Life() != 20 {
+		if a.Life() != 7 || b.Life() != 20 {
 			t.Fatal("source fragment did not retain declared rounding")
 		}
-		if _, err := Compile(record); err == nil {
-			t.Fatal("incomplete record accepted")
+		if _, err := Compile(record); err != nil {
+			t.Fatal(err)
 		}
 	}
 }

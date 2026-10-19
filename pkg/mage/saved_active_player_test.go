@@ -13,7 +13,7 @@ func TestSavedActivePlayerDelayedFrames(t *testing.T) {
 	g := NewGame(a, b)
 	saved := BindPlayer("active at creation")
 	body := Sequence(GainLifeFor(FromPlayer(saved), Fixed(2)), GainLifeFor(ActivePlayer, Fixed(3)))
-	declaration := Sequence(SnapshotPlayer(ActivePlayer, saved), AtNext(EachEndStep, body))
+	declaration := (SavedPlayerInstruction{Subject: ActivePlayer, Binding: saved, Body: AtNext(EachEndStep, body)}).Effect()
 	card := NewArtifact("Source", "", WithAbility(Activate(Costs(), declaration)))
 	if err := ValidateCardDefinition("Source", card); err != nil {
 		t.Fatal(err)

@@ -79,7 +79,9 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		if len(modifiers) != 0 {
 			return nil, unsupported(n.Args[1], "exile modifiers")
 		}
-		return func(bindings instanceBindings) mage.Effect { return mage.ExileEach(collection(bindings)) }, nil
+		return func(bindings instanceBindings) mage.Effect {
+			return (mage.PermanentExileInstruction{Subjects: collection(bindings)}).Effect()
+		}, nil
 	}
 	if subject.Name != "Permanent" {
 		return nil, unsupported(subject, "exile subject")
@@ -98,11 +100,16 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 	if len(modifiers) != 0 {
 		return nil, unsupported(n.Args[1], "exile modifiers")
 	}
+	if death := ctx.delayedDeath; death != nil && (ref.kind == permanentDeath && ref.death == death || death.watched != nil && ref == *death.watched) {
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.ExileGraveyardCard(mage.FromCard(bindings.deathCards[ctx.deathCard]))
+		}, nil
+	}
 	return func(bindings instanceBindings) mage.Effect {
 		if ctx.permanent {
 			return mage.ExilePermanentLinked(ref.build(bindings), producerExileLink(ctx))
 		}
-		return mage.Exile(ref.build(bindings))
+		return (mage.PermanentExileInstruction{Subject: ref.build(bindings)}).Effect()
 	}, nil
 }
 

@@ -1,5 +1,388 @@
 # Engine rules contracts
 
+## Face-up action replacements (2026-10-16)
+
+`TurnResolvedPermanentFaceUpBeforeAction(DamageSourceRef) ResolvingEffect`
+installs a replacement for the exact permanent that one saved spell becomes.
+It can be installed while the spell is pending. Counters and copied spells
+cannot supply the subject. Source departure and control changes do not end it.
+Phasing suspends it. Departure ends the subject's identity. Turning face up
+ends the replacement permanently, including if the permanent later turns down.
+Exact visit history also prevents a delayed installation from restarting it;
+explicit game cloning retains that history without making it copiable.
+
+RON accepts this complete resolving shape:
+
+```text
+CreateReplaceWouldMaskUntil(
+  PermanentWouldAssignDamageDealDamageBeDealDamageOrBecomeTapped(ThePermanentSpellResolvedThisWay),
+  [TurnItFaceUpInstead],
+  UntilPermanentIsTurnedFaceUp(ThePermanentSpellResolvedThisWay))
+```
+
+Both references must name the same in-scope saved cast. The operation list has
+exactly one symbol. Other events, operations, durations, subjects and entry/draw
+replacement contexts reject. RON owns syntax and scope; the engine owns events.
+
+The shared replacement pipeline turns the subject up before assignment, positive
+damage or an untapped-to-tapped transition, then continues the proposed event.
+Rechecks use restored colors, abilities and layers. Strike eligibility is saved
+for the current assignment operation before face-up changes (CR 510.4). The
+operation restores its prior scope on return; clones isolate its visit map. Simultaneous damage retains
+its batch and refreshes every packet from the revealed source. Grouped taps keep
+all tap transitions before tap events. Zero damage, zero assignment, absent
+combat recipients, suppressed assignment and already-tapped subjects have no
+matching event. Standard face-down cards stay face down after damage without this rule.
+The legacy status-only representation retains its old post-damage behavior
+until Go-card callers migrate. RON casting does not use that representation.
+Payment trials and game clones isolate replacement state. No priority window or
+entry event occurs while turning up (CR 510.1–4, 614.6–7, 616.1–2, 708.7–10).
+
+`TestRONFaceUpReplacement` executes all five complete Mask records, without
+projections. It covers the four events, optional decline, counters, source
+loss, copied abilities, pending/resolved clones, phasing and returned objects.
+`Invalid` checks syntax and binding scope. `TestFaceUpReplacement*` adds source
+snapshot refresh, simultaneous packets, competing prevention, protection rechecks,
+control changes, permanent duration expiry, spell copies, grouped taps, assignment
+eligibility and payment rollback. Earlier prerequisite projections remain tests
+of their narrower contracts; Mask's full replacement is now supported.
+
+
+## Saved cast identity (2026-10-16)
+
+`CastHandCardFaceDownWithoutPayingInto(PlayerRef, CardRef, *DamageSourceBinding)`
+and `MayCastHandCardFaceDownWithoutPayingInto(PlayerRef, CardRef, *DamageSourceBinding)`
+return resolving effects. They save the exact successful spell visit. Failure
+or decline clears the result. Existing constructors remain available.
+`PermanentFromResolvedSpell(DamageSourceRef) PermanentRef` reads only the
+permanent that this spell becomes. Before entry, after a counter, and after
+battlefield departure, there is no action subject. Neither a copied spell nor a
+later cast or battlefield visit of the same card supplies the original result.
+Control changes and turning face up keep the identity. Phasing suspends actions;
+phasing in restores them. Information readers use the shared phase/departure
+LKI service for that exact visit. LKI cannot supply an action subject.
+
+RON accepts the symbol `ThePermanentSpellResolvedThisWay` after a direct or
+`MayAction` face-down cast with the existing chosen-hand and `PT(2, 2)` operands.
+The result belongs to the remainder of that resolving action sequence, including
+supported delayed bodies. Reads before the cast, outside the choice branch,
+or after a cast confined to another branch reject during compilation. The
+reference takes no arguments. Nil/unproduced engine bindings reject during
+definition validation. Each producer and factory has a separate declaration;
+shared resolution, delayed, copy and clone frames own the values.
+
+The entry service records the exact stack ID before entry events. This is
+object identity, not a copiable characteristic. The explicit permanent clone
+path retains it for copy-on-write and LKI. RON owns names and lexical scope;
+engine code has no card names or declaration-time game state. Casting legality,
+external costs, payment rollback, zone replacement order, and event delivery
+remain with the existing shared services (CR 400.7h, 603.7c, 708.4, 708.6).
+No new replacement proposal or simultaneous operation is introduced.
+
+`TestCastResultIdentity*` covers results, absence, later visits, copied spells,
+control changes, face-up status, phasing, delayed actions, clone isolation,
+copy-on-write, failure clearing, LKI and invalid declarations.
+`TestRONCastResultIdentity` maps all five complete Illusionary Mask records
+(LEA, LEB, 2ED, CED, CEI) to their actual payment, hand choice, optional cast and
+saved identity. Its explicit test projection replaces the unsupported face-up
+replacement with a delayed tap. `DirectAndFactories` adds direct casting and
+separate factory instances. `Invalid` checks lexical scope and malformed reads.
+These tests establish the prerequisite only; complete Mask gameplay and its
+face-up replacements remain unfinished. No RON source or vocabulary changes.
+
+## Optional face-down hand casting
+
+RON accepts
+`MayAction(CastCardInHandWithoutPayingAsAFacedownCreatureSpell(TheCardInHandChosenThisWay, PT(2, 2)))`
+in ordinary resolving action bodies. The hand reference must come from the
+successful branch of the adjacent optional hand choice. The optional cast is a
+second decision. It does not use the hand choice as consent to cast. Other
+characteristics, malformed operands, entry/replacement contexts and out-of-scope
+references reject during compilation.
+
+`MayCastHandCardFaceDownWithoutPaying(PlayerRef, CardRef) ResolvingEffect`
+checks the exact hand visit, face-down casting restrictions and external costs
+before offering the cast. It repeats those checks after acceptance. Declining
+spends no mana and neither moves nor reveals the card. A failed cast is a no-op;
+independent later instructions still execute (CR 601.2, 608.2c–d, 608.2g, 708.4).
+The existing transactional payment, stack, reveal and entry services execute a
+successful cast. The printed mana cost is waived; external taxes still apply.
+There is no saved cast result in this operation.
+
+All five Illusionary Mask records now contain the separate optional cast from
+local Oracle. `TestRONOptionalFaceDownCast` executes each real record's payment,
+hand choice and cast projection; its unsupported replacement continuation is
+omitted explicitly. Full Mask gameplay remains unverified and compilation still
+rejects `CreateReplaceWouldMaskUntil`. `TestOptionalFaceDownCast` covers decline,
+legal and prohibited casts, external costs, stale and foreign hand visits,
+changes during the choice, continuation and clone isolation. RON tests also
+cover scope errors, source departure/phasing/control changes and independent
+copied ability decisions. The operation creates no simultaneous batch or
+replacement; those contracts remain with the shared services.
+
+
+## Private optional hand-card choice
+
+`ChooseHandCardOrElse(PlayerRef, CardFilter, *CardBinding, chosen, notChosen)`
+implements a nonmoving choice during resolution (CR 608.2c–d). It uses the
+existing player decision methods and exact hand-visit identities. The effect
+makes no mana payment, zone move, public reveal or replacement proposal.
+It makes no random choice and does not resolve a spell during selection.
+
+Only the selected player's matching, nontoken hand visits enter the offer.
+Empty sets and declined offers use `notChosen`; invalid or departed selections
+also use that branch. Copies of the candidates preserve physical IDs and owners.
+A returned response supplies an ID, never authoritative characteristics.
+Before the chosen branch starts, the canonical hand member must still have the
+offered visit and pass the current filter. A new card cannot enter an old offer.
+Selection does not move the card or change its owner.
+
+The result is assigned only within `chosen`. Definition validation rejects
+unpaid or later reads, reuse of an assigned result, nil players/results and
+absent branches. Runtime frames
+restore outer bindings, including during nested choices. Existing card references
+reject a later hand visit; no LKI read substitutes for the selected object.
+Shared stack and resolution capture services isolate pending copies and clones.
+Source departure and phasing do not cancel an already stacked choice.
+
+`TestOptionalHandChoice*` covers invalid answers, copied candidates, current
+filter rechecks, hand departure/return, nested identity, local frame restoration,
+clone isolation, declaration validation and private selection. The RON suite
+adds paid/unpaid branches, explicit payer/controller separation and real-record
+prerequisite evidence. Payment rollback, replacement ordering and simultaneous
+moves remain with their existing services; this choice performs none of them.
+
+
+## Random blocking piles for the current turn
+
+`RandomizeBlockingPilesThisTurn() ResolvingEffect` replaces the blocker choice
+procedure through cleanup. It installs no creature ability and retains no source
+reference. Copies are idempotent. Turn changes and cleanup clear the permission;
+extra combats in the same turn retain it. Game clones copy it independently.
+
+At each blocker boundary, the engine counts current attacking visits for the
+defender, including attacks on that player's permanents. It offers each present
+controlled creature an optional pile choice through `Player.ChooseMode`. A pile
+may be empty. Additional blocking capacity permits membership in distinct
+additional piles. The decision labels include previous pile contents. Required
+blocking does not force a defender to select creatures or invent pile members:
+the card replaces the ordinary declaration choice (CR 101.1 and 509.1).
+
+Only after choices finish does Fisher-Yates assign the piles bijectively to
+attackers, using the game's scripted RNG. Zero or one attacker consumes no RNG.
+The existing blocking planner checks the assigned pairs for current controller,
+creature status, phasing, tapping, evasion, protection, landwalk, capacity, bands,
+and minimum blocker counts. It cannot supply a different random pairing to meet
+a requirement. Left-and-returned visits do not inherit pile membership. All
+accepted blocks enter combat before the existing grouped, pair, blocked and
+unblocked events run (CR 509.1g-i and 509.3). Both native play and explicit AI
+execution use the same procedure. Ordinary blocker declarations are unchanged.
+Pure `CompleteBlockAssignments` calls neither make pile choices nor consume RNG.
+
+RON accepts only
+`CreateGameEffect(UntilEndOfTurn, DefendingPlayersChooseCreaturesToDefendAttackersAtRandom)`
+in ordinary resolving bodies. Entry and draw replacement bodies, unknown
+operations, tuple-form symbols and other durations reject during compilation.
+The inventory classifies the arguments as `duration` and
+`temporary_game_operation`. Camouflage's existing casting restriction continues
+to enforce its controller's declare attackers step and its printed mana cost.
+
+`TestRONRandomBlockingPiles/<set>` maps all five full records (LEA, LEB, 2ED,
+CED, CEI) to unpaid and paid casting, live combat choices and damage.
+`TimingAndCopies` checks the timing matrix, countering, copied spells and pending
+cloned resolution. `Invalid` and `Inventory` cover declaration rejection and
+semantic roles. Native `TestRandomBlockingPiles*` covers both execution paths,
+permutation, empty piles, RNG, extra capacity, legal filtering, simultaneous
+group events, bands, returned visits, later combats, cleanup and clone isolation.
+
+
+## Historical cast choice and spell damage totals
+
+`ChooseSpellCastThisTurn(player, caster PlayerRef, filter DamageSourceFilter,
+binding *DamageSourceBinding) ResolvingEffect` makes a required, untargeted
+choice at resolution. The central successful casting path saves the spell's
+exact stack identity, caster and characteristics at cast time. Failed casts and
+uncast spell copies add no history. Pending, resolved and countered casts remain
+eligible until cleanup. Later control or characteristic changes cannot rewrite
+the historical facts (CR 608.2i). Recasting the same card makes a separate entry
+(CR 400.7). This history is not added to general CR 609.7 damage-source choices.
+
+The existing damage-source chooser supplies exact identities, defensive copies
+and deterministic fallback for invalid required choices. Empty candidates or
+absent players clear the local result. Definition validation rejects missing
+players, bindings, invalid filters and result reads without a producer. Factory
+instances and resolution frames keep separate bindings; copied spells and cloned
+games make independent choices. Delayed frames use the existing saved bindings.
+
+`DamageDealtThisTurnBySource(source DamageSourceRef) ResolutionValue` returns
+actual damage dealt this turn by that exact spell, across all recipients. A
+missing result or nonspell source supplies zero. Shared damage execution records
+positive final amounts after replacement, prevention and redirection (CR 120.4).
+Simultaneous packets all update totals before their damage notifications. Life
+loss alone adds no damage. Copies and recasts have separate totals. Source
+and recipient departure or phasing cannot erase damage already dealt. Turn
+cleanup clears totals and cast entries; game clones copy both independently.
+
+RON supports `ChooseASpellCastThisTurn(And([IsCardtype(Sorcery),
+CastByPlayer(playerRef)]))` in ordinary resolving action lists, with either filter
+order and exactly one of each clause. The following lexical continuation can
+read `DamageDealtBySpellThisTurn(TheSpellCastChosenThisWay)` as a resolution
+value, including through existing rounding arithmetic. Unbound, tuple-form,
+branch-escaped and incompatible reads reject. Other types, filters and entry or
+replacement contexts require separate adapters. Spell targeting is unchanged.
+
+Backdraft's sole LEG record incorrectly required a resolved spell. Local Oracle
+text in data/LEG.json permits any sorcery cast by the chosen player this turn;
+its checked local rulings array is empty. The record now uses cast history
+explicitly, including countered spells, without assigning new meanings to the
+old resolved-spell vocabulary. No identical reprints exist in the collection.
+
+Complete-card mapping: `TestRONCastSpellHistoryGameplay`, `CopyChoices` and
+`EmptyAndCountered` cover paid and unpaid casting, resolution-time choices,
+rounding, distinct sorcery choices, copied Backdrafts, pending and countered
+casts, damage before countering, no eligible players, and cloned resolutions.
+`Declarations` and `LoadAndInventory` cover rejected declarations, fresh factories,
+engine validation, semantic roles and atomic loading. The existing
+`TestRONPlayerChoiceCompleteRecords` now requires acceptance. Native
+`TestCastSpellHistoryIdentity`, `CounteredAndChoices`, `RedirectAndPhasing` and
+`Definition` cover exact recasts, copy exclusion, damage across recipients,
+prevention, redirection, simultaneous packets, zero totals, cleanup, clone
+isolation, defensive choices, caster filtering and definition failures.
+
+
+## Entry graveyard exile payment and counter choices
+
+`ExileGraveyardAsEntersWithCounterChoice(amount EntryCounterValue,
+filter CardFilter, counters ...core.CounterType) Ability` is an entry replacement.
+The entry controller must select the full amount from their own graveyard.
+The existing single-graveyard cost service filters candidates, retains exact
+visits and rechecks all choices before movement. Mandatory entry selection
+uses a legal candidate when the chooser returns an invalid answer; it cannot
+be declined this way. Other cost callers retain their existing choice errors.
+Insufficient resources or changed visits prevent entry without partial payment.
+The declaration requires a nonnil amount, an explicit filter, distinct valid
+counter types and one payment declaration on a permanent.
+
+`AnnouncedXForEnteringPermanent` supplies the entering spell's own X, including
+spell copies (CR 107.3m). Ambient resolution X cannot change it. Noncast entry
+supplies zero. Zero payment needs no card or counter choice. These are entry
+payments, not casting costs; casting remains legal when the graveyard has too
+few cards. A countered spell pays no entry cost.
+
+Shared `CardZoneMoveAction` replacements apply to all selected moves before
+movement. Once valid payment starts, a changed or omitted move does not make
+payment fail (CR 118.11). Only actual exile moves supply the counter count.
+All moves finish before zone observations; one graveyard-leave event reports
+the batch. The controller chooses one counter kind per exiled card. Counts
+combine by kind in the entry context, and shared counter replacements apply
+before battlefield entry observations (CR 122.6, 614.1c, 616.1). Copy replacement
+priority supplies acquired entry rules before the payment is offered.
+Phasing keeps counters; leave-and-return requires fresh entry and clears them
+(CR 122.2, 400.7). Clones and copies keep separate controller zones and results.
+No saved result escapes the entry replacement.
+
+Failed permanent spell entry proposes stack-to-owner-graveyard movement through
+`CardZoneMoveAction`. The zone service retains the resolving stack visit,
+checks that the spell has not left, applies replacements and sends the actual
+zone event. Existing stack exile rules remain in force. Failed spell copies
+do not become battlefield tokens.
+
+RON accepts this complete source-entry shape:
+`AsPermanentEnters(ThisPermanent, [MustCost(Exile([NumberCardsInGraveyards(
+ValueX, And([cardFilter, InAPlayersGraveyard(SinglePlayer(You))]))], [])),
+IfElse(CostWasPaid, [EntersWithNumberCombinationCountersOfChoice(
+NumberOfCardsOfTypeExiledThisWay(cardFilter), [counterTypes...])],
+[PutIntoGraveyardInstead])])`. The count filter must match the paid filter.
+The compiler validates the entire declaration and keeps its result local.
+Other payment amounts, players, branch shapes, result contexts and entry
+instructions reject during compilation.
+
+The complete DRK Frankenstein's Monster record maps to
+`TestRONEntryGraveyardPaymentMonster` and `CopiesAndClone`.
+`Declarations` and `LoadAndInventory` cover rejection, atomic loading, fresh
+factory identity and nested semantic roles. Native
+`TestEntryGraveyardPaymentZero`, `Rechecks`, `ReplacementCount`,
+`FailedDestination`, `StackExileRule`, `Simultaneous`, `Definition` and
+`AcquiredCopy` cover
+entry timing, required choice fallback, visit identity, no partial payment, actual moves, counter
+replacement, failed-entry replacement, batch observations, definition errors
+and acquired copy rules. The local WotC ruling permits X above the graveyard's
+available count; no Scryfall notes or source corrections are involved.
+
+
+## Phasing until source departure
+
+`PhaseOutUntilSourceLeaves(subject PermanentRef, tapOnReturn bool)
+ResolvingEffect` captures the exact source and subject battlefield visits.
+The source can be phased out when the effect resolves. A departed or returned
+source cannot start the wait (CR 610.4b–c). Source phasing, control changes,
+ability removal and cleanup do not end an installed wait. Source departure
+returns the subject immediately, without a delayed trigger or priority pass.
+Simultaneous source departures finish before all waiting subjects phase in
+(CR 610.4d). A replaced departure that leaves the source present does not end
+the wait. Existing zone replacements and event batches remain in use.
+
+A held subject cannot phase in through the untap turn action (CR 610.4a).
+An external phase-in cancels the return; a later phase-out cannot restore it.
+Exact visits and phase epochs prevent returned objects or later phase cycles
+from inheriting the wait. Clones keep independent waits, epochs and status.
+Auras, Equipment and Fortifications phase out indirectly, including nested
+attachments (CR 702.26g). Each indirect attachment follows its saved parent
+visit. Independently phased attachments do not join that group. Status,
+counters, choices, identity and attachment relationships remain in place.
+`tapOnReturn` sets only the subject's status as it phases in. This produces
+no tap event, zone change, entry event or attachment event (CR 702.26d, j).
+
+RON accepts `PhaseOutPermanentUntilWithEffects(subject,
+UntilPermanentLeavesBattlefield(ThisPermanent), TapAsPhasesIn)` in resolving
+battlefield-source bodies, including entry triggers. It uses typed permanent
+references and per-factory target declarations. Other durations, phase-in
+operations, unbound references and payment contexts reject during compilation.
+The complete Oubliette ARN record maps to `TestRONPhaseUntilOubliette` and
+`TestRONPhaseUntilCasting`; declaration, atomic-load, factory and inventory
+checks map to `TestRONPhaseUntilDeclarations` and `LoadAndInventory`.
+Native `TestPhaseUntilLifecycle`, `Definition`, `IndirectAttachments`,
+`SimultaneousAndEvents`, `NoTapOrZoneEvents` and `IndependentWaits` cover
+the reusable contract. No RON source change is required.
+
+
+## Source-attributed turn damage totals
+
+`DamageReceivedThisTurnFromOtherSources(subject PermanentRef,
+from DamageSourceFilter) ResolutionValue` sums actual damage to one exact
+battlefield visit this turn. It excludes damage from that same visit.
+`DamageSourceHasName(name string) DamageSourceFilter` checks the supplied
+source name. Empty names fail definition validation.
+
+The shared damage pipeline records positive final amounts after replacement,
+redirection and prevention. It records all simultaneous packets before damage
+events. Source characteristics are saved at damage time (CR 608.2i); later name,
+type or control changes do not alter the history. Permanent and spell sources
+can contribute. Player damage cannot contribute. Marked damage removal and
+cleanup priority do not erase history. Final turn cleanup clears it. Phasing
+keeps the visit; departure and return create separate histories. A saved reference
+can read its departed visit. Game clones keep independent history and source
+snapshots. Waiting delayed queries retain source references without reading
+values or applying effects. Invalid or unbound subjects fail definition validation.
+
+RON supports `TheAmountOfDamageDealtToPermanentThisTurnBySources(subject,
+And([Other(subject), IsNamed(NamedCard(name))]))` in ordinary resolving bodies.
+The two filter terms can appear in either order. Both references must identify
+the same compiler binding. Other source filter shapes and entry/draw replacement
+contexts reject. `DeadPermanentDealsDamage(amount, recipient)` reads the bound
+source death event and uses `DamageSourceOf` with `DealDamageFrom`; it is not
+available in unrelated triggers. Damage uses source LKI (CR 608.2h), existing
+target legality, protection, replacement and state-based actions. Factories,
+pending triggers, ability copies and game clones keep distinct bindings.
+
+Complete Blazing Effigy (LEG) gameplay maps to
+`TestRONOtherSourceDamageHistoryEffigy`, `Lifetime`, `Chain`,
+`IndependentDeaths` and `NoTarget`. `Invalid` and `LoadAndInventory` cover
+validation, factory isolation, atomic loading and nested syntax roles.
+Native `TestOtherSourceDamageHistory`, `Snapshots`, `Definition`,
+`CleanupAndWaiting` and `Redirection` establish the reusable engine contract.
+
+
 ## Counter-bound resolving layers
 
 `UntilPermanentHasCounter(subject PermanentRef, counter core.CounterType,
@@ -6809,6 +7192,23 @@ Player-enchanting Auras need a separate contract.
 
 ## Live Aura attachment restriction and exception
 
+`CantBeEnchanted(subject PermanentRef) StaticRule` uses this same service with
+no exception. Definition validation requires a bound, nonnil subject. The rule
+does not grant a keyword or add a restriction to the token producer. As printed
+token text it is copiable, uses each token's own source, and survives producer
+departure. Source ability removal suspends it; cleanup restores it. Equipment
+attachments remain legal. Direct Aura entry preserves the original hand visit
+when there is no legal host. State-based actions still use the shared zone batch.
+
+`TestCantBeEnchanted*` covers validation, live subject isolation, control, phase
+cycles, source return, clone isolation, ability removal and cleanup, direct
+attachment, Equipment, entry, indestructibility and regeneration.
+`TestRONTokenEnchantmentRule*` covers strict token syntax, paid-cast rollback,
+creation timing, sibling and clone isolation, token copies, producer departure,
+semantic roles, and Tetravus's unchanged entry and creation clauses. The complete
+Tetravus record must still reject its later optional linked-token exile payment.
+This slice establishes no new payment, replacement or linked-token contract.
+
 `CantBeEnchantedExceptBy(PermanentRef, PermanentRef) StaticRule` implements a
 live attachment restriction under CR 303.4, 303.4a/c/f/j and 704.5m. It uses the
 existing active printed-effect lifecycle and typed permanent references. The
@@ -7249,7 +7649,8 @@ Rules: CR 118.3, 118.10–12, 601.2h, 602.2b, 608.2c/g, 701.9 and 732.1.
 Evidence: `TestRONChosenDiscardCost*`, existing selected-discard transaction,
 visit, replacement and batch tests. Real RON clauses are tested separately
 from complete-record coverage. Armorer now has complete-record tests in
-`TestRONResolutionChoiceArmorer`; War Machine and Land's Edge still reject.
+`TestRONResolutionChoiceArmorer`. Land's Edge now uses the discarded-card
+payment facts contract below. War Machine's later work is recorded separately.
 
 
 ## Fixed alternatives during resolution
@@ -8725,7 +9126,8 @@ and declared permanent-target references use existing per-instance bindings.
 Regeneration prohibition reuses `GrantKeywordModification(..., CantRegenerate)`
 and the existing destruction replacement check; shield creation remains legal
 (CR 701.19c). Other operation families retain their existing supported shapes.
-Damage prevention/redirection prohibitions and other durations remain rejected.
+The later recipient damage prohibition contract adds that operation. Other
+durations remain rejected.
 
 Evidence: `TestBlockEachAttackerRequirements`, `TestBlockEachAttackerIdentity`,
 and `TestRONTemporaryRuleList*`. Complete Blaze of Glory and Hurr Jackal records
@@ -13892,7 +14294,7 @@ and `EachPlayerAction(AnyPlayer, AnteTopCardOfLibrary)`. Existing trigger, modal
 conditional and delayed action contexts use the same adapter. Tuple spellings,
 cost, entry and static contexts reject. The all-player form permits only bare
 `AnyPlayer`; it does not create an `ActionPlayer` binding. Optional ante payments
-and paid-player results remain separate unsupported contracts.
+and paid-player results use the separate contract below.
 
 Contract from Below also routes bare ordinary `DiscardHand` into the existing
 `DiscardMatchingHand` adapter. Discard, ante and draw run in the printed order
@@ -17281,7 +17683,8 @@ CR 101.4 and 608.2e establish active-player choices and simultaneous operations;
 701.9a–c establish player discard choice and changed destinations; 400.7 keeps
 returned visits separate. This is an effect at resolution, not a casting or
 activation payment. Existing cost and discard callers retain their signatures.
-Unspecified visits on legacy discard proposals retain their existing behavior.
+Proposals without an explicit visit now save the current hand visit before
+replacements, under the self-card discard cause contract below.
 
 Evidence: `TestPlayerDiscardResults*` and `TestRONPlayerDiscardResults*`.
 Mind Bomb's unchanged complete DRK record supplies full-card gameplay evidence.
@@ -17356,10 +17759,10 @@ Existing lexical references are saved; body-produced results cannot escape the
 installation declaration. This event does not declare WouldDrawACard_ThatPlayer.
 Unknown events, malformed arguments and unsupported bodies remain errors.
 
-Aladdin's Lamp and Ring of Ma'rûf use this shared installation. Lamp's X minimum
-and library selection remain unsupported. Ring's outside-game card selection
-remains unsupported. Tests retain their real event nodes and supported costs,
-with explicit synthetic bodies; no complete-card gameplay is claimed.
+Aladdin's Lamp and Ring of Ma'rûf use this shared installation. Complete Lamp
+records now have gameplay evidence with private library selection and positive
+activation X. Ring's outside-game card selection remains unsupported. Its
+prerequisite test retains the real event node with an explicit synthetic body.
 Evidence: `TestFutureDrawReplacement*` and `TestRONFutureDrawReplacement*`.
 
 
@@ -18050,9 +18453,13 @@ restore an absent action subject. Queries make no choices and consume no RNG.
 Shared destruction batches retain simultaneous movement and regeneration.
 
 RON supports the positive and negative symbol forms in singular TargetPermanent
-filters and resolving collections. Collections additionally accept exactly
-`ExceptFor(NotControlledSinceBeginningOfTurn)`. General exclusion forms,
-static contexts and activation timing remain separate. Malformed declarations
+filters and resolving collections. Collections also accept
+`ExceptFor(collection)` in ordinary resolving bodies,
+including nested sets and typed references; see the resolving collection
+exclusion contract below. The original
+`ExceptFor(NotControlledSinceBeginningOfTurn)` form retains its existing
+contexts. Static contexts and activation timing remain separate. Malformed
+declarations
 reject before execution. Same-turn Siren's Call uses existing casting windows, live
 attack requirements and saved end-step triggers with this exclusion. Local
 Oracle evidence is `data/LEA.json` and `data/catalog/2ED.json`. The full record
@@ -19494,8 +19901,8 @@ single-action and simultaneous pipelines now admit an additional-effect rule
 through the private `appliesToUnpreventableDamage() bool` contract. The counter
 rule removes counters and returns the unchanged damage packet in this context.
 Each rule applies once per packet (CR 615.12a). Existing finite shields retain
-capacity. The combined prevention/redirection prohibition keeps excluding other
-rules; this slice does not define new unpreventable-damage syntax.
+capacity. The later recipient damage prohibition contract narrows this exclusion to
+prevention and redirection. Other amount replacements remain applicable.
 
 Shared replacement choices use the affected controller and APNAP batch order
 (CR 616.1). Redirection first can remove the original recipient from the counter
@@ -24713,6 +25120,82 @@ subjects across control, ownership, departure, return, phasing and clones.
 `TestPermanentOwnerInformationInvalid` checks invalid declarations and unknown
 sources. RON gameplay evidence is mapped in the DSL reference.
 
+## Finite damage redirection to a player (RON migration)
+
+`RedirectNextDamageToPlayer(subject PermanentRef, player PlayerRef,
+amount ResolutionValue) ResolvingEffect` saves one exact permanent visit, one
+player and a positive budget at resolution. Nonpositive amounts install no rule.
+The rule lasts until cleanup or exhaustion. Source, attachment, saved permanent
+and singular target references use the shared information service. An absent
+subject can supply a saved identity but cannot receive redirected-from damage.
+Return cannot inherit that identity. Phasing suspends the rule and keeps its
+budget; control changes keep both the subject identity and saved destination.
+
+The shared damage replacement process selects this rule in affected-player
+order (CR 616.1). It splits up to the remaining budget into damage to the saved
+player (CR 614.9). The subject must still be a creature or planeswalker. The
+subject's current controller allocates the finite budget across simultaneous
+packets with bounded number choices and a legal fallback. Both portions retain
+source identity, source information, combat status, targeting cause and prior
+replacement uses (CR 614.5). Rechecks can prevent or redirect either portion.
+The combined prevention/redirection prohibition stops this rule without spending
+its budget. Damage prevented before redirection does not spend the budget.
+Damage prevented after redirection does not restore it.
+
+Packet ancestry keeps redirected portions in their original instruction's
+results. Portions that reach the same recipient from the same source and input
+are combined after replacements, so they supply one final source damage event. Separate added spell damage from the existing event-expansion service
+stays outside those results. Scalar damage amounts sum the positive portions;
+plural results retain each final recipient and source. A split across recipients
+supplies no singular player or permanent result. A source result remains valid.
+Clones keep independent result snapshots and remaining budgets. Instruction-local
+prevention spends one finite amount across descendants; it does not renew its
+amount for each split. All final damage, life results, lifelink, history and
+events use the existing simultaneous damage executor (CR 120.3–4).
+
+`WaitingRedirectionPermanentSources` retains the exact subject while the budget
+is active, including departure and phasing. Waiting delayed queries declare
+source reads in the subject, player and amount, without resolving those reads
+or installing rules (CR 609.7a). Each installation and clone has separate state.
+
+Native evidence: `TestFiniteDamageRedirectBudget`, `Allocation`, `Lifecycle`,
+`Ordering`, `Invalid`, `Results`, `FactsAndWaiting`, `BudgetRetention`, `OneSourceEvent` and `APNAP`
+(with the shared `TestFiniteDamageRedirect` prefix). RON evidence:
+`TestRONFiniteDamageRedirect`, `Invalid`, `Delayed`, `Target` and `Copy`. The six actual
+Personal Incarnation activation fragments execute through owner-only activation
+and resolution. Their death rules remain unsupported; there is no complete-card
+claim and no source correction in this slice.
+
+## Source-death owner binding
+
+`PermanentDies().SourceOnly().WithOwner(owner)` saves the owner from the
+battlefield state at death detection. The pending trigger keeps its source
+controller separately. Return, later ownership changes, copied triggers and
+game clones cannot replace the saved player. Resolution restores the outer
+player-binding frame. Repeated `WithOwner` declarations, nil bindings and a
+shared owner/controller binding fail definition validation.
+
+RON accepts the symbol `OwnerOfDeadPermanent` inside
+`TriggerA(WhenAPermanentDies(SinglePermanent(ThisPermanent)), body)` on permanent
+cards. Each factory builds its own typed owner binding. Entry events, sibling
+rules and callable reference symbols do not provide this binding. The existing
+host-death owner context remains separate. This adapter does not add the
+self-death controller or toughness symbols.
+
+Personal Incarnation uses the saved owner with the existing resolving
+`LifeTotalOfPlayer(LoseLife_ThatPlayer)` and `HalfRoundedUp` services. The life
+value is read at resolution. Zero and negative life totals cause no life loss
+(CR 107.1b; local WotC ruling of 2007-02-01). All six RON reprints now round up,
+as required by local Oracle text. Death capture uses CR 603.6c and 603.10a;
+phasing and other departure destinations do not supply death events.
+
+`TestSourceDeathOwnerDeclaration` and `TestSourceDeathOwnerSavedFacts` cover
+native definition checks, saved ownership, return, controller separation,
+copying, clones and resolution frames. `TestRONSourceDeathOwner*` covers all
+six complete records, paid casting, owner-only finite redirection, death timing,
+odd and nonpositive life totals, simultaneous instances, phasing, ability loss,
+regeneration, exile replacement, copies, clones and invalid scope declarations.
+
 
 ## Opponent-owned permanent targets
 
@@ -24734,8 +25217,8 @@ CR 108.3, 115.1c, 608.2b and 702.26b establish ownership, announcement, current
 legality and phasing. Bronze Tablet's local WotC rulings confirm opponent-owned
 objects can be controlled by the activating player, and an absent target stops
 resolution. Two-branch fixed life payment is supported. With ordinary owner
-references, the record compiles; its absent-source ownership behavior still
-requires a source correction and a separate assignment contract.
+references, the record compiles. Independent ownership assignments now supply
+the absent-source correction; see Independent ownership of exiled results.
 
 Evidence: `TestTargetOpponentOwner`, `TestRONOpponentOwnerTarget`,
 `TestRONOpponentOwnerTargetInstances`, `TestRONOpponentOwnerTargetInvalid` and
@@ -24782,3 +25265,5921 @@ clean HEAD still rejects the complete record at `OwnerOfPermanent`.
 `TestLifePaymentBranches*` adds native restriction/replacement evidence; existing
 `TestResolutionPaymentBranches*` retains rollback and absent-payer evidence.
 No second payment implementation or new mutable result slot is introduced.
+
+## Independent ownership of exiled results
+
+`AcquireCardOwnership(card CardRef, owner PlayerRef) ResolvingEffect` also accepts
+`SingleExiledCardFrom(binding)`. Each assignment acts independently. A missing
+first result cannot stop a second assignment. The current exact exile visit must
+remain present; a departed and re-exiled card cannot replace it. Ownership keeps
+the visit, zone and controller. Ante-disabled or settled games do nothing.
+This reuses the existing service and adds no exchange or zone-move behavior.
+
+RON accepts `AcquireOwnershipOfCard(singularExileResult, playerRef)` in ordinary
+resolving action sequences, including grouped-exile payment branches. Results
+must follow their producer in lexical scope. Callable, plural and unbound
+operands reject. Existing ante-target acquisition and library exchange retain
+their contracts. Each factory supplies separate typed result bindings.
+
+Bronze Tablet now uses two assignments, rather than an atomic ownership swap.
+The source goes to the target's saved owner; the other exiled card goes to the
+resolving ability controller. Local Oracle text and the WotC 2004-10-04 and
+2008-08-01 rulings establish stolen and absent-source cases. CR 108.3, 407.3,
+608.2b/c/h and 400.7 supply ownership, ordered resolution, LKI and exact visits.
+No Scryfall note is used as a WotC ruling.
+
+`TestExiledOwnershipIndependentVisits` covers independent engine assignments,
+exile return, ante guards and clone isolation. `TestRONExiledOwnershipIndependent`
+covers factory lowering, source departure/return/phasing, stolen ownership,
+copied controllers and clones. `TestRONExiledOwnershipInvalid` covers declaration
+rejection. `TestRONExiledOwnershipBronzeTablet` executes the complete ATQ record:
+paid casting, tapped entry, activation rollback, life payment and refusal,
+insufficient life, absent/stolen sources, target legality and clone resolution.
+
+### RON collection-source combat prevention
+
+`CreatePreventDamageUntil(CombatDamageWouldBeDealtByACreature(SinglePermanent(ref)),
+[PreventThatDamage], UntilEndOfTurn)` accepts a typed permanent reference in a
+resolving body. A loop body can use its local `EachablePermanent`. Unbound,
+callable and escaped references, extra operations and other durations reject.
+The existing relation-union forms remain supported. General filtered forms
+remain unsupported; they require a separate live-membership contract.
+
+`PreventCombatDamageByEachThisTurn(subjects PermanentSet) ResolvingEffect`
+saves exact visits. Shared prevention handles combat damage, phasing, return,
+clones and cleanup. `ForEachInTurnOrder`, `ControllerOf`, and `UnlessPaid`
+supply independent resolution-time payments through shared cost transactions.
+Heroism uses these services after its white-creature sacrifice. Paying for one
+creature does not pay for another or bypass any other prevention rule.
+CR 608.2d/f/g/h and 615.1–4 establish choices, order, mana payment, saved
+information and prevention timing. Heroism's WotC ruling dated 2004-10-04
+requires payment during resolution. The complete FEM record supplies the
+card-to-test mapping `TestRONCollectionSourcePreventionHeroism`. Native service
+composition is covered by `TestCollectionSourcePreventionPaymentsAndVisits`.
+
+
+## RON source-bound basic land type
+
+`CreatePermanentLayerEffectUntil(ref, [SetLandType(basicType)],
+UntilPermanentLeavesBattlefield(ThisPermanent))` accepts one of Plains, Island,
+Swamp, Mountain or Forest in an ordinary resolving permanent-source body.
+Activation, trigger and delayed bodies use the same typed permanent references.
+Entry and draw replacement bodies, other duration references, additional
+operations and nonbasic land types reject during compilation.
+
+The adapter uses `UntilSourceLeaves(This, SetSubtypeFamily(subject, SubtypeLand,
+basicType))`. Shared layers capture the exact subject visit at resolution
+(CR 611.2a/c, 400.7). They replace land subtypes and printed abilities, retain
+other types and supertypes, preserve granted abilities, and supply intrinsic
+mana (CR 305.6–7). Source phasing preserves this duration; source departure
+ends it. A returned source cannot start or restore the old duration. Target
+phasing suspends application and phase-in restores it while the source visit
+remains. A returned target cannot inherit the effect. Control changes,
+untapping, ability removal and cleanup do not end it. Overlapping effects use
+the shared timestamps and expire separately. Waiting queries retain source
+and subject visits without installing effects. Copies and clones keep separate
+resolution frames and lifetimes.
+
+Evidence: `TestRONSourceLandTypeGaea` tests the unchanged nonattacking static
+branch and activation from all six Gaea's Liege records. That test keeps its
+fragment scope. Complete-card coverage and the predicate correction are recorded
+in the live defending-player count section below. `TestRONSourceLandTypeInvalid`
+covers declaration boundaries. `TestRONSourceLandTypeDelayedAndOverlap` covers
+all five types, delayed queries, factory isolation and overlapping timestamps.
+Native `TestSourceLandTypeDurationLayerContracts` and existing
+`TestComposableSourceDurationLand*` establish layer, mana, phasing and clone
+contracts. Production engine behavior is reused without modification.
+
+## Live defending-player counts for an attacking visit
+
+`DefendingPlayerOf(attacker PermanentRef) PlayerRef` reads a present, exact
+attacking visit. It supplies the nonactive player during two-player combat,
+including attacks on a planeswalker and attacks whose planeswalker has left.
+It supplies no player before the visit attacks, after removal from combat,
+outside combat, or for a phased, departed or replaced visit. It does not use
+LKI or change the existing `CombatDefendingPlayer` query. A copied or cloned
+context reads its own combat and source identity. Waiting delayed-source queries
+retain the explicit attacker read without resolving the player or running a body.
+The reference supports resolving player consumers and permanent collections;
+it does not add a new state-condition or target-controller declaration form.
+
+RON accepts `ControlledByPlayer(PlayerOrControllerOfPlaneswalkerCreatureIsAttacking(ThisPermanent))`
+in live static P/T battlefield counts, alone or within nonempty nested `And`
+filters. The subject must be the static source. Other references and resolving,
+entry and draw-replacement contexts reject. Shared `PermanentsControlledBy`,
+`IntersectPermanents`, `CountPermanents`, `Static`, `While` and
+`SetBasePowerToughness` perform membership and layer execution. These reads are
+live, have no choices and do not save a player across layer passes.
+
+CR 506.2, 506.4, 508.1c/k and 508.5 establish two-player combat, removal,
+declaration timing and the defending player. CR 611.3a/b, 613.4b–d and 702.26b
+establish live static values, P/T order and phasing. Gaea's Liege's WotC ruling
+of 2004-10-04 requires its nonattacking P/T during attack declaration. The second
+RON predicate is corrected from `IsntAttacking` to `IsAttacking` in all six
+reprints, in agreement with local Oracle text. No engine predicate changes.
+
+`TestAttackerDefendingPlayer*` covers exact source visits, combat removal,
+phasing, returns, control changes, planeswalker departure, clone isolation,
+invalid declarations and waiting delayed reads. `TestRONStaticDefendingCount*`
+covers complete paid casting and activation for all six Liege records, the
+predicate defect, attack restrictions before declaration, live Forest membership,
+control changes, planeswalker attacks, independent instances, counters,
+set/modify/switch order, ability removal, phasing and return identity.
+
+## Explicit hand and physical-source movement (CR 400.1, 400.3, 400.7)
+
+`PutHandCardInHandFor(CardRef, PlayerRef)` checks one present hand visit and one
+present destination player. CR 400.3 supplies the owner's hand, even when an
+ownership exchange did not occur. A move to the same hand does nothing. A move
+to a different hand ends the saved visit. Reveal does not move a card
+(CR 701.20b), and this operation is not discard or a choice.
+
+`PutSourceCardInGraveyardFromAnywhere(PlayerRef)` supplies an explicit physical
+source operation. It follows only `EffectContext.SourceID`, including when that
+card has returned or moved after a cost. It does not search by name or extend
+ordinary saved-card lifetimes. The selected player must exist; the current
+owner's corresponding graveyard receives the card under CR 400.3. A source
+already in that graveyard does nothing. A card in another player's graveyard
+can move to the owner's graveyard. This matters after an ownership exchange,
+which changes ownership without moving the card. Missing cards and tokens do
+nothing. Phased permanents remain unavailable (CR 702.26b).
+
+Nonbattlefield movement captures the current exact visit and applies the shared
+replacement service with `CardZoneMoveAction`. The affected chooser is the
+card's owner. `WithExile` retains the original subject. After replacements,
+movement rechecks zone and visit, then uses existing zone storage and removal
+services. Library order, exile permissions, command-source departure history,
+stack spell history, ante visits and clone storage keep their existing services.
+An ability on the stack does not place its physical source there (CR 405.1).
+Movement uses a physical-card zone query to preserve that distinction.
+Battlefield sources use `PutPermanentIntoGraveyard`, retaining its exact
+incarnation, replacement, LKI, death-history and departure-event behavior.
+
+Events observe completed placement. Graveyard departure supplies one
+`EvtCardsLeftGraveyard`. Direct movement sends neither discard nor sacrifice
+events. The two movement instructions are sequential under CR 608.2c; they are
+independent of whether the earlier ownership exchange completed (CR 701.12a).
+Copies retain their own resolving controller, source and bindings. Clones and
+delayed frames retain separate state. Waiting queries declare source/player
+reads without revealing, moving or running replacements.
+
+Source correction: LEG Tempest Efreet omitted the player operand in
+`PutCardFromAnywhereIntoPlayersGraveyard(ThisCard)`. Local `data/LEG.json` Oracle
+text specifies the targeted opponent's graveyard. The record now supplies
+`Ref_TargetPlayer` explicitly. The collection contains one record of this name.
+The local rulings file has an explicit empty array. No ruling was inferred.
+CR 400.3 still directs the card to its owner's graveyard if ownership exchange
+fails, including an empty opposing hand or a stale source exchange operand.
+
+Evidence: `TestExplicitCardMovementHand`, `Anywhere`, `PhasingAndDeclarations`,
+`Replacements` and `Events` establish native contracts. `TestRONExplicitCardMovementTempest`
+covers the complete record; `Invalid` and `InstancesAndDelay` establish compiler
+scope, per-instance bindings, delayed execution and query behavior. Existing
+source-payment and ownership tests retain their payment rollback, exact-visit
+exchange and settlement evidence.
+
+
+## RON private top-card selection and positive activation X
+
+`mage.SelectLibraryTopAndBottomRestRandomly(viewer, library PlayerRef,
+count ResolutionValue) ResolvingEffect` reads the count once at resolution.
+It privately inspects at most that many cards through the existing inspection
+service. The viewer chooses one through `ChooseCardFromLibrary`, with copied
+card candidates. An absent or invalid choice uses the first inspected card.
+That card stays on top; the other inspected cards go below the untouched tail
+through the existing random-bottom service. This operation does not draw,
+reveal publicly, shuffle the full library, or cause a zone change. Empty
+libraries and nonpositive computed counts make no choice. Fixed negative
+counts and missing typed operands fail definition validation. Library visits
+are checked again before placement; a returned visit cannot supply the selection.
+Source operands are declared to waiting delayed queries without execution.
+
+`mage.WithActivationMinimumX(minimum int) mage.ActionOption` requires one
+positive minimum on an activated action with an X mana payment. Announcement
+checks the minimum before target choices or payment. Invalid X leaves mana,
+tap state and stack unchanged. Availability queries use at least the minimum
+for affordability without changing X or paying costs. A defined X below the
+minimum makes the activation unavailable. Copies and clones retain the scalar
+restriction, and pending bodies use their own announced X.
+
+RON lowers `LookAtTheTopNumberCardsOfLibrary(value,
+[PutAGenericCardOnTopOfLibrary,
+PutTheRemainingCardsOnTheBottomOfLibraryInARandomOrder])` in resolving action
+bodies, including future draw replacement and delayed bodies. The current
+player action scope supplies both viewer and library. Other operation sets,
+wrong arities, callable operation symbols, entry bodies and unbound values
+reject. `XCantBeZero` is a symbol activation modifier with an X mana payment;
+duplicate declarations reject. Native definition validation also rejects
+spell contexts and nonpositive minimum declarations.
+
+Both complete Aladdin's Lamp records (ARN and 3ED) have paid-cast, activation,
+and draw gameplay evidence. Multiple effects use the affected player's shared
+replacement choice. Each effect finishes its selection before its generated
+draw can be replaced by another effect. Source departure, return, control
+changes and phasing do not cancel the saved replacement. Cleanup removes an
+unused replacement. Clones and copied abilities keep separate replacement use
+and saved X. This follows the local WotC ruling dated 2004-10-04; there are no
+Scryfall notes. Rules: CR 107.1b, 107.3a, 121.1/2/4/6, 401.2/4, 602.1b/2,
+608.2c/d/h, 614.5/11 and 616.1. Evidence: `TestLibraryTopSelection*` and
+`TestRONLampDrawSelection*`. These services do not change registry cutover or
+Go-card removal gates.
+
+## Recipient controller and resolving spell copies
+
+`PlayerOrControllerOfDamageTarget(target *DamageTargetBinding) PlayerRef` reads
+the declared player or the current controller of the exact permanent visit.
+A departed or phased visit supplies its saved controller. A returned card does
+not replace that visit. An unbound target supplies no player. This information
+read does not make an absent permanent available for an action.
+
+`CopySpellFor(player PlayerRef, spell StackObjectRef) ResolvingEffect` copies a
+present spell under the selected player's control, with optional new targets.
+`MayCopySpellFor` has the same signature and adds a separate choice to copy.
+`ThisSpell` identifies the exact resolving spell, including a resolving copy.
+The shared stack-copy service retains X, modes, target groups, copiable text and
+saved choices. The copy is placed on the stack; it is not cast. New targets must
+be legal. Keeping an old target retains its saved visit. Copies do not put a
+card in a graveyard after resolution or countering. Games and pending copies
+keep separate state. These services do not copy an ability or a departed spell.
+
+RON accepts `PlayerOrControllerOfPermanent(recipientRef)` for a declared singular
+damage target. It accepts `CopySpellAndMayChooseNewTargets(ThisSpell)` and
+`MayAction(CopySpellAndMayChooseNewTargets(ThisSpell))` in ordinary resolving spell
+bodies, including `PlayerAction(playerRef, ...)`. The latter uses that explicit
+player for both the copy choice and copy control. Activations, permanent-source,
+entry, draw replacement and delayed bodies reject self-copy declarations.
+`PlayerActions` accepts a `PlayerMayCost` and its adjacent continuation through
+shared sequence lowering. The complete record saves the recipient's player
+once before payment; changes during payment cannot change the copy chooser.
+Optional RR payment remains a separate shared payment transaction. Prevention
+or redirection does not change the original target used for the payment offer.
+
+The complete Chain Lightning LEG record uses the optional copy form. Local
+Oracle text and its four WotC rulings from 2022-12-08 require copy control,
+response priority, new targets and no copy when the original target is illegal.
+The source's prior forced-copy body omitted the separate choice after payment.
+CR 608.2b/c/h and 707.10/a/c establish legality, ordered instructions, last known
+information, copy ownership and target choices. CR 400.7 preserves visit identity.
+Evidence: `TestRecipientSpellCopy*` and `TestRONRecipientSpellCopy*`.
+
+### Death-time combat opponents
+
+`CombatOpponentsWithLKI(subject PermanentRef) PermanentSet` reads current combat
+relations for a present subject and saved combat relations for its exact departed
+or phased visit. It uses the existing information-reference and combat snapshot
+services. The result contains only present, unphased creatures of the saved
+opponent visits. Return cannot replace either visit. A control change or removal
+from combat after the source dies does not erase the saved relation. A phase
+cycle after death preserves an opponent visit; a phased opponent is absent at
+resolution. The query makes no choices and does not change state. Clones retain
+separate state. Waiting delayed-source queries retain explicit source reads
+without evaluating the collection.
+
+RON accepts `Or([BlockedDeadAttacker, WasBlockingDeadDefender])` (either order)
+as a resolving permanent collection in a source-death body. The two symbols
+must occur together, once each. They can be intersected with ordinary collections,
+as in Abu Ja'far's creature filter. Other events, unbound contexts, individual
+symbols, tuples in place of symbols and extra operands reject at compilation.
+The source-death event binds the exact dying visit separately for each factory,
+pending trigger and copied ability. `DestroyEachWithoutRegeneration` supplies
+one simultaneous destruction group through existing replacements; shroud does
+not apply, indestructibility remains effective and regeneration cannot save the
+selected creatures. Exile replacements keep their normal effect.
+
+This establishes CR 400.7, 506.4, 603.10a, 608.2h, 701.8 and 701.19 behavior
+for this collection. The complete unchanged ARN Abu Ja'far record is mapped to
+`TestRONDeathCombatCollectionAbu` and `Multiple`. `Invalid` and `Inventory`
+cover declarations and semantic roles. Native `TestCombatOpponentsInformation`
+and `Definitions`, plus `TestWaitingDelayedCollectionCount` cover information,
+identity, phasing, clones, validation and waiting queries. Existing live-only
+`BlockingOrBlockedBy` behavior and legacy callers remain unchanged.
+
+### Intrinsic permanent-spell casting requirements
+
+`CastingRequirement(condition StateCondition) *ActionDefinition` declares a
+casting-only spell action with no resolving instruction. It uses the same
+`WithCastingCondition` checks as spells with resolving actions. It can be
+attached with `WithAbility` to a permanent definition. The shared casting gate
+checks normal casts, casts without payment, alternate-cost casts and copies that
+are cast. Castability queries are pure. Failed conditions preserve resources.
+The requirement grants no timing or zone permission. Spell copies placed on the
+stack and spell resolution do not repeat casting checks (CR 601.2e, 601.3,
+601.5, 707.10). A card copy retains the declaration; factories create separate
+action identities. Existing callers and declaration validation remain in use.
+
+RON accepts exactly
+`CastEffect(CantBeCastUnless(NoPermanentsPassFilter(filter, OnTheBattlefield)))`
+as one top-level rule on a nonland permanent. `filter` uses the existing
+reference-free static permanent filter grammar, including `IsNamed(NamedCard("name"))`,
+characteristics, nonempty nested `And`/`Or` and reference-free `ExceptFor`.
+Source-dependent controller filters, `Other(ThisPermanent)`, saved bindings,
+wrong zones, malformed declarations, duplicate casting rules and casting rules
+on lands reject during compilation. Other permanent casting conditions and
+additional costs remain unsupported. Existing instant/sorcery casting adapters
+retain their current supported shapes.
+
+`BattlefieldHasNone` reads present matching permanents across both players.
+Tokens and returned objects with the matching current name count; a permanent
+on the stack, in hand or phased out does not (CR 400.7, 702.26b). Phasing in
+restores membership. The caster and owner do not restrict the collection.
+Entry by a noncasting method is legal. A matching permanent entering after a
+successful cast cannot stop resolution. No saved object or LKI is required:
+this condition reads current battlefield membership at the casting boundary.
+
+The complete unchanged FEM Tidal Influence record maps to
+`TestRONPermanentCastingRequirementTidal` and `Membership`: unpaid and paid
+casting, own/opponent/token membership, phasing, return, concurrent spells,
+late entry, spell copies, pending clones, entry counters, both players' blue
+creatures, unaffected green creatures, every counter-cycle state, immediate
+layer changes, source phasing and changed-controller upkeep. Its existing
+counter reset clause test now requires complete-record compilation. State
+trigger arming and P/T modification reuse CR 603.8 and 613.4c services.
+`Invalid`, `Composition` and `Inventory` cover declaration rejection, nested
+filters, nonland card types, fresh factories, semantic roles and atomic loading.
+Native `TestCastingRequirementPaths`, `Lifetime` and `Definitions` cover shared
+casting paths, rollback, copy/clone isolation, phasing, timing and invalid typed
+conditions. This slice adds no casting, layer, counter or replacement subsystem.
+
+### Optional chosen exile payment (CR 118.5, 118.10–12, 607.2c)
+
+`PayChosenExileOrElse(PlayerRef, PermanentSet, *NumberBinding, ResolvingEffect,
+ResolvingEffect) ResolvingEffect` makes one optional payment choice at
+resolution. The player chooses a count and distinct members from the declared
+set. A zero choice is paid. The set, rather than payer control, defines eligible
+objects. Every selected visit is checked before payment; a missing, returned,
+phased or no-longer-eligible visit prevents the whole payment. This contract
+covers a single exile payment, not a compound total cost.
+
+`Game.exilePermanents` supplies APNAP replacement processing, all replacement
+choices before departure, simultaneous zone movement and actual exile facts.
+CR 118.11–12 keeps the paid branch selected when a replacement redirects or
+cancels movement. The saved count includes only actual exile moves. Tokens
+count despite their later absence from exile (CR 111.7). Simultaneous event
+observers see the complete batch. No additional payment or announcement occurs.
+
+The count binding is defined only inside the paid branch and restored after
+that branch. Definition validation rejects unpaid or later reads. Nested
+payments, copied abilities and game clones cannot overwrite another result.
+Delayed bodies can retain a paid count, or offer a payment later. Source-read
+metadata retains exact producer visits without executing waiting payments.
+`TokensCreatedWith` retains its existing source-link, control, LKI and phasing
+contracts (CR 400.7, 607.2c, 702.26b–d).
+
+RON owns the strict `MayCost(Exile([AnyNumberOfPermanents(TheCreatedTokens)],[]))`
+shape and adjacent payment continuation. `NumPermanentsExiledThisWay` is local
+to the paid continuation. Permanent-source resolving bodies are supported;
+entry and draw replacements reject. No RON source or shared exile semantics
+changed. Tetravus's complete record tests both legal upkeep orders.
+
+Evidence: native `TestResolutionExilePayment` and its selection-lock,
+batch/replacement-order, competing-replacement, delayed-source and invalid
+variants; RON `TestRONLinkedExilePaymentTetravus`, `Gameplay`, `Scopes`,
+`Invalid` and `Inventory`. Existing token enchantment tests retain intrinsic
+Flying, P/T, artifact types, producer independence and Aura legality evidence.
+
+
+## Legendary token declarations and legend decisions
+
+`TokenLegendary() TokenOption` adds the legendary supertype to a token
+prototype. Both direct creation and token definition plans preserve it. Token
+factory fingerprints include this supertype, so changed builders fail before
+any member of a creation batch enters. Planned tokens retain the characteristic
+through copiable-value capture, physical copies and game clones (CR 111.3,
+205.4b–d, 707.2).
+
+Legend decisions group present, phased-in legendary permanents by controller
+and name. Players choose in active-player order before any legend departure.
+An invalid choice uses the first candidate. The remaining legends move through
+`moveGraveyardBatch` as direct graveyard moves. Shared replacements, graveyard
+ordering, predeparture information and batched events apply. Indestructible and
+regeneration do not prevent these moves; they are not sacrifices. Phasing
+suspends participation, and phase-in restores it (CR 702.26b, 704.4, 704.5j).
+This change establishes simultaneous legend departures; it does not change the
+ordering of other state-action families.
+
+Native evidence: `TestLegendaryTokenCreation`, `Phasing`, `Invalid`, `Batch`,
+`Choices`, `FactoryDrift` and `Replacement`. RON evidence: `TestRONLegendaryTokenGameplay` uses
+the unchanged Stangg token-creation subtree in a paid spell and pending clone;
+`TestRONLegendaryTokenInvalid` covers strict declarations. The collection-wide
+`TestRONTokenCopiableValuesDeclarations` now covers all 17 token declarations.
+These are token-capability tests, not complete Stangg gameplay evidence.
+
+
+## Saved-set delayed departure
+
+`WhenAnyLeaves(subjects PermanentSet, body ResolvingEffect) ResolvingEffect`
+saves the present, unphased visits in `subjects` when it resolves. An empty
+set installs no subscription. The next departure of any saved visit queues
+one delayed ability and consumes the whole subscription. Shared departure
+snapshots supply exact identity; simultaneous member departures still queue
+one ability. No event-member binding is introduced, so simultaneous matching
+events have the same observable body (CR 603.7a–c, 603.10a).
+
+The shared trigger service retains the creating controller, source visit and
+captured body frame. Cleanup, control changes, source departure and source
+ability removal do not remove the subscription. Phasing causes no departure.
+Return cannot supply a saved visit. The trigger service copies the saved
+member slice during game cloning. Waiting delayed-source queries include
+these visits without executing the effect (CR 603.7d–e, 702.26b–d).
+
+`WhenLeaves` and `WhenLeavesOrUntaps` can install their one-shot departure
+subscription for an exact phased visit. The subscription watches its later
+actual departure; it does not move or otherwise affect the phased permanent.
+An absent or returned source still cannot replace the old visit.
+
+Evidence: `TestSavedSetLeaveLifecycle`, `IdentityAndDefinitions` and
+`PhasedSourceRegistration` cover batch consumption, cleanup, wrong visits,
+control, source departure, empty sets, strict validation, waiting queries,
+waiting and pending clones, and phase-in after subscription setup.
+`TestRONResolutionTokenSetStangg` maps the complete LEG Stangg record to both
+delayed departure contracts. Its WotC ruling dated 2018-03-16 requires orphan
+tokens when the source leaves before entry-trigger resolution. Local Oracle
+text agrees with the complete RON record; no source correction was needed.
+
+
+## Resolving collection exclusion
+
+RON `ExceptFor(collection)` requires one supported typed permanent collection.
+It lowers through `compileContextualCollection(Node, scope)` to the existing
+`WithoutPermanents(subjects, excluded PermanentSet) PermanentSet`, with
+`MatchingPermanents(AnyPermanent)` as its universe. `And` intersects this set
+with its other operands; `Or` takes the union. Nested exclusions, nonempty
+`And`/`Or`, source and local target singletons, and player-scoped collections
+retain their normal lexical scope. Each factory builds its own bindings.
+The new forms require ordinary resolving bodies, including delayed bodies.
+Entry operations, draw replacement bodies and singular target filters do not
+gain new exclusion forms. The earlier control-history exclusion is preserved.
+
+The engine reads current members when an instruction resolves (CR 608.2h).
+Difference compares both permanent ID and incarnation. A saved exclusion cannot
+exclude a returned permanent (CR 400.7); changing control preserves identity.
+Phased-out visits cannot be action subjects, and a phase cycle retains identity
+(CR 702.26b–d). This does not authorize actions on LKI. Shared set and action
+services retain simultaneous operation and replacement behavior. Exclusion
+itself makes no decisions, pays no costs and creates no persistent state.
+
+Delayed source queries traverse both operands without executing the body.
+Target snapshots, copied controllers and clones use existing resolution frames.
+Malformed shapes, empty compositions and unbound references fail compilation.
+Unsupported predicates still fail. The attack opportunity contract below adds
+`CouldntAttackThisTurn` for the complete Season of the Witch record. Collection
+exclusion itself adds no history. No RON data changed.
+
+Evidence: `TestRONCollectionExclusionNested`, `DelayedIdentity`, `PlayerScope`,
+`Invalid`, `Contexts`, `AtomicLoad`; native `TestCollectionExclusionDelayedSource`
+and `Declarations`. Existing `TestRONCurrentTurnControlSiren` exercises complete
+Siren's Call gameplay for all six reprints through the shared subtraction path.
+
+## Discard payment characteristic facts
+
+`CardPaymentFact{Filter CardFilter, Result *NumberBinding}` and
+`DiscardCardCostWithFacts(facts ...CardPaymentFact) Cost` save predicates for
+one single-card discard payment. Each fact writes 1 for a match and 0 otherwise.
+The shared discard pipeline chooses replacements first, reads the selected hand
+card before movement, and publishes facts only for a completed discard. A move
+into an unrevealed hidden zone supplies no match, including for negative filters
+(CR 701.9c). Public graveyard and exile destinations retain the facts. The cost
+itself has no characteristic restriction. Existing filtered costs still reject
+hidden destinations when payment requires known characteristics.
+
+Facts use the existing total-cost transaction and saved-number frames. Queries
+make no choices or writes. Locked hand visits, full-payment checks and rollback
+remain shared. Chosen discards now join the transaction's existing commit preflight. A discard
+cancellation installed after preparation fails before other resources are spent.
+A failed payment publishes no result. Later card movement, a new
+hand or graveyard visit, source departure and phasing do not alter saved facts.
+Independent activations, interleaved transactions, stack copies, clones and
+captured delayed bodies keep separate values. Copies do not pay again.
+Definition validation rejects nil or duplicate result bindings, zero filters,
+missing producers, optional/alternative wrappers and resolution-payment use.
+Direct activation costs and spell additional costs can supply these facts.
+
+RON accepts `If(DiscardedCardPassesFilter(filter), [actions])` in an ordinary
+activated resolving body, including its saved delayed bodies. The enclosing
+activation must have exactly one bare `DiscardACard` cost, optionally inside
+cost `And`. Random and last-drawn costs cannot supply this result. Multiple
+discard costs are ambiguous and reject. A resolution-time discard payment
+shadows the activation result in its continuation; its unsupported result reads
+reject instead of reading the earlier activation payment. Reference-free card type and color
+filters, their negative forms, and nonempty nested `And`/`Or` reuse the hand-card
+filter compiler. Each predicate has a distinct per-factory number binding.
+Spells, unrelated triggers, entry operations and draw replacement bodies gain
+no RON result adapter. No declaration or execution state is global.
+
+Evidence: native `TestPaidDiscardFactsLifecycle`, `Transactions`, `Definition`,
+`Boundaries`, `MultipleAndHidden`, `ChangedReplacementRollback`,
+`SpellAdditionalCost`; RON `TestRONDiscardPaymentFactLandsEdge`,
+`IndependentAndTargets`, `FiltersAndDelay`, `Invalid`, `Load`, `Inventory`.
+The complete LEG Land's Edge record now has paid casting, both activating
+players, land/nonland discards, player/planeswalker targets, illegal target
+rechecks, source/paid-card departure, copies, clones, phasing and sequential
+world-permanent evidence. Forced discards do not activate the ability. Local
+WotC rulings and CR 118.3, 118.10–11, 602.2, 608.2h and 701.9 supply the contract.
+
+
+## Effect-driven blocking during resolution
+
+`MayHavePermanentBlockAttacker(player PlayerRef, blocker PermanentRef,
+attackers PermanentSet) ResolvingEffect` offers one optional block to the typed
+player. It intersects the supplied set with present creatures attacking that
+blocker's defending player. It reads the exact blocker visit, captures candidate
+visits before the choice, and rechecks both visits before adding combat membership.
+No target is declared for the chosen attacker. Absence, phasing, return, a changed
+defender relationship, an attacking blocker, or an invalid answer supplies no block.
+An existing identical block produces no duplicate choice or event.
+
+This action states that the creature blocks; it does not declare blockers.
+Declaration restrictions, requirements, costs, tapping checks, capacity and
+declaration limits do not apply. This follows the declaration boundary in CR
+509.1a–f and the effect-created transitions in CR 509.3a–f, rather than a
+`could block` legality check. False Orders has no such check; Sorrow's Path has
+one; see the checked block-assignment swap contract below.
+
+The internal `addEffectBlockers([]effectBlockAssignment) bool` service checks
+all exact visits before committing any member. Each assignment holds typed
+blocker and attacker visit pairs. A stale member rejects the complete batch.
+The service adds band membership, exact block history and
+historical sole-blocker information before it emits new block, pair, group and
+becomes-blocked events. Existing blocked attackers do not become blocked again.
+Reblocking after removal can trigger again (CR 509.3a–d). It does not emit a
+whole-step event, repeat attacks-and-unblocked events, tap creatures, change
+`BlockedAlone`, or pay costs. Original pending triggers remain queued. Damage
+uses the existing combat service. CR 506.4, 509.1h and 702.26 retain departure,
+blocked status and phasing behavior. No LKI object can become a blocker.
+
+The effect is immutable and keeps no chosen state between resolutions. Copies
+and clones use their own frames and combat maps. Waiting delayed-source queries
+retain explicit source reads in the player, blocker and attacker set without
+making choices or changing combat.
+
+Native evidence: `TestEffectBlockingRestrictionsAndChoice`, `EventsAndHistory`,
+`IdentityAndClone`, `DefinitionAndWaiting`, `BandEvents`, and `Batch`. Real-record and compiler evidence:
+`TestRONEffectBlockingFalseOrders`, `LegalityAndLifetime`, `IndependentInstances`,
+`ResolvingScopes`, `Invalid`, and `LoadAndInventory`. No payment, replacement
+ordering, zone movement or Go-card authoring API was changed.
+
+
+## Checked block-assignment swap
+
+`TrySwapBlockingAssignments(subjects PermanentSet) ResolvingEffect` reads exactly
+two distinct present, unphased blocking creature visits with the same controller.
+It checks both incoming sets before changing combat. Returned objects, noncreatures,
+nonblockers and stale visits cannot supply a swap. No LKI object can reenter combat.
+An empty incoming set passes, including after all its attackers have left combat.
+
+For nonempty sets, the blocker must be untapped and able to block. Shared
+`CanBlock`, `HasLandwalkEvasion`, `blockCapacity`, live attacker visits and continuous
+restriction maps supply evasion, protection, restrictions, minimum blocker counts
+and additional or unlimited capacity. A band uses one capacity slot and requires
+one legal member to block (CR 702.22h). Costs, requirements and declaration-only
+limits are not repeated. The WotC rulings for Sorrow's Path dated 2009-10-01 define
+this could-block boundary; CR 506.4, 509.1g–h and 509.3a–f define transitions.
+
+Failure changes neither assignment. Success removes both creatures from combat,
+then uses `addEffectBlockers` to install the complete swapped batch. Blocked
+attackers stay blocked. The removed creatures become blockers again, even when
+both blocked the same attacker before the swap. Block, pair and group events
+fire again; becomes-blocked events do not. All assignments and history are in
+place before observers run. Declaration-only snapshots remain unchanged.
+Pending triggers stay queued. Combat damage uses the resulting assignments.
+Copies and clones retain separate combat state and target frames.
+
+`OnePlayer(player PlayerRef) PlayerSet` selects one present typed player for
+existing set consumers. Missing or unbound players supply an empty set. Definition
+validation rejects nil and unbound references. Source queries retain reads through
+the player reference. This supplies the existing simultaneous damage service for
+Sorrow's Path's controller and creature recipients, without a second instruction.
+
+Evidence: native `TestBlockAssignmentSwapRestrictions`, `Events`, and
+`DefinitionAndWaiting`; RON `TestRONBlockAssignmentSwapSorrow`, `OtherTap`,
+`IndependentBindings`, `Invalid`, and `LoadAndScopes`. No zone, payment,
+replacement-order or declaration service is replaced.
+
+
+## Payment before the next draw step (CR 116.2c, 117.3a, 603.7)
+
+`UnlessManaPaidBeforeNextDraw(player PlayerRef, mana core.ManaCost,
+unpaid ResolvingEffect) ResolvingEffect` installs one independent special-action
+payment and one delayed ability. The player is read once during installation.
+Only fixed, nonnegative ordinary mana is valid. Nil or unbound player/body
+operands fail definition validation. A missing runtime player installs nothing.
+
+`GetPlayerPayments` and `TakePlayerPayment` use the existing priority permission
+and cost transaction services. Payment uses no stack object and cancels exactly
+one obligation. It cannot repeat. Failed or wrong-player payment keeps the
+obligation and resources. Repeatable turn payment permissions keep their prior
+contract. Cleanup retains draw deadlines and expires ordinary turn permissions.
+
+The payer's next actual `EvtDrawStep` ends the payment window before trigger
+placement or priority. The shared delayed-trigger system queues the unpaid body
+with its original source, controller, typed bindings, targets and saved X.
+A skipped draw step emits no event and leaves both permission and delay intact.
+An installation after a draw-step event waits for the next event. Payments cannot
+stop an ability that has already triggered. Source departure, return, phasing or
+control changes cannot end an installed obligation. Copies and clones retain
+separate obligations and captured frames. Existing delayed-body services retain
+exact source visits and LKI; waiting queries read explicit source references
+without execution. Mana, damage replacements and trigger ordering remain owned
+by their existing services.
+
+RON accepts exactly
+`CreateFutureTrigger_UnlessPlayerPaysManaBefore(AtTheBeginningOfPlayersNextDrawStep(player),
+ActionList(nonemptyActions), player, fixedManaList)` in ordinary resolving
+bodies, including spell, activation and delayed bodies. The event and payment
+operands must declare the same player reference. Entry and draw-replacement
+bodies reject this form. Other deadline events and X mana reject. RON retains
+syntax, reference scope and diagnostics; the engine retains lifecycle behavior.
+
+The complete ARN Nafs Asp record and all four local WotC rulings define the
+card contract. Its damage trigger watches actual damage to any player, including
+its controller. Each event creates a separate obligation when that trigger
+resolves. The unpaid body causes life loss and cannot trigger the damage ability.
+No source correction or vocabulary refresh is required.
+
+Evidence: `TestDrawDeadlinePaymentLifetime`, `RollbackAndValidation`,
+`SkippedAndLateStep`, `SavedFrame`, `SourceLKI`; RON
+`TestRONDrawDeadlineNafsAsp`, `DamageFacts`, `Invalid`, `LoadAndCombat`.
+Existing `TestPlayerPayment` cases retain automatic mana payment, rollback,
+priority retention and repeatable-permission coverage.
+
+## Dependent player and graveyard targets
+
+`DeclareGraveyardCardTargets(name string, player *PlayerTargetBinding,
+filters ...CardFilter) *GraveyardCardTargetsBinding` declares zero or more
+card targets in the earlier player's graveyard. The supported group list is
+one player declaration followed by this collection. Definition validation
+rejects missing, external and forward player dependencies. Target queries use
+separate query frames. Announcement checks each card's current zone and filter,
+rejects duplicate cards, and records exact graveyard visits before payment.
+Resolution keeps legal members and excludes departed or returned visits.
+Copy target choices retain each group's original count and can select a new
+player and cards from that player's graveyard. Clones retain independent state.
+
+`ReturnGraveyardCardsToLibraryTop(cards CardSet, chooser PlayerRef)
+ResolvingEffect` saves the selected graveyard visits before replacements.
+The shared `CardZoneMoveAction` pipeline applies replacements in APNAP order.
+The chooser orders the surviving library moves from top to bottom. Invalid
+orders retain collection order. The shared movement service checks each saved
+visit again after replacement and order choices. Owner zones apply under CR
+400.3. All moves finish before zone events and one departure count per graveyard.
+Other callers of `performCardZoneMove` keep their existing event timing.
+
+CR 601.2c, 608.2b–c and 707.10 support target choices, resolution checks and
+copy counts. CR 401.4 supplies the default owner order choice. Explicit card
+instructions can assign that choice to the spell controller (CR 101.1), as
+Drafna's Restoration does. Graveyard visits use CR 400.7; LKI cannot move an
+absent card. Battlefield phasing and permanent characteristics do not apply.
+
+`TestDependentGraveyardTargets`, `TestDependentGraveyardTargetsValidation`,
+`TestDependentGraveyardQueries` and `TestDependentGraveyardReplacementsAndBatch`
+cover these contracts with synthetic cards. Complete RON evidence is in
+`TestRONDependentGraveyard*`.
+
+## Attack opportunities at declaration boundaries
+
+`CouldntAttackThisTurn PermanentFilter` reads the exact permanent visit's saved
+attack opportunities. Both `doDeclareAttackers` and `ExecuteAttackers` record
+opportunities after current layers apply and before choices, costs, taps or
+attack events. A successful declared attack also disproves this predicate.
+Only creatures controlled by the declaring player can gain an opportunity.
+Summoning sickness, haste and attack permissions, defender, tapping, phasing,
+source and player restrictions, and Island Sanctuary use existing services.
+Optional attack costs do not force a player to enable an attack (CR 508.1d).
+The observation makes no choices and pays no costs.
+
+Declaration limits use the same requirement weights as the existing capped
+attack service. A creature gains an opportunity if a legal declaration can
+include it while satisfying the maximum requirements. Equal-weight alternatives
+all qualify; an optional creature cannot displace a required one in the last
+slot (CR 508.1a–d). This contract covers the engine's two-player attack model.
+
+The turn tracker saves `(permanent ID, incarnation)` pairs. Extra declarations
+add opportunities; skipped combat or a skipped declaration adds none. Later
+untapping, animation, haste or control changes cannot create an earlier
+opportunity. History does not require an observing source to be present.
+Control changes and phasing preserve history. Return cannot inherit it
+(CR 400.7, 702.26). Clones and payment trials copy the map. Final turn cleanup
+clears it; repeated cleanup priority retains it until that boundary.
+The predicate is a pure information read and does not restore an absent visit
+as an action recipient. Resolving collections still exclude phased objects.
+
+RON accepts the bare `CouldntAttackThisTurn` symbol in ordinary resolving
+permanent collections, including nested `And`, `Or` and `ExceptFor` collections
+and delayed bodies. Tuple forms, arguments, generic target filters, entry and
+draw replacement bodies reject. Each factory retains its own normal bindings.
+No RON source changes or new damage, cost, replacement or zone service is needed.
+Semantic inventory keeps this form and its enclosing collection exclusion in
+the permanent-collection role. It does not advertise generic filter support.
+
+Evidence: native `TestAttackEligibilityHistoryBoundaries`, `Requirements`,
+`Restrictions` and `CostsAndPurity`; RON `TestRONAttackEligibilitySeason`,
+`Upkeep`, `Resolution`, `Invalid` and `Load`. The complete DRK Season of the Witch
+record covers paid casting, controller upkeep life payment and sacrifice, both
+players' end-step triggers, multiple idle creatures, vigilant attackers,
+resolution-time tapping, source departure, returned visits, control changes,
+phasing, skipped combat, late sources, regeneration, indestructibility,
+graveyard replacement and pending clones. The two local WotC rulings dated
+2013-09-20 require declaration-time eligibility and exclude unused ways to
+enable attacks. The local file contains no Scryfall notes.
+
+## Temporary recipient damage prohibition
+
+`ProhibitDamagePreventionAndRedirection(subject PermanentRef)
+ContinuousModification` uses the existing captured layer modification service.
+`Until(EndOfTurn, ...)` retains one present, unphased recipient visit. An absent
+or phased recipient cannot receive the effect. Source departure and control
+changes do not end it. An installed effect survives a phase cycle. A returned
+card has a new visit. Cleanup and clones retain their existing isolated effect
+lifetimes (CR 400.7, 611.1–2, 702.26).
+
+`AttrDamageCantBePreventedOrRedirected` is a rule attribute, not an ability.
+Later ability removal cannot erase it. The effect has a detrimental outcome.
+The shared damage replacement pipeline rechecks the current recipient and
+blocks prevention and redirection. Shield capacity remains unused. Other
+replacements still apply, including damage multiplication (CR 614.9, 615.12,
+616.1). Existing PreventionEffect classification and explicit redirection
+markers define the excluded operations. The per-point counter-removal exception
+keeps its additional-effect behavior. No separate damage or shield system is added.
+
+Native evidence: `TestDamageRecipientProhibition`, `Definition`,
+`ReplacementBatch` and `Capture` cover references, source departure, control,
+phasing, return, ability removal, cleanup, cloning, simultaneous recipients,
+replacement order, unused shield budgets and independent amount replacement.
+RON evidence is `TestRONDamageRecipientProhibition*`. Whippoorwill's complete
+record now uses the delayed death graveyard-visit contract below for exile.
+
+
+## Delayed death graveyard visits
+
+`WhenDiesThisTurnWithCard(subject PermanentRef, permanent *PermanentBinding,
+owner, controller *PlayerBinding, card *CardBinding, body ResolvingEffect)
+ResolvingEffect` extends the existing delayed death capture with one required
+card binding. Existing `WhenDiesThisTurnWithBindings` callers keep their API.
+Definition validation requires a named card binding and restricts it to the
+body's isolated frame. The subject, permanent, owner, controller and body retain
+the existing validation contract.
+
+Death detection reads former battlefield facts and the destination graveyard
+visit from the current game. This reuses `creatureDiesPattern.WithCard` and
+`captureDestinationEvent`; it does not look up the card at trigger placement or
+resolution. Stack placement copies the saved card map and adds that event's
+visit. Waiting, pending and stacked clones keep separate facts. Simultaneous
+watched deaths with shared declarations keep independent event frames.
+CR 400.7e permits the death trigger to find the new public-zone object;
+CR 603.7c prevents it from following a later return. Source departure and
+cleanup after detection cannot erase pending facts. Phasing creates no death
+and preserves the watched visit. A replaced graveyard move creates no death.
+Tokens supply no retained graveyard card (CR 111.7–8).
+
+`ExileGraveyardCard` validates the saved visit and uses `CardZoneMoveAction`
+through the existing replacement pipeline. The card's current owner chooses
+competing replacements (CR 400.6, 616.1). Movement rechecks the visit after
+replacement choices. Cancellation leaves the card and publishes no departure.
+All zone notifications follow final destination placement. Ownership and exile
+source attribution remain intact. No parallel movement or replacement service
+is introduced.
+
+Native evidence: `TestDelayedDeathCardVisits`, `Definition`,
+`DestinationReplacement`, `IndependentFrames` and `ReplacementOrder`.
+RON evidence: `TestRONDelayedDeathCardWhippoorwill`, `Declarations` and `Scope`.
+The complete Whippoorwill record now has gameplay evidence for both actions.
+No source record changed. Grouped dead-object exile remains unsupported.
+
+## Previous-turn player activity
+
+`PlayerCastSpellDuringLastTurn(player)` and
+`PlayerPutNontokenPermanentDuringLastTurn(player)` read the named player's last
+completed turn. Final cleanup archives only that active player's actions and
+clears the current observations. Cleanup priority retains current observations
+and the earlier archive. Empty turns replace the active player's archive;
+skipped turns do not. Other players' turns and extra combats cannot replace it.
+CR 500.7, 500.11, 514.3a and 614.10 govern these boundaries.
+
+A cast counts at the existing cast event (CR 601.2i), even if countered. A stack
+copy is not a cast. Successful battlefield entry records the actor before entry
+observations; absent actor metadata uses the entering controller. Explicit
+actors remain distinct from owner and controller (CR 110.2a). Tokens, canceled
+entries, control changes and phase cycles supply no new nontoken-entry fact
+(CR 111.1 and 702.26d). Later departure cannot erase a completed action. Clones
+and speculative payment games own separate current and archived maps.
+
+`CastSpellDuringLastTurn(player)` and
+`PutNontokenPermanentDuringLastTurn(player)` expose pure state conditions for
+`You`, `ActivePlayer` and `CombatDefendingPlayer()`. Other reference shapes
+reject definition validation. `CantAttackEachIf(subjects, condition)` uses the
+existing live collection attack restriction. Both declaration paths check it
+before attack costs, taps and attack events (CR 508.1c). Changes do not remove
+already declared attackers. Printed-rule lifecycle, phasing, ability removal
+and source identity use existing continuous-effect services. This establishes
+the two-player player-attack context; it adds no planeswalker declaration API.
+
+## Self-card discard cause events
+
+`ThisCardDiscardedByOpponentEffect(cause *PlayerBinding) EventPattern` matches
+an effect-caused discard of its own source card from its owner's hand. The
+cause must have an opponent controller. The event writes that player to the
+supplied nonnil binding. It does not make a target. Definition validation rejects
+a missing binding and reads outside the event's binding scope.
+
+Before replacement choices, both single and batch discard paths save the exact
+hand visit, effect-versus-cost status and cause controller. A resolving spell or
+ability supplies its own stack ID and controller; current control of its source
+cannot replace these facts. Direct effect callers with a present, unphased
+permanent source use that source's controller. An absent or unspecified cause
+cannot match. Cost and cleanup discards cannot match. Replacement proposals
+retain the original facts and locked visit. A returned hand card cannot replace
+that visit. Existing signatures remain available.
+
+The existing source-card trigger service discovers the card's ability in a
+public graveyard or face-up exile destination. The discard mover now retains an
+exile replacement destination. A hidden library destination supplies no ability
+(CR 603.2f and 701.9c). Canceled or stale discards produce no event. Every move in
+a batch finishes before discard observations. Pending placement uses the shared
+APNAP service. Each occurrence has its own saved player; pending clones and
+copied abilities retain that player after either source departs or returns.
+CR 113.8, 400.7, 603.2–3 and 701.9 establish these boundaries.
+
+RON accepts
+`FromAnyZone(TriggerA(WhenASpellOrAbilityCausesAPlayerToDiscardACard(ControlledByAPlayer(Opponent), SinglePlayer(You), SingleCardInHand(ThisCardInHand)), ActionList(...)))`.
+The body binds the bare `Trigger_ControllerOfThatSpellOrAbility` player reference.
+The wrapper supports this self-card event; it does not enable arbitrary events
+in every zone. Other filters, subjects, event kinds, target declarations and
+intervening conditions reject. The body has no source-spell or permanent
+binding. RON spelling and declaration checks remain in `ron`; engine code has
+no card-name branch.
+
+Evidence: native `TestDiscardCauseEventLifecycle`, `ResolvingController`,
+`Definition`, `Snapshots`, `Replacements`, `ActivationAndCopy`, `CostRollback`
+and `SimultaneousAndAPNAP`; RON `TestRONDiscardCausePsychicPurge`, `Declarations`,
+`Load`, `SpellAndActivation` and `HiddenDestination`. These execute Psychic
+Purge's complete LEG record, including its independently cast damage spell.
+
+
+## Conditional protection that preserves existing state
+
+`PreventNewAuraAttachmentsIf(subjects PermanentSet, condition StateCondition)
+StaticRule` blocks new Aura attachments while the source condition holds.
+An Aura already attached to the exact subject visit remains legal under this
+rule. Other enchant restrictions, protection and state-based actions still apply.
+Moving the Aura away ends this permission. A returned subject cannot inherit it.
+Equipment and Fortifications do not match the Aura restriction.
+
+`PreventControlGainsIf(subjects PermanentSet, condition StateCondition)
+StaticRule` blocks a change from the current controller while the source
+condition holds. Established control effects remain. An ended control effect
+does not keep control; the default controller or an underlying control effect
+can resume. Each visit retains the identity of its established control effect.
+The layer service records effect identities for each current subject, including
+applications that do not change its controller. Clones retain these identities
+and copy the per-visit state. Exchange fails before
+creating either control effect if either subject has this restriction.
+The shared control service checks current rules after the layers finish.
+It tests membership with the subject's prior controller. If a gain is blocked,
+it repeats the layers with that controller held through Layer 2. Later layers
+then use permitted control. The hold lasts for that evaluation only. A later
+condition change can permit an existing control effect to apply.
+
+Both rules require a typed subject set and condition. Definition validation
+rejects missing or unbound declarations. Printed-ability suppression and source
+phasing disable the rules. Subject phasing preserves its visit. Clones use
+separate effects and battlefield state. There is no saved attachment allowlist
+or permanent controller lock. CR 101.2, 303.4a–j, 611.3 and 613.11 establish the
+rule boundary. Guardian Beast's WotC ruling confirms that sacrifice is permitted.
+
+RON supports `EachPermanentRuleEffect(filter, operations)` inside static
+`If`, `Unless` and `IfElse` bodies. The filter uses the existing static permanent
+filter grammar. The nonempty operation list accepts
+`CantBeEnchantedAndDoesntRemove(IsEnchantmentType(Aura))` and the bare symbol
+`CantBeGainedControlOf`, once each, separately or together. Conditional layer
+rules can share the body. Other enchantment predicates and mixed operations in
+this operation list reject at compilation. Unconditional and resolving contexts
+are outside this adapter.
+
+`TestRONRetainedProtectionGuardian` covers the complete Guardian Beast record,
+paid casting, entry, existing and new Auras, blocked control gains, later layers,
+tapping and established control. `ScopeAndRemoval` covers noncreature artifact
+membership, both controllers, later entry, ability removal, destruction and
+sacrifice. `Declarations` covers malformed syntax. `LoadAndInventory` covers
+factory instances, atomic rejection and nested semantic roles.
+Native `TestRetainedProtectionLifecycle`, `AttachmentsAndIdentity`,
+`EstablishedControl`, `ControlExpiry`, `ControlForms` and `Definitions` cover
+source departure, source and subject
+phasing, control changes, ability removal, former attachments, returned visits,
+failed exchanges, repeated layer evaluation, control expiry with and without
+an underlying effect, and clone isolation. `TestRONRetainedProtectionCasting`
+checks failed payment rollback, paid entry and illegal Aura casting.
+
+## Target-derived activation X and single-spell player retargeting
+
+`WithActivationManaXFromSpell(spell *SpellTargetBinding, multiplier int)
+ActionOption` defines payment X from the sole spell target's current stack mana
+value. The multiplier must be positive. Definition validation requires one
+X-independent spell target, an X mana cost, one X definition and an ordinary
+nonmodal activation. Missing, duplicate, unrelated and X-dependent declarations
+reject. Stack mana value includes the targeted spell's announced X (CR 202.3e).
+
+Affordability queries inspect legal candidate spells without making a choice,
+changing ambient X or spending resources. Activation uses the submitted exact
+stack ID before shared target validation and payment. A card ID, absent spell,
+ability, wrong count or failed payment cannot spend resources. Cost increases,
+reductions, source reservation and rollback use the existing activation payment
+transaction. The announced X stays on the resulting ability and its copies.
+Source departure, return, control and phasing cannot change that payment
+(CR 601.2b–f, 602.2b). Resolution does not reread payment information.
+
+`IfSpellTargetsPlayer(StackObjectRef, PlayerRef, ResolvingEffect)` checks the
+present spell's current announced targets. It does not require those targets to
+remain legal and does not use departure LKI (CR 115.9). Its player is read from
+the resolving frame; source control changes cannot change `You`.
+
+`ChangeSingleSpellTargetToPlayer(StackObjectRef) ResolvingEffect` changes the
+sole target occurrence to a different legal player (CR 115.7a–b). The resolving
+controller makes the choice. Candidate legality uses the original spell's
+controller, source characteristics, target declaration, event bindings and X.
+No legal player, cancellation, a false choice, an absent spell, an ability or a
+non-singleton target list leaves targets unchanged. Success preserves the spell's
+controller, mode, X and original damage/counter allocation; it updates modal
+targets and emits shared becomes-target events. Copies and clones retain separate
+lists and allocations (CR 115.7e–f, 115.8).
+
+RON accepts `XIs(Twice(ManaValueOfSpell(Ref_TargetSpell)))` on an activation
+with a sole `TargetSpell`, paired with `PayManaX([ManaCostX], ValueX)`.
+`ValueX` in that target or resolving body remains rejected. In ordinary resolving
+activation bodies, RON accepts
+`If(SpellPassesFilter(spellRef, TargetsPlayer(playerRef)), [actions])` and
+`ChangeTheTargetsOfSpellToAPlayer(spellRef, AnyPlayer)`. Entry, draw replacement,
+delayed and spell-body contexts remain rejected for these new adapters.
+
+`TestTargetDefinedXPayment`, `IdentityAndZero` and `Invalid` cover pure
+queries, stack X, zero payment, exact identities, malformed definitions,
+phasing and rollback. `TestSpellPlayerRetargetContract` covers legal and illegal
+changes, original-controller restrictions, no legal player, cancellation, copies,
+clones, modes and retained allocations. `Definition` checks missing operands.
+`TestRONTargetDefinedXMirror` executes complete Reflecting Mirror through paid
+casting, payment rollback, current-target checks, source departure/return/control/
+phasing, copied abilities and pending clones. `Declarations` checks invalid RON
+and fresh validated factories. The DRK record's former
+`ManaValueIs(EqualTo(ValueX))` restriction contradicted its Oracle-defined twice
+mana value X and was removed. Local DRK Oracle text and all three WotC rulings
+were read; there are no Scryfall notes. Lightning Bolt's full RON record and
+explicit empty rulings array supply the gameplay fixture.
+
+## Resolution sacrifice and mana-value library search (CR 118.11–12, 608.2g–h, 701.21, 701.23–24)
+
+`IfSacrificeWithManaValue(player PlayerRef, filter PermanentFilter,
+result *NumberBinding, paid ResolvingEffect) ResolvingEffect` requires one
+matching permanent controlled by the payer at resolution. The source can pay.
+The shared payment transaction selects and validates the exact battlefield
+visit. Missing, phased or stale subjects cannot start payment. A replacement
+can change or omit the sacrifice move without changing the payment result
+(CR 118.11–12). This is distinct from counting actual sacrifice events.
+The transaction saves mana value before departure. The result is available only
+inside the paid continuation; nested calls restore prior results. Definition
+validation rejects missing operands and reads outside that continuation.
+
+`SearchLibraryWithManaDifference(player PlayerRef, filter CardFilter,
+allowance ResolutionValue) ResolvingEffect` reads the allowance once, clamped
+to zero, then searches for one matching card. A qualified search can find none.
+The saved library visit must remain present through selection, payment and
+entry choices. A returned visit cannot replace it. The found card's mana value
+fixes the positive difference before optional payment. A nonpositive difference
+requires no offer. Shared mana payment permits mana abilities and supplies
+rollback. A successful payment enters the card under the searching player's
+control through the shared entry replacement pipeline. A failed entry keeps
+its established destination. A declined or failed payment proposes movement
+to the owner's graveyard through `CardZoneMoveAction`; replacement cancellation
+or exile is respected. Movement precedes one shuffle, including failed searches.
+The search adds no reveal instruction. Copies and clones have separate state.
+
+RON supports `MustCost(SacrificeAPermanent(filter))` followed by
+`If(CostWasPaid, actions)` with `ManaValueOfTheSacrificedPermanent` reads in
+ordinary resolving bodies. The artifact `SearchLibrary` continuation supports
+`FindACardOfType(IsCardtype(Artifact))`, a found-card mana-value comparison
+against the sacrifice, normal entry for a lesser or equal value, and optional
+`PayManaX([ManaCostX], Minus(ManaValueOfTheFoundCard,
+ManaValueOfTheSacrificedPermanent))` for a greater value. Its adjacent
+`IfElse(CostWasPaid, ...)` selects normal entry or
+`PutFoundCardsIntoGraveyard`, followed by `Shuffle`. Other search shapes,
+unbound results, entry operations and draw replacements are rejected.
+
+Evidence: native `TestLibraryValuePaymentContract`, `Declarations` and
+`VisitsAndReplacements`; RON `TestRONLibraryValuePaymentTransmute`,
+`Declarations`, `SearchDeclarations`, `CopiesAndClone` and `LoadAndInventory`.
+These tests cover the complete corrected Transmute Artifact record, paid
+casting, countering, missing sacrifices, both value branches, payment failure,
+exact library visits, replacements, mana abilities, entry, copy and clone
+isolation, result scope and nested inventory roles.
+
+Zone-event evidence: `TestLibraryValuePaymentZoneEvents` checks the library as
+the origin for successful entry, unpaid movement and failed entry. The final
+destination is present before observers run. Failed entry uses the same
+replaceable graveyard proposal as an unpaid find.
+
+## Saved permanent sets and plural control
+
+`SnapshotPermanentSet(subjects PermanentSet, result *PermanentSetBinding)
+ResolvingEffect` saves each present, unphased battlefield visit once in the
+shared resolution frame. Empty membership clears the prior result.
+`FromPermanentSet(result)` reads only present, unphased survivors. It does not
+repeat the original filter. A phase cycle preserves the visit; a zone change
+creates a different visit. The existing frame clone and delayed capture services
+retain separate sets. Definitions reject missing operands and undominated reads.
+
+`ChangeEachController(subjects PermanentSet, controller PlayerRef)
+ContinuousModification` uses the shared layer modification service. Install it
+with `Until(Indefinite, ...)` for control without a stated duration. All visits
+are captured before one control layer applies. Existing controller restrictions,
+timestamps, combat removal, summoning sickness and later layers still apply.
+Control survives source departure, phasing and ability removal. A returned
+subject cannot inherit it. Subject phasing preserves installed indefinite control.
+
+CR 400.7, 608.2c–h, 611.2a/c and 702.26b/d establish these contracts.
+`TestPermanentSetSnapshotVisitsAndClone`, `ControlLifetime`, `Definition` and
+`DelayedFrame` cover membership, duplicates, empty reset, return, phasing,
+source loss, ability loss, timestamps, cleanup, definition rejection and clone
+and delayed-frame isolation. `TestRONPermanentListCapturesBeforeTap` proves
+that a tap instruction cannot change the saved membership for later control.
+The RON tests cover the complete real-card continuation.
+
+
+## Optional static ability payment and conditional attack tapping
+
+`StaticAbilityPayment(PermanentRef, StaticRule, core.Duration)` extends the
+sealed resolution action payment contract. Preparation saves one present
+battlefield visit. `PayActionOrElse` offers the choice at resolution and rechecks
+that visit before installing the ability. Decline, departure, return or phasing
+before the recheck uses the unpaid branch. A phase cycle retains the visit.
+The result belongs to that invocation; later payments cannot replace it.
+No resources precede this single action, so it has no partial cost to roll back.
+CR 118.12 makes acceptance determine the paid branch.
+
+`AcquireStaticAbilityUntil(PermanentRef, StaticRule, core.Duration)` reuses the
+existing acquired static grant service, including recipient context, layer 6,
+ability removal, exact visits and stable ability identities. Supported native
+durations are `EndOfCombat`, `EndOfTurn` and `Indefinite`. The existing
+`AcquireStaticAbility` remains indefinite. Acquired rules now include
+`CantAttack`/`CantAttackEachIf`, in addition to the prior supported rules.
+Both the grant and its registered rules expire together. A later ability
+removal can remove the acquired restriction; an earlier removal cannot suppress
+a later grant. Returning objects cannot inherit the grant.
+
+`AttacksWithoutTappingUntil(PlayerRef, PermanentFilter, StateCondition,
+core.Duration)` changes the attack turn action for a saved player and source
+visit, until `EndOfCombat` or `EndOfTurn`. It requires a present source when
+installed. The condition saves its lexical player, card and permanent bindings at
+installation. Its maps are separate in clones. The source condition and
+attacker filter are live. The saved player
+can acquire new creatures during the duration (CR 611.2c). Source control changes
+do not change that player. Ability removal cannot remove this established game
+rule. Source departure, return and phasing prevent the source condition from
+applying; a phase cycle can restore it. Both attacker declaration paths save tapping exemptions for all selected
+visits before paying any attack cost. A cost that taps the condition source
+cannot change those saved decisions (CR 508.1f–j). Failed costs retain the
+existing transaction rollback. Both paths use the same query beside vigilance. This rule grants no ability and does not
+change attack legality, tap costs or an attack already declared (CR 508.1a/f).
+Clones own their continuous effects and expiry independently.
+
+RON supports, in ordinary battlefield-source resolving bodies, exactly:
+
+- `MayCost(CreatePermanentLayerEffectUntil(ThisPermanent,
+  [AddAbility([PermanentRuleEffect(ThisPermanent,[CantAttack])])],
+  UntilEndOfCombat))`, with an adjacent `If`, `Unless` or `IfElse` payment
+  continuation. `PlayerMayCost` uses the same supported payment shape.
+- That same `CreatePermanentLayerEffectUntil` as an ordinary action.
+- `CreatePlayerEffectUntil(playerRef,
+  [AttackingDoesntCauseCreaturesToTapIf(permanentFilter,
+  PermanentPassesFilter(ThisPermanent,IsUntapped))],UntilEndOfCombat)`.
+  Multiple such operations are permitted in that list.
+
+Other granted rule shapes, references and durations remain declaration errors.
+Entry and draw replacement contexts reject these new adapters. There are no
+card-name dispatches or Go factories in these paths. Johan's unchanged complete
+LEG record matches local Oracle text and its checked empty WotC ruling list.
+`TestRONAttackTappingPaymentJohan` covers paid casting, own-combat triggering,
+resolution choice, source state before resolution, copied triggers, pending
+clones, player scope, attack tapping and restriction expiry. Declaration and
+strict loader/inventory tests use the same complete record. Native
+`TestAttackTappingPayment*` covers both attack paths, live conditions, late
+creatures, ability loss, source identity, choice rechecks, combat expiry,
+definition rejection and waiting delayed source discovery.
+
+## Drawn hand visits and per-card life or library decisions
+
+`MayDrawCardsThen(player PlayerRef, count int, body ResolvingEffect)` offers one
+resolution choice. Acceptance performs the individual draws through the shared
+draw replacement pipeline, then runs the body even when every draw was replaced.
+Decline runs neither. Definitions require a player, a nonnegative fixed count
+and a body. This is acceptance of a draw instruction, not proof of actual draws.
+
+`PayLifeOrReturnDrawnCards(player PlayerRef, count, life int)` selects up to the
+required count from that player's current hand visits drawn this turn. It selects
+all cards before any payment. Each selection is required while enough eligible
+cards remain. Choice order supplies the order of the per-card operations. A
+separate shared transactional life payment is offered for each selected visit;
+otherwise the card moves to its owner's library top through CardZoneMoveAction
+and the shared replacement pipeline. Library order follows those successive
+moves. These are neither discards nor reveals. Exact life is payable. A life
+prohibition or insufficient life makes the payment unavailable.
+
+Successful EvtCardDrawn events retain `(player, card, hand visit)` in TurnTrackers.
+Older draws this turn remain eligible. Added cards, failed and replaced draws,
+and departed or returned visits do not qualify. Actual draws made by replacement
+bodies qualify. Final cleanup clears the history; cloning copies it independently.
+Choices use canonical cards and saved visits; invalid choices use an eligible
+original fallback. A returned card cannot replace a selected visit. No selection
+or decision state is stored in a reusable declaration or global last-result slot.
+CR 121.1–6, 400.7, 118.3, 118.11 and 608.2c–g establish these boundaries.
+
+RON supports `MayCost(DrawNumberCards(Integer(n)))` followed immediately by
+`If(CostWasPaid, actions)` in ordinary resolving action lists. Only fixed
+nonnegative n is supported; other payment declarations, result conditions and
+replacement contexts reject. The body uses ordinary lexical bindings; the payment
+result does not escape its adjacent continuation. The draw payer is You, as for
+other MayCost declarations. RON supports
+`PayLifeOrPutCardsDrawnThisTurnOnTopOfLibrary(Integer(count), Integer(life))`
+in ordinary resolving player actions, including typed single-player scopes.
+Both operands are fixed and nonnegative. Costs, static and entry declarations,
+draw replacement bodies, dynamic operands and unbound players reject.
+
+Sylvan Library's LEG record replaces its erroneous repeated life payments and
+discard with this choose-before-payment operation. Oracle text in data/LEG.json
+and all seven local WotC rulings require this order and library destination.
+There is one record and no identical reprint to repair. No Scryfall note is used.
+Evidence: native TestDrawnCardReturnHistory, ChoicesAndLife, ChoiceVisit,
+Definitions, Replacements, OrderAndEvents and OptionalContinuation; RON TestRONDrawnCardReturn
+Library, TimingAndCopies, ReplacedDraws, Declarations and LoadInventory.
+
+
+## Death return with an exact hand play lock
+
+`ReturnToHandInsteadOfDyingWithPlayLock() Ability` supplies a static replacement
+for its source's battlefield-to-graveyard move (CR 700.4, 614.1a, 614.6).
+Destruction, sacrifice and direct graveyard moves use the shared replacement
+pipeline. Current runtime ability identity and battlefield incarnation control
+applicability. Phased, face-down and ability-removed sources cannot supply it.
+A phase cycle keeps identity; a returned source reads its fresh declaration.
+Indestructible stops destruction, while sacrifice and zero toughness still move.
+
+The replacement proposes a hand destination before any move. Other replacements
+can change that destination. The same declaration cannot apply twice to the
+modified event (CR 614.5). The affected controller chooses competing ordinary
+replacements, including regeneration and exile (CR 616.1). Simultaneous batches
+finish all replacement choices before any member moves. Sacrifice keeps its
+sacrifice event and satisfies a sacrifice cost when its destination changes.
+Payment preparation remains isolated and failed total payment has no hand lock.
+
+Only a completed nontoken hand return creates a handVisitPlayLock. It saves the
+owner, physical card, new hand visit and installation turn. The return goes to
+the owner, including when another player controlled the source (CR 400.3).
+No graveyard visit or death count occurs. Shared leave events and departure LKI
+remain available. Tokens produce no hand card. A replaced hand destination
+creates no reveal or play lock. These results exist before leave-event dispatch.
+
+The saved hand visit stays publicly visible and cannot be cast or played as a
+land. Direct battlefield entry remains possible. Other copies and a later hand
+visit cannot inherit the rule (CR 400.7). Cleanup and source ability removal do
+not end it. NextTurnExpiration removes it before the owner's next actual turn's
+actions, including extra turns and turns with skipped untap; a skipped whole
+turn does not expire it. Clones retain independent effects and visibility facts.
+
+`Game.IsHandCardRevealed(player, card uuid.UUID) bool` reports current per-card
+visibility, including whole-hand rules. Opponent snapshots use it to expose only
+the returned card. Hand damage-source queries and departure information retain
+public facts without exposing other hand cards.
+
+Evidence: TestDeathReturnHand Routes, VisitAndExpiry, ReplacementOrder, Payment,
+InformationAndReentry, LandAndExtraTurn, ChangedDestination and
+SimultaneousAndSkippedTurn; TestSnapshotDeathReturnHand; and the complete RON
+Firestorm Phoenix gameplay, copy/owner, declaration and atomic-load tests.
+
+
+## One-use mana-cost spending
+
+`SpendAnyManaForOneSpellThisTurn(player PlayerRef) ResolvingEffect` installs one
+optional permission for the saved player until cleanup. Each installation has
+its own identity. Source departure, phasing, ability removal and control changes
+do not end or transfer the saved permission. Clones copy the permission slice.
+
+Ordinary casting offers each available permission through `ChooseMayAbility`.
+Acceptance locks its identity without consumption. Shared total-cost preparation
+and payment preserve additional costs, colored taxes, mana restrictions and
+actual spent colors. Generic reductions apply before the payment demand changes;
+they cannot reduce colored symbols through this permission. Printed colored and
+hybrid demands become generic payment demands, including permitted printed X.
+Generic reductions remove additional restricted X before printed X that can
+use this permission. The card's mana
+cost and announced X do not change (CR 106.6, 118.7a, 601.2f–h, 609.4b).
+Alternative costs and ability activations do not use this mana-cost permission.
+
+Commit rejects an absent or expired permission before changing resources. Only
+successful total payment consumes the chosen permission. Decline and unpayable
+mana or nonmana totals retain it. Copies do not pay or consume another permission.
+`Game.CanPaySpellManaCost(player uuid.UUID, card Card, x int) bool` checks only
+the printed cost, including available permissions, without choices or mutation.
+Added costs, taxes and reductions require the casting transaction. Existing
+`Game.CanAfford` retains its supplied-cost contract. `GetCastableSpells` uses the
+printed-cost query with X=0; it retains its existing limits for additional costs.
+
+RON accepts exactly `CreatePlayerEffectUntil(player,
+[MayActionOnce(CastASpellAndMaySpendManaAsThoughAnyTypeToPayManaCost(AnySpell))],
+UntilEndOfTurn)` in ordinary resolving bodies, using the existing typed player
+references. Entry and replacement bodies, escaped operations, other filters,
+malformed arities and durations reject at compilation. The compiler owns syntax;
+the engine owns installation, cost payment, queries and lifecycle.
+
+North Star's one LEG record replaces `AnyColorToCast` with the explicit
+`AnyTypeToPayManaCost` operation. The complete local Oracle record in data/LEG.json
+requires any type for the mana cost and normal additional costs. Its local rulings
+file has an explicit empty array. No other record uses the old operation.
+Evidence: native `TestOneSpellMana` tests and RON `TestRONOneSpellManaGameplay`,
+`Declarations`, `LoadAndInventory` and `Context`. Compilation gain is one name
+and one record; it does not establish complete collection gameplay.
+
+## Optional ante payment by each player
+
+`MayAnteTopEach(players PlayerSet, paid *PlayerSetBinding) ResolvingEffect`
+collects optional library-top ante choices in APNAP order. It reuses the locked
+`AnteTopCost` legality check and `Game.AnteLibraryTops` simultaneous move service.
+All choices finish before any move. Later players receive prior decisions in
+the prompt. The exact proposed top must still be eligible when payment starts.
+Empty libraries, tokens, foreign-owned cards, disabled ante and settled games
+cannot pay. Duplicate or absent candidates cannot contribute. A failed or
+unpaid candidate does not stop other candidates.
+
+`BindPlayerSet` and `FromPlayerSet` provide a typed saved collection over existing
+per-seat number bindings. The producer clears all seats on every invocation,
+then saves successful membership before ante events. Read order is APNAP.
+Definition validation checks declarations and producer dominance. Shared
+resolution frames retain membership for clones, stack copies and delayed reads;
+no game-global last-payment slot is used.
+
+`SetLifeTotalEach(players PlayerSet, total ResolutionValue) ResolvingEffect`
+captures each selected player's delta before replacements. It applies shared
+life-gain/loss permissions and replacements in APNAP order, then all ordinary
+changes, then actual gain/loss events. Equal totals cause no event. Independent
+prohibitions do not cancel another player's change. Replacement outcomes can
+leave a player above or below the requested total (CR 119.5). Integer overflow
+returns an error before replacements or life changes. Ante is a payment; the
+life setting is the subsequent effect, not part of that cost.
+
+RON lowers the exact `AnyPlayer` / bare `AnteTopCardOfLibrary` payment and fixed
+integer `EachPlayerAction(PaidCost, SetLifeTotal(...))` consumer in ordinary
+resolving sequences. Other consumers and replacement/entry contexts reject.
+The latest local producer dominates each read; branches cannot export results.
+Source departure and phasing cannot cancel pending payments or saved players.
+CR 101.4, 118.12, 119.5, 407.4 and 608.2e establish these boundaries. Rebirth's
+complete local Oracle record matches; its local rulings array is explicitly
+empty. No source record changes.
+
+Evidence: `TestOptionalAntePlayersBatch`, `Legality`, `LifeRules`, `Definitions`
+and `TestRONOptionalAntePlayersGameplay`, `Invalid`, `CopiesAndDelay`,
+`InventoryAndAtomicLoad`, `Contexts`. Rebirth adds one complete-card gameplay
+mapping; previously supported cards retain their own mappings.
+
+## Spell targets on granted activations
+
+The RON spell-target grant adapter reuses `GrantActivatedAbility`,
+`GrantEachActivatedAbility` and `ActivatedAbilityModification` with `WithTargets`.
+These services keep the declaration and body in a recipient binding scope.
+CR 113.7a and 113.8 preserve the activated ability and its controller after source
+changes. CR 602.2 uses normal target announcement, cost payment and rollback.
+CR 608.2b rechecks the exact targeted stack object before the body resolves.
+CR 613.1f places the grant in layer 6. Static grants follow live membership;
+resolving grants retain the captured recipient visit.
+
+Native `TestTargetedSpellGrantInstances` checks two recipients, two exact spell
+targets, a vanished target in one pending clone and independent life results.
+Existing `TestStaticGrantedTarget*` covers failed payment, departure, return,
+phasing, partial legality, definition scope, retargeted copies and targeted mana
+classification. `TestRONTargetedSpellGrant*` adds the compiler-to-engine evidence.
+No prospective spell execution or direct-destruction prediction is established.
+
+## Aggregate attack-group defending player
+
+`OneOrMoreCreaturesAttack().WithDefendingPlayer(*PlayerBinding)` and
+`OneOrMoreCreaturesYouControlAttack().WithDefendingPlayer(*PlayerBinding)` save
+the defending player at detection. This engine supports two players, so the
+member is the declaring player's opponent, including attacks on a planeswalker
+or battle. The capture uses the event's declaring player, not the observer's
+controller or the active player at resolution. Nil and repeated binding
+declarations fail definition validation. `WithCount` can share the same pattern.
+
+CR 508.1m, 508.2a, 508.3 and 508.4 distinguish declarations from entering
+attacking. CR 508.5 defines the defending player. CR 603.2c and 603.3a establish
+one trigger per group and its saved controller. Existing declaration events,
+APNAP trigger placement, source lifetimes and resolution frames supply execution.
+No new combat history or global last-event field is needed.
+
+Native `TestAttackGroupDefender*` checks both declaration paths, two attackers
+with one trigger, count and defender captures together, independent pending
+groups, source departure, source control, phasing and ability removal, copied
+abilities, clone isolation and invalid bindings. Existing `TestAttackBatchPattern*`
+and `TestAnyAttackBatch*` retain empty declaration, entering attacking and
+controller-filter coverage. RON evidence is in `TestRONAttackGroup*`.
+
+
+## Named permanent partitions (2026-10-16)
+
+`NamedPermanentPile{Name string, Result *PermanentSetBinding}` declares one
+named output. `SeparatePermanentsIntoNamedPiles(player PlayerRef,
+subjects PermanentSet, piles ...NamedPermanentPile) ResolvingEffect` snapshots
+present, unphased battlefield visits before decisions. It reads inputs before
+clearing old results, so a saved pile can be partitioned again. Each distinct
+visit receives one required `ChooseMode` decision from the specified player.
+Later decisions display the previous assignments. An invalid decision index
+uses the first pile, as a required choice cannot be declined.
+
+At least two distinct, nonempty names and distinct non-nil result bindings are
+required. Definition validation checks these declarations and binding dominance.
+Piles can be empty. Assignment changes no zone, control, combat status or event.
+There is no payment or replacement operation. CR 700.3a–d establishes pile
+membership and empty piles; CR 608.2c–d establishes resolution choices and order.
+CR 400.7 and 702.26 govern saved visits and phasing.
+
+`FromPermanentSet` reads surviving, unphased members. New objects cannot join a
+saved pile. A phase cycle retains membership. Departed objects supply no LKI to
+this present-object set. Shared binding frames preserve independent results for
+repeated resolutions, delays and clones. No new global game state is needed.
+
+Evidence: `TestNamedPermanentPartition`, `SnapshotAndInvalidChoice`,
+`Repartition`, `ResolutionFrames` and `Definition`. RON evidence is in
+`TestRONNamedPermanentPartition*`. Raging River's two WotC rulings also require
+future blocking rules to capture resolution-time membership. This service does
+not establish those blocking rules or complete-card gameplay.
+
+
+## Named permanent pile selection (2026-10-16)
+
+`ChooseNamedPermanentPile(player PlayerRef, subject PermanentRef,
+result *PermanentSetBinding, piles ...NamedPermanentPile) ResolvingEffect`
+requires a resolution-time choice among at least two distinct, nonempty pile
+names. Each input binding must have a preceding producer. Inputs must be
+non-nil and distinct. The output must be non-nil and separate from all inputs.
+Definition validation checks these contracts and binding dominance.
+
+The action saves every input's exact battlefield visits before clearing its
+output or asking the player. The subject supplies a public choice label; it
+must be present and unphased. A missing subject or player leaves an empty
+result and makes no decision. The choice prompt shows each pile’s present,
+unphased members. The named player uses `ChooseMode`; invalid
+indices select the first option. Empty piles remain valid options. A callback
+cannot change the saved inputs. The action moves no objects and creates no
+payment, replacement operation, targeting restriction, or simultaneous move.
+
+The output retains pile visits, including temporarily phased members.
+`FromPermanentSet` reads only present unphased members. A phase cycle preserves
+membership; leave-and-return does not. The output does not need source or
+subject LKI. Ordinary binding frames supply clone isolation, independent
+resolutions and delayed capture. The existing permanent loop isolates each
+iteration. There is no global last-result field.
+
+CR 608.2c–d governs choice timing and instruction order. CR 700.3a–d governs
+piles and empty choices. CR 400.7 and 702.26b–d govern visit identity and
+phasing. These rules do not establish a retained blocking restriction.
+Raging River's two WotC rulings remain requirements for that next contract:
+later attackers are unrestricted, while later creatures and newly animated
+objects cannot block captured attackers.
+
+Evidence: `TestNamedPileSelection` covers both choices, invalid indices,
+identity, phasing, absent subjects and clones; `EmptyAndSnapshot` covers empty
+choices and callback isolation; `Definition` checks declarations and dominance;
+`ResolutionFrames` uses real partition producers and independent delayed
+results. `TestRONNamedPileSelection*` supplies scoped compiler and gameplay
+projections. Complete Raging River remains unsupported.
+
+## Retained blocker eligibility (2026-10-16)
+
+`RetainBlockerEligibility(duration core.Duration, subject PermanentRef,
+eligible PermanentSet, allowed RetainedBlockerFilter) ResolvingEffect` captures
+one subject visit and an eligible set at resolution. A blocker must be in that
+saved set and pass `allowed`. Supported durations are `EndOfCombat` and
+`EndOfTurn`. Unavailable, phased or returned subjects produce no restriction.
+Declaration validation rejects missing references, sets, conditions, unsupported
+durations and undominated set/target reads before execution.
+
+`CurrentBlockers(PermanentFilter)` reads current properties during each legality
+query. `SavedBlockers(PermanentSet)` captures exact unphased visits at installation.
+`AllRetainedBlockers(...RetainedBlockerFilter)` and
+`AnyRetainedBlockers(...RetainedBlockerFilter)` require nonempty operands.
+The zero `RetainedBlockerFilter` is invalid. Saved membership has no live frame
+or game pointer. Later binding writes, entries and new incarnations cannot
+change it. Phase cycles retain saved membership. A current flying condition
+can permit an existing creature that gains flying, but cannot admit a later
+entry outside the eligible set.
+
+Installation delegates to `Until(duration, CantBeBlockedExceptBy(subject,
+filter))`. Shared declaration legality intersects restrictions and other evasion
+rules (CR 509.1a–b). Legal blocks remain blocks after characteristics change.
+Source departure, phasing and ability removal do not end the restriction.
+The shared duration service retains it through end-combat triggers and priority,
+then removes it before a later combat (CR 611.2a). Clones share only immutable
+captured membership and predicates; they read their own current characteristics
+and expire separately. CR 400.7 and 702.26b–d supply visit and phasing rules.
+No costs, replacements, moves or simultaneous actions are introduced.
+
+Raging River's two local WotC rulings require a resolution-time creature set:
+later creatures, including later flyers and newly animated permanents, cannot
+block the affected attackers. Later attacking entrants have no installed rule.
+The RON adapter captures all current creature visits without freezing control
+or flying; normal combat legality determines the defending player's blockers.
+Nonflying creatures in the saved chosen pile and current flyers within the
+eligible set pass its predicate. The complete source records stay unchanged.
+
+Engine evidence: `TestRetainedBlockerEligibility`, `Definition`, `Lifecycle`
+and `UnavailableSubject`. These cover binding overwrite, live flying changes,
+clone isolation, saved visits, invalid definitions, phase cycles, returned
+subjects and blockers, source departure and native end-combat priority/expiry.
+RON evidence: `TestRONRetainedBlockerEligibility/<set>` for LEA, LEB, 2ED,
+CED and CEI covers complete paid casting, grouped attacks, choices, actual
+legal/illegal block declarations, both rulings and native expiry.
+`Invalid`, `Scope`, `Instances` and `DelayedFrames` add declaration rejection,
+independent source/loop bindings, ability removal and delayed clone frames.
+
+## Optional turn replacement with a saved untap
+
+`MaySkipYourTurnToUntap(subject PermanentRef, condition StateCondition) StaticRule`
+uses `Static` and requires `This` or `AttachedPermanent` and a valid condition.
+Definition validation rejects absent references, absent conditions and target
+bindings. The source must be on the battlefield. The current controller gets
+the choice only while the source has the rule and its condition is true.
+Phasing, departure and ability removal stop new replacement offers.
+
+`Game.TryBeginTurn() bool` runs the shared replacement pipeline before turn
+start actions. Native `RunTurn`, interactive single- and multiplayer loops,
+scenario/CLI loops, and the test harness call it. A false result
+means that the driver must advance past the turn. Repeated calls for the same
+turn and player return the saved result without another choice. Direct
+`RunStepWithPriority` remains a step runner for a turn already accepted by its
+driver. `BeginActiveTurn` keeps its lifecycle role, marks the turn as started, and does
+not offer choices. A later start request cannot replace an already started turn.
+
+Pending `SkipNextTurnFor` entries enter the same pipeline as optional rules.
+The affected player chooses their order (CR 616.1). Declining one optional rule
+allows the remaining rules to apply, once each. An accepted skip ends the event;
+other rules do not apply and other scheduled skips remain pending (CR 614.10a).
+Skipped turns do not run steps, clear sickness, consume untap restrictions or
+execute pending untaps. Extra turns use the existing LIFO schedule (CR 500.7).
+
+An accepted optional skip saves the subject's exact battlefield visit in
+`TurnSystem`. After the next turn survives its own replacements, normal
+beginning-of-turn lifecycle work and history capture run, then saved untaps
+execute in the first actual step before its actions (CR 614.10b). The step
+runner checks step replacements and sets the current step before those untaps.
+Skipped steps retain the queue, and untap triggers see the current step rather
+than the previous turn's step. Intermediate skipped turns keep
+these continuations. Each uses `Game.UntapPermanent`, including stun counters
+and untap events; triggers wait for ordinary priority. Departure and return
+cannot transfer the saved action. A phased-out subject is absent when it would
+untap; a completed phase cycle keeps its visit. Source ability removal or
+control changes after acceptance do not cancel the saved action. Turn-system
+cloning copies pending visits and the attempted-turn result independently.
+
+Evidence: `TestTurnBeginReplacement*`, `TestTurnBeginReplacementHarness` and
+`TestRONTurnBeginReplacement*`. Complete Time Vault records in LEA, LEB, 2ED,
+CED and CEI cover paid casting, tapped entry, ordinary untap prohibition,
+optional turn replacement, tap activation, extra-turn resolution and cloning.
+The copied-activation case proves that multiple extra turns create no skip debt.
+
+
+## Outside-game card entry into hand
+
+`Game.SetOutsideGameCards(player uuid.UUID, cards []Card) error` supplies the
+owned traditional cards available under the match or casual game's policy.
+The caller supplies a permitted sideboard or casual collection. This service
+creates no game zone and does not infer eligibility from the registry or exile.
+Setup rejects nil cards, tokens, unknown owners, foreign cards, duplicate IDs
+and cards already in the game, including phased permanents. Invalid setup leaves
+the old pool intact. Setup takes card copies and gives each membership a fresh
+identity. `Game.OutsideGameCards(player)` returns separate snapshots. The pool
+is private input, not part of GameReader's public information.
+
+`PutOutsideGameCardInHand(player PlayerRef, filter CardFilter) ResolvingEffect`
+makes one required choice among matching owned cards at resolution. A zero
+filter matches all cards. `Player.ChooseCardFromOutsideGame` supplies the choice;
+nil or an unknown ID selects the first candidate. Only the saved candidate's
+card can enter. An answer cannot substitute its own characteristics or owner.
+The service rechecks membership, ownership, the filter, current absence from
+game zones and CR 407.3 ante restrictions after choices and replacements.
+Replacing the pool invalidates a pending choice even when the same card returns.
+An empty eligible pool does nothing and offers no choice.
+
+`OutsideGameEntryAction` supplies `ActionSource`, `PlayerID` and `CardID` to the
+shared replacement pipeline. The affected player chooses replacement order.
+Cancellation leaves the card outside. A completed entry removes pool membership
+before adding the card to its owner's hand and firing EvtZoneChange. That event
+uses ZoneAny for the absent origin; no card is stored in ZoneAny. No draw event,
+draw count, last-drawn result, reveal or RNG consumption is added. Clones copy
+pool membership and cards separately. Human, AI and search players implement the
+choice. Native TUI and pylib expose the distinct outside-game choice kind.
+Pylib decision anchors and decoded choices retain card IDs. Its dense numeric
+encoding reuses the library-choice category to preserve the existing schema.
+
+RON supports exactly `PutACardFromOutsideGameInHand(AnyCard)` in resolving action
+bodies, including PlayerAction and future draw replacement bodies. The lexical
+player selects and receives the card. Invalid arity, callable AnyCard, other
+filters and entry/static/cost contexts reject at compilation. The argument's
+inventory role is card_filter. Other RON outside-game filters remain unsupported.
+
+Complete ARN Ring of Ma'rûf reuses mana, tap, exile payment and
+ReplaceNextDrawThisTurn. Its body runs for the saved controller's next draw this
+turn, even after the Ring leaves. Empty pools still replace the draw, including
+an empty-library draw. Unchosen competing draw replacements remain available.
+The pool is read when the replacement runs, not at installation. This establishes
+CR 108.2b, 108.3/3b, 108.5, 400.11, 407.3 and 614.5/6/11. Subgames and format
+setup remain separate capabilities; this API does not implement a subgame.
+
+Evidence: TestOutsideGameEntry, Eligibility, EntryRechecks, EntryDefinition,
+DrawReplacementCompetition, EntryReplacement, AnteAndExplicitPlayer;
+TestRONOutsideGameRing, RingExpiryAndEmpty, Invalid, Inventory,
+ExplicitPlayerAndPendingClone; TestOutsideGameHumanChoice; TestOutsideGameNativeDecision.
+
+
+## Activation mana receipts and hand eligibility
+
+`BindActivationMana(name string) *ActivationManaBinding` declares one ability's
+payment result. `WithActivationManaReceipt(binding) ActionOption` saves the
+committed total mana payment. `WithActivationManaXReceipt(binding) ActionOption`
+saves the X component of one pure `{X}` cost on a nonmodal nonmana activation.
+Fixed requirements receive mana first. Taxes are excluded from the X receipt;
+generic reductions reduce actual payment. Both receipts save actual types,
+including colorless, rather than the types a spending permission can satisfy.
+Failed payments publish no stack result. Shared transactions retain rollback.
+
+`ChooseHandCardWithActivationManaOrElse(player PlayerRef, filter CardFilter,
+receipt *ActivationManaBinding, result *CardBinding, chosen, notChosen
+ResolvingEffect) ResolvingEffect` applies the receipt to a private hand choice.
+A card must have a mana cost payable with a subset of that receipt. Generic and
+hybrid costs use the shared mana payment allocator; hand-card X is zero (CR 107.3g).
+An absent mana cost rejects; a printed zero cost can match an empty receipt
+(CR 118.6). Current pools, spending permissions, cost reductions and last-drained
+state do not change this test. Candidate and canonical-response checks both use
+the same receipt. The existing hand-choice service retains exact visits,
+private candidate copies, branch scope and result restoration.
+
+Each factory creates a fresh binding. Each activation stores its own immutable
+amounts through existing captured number bindings. Ability copies retain the
+original payment and use their own controller's hand. Clones retain separate
+captured maps. Source departure, return, control and phasing do not replace
+payment facts (CR 602.2b, 601.2h, 707.10). Definition checks reject missing,
+duplicate, shared, uninitialized and out-of-scope declarations, spell actions,
+modal actions, mana abilities and non-pure-X declarations for X receipts.
+
+RON accepts the symbol `ManaCostIsSubsetOfManaPaidForThisAbility` alone or as a
+conjunct in `ChooseACardInHand`, under `MayCost` or `PlayerMayCost`. Its immediate
+nonmodal nonmana activation must have the exact cost
+`PayManaX([ManaCostX], ValueX)`. `And` can nest supported static hand filters.
+`Or` containing the receipt predicate, tuple-form predicates, fixed or composite
+payment declarations, spell/entry/delayed contexts and escaped choice results
+reject at compilation. The paid continuation retains existing `If`, `Unless`
+and `IfElse` rules. RON owns syntax and scope; the engine owns payment,
+eligibility and choice mechanics.
+
+Evidence: `TestActivationManaReceipt*` covers actual type receipts, generic and
+hybrid costs, X, absent/zero costs, source departure, independent payments,
+controller-changing copies, cloned pending resolution, zero/failed payment,
+automatic mana production, spending permissions, taxes, reductions and invalid
+definitions. `TestRONActivationManaReceipt*` covers lowering, invalid syntax and
+contexts, plus all five Illusionary Mask records. The Mask test replaces only
+the unsupported face-down continuation with a labelled observation. It proves
+payment and selection prerequisites, not complete Mask gameplay. All five full
+records still reject at `CastCardInHandWithoutPayingAsAFacedownCreatureSpell`.
+
+## Face-down hand casting (2026-10-16)
+
+`CastHandCardFaceDownWithoutPaying(player PlayerRef, card CardRef)` is a resolving
+instruction. Its card reader must have a producer on every path. Nil operands
+and unbound saved cards fail definition validation. An absent/stale hand visit
+performs no cast. The selected player must hold the nontoken card. The choice filter owns any
+restriction on its face-up types.
+The instruction supplies casting permission during resolution, without a new
+priority window or the printed mana payment.
+
+The shared casting restrictions and total-cost transaction see a nameless,
+colorless 2/2 creature with no mana cost, abilities, targets or printed additional
+costs (CR 708.2–4, 601.2e–h). External costs still apply. Failed preparation
+preserves the hand, mana and stack. An impossible resolving cast does nothing;
+later independent instructions continue. A successful cast has a distinct stack ID,
+X zero and the shared cast event/history. It remains counterable. Entry uses the
+shared replacement pipeline with face-down status already set; printed entry
+rules do not apply. Later grants, layers and summoning sickness still apply.
+
+`StackObject.IsFaceDown()` exposes status. `Game.InspectFaceDownObject(viewer,
+id)` returns an independent printed-card copy only to the current controller.
+Spells require the exact stack ID; permanents use their battlefield ID, including
+phased permanents (CR 708.5–6). Departures reveal and restore the physical card.
+`PublicReveals` includes remaining face-down cards when the game is over, without
+mutating state. Copies of spells keep the visible values, without copying status
+or the private physical card (CR 707.2, 707.10f). Copying a permanent preserves
+its face-down status, its later face-up values and physical departure identity
+(CR 708.10). Game clones retain separate movement and reveal state. Ownership changes keep
+the current physical ID and owner on inspection, reveal and departure. The shared
+departure reader corrects retained definition copies without changing them.
+
+`TestFaceDownCast`, `Legality`, `Layers`, `Definition` and `PermanentCopy` cover
+entry suppression, zero mana value, private inspection, counter/bounce/exile,
+return, phasing, copies, clone isolation, game end, named versus creature casting
+prohibitions, external tax payment/failure, declaration validation, continuous
+grants and expiry, summoning sickness, and face-up restoration without entry. `TestFaceDownCastStackDeparture` covers
+direct spell exile, counter-to-exile and ante. `TestFaceDownCastOwnership` checks
+spell and permanent ownership changes on clones. `FailureContinues` checks that
+a prohibited cast preserves the chosen hand card and does not stop a later action.
+`TestRONFaceDownCast` maps all five Illusionary Mask records to their real
+payment, eligible choice and cast instruction. It omits the unsupported
+replacement in a test projection only. Complete Mask gameplay remains unproved.
+Its special face-up replacements and spell-to-permanent result reference need
+subsequent contracts. The separate optional cast uses the contract above.
+
+## Direct destruction declaration contract (2026-10-16)
+
+`InspectDirectDestruction(ResolvingEffect) ([]DirectDestructionInstruction, bool)`
+establishes structural inspection only. It preserves the singular permanent
+reference or simultaneous permanent set, instruction order and prohibition on
+regeneration. The closed supported tree contains the four typed destruction
+constructors without result options, nested `Sequence` and `CompositeEffects`,
+and empty sequences. It does not flatten a destruction group into separate
+instructions. Unsupported descendants, result writes and malformed nil operands
+produce `nil, false` for the entire tree. Unknown does not mean no destruction.
+
+Inspection needs no game and calls no effect methods or operand callbacks.
+Returned descriptors contain declaration identity, without chosen state or LKI.
+They do not assert that any permanent will be destroyed. CR 608.2b still checks
+current target legality, CR 608.2c preserves execution order, and CR 608.2f
+keeps a destruction group simultaneous. CR 701.8, 614.6–8 and 702.12 still
+govern actual destruction, replacement, regeneration and indestructibility.
+Shared engine services retain all of this execution behavior. Definition
+validation remains required before execution; inspection is not a validator.
+
+Equinox's local WotC rulings require direct, certain destruction at the time
+its ability resolves. Damage, sacrifice, random outcomes and optional choices
+cannot establish that outcome. This inspection does not evaluate that predicate
+and does not enable Equinox's RON query. A later analyzer must use current
+legality and replacement contracts without choices, callbacks with side effects,
+RNG consumption or speculative live resolution.
+
+`TestDirectDestruction*` establishes ordered complete descriptors, fresh output
+values, typed target/set identity, no callbacks and explicit unsupported trees.
+`TestRONDirectDestruction*` maps six unique names and all 34 corresponding
+records to inspection plus native gameplay, including replacement by
+regeneration, its prohibition, indestructibility, phased targets, returned
+incarnations, independent factory declarations and clone isolation. These tests
+add analysis evidence for accepted records; they unlock no new full cards.
+
+## Pure permanent card-type predicates (2026-10-16)
+
+`HasCardTypeFilter(core.CardType) PermanentFilter` retains a typed predicate
+while normal `Match` uses the permanent's current `HasType` service.
+`InspectPermanentCardTypeFilter(PermanentFilter) (PermanentCardTypePredicate,
+bool)` accepts these leaves, the native creature/artifact/enchantment/land/
+planeswalker filters, `AnyPermanent`, the zero filter, and complete `Not`,
+`And` and `Or` trees. An opaque descendant rejects the whole tree, even below
+a Boolean branch whose result is already known. Labels never establish support.
+Empty conjunctions match; empty disjunctions do not. Boolean constructors copy
+the input filter slice so runtime behavior and the immutable plan stay aligned.
+
+`PermanentCardTypePredicate.Matches(...core.CardType) bool` evaluates a supplied
+set without filter callbacks, game reads, effects, choices or RNG. Its zero
+value matches all sets. The caller must check the inspection success flag and
+supply the types at the required time, after applicable continuous effects
+(CR 205.1, 205.2b, 613.1d). Multiple types are independent memberships; an empty
+set satisfies negative predicates. The plan stores no object or game state.
+It cannot select a target, establish incarnation identity or phasing presence,
+obtain LKI, determine replacement outcomes or predict destruction. Those remain
+separate contracts; no live or cloned game is executed to answer this query.
+
+RON `IsCardtype(type)` and `IsNonCardtype(type)` retain these typed leaves through
+`ron.IsCardtype`; `And([filters])`, `Or([filters])` and `AnyPermanent` preserve
+them in all existing `compileFilter` contexts. Arity and card-type validation
+remain in RON. Other supported runtime filters can still execute normally;
+this narrower pure inspection reports them as unsupported. Equinox's complete
+`WouldDestroyAPermanent` query remains a compile error.
+
+Evidence: `TestPermanentCardTypePredicate*` checks every subset of all seven
+engine card types against normal runtime matching, opaque and known callback
+traps, immutable composition, current layered and face-down types, phasing and
+clones. Phasing does not change type membership; presence belongs to selection.
+`TestRONPermanentCardTypePredicate` checks lowering and invalid declarations.
+`TestRONPermanentCardTypePredicateGameplay` casts all 34 complete records for
+Stone Rain, Ice Storm, Sinkhole, Shatter, Armageddon and Wrath of God and resolves
+independent game clones. Existing `TestRONDirectDestruction*` retains legality,
+return identity and regeneration evidence. This prerequisite unlocks no new
+complete card and introduces no payment or replacement operation.
+
+## Pure current permanent collections (2026-10-16)
+
+`mage.InspectPermanentCollection(mage.PermanentSet)
+(mage.PermanentCollectionPredicate, bool)` accepts type-only
+`MatchingPermanents` leaves and nonempty `UnionPermanents` /
+`IntersectPermanents` trees. Leaves use the complete typed filter contract above.
+Unknown children, nil sets, empty compositions and controller-dependent sets
+reject the whole query. Inspection runs no collection or filter callback,
+including on branches whose Boolean result is already known.
+
+`PermanentCollectionPredicate.Select(*mage.Game) []mage.PermanentVisit` reads
+current battlefield members in battlefield order, once each. `PermanentVisit`
+has `ID` and `Incarnation` UUID fields. It returns separate value snapshots,
+without permanent pointers or saved binding writes. Returned objects have new
+visits; phasing removes presence without changing identity. Current types use
+shared `Permanent.HasType`, including completed layers and face-down state.
+The caller must supply a game with current layers. The query does not update
+layers, execute effects, use departure LKI, make choices or consume RNG.
+A nil game or zero/failed plan supplies no members.
+
+RON direct destruction collections use `compileDestructionCollection`.
+It first validates the complete contextual collection, then retains pure
+`And`/`Or` type predicates as matching declarations. This preserves rejection
+of nested empty collection operands. Other valid contextual collections keep
+their existing runtime service and remain unknown to this pure query.
+No new spelling or broader declaration context is accepted.
+
+CR 608.2h supplies current information; CR 613.1d supplies current types;
+CR 702.26b,d excludes phased objects without a zone change. Selection supplies
+one simultaneous group, not separate destruction instructions (CR 608.2f).
+It does not check target legality, protection, indestructibility, regeneration,
+replacement certainty or sequential future states. In particular, a selected
+member need not be destroyed. Equinox's prospective query remains unsupported.
+
+`TestPermanentCollectionQuery*` compares native and pure membership, ordered
+visits, overlapping sets, current layered/face-down types, phasing, returns,
+clones, callback traps, opaque descendants and independent results.
+`TestRONPermanentCollectionQuery*` covers lowering, invalid declarations and
+all 18 complete records for Armageddon, Wrath of God and Nevinyrral's Disk.
+Gameplay includes source membership, paid activation, entry tapped, phasing
+and independent pending clones. Existing direct-destruction tests retain
+regeneration, prohibition, indestructibility and target legality evidence.
+Compilation gains are zero; collection inspection is a shared prerequisite.
+
+## Pure current permanent target queries (2026-10-16)
+
+`mage.InspectPermanentTarget(mage.PermanentRef)
+(mage.PermanentTargetPredicate, bool)` inspects singular `PermanentTargetBinding`
+declarations with complete type-only filters. It retains the exact declaration,
+not its name or any choices. Unknown filters, subtype, control, ownership,
+chooser, count and contextual restrictions reject the whole inspection.
+No target filter callback runs. Boolean type predicates retain their full tree.
+
+`PermanentTargetPredicate.Select(*mage.Game, *mage.StackObject)
+([]mage.PermanentVisit, bool)` reads one exact announced battlefield visit.
+The Boolean result distinguishes an unsupported query from a known illegal
+target. Missing declarations, ambiguous occurrences, unaligned specification
+lists or missing announcement snapshots return unknown. A departed, returned,
+phased or type-incompatible object supplies no legal visit. Phasing back in
+restores the same visit. Results have separate storage. Current layers are a
+precondition; selection never applies layers, effects, replacements or choices.
+
+The query uses `resolutionTargetSource` for spell colors and exact ability
+source information, including current, phase and departure LKI. The native
+`CanBeTargetedBy` method and the query share
+`canBeTargetedByCharacteristics`: shroud, hexproof, color protection and fixed
+attribute restrictions keep their existing rules. Indestructibility and
+regeneration do not make targets illegal. Color protection uses the native
+source color view and Aura exemption identity. Arbitrary noncolor protection
+filters return unknown. Aura sources return unknown. Typed unconditional global restrictions now use the bounded inspection contract
+below. Opaque predicates and relevant conditional rules still return unknown.
+The query does not invoke unrelated continuous effect callbacks. Native resolution keeps its complete existing rule service.
+
+RON `compileInspectableTargetFilter` lowers `AnyPermanent`, `IsCardtype(type)`,
+`IsNonCardtype(type)` and nonempty `And`/`Or` trees in permanent target filters.
+It preserves typed predicates without unnecessary subtype-domain metadata.
+Other declarations keep the existing adapters and native execution. Invalid
+arities, unknown types, empty target Boolean lists and unbound references
+remain compilation errors. There is no new spelling or accepted card name.
+
+CR 608.2b establishes current legality, exact target visits and source LKI;
+702.11b, 702.16b and 702.18a establish hexproof, protection and shroud;
+702.26b–d establishes phased absence without a new visit. This is a bounded
+legality service, not a prediction of replacement or destruction outcomes.
+Equinox still needs broader legality, replacement certainty and sequential
+state analysis before its prospective query can compile.
+
+`TestPermanentTargetQuery*` covers current types, presence, phasing, return,
+shroud, hexproof, color protection, source colors/LKI, copies, separate groups,
+clones, immutable results, opaque callbacks and unknown contexts.
+`TestRONPermanentTargetQuery*` covers syntax, lexical/factory identity, copied
+bindings and all 22 complete Stone Rain, Ice Storm, Sinkhole and Shatter records.
+Gameplay compares query membership with native resolution for legal targets,
+shroud, color protection, phasing and leave-and-return. No new complete card
+is unlocked. There is no payment, replacement or simultaneous-operation change.
+
+
+## Pure unconditional global target restrictions (2026-10-16)
+
+`PermanentTargetPredicate.Select` inspects native `CantBeTargetedBySpells`
+and `CantBeTargetedByAbilities` rules with `This` or `AttachedPermanent` subjects.
+It uses the native printed-ability activity check after it establishes that the
+inner rule has no custom activity callback. Exact source visits, current ability
+presence, phasing and suppression control activity. Attachment reads use the
+current exact host visit. Source control changes do not remove a restriction.
+Layers must be current. Inspection does not apply effects or make choices.
+
+`AnyCardFilter() CardFilter`, `HasCardTypeCardFilter(core.CardType) CardFilter`,
+`HasColorCardFilter(core.Color) CardFilter` and
+`HasSubTypeCardFilter(string) CardFilter` retain immutable characteristic trees.
+`AndCardFilter(...CardFilter) CardFilter` and `OrCardFilter(...CardFilter)
+CardFilter` retain complete Boolean trees only when every child is inspectable.
+Both copy the supplied filter list. Native execution still uses `Match`.
+Pure inspection reads the retained tree without calling filter callbacks.
+Arbitrary `NewCardFilter` predicates have no inspectable tree. Labels are never
+used as evidence. A zero filter in a Boolean tree keeps its native true meaning;
+an empty conjunction is true and an empty disjunction is false. RON still rejects
+empty Boolean declarations.
+
+RON spell filters retain trees for `AnySpell`, `IsCardtype`, `IsColor`,
+`IsEnchantmentType(Aura)` and their nonempty `And`/`Or` forms. Static ability
+filters retain trees for `AbilityOfASource` containing type/color and Boolean
+forms. There is no new spelling or accepted context. Invalid declarations still
+fail compilation. Source characteristics use the shared resolution source view:
+current layers, stack color overrides, exact departure/phase information and
+copies. A returned source cannot replace an earlier source's information.
+
+A known inactive rule or disjoint known subject cannot restrict the target.
+A nonmatching typed source filter also cannot restrict it. A relevant opaque
+filter, unknown subject or custom activity predicate returns unknown. A
+conditional spell restriction returns unknown when its subject and source filter
+match; its condition is never called. `CanTargetOnly` remains opaque. Noncolor
+protection and Aura targeting sources retain their previous unknown boundaries.
+This does not predict destruction or run replacements, payments or simulation.
+
+CR 608.2b establishes resolution legality and source LKI. CR 611.3b and
+702.26b–d establish live static activity and phased absence. Engine tests
+`TestGlobalTargetQuery*` compare native legality/resolution, exact visits,
+attachments, removal, control, source LKI, copies, clones and callback traps.
+`TestRONGlobalTargetQuery*` covers typed lowering, invalid declarations and
+complete Artifact Ward, Anti-Magic Aura, Bartel Runeaxe, Tetsuo Umezawa and
+Raiding Party records. These are restriction-interaction tests; existing tests
+remain the evidence for each card's other rules. Compilation gains are zero.
+
+
+## Pure turn-history conditional target restrictions (2026-10-16)
+
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+now inspects conditional spell restrictions whose complete condition consists of
+`IsYourTurn()`, `SourceAttackedThisTurnCondition()`,
+`SourceAttackedOrBlockedThisTurnCondition()`, and nonempty `AllConditions`,
+`AnyCondition` or one-child `NotCondition` trees. The private
+`inspectableTargetCondition(StateCondition) bool` checks every child before the
+native condition service reads state. An opaque child remains unknown even in a
+Boolean branch whose result is already determined. Nil, malformed and empty
+trees remain unknown. Inspection never calls an opaque callback.
+
+A false known condition cannot prohibit the target. A true known condition
+prohibits it only when the existing active-source, subject and typed source-filter
+checks also match. Other restriction conditions remain unknown when relevant.
+Turn conditions read the rule source's current controller. History conditions
+read the rule source's exact current incarnation, even when its subject is an
+Aura host. They do not read the targeted permanent's history. New turns reset
+history; control changes retain it; a phase cycle retains the visit and history;
+leave-and-return starts a different visit. Ability removal and phased or departed
+rule sources use the existing activity service. Layers must be current.
+
+RON `compileSourceTurnHistoryCondition(Node) (mage.StateCondition, bool, error)`
+retains the existing exact `PermanentPassesFilter(ThisPermanent,
+Or([AttackedThisTurn, BlockedThisTurn]))` shape, with either operand order.
+`Unless` retains native `NotCondition`; no predicate callback replaces the typed
+history declaration. Each operand must be a bare symbol and both must occur once.
+Malformed lists, arities, operands and unbound references fail compilation.
+This extracts the existing lowering boundary; it adds no RON spelling or broader
+history context. `IsPlayersTurn(You)` continues to lower to `IsYourTurn()`.
+
+CR 608.2b, 611.3a–b and 702.26b/d establish current legality, live static
+activity and history across phasing. This read-only query changes no costs,
+replacement ordering, simultaneous operations or destruction outcomes.
+Noncolor protection, declaration-based source restrictions, other conditional
+predicates, Aura targeting sources and prospective destruction remain separate
+gaps. No Go card fallback or production registry changes.
+
+Evidence: `TestConditionalTargetQueryHistory`, `Boolean`, `Opaque` and
+`CloneIsolation` compare native legality, both turn states, attack/block history,
+reset, exact source/host visits, phase cycles, control, ability removal, copies,
+clone isolation and callback traps. `TestRONConditionalTargetQueryGameplay`
+executes the complete DRK Lurker and LEA Stone Rain, Ice Storm, Sinkhole and
+Shatter records in ten states each, including actual attack/block declarations,
+restored restrictions at resolution and rejected announcement without payment.
+`TestRONConditionalTargetQueryInvalid` checks malformed declarations. These are
+interaction tests for five names/five records; they do not establish collection
+completion or new full-card compilation coverage.
+
+
+## Pure target-declaration restriction queries (2026-10-16)
+
+`CanTargetOnlySubtypeFilter(string) CardFilter` now retains a typed declaration
+predicate. `PermanentTargetPredicate.Select(*Game, *StackObject)
+([]PermanentVisit, bool)` can inspect that predicate in live static spell and
+ability target restrictions, including complete `AndCardFilter` and
+`OrCardFilter` trees mixed with typed source characteristics. Opaque children
+reject the complete tree, including branches with an already determined result.
+Labels do not establish support. No filter callback runs.
+
+Evaluation uses `TargetSourceCanTargetOnlySubtype(Card, string) bool` and
+`TargetRequiresSubtype(Target, string) bool`. It reads complete retained target
+groups, including groups with zero chosen occurrences. Empty, unknown, broad,
+contradictory and mixed domains supply no subtype proof. Chosen target identity,
+current battlefield membership and a second ability on the same source cannot
+supply proof. Native source information retains spell/ability declarations
+through departure, phasing, control, copies and clones. Current layers remain
+a precondition. Static activity and exact host/source visits use existing query
+services. This adds no choices, costs, events, zone moves or replacement work.
+
+RON `compileTargetOnlySubtypeFilter(Node) (mage.CardFilter, error)` validates the
+complete `CanTargetOnly(IsCreatureType(symbol))` envelope and lowers it to the
+typed native filter. Static `CantBeTheTargetOfSpells` and
+`CantBeTheTargetOfAbilities` use this adapter for source and Aura-host subjects.
+Characteristic-only spell contexts continue to reject the declaration predicate.
+Malformed wrappers, arities, literals and subtype constructors reject. There is
+no new RON spelling, source change or accepted card name.
+
+CR 115.1 and 115.6 distinguish declarations from chosen target occurrences;
+608.2b requires current legality and source LKI; 611.3 and 702.26 govern static
+activity and phasing. This slice preserves the existing native selected-mode
+contract. The local Wall of Shadows WotC ruling dated 2004-10-04 instead allows
+a modal spell with a non-Wall mode even when its chosen mode targets only Walls.
+That pre-existing native/ruling discrepancy is unresolved; these nonmodal
+interaction tests do not establish that card's complete Oracle fidelity.
+No RON source defect is established or corrected. A separate native modal
+contract repair must resolve this discrepancy before complete gameplay signoff.
+
+Evidence: `TestDeclarationTargetQuery`, `NoCallbacks` and `Filters` cover spell
+and ability declarations, empty/mixed/zero groups, Boolean composition, callback
+traps, native agreement, RNG/stack preservation and clones. The stack fixtures
+isolate source declarations from the query's type-only target declaration;
+they are inspection contracts rather than legal casting scenarios.
+`TestRONDeclarationTargetQueryGameplay` executes complete LEG Wall of Shadows
+and LEA Stone Rain, Ice Storm, Sinkhole and Shatter records in six states each.
+A native type layer makes the Wall a land or artifact. `AbilityGameplay` executes
+six additional broad-target RON ability scenarios with the complete Wall record,
+including source departure/return/phasing/control and copied controller.
+`Invalid` rejects malformed declaration syntax. Existing
+`TestRONTargetOnlySubtype*` remains a native execution regression set, including
+announcement rollback and resolution rechecks. New evidence covers five names /
+five records and does not claim complete card coverage. Noncolor protection,
+replacement certainty and sequential destruction remain separate gaps.
+
+
+## Pure noncolor protection target queries (2026-10-16)
+
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+recognizes native protection from card types, subtypes and everything. The
+constructors `ProtectionFromCardType`, `ProtectionFromSubType` and
+`ProtectionFromAll` retain typed characteristic predicates. `BlocksInGame` reads
+these predicates without callbacks; native opaque filters keep their existing
+execution behavior. The pure query rejects opaque protection, including complete
+Boolean trees with an opaque child. Filter labels cannot establish support.
+
+Protection uses `resolutionTargetSource`: current layered types and subtypes for
+live ability sources, the exact previous incarnation's LKI after departure, and
+shared phase information for phased sources. Returned objects cannot supply the
+old source's characteristics. Stack copies and game clones retain that identity.
+Face-down sources supply their visible characteristics. Face-down targets keep
+the native protection suppression rule. Granted abilities are unwrapped and the
+exact `ExemptCardID` exception is preserved. Layers must already be current.
+
+RON's type-only target adapter directly lowers `AnyPermanent`,
+`IsCardtype(symbol)`, `IsNonCardtype(symbol)`, and nonempty recursive `And`/`Or`
+lists to typed engine predicates. It validates symbols and argument shapes before
+building declarations. No new protection spelling is introduced. Complete Stone
+Rain, Ice Storm, Sinkhole and Shatter records exercise the lowering and native
+resolution with synthetic noncolor protection. Synthetic RON activations exercise
+source departure, return, phasing, copying and face-down source information.
+
+CR 702.16a/b/j and 608.2b establish protection qualities, targeting and LKI.
+This query does not predict replacements, regeneration or sequential destruction;
+Equinox's `WouldDestroyAPermanent` remains unsupported. No payment or simultaneous
+action semantics change.
+
+Evidence: native `TestNoncolorTargetQuery`, `NoCallbacks` and `SourceInformation`;
+RON `TestRONNoncolorTargetQueryGameplay`, `SourceInformation` and `Declarations`.
+Four names gain bounded interaction coverage; no complete-card unlock is claimed.
+
+## Pure direct-destruction proposals (2026-10-16)
+
+`DirectDestructionInstruction.Effect() ResolvingEffect` builds the existing
+native singular or simultaneous destruction action. Exactly one of `Subject`
+and `Subjects` must be present; malformed declarations return nil. The
+`CannotRegenerate` flag is preserved. RON lowers `DestroyPermanent`,
+`DestroyPermanentNoRegen`, `DestroyEachPermanent` and
+`DestroyEachPermanentNoRegen` through this descriptor with fresh instance
+bindings. Existing constructors and callers remain supported.
+
+`(*Game).InspectDestructionProposal(PermanentVisit, bool) (proceeds, known bool)` reports
+`(proceeds, known)` for one exact visit and a cannot-regenerate flag. The caller
+must first select the subject and check target legality. Layers must be current.
+A missing game or incomplete visit is unknown. An absent, returned, phased-out
+or indestructible subject supplies known false before replacements apply.
+
+The supported replacement context contains native regeneration shields, native
+static regeneration declarations (including granted wrappers), the saved
+next-destruction cancellation, and damage prevention shields or Fog. Damage-only
+rules cannot affect this proposal. Both persistent and cycle replacement lists
+are inspected. Matching shields need the exact incarnation and remaining uses.
+Static regeneration needs a current, face-up ability. Cannot-regenerate
+instructions and the current prohibition suppress regeneration, but do not
+suppress cancellation. Any supported applicable replacement terminates the
+proposal, so competing supported replacements have the same binary result in
+every order. Inspection does not select the order or predict its side effects.
+
+Unknown replacement classes and local death-return abilities return unknown,
+even beside a known shield. A live damage-history regeneration restriction
+returns unknown when a regeneration candidate needs it. No replacement
+`IsActive`, `Matches` or `Replace` callback, filter, effect, choice or RNG runs.
+No damage, combat state, shield use or stack entry changes. Native execution
+retains CR 614.6–8, 616.1, 701.8, 701.19 and 702.12 behavior.
+
+This API describes only the current destruction proposal. It does not prove a
+later graveyard move, group-wide outcomes or sequential future states. It does
+not enable Equinox's `WouldDestroyAPermanent` condition. Unknown is not false.
+No RON source or vocabulary spelling changes.
+
+`TestDestructionProposal*` covers declaration validity, identity, phasing,
+prohibitions, regeneration, cancellation, competing rules, clone isolation,
+consumption, cleanup and callback traps. `TestRONDestructionProposal*` compares
+complete-record Stone Rain, Wrath of God, Death Ward, Pyramids and Clergy of the
+Holy Nimbus interactions with native resolution. Synthetic RON direct
+destruction additionally checks the complete Clergy record's regeneration.
+These are bounded interaction tests; no new complete-card coverage is claimed.
+
+## Pure replacement action domains (2026-10-16)
+
+`InspectReplacementActionDomains(ReplacementEffect) (ReplacementActionDomains,
+bool)` reports complete coarse domains for a closed set of native types.
+`ReplacementDamageActions` includes player and permanent damage proposals;
+`ReplacementDestructionActions` includes destruction proposals. A known domain
+is a bound on possible matches, not proof that a rule is active or applicable.
+The query reads no game state and calls no replacement methods or operands.
+Nil, typed-nil, opaque, derived and unsupported mixed-domain rules are unknown.
+A caller must not interpret an unknown domain as an empty domain.
+
+The supported set contains 25 native damage-only types: finite and selected-source
+shields, combat prevention, filtered and static prevention, counter prevention,
+instruction prevention, damage expansion and damage redirection. Native
+regeneration, static regeneration and next-destruction cancellation have the
+destruction domain. Death exile, death return, face-up action replacements and
+all other unclassified types remain unknown. In particular, a damage-history
+condition does not make a death-exile rule damage-only.
+
+`Game.InspectDestructionProposal` uses these domains to ignore unrelated damage
+rules in persistent and cycle lists. It retains exact visits, regeneration
+restrictions, cancellation, local candidates and conservative unknown results.
+No replacement order, cost, shield use, callback, RNG, zone move or event runs.
+Native execution and its rechecks remain unchanged (CR 614.1–9 and 616.1).
+Destination and sequential-state inspection remain separate prerequisites.
+
+RON validates all four direct-destruction forms into `directDestructionPlan`
+before factory execution. The plan builds `DirectDestructionInstruction` with
+fresh permanent references and simultaneous collections from instance bindings.
+Spell, activation and trigger scope rules remain those of the shared reference
+compiler; invalid references and arities reject at declaration time.
+
+`TestReplacementActionDomain*` covers all 28 supported types, both replacement
+lists, cloning, shields, cannot-regenerate instructions, nils, opaque rules,
+derived types, callback traps and retained state. Existing proposal tests cover
+identity, phasing, LKI-related source cases, duration and competing order.
+`TestRONReplacementActionDomain*` maps complete LEA Stone Rain and Wrath of God
+records against complete Fog, Healing Salve and Reverse Damage records, then
+compares queries with original and cloned native resolution. The plan tests
+cover four valid forms and six invalid declarations. This is bounded interaction
+evidence for five names and five selected records, with zero new full-card
+unlocks. Equinox remains rejected. No RON source or vocabulary changes.
+
+## Pure destruction destinations (2026-10-16)
+
+`(*Game).InspectDestructionDestinations(PermanentVisit, bool)
+(DestructionDestinations, bool)` reads one exact, already selected destruction
+proposal. The second argument forbids regeneration. Layers must be current and
+the caller must check target legality first. A nil game or incomplete visit is
+unknown. An absent, returned, phased-out or indestructible visit gives
+`DestructionNoMove` before replacement inspection.
+
+A known result is the complete set of possible destinations in the supported
+context: `DestructionNoMove`, `DestructionToGraveyard`, `DestructionToExile` and
+`DestructionToHand`. It is not a chosen destination. Native regeneration shields,
+current static regeneration, saved next-destruction cancellation, exact saved
+singular death-exile rules and current death-return-with-play-lock declarations
+are supported. Current local declarations also account for their corresponding
+registered replacement objects. Both persistent and cycle lists are inspected.
+Damage-only domains cannot affect these proposals. Every applicable supported
+candidate terminates destruction or changes the graveyard destination; the
+remaining supported rules then cannot match. Thus the result contains each
+possible terminal destination across all replacement orders (CR 614.5–8,
+616.1, 701.8). Graveyard is possible only when no supported candidate applies.
+Tokens report their proposed move before they cease to exist, not a surviving
+card in that zone. Hand and graveyard destinations use the owner, not controller.
+
+Cannot-regenerate instructions and current `CantRegenerate` suppress regeneration,
+but do not suppress cancellation, hand return or exile. Face-down and removed
+abilities cannot supply local candidates. Phasing keeps the visit but suspends
+it; a phase cycle restores it. Returned objects cannot inherit saved exile or
+shields. Source departure does not end saved exile, and cleanup removes it.
+
+Nil, typed-nil, derived and opaque replacement classes remain unknown, even
+beside a supported terminating candidate. Live damage-history death-exile rules
+remain unknown. A live regeneration prohibition is unknown only when a possible
+regeneration needs it. No `IsActive`, `Matches`, `Replace`, filter, choice,
+effect or RNG callback runs. No shield, counter, damage, tap state, combat state,
+stack, visibility, payment or zone state changes. Native replacement execution,
+ordering, rechecks, simultaneous batches, departure LKI and rollback are reused
+without changes. The older `InspectDestructionProposal` contract is preserved.
+This query does not analyze sequential future states or a simultaneous group's
+changed state, and does not enable Equinox by itself.
+
+RON now validates `CreateReplaceWouldPutIntoGraveyardUntil` into
+`temporaryDeathExilePlan` before factory execution. The exact existing shape is
+`(APermanentWouldDie(SinglePermanent(ref)), [ExileItInstead], UntilEndOfTurn)`
+in resolving actions with a bound permanent reference. The existing live
+history shape also retains its typed source and filter; native execution stays
+supported while pure destination analysis returns unknown. `build(instanceBindings)`
+uses shared `ExileIfWouldDieThisTurn` or `ExileDealtDamageByThisTurn` with fresh
+bindings. No new spelling, duration, fallback or callback proof is added.
+
+Evidence: native `TestDestructionDestination`, `Unknown`, `Orders` and
+`NoCallbacks`; RON `TestRONDestructionDestination` and `Plan`. Complete LEA
+Stone Rain and Wrath of God records run against complete LEA Disintegrate and
+LEG Firestorm Phoenix records. Repeated queries agree with native resolution
+in original and cloned games. Stone Rain cases add the land type through the
+shared continuous layer API. These are bounded interactions for four names,
+not new full-card unlocks. Existing death-exile, live-history, death-return,
+destruction and payment tests retain their prior contracts.
+
+## Pure live death-history destinations (2026-10-16)
+
+`(*Game).InspectDestructionDestinations(PermanentVisit, bool)
+(DestructionDestinations, bool)` now includes native end-of-turn live
+history death exile and regeneration prohibitions. Its existing selection,
+current-layer, destination-set and conservative unknown contracts remain.
+The older `InspectDestructionProposal` API keeps its previous boundary.
+
+History uses the existing actual-damage maps and both exact battlefield visits.
+Zero and prevented damage add no membership. Damage before installation and
+later damage both qualify. Source departure, control changes, phasing and
+ability removal cannot end a resolved rule. Departure LKI is unnecessary for
+this membership test. Returned sources and recipients have different visits;
+a phase cycle keeps the original visit. Cleanup removes rules and history.
+Clones keep independent histories, including damage recorded after cloning.
+
+Death exile checks the current recipient filter. The pure proof supports the
+complete retained card-type Boolean trees accepted by
+`InspectPermanentCardTypeFilter`, including conjunction, disjunction and
+negation. It reads current `HasType` results without calling filter callbacks.
+Regeneration restrictions use the same live filters, or the native
+creature-at-damage map for `CantRegenerateCreaturesDealtDamageByThisTurn`.
+Later type changes cannot erase that recorded creature status. Native history
+regeneration rules must have their default activation and end-of-turn duration;
+custom activation callbacks, opaque filters and incomplete rules remain unknown.
+An opaque prohibition need not be inspected when regeneration is already
+forbidden by the instruction or current keyword, or when no shield or local
+regeneration exists.
+
+Persistent and cycle replacement lists keep every supported terminal outcome.
+History exile can compete with regeneration and local hand return; the query
+never selects their order. A matching history prohibition removes regeneration
+from those alternatives. Actual execution still uses affected-controller
+choices and native rechecks (CR 614.1–8, 616.1, 701.8 and 701.19). No replacement,
+filter, activation, effect, choice or RNG callback executes during inspection.
+No payment, shield, damage, history, zone or combat state changes. This establishes
+one current singular proposal, without sequential or simultaneous-group analysis.
+
+Evidence: `TestDeathHistoryDestination*` tests all three history consumer
+combinations, type timing, identities, phasing, cleanup, clones, both replacement
+lists, alternative orders and opaque/callback traps. `TestRONDeathHistoryDestination*`
+compares repeated queries with real resolution of complete DRK Runesword and
+LEA Stone Rain and Wrath of God records. Existing `TestRONLiveDamageHistory*`
+retains target legality, failed payment, copies, source information and batch
+coverage. These are bounded interaction proofs for three names, with no new
+full-card unlock. Equinox remains rejected pending its other certainty proofs.
+
+## Pure face-up replacement domains (2026-10-16)
+
+`InspectReplacementActionDomains(ReplacementEffect) (ReplacementActionDomains,
+bool)` now supports the native `faceUpActionReplacement`. Its complete domain
+is `ReplacementDamageActions | ReplacementTapActions |
+ReplacementDamageAssignmentActions`. The two new flags describe permanent tap
+proposals and combat damage assignment proposals. Domain inspection uses the
+closed native type, without reading activation, saved spell identity or game
+state. Nil, typed-nil, opaque and embedded derived types remain unknown.
+Other unclassified native domains remain unknown.
+
+Both `Game.InspectDestructionProposal` and `Game.InspectDestructionDestinations`
+reuse their shared domain check in persistent and cycle lists. They can now
+ignore this unrelated native replacement. Destruction does not turn a creature
+face up (CR 614.1, 614.7, 701.8, 708.7 and the Mask WotC ruling dated 2009-10-01).
+A regeneration result remains no move, even when its later native tap turns the
+creature up. Inspection leaves damage, face-down status, shields, tap state,
+replacement lists and RNG unchanged. Native execution, replacement ordering,
+rechecks, batches, payment rollback and departure reveal rules are unchanged.
+The query still requires current layers and a legal selected visit; it does not
+analyze sequential effects or future simultaneous group states.
+
+RON validates the complete existing `CreateReplaceWouldMaskUntil` shape through
+`compileFaceUpReplacementPlan(Node, scope) (faceUpReplacementPlan, error)`.
+`build(instanceBindings) mage.Effect` uses the exact instance's cast binding and
+`TurnResolvedPermanentFaceUpBeforeAction`. The event and duration must reference
+the same in-scope cast result. Entry and draw replacement bodies reject.
+Unsupported names, arities, subjects, operations and durations reject before
+factory construction. No syntax, source record or vocabulary snapshot changes.
+
+`TestFaceUpDestructionDomain*` covers both queries, both replacement lists,
+repeated inspection, original and cloned games, face-up/down objects, phasing,
+phase cycles, returned visits, regeneration with and without permission, and
+opaque and callback traps. Existing unknown-domain tests now use an opaque
+embedded face-up rule, preserving conservative rejection at that boundary.
+`TestRONFaceUpDestructionDomain*` checks independent bindings and invalid plans,
+then compares pure queries with native resolution for all five complete
+Illusionary Mask records against complete LEA Stone Rain and Wrath of God.
+Source departure, phase cycles, regeneration and clones are included. Existing
+`TestFaceUpReplacement*` and `TestRONFaceUpReplacement*` retain assignment,
+simultaneous damage, replacement ordering, exact identity, copied abilities,
+pending clones, payment rollback and declaration scope coverage.
+This is bounded interaction evidence for three names and seven selected
+records, with zero new full-card unlocks. Equinox remains rejected.
+
+
+## Pure player damage-limit domains (2026-10-16)
+
+`InspectReplacementActionDomains(ReplacementEffect) (ReplacementActionDomains,
+bool)` recognizes two more exact native types. `staticPlayerDamageCapReplacement`
+has `ReplacementDamageActions`. `damageLifeFloorReplacement` has the new
+`ReplacementDamageLifeLossActions` domain, which includes only life loss that
+results from damage. It does not include damage proposals or direct life loss.
+CR 120.3a/f and 120.4b/c separate damage from its results. Ali from Cairo's local
+WotC rulings confirm full damage and limited resulting life loss. Forethought
+Amulet's WotC ruling confirms that damage below three is unchanged.
+
+Both pure destruction queries use the shared closed domain check in persistent
+and cycle replacement lists. These two rules cannot obscure a direct destruction
+proposal or destination. The proof is independent of source presence, control,
+phasing and operand values. Domain inspection calls no replacement method or
+operand and changes no state. Nil, typed-nil, opaque and derived types remain
+unknown. Other unclassified native replacements remain unknown. Native damage,
+replacement order, life results and destruction execution are unchanged
+(CR 614.1–8, 616.1 and 701.8).
+
+RON validates both existing static shapes into private immutable plans before
+factory execution. Each build creates a fresh native static ability. Source type
+lists are copied by the native constructor. No game or selected-object state is
+held by a plan. Existing player and battlefield context restrictions remain.
+
+`TestPlayerDamageLimitDomain*` checks both exact types and both replacement lists,
+repeat inspection, clone state, RNG, phasing, returned visits, regeneration,
+cannot-regenerate instructions, indestructibility, callback traps and unknown
+rules. `TestRONPlayerDamageLimitDomain*` maps complete Ali from Cairo (ARN),
+Forethought Amulet (LEG), Stone Rain (LEA) and Wrath of God (LEA) records to native
+resolution, including simultaneous destruction of Ali and another creature.
+Post-inspection damage checks distinguish two actual damage with two lifelink
+from twenty-five actual damage with twenty-five lifelink and limited life loss.
+These are bounded interactions for four names and four selected records, not
+new complete-card gameplay claims. Equinox remains rejected pending further
+native-domain proofs and sequential certainty analysis.
+
+
+## Pure protection and temporary redirection domains (2026-10-16)
+
+`InspectReplacementActionDomains(ReplacementEffect) (ReplacementActionDomains,
+bool)` now recognizes exact native `protectionDamageReplacement`,
+`permanentDamageRedirectReplacement` and `playerDamageRedirectThisTurn` types
+as `ReplacementDamageActions`. This includes both optional recipient-filter
+redirection and exact spell-source redirection. Their complete match domains
+exclude destruction, even if an operand is opaque or the damage would cause
+lethal damage. Protection's targeting, attachment and blocking rules are
+separate from its damage prevention replacement (CR 702.16b–f).
+
+Both pure destruction queries ignore these rules in persistent and cycle lists.
+They call no replacement, filter or reference method, make no decisions and
+change no state. Nil, typed-nil, derived and unknown replacements remain unknown.
+Native damage execution, replacement ordering, source LKI, expiry, object visits
+and destruction remain unchanged (CR 614.1–8, 615.6, 616.1 and 701.8).
+Protection is normally an event-local damage candidate; classifying it also
+makes explicit that it cannot change a direct destruction proposal.
+
+RON validates all three existing `CreateReplaceWouldDealDamageUntil` forms into
+`temporaryDamageRedirectPlan` before factory execution. The plan retains typed
+source, destination, player and spell references or an immutable recipient
+filter. Each build creates a fresh native resolving effect with instance-local
+bindings. Only ordinary resolving bodies and `UntilEndOfTurn` are accepted;
+entry and replacement bodies reject. No new syntax or source data is introduced.
+
+Evidence: `TestDamageOnlyNativeDomain*` covers all three types, both lists,
+clones, repeat inspection, RNG preservation, phasing, returned visits,
+regeneration, cannot-regenerate destruction, indestructibility, callback traps,
+typed nils, derived types and unknown rules alongside known rules.
+`TestRONDamageOnlyNativeDomain*` covers plan validity and binding identity,
+invalid declarations and contexts, complete Shimian Night Stalker (LEG), Blood
+of the Martyr (DRK), Reverberation (LEG), Stone Rain (LEA) and Wrath of God (LEA)
+records, native damage after inspection, and original/clone destruction.
+Complete Black Knight and White Knight (LEA) records retain damage prevention
+and die to untargeted Wrath. These seven records provide bounded interaction
+evidence, with no new full-card compilation unlocks. Existing temporary
+redirection tests retain payment, LKI, timing, copy, expiry and replacement-order
+evidence. Equinox's sequential certainty analysis remains unsupported.
+
+## Pure draw and life gain replacement domains (2026-10-16)
+
+`InspectReplacementActionDomains(ReplacementEffect) (ReplacementActionDomains,
+bool)` now recognizes native `scopedDrawReplacement`, `futureDrawReplacement`
+and `lifeGainDrawReplacement`. `ReplacementDrawActions` bounds both draw types
+by individual `DrawCardAction` proposals. `ReplacementLifeGainActions` bounds
+the gain rule by positive `LifeGainAction` proposals. These categories describe
+possible input events; a gain replacement that produces draws still has only
+the life gain domain. The body can perform other actions without expanding
+the rule's match domain (CR 119.3, 121.1–2, 614.1, 614.5–7, 614.11, 616.1–2).
+
+The closed type switch calls no rule method, player operand or replacement
+body. It does not inspect source presence, ability state, event amounts,
+consumption, saved frames or optional choices. Domain knowledge alone does not
+prove applicability or predict the actions produced by replacement execution.
+Nil, typed-nil, embedded/derived rules and all unclassified native rules remain
+unknown. The legacy `drawReplacementEffect` remains unclassified in this slice.
+
+Both pure destruction queries use the existing domain service to ignore these
+unrelated rules in persistent and cycle lists. Exact visits, phasing,
+regeneration, indestructibility and conservative unknown results remain with
+the existing queries. No payment, choice, RNG, draw, event or layer pass runs.
+Normal replacement selection, rechecks, draw ancestry, saved X/source frames,
+life gain results and simultaneous destruction execution remain unchanged.
+This establishes no sequential destruction certainty contract for Equinox.
+
+RON retains `scopedDrawReplacementPlan`, `futureDrawReplacementPlan` and
+`lifeGainDrawPlan` before factory execution. The scoped plan keeps the typed
+window, declaration-local event player and complete lowered action body. Each
+build creates a fresh event binding. The future plan keeps its typed player
+reference and body and builds with instance bindings. The gain plan keeps the
+exact controller player reference. All three continue to build the existing
+native services: `ReplaceDraw`, `ReplaceNextDrawThisTurn` and
+`DrawInsteadOfLifeGain`. No alternative executor or card-specific policy is added.
+
+Supported RON forms are the two existing permanent `ReplaceWouldDraw` windows,
+the exact permanent You-to-proposed-amount `ReplaceWouldGainLife` form, and
+`CreateFutureReplaceWouldDraw(NextTimePlayerWouldDrawACardThisTurn(player),
+[actions])` in resolving bodies. Future replacements retain nested resolving
+body support. Entry contexts reject. The static draw plan also rejects
+resolving and replacement-body contexts. Malformed events, unsupported subjects,
+empty bodies and unbound references reject before factory execution.
+
+`TestDrawLifeNativeDomain*` covers exact categories, both lists, repeated pure
+inspection, original/clone state, RNG, phasing cycles, returned visits,
+regeneration, cannot-regenerate instructions, indestructibility, opaque body
+and player traps, nils, derived types and conservative unknowns.
+`TestRONDrawLifeNativeDomainPlans` and `Bindings` cover shapes, invalid contexts,
+fresh builds and exact declaration identity. `TestRONDrawLifeNativeDomain`
+executes complete RON Lich, Island Sanctuary, Chains of Mephistopheles,
+Aladdin's Lamp and Ring of Ma'rûf with complete Stone Rain and Wrath of God.
+It checks pure inspection, preserved draw/gain bodies and original/clone native
+destruction. This is bounded interaction evidence for seven names/seven selected
+records, with zero new compilation unlocks. Existing lifecycle, payment rollback,
+replacement-order and full-card tests retain their separate coverage.
+
+## Pure subtype destruction collections (2026-10-16)
+
+`InspectPermanentCollection(PermanentSet) (PermanentCollectionPredicate, bool)`
+now accepts exact `HasSubType(string)` leaves and complete `And`, `Or`, and
+`Not` filter trees with those leaves and existing card-type leaves. Matching,
+union and intersection sets retain their current contracts. Every descendant
+must be inspectable, even when another operand determines the Boolean result.
+Opaque callbacks, controller-dependent collections and other unsupported
+declarations remain unknown. The existing type-only inspector still rejects
+subtype-dependent predicates.
+
+`PermanentCollectionPredicate.Select(*Game) []PermanentVisit` reads current
+`Permanent.HasType` and `Permanent.HasSubType` values without filter callbacks.
+Layers must be current. It selects every matching visit once in battlefield
+order, across both controllers. Names and the basic supertype do not determine
+subtype membership (CR 205.3i, 305.6–8). Layer 4 changes affect membership
+(CR 613.1d); face-down and phased objects retain their shared characteristic
+and presence contracts (CR 702.26b–d). A return supplies a new visit. Selection
+does not consume regeneration, choose replacements, use LKI or predict deaths.
+
+RON retains complete type/subtype Boolean filters in
+`compileDestructionCollection`; other valid contextual collections retain their
+existing runtime declarations. No new syntax, scope or declaration acceptance
+is introduced. Native execution still uses the shared simultaneous destruction
+batch (CR 608.2f,h). This is a subject-selection prerequisite for certainty
+analysis, not a sequential outcome analyzer or Equinox implementation.
+
+`TestPermanentSubtypeCollection*` covers current layered subtypes, mixed and
+negative predicates, creature and Aura subtypes, overlapping union members,
+both controllers, face-down status, phase cycles, returned visits, clones,
+immutable operands/results, RNG preservation, known callback traps, opaque
+branches and the type-only boundary. `TestRONSubtypeDestructionCollection*`
+covers lowering, malformed declarations and all 14 complete Flashfires,
+Tsunami, Acid Rain and Tivadar's Crusade records. Each gameplay case includes two matching permanents
+and a land named for the subtype without that subtype. Regeneration,
+indestructibility, phase, subtype change, return and pending clones distinguish
+selection from native outcomes. These four cards' checked local ruling arrays are
+empty. No source correction is needed.
+
+
+## Pure color destruction collections (2026-10-16)
+
+`HasColorFilter(core.Color)` retains a color leaf for
+`InspectPermanentCollection(PermanentSet) (PermanentCollectionPredicate, bool)`.
+Complete `And`, `Or` and `Not` trees can mix color, card type and subtype
+leaves. `PermanentCollectionPredicate.Select(*Game) []PermanentVisit` reads
+`Permanent.Colors()` without filter callbacks. Layers must be current.
+Multicolored objects match each included color; a nonblack test includes
+colorless objects (CR 105.2–3, 613.1e). The existing native color predicate
+keeps its behavior. This change adds no color to a colorless object.
+
+RON `IsColor(color)` and `IsNonColor(color)` retain these leaves in direct
+resolving destruction collections, including nested `And`/`Or` trees.
+Malformed arities, non-symbol colors, unknown colors and empty Boolean
+collections reject at compile time. Valid contextual operands retain their
+existing declarations. Unknown descendants reject pure inspection even when
+another operand determines the result. Type-only inspection still rejects color
+predicates. No callbacks, choices, RNG changes or shield consumption occur.
+
+Current presence and identity contracts remain: phase-out removes membership;
+a phase cycle preserves the visit; a return supplies a new visit; face-down
+objects use native characteristics. Union members are deduplicated. Immutable
+plans can select independently in clones. Selection does not determine target
+legality, replacement outcomes, LKI, or ordered destruction certainty.
+
+`TestPermanentColorCollection*` covers native/pure agreement, mixed and negative
+predicates, multicolor and colorless members, both controllers, layers, phases,
+face-down status, returns, clones, callback traps, immutable operands/results,
+RNG preservation and opaque rejection. `TestRONColorDestructionCollection*`
+covers lowering, invalid declarations and complete LEG Cleanse/Hellfire gameplay
+in six states plus pending clones. Cleanse's actual retained instruction is
+inspected. Hellfire keeps its result-bound destruction declaration; the shared
+color predicate is inspected separately, and native death counts and damage are
+checked. The direct-instruction inspector still rejects result-bound actions.
+Existing `TestRONDestructionCountHellfire` and destruction-count regressions
+cover paid casting rollback, copies, tokens and graveyard replacement outcomes.
+This is a shared selection prerequisite for future analysis of both cards,
+not a complete Equinox implementation. No RON source correction is needed.
+
+
+## Pure contextual permanent collections (2026-10-16)
+
+`InspectContextualPermanentCollection(PermanentSet)
+(ContextualPermanentCollectionPredicate, bool)` reads complete native matching,
+controlled, owned, union and intersection declarations. Leaves retain the
+existing complete type/subtype/color predicates. Owner and controller references
+must be exactly `You` or `ActivePlayer`. Opaque filters, callbacks, saved or
+targeted player references, opponents sets, attachments, empty compositions and
+unknown descendants reject the entire declaration, even in a masked branch.
+The existing context-free inspector retains its previous boundary.
+
+`ContextualPermanentCollectionPredicate.Select(*EffectContext) []PermanentVisit`
+requires a game and a present resolving controller. A zero plan or invalid
+context returns no members. Supply current layers. `You` reads the stored
+resolving controller (CR 109.5); `ActivePlayer` reads the current active player.
+Ownership and current control are separate (CR 110.2). Selection reads current
+characteristics and current battlefield visits, excludes phased objects
+(CR 702.26b), deduplicates unions and returns battlefield order. A return is a
+new visit; departure information cannot supply members. No collection, filter
+or player callback runs. Queries make no choices and change no state.
+
+RON direct-destruction collection lowering recursively retains Boolean
+collection operands. Existing specialized death/combat and least-power contexts
+keep their shared lowering. Spelling and scope validation remain in `ron`;
+engine declarations and current membership remain in `mage`. This contract
+adds no binding, target, LKI, cost or replacement lifecycle. Native actions,
+simultaneous destruction and caller compatibility are unchanged.
+
+`TestContextualCollectionQuery*` covers pure/native agreement, owner versus
+controller, current control and active player, phased and returned visits,
+clones, immutable operands/results, deduplication, invalid contexts and callback
+traps. `TestRONContextualCollectionQuery*` covers valid and invalid nested
+shapes, the complete Equinox record's contextual land predicate, and complete
+Reset and Remove Enchantments casting/resolution in normal, phased, returned
+and changed-controller states, including pending clones. Existing casting-window
+and contextual-collection tests retain timing, cost, copy and attachment cases.
+Equinox still rejects `WouldDestroyAPermanent`. Remove Enchantments' full
+attachment-dependent collection is unknown to this inspector; its pure
+controller branch is supported. These bounded queries establish no ordered
+certainty, future-state analysis or full-collection gameplay completion.
+
+
+## Pure opponent controller collections (2026-10-16)
+
+`InspectContextualPermanentCollection(PermanentSet)` also accepts complete
+`PermanentsControlledByPlayers(OpponentsOf(You), filter)` and
+`PermanentsControlledByPlayers(OpponentsOf(ActivePlayer), filter)` declarations.
+The existing type, subtype and color filter boundary applies. Nested unions and
+intersections retain every operand. This extends the earlier contextual contract;
+opponent sets in these two exact forms are no longer unknown.
+
+The retained plan copies the player role rather than retaining the mutable
+`OpponentsOf` pointer. `Select(*EffectContext) []PermanentVisit` reads the supplied
+controller or current active player, then matches other present players' current
+permanents. This follows the native two-player opponent service (CR 102.2).
+It does not add team-game support. Ownership is independent of control (CR 110.2).
+Current layers, presence, phasing, incarnation, order and duplicate rules remain
+unchanged. No player-set, player-reference, collection or filter callback runs.
+No choices, payments, replacement applications or state changes occur.
+
+Nil and typed-nil opponent sets, opaque sets, arbitrary player references and
+opaque filters reject the whole plan, even in masked Boolean branches. Saved
+players, targets, attachments and future-state analysis remain outside this
+contract. The context-free inspector keeps its previous boundary.
+
+RON already lowers `ControlledByAPlayer(Opponent)` to this native declaration.
+`compileDestructionCollection` retains it inside complete Boolean collection
+trees; no new spelling, scope or executor is needed. The new engine inspection
+contract is the missing part of this existing lowering path.
+
+`TestOpponentCollectionQuery*` verifies native agreement for both resolving
+controllers and active players, ownership/control separation, nested composition,
+phase cycles, new visits, departure without LKI, clone isolation, immutable plans
+and results, callback traps and conservative rejection.
+`TestRONOpponentCollectionQuery*` verifies nested lowering, invalid declarations,
+and full ATQ Gaea's Avenger and DRK Angry Mob paid casting and resolution.
+Their exact opponent-count expressions agree with native P/T updates through
+phasing, departure, return and control changes in original and cloned games.
+These are bounded query/gameplay comparisons, not new full-card unlocks.
+Existing characteristic-additive and static-branch tests retain all other card
+behavior coverage. Equinox still rejects its prospective destruction condition.
+
+
+## Pure current-combat collections (2026-10-16)
+
+`InspectContextualPermanentCollection(PermanentSet)` accepts native
+`IsAttacking`, `IsBlocking` and their complete `Not`, `And` and `Or` filter
+trees, including mixed type, subtype and color leaves. Native matching, owner,
+controller and opponent collections retain these predicates. Union and
+intersection keep the complete collection tree. Unknown descendants reject the
+whole declaration, even when another branch determines the Boolean result.
+
+`ContextualPermanentCollectionPredicate.Select(*EffectContext) []PermanentVisit`
+reads current `Combat.IsAttacking` / `Combat.IsBlocking` membership for current
+unphased battlefield visits. It shares the native filters' combat service. No
+combat means no attacking or blocking members; negation follows ordinary Boolean
+rules. The caller supplies current layers and a present resolving controller.
+The query runs no filter, collection, player, effect or decision callback, makes
+no choices and changes no state or RNG. Results have independent storage.
+
+CR 506.4 removes a permanent from combat on departure, control change or phasing;
+phasing in does not restore combat. Tapping alone does not remove combat
+(CR 506.4b). Returned objects have new visits and cannot inherit old combat.
+There is no LKI fallback. Clones read their own combat. This contract queries
+current membership; it does not predict later combat or spell outcomes. The
+context-free `InspectPermanentCollection` still rejects combat predicates.
+
+RON's existing `compileFilter` maps symbol `IsAttacking`, symbol
+`IsntAttacking` and symbol `IsBlocking` to the native filters and negation.
+`compileContextualCollection` and `compileDestructionCollection` retain them in
+complete Boolean collection trees. No spelling, scope or executor is added.
+Native layer capture, simultaneous operations, payments and replacements retain
+their existing behavior. Attachments, combat relations, history and ordered
+certainty need their separate inspection contracts. Equinox remains rejected.
+
+`TestCombatCollectionQuery*` compares native and pure selection for both
+controllers, complete Boolean trees, controller/opponent restrictions, unions,
+combat removal, tapping, phasing, control changes, new visits and clones. It
+checks callback traps, masked unknown branches, immutable operands/results, RNG
+and stack preservation, absent combat and invalid contexts.
+`TestRONCombatCollectionQuery*` verifies nested lowering, invalid declarations
+and the complete ARN Army of Allah and Piety records. Paid casting, pending
+clones and native layer resolution agree with the pure collection in normal,
+removed, phased, phase-cycle and returned states. Removing combat after
+resolution preserves the captured layer members, while later combat members
+receive no bonus (CR 611.2c). These are two bounded gameplay mappings and zero
+new full-card compilation unlocks.
+
+## Pure current attachment-host collections (2026-10-16)
+
+`InspectContextualPermanentCollection(PermanentSet)` retains native
+`AttachmentsOn(hosts)` when the entire host collection is supported. Hosts can
+use current type, subtype, color, combat, owner, controller and opponent
+predicates, complete unions/intersections and nested `AttachmentsOn`. Unknown
+host descendants reject the entire declaration, including masked Boolean
+branches. Singular, saved, target-bound and opaque host references remain
+outside this inspection contract. Ordinary execution of those forms is retained.
+The context-free `InspectPermanentCollection` still rejects attachments.
+
+`ContextualPermanentCollectionPredicate.Select(*EffectContext) []PermanentVisit`
+reads current battlefield attachments and host membership. Both visits must be
+present and unphased, and `AttachedTo` plus the saved attached incarnation must
+match the host. It uses the same attachment identity as native `AttachmentsOn`;
+it does not read a stale host attachment list or departure information. Results
+contain each current attachment once, in battlefield order. An Aura restriction
+requires its own subtype predicate: attachments can also be Equipment or
+Fortifications. The attachment's owner/controller need not match the host's.
+
+The caller supplies current layers and a present resolving controller. Queries
+run no collection, filter, player, effect or decision callbacks, use no LKI,
+and change no state or RNG. Reattachment and control changes affect the next
+query. Phasing hides members; a phase cycle preserves attachment identity but
+removes combat. Host departure and a new incarnation cannot restore the old
+link. Clones read their own links. CR 303.4b,e, 400.7, 608.2h, 701.3 and
+702.26b–d,g–j establish these current-state and identity boundaries.
+
+RON reuses `compileContextualCollection` and `compileDestructionCollection`:
+`AttachedToAPermanent(collection)` lowers to `mage.AttachmentsOn` with no new
+spelling or executor. This completes pure inspection of Remove Enchantments'
+full destruction collection. It does not establish ordered destruction
+certainty for Equinox; `WouldDestroyAPermanent` remains rejected.
+
+`TestAttachmentCollectionQuery*` covers native/pure agreement, nested hosts,
+duplicate unions, subtype intersections, opponent and combat hosts, Equipment,
+reattachment, independent control, phasing, new visits, stale links, departure,
+clones, callback traps, immutable results and invalid complete declarations.
+`TestRONAttachmentCollectionQuery*` covers AST lowering, invalid shapes/scopes,
+the singular-host inspection boundary and the complete LEG Remove Enchantments
+record. Paid casting and pending clones exercise real return-then-destroy
+resolution, owned versus foreign Auras, changed hosts/control/combat and phasing.
+The query does not retain attachments after the real actions remove them.
+No new payment, target, replacement or simultaneous-operation contract is added.
+
+
+## Ordered collection destruction certainty (2026-10-16)
+
+`InspectOrderedDestruction(ResolvingEffect) (OrderedDestructionPredicate, bool)`
+retains the complete tree accepted by `InspectDirectDestruction`, restricted to
+simultaneous collections supported by `InspectContextualPermanentCollection`.
+Unknown descendants, singular references, result bindings and malformed operands
+reject the whole tree. No effect, collection or filter callback runs.
+
+`OrderedDestructionPredicate.Certain(*EffectContext, []PermanentVisit) (bool, bool)`
+reads exact watched visits using current layers and the action's resolving
+controller. The caller establishes that the source resolves and its targets are
+legal. This service does not inspect a whole spell or enable Equinox by itself.
+The result is `(certain, known)`: true/true proves a watched member must move to
+the graveyard through direct destruction. False/true means the complete supported
+query found no such proof; it does not claim that destruction is impossible.
+False/false means further analysis is unknown. Invalid contexts and the zero
+predicate are unknown. Watched visits are not retained or changed.
+
+The service preserves instruction order and simultaneous collection membership
+(CR 608.2c,f,h). It uses the shared destination inspector for regeneration,
+indestructibility, cancellation and graveyard destination replacements
+(CR 701.8, 614 and 702.12). Competing destinations cannot prove a graveyard move.
+Empty groups and groups of current indestructible visits permit inspection of
+later instructions. Other nonempty groups without a proof stop analysis before
+the next instruction, even when their known result
+has no zone move: regeneration can tap or remove an object from combat, and
+replacement use can affect later instructions. No speculative execution, choice,
+RNG use, shield consumption, layer update or mutation occurs.
+
+The current RON `DestroyEachPermanent/1` and
+`DestroyEachPermanentNoRegen/1` adapters already retain these declarations.
+`ActionList` preserves their order; no additional compiler executor is needed.
+`TestOrderedDestruction*` covers empty and nonempty prefixes, simultaneous union
+membership, independent shields, phase cycles, exact returned visits, clones,
+unknown replacement lists, destination changes, callback traps and invalid
+contexts. `TestRONOrderedDestruction*` compares the pure result with paid complete
+3ED records for Armageddon, Wrath of God, Shatterstorm and Tsunami. It also checks
+ordered synthetic RON actions and invalid declarations. These four bounded
+analysis/gameplay mappings do not claim full collection coverage.
+
+
+## Live spell destruction certainty (2026-10-16)
+
+`(*Game).InspectSpellDestruction(*StackObject, []PermanentVisit) (certain, known bool)`
+checks the complete announced effect tree of a live instant or sorcery spell.
+The supplied object must be the exact object in that game's stack. Objects below
+another stack object are valid. Abilities, detached objects, missing cards,
+invalid controllers and drawn games are unknown. The method reads current
+layers; it does not apply them.
+
+The complete tree must pass `InspectDirectDestruction`. Singular subjects must
+be native `PermanentTargetBinding` references to the exact announced declaration.
+Collections must pass `InspectContextualPermanentCollection`. Every announced
+target must pass `InspectPermanentTarget`, including declarations unused by the
+destruction instructions. Missing snapshots, duplicate declarations, absent
+required targets, opaque filters and unsupported descendants return unknown.
+A matching target name cannot replace declaration identity.
+
+All current target legality checks precede instruction analysis (CR 608.2b).
+When all targets are illegal, no instruction executes, including an untargeted
+collection. With a remaining legal target, illegal singular instructions have
+empty selections. Exact announced visits prevent leave-and-return substitution;
+phasing suspends selection and phasing in restores the same visit. Shared source
+characteristics establish protection and hexproof legality. This API excludes
+abilities; their source LKI service is unchanged.
+
+Instructions retain order (CR 608.2c). Collections remain simultaneous groups
+(CR 608.2f). Destination inspection uses `InspectDestructionDestinations`, so
+regeneration, indestructibility, cancellation and competing hand/exile moves
+cannot supply a false graveyard proof (CR 701.8). The result is true/true only
+when a watched exact visit certainly moves to the graveyard in a direct group.
+False/true means no proof in this supported tree; false/false means unknown.
+A nonempty group that can propose destruction blocks later instructions without
+a proof because it can change state even without a zone move. Empty, illegal
+and current indestructible groups allow the next instruction.
+Unknown is never evidence that a spell cannot destroy a watched permanent.
+
+Inspection does not execute effects or operand callbacks, make decisions, consume
+shields or RNG, change bindings, resolve the stack or update layers. Clones and
+spell copies read their own targets and state. Existing native resolution,
+payment rollback, replacement order, simultaneous events and APNAP are unchanged.
+No new event, payment, LKI fallback or result binding is introduced.
+
+`TestSpellDestruction*` checks legality, exact visits, phase cycles, source color,
+regeneration restrictions, destinations, full-tree rejection, all-illegal versus
+partly legal resolution, ordered barriers, copies, clones and callback traps.
+`TestRONSpellDestruction*` executes complete 3ED Stone Rain, Shatter and Disenchant
+records through payment and native resolution. Disenchant remains legal when an
+artifact becomes an enchantment. Synthetic RON adds numbered target groups,
+separate factory instances, no-regeneration instructions and declaration errors.
+
+RON already lowers `DestroyPermanent/1`, `DestroyPermanentNoRegen/1` and collection
+forms through `compileDirectDestructionPlan(Node, scope)` and
+`directDestructionPlan.build(instanceBindings) DirectDestructionInstruction`.
+The shared query consumes those exact per-instance declarations and ordered
+`ActionList` trees; no second AST executor or new spelling is needed. This
+prerequisite does not enable `WouldDestroyAPermanent`: broader changed-state and
+instruction contracts remain required. No production card acceptance changes.
+
+
+## Pure color predicates on singular permanent targets (2026-10-16)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` now
+accepts complete Boolean combinations of native card-type and color predicates.
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+reads current effective colors and types with the shared retained predicate
+matcher. Supply current layers. `HasColorFilter` tests membership in the color
+set; `Not` supplies noncolor. A multicolor object matches each of its colors;
+a colorless object matches each noncolor predicate (CR 105.2, 613.1e, 608.2b).
+The type-only inspector remains type-only. Subtype, combat, controller and other
+extra target restrictions remain outside this singular-target query contract.
+Opaque descendants reject the whole query, even under an otherwise true `Or`.
+
+RON `compileInspectableTargetFilter(Node) (mage.PermanentFilter, bool, error)`
+lowers `IsColor/1` and `IsNonColor/1`, including complete nested `And/1` and
+`Or/1` list trees mixed with `IsCardtype/1` and `IsNonCardtype/1`. It validates
+arity and color symbols before factory construction. Unhandled descendants
+retain the existing general target compiler; they cannot supply partial proof.
+The adapter builds native `HasColorFilter` and `Not` declarations without RON
+spelling in the engine. Existing `compileDirectDestructionPlan` connects these
+references to native destruction actions and `Game.InspectSpellDestruction`.
+
+The query retains exact declaration and announced incarnation identity, current
+target legality, source characteristics and ability-source LKI through existing
+services. Phasing removes a target until it phases in; leave-and-return cannot
+substitute a new visit. All-illegal targets prevent resolution; an illegal color
+group does not block a different legal group, even for the same object (CR
+608.2b's Plague Spores example). Inspection runs no callbacks, decisions,
+replacement operations or speculative resolution. Native costs, layers,
+replacement ordering, simultaneous groups and resolution remain unchanged.
+
+`TestPermanentColorTarget*` checks nested Boolean semantics, color layers,
+multicolor/colorless objects, callbacks, opaque descendants, face-down types,
+shroud, protection, visits, phasing, copies, clones and game-state preservation.
+`TestRONPermanentColorTargetLowering` rejects malformed arguments and partial
+queries. `Bindings` checks numbered groups for one object, independent factories,
+all-illegal clone targets and native resolution with regeneration shields.
+`Gameplay` maps all 20 complete records for Terror (six), Blue Elemental Blast
+(six), Red Elemental Blast (six), Active Volcano (one) and Flash Flood (one).
+It covers their destruction instructions and announced destruction modes,
+color/type changes, regeneration, indestructibility, copies and clone isolation.
+`Abilities` adds complete-record checks for Northern Paladin, Exorcist,
+Spinal Villain, Homarid Shaman and Horror of Horrors, including changed colors,
+source departure and copies. The three destruction abilities also pass pure
+target inspection; tapping and regeneration retain native execution.
+These are bounded interaction checks for ten names and 25 selected records.
+The AST audit finds 30 affected records across these ten names; Northern
+Paladin's other five reprints share its definition. This does not establish full
+gameplay coverage for every mode. Equinox still needs ordered changed-state
+proofs and a complete native instruction policy; its condition remains rejected.
+
+
+## Pure subtype predicates on singular permanent targets (2026-10-16)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` accepts
+complete Boolean type/color/subtype filters, `TargetHasSubtype` requirements and
+complete `TargetWithDomain` subtype trees. Retained domains become nodes for the
+shared permanent collection matcher; there is no second subtype matcher.
+`UnknownPermanentDomain` adds no restriction, as in native target execution.
+Invalid domains and required subtype names reject the complete query. Opaque
+filter descendants still reject even when another disjunction branch is true.
+The type-only inspector is unchanged. Controller, combat, attachment and other
+extra singular restrictions remain unknown.
+
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+reads current subtype layers, exact declaration/visit identity and native target
+legality. Supply current layers (CR 205.1a, 205.3, 608.2b, 613.1d). Subtype changes
+can invalidate a target; phasing suspends selection without changing its visit.
+A returned object cannot replace an announced visit. Copies retain declarations;
+clones read separate current game state. Ability source departure uses existing
+source LKI for protection. Queries run no filter callbacks, effects or decisions.
+Costs, rollback, replacements, simultaneous events and priority are unchanged.
+
+RON `compileInspectableTargetFilter(Node) (mage.PermanentFilter, bool, error)`
+adds `IsCreatureType/1`, `IsNonCreatureType/1`, `IsLandType/1`, `IsNonLandType/1`
+and `IsEnchantmentType/1` in complete nested `And/1` and `Or/1` target filters.
+It checks arity, symbol shape, canonical spelling and subtype families before
+factory construction. `ValidateSubtypePredicate(SubtypeFamily, string) error`
+reuses native family tables. Fixed families require known names; creature names
+remain open as in the existing subtype layer service. This does not claim a
+complete Oracle creature-name enumeration. `ValidateSubtypeFamily` callers keep
+their existing custom-name behavior. RON retains existing required-subtype and
+domain options even when it substitutes a pure filter. This preserves target
+proof consumers and factory isolation. No RON source or vocabulary changed.
+
+Evidence: `TestPermanentSubtypeTarget*` checks subtype layers, Boolean domains,
+invalid declarations, callback traps, protection, shroud, visits, phasing,
+copies, clone isolation and agreement with native destruction. Existing target
+and destruction tests retain legality, source LKI and independent-group coverage.
+`TestRONPermanentSubtypeTargetLowering` checks malformed declarations and family
+mismatches; `Bindings` checks factory identity and an illegal subtype group with
+an independent legal target group. `Tunnel` exercises all six full RON records
+through native no-regeneration destruction. `ReturnModes` executes complete LEG
+Active Volcano and Flash Flood records with their announced subtype modes.
+`Wizard` executes DRK Goblin Wizard's protection ability after subtype changes,
+source departure and copying. `DestructionAbilities` checks complete LEB Dwarven
+Demolition Team, ARN King Suleiman and DRK Goblin Digging Team records, including
+source departure, sacrifice, protection LKI, subtype changes and copies.
+`Records` audits complete collection ASTs for pure subtype target declarations.
+These bounded checks do not establish every rule of each card or the broader
+ordered-instruction policy required by Equinox.
+
+
+## Pure controller and ownership domains on singular targets (2026-10-16)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` now
+retains `TargetYouControl`, `TargetOpponentControls`, `TargetYouOwn` and
+`TargetOpponentOwns` options, including their conjunctions with complete
+characteristic predicates. The retained player domain is a value snapshot.
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+checks current control and ownership against the stack object's controller.
+Ability source departure or control changes cannot change that saved controller.
+Copied objects use their own controller. Current layers remain a precondition.
+
+Native `PermanentTarget.Possible` and the pure query share
+`permanentTargetPlayerDomain.matches`; neither substitutes ownership for control.
+The existing two-player opponent comparison is preserved. The query keeps exact
+announced declaration and visit identity, phasing, characteristic predicates,
+source LKI and native target legality. It runs no operand callbacks, decisions,
+effects or replacements. Unknown extra restrictions reject the whole query.
+Explicit `TargetControlledBy` player references, combat, attachment, history,
+chooser and dependent target contracts remain outside this supported shape.
+Costs, rollback, replacement ordering and simultaneous operations are unchanged.
+
+RON `compilePermanentTargetPlayerOption(Node)
+(mage.PermanentTargetOption, bool, error)` lowers
+`ControlledByAPlayer(SinglePlayer(You))`, `ControlledByAPlayer(Opponent)`,
+`OwnedByAPlayer(SinglePlayer(You))` and `OwnedByAPlayer(Opponent)` to those
+native options. Existing type/color/subtype Boolean predicates and nested
+conjunctions keep their adapters. `validatePermanentTargetPlayerDomains`
+checks complete conjunctions in both static and per-instance target adapters.
+Malformed operands and contradictory you/opponent domains fail compilation,
+before factory construction. Player domains under disjunction remain unsupported.
+Other existing contextual adapters retain their own scope checks and execution.
+There is no new RON spelling or source-data change.
+
+CR 109.5 establishes the meaning of you; 110.2 separates ownership and control;
+608.2b requires current legality and exact source information; 400.7 and
+702.26b–d establish return and phasing identity. Local wotc rulings for Erhnam
+Djinn require an opponent-controlled target. Gauntlets of Chaos explicitly
+rechecks current controllers; its dependent second target remains outside this
+query. No scryfall note is used as a wotc ruling.
+
+`TestPermanentPlayerTarget*` covers all four domains, stolen permanents,
+conjunctions, callback traps, current changes, phasing cycles, return, copy
+controllers, clone isolation and agreement with native selection, destruction
+inspection and resolution. `TestRONPermanentPlayerTarget*` covers invalid full
+cards, nested domains, exact factory/group identity, and an illegal control group
+with a legal owner group for the same visit. Full ATQ Obelisk of Undoing and DRK
+Witch Hunter records test native return gameplay, control/owner changes, source
+control/departure, phasing, return, copies and clones. Existing Obelisk payment
+rollback and Erhnam trigger/duration tests remain mapped to their other contracts.
+The collection AST audit covers pure target declarations in 13 unique cards /
+18 records. This is bounded declaration evidence, not complete gameplay proof
+for those cards or an implementation of Equinox's broader instruction analysis.
+
+
+## Pure current-state permanent targets (2026-10-16)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` retains
+native `IsTapped`, `IsUntapped`, `IsAttacking` and `IsBlocking` predicates,
+including complete `Not`, `And` and `Or` trees with supported characteristic
+predicates and controller/owner options. `PermanentTargetPredicate.Select(*Game,
+*StackObject) ([]PermanentVisit, bool)` reads current status and combat membership
+for the exact announced visit. Layers must be current. The query uses the shared
+retained filter tree and combat service; it runs no filter callbacks, effects,
+choices, replacements or speculative resolution. Unknown descendants reject the
+whole declaration. Extra history, combat relationships and source-power
+restrictions remain unknown.
+
+RON `compileInspectableTargetFilter(Node) (mage.PermanentFilter, bool, error)`
+lowers the strict symbols `IsTapped`, `IsUntapped`, `IsAttacking`,
+`IsntAttacking` and `IsBlocking`. `IsntAttacking` lowers to `Not(IsAttacking)`.
+Calls, operands on symbols, empty Boolean lists and unknown descendants cannot
+supply a complete query. Existing per-instance target construction, player
+options, subtype domains and scoped references remain in use.
+
+Tap status does not determine combat membership (CR 506.4b). Removing a creature
+from combat, changing its controller, phasing or leaving ends membership;
+phasing back in does not restore it (CR 506.4, 702.26b–d). A blocker remains a
+blocker when its attacker leaves, until it too leaves combat or combat ends
+(CR 509.1g). Untapping invalidates a tapped target at resolution, while either
+status can satisfy an attacking target (CR 110.5, 608.2b). Inspection retains the
+existing source LKI, protection and global target legality contracts. Copies
+keep their declarations and targets; clones read isolated state. Costs, rollback,
+replacement ordering and simultaneous operations use their existing services.
+The shared filter representation also makes tap predicates inspectable in
+current permanent collections; combat collections retain their contextual limit.
+
+`TestPermanentStateTarget*` compares native selection and pure inspection across
+tap/combat combinations, mixed Boolean trees, callback traps, current changes,
+phasing, return, copy and clone identity, end/absent combat, and an attacker's
+departure while its blocker stays. It also checks native destruction agreement,
+unsupported descendants and shared collection selection.
+`TestRONPermanentStateTarget*` checks exact lowering, malformed full cards,
+independent factories and groups, partial legality, copies/clones, source changes
+and native destruction with all six Royal Assassin records and LEG Tetsuo
+Umezawa. The AST audit covers complete target declarations in 19 names / 30
+records, each with full-record compilation and factory validation. This is
+bounded declaration evidence, not complete gameplay certification for all 19.
+
+
+## Pure singular source exclusion (2026-10-16)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` retains
+`TargetOtherThanSource()` with complete supported characteristic, state and
+player restrictions. `PermanentTargetPredicate.Select(*Game, *StackObject)
+([]PermanentVisit, bool)` compares the exact source visit supplied by the shared
+ability source information service. Source departure, phasing, control changes,
+stack copying and game cloning retain that identity. A later battlefield visit
+of the same card is a different object (CR 400.7, 113.7a, 608.2b, 702.26b–d).
+Native target selection uses the same comparison. Announcement with a plain
+source card retains the existing direct source-ID check; resolution uses the
+retained visit. Missing ability source identity returns unknown in inspection.
+
+RON `compileSourceExclusionTarget(Node, scope) (mage.PermanentTargetOption,
+error)` lowers `Other(ThisPermanent)` in permanent-source target contexts.
+The existing scoped reference compiler validates the source. Conjunctions retain
+this option beside complete supported Boolean filter children. Source exclusion
+inside a disjunction, absent sources, wrong arity, malformed references and
+unsupported descendants reject. Other scoped source aliases retain their existing
+adapters; this slice's new RON evidence is limited to `ThisPermanent`.
+RON owns spelling and scope; the engine owns object identity and target legality.
+No callback, cost, choice, replacement, or game mutation runs during inspection.
+Opaque descendants and other unsupported target options still return unknown.
+This does not establish broader ordered spell analysis for Equinox.
+
+`TestPermanentSourceExclusion*` checks native and pure agreement, source departure
+and return, phasing, control, copies, clones, callback traps and absent source
+identity. `TestRONPermanentSourceExclusion*` checks malformed declarations,
+independent factory bindings, copy/clone isolation, source LKI, both complete
+Sorceress Queen records and the complete Halfdane record. Self-target attempts
+cannot pay Queen's tap cost; Halfdane cannot select itself at upkeep. The existing
+animation and Halfdane tests retain duration and layer evidence. No payment,
+replacement-ordering or simultaneous-operation service changes.
+
+## Pure source-relative target comparisons (2026-10-16)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` retains
+`TargetPowerLessThanOrEqualToSourcePower()` and
+`TargetToughnessLessThanSourcePower()` in complete singular target declarations.
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+uses the same `sourceRelativeTargetMatches` service as native candidate selection.
+Power limits are inclusive; toughness limits are strict. Negative and zero power
+remain numeric values. Both options can apply in one conjunction. Current layers
+must be complete before inspection.
+
+The source information service supplies current power for the exact live visit,
+phase-out information while absent, or departure LKI for the original visit
+(CR 113.7a, 400.7, 608.2b, 608.2h, 702.26b–d). A returned source cannot supply
+power for its former visit. Missing visit identity or power returns unknown;
+native selection cannot select from unknown source power. Targets retain their
+announced visits. Copies retain declarations and source identity; clones read
+their own current state. Inspection runs no filter callbacks or game actions.
+Opaque descendants and unsupported options reject the complete declaration.
+
+RON `compileSourceRelativePowerTarget(Node, scope) (mage.PermanentFilter,
+[]mage.PermanentTargetOption, error)` lowers
+`PowerIs(LessThanOrEqualTo(PowerOfPermanent(ThisPermanent)))` and
+`ToughnessIs(LessThan(PowerOfPermanent(ThisPermanent)))` in permanent-source
+target contexts. The shared permanent-reference compiler checks source scope.
+Conjunctions retain complete supported filters and player restrictions.
+Disjunctions cannot flatten a source-relative option. Existing source aliases
+in the toughness adapter keep their prior scope behavior. The separate Old Man
+control-duration parser retains its existing exact shape.
+
+`TestSourceRelativeTargetQuery*` compares inspection, native candidates and native
+resolution across boundaries, counters, departure/return, phasing, target visits,
+source control, copies, clones, opaque descendants and missing source information.
+`TestRONSourceRelativeTargetQuery*` covers invalid declarations, all seven complete
+Old Man of the Sea and Stone Giant records, actual lowered binding identity,
+independent factories, copy/clone isolation, saved power and tap-cost rollback.
+Existing numeric-target and Old Man gameplay tests retain the complete delayed
+trigger and control-duration contracts. No payment, replacement-ordering or
+simultaneous-operation service changes. Equinox still needs its broader proof
+and instruction-family contracts.
+
+
+## Pure fixed numeric target predicates (2026-10-16)
+
+`HasPowerEqual(int)`, `HasToughnessEqual(int)` and `HasToughnessGTE(int)`
+retain immutable numeric predicates in the shared permanent filter tree.
+Native matching and pure inspection call the same current P/T comparisons.
+`And`, `Or` and `Not` retain complete trees; any opaque child rejects inspection.
+The RON target adapter retains `PowerAndToughnessIsEqualTo(PT(integer,integer))`
+and `ToughnessIs(EqualTo(Integer(integer)))`, `LessThanOrEqualTo` and
+`GreaterThanOrEqualTo`. Inclusive upper bounds use a Boolean union without
+integer arithmetic. Negative and machine-limit operands remain exact.
+Source-relative comparisons retain their separate scope and identity contract.
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` and
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+keep the existing exact declaration and announced visit contract. Current layers
+must be applied before selection. Counters, base-setting, modification and
+switch effects supply current values (CR 613.4). Selection uses no target LKI;
+a returned object cannot replace the announced visit (CR 400.7, 608.2b).
+Phasing suspends legality without changing identity (CR 702.26b–d).
+The shared collection inspector also retains these numeric filter trees.
+No new mutable state, cost, replacement or action service is introduced.
+
+`TestFixedNumericTargetQuery*` covers boundaries, complete Boolean inspection
+without callbacks, native parity, current layers, identity, phasing, copies,
+clone isolation and shared collections. `TestRONFixedNumericTargetQuery*`
+covers invalid declarations, both complete card records, native gameplay,
+control and characteristic changes, cost preservation and per-factory bindings.
+Pendelhaven checks current 1/1 at announcement and resolution, consistent with
+its local wotc ruling. Goblin Kites checks current toughness at those times;
+its delayed sacrifice does not repeat the targeting restriction. Existing
+numeric-target, coin and delayed-source tests retain the other card contracts.
+These checks do not establish complete prospective spell analysis for Equinox.
+
+
+## Pure attachment target predicates (2026-10-16)
+
+`IsAttachedTo(PermanentFilter) PermanentFilter` retains complete supported host
+filter trees. Native matching and pure inspection share an exact current-host
+check: attachment and host must be present and unphased, and the saved attached
+incarnation must equal the host incarnation. A returned host cannot restore an
+old attachment (CR 400.7). Reattachment reads the new host (CR 303.4b).
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` retains
+these trees and `TargetAttachedToYouControl() PermanentTargetOption`.
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+uses current host characteristics and the stack object's controller. The Aura's
+owner and controller are independent (CR 303.4e). The host is not targeted;
+host shroud does not restrict this query. Target restrictions, protection,
+exact announced visits, source LKI, copies and phasing keep their shared target
+contracts (CR 608.2b, 702.26b–d). Supply current layers. Opaque host descendants
+reject the complete query without callbacks. Contextual collection filter trees
+can retain the same host nodes; context-free inspection still rejects them.
+
+RON `AttachedToAPermanent(hostFilter)` retains supported pure characteristic,
+state and fixed numeric host filters, nonempty `And`/`Or`, and one conjunctive
+`ControlledByAPlayer(SinglePlayer(You))`. Existing syntax and scope restrictions
+remain in effect. Nested RON host attachments, player references from other
+scopes and controller predicates inside disjunctions remain rejected.
+No replacement, payment, simultaneous-action or mutable binding service changed.
+
+`TestAttachmentTargetQuery*` covers native parity, current control and types,
+reattachment, stale attachment identity, absence, leave-and-return, phasing,
+source departure, copies, clone isolation, Boolean trees and callback traps.
+`TestRONAttachmentTargetQuery*` inspects the complete Miracle Worker and
+Enchantment Alteration records, checks actual lowered destruction bindings,
+factory isolation and RON gameplay. Existing `TestRONAttachmentTarget*` and
+`TestRONAttachmentMoveAlteration` retain rollback, resolution choices, movement,
+protection, replacement and retargeting evidence. Both local ruling files were
+checked; Enchantment Alteration's wotc rulings distinguish the Aura target from
+the destination choice. These queries do not complete Equinox's prospective
+ordered-state or instruction-family contracts.
+
+## Native return instructions in spell proofs (2026-10-16)
+
+`DirectReturnInstruction{Subject PermanentRef, Subjects PermanentSet}` retains
+one unconditional owner-hand return. Exactly one subject field must be set.
+`Effect() ResolvingEffect` rejects malformed and typed-nil subjects with nil.
+Valid declarations reuse `ReturnToHand` and `ReturnEachToHand`; collections keep
+one simultaneous group. No zone, replacement or event executor was added.
+
+`InspectDirectReturn(ResolvingEffect) ([]DirectReturnInstruction, bool)` reads
+complete native return trees, including nested sequences and composites. Unknown
+children reject the whole tree before operand callbacks can run. Results contain
+per-instance declarations and no chosen state. Existing direct destruction
+inspection keeps its destruction-only contract.
+
+`Game.InspectSpellDestruction` accepts complete trees that combine these returns
+and direct destruction. It validates every instruction, subject, collection and
+announced target before analysis. Its existing legality gate, exact stack-object
+identity, source information and simultaneous-group rules still apply.
+RON owns validation and lowering through `compileDirectReturnPlan(Node, scope)`
+and `directReturnPlan.build(instanceBindings) mage.DirectReturnInstruction`.
+Both `PutPermanentIntoItsOwnersHand/1` and
+`PutEachPermanentIntoItsOwnersHand/1` use these descriptors. Existing lexical
+contexts and callers retain their behavior. The unused private
+`compileReturnCollection` adapter was removed after a whole-repository search.
+
+A pure query can exclude watched exact visits selected by an owner-hand return
+from later destruction. If no watched visits remain, it returns false/true.
+Returning a token has the same identity result. A later zone entry cannot
+restore that battlefield visit (CR 400.7). Native returns do not consume
+regeneration or destruction replacement rules. Return-only tails cannot cause
+direct destruction; indirect destruction from state-based actions is outside
+this contract (CR 701.8 and the Equinox rulings).
+
+An empty or illegal return permits analysis of the next instruction. A nonempty
+return with remaining watched visits and later destruction returns false/false:
+departure can change layers, attachments, membership and replacement sources. A phased watched visit must remain in the watch set: returning its
+phase-until source can make it present before the next destruction instruction.
+`TestReturnInstructionPhasedWatch` verifies that this path stays unknown and
+that native resolution phases the land in and then destroys it (CR 702.26b/d).
+The query does not project these changes or use pre-departure state as a proof.
+All target legality checks precede instructions (CR 608.2b), instruction order
+is retained (608.2c), and collections remain simultaneous (608.2f). Unknown
+remains distinct from a supported query that finds no direct destruction proof.
+No effects, decisions, shields, RNG, bindings, layers or events change during
+inspection. Native resolution, APNAP and payment rollback remain unchanged.
+
+`TestReturnInstruction*` covers declarations, complete-tree rejection, exact
+visits, ordering, partial/all-illegal targets, phase cycles, leave-and-return,
+regeneration, indestructibility, opaque callback traps, copies and clones.
+`TestRONReturnInstruction*` covers complete LEG Boomerang and Remove Enchantments
+records and all six Unsummon reprints, mixed return/destroy destinations, copy
+controllers, independent factory
+bindings, invalid declarations and retained simultaneous collection lowering.
+Existing `TestRONReturnHand*`, `TestRONReturnCollection*` and
+`TestRONAttachmentCollectionQueryGameplay` retain broader native movement,
+attachment, payment rollback and simultaneous-event coverage.
+
+This bounded identity proof is a prerequisite for Equinox. It does not establish
+complete changed-state projection, target-player collections, other instruction
+families or `WouldDestroyAPermanent`, which remains rejected.
+
+## Native tap instructions in spell proofs (2026-10-16)
+
+`TapInstruction{Subject PermanentRef, Subjects PermanentSet, Operation TapOperationKind}`
+retains one native instruction. Exactly one subject field must be set.
+`TapOperation` and `UntapOperation` accept singular subjects or collections;
+`MayTapOrUntapOperation` accepts only a singular subject. `Effect() ResolvingEffect`
+returns nil for malformed declarations. Valid declarations wrap one native action
+and reuse `TapSubject`,
+`UntapPermanent`, `TapEach`, `UntapEach` and `MayTapOrUntap`. Collections keep
+one simultaneous action. Optional choices occur at resolution (CR 608.2d,
+701.26a/b and the Twiddle and Hyperion Blacksmith wotc rulings).
+
+`InspectTapInstructions(ResolvingEffect) ([]TapInstruction, bool)` retains complete
+native tap trees through sequences and composites. Unknown children, malformed
+operands and result-bearing instructions reject the complete tree. The query
+reads declarations without effect, operand, filter or decision callbacks.
+Returned slices do not alias the declaration. The typed boundary forwards native
+metadata, delayed source references and captured stack references; it stores no
+chosen state. Typed tap and untap instruction boundaries refresh continuous
+effects after
+the full transition group and its native events, before the next instruction.
+Singular untap also refreshes after a stun counter replaces the transition.
+Source-tapped durations retain their existing expiry. Thus the following
+instruction reads current continuous state (CR 613.5). Legacy action and cost
+callers, raw tap/untap services
+and event-time layer queries keep their separate existing contracts.
+Existing event, replacement and simultaneous-action services remain in use.
+
+`Game.InspectSpellDestruction` accepts these instructions alongside native
+returns and destruction. All declarations, pure contextual collections and
+singular native permanent targets must validate before analysis. Target legality,
+exact visits, source information, phasing and the all-illegal resolution gate
+retain their existing contracts (CR 400.7, 608.2b/c/f, 702.26b/d). Tap and untap
+instructions do not themselves destroy a permanent (CR 701.8b). A tap-only tree
+therefore returns false/true. Before later destruction, an instruction that can
+change any selected visit returns false/false: its action or replacement can
+change layers and later selection. `Game.InspectTapStateChange` now permits
+later proofs for tapping already tapped visits and untapping already untapped
+visits. Optional tap-or-untap choices still block later proofs. See the bounded
+state contract below.
+Empty collections and illegal singular subjects do not block a later proof when
+the spell can still resolve. A destruction proof before a supported tap suffix
+remains valid. No instruction, choice, replacement, layer, binding or RNG state
+changes during inspection. Unknown remains distinct from a known negative.
+
+RON owns spelling and scope in `compileTapInstructionPlan(Node, scope)` and
+`tapInstructionPlan.build(instanceBindings) mage.TapInstruction`. The existing
+`TapPermanent/1`, `UntapPermanent/1`, `TapEachPermanent/1`, `UntapEachPermanent/1`
+and `MayAction(TapOrUntapPermanent/1)` resolving paths use this plan. Costs keep
+their separate lowering. Optional choice is not a new top-level action spelling.
+Result-bearing and payment paths retain their existing adapters.
+
+`TestTapInstruction*` covers declaration validity, complete-tree rejection,
+callback traps, ordered barriers, changed continuous state, identity, phasing,
+copies and clones. `TestRONTapInstruction*` checks complete Twiddle, Riptide and
+Reset records, pure inspection, native gameplay, independent factories, numbered
+targets, partial legality and invalid syntax. Existing `TestRONTapChoice*`,
+`TestRONCastingWindow*` and engine action tests retain optional decline, timing,
+stun replacements, rollback, simultaneous events and clone decision behavior.
+This establishes the tap instruction family only. Damage, life, player targets
+and broader changed-state proofs remain separate prospective-query contracts.
+
+## Singular damage instructions and pure recipient legality (2026-10-16)
+
+`SingularDamageInstruction{Source DamageSourceRef, Recipient DamageRecipientRef,
+Amount ResolutionValue}.Effect() ResolvingEffect` rejects missing and typed-nil
+operands. Valid declarations reuse `DealDamageFrom`, including its source identity,
+nonpositive amounts, prevention, replacement ordering, damage events and result
+processing. No second damage executor or mutable declaration state was added.
+`InspectSingularDamageInstructions(ResolvingEffect)
+([]SingularDamageInstruction, bool)` retains complete native singular damage trees
+through sequences and composites without operand callbacks. Unknown children,
+result options and instruction-local prevention reject the complete tree.
+Returned lists do not alias the declaration.
+
+`InspectDamageTarget(*DamageTargetBinding) (DamageTargetPredicate, bool)` retains
+one singular native `DamageAnyTarget`. Chooser wrappers, plural declarations and
+other recipient domains need separate inspection contracts.
+`DamageTargetPredicate.Select(*Game, *StackObject) (DamageTargetSelection, bool)`
+returns either an exact `PermanentVisit`, a player UUID, or an empty legal-selection
+result. False means unknown. Duplicate or absent declarations and missing visit
+metadata are unknown. Player UUIDs do not use permanent incarnations. Permanent
+selection reuses the complete pure creature-or-planeswalker characteristic tree,
+current types, phasing, exact visits, shroud, hexproof, native protection, global
+restrictions and source LKI. This matches the existing native any-target domain;
+this slice does not add new card types. Layers must be current. No target,
+filter, value, protection or effect callback runs during inspection.
+
+`Game.InspectSpellDestruction` now accepts singular damage from `This`, fixed
+amounts or native X values, and complete native any-target declarations, alongside
+its existing destruction, return and tap trees. All instruction children and
+all announced targets validate before analysis. All-illegal targets prevent
+resolution; an illegal damage recipient is skipped when another target is legal
+(CR 608.2b). A damage-only tree returns false/true even if native resolution will
+kill an animated land: damage does not directly destroy a permanent (CR 120.5
+and the Equinox wotc rulings). Opaque replacement rules need not run to prove
+this bounded instruction category. A legal damage instruction before later
+destruction returns false/false, including player damage and zero amounts.
+Damage and replacement events can change later state. No state projection is
+claimed. A destruction proof before a supported damage suffix remains valid.
+
+RON lowers the ordinary singular `SpellDealsDamage(ThisSpell, amount,
+Ref_AnyTarget)` path through the declaration. Existing signature, value and
+lexical binding validation remain in `ron`. Other damage shapes and result
+consumers keep their existing adapters. No RON spelling or data changed.
+
+`TestSingularDamageInstruction*` covers declaration rejection, complete-tree
+inspection, callback traps, exact visits, current legality, missing metadata,
+phasing, leave-and-return, source LKI, copies, clones, ordering, zero amounts,
+partial and all-illegal targets. `TestRONSingularDamageInstruction*` covers
+complete Lightning Bolt and Psychic Purge records, actual creature/player damage,
+lethal damage, protection, prevention shields, clone isolation, copies, invalid
+syntax, numbered recipients and independent factories. Psychic Purge's separate
+discard trigger remains covered by `TestRONDiscardCausePsychicPurge`; its wotc
+rulings distinguish effect discards from costs and life loss from damage.
+Collections, result-bearing damage, life, prevention instruction policy,
+player-bound collections and changed-state proofs remain separate contracts.
+`WouldDestroyAPermanent` remains rejected.
+
+
+## Native collection damage inspection (2026-10-17)
+
+`CollectionDamageInstruction{Source DamageSourceRef, Recipients DamageRecipientSet,
+Amount ResolutionValue}.Effect() ResolvingEffect` retains one simultaneous action.
+Missing or typed-nil operands return nil. The action uses `DealDamageEach`, with
+its existing source LKI, replacement ordering, batch events and nonpositive rules.
+`InspectCollectionDamageInstructions(ResolvingEffect)` returns a new list and a
+known flag. Complete native sequences and composites retain instruction order.
+Division, result options, missing operands and unknown descendants reject the tree.
+
+`InspectDamageRecipientCollection(DamageRecipientSet)` returns a
+`DamageRecipientCollectionPredicate` and a known flag. Supported sets are
+`DamageRecipients(EachPlayer, PermanentSet)` and `PermanentDamageRecipients`.
+The permanent operand must be a complete contextual collection declaration.
+`Select(*EffectContext) ([]DamageTargetSelection, bool)` reads players in turn
+order and exact current permanent visits in battlefield order. Supply current
+layers and a present resolving controller. A missing context or zero predicate
+returns unknown. Results have no shared mutable state. Collections omit phased
+objects, include new visits and use current controller, owner, keywords and combat
+membership. They use no target legality or old target LKI.
+
+`HasKeywordFilter` and `NotHasKeywordFilter` retain native predicates in complete
+Boolean filter trees. Pure reads use the same current attribute service as runtime
+matching, including face-down status, layer grants and removals. Opaque filters
+still reject a complete query. The prior filter text and runtime matching remain.
+
+RON lowers `SpellDealsDamage(ThisSpell, amount, EachPermanent(filter))` and
+`MultipleRecipients([EachPermanent(filter), EachPlayer(AnyPlayer)])` through the
+new declaration. Existing syntax, scope checks and instance factories remain.
+`Game.InspectSpellDestruction` supports this shape with source `This` and fixed
+or native X amounts. A damage-only tree proves no direct destruction, even with
+lethal animated-land damage (CR 120.5). A nonempty recipient set before later
+destruction returns unknown, even for zero damage. Empty sets permit later proofs.
+An earlier destruction proof survives a supported damage suffix. Every target and
+instruction must first support inspection; all-illegal targets stop resolution.
+No inspection reads an amount callback, executes damage, uses shields, calls
+replacement callbacks or changes RNG (CR 120.4–8, 608.2b/c/f/h, 613.1f).
+
+`TestRONCollectionDamageInstructionRealCards` covers Earthquake and Hurricane in
+all six sets, DRK Inferno and ARN Sandstorm (four names, fourteen complete records).
+`Invalid` covers malformed recipient sets, keywords and unbound references.
+`TestCollectionDamageInstructionDeclaration`, `Recipients`, `PureKeyword` and
+`Order` cover native metadata, invalid/opaque declarations, independent results,
+current layers, phase cycles, new visits, clones, exact player identities and
+ordered proof barriers. Existing RON collection/mixed damage tests retain source
+LKI, transactional casting, simultaneous events and replacement gameplay evidence.
+Packet instructions, bound target groups, result-based amounts and changed-state
+projection remain separate contracts. This does not complete Equinox.
+
+## Pure player targets and bound collections (2026-10-17)
+
+`InspectPlayerTarget(PlayerRef) (PlayerTargetPredicate, bool)` accepts complete
+singular native `PlayerTarget` and `OpponentTarget` declarations.
+`PlayerTargetPredicate.Select(*Game, *StackObject) (uuid.UUID, bool)` checks the
+exact declaration once in the announced target list and reads current player
+presence. Opponent eligibility uses the stack controller. A nil identity with a
+true known flag means illegal; absent, repeated or malformed declarations mean
+unknown. Attack-history restrictions use the extension below. Chooser wrappers
+and opaque references remain unsupported. No `Possible`, player operand or
+decision callback runs.
+
+`InspectContextualPermanentCollection` retains those declarations in owner,
+controller and native opponent collections, including complete Boolean and
+attachment-host trees. Its existing `Select(*EffectContext) []PermanentVisit`
+uses the resolving target frame. Missing frames select no objects. Internal
+`selectKnown` distinguishes missing bindings from a legal empty collection;
+proof consumers must preserve this distinction. An explicitly illegal target
+supplies an empty frame entry. Membership reads current ownership and control,
+current characteristics and exact visits, with phased objects absent. It does
+not use player or permanent LKI. Returned objects have new visits.
+
+`Game.InspectSpellDestruction` now validates native player targets and builds a
+local frame before the all-illegal resolution gate. Every bound collection,
+including damage recipients, must have its declaration in that frame, even
+under an empty Boolean child or an all-illegal spell.
+`OrderedDestructionPredicate.Certain` also checks every bound declaration
+before any proof. No frame enters game state, payment trials or clones.
+Return-only spells cannot directly destroy watched visits. A return removes selected exact visits from later proofs; a nonempty
+return with remaining watches still blocks changed-state proofs. The existing
+native zone batches, replacement processing, APNAP, target legality and casting
+transactions are reused (CR 115.1a, 115.10, 400.7, 608.2b/c/f/h).
+
+RON isolates player-target lowering in `compilePlayerTarget(Node, scope)`.
+`TargetPlayer(AnyPlayer)` and `TargetPlayer(Opponent)` build fresh native
+bindings. Existing `TargetPlayer(AttackedThisTurn)` execution remains supported
+and now uses the pure history extension below. Existing
+`SinglePlayer(Ref_TargetPlayer)` owner/control lowering retains the same
+per-instance declaration; lexical
+binding errors remain compile errors.
+
+`TestBoundPlayerCollection*` covers declaration identity, unknown/illegal
+results, complete membership, native/pure parity, callback traps, phasing,
+returned visits, clone isolation, mixed target legality and instruction order.
+`TestRONBoundPlayerCollection*` covers both complete Hurkyl's Recall records,
+current artifact status, foreign control, shroud, phasing, returns, copies,
+clones, fresh lowering and invalid declarations. Its wotc rulings require all
+battlefield artifacts owned by the targeted player, regardless of controller.
+Healing Salve and Mana Short share the target prerequisite; their full query
+policies require separate life/prevention and mana-loss instruction contracts.
+
+
+## Native packet damage and pure player recipients (2026-10-17)
+
+`PacketDamageInstruction{Source DamageSourceRef, Packets []DamagePacket}.Effect()
+ResolvingEffect` rejects an absent source, empty group, or missing and typed-nil
+packet operands. It copies the packets through `DealDamagePackets`. Existing
+callers keep their API. The shared batch reads all recipients and amounts before
+applying damage, merges overlapping recipients, retains source LKI, and uses
+normal prevention, replacements and simultaneous event delivery.
+`InspectPacketDamageInstructions(ResolvingEffect) ([]PacketDamageInstruction,
+bool)` retains complete groups through sequences and composites. Unknown children
+reject the entire tree. Each returned packet slice has independent storage.
+Inspection never executes source, recipient, amount or effect callbacks.
+
+`InspectDamageRecipient(DamageRecipientRef) (DamageRecipientPredicate, bool)`
+accepts native singular any-target bindings, native any-player/opponent bindings,
+`You` and `ActivePlayer`. `DamageRecipientPredicate.Select(*Game, *StackObject)
+(DamageTargetSelection, bool)` reads current legality and exact declarations.
+An empty known result means illegal; a missing or repeated binding means unknown.
+The zero predicate, nil contexts, chooser targets, saved and
+permanent references remain unknown. Permanent any-target legality reuses the
+existing exact-visit, phasing, current-layer, protection and source-LKI contract.
+Player identities never use permanent LKI. No reference callback is executed.
+
+`Game.InspectSpellDestruction` accepts complete packet groups and singular player
+damage from `This` with fixed or native X amounts. It checks every instruction,
+announced target and referenced binding before the all-illegal gate and before
+any proof. A damage-only tree proves no direct destruction, including lethal
+animated-land damage (CR 120.5 and Equinox's wotc rulings). All-illegal targets
+prevent nontargeted controller damage (CR 608.2b). Each legal damage recipient
+blocks a later destruction proof, including zero damage: replacements or damage
+events can change the later state. An illegal recipient cannot supply this
+barrier when another target is legal. A preceding supported destruction proof
+can still succeed. Packet grouping is preserved for execution; inspection only
+flattens packets that cannot contain an intervening destruction instruction.
+
+RON lowers `SpellDealsMultipleDamage(source, [DamageToRecipients(amount,
+recipient), ...])` and the existing permanent counterpart through this typed
+declaration. Spelling, lexical scopes, numbered groups and invalid declarations
+remain compiler responsibilities. Broader operands still execute through their
+existing adapters but remain unknown to this bounded pure query. No RON record,
+production registry, Go card or legacy DSL API changes.
+
+Evidence: `TestPacketDamageInstruction*` covers complete group retention, copy
+isolation, invalid declarations, callback traps, player identities, target
+legality, complete-tree validation, order barriers, missing/duplicate/foreign
+bindings and cloned queries. `TestRONPacketDamageInstruction*` covers every
+Psionic Blast record, actual damage, lethal damage, prevention, protection,
+phasing, new visits, copied controllers, clones, player targets, partial and
+all-illegal resolution, independent factories and invalid syntax. Existing
+`TestDamagePackets*`, `TestRONDamagePackets*`, `TestSingularDamageInstruction*`
+and `TestRONUnionDamageTarget*` retain batch ordering, source LKI and payment
+rollback evidence. This contract does not complete `WouldDestroyAPermanent`.
+
+
+## Singular life instructions and pure spell inspection (2026-10-17)
+
+`LifeInstruction{Subject PlayerRef, Amount ResolutionValue, Gain bool}.Effect()`
+returns the existing singular gain or loss action, or nil for missing operands.
+`InspectLifeInstructions(ResolvingEffect) ([]LifeInstruction, bool)` retains
+complete native sequences and composites. It rejects unknown children, missing
+operands and result-bearing life actions. It does not execute callbacks.
+
+RON `GainLife(amount)` and `LoseLife(amount)`, including `PlayerAction` scopes,
+lower to this declaration. Existing dynamic values and subject snapshots keep
+their execution contracts. The declaration does not add life payments or sets.
+Execution uses the existing life replacements, permissions, history and events.
+Damage prevention does not prevent life loss (CR 119.3).
+
+`Game.InspectSpellDestruction` accepts fixed or native X life amounts with
+native any-player/opponent target declarations, `You` or `ActivePlayer`.
+It validates the complete tree and every binding before the all-illegal gate
+or a destruction proof (CR 608.2b/c). A life-only tree returns false/true.
+A legal life instruction before later destruction returns unknown, even at
+zero or negative amounts. Life changes and replacements can change later state;
+inspection does not execute them. An illegal life target does not block a later
+proof if another target remains legal. A supported life suffix preserves an
+earlier direct destruction proof. Clones and spell copies keep declaration identity.
+
+`TestLifeInstruction*` covers declarations, query purity, ordering, binding
+failures, legality and shared life execution. `TestRONLifeInstruction*` covers
+all 13 Healing Salve, Stream of Life and Alabaster Potion records, selected life
+modes, X/zero, failed payment, copies, clones and independent scopes. Prevention
+modes, saved subjects, dynamic amounts and result bindings remain
+outside this pure query contract. Equinox still requires broader contracts.
+
+
+## Finite future prevention instructions and pure inspection (2026-10-17)
+
+`FuturePreventionInstruction{Recipient DamageRecipientRef, Amount ResolutionValue}.Effect()`
+builds the existing `PreventNextDamage` installation, or nil for missing operands.
+`InspectFuturePreventionInstructions(ResolvingEffect) ([]FuturePreventionInstruction, bool)`
+reads complete native sequences and composites without callbacks. Nil operands,
+typed nils and unknown children reject the complete tree. Returned slices are independent.
+This declaration retains existing operand execution; it does not expand query support.
+
+RON `CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(
+amount, recipient), [PreventThatDamage])` now lowers through this declaration.
+The existing compiler keeps arity, operation, value and reference scope checks.
+Negative fixed declarations reject; zero and in-scope X remain valid. Other future
+prevention events keep their existing adapters. RON owns spelling and scope;
+the engine owns shield installation, identity, expiry, allocation and replacements.
+
+`Game.InspectSpellDestruction` accepts fixed/native X amounts with complete native
+any-target or player target declarations, `You` or `ActivePlayer`. Selection uses
+current legality and exact announced permanent visits without recipient LKI.
+It checks all operands and bindings before an all-illegal result or an earlier
+destruction proof. Opaque, saved and dynamic operands stay unknown.
+A supported prevention-only tree returns false/true. A legal prevention prefix
+blocks later destruction proofs, even at zero or negative amounts; inspection
+does not simulate installation and later replacement interactions. An illegal
+recipient permits later proofs when another target remains legal. A supported
+suffix preserves an earlier proof. No shield is installed or consumed, and no
+choice, callback, event or RNG runs. Copies and clones keep declaration identity.
+
+Execution still uses the existing finite shield and simultaneous-damage allocation
+pipeline (CR 615.3–7, 615.12, 616.1–2). Installation occurs only at resolution,
+expires at cleanup, and retains the recipient visit across phasing without
+following a returned object. Query ordering follows CR 608.2b/c. This bounded
+policy does not complete the prospective spell contract for Equinox.
+
+Evidence: `TestFuturePreventionInstructionDeclaration`, `Spell` and `Execution`
+cover native trees, typed nils, unknown children, callback traps, exact bindings,
+missing/foreign/duplicate declarations, legality, phasing, return, order, zero,
+negative/X amounts, repetitions, execution and clone isolation.
+`TestRONFuturePreventionInstructionRealCards` covers every Healing Salve record
+(six) and Alabaster Potion (one): selected prevention mode, fixed/X/zero,
+players/permanents, failed casting, illegal targets, copied spells, pending clones,
+pure query and actual shield resolution. `Scopes` covers independent factory
+bindings and preservation of an existing shield. `Invalid` checks malformed and
+out-of-scope declarations. Retained `TestRONFinitePrevention*` covers both modes,
+retargeting, source LKI, cleanup, prevention restrictions, replacement order,
+simultaneous allocation, combat, delayed bodies and cost rollback. The life-mode
+query mapping remains `TestRONLifeInstructionRealCards`.
+
+
+## Native unspent mana loss instructions (2026-10-17)
+
+`ManaLossInstruction{Subject PlayerRef}.Effect() ResolvingEffect` retains one
+native unspent mana removal. Missing or typed-nil subjects return nil.
+`InspectManaLossInstructions(ResolvingEffect) ([]ManaLossInstruction, bool)`
+reads complete native sequence/composite trees and returns an independent list.
+Unknown children, incomplete declarations and saved-mana result actions reject
+the entire tree. Inspection does not resolve player operands or clear pools.
+Existing `LoseUnspentManaFor` callers are inspectable without conversion.
+
+RON `compileLoseUnspentMana(Node, scope) ([]effectFactory, error)` lowers bare
+`LoseUnspentMana` through this declaration with the current typed player operand.
+`PlayerAction(player, LoseUnspentMana)` retains its explicit operand. Existing
+`PlayerActions` snapshot bindings, trigger and delayed contexts retain their
+execution contract. Tuple spelling, unbound references and incompatible players
+remain declaration errors. No RON spelling enters the engine.
+
+`Game.InspectSpellDestruction` accepts complete native any-player/opponent targets,
+`You` and `ActivePlayer` for mana loss. It validates the entire instruction tree
+and every binding before target gates or destruction proofs. Mana loss alone
+cannot directly destroy a permanent. A legal mana-loss prefix blocks later state
+proofs, including with an empty pool; inspection does not predict consequences
+of resource changes. An illegal player target is skipped if another target is
+legal. Supported suffixes preserve earlier proofs. Saved subjects, forced mana
+activation and saved-mana transfers remain unknown.
+This completes Mana Short's bounded query tree, not Equinox's broader contract.
+
+Execution reuses native pool removal (CR 106.4, 608.2b/c). Restricted mana is
+removed; life, production history and other players' pools remain unchanged.
+No mana-production, payment or damage event is introduced. Both native and
+custom-player clone paths now copy `ProducedThisTurn` and `LastDrainedColors`
+into independent storage; previously those paths dropped both histories.
+The query reads current target and collection services without callbacks,
+choices, RNG, LKI acquisition, layer updates or speculative resolution.
+
+Evidence: `TestManaLossInstructionDeclaration`, `Spell`, `Execution` and
+`CloneHistory` cover missing/typed-nil declarations, unknown children, independent
+results, exact binding identity, full-tree validation, illegal targets, ordered
+barriers, empty pools, callback traps, visits, phasing, history and clone isolation.
+`TestRONManaLossInstructionRealCards` covers all six complete Mana Short records,
+empty/restricted pools, lands without mana abilities, excluded nonlands, phasing,
+returned lands, retargeted copies, pending clones and casting rollback.
+`TestRONManaLossInstructionScopes` and `Invalid` cover independent factory targets
+and declaration rejection. Existing `TestRONManaDenial*` retains Power Sink,
+trigger, delayed and player-snapshot execution evidence. No source record changed.
+
+
+## Pure attack-history player targets (2026-10-17)
+
+`InspectPlayerTarget(PlayerRef) (PlayerTargetPredicate, bool)` retains
+`TargetPlayerAttackedThisTurn()` on singular native player and opponent
+declarations. `PlayerTargetPredicate.Select(*Game, *StackObject) (uuid.UUID,
+bool)` checks the exact declaration and current `Game.PlayerAttackedThisTurn`
+history. The opponent restriction also uses the current stack controller.
+Missing, foreign, duplicate, plural and opaque declarations remain unknown.
+A present player without a declared attack is a known illegal target. No
+`Possible`, choice, filter or reference callback runs. Inspection changes no
+state and uses no RNG or player LKI.
+
+The shared target predicate supplies damage recipients, contextual collections,
+life, prevention and mana-loss subjects to native spell inspection. It validates
+complete trees before all-illegal gates or destruction proofs. An illegal
+history target skips only its instructions when another target is legal. A legal
+damage prefix, even zero damage, still blocks later changed-state proofs.
+
+RON's existing `compilePlayerTarget(Node, scope)` lowers the exact bare-symbol
+`TargetPlayer(AttackedThisTurn)` form with fresh per-factory declarations.
+`SpellDealsMultipleDamage` retains those same references in native packet groups.
+Tuple, Boolean and undeclared target forms remain compile errors. No new syntax
+or execution path is needed. Fire and Brimstone's complete DRK record now has
+pure-query and gameplay evidence; its compilation status does not change.
+
+CR 508.1 establishes declared attack history. Creature departure, phasing, combat
+removal and control changes do not erase the player's declaration. Entering
+combat without declaration does not count. CR 608.2b/c preserves target checks
+and instruction order. CR 514.3a retains history while cleanup priority resolves
+pending spells; final cleanup clears it. Clones read independent history.
+CR 120.5 and Equinox's wotc rulings distinguish damage from direct destruction.
+Fire and Brimstone has an explicit empty local rulings array.
+
+Evidence: `TestHistoryPlayerTargetQuery*` checks native selection parity, both
+player domains, live/reset history, exact and malformed bindings, callback traps,
+RNG purity, clones, complete-tree validation and instruction order.
+`TestRONHistoryPlayerTargetQuery*` covers the complete real record, self/other
+players, merged packets, prevention, phasing, new creature visits, cleanup
+priority, copies, clones, factory isolation and invalid syntax. Existing
+`TestRONAttackHistoryFireAndBrimstone` retains invalid-target payment rollback
+evidence. This extension does not complete Equinox or runtime cutover.
+
+
+## Native player-or-planeswalker target inspection (2026-10-17)
+
+`InspectDamageTarget(*DamageTargetBinding) (DamageTargetPredicate, bool)` now
+accepts native singular `PlayerOrPlaneswalkerTarget` declarations from
+`DeclarePlayerOrPlaneswalkerTarget(name)` and
+`DeclareOpponentOrPlaneswalkerTarget(name)`. The predicate retains the complete
+player and permanent domains. `DamageTargetPredicate.Select(*Game, *StackObject)
+(DamageTargetSelection, bool)` excludes the current controller only from an
+opponent-only player domain; either player's planeswalker remains eligible.
+Player identities remain separate from exact battlefield visits. Declaration
+identity, current type, phasing, shroud, hexproof, protection and native global
+target rules reuse the existing permanent target query, including ability-source
+information after departure. No target, filter, source or effect callback runs.
+Missing or repeated declarations, missing visit/zone information, opaque rules,
+typed-nil declarations and nonsingular shapes remain unknown. Known illegal
+selections are empty. The current stack controller must be a present player.
+
+`InspectDamageRecipient` and `Game.InspectSpellDestruction` use the same policy
+for singular damage, simultaneous packets and finite prevention. Every child
+and binding validates before target gates or destruction proofs. All-illegal
+targets prevent untargeted self damage; a partly illegal spell skips that
+recipient. A legal damage prefix keeps the changed-state barrier, including at
+zero damage. Supported suffixes preserve earlier proofs. Damage does not itself
+destroy a permanent (CR 120.5). CR 115, 608.2b and 702.26b establish target and
+phasing boundaries. Copies use their own controller; clones retain declarations
+and independent game state. Inspection does not consume RNG or prevention.
+
+RON already lowers the exact shape
+`TargetPlayerOrPermanent(AnyPlayer|Opponent, IsCardtype(Planeswalker))`, with
+`Ref_TargetPlayerOrPermanent`, to these fresh per-factory native declarations.
+That adapter and execution services are reused unchanged. No source record or
+vocabulary changes. Eternal Flame's complete prospective spell query remains
+unknown until its live count and rounded amount contract is implemented.
+
+Evidence: `TestPlayerPlaneswalkerTargetQuery*` covers domain parity, current
+legality, identity, phasing/return, copies/clones, malformed declarations,
+callback traps, RNG, complete validation and instruction ordering.
+`TestRONPlayerPlaneswalkerTargetQuery*` covers fresh lowering, independent
+factories, invalid forms, actual packet damage/prevention, all-illegal resolution
+and real Witch Hunter source LKI. Existing `TestRONPlayerPlaneswalker*`,
+`TestRONRoundedDamage*`, `TestRONModalTriggerRelicBind` and
+`TestRONDiscardPaymentFactLandsEdge` retain real-card gameplay evidence for
+Axelrod Gunnarson, Witch Hunter, Eternal Flame, Relic Bind and Land's Edge.
+
+
+## Native live count packet inspection (2026-10-17)
+
+`InspectLivePermanentCount(ResolutionValue) (LivePermanentCountPredicate, bool)`
+accepts `CountPermanents` over a complete native contextual permanent collection,
+optionally nested inside `DivideRoundUp` or `DivideRoundDown` with `Fixed(2)`.
+Other arithmetic, divisors, saved results, callbacks and incomplete descendants
+remain unknown. A zero predicate is unknown. The immutable predicate retains no
+members or game state.
+
+`LivePermanentCountPredicate.Read(*EffectContext) (int, bool)` reads current,
+phased-in collection members through the existing contextual collection query.
+Current layers and a present controller are required. Exact player declarations
+need a complete resolving target frame; missing bindings remain unknown. An
+illegal but declared player target supplies an empty collection. No LKI, value,
+collection, player or filter callback is used. Rounding uses integer division
+and remainder, so large counts do not overflow when rounding up (CR 107.1a).
+Copies read their controller's collection. Clones read their own battlefield.
+
+`Game.InspectSpellDestruction` accepts these values only in native source damage
+packets. Existing fixed/X packet support is preserved. Every count binding is
+validated before all-illegal target gates or any destruction proof. Query reads
+do not install or consume shields, execute damage or change RNG state. Damage
+alone proves no direct destruction (CR 120.5). Legal packets keep the existing
+changed-state barrier before later destruction, even when their count is zero.
+Supported damage suffixes preserve earlier destruction proofs. Other dynamic
+singular, collection, life and prevention amounts need separate contracts.
+
+RON already lowers `TheNumberOfPermanentsOnTheBattlefield(collection)` through
+`CountPermanents`, and `HalfRoundedUp/Down(value)` through native fixed-two
+division. These adapters and per-factory bindings are reused. Eternal Flame's
+full targeted count and half-up controller count stay in one simultaneous batch;
+all operands are read before damage (CR 608.2h). All-illegal targets prevent
+controller damage (CR 608.2b); phased-out lands do not count (CR 702.26b).
+
+Evidence: `TestLiveCountValue`, `TestLiveCountValueSpell`,
+`TestRONLiveCountValueEternalFlame` and `TestRONLiveCountValueInvalid` cover live
+reads, odd/even/zero counts, nested rounding, callback traps, unknown trees,
+bindings, complete validation, order barriers, real RON gameplay, control,
+phasing, returned lands, copied controllers, prevention and clone isolation.
+Existing `TestRONRoundedDamage*` retains simultaneous reads, target identity,
+source LKI, replacement ordering, casting and rollback coverage. This closes
+Eternal Flame's packet query gap, not Equinox's full prospective-spell contract.
+
+
+## Native plural permanent target inspection (2026-10-17)
+
+`InspectPermanentTargets(*PermanentTargetsBinding) (PermanentTargetsPredicate, bool)`
+retains a complete native fixed-count or exact-X permanent declaration. Native
+filter, owner/controller, source-relative and target restriction policies are
+shared with `InspectPermanentTarget`; the new query does not call `Possible` or
+filter callbacks. Optional counts, random/chooser wrappers and unsupported
+children remain unknown. The declaration contains no chosen state.
+
+`PermanentTargetsPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+checks exact aligned declaration identity, distinct announced identities, the
+full announced count, battlefield zone snapshots, incarnation snapshots and
+current target legality. Phased or returned targets are illegal; phasing in
+restores the same visit. Copies use their own controller. Missing declaration,
+zone, visit or count information is unknown. A zero-count group requires the
+exact declaration in `Card.CastTargets()`. Results are independent slices.
+Supply current layers. Selection does not use LKI for a returned target, apply
+layers, use shields, change RNG or make decisions (CR 115.3, 115.6, 608.2b).
+
+`InspectContextualPermanentCollection` also retains these target groups and
+`FilterPermanentSet` with complete native property filters. A resolving frame
+must contain only current legal exact visits. A missing frame is unknown; a
+present empty group is known. Filtering reads current properties, so flying is
+checked at resolution rather than at announcement. Collection results retain
+battlefield order; execution still uses the original native set and shared
+simultaneous damage service. Bound player and permanent frames are checked
+through the same internal `bindingsKnown` service.
+
+`Game.InspectSpellDestruction` validates all plural groups, then constructs the
+legal target frame before every instruction check, the all-illegal gate or any
+earlier destruction proof. Zero targets allow resolution; all announced targets
+being illegal stop it. Current native property filters cannot introduce an
+unannounced visit. Nonempty tap or damage prefixes keep the existing changed-state
+barrier, including zero damage. Empty sets permit later proofs; supported suffixes
+preserve earlier proofs. Damage does not directly destroy a permanent (CR 120.5,
+608.2b/c/f). This does not project a new state or complete Equinox.
+
+Existing RON lowering is reused: `NumberTargetPermanents(ValueX, filter)` and
+`NumberTargetPermanents(Integer(n), filter)` build fresh typed groups per factory.
+`TapEachPermanent(Ref_TargetPermanents)` retains a native tap group.
+`SpellDealsDamage(ThisSpell, Integer(2), EachPermanent(And([Ref_TargetPermanents,
+HasAbility(Flying)])))` retains `FilterPermanentSet` inside one native collection
+damage instruction. No new RON spelling, executor or card-name branch is needed.
+
+`TestRONPluralTargetQueryWinterBlast` executes the complete LEG record, including
+zero X, tapped creatures, current flying, partial/all illegality, phase cycles,
+return identity, shield preservation, copy controller and clone isolation.
+`TestRONPluralTargetQueryInvalid` rejects an unbound numbered group, a malformed
+keyword and an unbound plural read. `TestPluralTargetQuery*` covers native bounds,
+exact visits, source protection, hexproof, groups sharing an identity, missing and
+foreign frames, unknown suffixes before proofs, pure callback traps and RNG.
+Existing `TestRONCollectionDamage*` and `TestRONDestructionCountEruption*` retain
+payment rollback, simultaneous damage, replacement order and actual-result tests.
+Result-derived amounts, including Volcanic Eruption's graveyard count, remain a
+separate native inspection gap. No compilation count change is expected.
+
+## Native destruction result inspection (2026-10-17)
+
+`DestructionResultInstruction{Subjects PermanentSet, Result *NumberBinding,
+CannotRegenerate bool}.Effect() ResolvingEffect` builds one shared simultaneous
+destruction with `PermanentsPutIntoGraveyardThisWayInto`. Missing subjects or a
+missing/unnamed result returns nil. `InspectDestructionResult(ResolvingEffect)
+(DestructionResultInstruction, bool)` retains exactly one such producer, without
+selecting objects or reading resolution state. Creature-death results, visit
+results, duplicate options, sequences and unknown effects reject. The older
+`InspectDirectDestruction` contract still rejects result writes.
+
+`Game.InspectSpellDestruction` accepts these producers and an exact `FromNumber`
+read in native source collection damage. It validates the complete ordered tree
+before any resolution gate or proof. Each read requires its exact preceding
+producer; identical labels do not identify bindings. Repeated producers reject.
+Sequences retain lexical order across nesting. Arithmetic, other result kinds,
+opaque operands and unknown descendants remain unknown. All contextual subjects
+and target groups validate through the existing native query frame.
+
+The query does not evaluate or predict the saved number. A supported damage
+suffix cannot undo an earlier direct destruction proof. A nonempty damage prefix
+still blocks later state proofs. No execution result, decision, shield, RNG,
+callback or game state is consumed. Current layers remain a caller prerequisite.
+Execution uses the existing simultaneous destruction and damage services, counting
+actual graveyard moves after regeneration, indestructibility and destination
+replacements. Tokens count before they cease to exist. See CR 701.8a–c,
+608.2b/c/f/i and 120.5. This bounded contract does not finish Equinox integration.
+
+`TestDestructionResultQuery*` covers declaration rejection, ordered producer/read
+identity, exact target visits, phasing, regeneration prohibition, destinations,
+clones, copies, unknown descendants and query purity. `TestRONDestructionResultQuery`
+uses all six complete Volcanic Eruption records and compares repeated queries
+with actual resolution. Existing `TestRONDestructionCount*` retains replacement
+ordering, simultaneous damage, tokens, retargeted copies and payment rollback.
+
+
+## Native draw instructions and pure spell inspection (2026-10-17)
+
+`DrawInstruction{Subject PlayerRef, Amount ResolutionValue}.Effect()
+ResolvingEffect` builds the existing `DrawFor` action, or nil for missing
+operands. `InspectDrawInstructions(ResolvingEffect) ([]DrawInstruction, bool)`
+reads complete native sequences and composites without callbacks. Missing
+operands, unknown children, malformed options and all number/card/card-set result
+writes reject the complete tree. Returned slices are independent. The descriptor
+can retain dynamic operands; each query context must validate its own operands.
+
+RON `DrawNumberCards(amount)` and ordinary `DrawACard`, including singular
+`PlayerAction` scopes, lower through this descriptor. The drawn-card compiler
+marks each exact producer when reveal or discard reads its result. An unused
+producer builds a plain draw; a referenced producer retains `DrawCardInto` and
+its existing scoped continuation. Nested and independent producers keep separate
+identities. No result read or execution behavior is dropped.
+
+`Game.InspectSpellDestruction` accepts fixed or native X draw amounts with native
+player targets, the resolving controller or the active player. Complete operands
+and bindings validate before any all-illegal gate or destruction proof. Missing,
+foreign and repeated declarations, saved player references, other dynamic amounts,
+result writes and unknown descendants remain unknown. Copies use their own
+controller and target declarations. Current layers remain a caller prerequisite.
+
+A draw-only tree returns false/true for direct destruction. A legal draw before
+later destruction remains unknown, even at zero or negative amounts; the query
+does not project state or execute replacements. An illegal draw target is skipped
+when another target is legal. A supported draw suffix preserves an earlier
+proof. Inspection does not draw, inspect hidden cards, use replacements, make
+choices or advance RNG. This is a direct-destruction query, not a prediction of
+indirect consequences. Equinox's broader prospective-spell contract remains open.
+
+Execution uses individual shared draws, including replacement completion before
+the next draw (CR 121.1, 121.2, 121.6). The existing target legality and ordered
+resolution services apply (CR 608.2b/c). Saved draw readers retain CR 121.6c.
+The WotC Equinox rulings exclude indirect destruction and require present-state
+evaluation; no Scryfall note supplies an additional policy here.
+
+`TestDrawInstructionDeclaration`, `TestDrawInstructionSpell` and
+`TestDrawInstructionExecution` cover native declarations, option rejection,
+unknown trees, callback traps, binding identity, all/partial legality, order
+barriers, exact visits, phasing, clones, RNG purity, X and per-card replacements.
+`TestRONDrawInstructionRealCards` queries and executes all eleven Ancestral
+Recall and Braingeyser records, with X/zero, self/opponent draws, failed payment,
+copies, retargeting, clone isolation and one-shot replacement preservation.
+`TestRONDrawInstructionScopes`, `TestRONDrawInstructionInvalid` and
+`TestRONDrawInstructionSavedResultBoundary` cover independent factories,
+malformed/unbound syntax and retained saved-card execution. Existing drawn-card
+reveal, future replacement and draw/life domain suites retain wider interactions.
+No RON record or vocabulary change is needed.
+
+
+## Native battlefield exile inspection (2026-10-17)
+
+`PermanentExileInstruction{Subject PermanentRef, Subjects PermanentSet}.Effect()
+ResolvingEffect` requires exactly one non-nil subject field. It builds the existing
+`Exile` or `ExileEach` action. `InspectPermanentExileInstructions(ResolvingEffect)
+([]PermanentExileInstruction, bool)` reads complete native sequences and composites.
+Missing operands, typed nils, result-bearing actions and unknown descendants
+reject the whole tree. Returned instruction slices are independent. Inspection
+retains operand declarations without resolving them or executing callbacks.
+
+`Game.InspectSpellDestruction` accepts singular native permanent target bindings
+and complete contextual permanent collections for these actions. Every declaration,
+filter and binding must support pure inspection before target legality gates or
+proofs. Missing, foreign or repeated declarations remain unknown. Exact battlefield
+visits, partial legality, all-illegal resolution, phasing and copies use the shared
+target contracts. Current layers remain a caller prerequisite.
+
+Exile alone has no direct-destruction proof. A nonempty exile prefix blocks later
+destruction proofs, including for the same watched visit: the query does not
+project replacement outcomes or later state. Empty and illegal selections do not
+block later proofs. A supported suffix retains an earlier proof; an unknown suffix
+rejects the complete tree. Inspection consumes no replacement, shield, choice or
+RNG and makes no zone changes. Linked exile, saved results and other zones retain
+execution support but require separate query contracts.
+
+Execution reuses singular exile and simultaneous group exile. Group execution
+processes replacements before departures and zone events after the group. CR 701.13a defines
+exile; CR 400.7, 608.2b/c/f and 702.26b/d define visit identity, target legality,
+order, simultaneous actions and phasing. The local WotC Dust to Dust and Ashes to
+Ashes rulings require partial-target resolution; Ashes deals no damage when both
+targets are illegal. Equinox's WotC rulings distinguish direct destruction from
+indirect consequences. No Scryfall notes add policy for these three cards.
+
+`TestExileInstructionDeclaration`, `Spell`, `PartialLegality` and `GroupExecution`
+cover declarations, callback traps, complete trees, order barriers, exact visits,
+phasing, copies, clone isolation, RNG purity, simultaneous departures and actual
+replacement cancellation/redirection. `TestRONExileInstructionRealCards` maps both
+complete DRK records to native queries and resolution, including payment failure,
+illegal counts, duplicate targets, partial/all-illegal targets, copied controllers,
+retargeted copies, prevention and indestructibility. `Bindings` and `Invalid` cover
+fresh factories, singular lowering and invalid syntax. Existing `TestExileEach*`,
+`TestExileControllerCounts*`, linked/grouped exile and delayed death tests retain
+broader execution coverage. No source record or vocabulary change is required.
+
+## Native target information life instructions
+
+`PermanentLifeInstruction{Subject *PermanentTargetBinding, ManaValue bool}.Effect()`
+builds life gain for the target's controller, using that target's power or mana
+value. `InspectPermanentLifeInstruction(ResolvingEffect)` retains that exact
+native declaration without resolving either operand. Both operands must use the
+same singular target binding. Missing targets, owner reads, toughness, loss,
+saved results and opaque operands are outside this inspection contract.
+
+Execution reuses `ControllerOfWithLKI`, `PowerOfWithLKI`, `ManaValueOfWithLKI`
+and `LifeInstruction`. It reads current information at the life instruction or
+exact departure/phase information for the original visit. Failure to destroy
+an indestructible artifact does not suppress the later life gain. A returned
+card cannot replace the old visit. Nonpositive life gain does nothing. Life
+permissions and replacements use the existing engine services (CR 107.1b,
+119.3/7/9/10, 400.7, 608.2b/c/h and 702.26b/d).
+
+`Game.InspectSpellDestruction` validates the complete native tree and exact target
+declaration before the all-illegal gate or an earlier destruction proof. It
+uses shared target legality and announced visits. It does not read or predict
+life operands, inspect later state, execute replacements, use shields, choose,
+or advance RNG. A legal information-life prefix blocks later destruction
+proofs, even for a current zero or negative characteristic. An illegal target's
+instruction is skipped if another target is legal. A supported suffix permits
+an earlier direct destruction proof. Opaque destruction replacements still make
+that proof unknown, even when a test callback matches only life gain.
+
+`TestPermanentLifeInstructionDeclaration`, `Spell` and `Departure` cover native
+shape rejection, declaration identity, complete-tree checks, order barriers,
+partial/all-illegal targets, missing visits, departure and phase information,
+control, negative power and clone isolation. `TestRONPermanentLifeInstruction*`
+covers both full source records across eight reprints, announcement/payment,
+queries, execution, copies, retargeting, factories and invalid syntax. Existing
+`TestRONPermanentInformationReplacementOrder` retains affected-player replacement
+choice and recheck evidence. No new payment or replacement ordering is introduced.
+
+## Native damage result inspection (2026-10-17)
+
+`DamageResultInstruction{Source DamageSourceRef, Recipient DamageRecipientRef,
+Recipients DamageRecipientSet, Amount ResolutionValue, Total *NumberBinding,
+Results *DamageResultsBinding}.Effect()` builds one singular or simultaneous
+shared damage action. Exactly one recipient form and two named result bindings
+are required. `InspectDamageResultInstruction(ResolvingEffect)
+(DamageResultInstruction, bool)` retains this complete native producer without
+running operands. Sequences, division, instruction-local prevention, extra result
+kinds, missing/duplicate options and unnamed bindings are outside its contract.
+Existing result-free inspectors retain their narrower policies.
+
+RON's ordinary damage-outcome lowering uses the descriptor for singular and
+collection producers. Existing lexical result scopes, per-factory declarations,
+actual damage totals and saved outcomes remain unchanged. Execution reuses
+`DealDamageFrom`, `DealDamageEach`, the shared replacement/prevention pipeline,
+`FromNumber`, `ClampedDamageAmount` and life services. Damage is not capped by
+recipient life or toughness. Only the clamped life operand uses the final
+recipient's pre-damage life/loyalty or exact-visit current/departure toughness.
+See CR 120.3–4, 119.3/7/9/10 and 608.2b/c/h.
+
+`Game.InspectSpellDestruction` accepts fixed/X source producers with existing
+pure native recipients. Native life gain/loss may read the total from an exact
+preceding damage producer, or clamped outcomes from an exact preceding singular
+producer. A collection cannot supply the singular clamped read. The complete
+instruction tree validates missing, forward, duplicate and foreign bindings
+before target gates or destruction proofs. Matching binding names do not imply
+matching declarations. Destruction counts cannot supply damage-life reads.
+Queries do not resolve operands, read saved results, predict damage or life,
+use shields, run replacements, make choices or advance RNG. A supported suffix
+preserves an earlier destruction proof. Nonempty damage and legal life prefixes
+retain the existing barrier to later changed-state proofs, including zero values.
+All-illegal targets prevent resolution only after complete-tree validation.
+
+`TestDamageResultInstructionDeclaration`, `Spell` and `Bindings` cover native
+shapes, rejection, target/visit identity, result dominance, order barriers,
+partial illegality, phase cycles, return, copies and pure cloned queries.
+`TestRONDamageResultInstructionDrainLife` covers complete records in all six
+sets, queries and clamped resolution with prevention, phase/return, zero X,
+copies and clones. `TestRONDamageResultInstructionTotal` covers singular and
+simultaneous actual totals and prevention; `Invalid` covers syntax and scopes.
+Existing `TestRONClampedDamage*`, `TestRONRestrictedX*`, `TestClampedDamage*`
+and `TestRONDamageOutcome*` retain payment, result lifetime, replacement,
+redirection and simultaneous-operation evidence.
+
+Drain Life gains complete native query coverage (six records). Syphon Soul's
+producer now uses the shared descriptor, but its complete prospective query
+remains unknown because opponent-player collection inspection is unsupported.
+Its existing real-record execution remains covered by
+`TestRONDamageOutcomeSyphonSoul`. This slice does not complete Equinox.
+
+## Native player collection inspection (2026-10-17)
+
+`InspectPlayerCollection(PlayerSet) (PlayerCollectionPredicate, bool)` retains
+`EachPlayer`, the internal empty player set, `OnePlayer(PlayerRef)` and
+`OpponentsOf(PlayerRef)`. References can be `You`, `ActivePlayer` or a complete
+singular native player target. Nil, typed-nil, saved and opaque references reject.
+The retained predicate copies the declaration; it calls no player/set callback.
+
+`PlayerCollectionPredicate.Select(*EffectContext) ([]uuid.UUID, bool)` requires
+a present resolving controller. It reads current player presence and uses the
+same active-first order as native execution. Targets require a legal resolving
+frame with the exact declaration identity. Missing, repeated and malformed
+bindings are unknown. An empty legal binding or absent player selects nobody,
+including for opponent sets. Names do not substitute for identity. There is no
+player LKI. Returned slices have independent storage. This is the engine's
+two-player opponent contract (CR 102.1–2), not a multiplayer team policy.
+
+`InspectDamageRecipientCollection` now accepts `PlayerDamageRecipients` as well
+as mixed recipients. Both use the shared player predicate. Mixed recipients
+still require a complete contextual permanent collection, with exact visits,
+phasing and target-frame contracts unchanged. `Game.InspectSpellDestruction`
+validates both player and permanent frames before the all-illegal gate or any
+earlier destruction proof. Nonempty player damage blocks later destruction
+proofs even at zero damage; supported suffixes preserve earlier proofs. These
+queries execute no amounts, damage, replacements, shields, choices or RNG.
+They create no payment, replacement or simultaneous-operation service; runtime
+execution still uses existing damage batches and actual-result bindings
+(CR 120.3–4, 608.2b/c/h).
+
+RON shares the ordinary `AnyPlayer`, `Opponent` and `Other(player)` lowering
+between damage-outcome and mixed damage collections. `Opponent` means opponents
+of the spell/ability controller; `Other` uses its explicit scoped player.
+`Player(player)` in mixed collections keeps the existing singleton lowering.
+History-filtered sets retain their separate execution and query contracts.
+Recipient-dependent `DealDamageEachPlayer` trees still need a separate pure
+instruction contract; this slice supports native damage-outcome and mixed trees.
+
+`TestPlayerCollectionQuerySelection`, `Boundaries` and `Damage` cover order,
+controller/active player differences, exact and foreign declarations, invalid
+frames, empty/absent players, copied declarations, unknown descendants,
+all-illegal gates, zero-value barriers and pure repeated cloned queries.
+`TestRONPlayerCollectionInspectionSyphonSoul` executes the complete LEG record:
+unpaid/paid casting, normal/partial/full prevention, actual life gain,
+controller-relative copies, complete native queries and clone isolation.
+`Mixed`, `Target` and `Invalid` cover shared lowering, active/explicit players,
+singleton and opponent target bindings, factory instances and syntax rejection.
+The earlier mixed `Opponent` rejection fixture now rejects `Opponent()`;
+the supported declaration has positive query and execution evidence.
+
+Syphon Soul gains complete native query coverage (one record). Typhoon still
+needs its recipient-specific count instruction contract. This does not complete
+Equinox, gameplay mapping or runtime cutover.
+
+## Native player damage-history value inspection
+
+`InspectPlayerDamageHistory(ResolutionValue) (PlayerDamageHistoryPredicate, bool)`
+retains `DamageTakenThisTurn`, `ArtifactDamageTakenThisTurn` and nested native
+multiplication by a fixed two on either side. Other arithmetic and unknown
+operands reject the complete tree. Inspection runs no value, player or filter
+callbacks and reads no damage total. `PlayerDamageHistoryPredicate.Read(*EffectContext)
+(int, bool)` reads the current actual history through native player selection.
+The zero predicate and invalid contexts are unknown. References are `You`,
+`ActivePlayer` or a singular supported native player target. Target identity is
+per declaration; missing, foreign, repeated or malformed bindings are unknown.
+An empty legal frame or absent player supplies zero. Player history uses no LKI.
+
+`Game.InspectSpellDestruction` accepts these amounts in ordinary singular native
+life gain/loss and singular source damage. It validates history frames before
+all-illegal target gates and destruction proofs without reading the totals.
+A supported suffix preserves an earlier proof. A legal action before later
+destruction remains a state barrier, including a zero history amount. Unknown
+children remain unknown even after an earlier proof or with all targets illegal.
+Collection, packet, result-bearing and recipient-dependent history amounts need
+separate contracts. No execution, replacement, cost or simultaneous service changed.
+
+`InspectDamageRecipient` now retains singular native permanent targets through
+`InspectPermanentTarget`. Selection uses the same exact declaration, saved visit,
+current legality and phasing policy. An illegal target is empty; a missing frame
+is unknown. No new LKI action permission is created.
+
+RON keeps history spelling and lexical player scope in `compilePlayerDamageHistory`;
+unknown constructors are errors. `SpellDealsDamage(ThisSpell, amount,
+Permanent(ref))` lowers to `SingularDamageInstruction`, with the existing amount
+factory and per-instance target binding. `Twice` retains native multiplication.
+No RON record changed. Both complete Simulacrum consumers and Reverse Polarity's
+artifact history and doubling have native query and gameplay evidence across
+all eight records in `TestRONPlayerDamageHistoryQueryCards`. `Invalid` and
+`Adapter` cover declaration rejection. `TestPlayerDamageHistoryQueryValues`,
+`Boundaries`, `Spell` and `PermanentRecipient` cover read agreement, frame identity,
+copy/clone state, ordering, target legality, visit changes and callback/RNG purity.
+Existing `TestPlayerDamageHistory*` and `TestRONPlayerDamageHistory*` retain
+prevention/redirection ordering, damage-time source classification, cleanup,
+late reads, failed payment and complete execution evidence.
+
+CR 120.3–4, 514.2 and 608.2b/c/h/i define actual damage, cleanup, legality,
+instruction order and historical information. Local Simulacrum rulings are WotC
+rulings: life loss is excluded, life gain and damage are new actions, and the
+spell is the damage source. Reverse Polarity has an explicit empty rulings array.
+
+## Native target-characteristic scalar values
+
+`InspectTargetCharacteristicValue(ResolutionValue)
+(TargetCharacteristicValuePredicate, bool)` retains `PowerOfWithLKI(target)` and
+`ManaValueOfWithLKI(target)` for one native singular permanent target. Inspection
+uses the complete native target declaration and rejects unknown references or
+filters without callbacks. The zero predicate is unknown. Source, saved,
+toughness, arithmetic, and other consumer contexts remain separate contracts.
+
+`TargetCharacteristicValuePredicate.Read(*EffectContext) (int, bool)` requires
+a present controller and an exact resolution binding. Missing, foreign, repeated,
+zero-ID and missing-incarnation frames are unknown. Empty legal frames supply
+zero. A present visit uses current information; departed, returned and phased
+visits use the shared exact-incarnation LKI service. A returned card never supplies
+information for its old visit. A visit without available information is unknown.
+Callers must supply resolution-legal frames and current layers. Reading information
+does not permit actions on an illegal, departed or phased target.
+
+`Game.InspectSpellDestruction` accepts these scalar amounts in native singular
+life gain/loss with supported player recipients. It validates all bindings before
+all-illegal gates or destruction proofs without reading or predicting the amount.
+A legal life prefix remains a state barrier even if the target amount is empty or
+zero. A supported suffix preserves earlier proofs. Unknown descendants invalidate
+the whole query. Execution still uses shared life actions, replacements and LKI.
+No payment, damage, replacement ordering or simultaneous-operation service changed.
+
+RON `compilePermanentInformationValue` owns exact constructor/arity/reference
+validation and builds fresh per-instance power/mana operands. Existing callers
+retain the same execution. `TestRONTargetCharacteristicValueCard` maps the complete
+LEG Divine Offering record to paid/unpaid casting, normal destruction, regeneration,
+indestructible, illegal/returned/phased targets, phase cycles, retargeted copies,
+repeated native queries and independent clone resolution. Its WotC rulings require
+life gain after failed destruction, and no life gain when its target becomes
+illegal. CR 608.2b/c/h supplies legality, order and LKI. No source correction was
+needed. `TestTargetCharacteristicValueRead`, `Boundaries` and `Spell` cover pure
+reads, exact identity, malformed frames, declaration rejection and ordering.
+`TestRONTargetCharacteristicValueInvalid`, `Adapter` and `Bindings` cover syntax
+rejection, native lowering, independent factories and clone execution.
+
+
+## Native recipient-dependent permanent counts (2026-10-17)
+
+`PlayerCollectionDamageInstruction{Source DamageSourceRef, Subjects PlayerSet,
+Member *PlayerBinding, Amount ResolutionValue}.Effect() ResolvingEffect` builds
+`DealDamageEachPlayer`. Missing operands and unnamed members return nil.
+`InspectPlayerCollectionDamageInstruction(ResolvingEffect)
+(PlayerCollectionDamageInstruction, bool)` retains exact native operands;
+sequences and other instruction kinds require their own inspection contracts.
+
+`InspectRecipientPermanentCount(ResolutionValue, *PlayerBinding)
+(RecipientPermanentCountPredicate, bool)` checks a complete native permanent
+count, including the existing fixed-two rounding forms. Within this inspection
+only, saved-player references must name the exact local member. Other saved
+players reject even if their names match. Current contextual collections retain
+controller, owner, opponent, composition, attachment and target semantics.
+Ordinary `InspectLivePermanentCount` still rejects local saved players.
+
+`RecipientPermanentCountPredicate.Read(*EffectContext, uuid.UUID) (int, bool)`
+requires a present recipient and resolving controller. It binds immutable query
+nodes in a private tree, then uses the shared live count and collection reader.
+It preserves `You`, active-player and target references. Layers must be current;
+target frames must already be resolution-legal. Phased objects do not count.
+Return supplies the current new visit; there is no count LKI. Missing contexts,
+recipients, foreign bindings and unknown descendants are unknown. Reads do not
+call callbacks, change resolution frames, select replacements or consume RNG.
+
+`Game.InspectSpellDestruction` accepts these instructions with native source
+damage and complete native player collections. It validates the complete tree
+and external amount bindings before all-illegal gates and earlier proofs.
+A nonempty recipient set remains a changed-state barrier before later
+destruction, including zero counts. Empty sets permit later proofs. Supported
+suffixes preserve earlier proofs. Unknown suffixes still reject. The query does
+not predict damage deaths or prove Equinox's broader changed-state contract.
+
+Execution reuses the existing local player frames, source information,
+prevention and simultaneous damage services. All amounts are read before the
+first damage event (CR 120.3–4, 608.2c/h). Typhoon's WotC ruling requires Island
+counts at resolution. Phasing follows CR 702.26b. No new replacement, payment
+or source-LKI service is introduced.
+
+`TestRecipientCountInstructionRead`, `Collections`, `Spell` and `Descriptor`
+cover exact local identity, callback traps, context failures, owner/controller
+and opponent sets, composition, rounding, phase cycles, control changes,
+query-frame/RNG isolation, unknown trees and ordered proof barriers.
+`TestRONRecipientCountInstructionTyphoon` covers the complete LEG record,
+unpaid/paid casting, post-announcement Islands, zero counts, phasing, control,
+return, partial/full prevention, different-controller copies and cloned games.
+`Invalid` and `Bindings` cover syntax rejection and fresh factory-local members.
+Existing `TestPlayerDamageAmounts*` and `TestRONDamageRecipientValue*` retain
+source-LKI, simultaneous snapshots, replacement ordering, timing, scope and
+rollback evidence. Storm Seeker's singular hand-size amount and Mind Bomb's
+saved-discard arithmetic remain separate native query contexts.
+
+## Tap instructions with no state change (2026-10-17)
+
+`Game.InspectTapStateChange(TapOperationKind, []PermanentVisit) (mayChange, known bool)`
+checks already selected, current battlefield visits. The caller supplies current
+layers and legal subjects. A nil game, invalid operation, absent or phased-out
+subject, or different incarnation returns unknown. All visits validate, even
+when an earlier visit permits a transition. Duplicate visits do not change the
+answer. An empty group is known to leave state unchanged.
+
+Tap on an already tapped visit and untap on an already untapped visit cannot
+change state (CR 701.26a/b). A possible transition returns true/true without
+predicting whether a replacement or restriction will stop it. A nonempty
+`MayTapOrUntapOperation` also returns true/true; the resolution-time choice is
+not made or predicted. No callbacks, replacement choices, counters, events,
+bindings, layers or RNG state change during this query. It uses no LKI.
+
+`Game.InspectSpellDestruction` retains the exact operation from native
+`TapInstruction` declarations. A group with no possible state change permits a
+later destruction proof. One possibly changing visit blocks that later proof,
+even if it is not watched. All declarations and target bindings still validate
+before any proof or all-illegal gate. Earlier proofs and empty or illegal
+subjects retain their existing behavior. This does not project a changed state
+or complete Equinox's prospective-spell contract.
+
+The shared `untapWithoutEvent` service now checks tapped status before stun
+replacement. Untapping an untapped permanent leaves its stun counters intact;
+untapping a tapped permanent removes one stun counter instead of untapping
+(CR 122.1d). Singular actions, collection actions, costs and turn untaps continue
+to use the same service. Simultaneous groups and layer refresh keep their
+existing instruction boundaries.
+
+RON reuses `compileTapInstructionPlan` and its exact per-instance operation and
+subject declarations. No syntax or scope change is required. Tests
+`TestTapStateChange*` cover invalid visits, current versus stale incarnations,
+phasing, repeated queries, clones, groups, opaque callbacks and actual stun
+execution. `TestRONTapStateChange*` covers complete Riptide, Reset and Twiddle
+lowering and gameplay, plus synthetic ordered compositions, target legality,
+copy controllers and independent cloned queries. The synthetic destruction
+suffixes establish composition evidence; they are not additional card records.
+
+
+## Destruction prefixes with no state change (2026-10-17)
+
+`Game.InspectDestructionStateChange([]PermanentVisit) (mayChange, known bool)`
+checks whether direct destruction can propose any action for an already selected
+current group. The caller supplies current layers and legal subjects. Nil games,
+absent or phased visits, and different incarnations return unknown. The complete
+list validates even after a possible change. Empty groups and groups consisting
+only of current indestructible visits return false/true. Duplicates are harmless.
+All other valid groups return true/true without predicting replacements.
+
+This follows the execution guard in `Game.DestroyPermanent` and
+`moveGraveyardBatch`: indestructible visits never reach the destruction proposal
+or replacement pipeline (CR 701.8, 702.12b). It is stricter than a no-move result.
+Regeneration can tap a subject, remove damage and remove it from combat
+(CR 701.19). Cancellation can consume a rule; hand and exile replacements move
+objects. None permits later state proofs through this query, even with a
+no-regeneration instruction. Unknown replacements are never executed to decide
+whether state might change. Inspection uses no callbacks, decisions, RNG,
+shields, events, LKI or frame writes.
+
+`InspectSpellDestruction` and `OrderedDestructionPredicate.Certain` use the query
+after a direct destruction group fails to prove a watched graveyard move. A group
+that cannot propose destruction permits inspection of the next instruction.
+One possibly changing member retains the barrier, including unwatched members.
+Earlier proofs and full-tree validation retain their contracts. The spell query
+still checks every target and binding before the all-illegal gate (CR 608.2b/c).
+No speculative state, replacement ordering or execution service is added.
+
+`TestDestructionStateChange*` covers invalid visits, repeats, phase cycles,
+returned objects, clones, callback traps, frame/RNG/shield isolation, simultaneous
+mixed groups, regeneration, cancellation and hand/exile barriers. Both ordered
+and spell inspection are compared with actual sequential engine execution.
+`TestRONDestructionStateChange*` covers all six Shatter and Wrath of God records,
+exact native lowering, gameplay and synthetic destruction suffixes. Numbered
+singular RON targets cover legality, stale visits, phasing, copies and clones.
+`TestRONDirectDestructionInvalid` retains malformed/unbound declaration coverage.
+These tests expand existing mappings; composition fixtures are not new cards.
+Equinox's broader prospective-spell integration remains separate.
+
+## Singular hand-size damage inspection (2026-10-17)
+
+`InspectPlayerHandSize(ResolutionValue) (PlayerHandSizePredicate, bool)` retains
+native `HandSizeOf` values for `You`, `ActivePlayer` or a singular native player
+target. The immutable predicate uses the shared native player collection query.
+It rejects arithmetic, saved/loop references, nil and opaque values or references
+without callbacks. `PlayerHandSizePredicate.Read(*EffectContext) (int, bool)`
+reads the current hand. Empty or absent players supply zero; missing, foreign,
+duplicate, nil-ID or incarnation-bearing target frames are unknown. Players use
+no permanent LKI. A zero predicate or invalid context is unknown.
+
+`Game.InspectSpellDestruction` accepts this amount only in native singular damage
+from `This`. It validates exact declaration bindings before target gates and
+proofs, without reading or predicting hand sizes. Damage alone yields no direct
+destruction proof (CR 120.5). Legal damage prefixes remain state barriers even
+with empty hands; illegal recipients can be skipped when another target is legal.
+Earlier destruction proofs survive supported suffixes. Unknown children or
+bindings remain unknown, including with all-illegal targets. No replacement,
+prevention, RNG, effect or value callback runs. This does not complete Equinox.
+
+RON `SpellDealsDamage(ThisSpell, TheNumberOfCardsInPlayersHand(
+DealsDamage_ThatPlayer), Player(Ref_TargetPlayer))` now lowers through
+`SingularDamageInstruction.Effect`, retaining the exact factory-local target.
+RON keeps spelling, arity and lexical validation. The engine keeps inspection and
+execution. Resolution uses `HandSizeOf` and `DealDamageFrom`, including current
+hand sizes, prevention, retargeted copies and independent clones (CR 608.2b/c/h).
+Loop-local damage amounts retain their separate contracts. No RON data changes.
+
+`TestPlayerHandSizeQuery*` covers native reads, invalid frames, opaque operands,
+ordered proofs and target gates. `TestRONPlayerHandSizeQuery*` covers the complete
+Storm Seeker record, live hand changes, empty hands, self targeting, prevention,
+copies, clones, independent factories, declaration errors and ordered gameplay.
+Existing `TestRONDamageRecipientValue*` retains casting rollback and other
+recipient-value regressions. Compilation gain is zero; this extends native
+inspection evidence for one already accepted card.
+
+## Native recipient discard result inspection (2026-10-17)
+
+`DiscardUpToInstruction{Subjects PlayerSet, Maximum ResolutionValue,
+Result *PlayerNumbersBinding}.Effect() ResolvingEffect` builds `DiscardUpToEach`.
+Missing operands, unnamed results and aliased seat declarations return nil.
+`InspectDiscardUpToInstruction(ResolvingEffect) (DiscardUpToInstruction, bool)`
+retains one complete native producer. Sequences need their own tree traversal.
+
+`InspectRecipientDiscardAmount(ResolutionValue, *PlayerBinding)
+(RecipientDiscardAmount, bool)` retains exactly fixed subtraction from
+`PlayerNumber(result, FromPlayer(member))`. `RecipientDiscardAmount` contains
+`Base int` and `Result *PlayerNumbersBinding`; it stores no game state.
+The fixed operand can use the retained `ValueAtResolution(Fixed(...))` wrapper.
+Other arithmetic, opaque operands, unnamed or malformed results, and foreign
+local players reject without callbacks. Member and result identity use exact
+declarations, including when labels match. This query does not read saved counts.
+
+`Game.InspectSpellDestruction` accepts native source player-collection damage
+with this amount and an earlier native optional discard producer. Maximums must
+be nonnegative native fixed values; player sets use `InspectPlayerCollection`.
+The complete tree validates producer dominance and unique result writes before
+all-illegal gates or earlier destruction proofs. Forward, duplicate, foreign and
+aliased producers reject. Generic number producers cannot overwrite either seat.
+Target-bound producer sets require complete legal target frames. Inspection
+executes no choices, discard replacements, damage, shields, RNG or frame writes.
+Discard alone gives no destruction proof. Nonempty discard groups block later
+proofs, including zero maximums or empty hands. Empty selected sets can permit
+later proofs. Supported suffixes preserve earlier proofs; unknown suffixes reject.
+
+Execution keeps `DiscardUpToEach` and `DealDamageEachPlayer`: choices in APNAP
+order precede simultaneous discard moves (CR 101.4, 701.9), actual completed
+discards supply separate player counts, and all damage amounts are read before
+one damage batch (CR 608.2c/h). Cancellation, replacement destinations, returned
+hand visits, prevention, source LKI, timing, rollback and copy/clone frames use
+the existing services. Damage itself does not destroy permanents (CR 120.5).
+Mind Bomb's complete DRK record defines the RON shape; its checked local rulings
+array is empty. No source correction is needed.
+
+`TestRecipientDiscardInstructionDeclaration`, `Bindings` and `Spell` cover exact
+operands, identity, malformed declarations, callbacks, dominance, alias collisions,
+ordered barriers, target gates, copies, clones and unchanged saved counts/RNG.
+`TestRONRecipientDiscardInstructionMindBomb`, `Bindings` and `Invalid` cover real
+RON inspection and execution, empty hands, prevention, different-controller copies,
+clones, fresh factories and invalid scopes. Existing `TestPlayerDiscardResults*`
+and `TestRONPlayerDiscardResults*` retain APNAP, simultaneous operation,
+replacement/cancellation, returned visits, source changes, timing and rollback
+coverage. This contract does not complete Equinox or the migration cutover.
+
+## Native spell counter instruction inspection (2026-10-17)
+
+`CounterInstruction{Subject StackObjectRef}.Effect() ResolvingEffect` builds the
+existing `Counter` action. A missing or typed-nil subject returns nil.
+`InspectCounterInstructions(ResolvingEffect) ([]CounterInstruction, bool)` reads
+complete native spell counter trees, including `Sequence` and `CompositeEffects`.
+It preserves reference identity and instruction order without running effects or
+reference callbacks. Unknown children, nil leaves and ability counters reject
+the whole tree. Saved spell references retain normal execution but need separate
+prospective inspection contracts.
+
+`InspectSpellTarget(StackObjectRef) (SpellTargetPredicate, bool)` accepts exact
+singular native spell declarations with unrestricted or card-type predicates,
+card-type conjunctions/disjunctions and complete spell `all`/`any`/`not` trees.
+All descendants validate before selection. Color predicates are added by the
+spell color target contract below. Opaque card filters, subtype,
+controller, single-target, mana-value, battlefield and union target restrictions
+remain unknown. Labels cannot supply semantics. Multiple contextual filter
+writes reject. `SpellTargetPredicate.Select(*Game, *StackObject)
+(uuid.UUID, bool)` uses exact declaration and stack identity, current spell card
+types and the recorded stack zone without callbacks. Nil/absent targets, ability
+objects and departed spells are illegal. A recast card is a new stack object;
+there is no source-ID fallback or LKI. Missing zones, missing/duplicate target
+declarations and malformed frames are unknown. Copies and clones retain their
+own target frames.
+
+`Game.InspectSpellDestruction` validates these instructions and targets before
+all-illegal gates or earlier proofs. Countering alone cannot directly destroy a
+permanent (CR 701.6a, 701.8a/b). A legal counter prefix blocks later destruction
+proofs, including an uncounterable target: the query does not project outcomes,
+triggers or changed state. An illegal counter prefix can permit later proofs
+when another target is legal. A supported counter suffix preserves an earlier
+proof; an unknown suffix rejects the complete tree. Inspection removes no spell,
+uses no replacement, runs no filter/choice callback and writes no frame or RNG.
+Execution keeps the shared counter service, uncounterability, owner graveyard
+movement, target legality and paid costs (CR 608.2b/c and 701.6b).
+
+`TestCounterInstructionDeclaration`, `Target`, `FilterContract` and `Spell`
+cover native declarations, Boolean matching, callback traps, unsupported forms,
+exact visits to the stack, departed/recast targets, copies/clones, result-free
+inspection and ordered proof boundaries. `TestRONCounterInstructionGameplay`
+executes all nine complete records for Counterspell, Flash Counter, Remove Soul
+and Artifact Blast, including countered, departed, recast, copied, cloned and
+uncounterable targets. `TestRONCounterInstructionBindings` checks independent
+factory declarations and cloned execution; `Invalid` rejects malformed syntax
+and incompatible or unbound references. This capability unlocks no additional
+records and does not complete Equinox's broader prospective-spell query.
+
+## Native spell color target inspection (2026-10-17)
+
+`InspectSpellTarget(StackObjectRef) (SpellTargetPredicate, bool)` also accepts
+native color predicates for White, Blue, Black, Red and Green. Complete card
+conjunction/disjunction and spell all/any/not trees can combine types and colors.
+Every child must support inspection, even under an unrestricted disjunction.
+Colorless, AnyColor, invalid enum values, subtypes, opaque callbacks and other
+contextual restrictions remain unknown. No label supplies missing semantics.
+
+`SpellTargetPredicate.Select(*Game, *StackObject) (uuid.UUID, bool)` checks
+current stack colors through the same card view as runtime spell filters and
+native target declarations. A stack color override takes precedence over card
+colors and does not change the source card. Multicolor objects match each color.
+Selection uses the exact declared stack identity and recorded zone; departure
+and recasting cannot restore the target. No saved source information is used.
+Inspection runs no callbacks, changes no frame and makes no choices. Existing
+counter execution, uncounterability and selected-mode target frames are reused.
+
+CR 105.1–3 defines colors and color changes; 608.2b requires current target
+legality; 700.2a/c keeps targets within the announced mode. Blue Elemental Blast's
+local WotC ruling (2004-10-04) requires mode choice before target selection and
+keeps the mode when targets change. Red Elemental Blast has a checked empty
+local rulings array. No Scryfall note changes this contract.
+
+`TestSpellColorTarget`, `Unknown`, `RuntimeOverride` and `OverrideIsolation`
+cover nested native trees, callback traps, invalid colors, current overrides,
+legacy target filters, independent clones, spell copies and departed/recast
+identities. `TestRONSpellColorTargetGameplay` covers both modes of both Elemental
+Blasts in all twelve records, color changes, multicolor objects, copies, clones,
+departure, phasing, uncounterability and indestructibility. `BooleanBindings`
+checks complete nested RON lowering and independent factory target frames;
+`Invalid` checks malformed filters. Existing modal legality, retargeting, source
+identity, payment and replacement contracts remain in force.
+
+## Native mana-production instruction inspection
+
+`ManaProductionInstruction{Subject PlayerRef, Color core.Color,
+Amount ResolutionValue}.Effect() ResolvingEffect` builds existing native
+production for one of the six mana types. Missing or typed-nil operands and
+invalid types return nil. Execution uses `AddManaAmount` for the controller or
+`AddManaToPlayer` for an explicit player. Amounts at or below zero produce no
+mana. Source identity, mana replacements, pool history and clone isolation
+remain owned by the existing services (CR 106.1–6, 605.5b, 608.2b/c).
+
+`InspectManaProductionInstructions(ResolvingEffect)
+([]ManaProductionInstruction, bool)` reads complete native sequence/composite
+trees. It also accepts existing `AddMana`, `AddManaAmount` and `AddManaToPlayer`
+callers. It retains exact subject and amount operands, preserves instruction
+order and returns separate slice storage. Unknown children reject the complete
+tree. It does not resolve operands, execute effects or use replacements.
+Native declarations can retain dynamic operands without making them queryable.
+
+`Game.InspectSpellDestruction` accepts these instructions with fixed or
+announced-X amounts, the saved casting values specified below, and native
+singular player targets, `You` or `ActivePlayer`.
+Every operand and target declaration must validate before the all-illegal gate
+or an earlier destruction proof. Missing, foreign or duplicate declarations
+remain unknown. Illegal player targets are skipped if another target is legal.
+Mana production alone cannot directly destroy a permanent. A legal production
+prefix blocks a later state proof, including at zero; a supported suffix keeps
+an earlier proof. Inspection neither predicts mana replacement outcomes nor
+runs callbacks. Other saved values, choice of color, restrictions, forced activation,
+transfers and delayed production need separate inspection contracts.
+
+RON `compileResolvingMana` lowers fixed-type `AddMana` and `AddManaRepeated`
+through this declaration. Nested `And` production order is retained. Existing
+dynamic operands keep their exact bindings and execution behavior. Only the
+saved casting values specified below gain a pure inspection contract. RON
+spelling and scope remain in the compiler.
+No card-name branch, fallback, source change or public caller removal is needed.
+
+Evidence: `TestManaProductionInstructionDeclaration`, `Spell` and `Execution`
+cover operands, invalid declarations, callback traps, fixed/X support, target
+identity/legality, whole-tree validation, ordering, phasing, departure, repeated
+queries, six mana types, nonpositive amounts, history and clones.
+`TestRONManaProductionInstructionGameplay` covers all six complete Dark Ritual
+records: payment, failure rollback, normal stack timing, counters, copies with
+a different controller, clones and repeated pure queries. `Composition`, `Order`
+and `Invalid` cover nested RON production, zero/repeated amounts, instruction
+order and malformed declarations. This is an inspection prerequisite; it does
+not establish Equinox's complete prospective-spell policy.
+
+
+## Saved casting-sacrifice values in mana inspection
+
+`Game.InspectSpellDestruction` accepts native fixed-type mana production amounts
+with fixed values, announced X, `FromNumber` and nested native addition or
+multiplication. Every saved read must match the exact `NumberBinding` produced
+by one native, mandatory, single-permanent additional sacrifice cost with
+mana-value capture. The current spell definition supplies the cost; text
+revisions use `spellTextDefinition`. The stack object's captured map must
+contain that binding with a nonnegative value. A map entry alone is insufficient.
+Optional, multiple, foreign, missing and incompatible producers remain unknown.
+Any resolution producer that writes the same binding rejects the complete tree,
+even when that write follows the read. Unknown children reject before an earlier
+proof or the all-illegal-target gate. No callback or resolution operand runs.
+
+The query reuses the existing payment transaction and capture services. Costs
+are paid before responses (CR 601.2h/i). Replaced payment actions remain paid
+(CR 118.11). Mana value is saved from the paid battlefield object, with X equal
+to zero there (CR 202.3). Departure, return and phasing cannot change that number.
+Copies retain the original paid value (CR 707.10); clones keep separate maps and
+pools. Existing mana production services keep source identity, replacement order
+and production history (CR 106.3/4). No new payment or replacement rule is added.
+
+A supported mana suffix preserves an earlier destruction proof. A legal mana
+prefix blocks later state proofs, including zero production. Required tap
+branches, chosen colors, spending restrictions, transfers and delayed production
+remain separate inspection contracts. This is a complete supported producer and
+scalar-consumer context, not a general saved-number inference rule.
+
+Evidence: `TestCastingManaInspection`, `TestCastingManaInspectionPayment`,
+`TestRONCastingManaInspectionRecords`, `Invalid`, `InvalidArithmetic`,
+`Arithmetic` and `Pending`. Real gameplay uses all six complete Sacrifice records.
+
+
+## Native chosen-color and restricted mana inspection
+
+`ManaProductionInstruction` now retains `Restriction core.ManaRestriction`.
+`Color: core.AnyColor` declares one color choice for the complete amount at
+resolution. This shape requires `Subject: You`; an explicit other player is
+rejected. A concrete color with a restriction requires a positive native fixed
+amount and `You`. Missing operands, typed-nil restrictions, invalid colors,
+unknown restriction types and unsupported combinations return nil from `Effect`.
+Only the native value declarations `core.CreatureSpellsOnly{}` and
+`core.ArtifactSpellsOnly{}` are accepted. Their methods do not run in inspection.
+Existing unrestricted fixed-color explicit-player declarations still work.
+
+`InspectManaProductionInstructions` accepts native `AddManaOfAnyOneColor`,
+`AddRestrictedManaOfAnyOneColor` and `AddRestrictedMana` effects. Each returned
+component retains its exact amount and restriction. Fixed restricted batches
+return components in order with fresh slice storage. The original effect keeps
+its single production event; the query does not rebuild or execute the batch.
+Malformed or unknown descendants reject the complete tree. Opaque restriction,
+amount, effect and player callbacks never run. A native dynamic amount can be
+retained without being accepted by the prospective spell query.
+
+`Game.InspectSpellDestruction` uses the existing native scalar and casting-value
+producer contract for these components. All bindings validate before target
+gates or earlier proofs. A supported suffix preserves an earlier proof. A legal
+production prefix blocks a later proof, including zero production. Mana alone
+supplies no destruction proof. Missing, foreign, overwritten or incompatible
+paid producers stay unknown. Inspection does not choose a color, spend or add
+mana, use RNG, activate an ability, run a replacement or modify saved values.
+This adds a reusable prerequisite for Equinox; it does not complete Equinox.
+
+CR 106.1a/b distinguishes colors from types; CR 106.3/4 retains source identity
+and pools; CR 106.6/6a keeps spending restrictions on production and replacement
+amounts. Shared execution services retain decisions, payment rollback, mana
+solver metadata, production grouping, replacement order, copies, text changes
+and clones. No new replacement ordering or simultaneous-operation rule is added.
+Transfers, delayed production, required-tap paid branches and other dynamic
+amounts still need separate prospective-query contracts.
+
+Evidence: `TestChosenManaInspectionDeclaration`, `Spell`, `Provenance` and
+`FixedOrder`; `TestRONChosenManaInspectionMetamorphosis`, `Workshop` and `Invalid`.
+Existing `TestRestrictedFixedManaBatch`, `TestRONRestrictedFixedMana*`,
+`TestRONSacrificeMana*` and `TestCastingManaInspection*` retain execution,
+transaction, replacement and spending evidence.
+
+## Required tap and mana inspection (2026-10-17)
+
+`RequiredTapInstruction{Player, Subject, Paid, Unpaid}.Effect() ResolvingEffect`
+retains a mandatory tap through `RequiredTapOrElse`. Missing player, subject or
+both bodies returns nil. `InspectRequiredTapInstruction(ResolvingEffect)
+(RequiredTapInstruction, bool)` retains exact native operands without execution.
+RON `compileRequiredTapPayment` builds this declaration per factory instance for
+`MustCost(TapPermanent(ref))` followed by `If` or `Unless` and a payment condition.
+The existing spelling, scope, polarity and rejection rules stay in RON.
+
+`Game.InspectSpellDestruction` accepts this payment with `You`, one native
+permanent target and complete native mana production branches. It validates
+both bodies before all-illegal target gates and earlier destruction proofs.
+Other bodies, nested payments and other payers remain unknown. No branch is
+predicted or executed. The shared target frame checks exact declarations and
+battlefield visits; missing and foreign value references reject the whole tree.
+Mana amounts support native fixed/X and saved casting values plus exact target
+mana value, with native addition and multiplication. Target values use
+`InspectTargetCharacteristicValue` for declaration and frame checks. Inspection
+reads no amount and invokes no reference, filter, restriction or replacement
+callback. It changes no pools, targets, RNG, history or stack state.
+
+The query treats both possible mana bodies as conservative state barriers.
+Payment and production prefixes cannot establish a later destruction proof
+through a possible state change. A supported suffix preserves an earlier proof.
+Production alone supplies no direct destruction proof. This bounded policy does
+not enable `WouldDestroyAPermanent` or complete Equinox.
+
+Execution reuses the exact-visit payment transaction and shared mana production.
+A replaced tap still pays its branch (CR 118.11–12), including cancellation,
+phasing and departure during payment. Only an available untapped visit can start
+payment (CR 701.26a). Illegal targets cannot pay (CR 608.2b). Mana value reads
+current information or exact-visit LKI after departure (CR 608.2h); X contributes
+zero on the battlefield (CR 202.3e). Copies use their own controller and target
+legality. Clones keep independent payment and pool state. No new replacement
+ordering or simultaneous-operation contract is introduced.
+
+`TestRequiredTapInspectionDeclaration`, `Spell` and `Replacement` cover native
+operands, malformed declarations, pure queries, both bodies, target identity,
+unknown callbacks, ordering and replaced payment. `TestRONRequiredTapInspection*`
+executes the complete LEG Energy Tap record and rejects malformed declarations.
+`TestRONSpecificTapPayment*` and `TestRequiredTapPayment*` retain the wider
+payment, rollback, delayed-source and Aura-cost execution contracts.
+
+
+### Forced activation and saved mana inspection
+
+`ForcedManaLossInstruction{Subject PlayerRef, Filter PermanentFilter,
+Result *LostManaBinding}.Effect() ResolvingEffect` retains forced per-visit mana
+activations and the following unspent mana loss. `Result` is optional. Missing
+players or filters and unnamed results return nil. Execution uses the existing
+player snapshot, `ActivateManaAbilityOfEach`, and unspent mana loss services.
+The private snapshot supplies the same player for both operations. The public
+result remains visible to definition validation and later transfer instructions.
+
+`LostManaInstruction{Subject PlayerRef, Result *LostManaBinding, Restore bool}`
+builds the existing saved loss or transfer. Both fields are required; an unnamed
+result returns nil. `InspectForcedManaLossInstruction` and
+`InspectLostManaInstruction` retain exact operands from one native instruction.
+Legacy activation, loss and transfer constructors remain valid.
+
+RON lowers `PlayerAction(player, ActivateAManaAbilityOfEachPermanentAndLoseUnspentMana(
+And([IsCardtype(Land), ControlledByAPlayer(SinglePlayer(ActionPlayer))])))`
+through the native declaration in ordinary resolving bodies. A following
+`AddMana(TheManaLostThisWay)` reads its per-instance lexical result. Existing
+scope, filter, symbol, entry and replacement-body rejection rules remain.
+
+`Game.InspectSpellDestruction` accepts complete native forced activation and
+saved-mana trees with You, ActivePlayer or native singular player targets.
+Filters must support the shared pure contextual filter inspection. Unknown
+players, filters and children reject the entire tree. Each transfer requires
+its exact preceding result producer. Forward, foreign, missing and duplicate
+producers reject before target legality gates and earlier destruction proofs.
+The query reads no saved mana, runs no ability or affordability query, and
+invokes no choices, filters, payments or replacements. Pools, production history,
+resolution bindings, RNG and stack state remain unchanged.
+
+A legal forced activation, loss or transfer blocks a later destruction proof,
+even with no mana or available mana abilities. Inspection does not predict
+ability outcomes. Supported suffixes preserve earlier proofs. An illegal
+player subject can be skipped when another target remains legal. These
+operations supply no direct destruction proof. This bounded contract does not
+enable `WouldDestroyAPermanent` or complete Equinox.
+
+CR 106.13 preserves each transferred mana unit, its restrictions and source
+metadata without new production. CR 605.1a and 605.3b retain shared mana ability
+classification and immediate resolution. CR 608.2b/c retains legality and order.
+The existing transaction preserves cost rollback; forced activations retain
+visit identity, phasing, per-activation X, player choices and replacement order.
+Each forced activation now saves and restores the outer resolution frame through
+`ResolutionState.Clone`. Immediate activated mana bodies otherwise clear that
+frame on exit. The saved player, other results, target context and outer X must
+remain available to the following loss and transfer. The frame contains no
+battlefield or player state, so real mana, cost and replacement outcomes remain.
+
+Evidence: `TestForcedManaInspectionDeclaration`, `Spell` and `Execution`;
+`TestRONForcedManaInspection` executes all six complete Drain Power records,
+including copies, clones, phasing, changed control, returned lands and countering.
+Existing `TestForcedMana*`, `TestLostMana*`, `TestRONForcedMana*` and
+`TestRONLostMana*` retain broader activation, rollback and lexical-scope evidence.
+
+
+### Next-main-phase mana inspection
+
+`NextMainPhaseInstruction{Body ResolvingEffect}.Effect() ResolvingEffect` builds
+`AtNext(YourMainPhase, Body)`. A missing or typed nil body returns nil.
+`InspectNextMainPhaseInstruction(ResolvingEffect) (NextMainPhaseInstruction, bool)`
+retains the complete body of that native one-shot schedule. Repeated schedules,
+cleanup expiry, other patterns, conditions, modes and new targets need separate
+inspection contracts. The inspector does not create or consume a trigger.
+
+RON lowers `CreateFutureTrigger(AtTheBeginningOfPlayersNextMainPhase(You),
+ActionList([...]))` through this declaration. Existing body validation and lexical
+bindings remain in RON. The constructor retains general scheduling behavior;
+spell destruction inspection accepts only complete native fixed-color mana
+production bodies for You, without spending restrictions or color choices.
+Amounts can use fixed values, saved announcement X, `ManaValueOfSpellWithLKI`
+of exact native singular spell targets, and native addition or multiplication.
+Every saved spell declaration must belong to the inspected stack object.
+Foreign references reject before illegal-target gates and earlier proofs.
+Event spell references and arbitrary value callbacks need separate inspection
+contracts; their existing execution remains available.
+
+The query reads no amount, stack LKI, pool, replacement or callback. It changes
+no bindings, RNG, mana, stack or delayed schedule. It conservatively treats a
+schedule prefix as a state barrier before later destruction. Supported suffixes
+preserve earlier proofs. Delayed mana cannot supply a direct destruction proof.
+This contract does not enable the Equinox adapter.
+
+Execution reuses CR 603.7a/b/d delayed creation, one-shot timing and controller
+capture, CR 608.2b/c legality and instruction order, and CR 608.2h exact spell
+LKI. Counter failure does not stop schedule creation for a legal target. An
+illegal sole target creates no schedule. Countering and delayed production use
+the existing stack, capture and mana replacement services. There is no new cost,
+phasing, simultaneous operation or replacement ordering contract.
+
+Evidence: `TestNextMainInstructionDeclaration`, `Inspection` and `Order`;
+`TestRONDelayedManaInspection` executes the complete LEG Mana Drain record after
+pure queries, including legal uncounterable targets, illegal targets, copies
+and clones. `TestRONNextMainPhase*` and `TestNextMainPhase*` retain full timing,
+multiple X, recast identity, separate instance, delayed-copy, countered-delay,
+source phasing, skipped/extra phase and malformed declaration evidence.
+
+
+## Native singular graveyard-to-hand inspection (2026-10-17)
+
+`GraveyardHandInstruction{Subject CardRef}.Effect() ResolvingEffect` retains one
+native return. Missing and typed nil subjects return nil.
+`InspectGraveyardHandInstruction(ResolvingEffect) (GraveyardHandInstruction, bool)`
+retains its complete reference without resolving it. Execution reuses
+`ReturnCardToHand` and shared graveyard movement, including the owner's hand
+(CR 400.3). Existing event, saved-card and Aura callers retain execution support.
+
+`InspectGraveyardTarget(CardRef) (GraveyardTargetPredicate, bool)` accepts a
+native singular required graveyard target with complete native card-type/color
+Boolean predicates and own or any graveyard scope. `Select(*Game, *StackObject)
+(uuid.UUID, bool)` checks exact declaration identity, announced zone and visit,
+current graveyard membership and current characteristics. It does not use LKI,
+execute filter callbacks, make choices, run replacements or change game state.
+Missing snapshots and foreign or repeated declarations are unknown; an old or
+absent visit is illegal. Optional, numeric, source-excluding, dependent and Aura
+targets and opaque predicates are outside this inspection contract. CR 400.7
+and 608.2b require visit identity and current legality.
+
+RON lowers `PutGraveyardCardIntoHand(card-ref)` through the native instruction
+and uses `HasCardTypeCardFilter` in `TargetGraveyardCard` declarations. It keeps
+spelling, arity, reference scope and declaration validation in the compiler.
+`Game.InspectSpellDestruction` validates all references before illegal-target
+gates and earlier destruction proofs. Graveyard return is not destruction
+(CR 701.8a). A legal return before a later destruction remains a conservative
+state barrier, because movement, replacements and resulting continuous effects
+are not projected. An illegal return has no such barrier. A supported suffix
+preserves an earlier proof (CR 608.2c). Unknown never means cannot destroy.
+This does not enable Equinox or establish general future-state analysis.
+
+Evidence: `TestGraveyardHandInstructionDeclaration`, `Inspection`, `Order` and
+`TargetContract`; `TestRONGraveyardHandInspection` covers all 14 complete records
+of Raise Dead, Regrowth and Reconstruction, including exact returned visits,
+absent targets, spell copies and clones. Existing `TestRONGraveyardReturn*`
+retains announcement rollback, instance isolation, invalid declarations,
+reprints and activated/event/Aura contexts. Raise Dead's WotC rulings specify
+announcement-time targeting and public graveyard identity. Regrowth and
+Reconstruction have checked empty local rulings. No RON source correction,
+new payment, phasing, simultaneous-operation or replacement ordering contract
+is introduced. Broader reanimation and resolution choices remain separate.
+
+
+## Native single-card library search inspection (2026-10-17)
+
+`LibrarySearchInstruction{Kind: LibrarySearchKind}.Effect() ResolvingEffect`
+retains one complete search of the resolving controller's library, its movement
+and its final shuffle. `SearchAnyCardToHand` requires a card if one exists;
+`SearchBasicLandToBattlefield` permits finding none and uses normal entry.
+Basic snow lands qualify. There is no revealed-card or action-result binding.
+Zero and unsupported kinds return nil at declaration construction.
+
+`InspectLibrarySearchInstruction(ResolvingEffect) (LibrarySearchInstruction, bool)`
+reads this immutable native declaration. It also recognizes the exact existing
+`SearchLibraryToHand` effect. Nil, typed nil, invalid kinds, opaque filters,
+arbitrary search-to-battlefield effects and composite trees are not individual
+native declarations. Complete spell-tree inspection recursively checks every
+sequence/composite child; an unsupported suffix invalidates an earlier proof.
+
+RON lowers the two existing strict `SearchLibrary/1` single-card sequences to
+these native instructions. Syntax, operand order, argument arity, scope and
+basic/land conjunction validation remain in RON. Bounded searches, optional
+wrappers, mana-difference payments, other destinations and reanimation keep
+existing execution and require separate inspection contracts.
+
+Execution delegates to `SearchLibraryToHand` and `SearchLibraryToBattlefield`.
+It preserves current controller, hidden choices, required versus qualified
+finding, normal entry replacements and restrictions, movement before shuffle,
+empty-library shuffle, independent copies and cloned libraries. Existing callers
+keep their APIs. No parallel library movement or choice service is introduced.
+
+`Game.InspectSpellDestruction` accepts either native search alone as known with
+no direct destruction proof. A search prefix before destruction returns unknown,
+even with an empty library: inspection does not read hidden contents or project
+entry, choices, replacements or shuffle state. A supported suffix preserves an
+earlier exact destruction proof. All target declarations and children are
+validated before the all-illegal resolution gate. Unknown never means false for
+Equinox. CR 608.2b/c, 701.8a, 701.23a/b/d/e and 701.24a/e define these boundaries.
+
+`TestLibrarySearchInstructionDeclaration`, `Order` and `Purity` cover missing
+and opaque declarations, complete trees, target legality, order, clones, copies,
+and traps for hidden-library reads, choices, shuffles and callbacks.
+`TestRONLibrarySearchInspection` covers all seven complete Demonic Tutor and
+Untamed Wilds records with paid casts, empty libraries, copies and clones.
+Existing `TestRONLibrarySearch*` tests retain invalid declarations and contexts,
+required/optional finding, normal entry, costs, controller changes and phasing.
+
+## Native normal graveyard-to-battlefield inspection (2026-10-17)
+
+`GraveyardBattlefieldInstruction{Subject CardRef, Controller PlayerRef}.Effect()
+ResolvingEffect` builds a mandatory normal return through
+`ReturnCardToBattlefield`. Missing and typed nil operands return nil.
+`InspectGraveyardBattlefieldInstruction(ResolvingEffect)
+(GraveyardBattlefieldInstruction, bool)` retains the exact operands. Nil effects,
+optional entry, entry options, saved results and composite trees reject. The
+inspector does not resolve either reference. Existing callers retain execution
+support for all other return forms.
+
+The complete spell query accepts this instruction with `You` and a native
+singular required graveyard target. It reuses `InspectGraveyardTarget` for exact
+declaration, zone and visit identity, current membership and native filters.
+Foreign, duplicate or incomplete declarations remain unknown. Departed or
+returned visits are illegal without LKI (CR 400.7, 608.2b). An illegal return
+permits a later destruction proof when another target remains legal; all-illegal
+targets prevent resolution. Every child is validated before this gate or an
+earlier proof, so an opaque suffix still invalidates the complete tree.
+
+Reanimation is not direct destruction (CR 701.8a). A legal entry before later
+destruction is a state barrier: the query does not project entry replacements,
+new continuous effects or trigger outcomes. A supported suffix preserves an
+earlier proof (CR 608.2c). Inspection reads no card through an opaque callback,
+runs no entry replacement or choice, changes no zone or frame, and consumes no
+RNG. Unknown is distinct from false. Equinox remains unsupported.
+
+Execution reuses existing normal entry, replacement, controller, trigger and
+zone services (CR 400.6). No new payment, phasing, simultaneous-operation or
+replacement-order contract is introduced. Result-bearing, optional, source-zone,
+Aura-linked and changed-entry procedures require separate query contracts.
+
+Evidence: `TestGraveyardBattlefieldInstructionDeclaration`, `Inspection`, `Order`
+and `Purity`; `TestRONGraveyardBattlefieldInspection` covers all six complete
+Resurrection records with paid casts, stale visits, copies and clones. Fresh
+`TestRONGraveyardReturn*` checks invalid syntax, announcement rollback, independent
+bindings, normal entry replacements, trigger timing, chosen controllers and
+source departure/control/phasing. Resurrection has checked empty local rulings.
+
+## Native fixed library look and optional shuffle inspection (2026-10-17)
+
+`LibraryProcedureInstruction{Chooser, Library PlayerRef; Count int; Reorder,
+OptionalShuffle bool}.Effect() ResolvingEffect` retains a fixed private look
+with optional top ordering, or an optional shuffle. Missing and typed-nil player
+operands, negative counts, and a shuffle combined with a count or ordering return
+nil. Zero-card looks are valid. Execution uses `LookAtLibraryTop` and
+`MayShuffleLibrary`; it does not introduce another library or choice service.
+
+`InspectLibraryProcedureInstruction(ResolvingEffect)
+(LibraryProcedureInstruction, bool)` reads the exact existing native effects.
+It rejects nil, typed nil, dynamic counts and composite trees. The complete
+spell query recursively validates all children. RON retains its existing strict
+three-argument look and two-argument optional action syntax, lexical bindings,
+ordering symbols and resolving contexts. Fixed counts use the native declaration;
+dynamic counts retain their existing execution and remain unknown to this query.
+
+`Game.InspectSpellDestruction` accepts You, ActivePlayer and exact singular
+native player targets for the chooser and library. Foreign or duplicate target
+declarations and opaque player operands return unknown before target gates or
+earlier proofs. Player targets use current legality without LKI; copies use their
+own controller, and cloned games retain independent library and look history.
+A supported procedure alone cannot directly destroy a permanent. A legal prefix
+blocks later destruction proofs without reading hidden library contents, even
+for a zero-card look or an optional shuffle. An illegal operand skips that
+procedure when another target is legal. A supported suffix preserves an earlier
+proof. Unknown suffixes invalidate the whole tree, including all-illegal trees.
+No query reads libraries, reveals cards, orders cards, makes optional choices,
+shuffles, consumes RNG, or changes frames, zones or state.
+
+CR 401.2, 608.2b/c/d, 701.20e and 701.24a/e define the library, timing and
+choice boundaries. Natural Selection's local WotC ruling requires a target.
+Visions' three WotC rulings require unchanged order, the shuffle option for a
+short library, and no empty-library draw loss. Equinox's WotC rulings require
+certainty and exclude indirect or choice-dependent destruction; unknown is
+never used as false. No Scryfall notes or source-data corrections are involved.
+
+Evidence: `TestLibraryProcedureInstructionDeclaration`, `Order` and `Purity`
+cover declarations, nil and opaque operands, exact/foreign/duplicate targets,
+partial/all-illegal resolution, complete trees, ordering barriers, copies,
+clones and callback traps. `TestRONLibraryProcedureInspection` covers every
+Natural Selection and Visions record with paid casts, short/empty libraries,
+private looks, ordering, accepted/declined shuffle, copies and clones. Existing
+`TestRONLibraryInspection*` preserves invalid syntax/context, independent pending
+bindings, retargeting, rollback, sorcery timing and Orcish Spy source behavior.
+This establishes two complete native spell queries, not Equinox's full contract.
+
+## Fixed temporary P/T spell inspection (2026-10-17)
+
+`TemporaryPTInstruction{Subject PermanentRef, Subjects PermanentSet,
+Adjustments []PTAdjustment}.Effect() ResolvingEffect` requires exactly one
+non-nil subject form and a nonempty list of fixed signed power/toughness pairs.
+It copies that list and installs all changes through the existing `untilEffect`
+in layer 7c until end of turn. The native wrapper inherits execution, definition
+metadata and AI properties from that service. Existing `Until` callers retain
+their contracts. No parallel layer or duration implementation is introduced.
+
+`InspectTemporaryPTInstruction(ResolvingEffect) (TemporaryPTInstruction, bool)`
+returns a copied declaration for this exact native shape. Nil and typed-nil
+effects, raw `Until` declarations and composite trees return unknown. The spell
+query traverses complete sequences separately. RON retains fixed nonempty
+`AdjustPT` lists with bare `UntilEndOfTurn` in instant/sorcery contexts; permanent
+abilities keep their current adapters. Dynamic, mixed and other duration forms
+remain executable but require separate pure inspection contracts.
+
+`Game.InspectSpellDestruction` accepts exact singular native permanent targets
+and complete contextual collections. It validates all declarations before
+all-illegal gates and earlier destruction proofs. The shared target query reads
+current legality and exact announced visits without target LKI or callbacks.
+A legal nonempty P/T prefix blocks later destruction proofs, even for zero
+changes. Empty and illegal subjects permit later proofs. Supported suffixes
+preserve earlier proofs; unknown suffixes reject the complete tree. The query
+never installs layers, changes characteristics or predicts state-based actions.
+A toughness reduction cannot itself prove direct destruction.
+
+CR 608.2b/c, 611.2a/c and 613.4c establish target legality, instruction order,
+duration, fixed membership and modification layers. Local rulings for all nine
+complete spell names, Blood Lust and Equinox were read and coverage checks pass.
+Eight complete spell names have empty ruling arrays; Righteousness has one WotC
+ruling about blocking status through the end of combat. Blood Lust has one WotC
+ruling about its fixed toughness change. Equinox has seven WotC rulings requiring
+direct, certain destruction at resolution. No Scryfall notes or source changes
+are involved.
+
+Evidence: `TestTemporaryPTInstructionDeclaration`, `Order` and `Installation`
+cover copied adjustment lists, invalid declarations, exact/foreign/duplicate
+bindings, opaque filter traps, instruction order, zero changes, partial/all-illegal
+targets, clones, copies, one layer installation, phasing, returned visits and
+cleanup. `TestRONTemporaryPTInspection` covers paid casts, repeated pure queries,
+resolution, copies, clones, phase/return legality, retained blockers after attacker
+departure and cleanup for all nineteen
+records of Army of Allah, Giant Growth, Hell Swarm, Holy Light, Marsh Gas, Morale,
+Piety, Righteousness and Shield Wall. Existing `TestRONTemporaryLayer*` and
+`TestRONTemporaryCollection*` cover invalid syntax/scope, source identity, payment
+rollback, static/base/switch interactions and resolution-time collection capture.
+This extends native inspection evidence; it does not complete Equinox's contract.
+
+## Temporary keyword spell instructions (2026-10-17)
+
+`TemporaryKeywordInstruction{Subject PermanentRef, Subjects PermanentSet,
+Keywords []core.Attr}.Effect() ResolvingEffect` requires exactly one subject
+form and a nonempty list of ability attributes from Flying through Ward.
+Rule permissions, type attributes, prepared state and invalid values return nil.
+The constructor copies the list. It uses `GrantKeywordModification` or
+`GrantEachKeyword` and one existing `untilEffect` installation in layer 6 until
+end of turn. Definition metadata, AI properties, exact visit capture, fixed
+resolution-time collection membership, cloning, phasing and cleanup use that
+shared service. Existing `Until` callers keep their contracts.
+
+`InspectTemporaryKeywordInstruction(ResolvingEffect)
+(TemporaryKeywordInstruction, bool)` returns a copied native declaration.
+Nil effects, raw `Until` values and composite trees return unknown; the complete
+spell query traverses sequences separately. RON retains nonempty keyword-only
+`AddAbility([keyword, ...])` lists in `CreatePermanentLayerEffectUntil` and
+`CreateEachPermanentLayerEffectUntil` with bare `UntilEndOfTurn` in instant
+and sorcery bodies. Repeated AddAbility operations share one installation.
+Permanent ability contexts keep their previous lowering. Mixed modifications,
+protection, rampage and other durations keep execution but require separate
+native query contracts.
+
+`Game.InspectSpellDestruction` accepts exact native singular targets and complete
+contextual permanent collections. It checks every declaration and child before
+all-illegal target gates and earlier proofs. Legal nonempty keyword prefixes
+block later destruction certainty, including grants of an existing keyword;
+empty or illegal subjects permit later proofs. Supported suffixes preserve
+earlier proofs. A grant alone cannot prove direct destruction. Queries do not
+install effects, call filter callbacks, run triggers or predict future layers.
+Rapid Fire and Berserk remain unknown as complete trees.
+
+CR 608.2b/c, 611.2a/c and 613.1f define legality, order, duration, fixed membership
+and ability layers. Jump's WotC ruling confirms that granting flying to an
+already blocked creature does not remove blockers. Equinox's WotC rulings require
+certain direct destruction at resolution. No source data or replacement rule
+changes are introduced. No new LKI or payment contract is introduced.
+
+Evidence: `TestTemporaryKeywordInstructionDeclaration`, `Order` and
+`Installation` cover copied lists, invalid declarations, exact, foreign,
+duplicate and missing bindings, callback traps, prefix/suffix order, partial and
+all-illegal targets, clones, copies, one installation, phase cycles, returned
+visits and cleanup. `TestRONTemporaryKeywordInspection` covers paid casts and
+pure queries for all six Jump records, either player's targets, copies, clones,
+shroud, phasing, returned targets, blocked attackers and cleanup (54 scenarios).
+`TestRONTemporaryKeywordCollectionInspection` covers multiple grants, current
+copy controller, membership captured at resolution and cleanup.
+`TestRONTemporaryKeywordInspectionRejectsDeclarations` covers invalid syntax and
+unknown mixed, protection and rampage trees.
+`TestRONTemporaryKeywordInspectionKeepsOtherTreesUnknown` checks complete real
+Rapid Fire and Berserk records. Existing `TestRONTemporaryLayer*` and
+`TestRONTemporaryCollection*` retain binding, rollback and source-departure tests.
+
+
+## Singular temporary P/T value instructions (2026-10-17)
+
+TemporaryPTValueInstruction has one PermanentRef Subject and nonempty
+[]PTValueAdjustment Adjustments. Each pair retains ResolutionValue Power and
+Toughness. Effect() ResolvingEffect rejects missing and typed-nil operands,
+copies the list and uses ModifyPT in one untilEffect until EndOfTurn. The
+existing service captures every value before installing any modification in
+layer 7c. Exact subject visits, phasing, copy/clone isolation, definition reads,
+AI properties and cleanup use that service. Existing callers are preserved.
+
+InspectTemporaryPTValueInstruction(ResolvingEffect)
+(TemporaryPTValueInstruction, bool) returns a copied declaration. Raw Until,
+composites and nil effects are unknown. Game.InspectSpellDestruction accepts
+complete native fixed and announced-X values, singular native target power,
+toughness and mana values, and recursive subtraction/multiplication. All target
+reads must belong to the inspected spell's exact native declarations. Missing,
+foreign, duplicate or opaque declarations reject before target legality gates
+and earlier proofs. Complete unknown value trees remain unknown even when all
+targets are illegal. Queries call no value/reference/filter callbacks, read no
+amounts or LKI, install no layers and predict no future characteristics.
+
+A legal layer prefix blocks later destruction proofs even at zero. Illegal
+subjects permit later proofs; supported suffixes preserve earlier proofs.
+A toughness reduction cannot prove direct destruction. Conditional and mixed
+parents retain their separate contracts. No new replacement order, payment,
+simultaneous zone operation or target-LKI rule is introduced.
+
+CR 608.2b/c/h, 611.2a/c/d and 613.4c establish legality, instruction order,
+resolution-time amounts, fixed subjects, duration and layer order. Howl from
+Beyond and Great Defender have explicit empty local ruling arrays. Blood Lust's
+WotC ruling confirms that a saved toughness adjustment stays fixed after later
+characteristic changes. Berserk's WotC ruling concerns its delayed instruction;
+that complete native tree remains unknown. Equinox's WotC rulings require direct
+certain destruction. Rulings for Rapid Fire, Subdue and Kry Shield were also
+read. No Scryfall note, source correction or new LKI policy is involved.
+
+TestTemporaryPTValueInstructionDeclaration checks copied lists, missing and
+typed-nil operands and exact native shapes. TestTemporaryPTValueInstructionInspection
+covers 100 amount/order combinations, fixed and X values, characteristics,
+nested arithmetic, callback traps, foreign/missing/duplicate declarations,
+partial/all-illegal targets, copies, clones and query purity.
+TestTemporaryPTValueInstructionInstallation checks one installation, values
+captured together, phase cycles, returned visits, clone isolation and cleanup.
+TestRONTemporaryPTValueInspection covers 63 paid real-record scenarios for Howl
+from Beyond (six records) and Great Defender (one record), including failed
+payment, zero X, opponent targets, copies, clones, legality and cleanup.
+TestRONTemporaryPTValueCapture adds fixed/dynamic lists, nested arithmetic,
+changed characteristics before and after resolution and clone isolation.
+TestRONTemporaryPTValueRejectsDeclarations preserves invalid declarations and
+unknown complete Blood Lust, Berserk and Subdue trees. Existing
+TestRONTemporaryValueCards covers retargeted copies with different mana values;
+TestRONTemporaryCharacteristicValues checks simultaneous characteristic reads.
+
+## Native conditional temporary layers (2026-10-17)
+
+`PermanentBranchInstruction{Subject PermanentRef, Filter PermanentFilter,
+Matching ResolvingEffect, Nonmatching ResolvingEffect, Negate bool}.Effect()`
+returns a `ResolvingEffect` through the existing permanent information branch.
+Missing or typed-nil subjects or matching bodies return nil. Nonmatching is
+optional; a typed-nil body rejects. `InspectPermanentBranchInstruction` returns
+that declaration and a Boolean without reference, filter or body callbacks.
+Control-history branches remain outside this declaration.
+
+`TemporaryRampageInstruction{Subject PermanentRef, Amounts []int}.Effect()`
+requires a subject and a nonempty list of nonnegative integers. It copies the
+list and uses one untilEffect with separate TriggeredAbilityModification grants
+from BecomesBlocked(This) and RampageEffect for each amount. Zero remains a
+separate triggered ability. `InspectTemporaryRampageInstruction(ResolvingEffect)
+(TemporaryRampageInstruction, bool)` copies the amount list without installing
+anything. Existing definition validation, AI properties, trigger identity,
+fixed subject visits, layer 6 grants, phasing, copy/clone and cleanup apply.
+
+Game.InspectSpellDestruction accepts complete native layer-only branch bodies,
+including nested branches and sequences. Both bodies and the full native filter
+must be known before target legality or destruction proofs. The condition must
+use an exact native permanent target declared by the spell. The same rule
+applies to every child subject and dynamic value read. Native filters include
+fixed toughness comparisons and HasRampage/Not(HasRampage). HasRampage retains
+native query metadata and uses the same current runtime ability scan in both
+execution and native collection queries. Target domains keep their prior gates.
+
+Inspection does not evaluate branch predicates or predict future layers. It
+retains both paths as conservative layer barriers. A legal condition subject or
+nonempty child group blocks later destruction certainty even if the predicate
+is currently false. A supported suffix preserves an earlier proof. Unknown
+filters or children reject even on an unchosen path or with all targets illegal.
+Conditional destruction, mixed layers, protection and delayed bodies still need
+separate contracts. No new LKI, payment, replacement ordering or simultaneous
+operation rule is introduced.
+
+CR 608.2b/c/h, 611.2a/c/d, 613.4c and 702.23a-c establish this contract. Blood
+Lust's WotC ruling requires the fixed saved adjustment. Rapid Fire's WotC ruling
+requires its existing first-combat casting window. No Scryfall note or source
+correction is used. TestTemporaryLayerBranchDeclaration checks declarations and
+list isolation. TestTemporaryLayerBranchInspection covers complete filters,
+opaque branches, foreign declarations, illegal/duplicate targets, instruction
+order, copies, clones and purity. TestTemporaryLayerBranchRampageInstallation
+checks separate zero and positive grants, one installation, combat bonuses,
+phasing, returned identity, clone isolation and cleanup.
+
+TestRONTemporaryLayerBranchInspection adds complete native-query/gameplay
+coverage for Blood Lust and Rapid Fire (one LEG record each), including copies,
+clones, legality, phasing, returned targets and cleanup.
+TestRONTemporaryLayerBranchBloodLustCapture checks both branches across six
+resolution toughness values and later changes. TestRONTemporaryLayerBranchRejectsDeclarations
+checks malformed predicates and scope errors. Existing TestRONTemporaryRampage*
+checks paid casts, rollback, first-combat timing, acquired/lost rampage, independent
+retargeted copies and full combat behavior through the new native adapter.
+
+## Native mixed layers and delayed destruction (2026-10-17)
+
+`TemporaryMixedLayerInstruction{Subject PermanentRef, Keywords []core.Attr,
+Adjustments []PTValueAdjustment}.Effect() ResolvingEffect` requires one subject,
+nonempty keyword and adjustment lists, valid keyword attributes and both values
+in every adjustment. Missing and typed-nil operands return nil. The constructor
+and `InspectTemporaryMixedLayerInstruction(ResolvingEffect)
+(TemporaryMixedLayerInstruction, bool)` copy both lists. Execution uses one
+untilEffect operation with separate layer 6 and 7c entries. All values are saved
+before either entry applies. This preserves resolution-time values, layer order,
+exact visits, phase cycles, clone independence and cleanup.
+
+`NextEndStepInstruction{Body ResolvingEffect}.Effect() ResolvingEffect` requires
+a non-nil body and uses AtNext(EachEndStep, body). Its inspector has signature
+`InspectNextEndStepInstruction(ResolvingEffect) (NextEndStepInstruction, bool)`.
+Repeated schedules, cleanup expiry, other steps, intervening conditions, new
+targets and modes remain outside this declaration. Inspection does not schedule
+anything. Execution retains the existing captured resolution frame and controller.
+
+Game.InspectSpellDestruction validates complete next-end-step bodies consisting
+of singular native target destruction, sequences and native permanent branches.
+Both branch paths, complete native filters and all target declarations must be
+known before legality gates or earlier proofs. Attack-history filters retain
+native immutable metadata; their shared history service keeps exact incarnations.
+Target-domain support gates remain separate. No condition, value or opaque
+callback runs during inspection. Unknown children remain unknown even with all
+targets illegal or after an earlier destruction instruction.
+
+A supported delayed body is not immediate destruction. Scheduling it changes no
+current permanent state, so it neither proves direct destruction nor blocks a
+later direct proof. A mixed-layer prefix still blocks later state prediction;
+a supported mixed-layer suffix preserves an earlier proof. Future targets retain
+the original visit and can change characteristics without losing that identity.
+CR 603.7a-d, 608.2b/h, 611.2a/c/d, 613.1f/g and 613.4c establish the contract.
+Berserk's WotC ruling confirms that losing creature type does not stop delayed
+destruction. No Scryfall notes or source corrections are used.
+
+Evidence: TestNativeMixedDelayedDeclaration, Inspection and Installation cover
+list isolation, invalid operands and schedules, complete bodies, native filters,
+foreign bindings, opaque callbacks, instruction order, copies, clones, saved
+values, phase cycles, new visits and cleanup. TestRONNativeMixedDelayedBerserk
+covers all five complete Berserk records with paid casting, failed payment,
+inspection purity, copies, clones, illegal targets, return, phasing, attack and
+no-attack paths, type loss and delayed resolution. TestRONNativeMixedDelayedRejectsDeclarations
+covers malformed mixed modifications, events, empty bodies and incompatible
+bindings. TestRONAttackHistoryBerserk* preserves combat timing, attack history,
+regeneration, indestructibility, retargeting, separate schedules and expiry.
+
+This is a prerequisite for Equinox; Subdue prevention inspection and the
+WouldDestroyAPermanent adapter remain separate work. Compilation gain is zero.
+
+## Native singular combat-source prevention (2026-10-17)
+
+`CombatSourcePreventionInstruction{Subject PermanentRef}.Effect() ResolvingEffect`
+retains prevention of all combat damage from one source until end of turn.
+Missing and typed-nil subjects return nil. `InspectCombatSourcePreventionInstruction`
+returns `(CombatSourcePreventionInstruction, bool)` without resolving the subject
+or installing a shield. It accepts the shared singular end-of-turn installation,
+including existing `PreventCombatDamageByThisTurn` callers. Source sets, other
+durations, recipient unions and noncombat prevention require separate contracts.
+
+RON `CreatePreventDamageUntil(CombatDamageWouldBeDealtByCreature(ref),
+[PreventThatDamage], UntilEndOfTurn)` lowers through this declaration. Other
+contexts retain their existing reference and validation rules. Spell inspection
+requires the exact native singular target declaration. It validates the whole
+tree before legality or earlier proofs. A legal prevention prefix blocks later
+state proofs; an illegal source prefix does not. A supported suffix preserves an
+earlier direct proof. Prevention alone cannot prove direct destruction.
+
+Execution reuses the existing replacement service: capture the source visit at
+resolution, prevent repeated combat damage to players and permanents, permit
+noncombat and unrelated-source damage, keep the effect across combats and phase
+cycles, and expire it at cleanup. A returned object has a different visit. Control
+and type changes do not change the captured source. Clones retain independent
+replacement state. Existing replacement ordering and unpreventable damage rules
+apply. CR 400.7, 608.2b, 611.2a and 615.1–4, 615.6, 615.12 establish these rules.
+No new choice, payment, simultaneous batch or LKI rule is added.
+
+Evidence: `TestCombatSourcePreventionInstructionDeclaration`, `Inspection` and
+`Execution`; `TestRONNativeSourceCombatPreventionSubdue`; existing
+`TestRONSourceCombatPreventionDeclarations`, `Subdue` and `ReplacementOrder`.
+The complete Subdue record now supports native inspection and gameplay. Its local
+rulings array is explicitly empty. This completes a prerequisite for Equinox;
+`WouldDestroyAPermanent` lowering remains outside this slice.
+
+## Native announced-X mana-value targets (2026-10-17)
+
+`InspectPermanentTarget(PermanentRef) (PermanentTargetPredicate, bool)` and
+`InspectSpellTarget(StackObjectRef) (SpellTargetPredicate, bool)` now retain
+native mana-value-equals-announced-X declarations in addition to their current
+complete filters. `InspectPermanentTargetDeclaration(Target)
+(PermanentTargetPredicate, bool)` reads the same complete singular declaration
+from an announced target specification. Raw specs, nil and typed-nil targets,
+unknown wrappers, opaque filters and unsupported descendants reject.
+
+`PermanentTargetPredicate.Select(*Game, *StackObject) ([]PermanentVisit, bool)`
+and `SpellTargetPredicate.Select(*Game, *StackObject) (uuid.UUID, bool)` read the
+inspected object's XValue, never the active resolution frame's X. Permanent
+mana value uses the shared execution comparison, which treats printed X as zero
+outside the stack. Spell mana value uses stackSpellManaValue, including every
+X symbol at the target spell's chosen value. Actual mana paid, additional costs
+and reductions do not supply mana value. Negative announced X returns unknown.
+The current cost is checked at selection time. A mismatch is a known illegal
+target. Exact visits, zone snapshots, source information, protection and global
+target restrictions retain their existing contracts. Missing or duplicate
+declarations and missing snapshots remain unknown. Fixed and exact-X plural permanent groups reuse this singular restriction for
+each visit. Counts and partly legal groups retain their existing contracts.
+Neither selection mutates
+state, executes filter callbacks, changes X, uses shields, makes choices or uses
+RNG. Copies read their own X and targets; clones read their own current state.
+
+RON `ManaValueIs(EqualTo(ValueX))` lowers through a shared immutable
+`manaValueXTargetPlan`. Permanent lowering uses TargetManaValueEqualX;
+spell lowering uses DeclareSpellTargetManaValueX. Announced X must be in scope.
+Wrong arity, other comparisons, unbound values and unsupported Boolean placement
+remain errors. The existing spell-target restriction against combining mana
+value and controlled-permanent-target restrictions stays in force.
+
+Detonate (ATQ, one record) and Spell Blast (six records) are the affected unique
+cards. The complete Spell Blast spell tree now supports pure inspection.
+Detonate's target supports pure inspection. The later native target-controller
+recipient contract below completes its damage suffix and complete spell query.
+Equinox remains rejected. Full gameplay coverage, startup cutover and removal
+gates remain separate.
+
+CR 107.3a/e/g, 202.3/202.3e, 400.7, 608.2b/h and 702.26b/d establish this
+contract. Detonate's WotC ruling requires no damage after target illegality.
+Spell Blast's two WotC rulings distinguish chosen X from actual casting cost.
+There are no Scryfall notes or source corrections. No new LKI, cost rollback,
+replacement-order or simultaneous-operation contract is introduced.
+
+Evidence: TestNativeManaXTargetPermanent, Spell, Plural and Invalid cover native
+construction, zero and multiple X symbols, mismatches, negative X, changing
+costs, exact identity, missing frames, copies, clones, purity and destruction
+proofs without shield use. TestRONNativeManaXTargetLowering checks all seven
+complete records. TestRONNativeManaXTargetDetonate covers current legality and
+full gameplay; the later target-controller slice extends it to 13 states and
+complete spell inspection.
+TestRONNativeManaXTargetSpellBlast covers complete native inspection and actual
+counters in seven states for all six records. TestRONManaValueXDeclarations and
+the existing Detonate/Spell Blast gameplay, retargeting, payment and independent
+pending-counter tests preserve syntax, rollback and factory isolation.
+
+## Native blocked-by-defender collection inspection
+
+`InspectContextualPermanentCollection(BlockedByThisTurn(blocker))` accepts a
+complete native singular `*PermanentTargetBinding`. It retains the declaration
+identity without selected members. Union, intersection, native filter and host
+collection parents validate every child. Nil, typed-nil, opaque, source and saved
+references remain unknown. The context-free inspector still rejects this shape.
+
+`ContextualPermanentCollectionPredicate.Select(*EffectContext)` uses the exact
+blocker visit in the supplied legal resolving target frame and the shared
+`Game.wasBlockedByThisTurn` lookup. It selects current, phased-in attacker
+visits in battlefield order. It does not require a current combat relationship
+or creature type. Callers can intersect a creature filter. Control changes and
+combat reset preserve pairs. Returned attackers have new visits; phase cycles
+preserve visits. Final cleanup clears history; clones have independent history.
+These rules use CR 400.7, 509.1, 509.4, 514.2 and 702.26b/d.
+
+Target legality remains a caller contract. A present empty binding means an
+illegal target and selects nothing. Missing bindings, multiple values, nil IDs
+and nil incarnations are unknown. A supplied captured blocker visit can read
+history after blocker departure, return or phasing; this does not restore a
+spell's illegal target. `InspectSpellDestruction` first validates the complete
+instruction tree and exact declarations, then builds the legal target frame.
+It can inspect direct destruction clauses with this collection and retains its
+existing destination, regeneration and replacement certainty rules. Foreign
+operands cannot hide behind empty selections or earlier proofs. Queries call no
+reference or filter callbacks, read no LKI, consume no shields and change no
+resolution frame, choices, RNG, history or stack state.
+
+Evidence: `TestNativeBlockedHistoryCollection`, `Bindings` and `Spell` in
+`pkg/mage/blocked_history_collection_query_test.go`; RON lowering and full-record
+play in `TestRONNativeBlockedHistoryCollectionLowering` and `Gameplay`.
+Glyph of Doom's bounded combat schedule and Glyph of Reincarnation's death-return
+continuation still reject complete native spell inspection. Their existing
+execution, batch destruction, delayed capture and actual-death services remain
+in use. Doom has no local rulings. Reincarnation's two WotC rulings retain
+batch-before-choice ordering and opponent-Wall targeting; there are no Scryfall
+notes or source changes in this slice.
+
+
+## Native target-controller damage recipients (2026-10-17)
+
+`InspectDamageRecipient(ControllerOfWithLKI(target))` accepts a complete native
+singular permanent target. The predicate retains its exact declaration without
+chosen state. `DamageRecipientPredicate.Select(Game, StackObject)` uses the shared
+`PermanentTargetPredicate.Select` legality and visit checks, then reads the live
+permanent's current controller. It returns a player recipient, never a permanent
+recipient. Missing, repeated and foreign declarations or missing zone/visit
+snapshots are unknown. An illegal, departed, returned or phased target supplies
+an empty known selection. Phase cycles preserve identity. Source, attachment,
+saved, opaque and nil subjects, and owner references, need separate inspection
+contracts. No reference/filter callbacks run during selection, and it does not
+read target LKI. Shared source-LKI legality checks remain in use.
+
+Execution continues to use `ControllerOfWithLKI` and the shared incarnation
+information service. After a legal target is destroyed, later damage uses that
+visit's last controller. Indestructibility does not prevent the damage clause;
+no-regeneration destruction bypasses regeneration. Damage still uses normal
+prevention and replacement services. CR 400.7, 608.2b/c/h and 702.26b/d establish
+the identity, ordering, legality and information boundaries. Detonate's WotC
+ruling requires no damage when its target is illegal. There are no source edits.
+
+`Game.InspectSpellDestruction` now accepts Detonate's complete native spell
+tree. A supported damage suffix preserves earlier destruction proofs. A legal
+nonempty prefix blocks later proofs even at zero damage; an illegal recipient
+permits later proofs when another target is legal. Complete validation precedes
+all-illegal gates and earlier proofs, so foreign references and opaque suffixes
+remain unknown. Inspection does not simulate damage, preceding destruction,
+LKI or future control. It does not change frames, stack, choices, RNG or shields.
+
+Evidence: `TestNativeTargetControllerRecipient`, `Invalid` and `Spell` cover
+15 selection states, unsupported declarations and 13 complete-tree states.
+`TestRONNativeTargetControllerRecipientLowering` uses the full Detonate record,
+fresh bindings and malformed/unbound declarations.
+`TestRONNativeManaXTargetDetonate` covers complete native inspection and real
+RON destruction/damage in 13 states, including independent clone resolution and
+prevention. Existing permanent-information and permanent-life tests preserve
+Crumble and Swords to Plowshares execution after the typed compiler refactor.
+Their WotC rulings retain illegal-target suppression and departure power reads.
+No new cost, delay, simultaneous-operation or replacement-order rule is added.
+
+## Native bounded end-of-combat inspection (2026-10-17)
+
+`NextCombatThisTurnInstruction{Body ResolvingEffect}.Effect() ResolvingEffect`
+requires a non-nil body and uses `AtNextThisTurn(EachEndOfCombat, body)`.
+`InspectNextCombatThisTurnInstruction(ResolvingEffect)
+(NextCombatThisTurnInstruction, bool)` retains the body without scheduling a
+trigger. Repeated schedules, unbounded schedules, other steps, conditions,
+new target declarations and modes remain outside this declaration. Missing
+and typed-nil bodies return nil from the constructor and reject inspection.
+
+`Game.InspectSpellDestruction` accepts complete direct-destruction bodies,
+including sequences, singular native permanent targets and complete contextual
+permanent collections. Each subject, filter and binding must be known before
+all-illegal gates or earlier destruction proofs. A foreign target, opaque
+operand or unsupported child keeps the whole tree unknown. Both regeneration
+policies are accepted. Inspection does not select future collection members,
+predict future destruction, create triggers, resolve callbacks, use shields,
+make choices, consume RNG or change the resolution frame.
+
+A delayed instruction supplies no immediate destruction proof and does not block
+a later direct proof. A supported suffix preserves an earlier proof. Execution
+retains the resolving controller and exact target visit in the shared delayed
+frame. It reads live combat history at delayed resolution and uses simultaneous
+destruction with shared replacement ordering. Source departure, phasing,
+returned objects, copies and clones keep the existing identity rules. Cleanup
+ends unused schedules but does not remove a pending triggered ability.
+CR 400.7, 511.2, 603.7a-d, 608.2b/c and 702.26 establish these boundaries.
+Glyph of Doom has an explicitly empty local rulings array. No source data changes
+or new payment, replacement, history or simultaneous-operation rules are added.
+
+Evidence: `TestNativeBoundedCombatDeclaration` and `Inspection` cover malformed
+schedules, complete and unknown bodies, binding identity, legality, phase cycles,
+returns, ordering, copies, clones, shields and query purity.
+`TestRONNativeBoundedCombatLowering` and `Invalid` cover the real full record,
+per-instance lowering and invalid nested declarations. The existing
+`TestRONBoundedDelayedStepGlyphOfDoom` now checks pure complete-tree inspection
+before all 15 gameplay paths. `TestRONBoundedDelayedStepNativeAndBindings`,
+`LiveHistory` and `TestRONNativeBlockedHistoryCollectionGameplay` retain separate
+factory bindings, live member selection, simultaneous destruction, illegal
+targets, regeneration and clone isolation. Glyph of Reincarnation's death-return
+continuation remains unknown. This prerequisite advances Equinox without
+lowering its condition or changing collection acceptance.
+
+## Native creature-death result and return inspection
+
+`CreatureDeathInstruction{Subjects PermanentSet, Result *PermanentSetBinding,
+CannotRegenerate bool}.Effect() ResolvingEffect` builds one shared simultaneous
+destruction with `CreatureDeathsInto`. `InspectCreatureDeathInstruction` reads
+that declaration; nil or unnamed results, mixed result kinds and duplicate
+options reject. `CreatureDeathReturnInstruction{Result *PermanentSetBinding,
+Member *PermanentBinding, Graveyard PlayerRef}.Effect() ResolvingEffect` builds
+a required creature-card choice for each saved visit and simultaneous entry
+under owner control. `InspectCreatureDeathReturnInstruction` accepts this exact
+native creature filter; opaque filters and other card types remain unknown.
+Both inspectors return their declaration and a bool without selecting objects.
+
+The complete spell query checks producers before consumers by pointer identity.
+Missing, forward and duplicate producers, duplicate member declarations, foreign
+result identities and foreign historical members reject before target legality
+or earlier proofs. The supported graveyard players are the resolving controller
+and `ControllerWhenLastBlockedThisTurn(From(Member), nativePermanentTarget)`.
+Every blocker target must be declared by the same spell, even if all targets
+are illegal. Inspection never reads saved deaths or predicts choices or entry.
+A return continuation is a conservative barrier before later destruction; it
+preserves an earlier direct destruction proof, including when the dead card may
+subsequently return. All children must support inspection before any proof.
+Opaque replacements can still make destination inspection unknown.
+
+Execution reuses exact creature deaths, LKI, visit history, required choices,
+replacement ordering, simultaneous entry, source frames, copies and clones.
+There is no new payment, rollback, replacement or zone-change service.
+CR 400.7, 608.2b/c/h/i, 700.4, 701.8/19 and 702.26 establish these boundaries.
+Glyph of Reincarnation's two local WotC rulings require deaths before choices
+and permit the newly dead cards to return. No Scryfall notes or source changes
+are used. `TestNativeCreatureDeathDeclarations` and `Inspection` cover native
+contracts and purity. `TestRONNativeCreatureDeath`, `TestRONDeathResultReturn*`
+and `TestRONNativeBlockedHistoryCollectionGameplay` cover the complete RON tree
+and its gameplay, including changed control, last-block history, invalid targets,
+regeneration, replacements, phasing, returns, copies and clones.
+
+
+## Native creature-death count continuation (2026-10-17)
+
+`CreatureDeathCountInstruction{Subjects PermanentSet, Result *NumberBinding,
+CannotRegenerate bool}.Effect() ResolvingEffect` uses shared simultaneous
+destruction and `CreaturesDiedThisWayInto`. Missing operands and unnamed results
+return nil. `InspectCreatureDeathCountInstruction(ResolvingEffect)
+(CreatureDeathCountInstruction, bool)` retains one complete producer. Duplicate
+options, mixed result forms and unknown effects remain unsupported.
+
+RON lowers the adjacent `DestroyEachPermanent[NoRegen]` and
+`TheNumberOfPermanentsThatDiedThisWay(IsCardtype(Creature))` continuation through
+this declaration. Existing syntax, lexical checks and fresh factory bindings
+remain in RON. Graveyard-move counts keep their separate existing declaration.
+
+`Game.InspectSpellDestruction` validates saved-number sums in singular native
+source damage. The supported amount tree contains fixed/X leaves, named saved
+number leaves and binary addition. Each saved identity must have one preceding
+native producer in the complete spell tree. Foreign, forward, duplicate and
+opaque declarations remain unknown, even after an earlier destruction proof.
+The query does not read result frames, resolve amounts, simulate damage, use
+shields or change game state. A supported damage suffix preserves an earlier
+proof. A live damage prefix still blocks later state proofs.
+
+Complete Hellfire gameplay checks actual creature deaths, tokens, noncreatures,
+regeneration, indestructibility, native exile replacement, phasing, returned
+visits, control changes, stack copies and clones. Volcanic Eruption retains its
+separate graveyard-count and collection-damage tests. CR 608.2c/h/i, 700.4,
+701.8 and 701.19 define instruction order, historical facts, death, destruction
+and regeneration. Hellfire's WotC rulings distinguish graveyard entry from
+replacement and include token creatures. No source records change.
+
+
+## Native live collection attack-rule declarations (2026-10-17)
+
+`TurnAttackRuleInstruction{Filter PermanentFilter, Player PlayerRef, Require bool}`
+retains one current-turn rule. `Effect() ResolvingEffect` rejects a missing required
+player or a player on a restriction. It uses the existing `turnAttackRuleEffect`;
+`CantAttackMatchingThisTurn` and `MustAttackControlledThisTurn` remain compatible.
+The filter's zero value still means all permanents during execution.
+`InspectTurnAttackRuleInstruction(ResolvingEffect) (TurnAttackRuleInstruction, bool)`
+returns one structurally valid declaration without evaluating its operands.
+Singular and next-turn effects are distinct contracts.
+
+Pure spell destruction inspection additionally requires complete native filter
+metadata and You or ActivePlayer for a requirement. Opaque and nested opaque
+filters, saved players and foreign player targets reject the whole tree before
+target legality or any earlier destruction proof. No filter, reference callback,
+choice, creature selection or rule installation runs. A supported attack rule
+alone has no direct destruction proof. A prefix remains a conservative barrier
+before later destruction, even with empty current membership; a supported suffix
+preserves an earlier proof. This is not a simulation of combat or future members.
+
+CR 508.1c/d, 608.2b/c/h, 611.2a/c and 514.2 govern restrictions, requirements,
+resolution order, player capture, live rule membership and cleanup. Execution
+reuses source-independent turn rules, current properties and control, exact
+phasing state, shared attack payments and effect-manager cloning. No new LKI,
+replacement, simultaneous-operation or rollback mechanism is added.
+
+`TestTurnAttackRuleInstructionDeclaration`, `Query` and `Execution` cover structural
+rejection, unchanged declaration reads, opaque descendants, foreign identities,
+all-illegal targets, whole-tree rejection, ordering, copies, clones, source exit,
+phase cycles, returned and late creatures, and cleanup. `TestAttackRulesThisTurn*`
+retains ability removal, current characteristics/control, attack-cost choices and
+both attack-declaration paths. `TestRONCollectionAttackTurnFestival` covers the
+complete Festival record; `TestRONCollectionAttackTurnSirenClause` checks the exact
+Siren's Call clause. `TestRONCurrentTurnControlSiren` retains its complete six-reprint
+gameplay, including delayed destruction, cast timing, payment, phasing and copies.
+Complete Siren's Call inspection remains blocked on saved-player delayed bodies.
+
+
+## Native saved-player delayed destruction (2026-10-17)
+
+`SavedPlayerInstruction{Subject PlayerRef, Binding *PlayerBinding,
+Body ResolvingEffect}.Effect() ResolvingEffect` builds an ordered snapshot and
+body with the existing `SnapshotPlayer` and `Sequence` services. Missing or typed
+nil operands and an unnamed binding return nil. Definition validation checks
+producer dominance and exact binding identity. The body uses the same resolution
+frame; a delayed schedule captures that frame independently. This constructor
+does not add a new lexical lifetime to the engine binding.
+
+`InspectSavedPlayerInstruction(ResolvingEffect) (SavedPlayerInstruction, bool)`
+reads the exact two-child snapshot/body declaration without reading players,
+calling callbacks or scheduling a trigger. RON `PlayerActions(player, actions)`
+now lowers through this declaration with one fresh binding per factory instance.
+The compiler retains its existing lexical scope and malformed-declaration checks.
+
+Complete spell inspection supports You or ActivePlayer followed only by one or
+more next-end-step schedules, each with a nonempty complete direct-destruction
+body over native contextual collections. A saved collection player must be the
+exact local binding. Singular destruction, nested saved scopes, other durations,
+opaque descendants and target-dependent collections remain unknown in this
+context. All children are checked before target legality gates or earlier proofs.
+Inspection reads no saved value and selects no future member. This schedule
+supplies no immediate destruction proof and permits a later direct proof.
+
+Native collection inspection also retains set difference, including both complete
+operands, and the existing DidntAttackThisTurn and ControlledSinceCurrentTurnStart
+filters. Selection uses current exact visits and shared turn history. Departure
+and return create a new visit; phasing preserves history and excludes phased
+members. The saved player persists across source departure, cleanup and a later
+player's end step. Resolution still performs one simultaneous destruction per
+instruction through the existing replacement and regeneration services.
+
+CR 603.7a-d, 608.2b/c/h, 701.8 and 702.26b/d establish these contracts.
+`TestSavedPlayerInstructionDeclaration`, `Query`, `Definition` and
+`HistoryCollection` cover structural rejection, binding identity and dominance,
+purity, unknown descendants, proof ordering, legality, copies, clones and history.
+`TestSavedActivePlayerDelayedFrames` executes the native declaration through
+independent saved frames, source return and clone divergence.
+`TestRONSavedActivePlayerSiren` now inspects the complete six-reprint spell tree
+before existing cross-turn gameplay checks. `TestRONCurrentTurnControlSiren`
+retains same-turn attack requirements, delayed batches, replacements, payment and
+casting restrictions. `TestRONSavedActivePlayerInvalid` and `Native` retain
+malformed/escaped scope and atomic collection rejection evidence.
+
+## Native per-permanent optional life payment inspection
+
+`PermanentLifePaymentInstruction{Subjects PermanentSet, Amount int,
+Unpaid *PermanentSetBinding, Body ResolvingEffect}.Effect() ResolvingEffect`
+retains one fixed nonnegative life offer per selected visit, to any player,
+followed by the ordered body. Missing or typed-nil operands, unnamed results
+and negative amounts return nil. Execution uses `OfferCostForEachPermanent`,
+`EachPlayer`, `LifePayCost` and `Sequence`. Existing callers remain supported.
+`InspectPermanentLifePaymentInstruction(ResolvingEffect)
+(PermanentLifePaymentInstruction, bool)` retains exact declaration identities
+without selecting members, making offers or reading saved results. Additional
+costs, captured payment amounts and restricted player sets are different shapes.
+
+RON lowers `ForEachPermanentAnyPlayerMayCost(collection, AnyPlayer,
+PayLife(Integer(n)))` and its lexical continuation through this declaration.
+Each factory creates its own unpaid binding. Existing ordinary resolving,
+triggered, delayed and nested execution contexts remain supported.
+
+Pure `Game.InspectSpellDestruction` accepts complete native collections without
+target reads followed by a nonempty direct destruction tree over exactly
+`FromPermanentSet(Unpaid)`. Both normal and no-regeneration destruction retain
+their execution semantics. Foreign, forward, escaped and duplicate result
+bindings, opaque descendants, target-dependent collections, and other bodies
+remain unknown. Every descendant validates before target gates or earlier proofs.
+
+The optional body supplies no destruction certainty proof. A payment prefix
+conservatively blocks proofs from later instructions, even with zero life,
+an empty collection or no affordable payer. A supported suffix preserves an
+earlier independent direct proof. Inspection does not predict choices, consume
+RNG, change life, populate results, move permanents or use replacements.
+This is a prerequisite for the complete Equinox query, not its compiler adapter.
+
+CR 101.4, 118.3b, 118.5, 608.2b/c/f/h, 701.8 and 702.26b/d establish the
+shared execution rules. Cleansing has an explicit empty local rulings array.
+Equinox's seven WotC rulings distinguish direct certain destruction from
+optional, random, damage and indirect outcomes. Neither file has Scryfall notes.
+No new transaction, LKI, phasing, clone or replacement service is added.
+
+Evidence: `TestPermanentLifePaymentInstructionDeclaration` and `Query` cover
+native structure, malformed declarations, exact binding scope, unknown children,
+all-illegal gates, conservative prefixes, supported suffixes, copies, clones
+and repeated query purity. `TestPermanentPaymentIdentityDelayAndClone` and
+`TestPermanentPaymentSnapshotRecheckAndSimultaneous` now execute the native
+constructor for exact visits, phasing cycles, departure/return, delayed captures,
+clone isolation and simultaneous departures. `TestRONPermanentPaymentCleansing`
+checks the complete real spell tree before its existing payment, affordability,
+regeneration, indestructibility, phase, copy and clone gameplay.
+`TestRONPermanentPaymentNativeLowering` checks separate factory declarations;
+other `TestRONPermanentPayment*` cases retain invalid declarations, atomic
+loading and trigger, delayed, saved-result and nested execution coverage.
+
+
+## Native temporary collection colors (2026-10-17)
+
+`TemporaryColorInstruction{Subjects PermanentSet, Colors []core.Color}.Effect()`
+returns a `ResolvingEffect` for one collection color replacement until end of turn.
+Missing or typed-nil subjects and values outside the five colors return nil.
+An empty list makes the members colorless. The constructor and
+`InspectTemporaryColorInstruction(ResolvingEffect) (TemporaryColorInstruction, bool)`
+copy the color list. The inspector accepts only the native declaration, without
+selecting members, reading filters or installing effects.
+
+Execution uses `SetEachColors` and the existing `untilEffect` layer 5 service.
+Membership is captured at resolution; later entries do not join. Each member
+keeps its exact battlefield visit. A phase cycle retains the installation, a
+return does not inherit it, and clones retain separate pending and installed
+state. Color replacement follows layer timestamps and ends at cleanup.
+CR 608.2b, 611.2a/c, 613.1e, 613.7 and 702.26b/d establish these rules.
+
+`Game.InspectSpellDestruction` accepts complete native contextual collections,
+including exact plural target declarations. Unknown descendants, missing target
+bindings and opaque filters remain unknown. The complete tree validates before
+all-illegal target gates and earlier destruction proofs. The color instruction
+cannot prove destruction. A nonempty selected prefix is a conservative barrier
+before later destruction, including colorless assignments. An empty prefix
+allows a later independent proof; a complete supported suffix preserves an
+earlier proof. Inspection runs no filter callbacks, layer operations or choices.
+
+RON lowers the complete supported shape
+`CreateEachPermanentLayerEffectUntil(Ref_TargetPermanents,
+[SetColor(SimpleColorList([color, ...]))], UntilEndOfTurn)` through the native
+instruction. Empty color lists retain their existing colorless behavior.
+The binding belongs to the same factory instance as its plural target. Existing
+lexical contexts and delayed-body rejections remain in force. Mixed modifications,
+other durations and other layer forms need their own native contracts.
+
+Complete LEG records for Dwarven Song, Heaven's Gate, Sea Kings' Blessing,
+Sylvan Paradise and Touch of Darkness now have native spell inspection.
+`TestRONNativeCollectionColor` covers all five through normal, partially and
+fully illegal targets, return, phasing, phase cycles, copies and clones, followed
+by resolution and cleanup. `TestRONNativeCollectionColorLowering` checks operand
+retention and per-instance binding identity. Existing `TestRONPluralColor*`
+retains invalid declarations, announcement rollback, timestamp ordering and
+membership coverage. `TestTemporaryColorInstruction*` checks declaration
+validation, list isolation, colorless execution, captured membership, exact
+visits, cleanup, clones, ordered barriers and whole-tree callback rejection.
+All five local ruling files have explicit empty arrays; coverage checks pass.
+No source correction, replacement service or new zone mechanism was needed.
+This advances a multi-card prerequisite for Equinox; its complete prospective
+query and compiler adapter remain unfinished.
+
+
+This slice also establishes the required one-or-more target query contract.
+`InspectPermanentTargets` accepts a native `PermanentTarget` with bounds
+`1..math.MaxInt`, in addition to its existing fixed and exact-X forms. Selection
+checks the announced occurrence count against these bounds before current
+legality. A declared group with zero legal remaining targets is known and empty;
+a group with zero announced targets is malformed. Duplicate identities, missing
+visit or zone snapshots, foreign declarations and opaque descendants are unknown.
+Bounded optional, up-to-X and one-to-X wrappers still need separate contracts.
+No new announcement or retargeting service is introduced.
+
+## Native spell-or-permanent color inspection
+
+`ObjectColorInstruction{Subject *SpellOrPermanentTargetBinding, Color core.Color}.Effect()`
+retains one fixed actual color. Invalid declarations return nil.
+`InspectObjectColorInstruction(ResolvingEffect) (ObjectColorInstruction, bool)`
+reads the exact subject and color without executing the effect. Existing
+`SetObjectColor` callers retain execution and definition validation behavior.
+Complete sequences need full-tree inspection; the inspector does not accept a
+sequence in place of one instruction.
+
+`InspectObjectTarget(*SpellOrPermanentTargetBinding) (ObjectTargetPredicate, bool)`
+accepts one complete native singular union declaration. Its `Select(*Game,
+*StackObject) (ObjectTargetSelection, bool)` reads the announced zone and exact
+stack ID or permanent visit. Selection retains separate `Spell uuid.UUID` and
+`Permanent PermanentVisit` fields. `Empty()` reports an illegal target. Missing
+snapshots, foreign or repeated bindings, invalid counts and inconsistent stack
+visits are unknown. A departed or phased target is known and illegal. Permanent
+legality uses shared native source, protection and global restriction inspection;
+opaque descendants remain unknown. There is no source-ID or LKI fallback.
+
+RON's existing two-branch fixed-color `Targeted_Modal` shape now lowers through
+this declaration. Each factory retains a separate target binding. Both branches
+use the same color and still announce one union target. Syntax restrictions and
+invalid-declaration diagnostics remain unchanged. All five laces and their 30
+records have complete native spell inspection. This adds no new compiled cards.
+
+Pure destruction inspection validates all children and declarations before
+legality gates or proofs. A color instruction cannot prove destruction. A legal
+color prefix blocks a later destruction proof because it can change filters,
+protection or replacement applicability. An illegal prefix permits an independent
+later proof if another target remains legal. A complete supported suffix keeps
+an earlier proof. Opaque suffixes remain unknown even when all targets are
+illegal. Color inspection does not execute callbacks or change state.
+
+Execution uses the existing target frame, ChangeObjectColor, layer 5, timestamps,
+stack-to-permanent color carry, exact visits, phasing and clone services.
+CR 105.3, 112.4, 400.7a, 608.2b/c, 611.2a/c and 613.1e establish the contract.
+No payment, replacement, zone movement or simultaneous-action service is added.
+
+Evidence: `TestObjectColorInstructionDeclaration`, `Query` and
+`TargetDeclarations` and `SpellSelection`; `TestRONNativeObjectColor` covers Purelace, Thoughtlace,
+Deathlace, Chaoslace and Lifelace in both categories through resolution, legality,
+phase cycles, returns, copies and clones. Existing `TestRONLace*` retains all
+reprints, invalid declarations, cross-category retargeting, payment rollback,
+color carry, cleanup, ordering, source identity and protection evidence.
+
+## Native global combat prevention (2026-10-17)
+
+`GlobalCombatPreventionInstruction{}.Effect() ResolvingEffect` retains the complete
+installation of all combat damage prevention until cleanup. There are no source,
+recipient, amount or choice operands. Execution uses `PreventAllCombatDamage`,
+`Game.SetPreventCombatDamage` and the existing prevention replacement. Existing
+callers retain the same behavior and native declaration.
+
+`InspectGlobalCombatPreventionInstruction(ResolvingEffect)
+(GlobalCombatPreventionInstruction, bool)` accepts only the exact non-nil native
+installation. Nil, typed nil, sequences, opaque effects, finite shields, source
+prevention and recipient prevention are not that declaration. The inspector
+neither installs prevention nor reads game state. General sequences are inspected
+by the shared spell-tree walker, which validates every child.
+
+`Game.InspectSpellDestruction` accepts this instruction in complete native spell
+trees. It cannot prove destruction. A prefix blocks later destruction proofs;
+a supported suffix preserves an earlier independent proof. Unknown children,
+foreign bindings and malformed target declarations remain unknown before an
+all-illegal target gate or any earlier proof. Repeated inspection does not change
+replacements, RNG, stack state or battlefield visits. It does not project a new
+state. This bounded query does not complete Equinox's prospective contract.
+
+Execution prevents combat damage to players and permanents from all sources,
+including sources that enter later. It covers repeated combats and expires at
+cleanup rather than end of combat. It does not prevent noncombat or unpreventable
+damage. Replacement ordering remains with the affected player. Source departure,
+return, phasing and control changes do not end global prevention. Pending copies,
+clones and installed effects use the existing stack, clone and duration services.
+CR 608.2b/c, 611.2a, 615.1/3/4/6/12 and 616.1 establish these rules.
+
+RON lowers the complete shape
+`CreatePreventDamageUntil(CombatDamageWouldBeDealt, [PreventThatDamage],
+UntilEndOfTurn)` through this instruction. Existing declaration diagnostics and
+resolving contexts remain in force. No source record changes were required.
+Fog (six reprints), Darkness and Holy Day now have complete native spell trees.
+Spore Cloud's prevention child is native; its untap-lock continuation remains
+unknown. Spore Flower and Angus Mackenzie retain their existing ability gameplay.
+
+Evidence: `TestGlobalCombatPreventionInstructionDeclaration`, `Query` and
+`Execution` cover exact shape, invalid declarations, unknown children, ordering,
+legality, visit identity, copies, clones, purity and source-independent duration.
+`TestRONNativeGlobalCombatPrevention` covers all eight real spell records,
+including repeated pure inspection, independent copy resolution and gameplay.
+`TestRONNativeGlobalCombatPreventionMixedBoundary` retains the Spore Cloud gap.
+`TestRONGlobalCombatPrevention*` retains invalid RON forms, rollback, first strike,
+trample, lifelink, repeated combat, replacement ordering, unpreventable damage,
+cleanup, Spore Flower and Angus Mackenzie coverage. The three complete spell
+names, Spore Flower and Angus Mackenzie have empty local rulings arrays. Spore
+Cloud has three WotC rulings; Equinox has seven. There are no Scryfall notes.
+
+## Native random discard inspection (2026-10-18)
+
+`RandomDiscardInstruction{Subject PlayerRef, Amount ResolutionValue}.Effect()
+returns a `ResolvingEffect` through the existing `DiscardAtRandom` service.
+Missing or typed-nil operands return nil. Existing callers keep their behavior.
+`InspectRandomDiscardInstructions(ResolvingEffect) ([]RandomDiscardInstruction,
+bool)` reads complete native instructions, sequences and composites. Unknown
+children, nil effects and incomplete declarations reject the whole tree. The
+returned slice does not share storage with the effect. It retains operands;
+it does not evaluate them, use RNG, make choices or move cards.
+
+RON lowers `DiscardACardAtRandom` and `DiscardNumberCardsAtRandom(value)` through
+this declaration in all existing resolving contexts. Syntax, bindings, dynamic
+values and diagnostics keep their existing contracts. Pure spell destruction
+inspection accepts only fixed/X amounts and supported native player references.
+Other dynamic operands and saved player references remain unknown to that query.
+All declarations and children are checked before target legality or any proof.
+Foreign, missing and repeated target declarations remain unknown, including
+all-illegal target trees. A legal discard prefix blocks later destruction proofs,
+even for zero or negative amounts or an empty hand. An illegal discard target
+permits a later proof when another target is legal. A supported suffix preserves
+an earlier proof. The query does not simulate discard replacements or triggers.
+
+Execution uses current hand membership, selects distinct cards before movement,
+and runs shared discard replacements and one batch before discard events.
+It discards as many cards as possible. Copies retain X and the selected player;
+clones retain independent RNG and zones. No new cost, LKI, phasing or replacement
+service is introduced. CR 608.2b/c, 609.3, 701.9 and 616.1 define this boundary.
+
+Mind Twist (LEA, LEB, 2ED, 3ED, CED, CEI) and Hymn to Tourach (FEM) gain complete
+native spell inspection: two names and seven records, with no compilation gain.
+`TestRONNativeRandomDiscard` checks repeated inspection followed by real gameplay
+in normal, cloned and copied games, including X=0 and RNG preservation.
+`TestRONNativeRandomDiscardLowering` checks all seven real source declarations.
+`TestRandomDiscardInstructionDeclaration`, `Spell` and `Batch` cover malformed
+native trees, exact target identity, all-illegal gates, opaque operands, ordering,
+phasing and returned watched visits, clone purity and simultaneous discard events.
+Existing `TestRONRandomDiscard*`, `TestRONDiscardReplacement*` and
+`TestTypedRandomDiscard*` retain short-hand, empty-hand, rollback, replacement,
+source lifecycle, modal, activation, trigger and copy behavior evidence.
+
+## Native optional mana payment inspection (2026-10-18)
+
+`ManaPaymentInstruction{Player PlayerRef, Cost core.ManaCost,
+Amount ResolutionValue, Paid, Unpaid ResolvingEffect}.Effect()` retains one
+optional mana payment. Amount is required for X and absent for a fixed cost.
+At least one branch is required; an absent branch has no action. Missing or
+typed-nil operands, negative cost fields, invalid hybrid symbols and inconsistent
+X fields return nil. Hybrid cost slices are copied at construction and inspection.
+`InspectManaPaymentInstruction(ResolvingEffect) (ManaPaymentInstruction, bool)`
+reads native fixed and X payment declarations without reading amounts or players,
+making choices, checking affordability or paying costs. Required, repeated and
+non-mana payments have separate contracts. Execution reuses `UnlessPaid`,
+`IfPaid`, `PayOrElse` and the shared resolution-X payment service, including
+mana abilities, atomic transactions, rollback and separate branch results.
+
+RON lowers existing `MayCost`/`PlayerMayCost` fixed `PayMana` and dynamic
+`PayManaX` with adjacent `If`/`Unless(CostWasPaid/CostWasntPaid, actions)` through
+the declaration. Syntax and lexical scopes remain unchanged. Both branches retain
+execution support. Other existing payment families keep their services.
+
+Pure spell destruction inspection supports the controller of a complete native
+singular spell target, fixed/X amounts, and complete paid and unpaid trees.
+These trees can contain counters for that exact declaration, or a saved-player
+body with the same controller and LKI. Saved bodies can tap native collections
+without target reads and remove that exact saved player's unspent mana.
+`HasManaAbility` now retains a native collection predicate; execution and query
+use the same current ability classification without checking affordability or
+positive output. Unknown children, foreign bindings and opaque amounts or
+filters reject the complete spell before legality gates and earlier proofs.
+A legal payment prefix blocks later destruction proofs even for zero mana;
+an illegal payer target skips the payment when another target is legal.
+Supported suffixes preserve earlier proofs. Optional countering never proves
+direct destruction. Inspection does not predict a payment or counter outcome,
+run replacements or triggers, or mutate the game. This bounded contract does
+not enable the Equinox adapter.
+
+CR 118.12/118.12a and 608.2b/c/g/h establish optional payment, ordered resolution,
+legal targets, mana abilities and controller LKI. Force Spike's one WotC ruling
+and Power Sink's three WotC rulings confirm optionality, separate expenditure,
+mana abilities during payment and tapping only lands with mana abilities.
+Their local files have no Scryfall notes. No RON source defect was found.
+
+Evidence: `TestManaPaymentInstructionDeclaration`, `Spell`, `Branches`,
+`HybridIsolation` and `Collection` cover validation, whole-tree rejection,
+exact bindings, prefix/suffix proofs, partial/all-illegal targets, unknown
+branches, fixed/X branch execution, copied costs and current mana-ability
+membership. `TestRONNativeManaPayment` and `Lowering` cover Force Spike (LEG)
+and Power Sink (LEA, LEB, 2ED, 3ED, CED, CEI), with repeated pure inspection
+followed by paid/unpaid gameplay, zero X, clones, copies and illegal targets.
+`TestRONOptionalPayment*`, `TestRONResolutionMana*`, `TestRONManaDenial*`,
+`TestResolutionManaPayment*` and `TestHasManaAbilityFilter` retain mana-source,
+controller-change, departure/recast, uncounterable, rollback and invalid-syntax
+regressions. Compilation gain is zero; complete native spell-tree gain is
+two names and seven records. Complete collection gameplay remains separate.
+
+
+## Native next-untap declaration and pure spell inspection
+
+`NextUntapInstruction{Subject PermanentRef, Subjects PermanentSet, Count int}`
+retains a future current-controller untap restriction. `Effect() ResolvingEffect`
+requires exactly one subject, a nonnegative singular count or collection count
+one. Malformed declarations return nil. The native single-step, counted and
+collection services remain the execution boundary; their callers are preserved.
+`InspectNextUntapInstruction(Effect) (NextUntapInstruction, bool)` accepts these
+three complete native declarations without callbacks, member selection or rule
+installation. Typed nils, negative counts, missing subjects, wrappers and
+player-captured restrictions are rejected by this leaf inspector.
+
+`Game.InspectSpellDestruction` validates all instruction children, native target
+declarations and collection bindings before legality gates and earlier proofs.
+Positive-count locks on a nonempty set conservatively block later state proofs.
+Zero counts, empty collections and illegal subjects do not block them. Supported
+suffixes preserve earlier destruction proofs. Unknown suffixes reject the whole
+tree even with an earlier proof or all targets illegal. No untap restriction,
+replacement, tap, choice, RNG use or stack operation occurs during inspection.
+
+CR 502.3 and 611.2 establish the existing step and duration contracts. CR 608.2b/c
+establish legality and instruction order. CR 702.26 removes phased creatures
+from combat while preserving their visits. Execution captures collection members
+at resolution, follows the permanent's current controller and clears restrictions
+on departure. Phasing and cloning retain their existing services. This slice
+adds no cost, LKI, replacement-order or simultaneous-operation service.
+
+Evidence: `TestNextUntapInstructionDeclaration`, `Query` cover declaration shapes,
+complete-tree rejection, exact/foreign bindings, partial legality, proof order,
+zero/empty prefixes, phasing, return, copies, clones and query purity.
+`TestRONNativeNextUntap` runs complete Telekinesis and Spore Cloud records after
+repeated inspection. `TestRONNativeNextUntapLowering` checks fresh lowering for
+those cards plus Barl's Cage, Elvish Hunter, Deep Spawn and Homarid Warrior.
+Existing `TestRONNextUntaps*`, `TestNextUntaps*` and `TestSkipNextUntap*` retain
+cost rollback, count overlap, saved information, controller changes, source
+capture, other untaps, stun and simultaneous untap coverage.
+
+## Native player collection draws (2026-10-18)
+
+`PlayerDrawInstruction{Subjects PlayerSet, Amount ResolutionValue}.Effect()`
+returns a native resolving draw action, or nil for missing operands.
+`InspectPlayerDrawInstruction(Effect) (PlayerDrawInstruction, bool)` reads one
+complete native collection draw without selecting players or reading amounts.
+Singular draws, result bindings and composite parents use separate contracts.
+
+Execution uses `DrawEach`: select players once, read the shared amount once,
+then perform each player's individual draws in active player order. Each draw
+uses the shared replacement pipeline. CR 121.2, 121.2c, 121.4, 121.6 and
+608.2b/c establish the ordering, empty-library and legality rules. The declaration
+adds no game state; copies and clones retain their existing frame isolation.
+
+RON retains `EachPlayerAction(AnyPlayer, DrawNumberCards(value))` in ordinary
+resolving spell, activated, triggered and delayed bodies. Amount validation and
+lexical bindings are unchanged. Negative literal amounts and unbound shuffle
+results remain declaration errors. No loop reference escapes this action.
+
+Pure spell destruction inspection accepts fixed nonnegative amounts, including
+the exact native fixed-value adapter, with complete native player collections.
+Every child and target binding validates before legality gates or earlier proofs.
+A positive draw prefix with present players blocks later destruction proofs.
+Zero amounts and empty legal collections permit them. A supported suffix
+preserves an earlier proof. Opaque operands, foreign player targets, announced X,
+saved results and unknown siblings remain unknown without callbacks or draws.
+Other amounts can execute through the existing draw service; their prospective
+inspection needs separate contracts. Whole-hand discard, hand/graveyard shuffle
+and per-player shuffle receipts remain separate prerequisites.
+
+Evidence: `TestPlayerDrawInstructionDeclaration`, `TestPlayerDrawInstructionQuery`,
+`TestRONNativePlayerDraw`, `TestRONNativePlayerDrawQuery`, `TestTypedDrawAmount*`,
+`TestRONEachPlayer*` and `TestRONLibraryRecycle*`. The real Wheel of Fortune and
+Timetwister draw children retain native declarations in all eleven records.
+Their complete spell trees remain unknown until the other operations gain
+inspection contracts. No RON source, production registry or DSL export changed.
+
+## Native whole-hand discard (2026-10-18)
+
+`WholeHandDiscardInstruction{Subject PlayerRef, Subjects PlayerSet}.Effect()`
+requires exactly one non-nil operand. It returns `DiscardEntireHand` for one
+player or `DiscardEach` for a collection. Missing, typed-nil or conflicting
+operands return nil. `InspectWholeHandDiscardInstruction(ResolvingEffect)
+(WholeHandDiscardInstruction, bool)` reads one exact native action without
+resolving players. Filtered discards, result bindings, unknown children and
+composite parents require separate contracts.
+
+Both actions use the shared discard batch: select the current hands, prepare
+all replacements and destination orders, move all cards, then send discard
+events. Singular `DiscardEntireHand` now uses this same batch rather than
+individual card actions. Existing actual-count results remain supported by
+execution. Source-controller references remain visible to waiting delayed
+source inspection. No new game state or clone map is needed. CR 701.9a/c,
+101.4, 608.2b/c/e and 616.1 establish the movement, sequencing and replacement
+contract. Costs retain their separate transactional service.
+
+RON lowers symbolic `DiscardHand` through this declaration for the implicit
+player, explicit `PlayerAction` and saved `PlayerActions` scopes, and
+`EachPlayerAction(AnyPlayer, DiscardHand)`. Existing activated, triggered and
+delayed contexts retain their bindings. Tuple spellings and unbound player
+references reject before execution. Filtered `DiscardCards` is unchanged.
+
+Pure spell destruction inspection accepts complete native player collections
+and singular You, ActivePlayer or exact native player targets. All children and
+bindings validate before all-illegal gates or earlier proofs. A discard prefix
+with selected players conservatively blocks a later destruction proof, even
+with empty hands. An empty legal player collection permits that proof. A
+supported suffix preserves earlier proofs. Unknown operands, foreign targets,
+result-bearing forms and unknown siblings remain unknown without callbacks,
+hand reads, choices or state changes. This does not inspect ante or linked-exile
+operations. Wheel of Fortune now has a complete native spell tree in six records;
+Contract from Below retains its separate ante boundary.
+
+Evidence: `TestWholeHandDiscardInstructionDeclaration`, `Query`, `SourceRead`,
+`Execution`; `TestRONNativeWholeHandDiscardLowering`, `Query`, `Invalid`, `Targets`;
+`TestRONNativePlayerDraw`; existing `TestRONEachPlayer*`, `TestRONAnteTop*`,
+`TestRONDamagePlayer*`, `TestRONLinkedExileTransport*`,
+`TestRONWaitingDelayedHandAction*`, `TestTypedDiscardEntireHand*` and
+`TestDiscardEach*`. No RON source, registry or DSL export changed.
+
+
+## Native equal-division damage (2026-10-18)
+
+`EvenDamageInstruction{Source DamageSourceRef, Recipients DamageRecipientSet,
+Total ResolutionValue}.Effect() ResolvingEffect` retains one simultaneous
+instruction. Missing and typed-nil operands return nil.
+`InspectEvenDamageInstructions(ResolvingEffect) ([]EvenDamageInstruction, bool)`
+accepts exact native leaves and complete sequence/composite trees. Unknown
+children, result bindings and announcement allocations reject without callbacks.
+The declaration reuses `DealDamageEvenlyToRecipients`: select legal recipients
+once, divide at resolution, round down, and submit one shared damage batch.
+Empty sets and nonpositive shares deal no damage. Existing services retain
+source LKI, replacements, prevention, simultaneous events, copies and clones.
+CR 608.2b/c/f and 120.2b establish the shared contract. Local WotC rulings for
+Fireball and Dwarven Catapult establish their division timing and rounding.
+Neither local file contains Scryfall notes. Pyrotechnics uses announcement
+allocation under CR 601.2d and remains a separate declaration contract.
+
+`InspectDamageTargets(*DamageTargetsBinding) (DamageTargetsPredicate, bool)`
+reads native fixed/optional DamageAnyTarget declarations. X bounds and chooser
+wrappers remain unknown. `Select(*Game, *StackObject)
+([]DamageTargetSelection, bool)` uses current layers, exact declaration identity,
+recorded battlefield visits/zones and shared native permanent target legality.
+It retains player identities separately. Missing frames/visits, duplicates and
+foreign declarations are unknown; illegal visits are omitted. An empty group
+must occur exactly once in the card's target declarations. Results have fresh
+storage. The query runs no operand callback and changes no state.
+`InspectDamageRecipientCollection` now accepts these groups with a legal target
+frame. Missing, foreign or malformed frames reject; an explicit empty frame is
+known. Callers must supply selections after current target legality checks.
+
+`Game.InspectSpellDestruction` validates complete instruction trees and target
+frames before its all-illegal gate or an earlier destruction proof. Native
+source fixed/X division accepts supported contextual permanent collections and
+plural damage groups. A nonempty damage prefix blocks a later destruction proof;
+an empty legal group permits it. Supported suffixes preserve earlier proofs.
+The query does not calculate shares, read shields, run replacements, deal damage
+or predict deaths from damage. Opaque operands and unknown siblings stay unknown.
+No mutable game state or payment protocol was added.
+
+Tests: `TestEvenDamageInstructionDeclaration`, `TestEvenDamageInstructionOrder`,
+`TestEvenDamageTargetsQuery`, `TestEvenDamageTargetFrames`,
+`TestRONNativeEvenDamage`, and existing `TestEvenDamage*`, `TestRONEvenDamage*`
+and `TestRONTargetSurcharge*`. The real-record mapping covers Fireball in all six
+sets and Dwarven Catapult in FEM. Existing execution tests retain source LKI,
+replacement rechecks, batch events, per-instance X, payment rollback and copies.

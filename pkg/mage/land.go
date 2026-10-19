@@ -123,6 +123,9 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	if !card.HasType(TypeLand) {
 		return fmt.Errorf("card is not a land")
 	}
+	if fromZone == ZoneHand && g.isHandVisitPlayLocked(playerID, card.ID()) {
+		return fmt.Errorf("can't play %s: hand visit is restricted", card.Name())
+	}
 	if g.IsLandPlayProhibited(card) {
 		return fmt.Errorf("can't play %s: land play is prohibited", card.Name())
 	}

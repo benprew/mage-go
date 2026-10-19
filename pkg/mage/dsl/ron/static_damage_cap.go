@@ -7,7 +7,27 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
+type staticDamageCapPlan struct {
+	threshold, amount int
+	kinds             []core.CardType
+}
+
+func (p staticDamageCapPlan) build() mage.CardOption {
+	return mage.WithAbility(mage.Static(mage.LimitPlayerDamageFromTypes(mage.You, p.threshold, p.amount, p.kinds...)))
+}
+
 func compileStaticDamageCap(n Node) (optionFactory, error) {
+	plan, err := compileStaticDamageCapPlan(n)
+	if err != nil {
+		return nil, err
+	}
+	return plan.build, nil
+}
+
+func compileStaticDamageCapPlan(n Node) (*staticDamageCapPlan, error) {
+	if n.Name != "ReplaceWouldDealDamage" {
+		return nil, unsupported(n, "static damage amount rule")
+	}
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -60,9 +80,7 @@ func compileStaticDamageCap(n Node) (optionFactory, error) {
 	if threshold <= 0 || amount >= threshold {
 		return nil, problem(n, "supply a positive threshold and a smaller damage amount")
 	}
-	return func() mage.CardOption {
-		return mage.WithAbility(mage.Static(mage.LimitPlayerDamageFromTypes(mage.You, threshold, amount, kinds...)))
-	}, nil
+	return &staticDamageCapPlan{threshold: threshold, amount: amount, kinds: kinds}, nil
 }
 
 func fixedDamageCapAmount(n Node) (int, error) {

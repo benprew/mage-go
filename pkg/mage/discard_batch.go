@@ -32,37 +32,62 @@ func (g *Game) discardActionsTogether(actions []*DiscardAction) int {
 }
 
 func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requireAll bool) []core.GameEvent {
+	events, _ := g.discardActionsTogetherWithFacts(actions, requireAll, nil)
+	return events
+}
+
+func (g *Game) discardActionsTogetherWithFacts(actions []*DiscardAction, requireAll bool, facts []CardPaymentFact) (events []core.GameEvent, values []int) {
 	var prepared []*DiscardAction
+	for _, action := range actions {
+		g.snapshotDiscardCause(action)
+	}
 	for _, action := range actions {
 		result := g.effects.ApplyReplacements(action, g)
 		if discard, ok := result.(*DiscardAction); ok {
 			// A hidden destination removes the names required by this cost.
 			if action.requiresCharacteristics && discard.Destination() == core.ZoneLibrary {
-				return nil
+				return nil, nil
 			}
 			if action.handVisit != uuid.Nil {
 				proposal := *discard
 				proposal.handVisit = action.handVisit
 				discard = &proposal
 			}
+			discard.discardEvent = action.discardEvent
 			prepared = append(prepared, discard)
 		}
 	}
 	if requireAll && len(prepared) != len(actions) {
-		return nil
+		return nil, nil
 	}
 	g.orderDiscardDestinations(prepared, core.ZoneGraveyard)
 	g.orderDiscardDestinations(prepared, core.ZoneLibrary)
-	var events []core.GameEvent
+	values = make([]int, len(facts))
 	for _, action := range prepared {
-		if card, ok := g.moveDiscardedCard(action); ok {
-			events = append(events, core.GameEvent{Type: core.EvtDiscard, SourceID: card.ID(), PlayerID: action.PlayerID(), DiscardedCardVisit: g.graveyardVisit(card.ID())})
+		matches := make([]int, len(facts))
+		if len(facts) > 0 && (action.Destination() == core.ZoneGraveyard || action.Destination() == core.ZoneExile) {
+			for _, card := range g.GetPlayer(action.PlayerID()).Hand() {
+				if card.ID() == action.CardID() {
+					for i, fact := range facts {
+						if fact.Filter.Match(card) {
+							matches[i] = 1
+						}
+					}
+					break
+				}
+			}
+		}
+		if _, ok := g.moveDiscardedCard(action); ok {
+			for i, value := range matches {
+				values[i] += value
+			}
+			events = append(events, g.completedDiscardEvent(action))
 		}
 	}
 	for _, event := range events {
 		g.FireEvent(event)
 	}
-	return events
+	return events, values
 }
 
 func (g *Game) orderDiscardDestinations(actions []*DiscardAction, destination core.Zone) {

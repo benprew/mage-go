@@ -6,6 +6,9 @@ import "github.com/google/uuid"
 // Other replacement references require separate contracts.
 func (g *Game) WaitingRedirectionPermanentSources() []DamageSource {
 	return g.waitingReplacementPermanentSources(func(replacement ReplacementEffect) []capturedPermanent {
+		if rule, ok := replacement.(*finiteDamageRedirectReplacement); ok {
+			return []capturedPermanent{rule.subject}
+		}
 		if rule, ok := replacement.(*selectedSourceRedirectReplacement); ok {
 			return []capturedPermanent{rule.subject, {rule.source.ID(), rule.source.Incarnation()}, {rule.continued.ID(), rule.continued.Incarnation()}}
 		}

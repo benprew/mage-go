@@ -26,7 +26,9 @@ func compileCollectionAttackTurn(n Node) (effectFactory, error) {
 		if subjects.controlled || subjects.excludeSource {
 			return nil, unsupported(subject, "global resolving attack filter")
 		}
-		return func(instanceBindings) mage.Effect { return mage.CantAttackMatchingThisTurn(subjects.filter) }, nil
+		return func(instanceBindings) mage.Effect {
+			return (mage.TurnAttackRuleInstruction{Filter: subjects.filter}).Effect()
+		}, nil
 	}
 	if operation.Name != "MustAttack" {
 		return nil, unsupported(operation, "collection attack operation")
@@ -64,6 +66,6 @@ func compileCollectionAttackTurn(n Node) (effectFactory, error) {
 		return nil, problem(subject, "supply an active player controller and a permanent filter")
 	}
 	return func(instanceBindings) mage.Effect {
-		return mage.MustAttackControlledThisTurn(player, mage.And(filters...))
+		return (mage.TurnAttackRuleInstruction{Filter: mage.And(filters...), Player: player, Require: true}).Effect()
 	}, nil
 }

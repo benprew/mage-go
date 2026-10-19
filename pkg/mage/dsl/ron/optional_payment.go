@@ -14,6 +14,48 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if faceDownCastProducer(part) && hasCastResultRead(parts[i+1:]) {
+			build, err := compileCastResultProducer(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
+		if part.Name == "EachPlayerAction" && len(part.Args) == 2 && part.Args[1].Name == "SeparatePermanentsIntoNamedPiles" {
+			build, err := compileNamedPartitionContinuation(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
+		if part.Name == "ChooseNamedPileForPermanent" {
+			build, err := compileNamedPileSelection(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
+		if part.Name == "EachPlayerMayCost" {
+			build, err := compileOptionalAntePlayers(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
+		if part.Name == "CreatePermanentsList" {
+			build, err := compilePermanentList(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
+		if part.Name == "CreateTokens" && hasResolutionTokensRead(parts[i+1:]) {
+			build, err := compileResolutionTokens(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if lostManaProducer(part) && hasLostManaRead(parts[i+1:]) {
 			build, err := compileLostManaProducer(part, parts[i+1:], ctx)
 			if err != nil {
@@ -197,6 +239,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			effects = append(effects, effect)
 			continue
 		}
+		if part.Name == "ChooseASpellCastThisTurn" {
+			build, err := compileCastSpellChoice(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if part.Name == "ChooseAPlayer" {
 			effect, err := compilePlayerChoice(part, parts[i+1:], ctx)
 			if err != nil {
@@ -358,6 +407,20 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if (payment.Name == "MayCost" && len(payment.Args) == 1 || payment.Name == "PlayerMayCost" && len(payment.Args) == 2) && payment.Args[len(payment.Args)-1].Name == "ChooseACardInHand" {
+		return compileOptionalHandChoice(payment, continuation, ctx)
+	}
+
+	if payment.Name == "MustCost" && containsDeclarationName(continuation, "ManaValueOfTheSacrificedPermanent") {
+		return compileResolutionSacrificeValue(payment, continuation, ctx)
+	}
+	if len(payment.Args) > 0 && containsDeclarationName(payment.Args[len(payment.Args)-1], "DiscardACard") {
+		ctx.discardFacts = nil
+	}
+
+	if len(payment.Args) > 0 && payment.Args[len(payment.Args)-1].Name == "Exile" {
+		return compileLinkedExilePayment(payment, continuation, ctx)
+	}
 	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "PutExiledCardOntoBattlefield" {
 		return compileSingleExileEntry(payment.Args[0], continuation, ctx)
 	}
@@ -372,6 +435,9 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		if cost.Name == "AnteAPermanent" || cost.Name == "AnteTopCardOfLibrary" {
 			return compileAntePayment(payment, continuation, ctx)
 		}
+	}
+	if payment.Name == "MayCost" && len(payment.Args) == 1 && payment.Args[0].Name == "DrawNumberCards" {
+		return compileOptionalDrawContinuation(payment, continuation, ctx)
 	}
 	if isResolutionActionPayment(payment) {
 		return compileResolutionActionPayment(payment, continuation, ctx)
@@ -439,6 +505,16 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		var amount int
 		amount, err = compileMillCount(cost, true)
 		costs = []costFactory{func() mage.Cost { return mage.MillCost(amount) }}
+	} else if cost.Name == "PayMana" {
+		if err := arity(cost, 1); err != nil {
+			return nil, err
+		}
+		var text string
+		text, err = manaCost(cost.Args[0])
+		mana = core.ParseManaCost(text)
+		if err == nil && mana.HasX {
+			return nil, problem(cost, "X payment requires PayManaX binding")
+		}
 	} else if cost.Name == "PayManaX" {
 		mana, dynamic, err = compileResolutionManaCost(cost, ctx)
 	} else if cost.Name == "PayLife" && len(cost.Args) == 1 && cost.Args[0].Name == "ManaValueOfTheCardRevealedThisWay" {
@@ -507,11 +583,17 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 			}
 			return mage.UnlessSacrificePaid(player.build(bindings), sacrifice.build(bindings), mage.Sequence(effects...))
 		}
-		if dynamic != nil {
-			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
-				return mage.IfManaPaid(player.build(bindings), mana, dynamic(bindings), mage.Sequence(effects...))
+		if dynamic != nil || cost.Name == "PayMana" {
+			instruction := mage.ManaPaymentInstruction{Player: player.build(bindings), Cost: mana}
+			if dynamic != nil {
+				instruction.Amount = dynamic(bindings)
 			}
-			return mage.UnlessManaPaid(player.build(bindings), mana, dynamic(bindings), mage.Sequence(effects...))
+			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
+				instruction.Paid = mage.Sequence(effects...)
+			} else {
+				instruction.Unpaid = mage.Sequence(effects...)
+			}
+			return instruction.Effect()
 		}
 		if life != nil {
 			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {

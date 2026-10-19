@@ -55,11 +55,12 @@ func (e *spellExileEffect) Apply(ctx *EffectContext) error {
 	ctx.Game.stack.RemoveByID(obj.ID)
 	ctx.Game.stack.saveSpellInformation(obj)
 	obj.leftStack = true
-	ctx.Game.zones.ExileCard(obj.Card, ctx.SourceID)
+	card := ctx.Game.revealFaceDownCard(obj.Card)
+	ctx.Game.zones.ExileCard(card, ctx.SourceID)
 	exiled := ctx.Game.FindExiledCard(obj.Card.ID())
 	exiled.Counters[e.counter] = e.count
 	exiled.spellCopy = obj.IsCopy
-	ctx.Game.recordCardPutIntoExile(obj.Card)
+	ctx.Game.recordCardPutIntoExile(card)
 	ctx.Game.FireEvent(core.GameEvent{Type: core.EvtZoneChange, SourceID: obj.Card.ID(), PlayerID: obj.Controller, FromZone: core.ZoneStack, ToZone: core.ZoneExile})
 	return nil
 }

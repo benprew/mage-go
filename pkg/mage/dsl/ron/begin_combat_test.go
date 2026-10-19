@@ -213,7 +213,7 @@ func TestRONBeginCombatConsumerBoundaries(t *testing.T) {
 	}{
 		{"ATQ", "Battering Ram", "", false},
 		{"FEM", "Goblin Flotilla", "", true},
-		{"LEG", "Johan", "optional payment cost", false},
+		{"LEG", "Johan", "", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			n := hostUntapRecord(t, tc.set, tc.name)

@@ -16,7 +16,25 @@ type effectFactory func(instanceBindings) mage.Effect
 type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
+type sourceDeathOwnerPlan struct{ name string }
+
 type scope struct {
+	castResult           *castResultPlan
+	chosenHandCard       *chosenHandCardPlan
+	namedPiles           *namedPilesPlan
+	selectedPile         *selectedPilePlan
+	eachablePlayer       *playerReferencePlan
+	attackGroup          *sourceCombatPlayerPlan
+	paidPlayers          *paidPlayersPlan
+	chosenCastSpell      *castSpellChoicePlan
+	permanentList        *permanentListPlan
+	discardCauseEvent    *discardCauseEventPlan
+	graveyardTargets     *graveyardTargetsPlan
+	pairedTargets        *permanentTargetsPlan
+	discardFacts         *discardFactPlan
+	resolutionTokens     *resolutionTokensPlan
+	linkedExilePayment   *linkedExilePaymentPlan
+	sourceDeathOwner     *sourceDeathOwnerPlan
 	lostMana             *lostManaPlan
 	exileCounts          *exileControllerCountsPlan
 	copyAbility          *copyAbilityPlan
@@ -67,6 +85,7 @@ type scope struct {
 	opponentEntryChoice  *opponentEntryChoicePlan
 	basicLandEntryChoice *basicLandEntryChoicePlan
 
+	activationMana    *activationManaPlan
 	activationHistory *activationHistoryPlan
 	enteringSource    bool
 	actionPlayer      *playerActionsPlan
@@ -125,19 +144,21 @@ type scope struct {
 }
 
 type actionPlan struct {
-	distribution     *distributedDamagePlan
-	effects          []effectFactory
-	targets          []targetFactory
-	playerTarget     *playerTargetPlan
-	permanentTarget  *permanentTargetPlan
-	permanentGroups  []*permanentTargetPlan
-	permanentTargets *permanentTargetsPlan
-	spellTarget      *spellTargetPlan
-	abilityTarget    *abilityTargetPlan
-	cardTarget       *cardTargetPlan
-	damageTarget     *damageTargetPlan
-	damageGroups     []*damageTargetPlan
-	damageTargets    *damageTargetsPlan
+	activationSpellManaX bool
+	graveyardTargets     *graveyardTargetsPlan
+	distribution         *distributedDamagePlan
+	effects              []effectFactory
+	targets              []targetFactory
+	playerTarget         *playerTargetPlan
+	permanentTarget      *permanentTargetPlan
+	permanentGroups      []*permanentTargetPlan
+	permanentTargets     *permanentTargetsPlan
+	spellTarget          *spellTargetPlan
+	abilityTarget        *abilityTargetPlan
+	cardTarget           *cardTargetPlan
+	damageTarget         *damageTargetPlan
+	damageGroups         []*damageTargetPlan
+	damageTargets        *damageTargetsPlan
 }
 
 func (p actionPlan) build() Actions {
@@ -174,6 +195,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		if target, ok := targets[i].(*mage.PlayerTargetBinding); ok {
 			bindings.players[p.playerTarget] = target
 		}
+		if target, ok := targets[i].(*mage.GraveyardCardTargetsBinding); ok {
+			bindings.graveyardTargets[p.graveyardTargets] = target
+		}
 		if target, ok := targets[i].(*mage.CardTargetBinding); ok {
 			bindings.cards[p.cardTarget] = target
 		}
@@ -204,7 +228,12 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	if len(declared) != 0 {
 		targets = mage.Spell(mage.Sequence(effects...), mage.WithTargets(declared...)).Targets()
 	}
-	return Targeted(targets, ActionList(effects...))
+	actions := Targeted(targets, ActionList(effects...))
+	actions.targetBindings = declared
+	if p.activationSpellManaX {
+		actions.options = []mage.ActionOption{mage.WithActivationManaXFromSpell(bindings.spells[p.spellTarget], 2)}
+	}
+	return actions
 }
 
 func initializeActionBindings(bindings instanceBindings) instanceBindings {
@@ -220,6 +249,7 @@ func initializeActionBindings(bindings instanceBindings) instanceBindings {
 	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
 	bindings.abilities = make(map[*abilityTargetPlan]*mage.AbilityTargetBinding)
 	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
+	bindings.graveyardTargets = make(map[*graveyardTargetsPlan]*mage.GraveyardCardTargetsBinding)
 	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
 	bindings.recipientSets = make(map[*damageTargetsPlan]*mage.DamageTargetsBinding)
 	return bindings
@@ -453,17 +483,25 @@ func Compile(n Node) (mage.CardFactory, error) {
 			return nil, err
 		}
 		castingRule := false
-		for _, rule := range rules {
+		for ruleIndex, rule := range rules {
 			if rule.Name != "CastEffect" {
 				continue
-			}
-			if permanent {
-				return nil, unsupported(rule, "casting window on a permanent")
 			}
 			if castingRule {
 				return nil, problem(rule, "duplicate CastEffect rule")
 			}
 			castingRule = true
+			if permanent {
+				if slices.Contains(types, core.TypeLand) {
+					return nil, problem(rule, "land cannot declare a casting requirement")
+				}
+				option, err := compilePermanentCastingRequirement(rule)
+				if err != nil {
+					return nil, err
+				}
+				options = append(options, definitionAbilityGroupOption(ruleIndex+1, option))
+				continue
+			}
 			if rule.Kind == Tuple && len(rule.Args) == 1 && rule.Args[0].Name == "AdditionalCastingCost" {
 				ctx.castingCost, ctx.sacrificeValue, err = compileAdditionalSacrifice(rule.Args[0], rules)
 				if err != nil {
@@ -681,7 +719,7 @@ func manaCost(n Node) (string, error) {
 }
 
 func compileRule(n Node, ctx scope) (optionFactory, error) {
-	if !ctx.permanent && n.Name != "SpellActions" && n.Name != "FromGraveyard" && n.Name != "FromExile" {
+	if !ctx.permanent && n.Name != "SpellActions" && n.Name != "FromGraveyard" && n.Name != "FromExile" && n.Name != "FromAnyZone" {
 		return nil, unsupported(n, "non-spell rule on an instant or sorcery")
 	}
 	if n.Kind == Symbol {
@@ -694,6 +732,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	switch n.Name {
 	case "NoMoreThanNumberCreaturesCanAttack", "NoMoreThanNumberCreaturesCanBlock":
 		return compileCombatCardinality(n)
+	case "FromAnyZone":
+		return compileDiscardCauseEvent(n)
 	case "FromStack":
 		return compileStackSelfCast(n, ctx)
 	case "ReplaceWouldPutAPermanentOnTheBattlefield":
@@ -702,6 +742,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileFilteredEntry(n)
 	case "ReplaceWouldDestroy":
 		return compileStaticDestructionReplacement(n)
+	case "ReplaceWouldPutIntoGraveyard":
+		return compileDeathReturnHand(n, ctx)
 	case "ReplaceWouldDealDamage":
 		return compileStaticDamageCap(n)
 	case "ReplaceWouldDiscard":
@@ -754,7 +796,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "TriggerI":
 		return compileTappedUpkeep(n, ctx)
 	case "EachPermanentRuleEffect":
-		return compileCollectionPermanentRule(n)
+		return compileCollectionPermanentRule(n, ctx)
 	case "PermanentRuleEffect":
 		return compilePermanentBlockingRule(n, ctx)
 	case "EachPermanentStickyLayerEffect":
@@ -1054,8 +1096,14 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if err != nil {
 			return plan, err
 		}
+		if len(targets) == 1 && targets[0].Name == "NumberTargetGroupPermanents" {
+			return compilePairedOpponentTargets(n, targets[0], ctx)
+		}
 		if len(targets) == 1 && targets[0].Name == "AnyNumberOfAnyTargets" {
 			return compilePluralUnionDamage(n, targets[0], ctx)
+		}
+		if len(targets) > 1 && (targets[0].Name == "TargetPlayer" || targets[0].Name == "AnyNumberOfTargetGraveyardCards") {
+			return compilePlayerGraveyardGroups(n, targets, ctx)
 		}
 		if len(targets) > 1 {
 			if isUnionDamageTarget(targets[0]) {
@@ -1152,20 +1200,7 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	case "OneOrMoreTargetPermanents":
 		return compilePluralPermanentTarget(n, ctx)
 	case "TargetPlayer":
-		players := n.Args[0]
-		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent" && players.Name != "AttackedThisTurn") {
-			return nil, "", unsupported(players, "player target filter")
-		}
-		return func(instanceBindings) mage.Target {
-			var options []mage.PlayerTargetOption
-			if players.Name == "Opponent" {
-				options = append(options, mage.TargetOpponentOnly())
-			}
-			if players.Name == "AttackedThisTurn" {
-				options = append(options, mage.TargetPlayerAttackedThisTurn())
-			}
-			return mage.DeclarePlayerTarget(ctx.targetNamespace+"Ref_TargetPlayer", options...)
-		}, "Ref_TargetPlayer", nil
+		return compilePlayerTarget(n, ctx)
 	case "TargetAnteCard":
 		return compileAnteTarget(n, ctx)
 	case "TargetGraveyardCard":
@@ -1404,6 +1439,10 @@ func requireRef(n Node, name string, ctx scope) error {
 }
 
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "ReturnGraveyardCardsToTopOfLibraryInAnyOrder" {
+		effect, err := compileGraveyardCardsToTop(n, ctx)
+		return []effectFactory{effect}, err
+	}
 	if n.Name == "If" && len(n.Args) > 0 && n.Args[0].Name == "APermanentWasSacrificedThisWay" {
 		build, err := compileSacrificeSubtypeBranch(n, ctx)
 		if err != nil {
@@ -1430,6 +1469,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "TrySwappingBlockAssignmentsOfTwoBlockingCreatures":
+		build, err := compileBlockAssignmentSwap(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "DrawTheGame":
 		if n.Kind != Symbol {
 			return nil, problem(n, "DrawTheGame requires a symbol")
@@ -1498,6 +1543,24 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreateReplaceWouldMaskUntil":
+		build, err := compileFaceUpReplacement(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "CastCardInHandWithoutPayingAsAFacedownCreatureSpell":
+		build, err := compileFaceDownCast(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "PutCardFromHandIntoPlayersHand", "PutCardFromAnywhereIntoPlayersGraveyard":
+		build, err := compileExplicitCardMovement(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "AcquireOwnershipOfCard", "ExchangeAnteCardWithTopCardOfPlayersLibrary":
 		build, err := compileAnteExchangeAction(n, ctx)
 		if err != nil {
@@ -1535,7 +1598,27 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ChangeTheTargetsOfSpellToAPlayer":
+		build, err := compilePlayerSpellRetarget(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "If":
+		if len(n.Args) > 0 && n.Args[0].Name == "SpellPassesFilter" {
+			build, err := compileSpellPlayerBranch(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
+		if len(n.Args) > 0 && n.Args[0].Name == "DiscardedCardPassesFilter" {
+			build, err := compileDiscardFactBranch(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		if len(n.Args) > 0 && n.Args[0].Name == "APermanentWasExiledThisWay" {
 			build, err := compilePermanentExileFactBranch(n, ctx)
 			if err != nil {
@@ -1578,7 +1661,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 
 	case "SearchLibrary":
-		build, err := compileLibrarySearch(n)
+		build, err := compileLibrarySearch(n, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1595,6 +1678,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreateGameEffect":
+		build, err := compileRandomBlockingPiles(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateTriggerUntil":
 		build, err := compileDepartureDelay(n, ctx)
 		if err != nil {
@@ -1603,6 +1692,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "CreateFutureReplaceWouldDestroy":
 		build, err := compileFutureDestructionReplacement(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "PutACardFromOutsideGameInHand":
+		build, err := compileOutsideGameEntry(n, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1619,6 +1714,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreateFutureTrigger_UnlessPlayerPaysManaBefore":
+		build, err := compileDrawDeadlinePayment(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateFutureTrigger":
 		build, err := compileDelayedStep(n, ctx)
 		if err != nil {
@@ -1626,6 +1727,10 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "MayAction":
+		if len(n.Args) == 1 && n.Args[0].Name == "CopySpellAndMayChooseNewTargets" {
+			build, err := compileOptionalResolvingSpellCopy(n, ctx)
+			return []effectFactory{build}, err
+		}
 		build, err := compileOptionalTapChoice(n, ctx)
 		if err != nil {
 			return nil, err
@@ -1645,6 +1750,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "LookAtPlayersHand":
 		build, err := compileHandInspection(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "LookAtTheTopNumberCardsOfLibrary":
+		build, err := compileLibraryTopSelection(n, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1724,6 +1835,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "GainControlOfEachPermanent":
+		build, err := compileIndefinitePluralControl(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "GainControlOfPermanent":
 		build, err := compileIndefiniteControl(n, ctx)
 		if err != nil {
@@ -1792,6 +1909,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(func(bindings instanceBindings) mage.Effect {
 			return mage.ReturnCardToHand(mage.FromCard(bindings.hostDeaths[ctx.hostDeath].aura))
 		})
+	case "DeadPermanentDealsDamage":
+		build, err := compileDeadPermanentDamage(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "DeadGuestPermanentDealsDamage":
 		build, err := compileDeadGuestDamage(n, ctx)
 		if err != nil {
@@ -1830,7 +1953,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageEach(source(bindings), mage.PermanentDamageRecipients(subjects(bindings)), amount(bindings))
+				return (mage.CollectionDamageInstruction{Source: source(bindings), Recipients: mage.PermanentDamageRecipients(subjects(bindings)), Amount: amount(bindings)}).Effect()
 			})
 		}
 		if n.Args[2].Name == "MultipleRecipients" {
@@ -1839,7 +1962,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageEach(source(bindings), recipients(bindings), amount(bindings))
+				return (mage.CollectionDamageInstruction{Source: source(bindings), Recipients: recipients(bindings), Amount: amount(bindings)}).Effect()
 			})
 		}
 		if n.Args[2].Name == "Permanent" {
@@ -1854,7 +1977,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, unsupported(n.Args[2].Args[0], "targeted damage recipient")
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageFrom(mage.This, bindings.permanents[recipient.target], amount(bindings))
+				return (mage.SingularDamageInstruction{Source: source(bindings), Recipient: bindings.permanents[recipient.target], Amount: amount(bindings)}).Effect()
 			})
 		}
 		if ctx.damageGroups[n.Args[2].Name] != nil {
@@ -1878,7 +2001,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageFrom(mage.This, bindings.recipients[recipient], amount(bindings))
+				return (mage.SingularDamageInstruction{Source: mage.This, Recipient: bindings.recipients[recipient], Amount: amount(bindings)}).Effect()
 			})
 		}
 		if ctx.target == "Ref_TargetPlayer" {
@@ -1913,13 +2036,22 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CopySpellAndMayChooseNewTargets":
+		build, err := compileResolvingSpellCopy(n, ctx)
+		return []effectFactory{build}, err
 	case "CopySpellAndMayChooseNewTargetsWithEffects":
 		build, err := compileSpellColorCopy(n, ctx)
 		if err != nil {
 			return nil, err
 		}
 		return one(build)
-	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "SacrificePermanent":
+	case "DestroyPermanent", "DestroyPermanentNoRegen", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
+		build, err := compileDirectDestruction(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "CounterSpell", "SacrificePermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -1929,27 +2061,17 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			if err != nil {
 				return nil, err
 			}
-			return one(func(bindings instanceBindings) mage.Effect { return mage.Counter(subject.build(bindings)) })
+			return one(func(bindings instanceBindings) mage.Effect {
+				return (mage.CounterInstruction{Subject: subject.build(bindings)}).Effect()
+			})
 		}
 		subject, err := compilePermanentRef(ref, ctx)
 		if err != nil {
 			return nil, err
 		}
-		return one(func(bindings instanceBindings) mage.Effect {
-			ref := subject.build(bindings)
-			switch n.Name {
-			case "PutPermanentIntoItsOwnersHand":
-				return mage.ReturnToHand(ref)
-			case "DestroyPermanent":
-				return mage.Destroy(ref)
-			case "DestroyPermanentNoRegen":
-				return mage.DestroyWithoutRegeneration(ref)
-			default:
-				return mage.Sacrifice(ref)
-			}
-		})
-	case "PutEachPermanentIntoItsOwnersHand":
-		build, err := compileReturnCollection(n, ctx)
+		return one(func(bindings instanceBindings) mage.Effect { return mage.Sacrifice(subject.build(bindings)) })
+	case "PutPermanentIntoItsOwnersHand", "PutEachPermanentIntoItsOwnersHand":
+		build, err := compileDirectReturn(n, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1972,31 +2094,11 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return mage.ControllersSacrificeEach(set(bindings))
 		})
 	case "TapEachPermanent", "UntapEachPermanent":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		set, err := compileContextualCollection(n.Args[0], ctx)
+		build, err := compileTapAction(n, ctx)
 		if err != nil {
 			return nil, err
 		}
-		return one(func(bindings instanceBindings) mage.Effect {
-			if n.Name == "UntapEachPermanent" {
-				return mage.UntapEach(set(bindings))
-			}
-			return mage.TapEach(set(bindings))
-		})
-	case "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		set, err := compileContextualCollection(n.Args[0], ctx)
-		if err != nil {
-			return nil, err
-		}
-		if n.Name == "DestroyEachPermanent" {
-			return one(func(bindings instanceBindings) mage.Effect { return mage.DestroyEach(set(bindings)) })
-		}
-		return one(func(bindings instanceBindings) mage.Effect { return mage.DestroyEachWithoutRegeneration(set(bindings)) })
+		return one(build)
 	case "EachPlayerAction":
 		return compileEachPlayerAction(n, ctx)
 	case "PlayerActions":
@@ -2023,7 +2125,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	case "ReturnNumberCardsFromPlayersGraveyardToHand":
 		build, err := compileGraveyardHandReturn(n, ctx)
 		return []effectFactory{build}, err
-	case "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "PayLifeOrPutCardsDrawnThisTurnOnTopOfLibrary", "PutACardFromHandOnTopOfLibrary", "LoseTheGame", "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -2062,6 +2164,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "PhaseOutPermanentUntilWithEffects":
+		build, err := compilePhaseUntil(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreatePermanentLayerEffectUntil":
 		build, err := compileTemporaryLayer(n, ctx)
 		if err != nil {
@@ -2083,6 +2191,28 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "PutACardFromOutsideGameInHand" {
+		build, err := compileOutsideGameEntry(n, ctx)
+		return []effectFactory{build}, err
+	}
+	if n.Name == "MayAction" && len(n.Args) == 1 && n.Args[0].Name == "CopySpellAndMayChooseNewTargets" {
+		build, err := compileOptionalResolvingSpellCopy(n, ctx)
+		return []effectFactory{build}, err
+	}
+
+	if n.Name == "CopySpellAndMayChooseNewTargets" {
+		build, err := compileResolvingSpellCopy(n, ctx)
+		return []effectFactory{build}, err
+	}
+
+	if n.Name == "LookAtTheTopNumberCardsOfLibrary" {
+		build, err := compileLibraryTopSelection(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
+
 	if n.Name == "ExchangeLifeTotalWithPlayer" {
 		build, err := compileLifeExchange(n, ctx)
 		return []effectFactory{build}, err
@@ -2114,6 +2244,10 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return mage.LoseGameFor(ctx.player.build(bindings))
 		}}, nil
 	}
+	if n.Name == "GainControlOfEachPermanent" {
+		build, err := compileIndefinitePluralControl(n, ctx)
+		return []effectFactory{build}, err
+	}
 	if n.Name == "GainControlOfPermanent" {
 		build, err := compileIndefiniteControl(n, ctx)
 		if err != nil {
@@ -2144,6 +2278,9 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	if n.Name == "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType" || n.Name == "RevealHandAndDiscardACardOfTypeAtRandom" {
 		return compileRandomHandDiscard(n, ctx)
+	}
+	if n.Name == "PayLifeOrPutCardsDrawnThisTurnOnTopOfLibrary" {
+		return compileDrawnCardReturn(n, ctx)
 	}
 	if n.Name == "PutACardFromHandOnTopOfLibrary" {
 		return compileHandLibraryChoice(n, ctx)
@@ -2262,7 +2399,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, problem(n, "DrawACard requires a symbol")
 		}
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.DrawFor(ctx.player.build(bindings), mage.Fixed(1))
+			return (mage.DrawInstruction{Subject: ctx.player.build(bindings), Amount: mage.Fixed(1)}).Effect()
 		}}, nil
 	}
 	if err := arity(n, 1); err != nil {
@@ -2278,7 +2415,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	switch n.Name {
 	case "DrawNumberCards":
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.DrawFor(ctx.player.build(bindings), amount(bindings))
+			return (mage.DrawInstruction{Subject: ctx.player.build(bindings), Amount: amount(bindings)}).Effect()
 		}}, nil
 	case "GainLife", "LoseLife":
 		return compileLifeEffect(n, ctx, amount)
@@ -2291,11 +2428,25 @@ func compileLifeEffect(n Node, ctx scope, amount valueFactory) ([]effectFactory,
 	if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
 		return nil, unsupported(n, "life action in an event player scope")
 	}
+	if n.Name == "GainLife" && ctx.player.permanent != nil && !ctx.player.owner && ctx.player.permanent.kind == permanentTarget {
+		value := n.Args[0]
+		if value.Name == "PowerOfPermanent" || value.Name == "ManaValueOfPermanent" {
+			permanent, err := compilePermanentRef(value.Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			if permanent.kind == permanentTarget && permanent.target == ctx.player.permanent.target {
+				return []effectFactory{func(bindings instanceBindings) mage.Effect {
+					return (mage.PermanentLifeInstruction{Subject: bindings.permanents[permanent.target], ManaValue: value.Name == "ManaValueOfPermanent"}).Effect()
+				}}, nil
+			}
+		}
+	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
 		player := ctx.player.build(bindings)
 		if n.Name == "LoseLife" {
 			if ctx.lifeSubject == nil || !ctx.lifeSubject.referenced {
-				return mage.LoseLifeFor(player, amount(bindings))
+				return (mage.LifeInstruction{Subject: player, Amount: amount(bindings)}).Effect()
 			}
 			binding := mage.BindPlayer(ctx.lifeSubject.name)
 			bindings.lifeSubjects = maps.Clone(bindings.lifeSubjects)
@@ -2305,7 +2456,7 @@ func compileLifeEffect(n Node, ctx scope, amount valueFactory) ([]effectFactory,
 			bindings.lifeSubjects[ctx.lifeSubject] = binding
 			return mage.Sequence(mage.SnapshotPlayer(player, binding), mage.LoseLifeFor(mage.FromPlayer(binding), amount(bindings)))
 		}
-		return mage.GainLifeFor(player, amount(bindings))
+		return (mage.LifeInstruction{Subject: player, Amount: amount(bindings), Gain: true}).Effect()
 	}}, nil
 }
 

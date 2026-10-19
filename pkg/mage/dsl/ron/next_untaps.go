@@ -11,7 +11,9 @@ func compileNextUntaps(n Node, ctx scope) (effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		return func(bindings instanceBindings) mage.Effect { return mage.SkipNextUntapEach(subjects(bindings)) }, nil
+		return func(bindings instanceBindings) mage.Effect {
+			return (mage.NextUntapInstruction{Subjects: subjects(bindings), Count: 1}).Effect()
+		}, nil
 	}
 	counted := n.Name == "PermanentDoesntUntapDuringControllersNextNumberUntaps"
 	arguments := 1
@@ -27,7 +29,7 @@ func compileNextUntaps(n Node, ctx scope) (effectFactory, error) {
 	}
 	if !counted {
 		return func(bindings instanceBindings) mage.Effect {
-			return mage.SkipNextUntap(subject.build(bindings))
+			return (mage.NextUntapInstruction{Subject: subject.build(bindings), Count: 1}).Effect()
 		}, nil
 	}
 	value := n.Args[1]
@@ -42,6 +44,6 @@ func compileNextUntaps(n Node, ctx scope) (effectFactory, error) {
 	}
 	count := value.Args[0].Integer
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.SkipNextUntaps(subject.build(bindings), count)
+		return (mage.NextUntapInstruction{Subject: subject.build(bindings), Count: count}).Effect()
 	}, nil
 }

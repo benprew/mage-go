@@ -59,8 +59,6 @@ func compileForcedMana(n Node, ctx scope) ([]effectFactory, error) {
 		return nil, err
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		saved := mage.BindPlayer("forced mana player " + n.Position.String())
-		ref := mage.FromPlayer(saved)
-		return mage.Sequence(mage.SnapshotPlayer(player.build(bindings), saved), mage.ActivateManaAbilityOfEach(ref, mage.IsLand), mage.LoseUnspentManaFor(ref))
+		return (mage.ForcedManaLossInstruction{Subject: player.build(bindings), Filter: mage.IsLand}).Effect()
 	}}, nil
 }

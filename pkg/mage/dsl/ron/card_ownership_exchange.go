@@ -8,6 +8,10 @@ type sourceCardPaymentPlan struct {
 }
 
 func compileOwnershipExchangeCard(n Node, ctx scope) (func(instanceBindings) mage.CardRef, error) {
+	if n.Name == "TheCardInHandChosenThisWay" {
+		return compileChosenHandCardRef(n, ctx)
+	}
+
 	if n.Name == "ThisPermanent" {
 		if n.Kind != Symbol {
 			return nil, problem(n, "source card reference requires a symbol")

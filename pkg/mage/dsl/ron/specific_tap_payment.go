@@ -46,6 +46,6 @@ func compileRequiredTapPayment(payment, continuation Node, ctx scope) (effectFac
 		} else {
 			unpaid = mage.Sequence(effects...)
 		}
-		return mage.RequiredTapOrElse(mage.You, subject.build(bindings), paid, unpaid)
+		return (mage.RequiredTapInstruction{Player: mage.You, Subject: subject.build(bindings), Paid: paid, Unpaid: unpaid}).Effect()
 	}, nil
 }

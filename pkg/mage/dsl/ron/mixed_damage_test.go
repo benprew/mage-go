@@ -212,8 +212,8 @@ func TestRONMixedDamageInvalid(t *testing.T) {
 		`MultipleRecipients([EachPlayer(AnyPlayer),EachPlayer(AnyPlayer)])`,
 		`MultipleRecipients([EachPermanent(IsCardtype(Creature)),EachPlayer(AnyPlayer),EachPlayer(AnyPlayer)])`,
 		`MultipleRecipients([EachPermanent(),EachPlayer(AnyPlayer)])`, `MultipleRecipients([EachPermanent(IsCardtype(Creature)),EachPlayer(AnyPlayer())])`,
-		`MultipleRecipients([EachPermanent(IsCardtype(Creature)),EachPlayer(Opponent)])`,
-		`MultipleRecipients([EachPermanent(IsCardtype(Creature)),Player(You)])`,
+		`MultipleRecipients([EachPermanent(IsCardtype(Creature)),EachPlayer(Opponent())])`,
+		`MultipleRecipients([EachPermanent(IsCardtype(Creature)),Player(You())])`,
 		`MultipleRecipients([EachPermanent(SinglePermanent(Ref_TargetPermanent)),EachPlayer(AnyPlayer)])`,
 		`MultipleRecipients([EachPermanent(WasDealtDamageByPermanentThisGame(ThisPermanent)),EachPlayer(AnyPlayer)])`,
 	} {

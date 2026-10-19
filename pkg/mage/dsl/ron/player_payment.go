@@ -6,6 +6,9 @@ import (
 )
 
 func compilePlayerPayment(n Node, ctx scope) (effectFactory, error) {
+	if len(n.Args) == 3 && n.Args[1].Kind == List && len(n.Args[1].Args) > 0 && n.Args[1].Args[0].Name == "AttackingDoesntCauseCreaturesToTapIf" {
+		return compileAttackTapping(n, ctx)
+	}
 	if len(n.Args) == 3 && n.Args[1].Kind == List && len(n.Args[1].Args) > 0 && n.Args[1].Args[0].Name == "CantBeAttackedExceptBy" {
 		return compilePlayerAttackRestriction(n, ctx)
 	}
@@ -29,6 +32,14 @@ func compilePlayerPayment(n Node, ctx scope) (effectFactory, error) {
 	var payments []effectFactory
 	for _, operation := range operations {
 
+		if operation.Name == "MayActionOnce" {
+			payment, err := compileOneSpellMana(operation, player, ctx)
+			if err != nil {
+				return nil, err
+			}
+			payments = append(payments, payment)
+			continue
+		}
 		if operation.Name == "MayPayLifeToProduceManaAsManaAbility" {
 			if !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
 				return nil, unsupported(operation, "life mana installation context")

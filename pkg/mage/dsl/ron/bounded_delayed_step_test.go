@@ -54,6 +54,14 @@ func TestRONBoundedDelayedStepGlyphOfDoom(t *testing.T) {
 			if change == "illegal" {
 				g.PhaseOut(wall.ID())
 			}
+			for range 2 {
+				if certain, known := g.InspectSpellDestruction(g.StackPeek(), nil); certain || !known {
+					t.Fatal("complete bounded delay unknown or immediate destruction claimed")
+				}
+			}
+			if len(g.DelayedTriggers()) != 0 || g.FindPermanent(attacker.ID()) == nil {
+				t.Fatal("inspection executed the schedule")
+			}
 			g.ResolveStack()
 			wantSchedules := 1
 			if change == "copy" {

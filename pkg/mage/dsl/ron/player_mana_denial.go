@@ -7,6 +7,6 @@ func compileLoseUnspentMana(n Node, ctx scope) ([]effectFactory, error) {
 		return nil, problem(n, "LoseUnspentMana requires a symbol")
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		return mage.LoseUnspentManaFor(ctx.player.build(bindings))
+		return (mage.ManaLossInstruction{Subject: ctx.player.build(bindings)}).Effect()
 	}}, nil
 }

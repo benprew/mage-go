@@ -123,8 +123,8 @@ func TestRONSingleTargetRejectAndDeclarations(t *testing.T) {
 		}
 	}
 	mirror := staticBaseRecord(t, "DRK", "Reflecting Mirror")
-	if _, err := Compile(mirror); err == nil {
-		t.Fatal("incomplete Mirror accepted")
+	if _, err := Compile(mirror); err != nil {
+		t.Fatal(err)
 	}
 	data := `Card(Name:"Counter",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(Targeted([TargetSpell(TargetsOnlyASingleTarget)],ActionList([CounterSpell(Ref_TargetSpell)])))])`
 	report, err := InspectFS(fstest.MapFS{"single.ron": {Data: []byte(data)}}, "*.ron")

@@ -375,14 +375,14 @@ func TestAttachmentTargetResolution(t *testing.T) {
 			host := g.PutOnBattlefield(NewCreature("Host", "", 2, 2), a.PlayerID())
 			other := g.PutOnBattlefield(NewCreature("Other", "", 2, 2), a.PlayerID())
 			opponent := g.PutOnBattlefield(NewCreature("Opponent", "", 2, 2), b.PlayerID())
-			aura := NewAura("Aura", "")
+			aura := NewAura("Aura", "", WithCastTarget(TargetPermanent()))
 			aura.SetOwner(a.PlayerID())
 			controller := a.PlayerID()
 			if change == "opponent aura" {
 				controller = b.PlayerID()
 			}
 			p := g.PutOnBattlefield(aura, controller)
-			p.AttachedTo = host.ID()
+			g.Attach(p.ID(), host.ID())
 			target := DeclarePermanentTarget("aura", And(IsEnchantment, HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())
 			ability := Spell(ReturnToHand(target), WithTargets(target))
 			spell := NewInstant("Return", "", WithAbility(ability))
@@ -393,18 +393,18 @@ func TestAttachmentTargetResolution(t *testing.T) {
 			case "host control":
 				clone.AddControlEffect(ControlEffectSpec{SourceID: spell.ID(), TargetID: host.ID(), ControllerID: b.PlayerID(), Duration: Indefinite})
 			case "host type":
-				cp.AttachedTo = clone.PutOnBattlefield(NewArtifact("Noncreature", ""), a.PlayerID()).ID()
+				clone.Attach(cp.ID(), clone.PutOnBattlefield(NewArtifact("Noncreature", ""), a.PlayerID()).ID())
 			case "move to own":
-				cp.AttachedTo = other.ID()
+				clone.Attach(cp.ID(), other.ID())
 			case "move to opponent":
-				cp.AttachedTo = opponent.ID()
+				clone.Attach(cp.ID(), opponent.ID())
 			case "detach":
 				cp.AttachedTo = uuid.Nil
 			case "phase":
 				clone.PhaseOut(p.ID())
 			case "return":
 				clone.RemoveFromBattlefield(cp)
-				clone.PutOnBattlefield(cp.Card, controller).AttachedTo = host.ID()
+				clone.Attach(clone.PutOnBattlefield(cp.Card, controller).ID(), host.ID())
 			}
 			clone.ResolveStack()
 			want := 0

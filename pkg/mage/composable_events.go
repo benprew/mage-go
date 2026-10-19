@@ -1071,8 +1071,14 @@ func captureTriggerEventEffects(pt *pendingTrigger, obj *StackObject) {
 				if body.numbers == nil {
 					body.numbers = make(map[*NumberBinding]int)
 				}
+				body.cards = maps.Clone(captured.cards)
+				if body.cards == nil {
+					body.cards = make(map[*CardBinding]capturedCard)
+				}
 				for _, capture := range pt.eventCaptures {
 					switch fact := capture.(type) {
+					case *eventCardCapture:
+						body.cards[fact.binding] = fact.value
 					case *eventAmountCapture:
 						body.numbers[fact.binding] = fact.amount
 					case *eventPermanentCapture:
@@ -2745,6 +2751,7 @@ type creatureDiesPattern struct {
 	captureController  bool
 	owner              *PlayerBinding
 	captureOwner       bool
+	duplicateOwner     bool
 	power              *NumberBinding
 	capturePower       bool
 	duplicatePower     bool
@@ -2904,6 +2911,9 @@ func (p creatureDiesPattern) WithController(controller *PlayerBinding) creatureD
 
 // WithOwner saves the permanent's owner when the death event occurs.
 func (p creatureDiesPattern) WithOwner(owner *PlayerBinding) creatureDiesPattern {
+	if p.captureOwner {
+		p.duplicateOwner = true
+	}
 	p.owner = owner
 	p.captureOwner = true
 	return p
@@ -3136,6 +3146,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 		n.children = append(n.children, definitionEdge{"controller", &eventPlayerCapture{binding: p.controller}})
 	} else if p.captureController {
 		n.problem = "death event: supply a controller binding"
+	}
+	if p.duplicateOwner {
+		n.problem = "death event: supply one owner binding"
 	}
 	if p.owner != nil {
 		n.bindingWrites = append(n.bindingWrites, p.owner)

@@ -32,7 +32,13 @@ func isTriggeredManaAbility(ability *GenericTriggered) bool {
 }
 
 // HasManaAbility checks current abilities without checking payment or output.
-var HasManaAbility = NewPermanentFilter("has a mana ability", func(p *Permanent, _ *Game) bool {
+var HasManaAbility = PermanentFilter{
+	label: "has a mana ability",
+	fn:    func(p *Permanent, _ *Game) bool { return permanentHasManaAbility(p) },
+	query: &permanentCollectionFilterNode{operation: collectionFilterManaAbility},
+}
+
+func permanentHasManaAbility(p *Permanent) bool {
 	for _, ability := range p.RuntimeAbilities {
 		if IsActivatedManaAbility(ability) {
 			return true
@@ -42,4 +48,4 @@ var HasManaAbility = NewPermanentFilter("has a mana ability", func(p *Permanent,
 		}
 	}
 	return false
-})
+}

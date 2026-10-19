@@ -49,11 +49,10 @@ func compilePermanentPayment(n Node, remaining []Node, ctx scope) (effectFactory
 		}
 		result := mage.BindPermanentSet(plan.name)
 		bindings.permanentPayments[plan] = result
-		effects := make([]mage.Effect, 0, 1+len(body))
-		effects = append(effects, mage.OfferCostForEachPermanent(subjects(bindings), mage.EachPlayer, mage.Costs(mage.LifePayCost(amount.Args[0].Integer)), result))
+		effects := make([]mage.Effect, 0, len(body))
 		for _, build := range body {
 			effects = append(effects, build(bindings))
 		}
-		return mage.Sequence(effects...)
+		return (mage.PermanentLifePaymentInstruction{Subjects: subjects(bindings), Amount: amount.Args[0].Integer, Unpaid: result, Body: mage.Sequence(effects...)}).Effect()
 	}, nil
 }

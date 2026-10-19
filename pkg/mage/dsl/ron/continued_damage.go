@@ -11,7 +11,7 @@ func compileContinuedDamage(n Node, ctx scope) (effectFactory, error) {
 	if source.Kind != Symbol || source.Name != "TheChosenDamageSource" || ctx.chosenDamageSource == nil {
 		return nil, problem(source, "unbound or incompatible chosen damage source")
 	}
-	if !ctx.resolving || ctx.permanent || ctx.sourceZone != nil || ctx.enteringSource || ctx.drawReplacementBody || ctx.delayedStep {
+	if !ctx.resolving || ctx.permanent || ctx.sourceZone != nil || ctx.enteringSource || ctx.drawReplacementBody || ctx.delayedStep || ctx.discardCauseEvent != nil {
 		return nil, problem(n, "continued damage requires an ordinary spell resolving body")
 	}
 	recipient := event.Args[1]

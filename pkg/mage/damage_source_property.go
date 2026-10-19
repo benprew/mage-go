@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -15,11 +16,13 @@ const (
 	damageSourceType
 	damageSourceAll
 	damageSourceEither
+	damageSourceName
 )
 
 // DamageSourceFilter reads the information supplied by a typed source reference.
 // The zero value permits any valid source.
 type DamageSourceFilter struct {
+	name     string
 	kind     damageSourceFilterKind
 	color    core.Color
 	cardType core.CardType
@@ -34,6 +37,11 @@ func DamageSourceHasColor(color core.Color) DamageSourceFilter {
 // DamageSourceHasType requires the specified card type.
 func DamageSourceHasType(cardType core.CardType) DamageSourceFilter {
 	return DamageSourceFilter{kind: damageSourceType, cardType: cardType}
+}
+
+// DamageSourceHasName checks the name supplied by the source reference.
+func DamageSourceHasName(name string) DamageSourceFilter {
+	return DamageSourceFilter{kind: damageSourceName, name: name}
 }
 
 // AllDamageSources requires each supplied source property.
@@ -55,6 +63,8 @@ func (f DamageSourceFilter) Match(source DamageSource) bool {
 	switch f.kind {
 	case damageSourceAny:
 		return true
+	case damageSourceName:
+		return source.Name() == f.name
 	case damageSourceColor:
 		return source.HasColor(f.color)
 	case damageSourceType:
@@ -73,6 +83,11 @@ func (f DamageSourceFilter) inspectDefinition() definitionNode {
 	switch f.kind {
 	case damageSourceAny:
 		n.Text = "any source"
+	case damageSourceName:
+		n.Text = "source name"
+		if strings.TrimSpace(f.name) == "" {
+			n.problem = "supply a nonempty source name"
+		}
 	case damageSourceColor:
 		n.Text = "source color"
 		if f.color < core.White || f.color > core.Green {

@@ -36,7 +36,7 @@ func TestDelayedLeaveUntap(t *testing.T) {
 			if err := applyEffectWithCardSetCaptures(g, effect, p.ID(), a.PlayerID(), nil, map[*NumberBinding]int{amount: 3}, captures, nil, nil); err != nil {
 				t.Fatal(err)
 			}
-			if event == "leave-before-install" || event == "return-before-install" || event == "phase-before-install" {
+			if event == "leave-before-install" || event == "return-before-install" {
 				if len(g.DelayedTriggers()) != 0 {
 					t.Fatal("absent saved visit subscribed")
 				}
@@ -48,6 +48,9 @@ func TestDelayedLeaveUntap(t *testing.T) {
 			g.triggers.ClearEndOfTurn()
 			if len(g.DelayedTriggers()) != 1 {
 				t.Fatal("cleanup removed unbounded trigger")
+			}
+			if event == "phase-before-install" {
+				g.PhaseIn([]uuid.UUID{p.ID()})
 			}
 			clone := g.Clone()
 			switch event {

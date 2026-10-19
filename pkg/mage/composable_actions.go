@@ -1835,7 +1835,7 @@ func (e *damageFromEffect) Apply(ctx *EffectContext) error {
 		ctx.Game.resolution.damageSourceBindings[e.sourceResult] = cloneDamageSource(outcome.source)
 	}
 	if e.outcomes != nil && outcome.amount > 0 {
-		ctx.Game.resolution.damageResultsBindings[e.outcomes] = []damageOutcome{cloneDamageOutcome(outcome)}
+		ctx.Game.resolution.damageResultsBindings[e.outcomes] = cloneDamageOutcomes(damageOutcomeParts(outcome))
 	}
 	return nil
 }
@@ -1884,6 +1884,7 @@ func (o damageResultsOption) applyDamageEachResult(e *damageEachEffect) {
 
 func cloneDamageOutcome(outcome damageOutcome) damageOutcome {
 	outcome.source = cloneDamageSource(outcome.source)
+	outcome.parts = cloneDamageOutcomes(outcome.parts)
 	return outcome
 }
 func cloneDamageOutcomes(outcomes []damageOutcome) []damageOutcome {
@@ -2402,7 +2403,7 @@ func (e *discardEntireHandEffect) Apply(ctx *EffectContext) error {
 	if player == nil {
 		return nil
 	}
-	count := discardPlayerHand(ctx.Game, player, ctx.SourceID)
+	count := ctx.Game.discardHandsTogether([]uuid.UUID{player.PlayerID()}, ctx.SourceID)
 	if e.result != nil {
 		ctx.Game.resolution.numberBindings[e.result] = count
 	}
@@ -3777,7 +3778,28 @@ func clonePublicReveals(in []PublicCardReveal) []PublicCardReveal {
 
 // PublicReveals returns public reveal history in reveal order.
 func (g *Game) PublicReveals() []PublicCardReveal {
-	return clonePublicReveals(g.publicReveals)
+	reveals := clonePublicReveals(g.publicReveals)
+	if g.IsGameOver() {
+		add := func(card Card) {
+			if original := faceDownOriginal(card); original != nil {
+				original = cardForBattlefieldDeparture(card)
+				copyCard := original.Copy()
+				copyCard.SetID(original.ID())
+				reveals = append(reveals, PublicCardReveal{CardID: original.ID(), Owner: original.Owner(), Name: original.Name(), Types: slices.Clone(original.Types()), Card: copyCard})
+			}
+		}
+		for _, obj := range g.stack.objects {
+			if obj.IsFaceDown() {
+				add(obj.Card)
+			}
+		}
+		for _, p := range g.AllBattlefield() {
+			if p.FaceDown {
+				add(p.Card)
+			}
+		}
+	}
+	return reveals
 }
 
 func (g *Game) recordPublicReveal(card Card) {
@@ -3992,6 +4014,7 @@ type TokenOption interface {
 type tokenDefinition struct {
 	plan             *CardDefinitionPlan
 	name             string
+	legendary        bool
 	types            []CardType
 	subtypes         []string
 	colors           []Color
@@ -4011,6 +4034,14 @@ func (o tokenTypes) applyToken(d *tokenDefinition) { d.types = slices.Clone(o) }
 
 // TokenTypes sets the token's card types.
 func TokenTypes(types ...CardType) TokenOption { return tokenTypes(slices.Clone(types)) }
+
+type tokenLegendary struct{}
+
+func (tokenLegendary) tokenOption()                  {}
+func (tokenLegendary) applyToken(d *tokenDefinition) { d.legendary = true }
+
+// TokenLegendary gives each token the legendary supertype.
+func TokenLegendary() TokenOption { return tokenLegendary{} }
 
 type tokenSubtypes []string
 
@@ -4405,7 +4436,7 @@ func (t *typedSpellTarget) Possible(controller uuid.UUID, source Card, g *Game) 
 		}
 		matches := true
 		for _, filter := range t.filters {
-			if !filter.Match(obj.Card) {
+			if !filter.Match(spellCharacteristicCard(obj)) {
 				matches = false
 				break
 			}

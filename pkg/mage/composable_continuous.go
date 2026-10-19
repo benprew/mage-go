@@ -70,6 +70,12 @@ func ChangeController(subject PermanentRef, controller PlayerRef) ContinuousModi
 	return &layerModification{subject: subject, controller: controller, layer: LayerControl}
 }
 
+// ChangeEachController changes control of a set for the supplied duration.
+// Until saves all members before the control layer applies.
+func ChangeEachController(subjects PermanentSet, controller PlayerRef) ContinuousModification {
+	return &layerModification{subjects: subjects, controller: controller, layer: LayerControl}
+}
+
 // SetBasePowerToughness sets both base values of one permanent.
 func SetBasePowerToughness(subject PermanentRef, power, toughness ResolutionValue) ContinuousModification {
 	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT, setBasePT: true}
@@ -110,6 +116,12 @@ func GrantProtectionColors(subject PermanentRef, colors ...Color) ContinuousModi
 // GrantKeywordModification grants a keyword. DSL exports it as GrantKeyword.
 func GrantKeywordModification(subject PermanentRef, keyword Attr) ContinuousModification {
 	return &layerModification{subject: subject, keyword: keyword, layer: LayerAbility}
+}
+
+// ProhibitDamagePreventionAndRedirection changes damage rules for one subject.
+// Ability removal cannot remove this rule.
+func ProhibitDamagePreventionAndRedirection(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, keyword: AttrDamageCantBePreventedOrRedirected, layer: LayerAbility}
 }
 
 // AttackAsThoughHaste permits attacks without changing tap cost legality.
@@ -483,6 +495,10 @@ func (m *layerModification) captureMembers(ctx *EffectContext, members []*Perman
 	return result
 }
 func (v capturedModification) apply(g *Game, layer Layer) {
+	v.applyFromEffect(g, layer, uuid.Nil)
+}
+
+func (v capturedModification) applyFromEffect(g *Game, layer Layer, identity uuid.UUID) {
 	p := g.FindPermanent(v.permanent.id)
 	if p == nil || p.PhasedOut || p.incarnationID != v.permanent.incarnation {
 		return
@@ -490,7 +506,7 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 	p = g.MutablePermanent(p.ID())
 	switch layer {
 	case LayerControl:
-		setComputedController(p, v.controller)
+		setComputedController(p, v.controller, identity)
 	case LayerPT:
 		if v.setBasePT {
 			power, toughness := v.power, v.toughness
@@ -762,14 +778,14 @@ func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 			// Subtype checks need the added card types from the same effect.
 			for _, v := range e.captured {
 				if v.addType != 0 {
-					v.apply(ctx.Game, e.layer)
+					v.applyFromEffect(ctx.Game, e.layer, e.identity)
 				}
 			}
 			ctx.Game.effects.syncAttrDeltas(ctx.Game)
 		}
 		for _, v := range e.captured {
 			if e.layer != LayerType || v.addType == 0 {
-				v.apply(ctx.Game, e.layer)
+				v.applyFromEffect(ctx.Game, e.layer, e.identity)
 			}
 		}
 		return nil
@@ -818,7 +834,7 @@ func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 					identity := fmt.Sprintf("%s/%s/%d", source.incarnationID, v.permanent.incarnation, i)
 					v.grantID = uuid.NewSHA1(e.grantID, []byte(identity))
 				}
-				v.apply(ctx.Game, e.layer)
+				v.applyFromEffect(ctx.Game, e.layer, e.identity)
 			}
 		}
 	}
@@ -943,7 +959,7 @@ func propertiesFromModifications(modifications []*layerModification) EffectPrope
 			p.Outcome = OutcomeDetriment
 		} else if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword
-			if m.keyword == AttrMustBeBlockedIfAble || m.keyword == CantRegenerate {
+			if m.keyword == AttrMustBeBlockedIfAble || m.keyword == CantRegenerate || m.keyword == AttrDamageCantBePreventedOrRedirected {
 				p.Outcome = OutcomeDetriment
 			}
 		}

@@ -106,7 +106,7 @@ func TestRONAnteDeckCollectionDeclarations(t *testing.T) {
 			seen[name] = true
 			records++
 			factory, compileErr := Compile(node)
-			complete := name == "Demonic Attorney" || name == "Contract from Below" || name == "Jeweled Bird" || name == "Darkpact"
+			complete := name == "Rebirth" || name == "Tempest Efreet" || name == "Demonic Attorney" || name == "Contract from Below" || name == "Jeweled Bird" || name == "Darkpact"
 			if name == "Bronze Tablet" {
 				if compileErr != nil && !strings.Contains(compileErr.Error(), "unbound or incompatible player reference (OwnerOfPermanent)") {
 					t.Fatalf("%s: owner prerequisite: %v", name, compileErr)

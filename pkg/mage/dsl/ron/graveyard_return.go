@@ -112,7 +112,7 @@ func compileGraveyardTargetFilter(n Node) ([]mage.CardFilter, bool, error) {
 		if err != nil {
 			return nil, false, err
 		}
-		filter := mage.NewCardFilter(kind.String()+" card", func(card mage.Card) bool { return card.HasType(kind) })
+		filter := mage.HasCardTypeCardFilter(kind)
 		return []mage.CardFilter{filter}, false, nil
 	case "InAPlayersGraveyard":
 		players := n.Args[0]
@@ -163,7 +163,9 @@ func compileGraveyardReturnInto(n Node, ctx scope, result *returnedPermanentPlan
 		return nil, problem(n.Args[0], "graveyard return requires a graveyard card reference")
 	}
 	if count == 1 {
-		return func(bindings instanceBindings) mage.Effect { return mage.ReturnCardToHand(card.build(bindings)) }, nil
+		return func(bindings instanceBindings) mage.Effect {
+			return (mage.GraveyardHandInstruction{Subject: card.build(bindings)}).Effect()
+		}, nil
 	}
 	if !card.enchanted && (card.target == nil || !card.target.creatureOnly) {
 		return nil, problem(n, "battlefield return requires a creature card target")
@@ -200,6 +202,9 @@ func compileGraveyardReturnInto(n Node, ctx scope, result *returnedPermanentPlan
 		}
 		if result != nil {
 			return mage.ReturnCardToBattlefieldInto(card.build(bindings), controller.build(bindings), bindings.returnedPermanents[result], options...)
+		}
+		if len(options) == 0 {
+			return (mage.GraveyardBattlefieldInstruction{Subject: card.build(bindings), Controller: controller.build(bindings)}).Effect()
 		}
 		return mage.ReturnCardToBattlefield(card.build(bindings), controller.build(bindings), options...)
 	}, nil

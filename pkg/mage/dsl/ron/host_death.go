@@ -5,6 +5,7 @@ import "github.com/benprew/mage-go/pkg/mage"
 type hostDeathPlan struct {
 	name         string
 	departedAura bool
+	watched      *permanentReferencePlan
 }
 
 type hostDeathBindings struct {

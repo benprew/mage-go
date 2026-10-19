@@ -15,6 +15,12 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "DamageDealtBySpellThisTurn" {
+		return compileCastSpellDamageValue(n, ctx)
+	}
+	if n.Name == "TheAmountOfDamageDealtToPermanentThisTurnBySources" {
+		return compileOtherSourceDamageHistory(n, ctx)
+	}
 	if n.Name == "LifeTotalOfPlayer" {
 		return compileLifeTotal(n, ctx)
 	}
@@ -153,20 +159,7 @@ func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
 		}, nil
 	}
 	if n.Name == "PowerOfPermanent" || n.Name == "ManaValueOfPermanent" {
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		permanent, err := compilePermanentRef(n.Args[0], ctx)
-		if err != nil {
-			return nil, err
-		}
-		return func(bindings instanceBindings) mage.ResolutionValue {
-			ref := permanent.build(bindings)
-			if n.Name == "PowerOfPermanent" {
-				return mage.PowerOfWithLKI(ref)
-			}
-			return mage.ManaValueOfWithLKI(ref)
-		}, nil
+		return compilePermanentInformationValue(n, ctx)
 	}
 	if n.Name == "TheNumberOfCardsInPlayersHand" {
 		if err := arity(n, 1); err != nil {
@@ -197,6 +190,14 @@ func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
 				return mage.AddValues(left(bindings), right(bindings))
 			}
 			return mage.SubtractValues(left(bindings), right(bindings))
+		}, nil
+	}
+	if n.Name == "NumPermanentsExiledThisWay" {
+		if n.Kind != Symbol || ctx.linkedExilePayment == nil {
+			return nil, problem(n, "unbound or incompatible linked exile payment value")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.linkedExilePayments[ctx.linkedExilePayment])
 		}, nil
 	}
 	if n.Name == "TheNumberOfCountersRemovedThisWay" {

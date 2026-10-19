@@ -49,7 +49,7 @@ func compileEvenSpellDamage(n Node, ctx scope) (effectFactory, error) {
 		}
 		binding := ctx.damageTargets
 		return func(bindings instanceBindings) mage.Effect {
-			return mage.DealDamageEvenly(source(bindings), bindings.recipientSets[binding], total(bindings))
+			return (mage.EvenDamageInstruction{Source: source(bindings), Recipients: bindings.recipientSets[binding], Total: total(bindings)}).Effect()
 		}, nil
 	}
 	if recipients.Name != "EachPermanent" {
@@ -60,6 +60,6 @@ func compileEvenSpellDamage(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.DealDamageEvenlyToRecipients(source(bindings), mage.PermanentDamageRecipients(subjects(bindings)), total(bindings))
+		return (mage.EvenDamageInstruction{Source: source(bindings), Recipients: mage.PermanentDamageRecipients(subjects(bindings)), Total: total(bindings)}).Effect()
 	}, nil
 }

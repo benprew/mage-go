@@ -12,6 +12,7 @@ import (
 // ZoneSystem manages the battlefield, exile and command zones, Last-Known Information (LKI),
 // copy-on-write battlefield sharing, and zone transition bookkeeping.
 type ZoneSystem struct {
+	phaseUntil             []phaseUntilWait
 	battlefield            []*Permanent
 	battlefieldShared      bool
 	battlefieldSliceShared bool
@@ -44,6 +45,7 @@ func NewZoneSystem() ZoneSystem {
 // Clone creates a search clone with copy-on-write battlefield sharing and deep-copied exile.
 func (zs *ZoneSystem) Clone() ZoneSystem {
 	clone := ZoneSystem{
+		phaseUntil:          slices.Clone(zs.phaseUntil),
 		departedAttachments: maps.Clone(zs.departedAttachments),
 		departedCounters:    maps.Clone(zs.departedCounters),
 		counterPlacements:   maps.Clone(zs.counterPlacements),
@@ -347,51 +349,52 @@ func (zs *ZoneSystem) RemovePermanent(id uuid.UUID) (*Permanent, bool) {
 	return nil, false
 }
 
-// PhaseOut phases the permanent with the given ID out of the battlefield, along
-// with any Auras and Equipment attached to it (CR 702.26f, "phasing out
-// indirectly").
+// PhaseOut saves each indirect attachment's parent visit for phase-in (CR 702.26g).
 func (zs *ZoneSystem) PhaseOut(id uuid.UUID) []uuid.UUID {
-	perm := zs.MutablePermanent(id)
-	if perm == nil {
-		return nil
+	var phased []uuid.UUID
+	var phase func(uuid.UUID, capturedPermanent)
+	phase = func(id uuid.UUID, parent capturedPermanent) {
+		p := zs.MutablePermanent(id)
+		if p == nil {
+			return
+		}
+		p.PhasedOut = true
+		p.phaseEpoch++
+		p.phasedWith = parent
+		phased = append(phased, id)
+		visit := capturedPermanent{p.ID(), p.incarnationID}
+		for _, attachment := range zs.battlefield {
+			if attachment.AttachedTo == id && !attachment.PhasedOut && (attachment.HasSubType("Aura") || attachment.HasSubType("Equipment") || attachment.HasSubType("Fortification")) {
+				phase(attachment.ID(), visit)
+			}
+		}
 	}
-	perm.PhasedOut = true
-	perm.phaseEpoch++
-	phased := []uuid.UUID{id}
-	for _, p := range zs.battlefield {
-		if p.PhasedOut || p.AttachedTo != id {
-			continue
-		}
-		if !p.HasSubType("Aura") && !p.HasSubType("Equipment") {
-			continue
-		}
-		att := zs.MutablePermanent(p.ID())
-		if att == nil {
-			continue
-		}
-		att.PhasedOut = true
-		att.phaseEpoch++
-		phased = append(phased, att.ID())
-	}
+	phase(id, capturedPermanent{})
 	return phased
 }
 
-// PhaseIn phases the given permanents back onto the battlefield. IDs that are
-// not currently phased out are skipped. If an unphasing permanent has attached
-// permanents that phased out indirectly with it (CR 702.26g), they phase in too.
+// PhaseIn restores the group that phased out indirectly with each subject.
 func (zs *ZoneSystem) PhaseIn(ids []uuid.UUID) {
-	for _, id := range ids {
-		perm := zs.MutablePermanentIncludingPhased(id)
-		if perm != nil && perm.PhasedOut {
-			perm.PhasedOut = false
-			delete(zs.phaseInformation, perm.incarnationID)
-			for _, p := range zs.battlefield {
-				if p.PhasedOut && p.AttachedTo == id {
-					attachment := zs.MutablePermanentIncludingPhased(p.ID())
-					attachment.PhasedOut = false
-					delete(zs.phaseInformation, attachment.incarnationID)
-				}
+	var phase func(uuid.UUID)
+	phase = func(id uuid.UUID) {
+		p := zs.MutablePermanentIncludingPhased(id)
+		if p == nil || !p.PhasedOut {
+			return
+		}
+		p.PhasedOut = false
+		p.phasedWith = capturedPermanent{}
+		delete(zs.phaseInformation, p.incarnationID)
+		visit := capturedPermanent{p.ID(), p.incarnationID}
+		for _, attachment := range zs.battlefield {
+			if attachment.PhasedOut && attachment.phasedWith == visit {
+				phase(attachment.ID())
 			}
+		}
+	}
+	for _, id := range ids {
+		p := zs.FindPermanentIncludingPhased(id)
+		if p != nil && p.phasedWith == (capturedPermanent{}) {
+			phase(id)
 		}
 	}
 }

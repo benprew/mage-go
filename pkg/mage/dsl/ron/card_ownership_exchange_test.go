@@ -13,14 +13,12 @@ import (
 
 func TestRONCardOwnershipExchangeGameplay(t *testing.T) {
 	record := staticBaseRecord(t, "ATQ", "Bronze Tablet")
-	var exile, exchange Node
+	var exile Node
+	exchange := nameScopeNode(t, `ExchangeOwnershipOfTwoCards(TheFirstCardExiledThisWay,TheSecondCardExiledThisWay)`)
 	var walk func(Node)
 	walk = func(n Node) {
 		if n.Name == "Exile" {
 			exile = n
-		}
-		if n.Name == "ExchangeOwnershipOfTwoCards" {
-			exchange = n
 		}
 		for _, child := range n.Args {
 			walk(child)
@@ -216,8 +214,12 @@ func TestRONCardOwnershipExchangeRevealContexts(t *testing.T) {
 			}
 		})
 	}
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "PutCardFromHandIntoPlayersHand") {
-		t.Fatal("hand transfer must remain unsupported", err)
+	factory, err := Compile(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Tempest Efreet", factory()); err != nil {
+		t.Fatal(err)
 	}
 }
 

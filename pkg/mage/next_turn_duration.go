@@ -43,6 +43,9 @@ func (em *EffectManager) removeUntilNextTurn(player uuid.UUID, turn int) bool {
 // BeginActiveTurn expires saved lifetimes before the active turn's actions.
 // Drivers must check turn skips first. Repeated calls in one turn are safe.
 func (g *Game) BeginActiveTurn() {
+	g.turns.attemptedTurn = g.CurrentTurn()
+	g.turns.attemptedTurnPlayer = g.ActivePlayerObj().PlayerID()
+	g.turns.turnSkipped = false
 	g.recordActiveTurnStart()
 	started := g.effects.beginNextTurnWindows(g.ActivePlayerObj().PlayerID(), g.CurrentTurn())
 	if g.effects.removeUntilNextTurn(g.ActivePlayerObj().PlayerID(), g.CurrentTurn()) || started {

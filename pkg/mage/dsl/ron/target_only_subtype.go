@@ -3,6 +3,9 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compileTargetOnlySubtypeFilter(n Node) (mage.CardFilter, error) {
+	if n.Name != "CanTargetOnly" {
+		return mage.CardFilter{}, unsupported(n, "target declaration filter")
+	}
 	if err := arity(n, 1); err != nil {
 		return mage.CardFilter{}, err
 	}

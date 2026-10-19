@@ -108,7 +108,7 @@ func TestRONCreatedTokenLeaveCollectionAtomic(t *testing.T) {
 	if card := repositoryCard(t, "DRK", "Dance of Many"); mage.ValidateCardDefinition(card.Name(), card) != nil {
 		t.Fatal("complete token-copy consumer rejected")
 	}
-	for _, tc := range []struct{ set, name string }{{"LEG", "Stangg"}, {"ATQ", "Tetravus"}} {
+	for _, tc := range []struct{ set, name string }{{"LEG", "Stangg"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)
@@ -119,8 +119,8 @@ func TestRONCreatedTokenLeaveCollectionAtomic(t *testing.T) {
 				continue
 			}
 			found = true
-			if err := LoadInto(registry, fstest.MapFS{"real.ron": {Data: []byte(line)}}, "*.ron"); err == nil {
-				t.Fatalf("published incomplete %s", tc.name)
+			if err := LoadInto(registry, fstest.MapFS{"real.ron": {Data: []byte(strings.ReplaceAll(line, "TheTokensCreatedThisWay", "UnknownTokens"))}}, "*.ron"); err == nil {
+				t.Fatalf("published invalid %s", tc.name)
 			}
 			if names := registry.RegisteredCardNames(); len(names) != 1 || names[0] != "The Hive" {
 				t.Fatal("collection failure replaced the registry")

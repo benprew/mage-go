@@ -17,7 +17,7 @@ func WithSpellTextContinuation() ActionOption {
 
 func (a *ActionDefinition) supportsSpellTextContinuation() bool {
 	return a.kind == ActionSpell && a.xSpendingOptions == 0 && !a.staticGrant && len(a.costs) == 0 && len(a.modes) == 0 &&
-		len(a.dslCaptures) == 0 && a.activationHistory == nil && a.activationManaX == nil &&
+		len(a.dslCaptures) == 0 && a.activationHistory == nil && a.activationManaX == nil && a.activationMinimumXOptions == 0 &&
 		(a.spellSacrificeContinuationOptions == 0 || (a.spellSacrificeContinuationOptions == 1 && a.spellSacrificeManaValue != nil))
 }
 

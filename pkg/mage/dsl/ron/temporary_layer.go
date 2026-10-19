@@ -1,8 +1,24 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
+import (
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
+	if containsDeclarationName(n, "PermanentRuleEffect") {
+		subject, err := compileAttackRestrictionGrant(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.AcquireStaticAbilityUntil(subject.build(bindings), mage.CantAttack(mage.This), core.EndOfCombat)
+		}, nil
+	}
+
+	if len(n.Args) == 3 && n.Args[2].Name == "UntilPermanentLeavesBattlefield" {
+		return compileSourceLandType(n, ctx)
+	}
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}
@@ -19,9 +35,23 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	var modifications []func(instanceBindings) mage.ContinuousModification
+	var adjustments []mage.PTAdjustment
+	var valueAdjustments []func(instanceBindings) mage.PTValueAdjustment
+	var keywordGrants []core.Attr
+	var rampageGrants []int
+	onlyRampage := true
+	onlyKeywords := true
+	onlyMixed := true
 	for _, part := range parts {
+		if part.Name != "AddAbility" && part.Name != "AdjustPT" && part.Name != "AdjustPTX" {
+			onlyMixed = false
+		}
+		if part.Name != "AddAbility" {
+			onlyRampage = false
+			onlyKeywords = false
+		}
 		if part.Name == "SetLandType" && n.Args[2].Name == "ForAsLongAsPermanentHasACounterOfTypeOnIt" {
-			build, err := compileCounterDurationLandType(part, subject)
+			build, err := compileBasicLandTypeModification(part, subject)
 			if err != nil {
 				return nil, err
 			}
@@ -109,6 +139,17 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 				if err != nil {
 					return nil, err
 				}
+				if ability.isRampage {
+					rampageGrants = append(rampageGrants, ability.rampage)
+				} else {
+					onlyRampage = false
+				}
+				if ability.keyword == 0 {
+					onlyMixed = false
+					onlyKeywords = false
+				} else {
+					keywordGrants = append(keywordGrants, ability.keyword)
+				}
 				modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
 					return ability.modification(subject.build(bindings))
 				})
@@ -116,11 +157,15 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 			continue
 		}
 		if part.Name == "AdjustPTX" {
-			build, err := compileTemporaryPTX(part, ctx, subject)
+			build, err := compileTemporaryPTAdjustment(part, ctx, subject)
 			if err != nil {
 				return nil, err
 			}
-			modifications = append(modifications, build)
+			valueAdjustments = append(valueAdjustments, build)
+			modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+				value := build(bindings)
+				return mage.ModifyPT(subject.build(bindings), value.Power, value.Toughness)
+			})
 			continue
 		}
 		if part.Name != "AdjustPT" {
@@ -130,6 +175,10 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		adjustments = append(adjustments, mage.PTAdjustment{Power: power, Toughness: toughness})
+		valueAdjustments = append(valueAdjustments, func(_ instanceBindings) mage.PTValueAdjustment {
+			return mage.PTValueAdjustment{Power: mage.Fixed(power), Toughness: mage.Fixed(toughness)}
+		})
 		modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
 			return mage.ModifyPT(subject.build(bindings), mage.Fixed(power), mage.Fixed(toughness))
 		})
@@ -138,6 +187,29 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n.Args[1], "supply at least one temporary modification")
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if !ctx.permanent && onlyRampage && n.Args[2].Name == "UntilEndOfTurn" {
+			return (mage.TemporaryRampageInstruction{Subject: subject.build(bindings), Amounts: rampageGrants}).Effect()
+		}
+		if !ctx.permanent && onlyKeywords && n.Args[2].Name == "UntilEndOfTurn" {
+			return (mage.TemporaryKeywordInstruction{Subject: subject.build(bindings), Keywords: keywordGrants}).Effect()
+		}
+		if !ctx.permanent && len(adjustments) == len(parts) && n.Args[2].Name == "UntilEndOfTurn" {
+			return (mage.TemporaryPTInstruction{Subject: subject.build(bindings), Adjustments: adjustments}).Effect()
+		}
+		if !ctx.permanent && len(valueAdjustments) == len(parts) && n.Args[2].Name == "UntilEndOfTurn" {
+			values := make([]mage.PTValueAdjustment, len(valueAdjustments))
+			for i, build := range valueAdjustments {
+				values[i] = build(bindings)
+			}
+			return (mage.TemporaryPTValueInstruction{Subject: subject.build(bindings), Adjustments: values}).Effect()
+		}
+		if !ctx.permanent && onlyMixed && len(keywordGrants) > 0 && len(valueAdjustments) > 0 && n.Args[2].Name == "UntilEndOfTurn" {
+			values := make([]mage.PTValueAdjustment, len(valueAdjustments))
+			for i, build := range valueAdjustments {
+				values[i] = build(bindings)
+			}
+			return (mage.TemporaryMixedLayerInstruction{Subject: subject.build(bindings), Keywords: keywordGrants, Adjustments: values}).Effect()
+		}
 		values := make([]mage.ContinuousModification, len(modifications))
 		for i, build := range modifications {
 			values[i] = build(bindings)

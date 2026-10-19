@@ -409,7 +409,7 @@ func (m Model) handleChoiceKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m *Model) submitChoice(req *interactive.ChoiceRequest, singleIdx int, multiIdxs []int) {
 	var resp interactive.ChoiceResponse
 	switch req.Type {
-	case interactive.ChoicePermanent, interactive.ChoiceCardFromLibrary:
+	case interactive.ChoicePermanent, interactive.ChoiceCardFromLibrary, interactive.ChoiceCardFromOutsideGame:
 		if singleIdx < len(req.Options) {
 			resp.SelectedIDs = []uuid.UUID{req.Options[singleIdx].ID}
 		}

@@ -96,9 +96,7 @@ func ProtectionFromCardType(ct CardType) *ProtectionAbility {
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
-		Filter: NewCardFilter(ct.String(), func(card Card) bool {
-			return card.HasType(ct)
-		}),
+		Filter: typedCardFilter(ct.String(), HasCardTypeCardFilter(ct).characteristics),
 	}
 }
 
@@ -110,9 +108,7 @@ func ProtectionFromSubType(subtype string) *ProtectionAbility {
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
-		Filter: NewCardFilter(subtype, func(card Card) bool {
-			return slices.Contains(card.SubTypes(), subtype)
-		}),
+		Filter: HasSubTypeCardFilter(subtype),
 	}
 }
 
@@ -124,9 +120,7 @@ func ProtectionFromAll() *ProtectionAbility {
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
-		Filter: NewCardFilter("everything", func(card Card) bool {
-			return true
-		}),
+		Filter: typedCardFilter("everything", AnyCardFilter().characteristics),
 	}
 }
 
@@ -143,12 +137,19 @@ func (pa *ProtectionAbility) exempts(card Card) bool {
 }
 
 // BlocksInGame evaluates color protection against the source object's current
-// colors. Other protection qualities continue to use their CardFilter.
+// colors. Typed noncolor filters use the same source view without callbacks.
+// Opaque noncolor filters keep their native callback behavior.
 func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
 	if card == nil || pa.exempts(card) {
 		return false
 	}
-	if len(pa.FromColors) == 0 || g == nil {
+	if len(pa.FromColors) == 0 {
+		if pa.Filter.characteristics != nil {
+			return pa.Filter.characteristics.matches(card)
+		}
+		return pa.Blocks(card)
+	}
+	if g == nil {
 		return pa.Blocks(card)
 	}
 	var colors []Color

@@ -128,8 +128,8 @@ func TestRONCreatedTokenLinkInvalid(t *testing.T) {
 		}
 		for line := range strings.SplitSeq(string(data), "\n") {
 			if strings.Contains(line, `Name: "`+tc.name+`"`) {
-				if registry, err := LoadFS(fstest.MapFS{"real.ron": {Data: []byte(line)}}, "*.ron"); err == nil || registry != nil {
-					t.Fatalf("published incomplete %s", tc.name)
+				if registry, err := LoadFS(fstest.MapFS{"real.ron": {Data: []byte(line)}}, "*.ron"); err != nil || registry == nil {
+					t.Fatalf("complete %s rejected: %v", tc.name, err)
 				}
 			}
 		}

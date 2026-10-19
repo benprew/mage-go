@@ -333,16 +333,21 @@ func (mp *ManaPool) Surplus(mc ManaCost, spellCtx *SpellPaymentContext) int {
 // spent preferentially (it would otherwise be wasted at end-of-step per
 // CR 500.5).
 func (mp *ManaPool) Pay(mc ManaCost, spellCtx *SpellPaymentContext) error {
+	_, err := mp.payWithReceipt(mc, spellCtx)
+	return err
+}
+
+func (mp *ManaPool) payWithReceipt(mc ManaCost, spellCtx *SpellPaymentContext) ([AnyColor + 1]int, error) {
 	plan, ok := mp.paymentPlan(mc, spellCtx)
 	if !ok {
-		return fmt.Errorf("insufficient mana to pay %s", mc)
+		return [AnyColor + 1]int{}, fmt.Errorf("insufficient mana to pay %s", mc)
 	}
 	for _, color := range [...]Color{Colorless, White, Blue, Black, Red, Green} {
 		if remaining := mp.removeUpTo(color, plan[color], spellCtx); remaining != 0 {
-			return fmt.Errorf("mana pool changed while paying %s", mc)
+			return [AnyColor + 1]int{}, fmt.Errorf("mana pool changed while paying %s", mc)
 		}
 	}
-	return nil
+	return plan, nil
 }
 
 // removeUpTo consumes up to n mana of color c, preferring restricted-but-

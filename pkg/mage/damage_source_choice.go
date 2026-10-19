@@ -101,6 +101,10 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	for _, ref := range e.sources {
 		candidates = append(candidates, ref.resolveDamageSource(ctx))
 	}
+	return e.chooseCandidates(ctx, player, candidates)
+}
+
+func (e *damageSourceChoice) chooseCandidates(ctx *EffectContext, player Player, candidates []DamageSource) error {
 	sources := make([]DamageSource, 0, len(candidates))
 	for _, source := range candidates {
 		if !e.filter.Match(source) || slices.ContainsFunc(sources, source.SameObject) {

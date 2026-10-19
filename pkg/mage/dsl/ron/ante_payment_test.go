@@ -97,8 +97,8 @@ func TestRONAntePaymentRecordSubrules(t *testing.T) {
 		t.Fatal("real source payment subrule")
 	}
 	rebirth := staticBaseRecord(t, "LEG", "Rebirth")
-	if _, err := Compile(rebirth); err == nil || !strings.Contains(err.Error(), "EachPlayerMayCost") {
-		t.Fatalf("expected paid-player gap: %v", err)
+	if _, err := Compile(rebirth); err != nil {
+		t.Fatalf("complete Rebirth record: %v", err)
 	}
 	cost := rebirth.Fields["Rules"].Args[1].Args[0].Args[0].Args[0].Args[1]
 	if cost.Kind != Symbol || cost.Name != "AnteTopCardOfLibrary" {

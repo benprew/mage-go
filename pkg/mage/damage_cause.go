@@ -53,8 +53,10 @@ func keepDamageCause(before, after Action) Action {
 	switch a := after.(type) {
 	case *DamageToCreatureAction:
 		a.cause = cause
+		a.origin = damageOrigin(before)
 	case *DamageToPlayerAction:
 		a.cause = cause
+		a.origin = damageOrigin(before)
 	}
 	return after
 }
@@ -92,4 +94,22 @@ func (e *targetingCausePrevention) Apply(ctx *EffectContext) error {
 		}),
 	})
 	return nil
+}
+
+func damageOrigin(action Action) int {
+	switch a := action.(type) {
+	case *DamageToPlayerAction:
+		return a.origin
+	case *DamageToCreatureAction:
+		return a.origin
+	}
+	return -1
+}
+func setDamageOrigin(action Action, origin int) {
+	switch a := action.(type) {
+	case *DamageToPlayerAction:
+		a.origin = origin
+	case *DamageToCreatureAction:
+		a.origin = origin
+	}
 }

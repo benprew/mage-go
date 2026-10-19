@@ -232,6 +232,7 @@ const (
 	ChoiceMay                               // yes/no for an optional ability
 	ChoiceMode                              // pick one mode from a modal spell/ability
 	ChoiceNumber                            // pick a number from a range
+	ChoiceCardFromOutsideGame
 )
 
 // ChoiceOption is one selectable item in a ChoiceRequest.

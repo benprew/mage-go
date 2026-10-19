@@ -208,8 +208,8 @@ func TestRONCounterStateTidalClause(t *testing.T) {
 		if n.Fields["Name"].String != "Tidal Influence" {
 			continue
 		}
-		if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "casting window") {
-			t.Fatalf("full Tidal Influence must reject casting restriction: %v", err)
+		if _, err := Compile(n); err != nil {
+			t.Fatalf("full Tidal Influence must compile: %v", err)
 		}
 		for _, rule := range n.Fields["Rules"].Args {
 			if rule.Name != "TriggerA" || rule.Args[0].Name != "WhenAPermanentHasNumberCountersOfType" {

@@ -31,7 +31,7 @@ func staticActivationSpellParts(base *BaseCard) (*StaticAbilityHolder, *ActionDe
 			}
 			pt = rule
 		case *ActionDefinition:
-			if rule == nil || action != nil || !layeredActivatedEligible(rule) || len(rule.modes) != 0 || rule.activationHistory != nil || rule.activationManaX != nil || len(rule.dslCaptures) != 0 || len(rule.activationConds) != 0 || len(rule.dslRestrictions) != 0 {
+			if rule == nil || action != nil || !layeredActivatedEligible(rule) || len(rule.modes) != 0 || rule.activationHistory != nil || rule.activationManaX != nil || rule.activationMinimumXOptions != 0 || len(rule.dslCaptures) != 0 || len(rule.activationConds) != 0 || len(rule.dslRestrictions) != 0 {
 				return nil, nil
 			}
 			action = rule

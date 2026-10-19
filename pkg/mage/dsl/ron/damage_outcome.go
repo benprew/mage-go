@@ -91,9 +91,9 @@ func compileDamageOutcomeProducer(n Node, continuation []Node, ctx scope) (effec
 		bindings.damageOutcomes[plan] = result
 		var producer mage.Effect
 		if many != nil {
-			producer = mage.DealDamageEach(source(bindings), many(bindings), amount(bindings), mage.DamageTotalInto(result.total), mage.DamageResultsInto(result.results))
+			producer = (mage.DamageResultInstruction{Source: source(bindings), Recipients: many(bindings), Amount: amount(bindings), Total: result.total, Results: result.results}).Effect()
 		} else {
-			producer = mage.DealDamageFrom(source(bindings), single(bindings), amount(bindings), mage.DamageAmountInto(result.total), mage.DamageOutcomesInto(result.results))
+			producer = (mage.DamageResultInstruction{Source: source(bindings), Recipient: single(bindings), Amount: amount(bindings), Total: result.total, Results: result.results}).Effect()
 		}
 		effects := make([]mage.Effect, 0, 1+len(body))
 		effects = append(effects, producer)

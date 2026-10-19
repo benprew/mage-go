@@ -79,6 +79,13 @@ func (g *Game) performSacrifice(result *SacrificePermanentAction) bool {
 
 	if result.destination == ZoneExile && !isToken {
 		g.ExileCard(card, result.exileSource)
+	} else if result.destination == ZoneHand && !isToken {
+		if p := g.GetPlayer(owner); p != nil {
+			p.AddToHand(card)
+			if result.lockReturnedHand {
+				g.lockReturnedHandCard(owner, card)
+			}
+		}
 	} else if !isToken {
 		if p := g.GetPlayer(owner); p != nil {
 			p.AddToGraveyard(card)

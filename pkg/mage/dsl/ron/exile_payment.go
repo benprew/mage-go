@@ -135,6 +135,27 @@ func compileExilePaymentPlan(cost Node) (*exilePaymentPlan, error) {
 }
 
 func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, error) {
+	if ctx.discardFacts != nil && (n.Name == "DiscardCard" || n.Name == "DiscardACardAtRandom") {
+		ctx.discardFacts.producers++
+	}
+	if n.Name == "DiscardACard" && ctx.discardFacts != nil {
+		if _, err := symbol(n); err != nil {
+			return nil, false, err
+		}
+		ctx.discardFacts.producers++
+		ctx.discardFacts.single = true
+		return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
+			if len(ctx.discardFacts.filters) == 0 {
+				return mage.DiscardCost(1)
+			}
+			facts := make([]mage.CardPaymentFact, len(ctx.discardFacts.filters))
+			for i, filter := range ctx.discardFacts.filters {
+				facts[i] = mage.CardPaymentFact{Filter: filter, Result: bindings.discardFacts[ctx.discardFacts][i]}
+			}
+			return mage.DiscardCardCostWithFacts(facts...)
+		}}, false, nil
+	}
+
 	if n.Name == "PayManaCostOfPermanent" {
 		return compilePermanentManaCost(n, ctx)
 	}

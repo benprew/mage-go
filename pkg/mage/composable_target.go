@@ -255,6 +255,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	if b.optionalGraveyardCount > 1 {
 		n.problem = "supply up to one graveyard option once"
 	}
+	if spec, ok := b.spec.(*playerGraveyardTargets); ok {
+		n.children = append(n.children, definitionEdge{"graveyard-player", spec})
+	}
 	if restriction, ok := b.spec.(*manaValueBoundGraveyardTarget); ok {
 		n.children = append(n.children, definitionEdge{"restriction", restriction})
 	}

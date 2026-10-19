@@ -9,6 +9,7 @@ import (
 type permanentGraveyardAction struct {
 	subject, incarnation, exileSource uuid.UUID
 	destination                       core.Zone
+	lockReturnedHand                  bool
 }
 
 func (a *permanentGraveyardAction) ActionSource() uuid.UUID { return uuid.Nil }
@@ -110,9 +111,12 @@ func (g *Game) performPermanentGraveyardAction(a *permanentGraveyardAction) {
 	if p == nil || p.PhasedOut || p.incarnationID != a.incarnation {
 		return
 	}
-	if a.destination == core.ZoneExile {
+	switch a.destination {
+	case core.ZoneExile:
 		g.exilePermanent(p, a.exileSource)
-	} else {
+	case core.ZoneHand:
+		g.bouncePermanentToHand(p, a.lockReturnedHand)
+	default:
 		g.putPermanentIntoGraveyard(p)
 	}
 }

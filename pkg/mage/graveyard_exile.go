@@ -1,6 +1,10 @@
 package mage
 
-import "github.com/benprew/mage-go/pkg/mage/core"
+import (
+	"github.com/google/uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 type exileGraveyardCardEffect struct{ card CardRef }
 
@@ -27,9 +31,14 @@ func (e *exileGraveyardCardEffect) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
-	moved, _, ok := ctx.Game.MoveFromAnyGraveyard(card.ID(), core.ZoneExile)
-	if ok {
-		ctx.Game.ExileCard(moved, ctx.SourceID)
+	g := ctx.Game
+	visit := g.graveyardVisit(card.ID())
+	if visit == uuid.Nil || card.IsToken() {
+		return nil
+	}
+	proposal := &CardZoneMoveAction{source: ctx.SourceID, card: card.ID(), visit: visit, from: core.ZoneGraveyard, destination: core.ZoneExile, owner: card.Owner(), exileSource: ctx.SourceID}
+	if result, ok := g.effects.ApplyReplacements(proposal, g).(*CardZoneMoveAction); ok && result != nil {
+		g.performCardZoneMove(result)
 	}
 	return nil
 }

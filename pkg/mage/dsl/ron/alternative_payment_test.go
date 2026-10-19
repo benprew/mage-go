@@ -401,12 +401,6 @@ func TestRONAlternativePaymentNativeUpkeepAndLifeClause(t *testing.T) {
 		t.Fatal("native upkeep did not offer the host controller's life payment")
 	}
 	n := hostUntapRecord(t, "DRK", "Season of the Witch")
-	if _, err := Compile(n); err == nil || strings.Contains(err.Error(), "optional payment cost (PayLife)") {
-		t.Fatalf("full card must retain its independent end-step blocker: %v", err)
-	}
-	rules := n.Fields["Rules"]
-	rules.Args = append([]Node(nil), rules.Args[:1]...)
-	n.Fields["Rules"] = rules
 	factory, err := Compile(n)
 	if err != nil {
 		t.Fatal(err)

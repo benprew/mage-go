@@ -66,6 +66,8 @@ type CombatReader interface {
 
 // TrackerReader provides read-only queries for turn-scoped and duel-scoped observations.
 type TrackerReader interface {
+	PlayerCastSpellDuringLastTurn(uuid.UUID) bool
+	PlayerPutNontokenPermanentDuringLastTurn(uuid.UUID) bool
 	DamageTakenByPlayer(uuid.UUID) int
 	HasDealtDamageToPlayerThisTurn(sourceID, incarnation, playerID uuid.UUID) bool
 	PlayerLifeGainedThisTurn(uuid.UUID) int
@@ -1125,7 +1127,10 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 	// Fresh search clones haven't run an Apply() cycle yet, so the per-cycle
 	// attack-cost registry may be empty; rebuild it before consulting it.
 	g.effects.Apply(g)
+	g.recordAttackOpportunities(playerID)
 	attackerIDs = g.completeRequiredAttackers(playerID, attackerIDs, false)
+	// Save the tapping decisions before costs can change the condition.
+	untappedAttackers := g.attackTappingExemptions(attackerIDs)
 	declaredCount := 0
 	for _, id := range attackerIDs {
 		if g.combat.IsAttacking(id) {
@@ -1142,7 +1147,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 		if atk == nil {
 			continue
 		}
-		if !atk.HasKeyword(Vigilance) {
+		if !untappedAttackers[capturedPermanent{atk.ID(), atk.incarnationID}] {
 			g.TapPermanent(atk)
 		}
 		g.combat.AddAttackerIncarnation(id, atk.incarnationID, defender.PlayerID())

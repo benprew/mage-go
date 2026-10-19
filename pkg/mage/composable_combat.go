@@ -8,10 +8,13 @@ import (
 
 // --- from composable_attack_batch.go ---
 type controlledAttackBatchPattern struct {
-	controlled     bool
-	count          *NumberBinding
-	captureCount   bool
-	duplicateCount bool
+	defender          *PlayerBinding
+	captureDefender   bool
+	duplicateDefender bool
+	controlled        bool
+	count             *NumberBinding
+	captureCount      bool
+	duplicateCount    bool
 }
 
 // OneOrMoreCreaturesYouControlAttack matches one legal declaration group.
@@ -57,6 +60,14 @@ func (p controlledAttackBatchPattern) inspectDefinition() definitionNode {
 		} else {
 			n.bindingWrite = p.count
 			n.children = append(n.children, definitionEdge{"count", &eventAmountCapture{binding: p.count}})
+		}
+	}
+	if p.captureDefender {
+		if p.defender == nil || p.duplicateDefender {
+			n.problem = "attack group: supply one defending player binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.defender)
+			n.children = append(n.children, definitionEdge{"defending player", &eventPlayerCapture{binding: p.defender}})
 		}
 	}
 	return n

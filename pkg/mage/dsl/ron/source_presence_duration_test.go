@@ -188,9 +188,9 @@ func TestRONSourcePresenceDurationInvalidAndLoading(t *testing.T) {
 	if _, err := Compile(record); err != nil {
 		t.Fatal(err)
 	}
-	for _, tc := range []struct{ set, name string }{{"LEB", "Gaea's Liege"}, {"ARN", "Oubliette"}} {
-		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil {
-			t.Fatal("accepted unrelated incomplete card", tc.name)
+	for _, tc := range []struct{ set, name string }{{"ARN", "Oubliette"}} {
+		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err != nil {
+			t.Fatal("supported phasing duration rejected", tc.name, err)
 		}
 	}
 	fs := fstest.MapFS{"valid.ron": &fstest.MapFile{Data: []byte(`Card(Name:"Valid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(PayMana([]),ActionList([GainControlOfPermanentUntil(ThisPermanent,UntilPermanentLeavesBattlefield(ThisPermanent))]))])`)}}

@@ -26,8 +26,10 @@ func (g *Game) Clone() *Game {
 		stopped:     g.stopped,
 	}
 	// Saved payment frames do not change; each payment copies its frame.
+	c.outsideGame = cloneOutsideGame(g.outsideGame)
 	c.playerPayments = slices.Clone(g.playerPayments)
 	c.playerManaAbilities = slices.Clone(g.playerManaAbilities)
+	c.oneSpellManaPermissions = slices.Clone(g.oneSpellManaPermissions)
 	c.turns = g.turns.Clone()
 	c.zones = g.zones.Clone()
 	c.resolution = g.resolution.Clone()
@@ -118,6 +120,11 @@ func extractBasePlayer(p Player) *BasePlayer {
 	if state, ok := p.(interface{ handIsPublic() bool }); ok {
 		bp.handPublic = state.handIsPublic()
 	}
+	if state, ok := p.(interface {
+		revealedHandVisits() map[uuid.UUID]uuid.UUID
+	}); ok {
+		bp.handRevealedVisits = state.revealedHandVisits()
+	}
 	if history, ok := p.(interface {
 		handDepartures() map[uuid.UUID]handDeparture
 	}); ok {
@@ -163,6 +170,8 @@ func extractBasePlayer(p Player) *BasePlayer {
 	}
 	// Copy mana pool.
 	bp.manaPool.RestorePool(p.ManaPool().SnapshotPool())
+	bp.manaPool.ProducedThisTurn = slices.Clone(p.ManaPool().ProducedThisTurn)
+	bp.manaPool.LastDrainedColors = maps.Clone(p.ManaPool().LastDrainedColors)
 	bp.manaPool.spendingPermissions = p.ManaPool().spendingPermissions
 	if len(p.ManaPool().ManaConversions) > 0 {
 		bp.manaPool.ManaConversions = make(map[Color]Color)
@@ -188,6 +197,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone.hand = cloneZoneCards(bp.hand)
 	clone.departedHandSources = bp.departedHandSources
 	clone.handPublic = bp.handPublic
+	clone.handRevealedVisits = bp.handRevealedVisits
 	clone.handVisits = bp.handVisits
 	clone.graveyard = cloneZoneCards(bp.graveyard)
 	clone.departedGraveyardSources = bp.departedGraveyardSources
@@ -200,6 +210,8 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone.anteVisits = bp.anteVisits
 	// Copy mana pool state.
 	clone.manaPool.RestorePool(bp.manaPool.SnapshotPool())
+	clone.manaPool.ProducedThisTurn = slices.Clone(bp.manaPool.ProducedThisTurn)
+	clone.manaPool.LastDrainedColors = maps.Clone(bp.manaPool.LastDrainedColors)
 	clone.manaPool.spendingPermissions = bp.manaPool.spendingPermissions
 	if len(bp.manaPool.ManaConversions) > 0 {
 		clone.manaPool.ManaConversions = make(map[Color]Color)
@@ -214,6 +226,8 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 // copied only when non-empty.
 func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
+		resolvedSpellID:             src.resolvedSpellID,
+		turnedFaceUp:                src.turnedFaceUp,
 		resolvingCopy:               src.resolvingCopy,
 		Card:                        src.Card, // shared
 		incarnationID:               src.incarnationID,
@@ -225,9 +239,13 @@ func clonePermanentInto(dst, src *Permanent) {
 		graveyardEnchantRemoved:     src.graveyardEnchantRemoved,
 		grantedEnchants:             slices.Clone(src.grantedEnchants),
 		computedController:          src.computedController,
+		controlEffectID:             src.controlEffectID,
+		controlLayerEffects:         slices.Clone(src.controlLayerEffects),
 		baseController:              src.baseController,
 		Tapped:                      src.Tapped,
 		PhasedOut:                   src.PhasedOut,
+		phaseEpoch:                  src.phaseEpoch,
+		phasedWith:                  src.phasedWith,
 		Damage:                      src.Damage,
 		AttachedTo:                  src.AttachedTo,
 		IsToken:                     src.IsToken,
@@ -434,11 +452,12 @@ func cloneCombat(c *Combat) *Combat {
 		return nil
 	}
 	clone := &Combat{
-		Attackers:            cloneUUIDBoolMap(c.Attackers),
-		AttackerIncarnations: maps.Clone(c.AttackerIncarnations),
-		FirstStruck:          cloneUUIDBoolMap(c.FirstStruck),
-		AttackedAlone:        c.AttackedAlone,
-		BlockedAlone:         c.BlockedAlone,
+		assignmentEligibility: maps.Clone(c.assignmentEligibility),
+		Attackers:             cloneUUIDBoolMap(c.Attackers),
+		AttackerIncarnations:  maps.Clone(c.AttackerIncarnations),
+		FirstStruck:           cloneUUIDBoolMap(c.FirstStruck),
+		AttackedAlone:         c.AttackedAlone,
+		BlockedAlone:          c.BlockedAlone,
 	}
 	// Deep copy groups.
 	if len(c.Groups) > 0 {

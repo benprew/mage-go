@@ -109,10 +109,10 @@ func (e *forcedManaEffect) Apply(ctx *EffectContext) error {
 			failed[option] = true
 			continue
 		}
-		err := g.ActivateAbilityByIndex(id, p.ID(), option.index, nil)
+		err := g.activateForcedManaAbility(id, p.ID(), option.index)
 		if err != nil && chosenX && g.resolution.X() > 0 && option.current(g, id) != nil {
 			g.resolution.SetX(0)
-			err = g.ActivateAbilityByIndex(id, p.ID(), option.index, nil)
+			err = g.activateForcedManaAbility(id, p.ID(), option.index)
 		}
 		if err != nil {
 			failed[option] = true
@@ -179,4 +179,11 @@ func forcedManaLabel(g *Game, p *Permanent, ability Ability) string {
 		parts = append(parts, effect.Text())
 	}
 	return label + strings.Join(parts, ", ")
+}
+
+// Immediate mana resolution must not clear the calling instruction's bindings.
+func (g *Game) activateForcedManaAbility(player, permanent uuid.UUID, index int) error {
+	outer := g.resolution.Clone()
+	defer func() { g.resolution = outer }()
+	return g.ActivateAbilityByIndex(player, permanent, index, nil)
 }

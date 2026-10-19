@@ -324,6 +324,15 @@ func (p *HumanPlayer) ChooseManaColor(reason string) core.Color {
 }
 
 func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+	return p.chooseCard(candidates, reason, ChoiceCardFromLibrary)
+}
+
+// ChooseCardFromOutsideGame selects an owned card from the supplied pool.
+func (p *HumanPlayer) ChooseCardFromOutsideGame(candidates []mage.Card, reason string, _ mage.GameReader) mage.Card {
+	return p.chooseCard(candidates, reason, ChoiceCardFromOutsideGame)
+}
+
+func (p *HumanPlayer) chooseCard(candidates []mage.Card, reason string, kind ChoiceType) mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -331,7 +340,7 @@ func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 	for i, c := range candidates {
 		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
 	}
-	resp := p.requestChoice(ChoiceRequest{Type: ChoiceCardFromLibrary, Reason: reason, Options: opts})
+	resp := p.requestChoice(ChoiceRequest{Type: kind, Reason: reason, Options: opts})
 	if len(resp.SelectedIDs) > 0 {
 		for _, c := range candidates {
 			if c.ID() == resp.SelectedIDs[0] {

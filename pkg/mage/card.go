@@ -42,6 +42,8 @@ type Card interface {
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
+	faceDown              bool
+	faceDownOriginal      Card
 	abilityKeys           map[uuid.UUID]definitionAbilityKey
 	abilityGroups         map[int]bool
 	abilityGroupProblem   string
@@ -680,6 +682,8 @@ func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 
 // Permanent represents a card on the battlefield.
 type Permanent struct {
+	turnedFaceUp        bool
+	resolvedSpellID     uuid.UUID
 	resolvingCopy       *resolvingCopyState
 	enchantedCard       capturedCard
 	createdTokenLink    *CreatedTokenLink
@@ -688,6 +692,8 @@ type Permanent struct {
 	incarnationID       uuid.UUID
 	attachedIncarnation uuid.UUID
 	computedController  uuid.UUID
+	controlEffectID     uuid.UUID
+	controlLayerEffects []uuid.UUID
 	baseController      uuid.UUID
 	Tapped              bool
 	PhasedOut           bool // true when phased out (treated as though it doesn't exist)
@@ -700,6 +706,7 @@ type Permanent struct {
 	// Keep ended durations separate from counters added later in the same resolution.
 	counterZeroEpoch [NumCounters]uint64
 	phaseEpoch       uint64
+	phasedWith       capturedPermanent
 
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
@@ -791,6 +798,7 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		computedController: controller,
 		baseController:     controller,
 		IsToken:            card.IsToken(),
+		FaceDown:           isFaceDownCard(card),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {
@@ -834,6 +842,8 @@ func (p *Permanent) replaceEntryDefinition(card Card) {
 	copied.incarnationID = p.incarnationID
 	copied.baseController = p.baseController
 	copied.computedController = p.computedController
+	copied.controlEffectID = p.controlEffectID
+	copied.controlLayerEffects = p.controlLayerEffects
 	copied.turnControlGained = p.turnControlGained
 	copied.controlGainedTurns = p.controlGainedTurns
 	copied.ColorOverride = p.ColorOverride
@@ -851,11 +861,10 @@ func (p *Permanent) ControlledSinceTurnStart(g GameReader) bool {
 	return p.turnControlGained < g.MostRecentTurnStart(p.ControllerID())
 }
 
-// HasAttr returns true if this permanent currently has the given attribute.
-// Face-down permanents only expose basic creature attrs (they are 2/2 colorless creatures
-// with no other properties).
+// HasAttr reports the current value of an attribute.
+// Face-down card values omit printed abilities. Granted abilities still apply.
 func (p *Permanent) HasAttr(a Attr) bool {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		switch a {
 		case AttrIsCreature, AttrCanAttack, AttrCanBlock, AttrHasPowerToughness:
 			return true
@@ -892,7 +901,7 @@ func (p *Permanent) ID() uuid.UUID { return p.Card.ID() }
 func (p *Permanent) Name() string  { return p.Card.Name() }
 
 func (p *Permanent) HasType(t CardType) bool {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return t == TypeCreature
 	}
 	// Check attr-based identity for the four main battlefield types.
@@ -916,7 +925,7 @@ func (p *Permanent) HasType(t CardType) bool {
 
 // Colors returns the permanent's current colors, considering color overrides.
 func (p *Permanent) Colors() []Color {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return nil // face-down creatures are colorless
 	}
 	if p.ColorOverride != nil {
@@ -929,7 +938,7 @@ func (p *Permanent) Colors() []Color {
 }
 
 func (p *Permanent) HasSubType(s string) bool {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return false // face-down creatures have no subtypes
 	}
 	return slices.Contains(p.computedSubtypes(), s)
@@ -937,7 +946,7 @@ func (p *Permanent) HasSubType(s string) bool {
 
 // SubTypes returns the permanent's current subtypes after continuous effects.
 func (p *Permanent) SubTypes() []string {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return nil
 	}
 	return p.computedSubtypes()
@@ -952,7 +961,7 @@ func (p *Permanent) HasKeyword(kw Keyword) bool {
 // KeywordNames returns the display names of all active keyword attrs on this permanent.
 // Includes both intrinsic keywords (baseAttrs) and those granted by effects (grantedAttrs).
 func (p *Permanent) KeywordNames() []string {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return nil
 	}
 	var result []string
@@ -966,7 +975,7 @@ func (p *Permanent) KeywordNames() []string {
 
 // HasProtectionFrom checks if this permanent has protection that blocks the given card.
 func (p *Permanent) HasProtectionFrom(card Card) bool {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return false // face-down creatures have no protection
 	}
 	// Protection granted by another permanent arrives wrapped by
@@ -984,7 +993,7 @@ func (p *Permanent) HasProtectionFrom(card Card) bool {
 // HasProtectionFromInGame checks protection against the source's current
 // characteristics, including color-changing effects on spells and permanents.
 func (p *Permanent) HasProtectionFromInGame(card Card, g *Game) bool {
-	if p.FaceDown {
+	if p.FaceDown && !isFaceDownCard(p.Card) {
 		return false
 	}
 	for _, a := range p.RuntimeAbilities {
@@ -1007,6 +1016,13 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 		return false
 	}
 	if g != nil && g.restrictedAbilityTarget(p, source) {
+		return false
+	}
+	return p.canBeTargetedByCharacteristics(source, sourceController, g)
+}
+
+func (p *Permanent) canBeTargetedByCharacteristics(source Card, sourceController uuid.UUID, g *Game) bool {
+	if p.PhasedOut {
 		return false
 	}
 	if p.HasKeyword(Shroud) {

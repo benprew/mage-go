@@ -135,12 +135,6 @@ func TestRONTokenCopiableValuesDeclarations(t *testing.T) {
 			seen[name] = true
 			for _, node := range tokens {
 				factory, err := compileCreatureToken(node)
-				if name == "Stangg" || name == "Tetravus" {
-					if err == nil {
-						t.Fatalf("unsupported token for %s accepted", name)
-					}
-					continue
-				}
 				if err != nil {
 					t.Fatalf("%s: %v", name, err)
 				}
@@ -173,7 +167,7 @@ func TestRONTokenCopiableValuesDeclarations(t *testing.T) {
 			}
 		}
 	}
-	if len(seen) != 17 || supported != 15 {
+	if len(seen) != 17 || supported != 17 {
 		t.Fatalf("token names=%d supported declarations=%d", len(seen), supported)
 	}
 }

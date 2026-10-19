@@ -1,8 +1,6 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
-
-func compileTemporaryPlayerRedirect(n Node, ctx scope) (effectFactory, error) {
+func compileTemporaryPlayerRedirectPlan(n Node, ctx scope) (*temporaryDamageRedirectPlan, error) {
 	if ctx.enteringSource || ctx.drawReplacementBody {
 		return nil, problem(n, "temporary redirection requires an ordinary resolving body")
 	}
@@ -36,9 +34,7 @@ func compileTemporaryPlayerRedirect(n Node, ctx scope) (effectFactory, error) {
 		if operation.Args[0].Kind != Symbol || operation.Args[0].Name != "WouldDealDamage_ControllerOfDamageSource" {
 			return nil, unsupported(operation.Args[0], "damage source controller")
 		}
-		return func(bindings instanceBindings) mage.Effect {
-			return mage.RedirectSpellDamageToSourceControllerThisTurn(spell.build(bindings))
-		}, nil
+		return &temporaryDamageRedirectPlan{spell: &spell}, nil
 	}
 	recipient := event.Args[0]
 	if recipient.Name != "APermanent" {
@@ -77,7 +73,5 @@ func compileTemporaryPlayerRedirect(n Node, ctx scope) (effectFactory, error) {
 	if redirect.Args[0].Kind != Symbol || redirect.Args[0].Name != "You" {
 		return nil, unsupported(redirect.Args[0], "optional redirection player")
 	}
-	return func(_ instanceBindings) mage.Effect {
-		return mage.MayRedirectDamageFromPermanentsToPlayerThisTurn(filter, mage.You)
-	}, nil
+	return &temporaryDamageRedirectPlan{recipients: &filter}, nil
 }
