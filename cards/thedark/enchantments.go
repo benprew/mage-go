@@ -89,11 +89,10 @@ func registerEnchantments() {
 							return nil
 						}
 						tokenCard := target.Card.Copy()
-						tokenPerm := g.PutOnBattlefield(tokenCard, controller)
+						tokenPerm := g.PutTokenOnBattlefield(tokenCard, controller)
 						if tokenPerm == nil {
 							return nil
 						}
-						tokenPerm.IsToken = true
 						tokenPerm.CreatedBy = sourceID
 
 						// When the token leaves the battlefield, sacrifice this enchantment.

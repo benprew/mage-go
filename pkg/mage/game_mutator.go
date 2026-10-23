@@ -92,6 +92,7 @@ type GameReader interface {
 	StackReader
 
 	FindCardAnywhere(uuid.UUID) Card
+	LookupObject(uuid.UUID) LKIView
 	GetArtifactUntapMax() int
 	HypotheticalMana(uuid.UUID) int
 	// FlipCoin is NOT a pure query: each call is a fresh flip (and consumes

@@ -50,9 +50,9 @@ func TestBronzeTabletEntersTappedAndTargetsByOwner(t *testing.T) {
 	ownedByA := mage.NewArtifact("Wrong Owner", "{1}")
 	ownedByA.SetOwner(a.PlayerID())
 	wrongOwner := g.PutOnBattlefield(ownedByA, b.PlayerID())
-	tokenCard := mage.NewToken("Opponent Token", 1, 1, []core.CardType{core.TypeArtifact, core.TypeCreature}, nil)
+	tokenCard := mage.NewToken("Opponent Token", 1, 1, []core.CardType{core.TypeArtifact, core.TypeCreature}, nil, nil)
 	tokenCard.SetOwner(b.PlayerID())
-	token := g.PutOnBattlefield(tokenCard, b.PlayerID())
+	token := g.PutTokenOnBattlefield(tokenCard, b.PlayerID())
 
 	aa := mage.UnwrapAbility(tablet.RuntimeAbilities[0]).(mage.ActivatedAbility)
 	possible := aa.Targets()[0].Possible(a.PlayerID(), tablet.Card, g.Game)

@@ -153,7 +153,7 @@ func registerSpells() {
 							return nil
 						}
 						tokenCard := perm.Card.Copy()
-						newPerm := g.PutOnBattlefield(tokenCard, controller)
+						newPerm := g.PutTokenOnBattlefield(tokenCard, controller)
 						if newPerm == nil {
 							return nil
 						}
@@ -843,7 +843,7 @@ func registerSpells() {
 						// Card with the same characteristics; the permanent inherits its values.
 						tokenCard := perm.Card.Copy()
 						tokenCard.SetOwner(targetPlayerID)
-						g.PutOnBattlefield(tokenCard, targetPlayerID)
+						g.PutTokenOnBattlefield(tokenCard, targetPlayerID)
 						// Paradigm: exile self instead of going to graveyard.
 						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
 						g.RecordParadigmResolution(controller, cardName)
@@ -1494,12 +1494,11 @@ func registerSpells() {
 						if p := g.GetPlayer(targetController); p != nil {
 							inklingToken := NewToken("Inkling Token", 1, 1,
 								[]CardType{TypeCreature},
-								[]string{"Inkling"},
+								[]string{"Inkling"}, []Color{White, Black},
 								Flying,
 							)
-							inklingToken.SetColorOverride([]Color{White, Black})
 							inklingToken.SetOwner(targetController)
-							g.PutOnBattlefield(inklingToken, targetController)
+							g.PutTokenOnBattlefield(inklingToken, targetController)
 						}
 						return nil
 					},
@@ -3006,11 +3005,10 @@ func registerSpells() {
 						for range 2 {
 							token := NewToken("Fractal Token", 0, 0,
 								[]CardType{TypeCreature},
-								[]string{"Fractal"},
+								[]string{"Fractal"}, []Color{Green, Blue},
 							)
-							token.SetColorOverride([]Color{Green, Blue})
 							token.SetOwner(controller)
-							perm := g.PutOnBattlefield(token, controller)
+							perm := g.PutTokenOnBattlefield(token, controller)
 							if perm != nil && x > 0 {
 								perm.AddCounter(P1P1, x)
 								g.ApplyContinuousEffects()
@@ -3613,11 +3611,10 @@ func registerSpells() {
 						x := g.XValue()
 						token := NewToken("Fractal Token", 0, 0,
 							[]CardType{TypeCreature},
-							[]string{"Fractal"},
+							[]string{"Fractal"}, []Color{Green, Blue},
 						)
-						token.SetColorOverride([]Color{Green, Blue})
 						token.SetOwner(controller)
-						perm := g.PutOnBattlefield(token, controller)
+						perm := g.PutTokenOnBattlefield(token, controller)
 						if perm != nil && x > 0 {
 							perm.AddCounter(P1P1, x)
 							g.ApplyContinuousEffects()

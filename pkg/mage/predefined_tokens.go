@@ -16,8 +16,7 @@ import (
 // token with subtype "Treasure" and the activated ability
 // "{T}, Sacrifice this artifact: Add one mana of any color." (CR 111.10c).
 func newTreasureToken() *BaseCard {
-	tok := NewToken("Treasure", 0, 0, []CardType{TypeArtifact}, []string{"Treasure"})
-	tok.colorOverride = []Color{Colorless}
+	tok := NewToken("Treasure", 0, 0, []CardType{TypeArtifact}, []string{"Treasure"}, []Color{Colorless})
 	tok.AddAbility(NewActivatedAbility(
 		AddAnyMana(1, Colorless),
 		Tap(),
@@ -30,8 +29,7 @@ func newTreasureToken() *BaseCard {
 // subtype "Food" and the activated ability
 // "{2}, {T}, Sacrifice this artifact: You gain 3 life." (CR 111.10d).
 func newFoodToken() *BaseCard {
-	tok := NewToken("Food", 0, 0, []CardType{TypeArtifact}, []string{"Food"})
-	tok.colorOverride = []Color{Colorless}
+	tok := NewToken("Food", 0, 0, []CardType{TypeArtifact}, []string{"Food"}, []Color{Colorless})
 	tok.AddAbility(NewActivatedAbility(
 		GainLife(3),
 		GenericCost(2),
@@ -85,7 +83,7 @@ func (e *createPredefinedTokenEffect) Apply(ctx *EffectContext) error {
 	for i := 0; i < count; i++ {
 		tok := e.build()
 		tok.SetOwner(ctx.Controller)
-		ctx.Game.PutOnBattlefield(tok, ctx.Controller)
+		ctx.Game.PutTokenOnBattlefield(tok, ctx.Controller)
 	}
 	return nil
 }

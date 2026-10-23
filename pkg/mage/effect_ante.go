@@ -106,7 +106,7 @@ func (*exchangeTargetAnteCardWithLibraryTopEffect) Apply(ctx *EffectContext) err
 	if err != nil {
 		return err
 	}
-	if anteCard == nil || !slices.ContainsFunc(ownedAnte, func(card Card) bool { return card.ID() == anteCard.ID() }) || top.Owner() != ctx.Controller || top.IsToken() {
+	if anteCard == nil || !slices.ContainsFunc(ownedAnte, func(card Card) bool { return card.ID() == anteCard.ID() }) || top.Owner() != ctx.Controller {
 		return nil
 	}
 	if err := ctx.Game.MoveToAnte(ctx.Controller, top.ID()); err != nil {

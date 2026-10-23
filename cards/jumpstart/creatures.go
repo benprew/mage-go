@@ -64,13 +64,12 @@ func registerCreatures() {
 			"create a 2/2 white Cat token; if the entering enchantment is an Aura, may attach it to the token",
 			EffectProperties{Outcome: OutcomeBenefit, TokenPower: 2, TokenToughness: 2},
 			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-				token := NewToken("Cat", 2, 2, []CardType{TypeCreature}, []string{"Cat"})
+				token := NewToken("Cat", 2, 2, []CardType{TypeCreature}, []string{"Cat"}, []Color{White})
 				token.SetOwner(controller)
-				tokenPerm := g.PutOnBattlefield(token, controller)
+				tokenPerm := g.PutTokenOnBattlefield(token, controller)
 				if tokenPerm == nil {
 					return nil
 				}
-				g.AddContinuousEffect(ColorOverride(tokenPerm.ID(), White))
 
 				if len(targets) == 0 {
 					return nil
@@ -560,18 +559,14 @@ func registerCreatures() {
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					n := 0
 					for _, p := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
-						if !p.Card.IsToken() {
+						if !p.IsToken {
 							n++
 						}
 					}
 					for i := 0; i < n; i++ {
-						token := NewToken("Soldier", 1, 1, []CardType{TypeCreature}, []string{"Soldier"})
+						token := NewToken("Soldier", 1, 1, []CardType{TypeCreature}, []string{"Soldier"}, []Color{White})
 						token.SetOwner(controller)
-						colors := []Color{White}
-						perm := g.PutOnBattlefield(token, controller)
-						if perm != nil {
-							perm.ColorOverride = &colors
-						}
+						g.PutTokenOnBattlefield(token, controller)
 					}
 					return nil
 				}), false)),
@@ -2550,13 +2545,9 @@ func registerCreatures() {
 						}
 						x := snap.Power
 						for range x {
-							token := NewToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"})
+							token := NewToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"}, []Color{Black})
 							token.SetOwner(controller)
-							colors := []Color{Black}
-							perm := g.PutOnBattlefield(token, controller)
-							if perm != nil {
-								perm.ColorOverride = &colors
-							}
+							g.PutTokenOnBattlefield(token, controller)
 						}
 						return nil
 					}),
@@ -2750,8 +2741,8 @@ func registerCreatures() {
 				if evt.SourceID == sourceID {
 					return false
 				}
-				c := g.FindCardAnywhere(evt.SourceID)
-				return c != nil && !c.IsToken()
+				obj := g.LookupObject(evt.SourceID)
+				return obj != nil && !obj.ViewIsToken()
 			}).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 				EventSourceWasOfType{Type: TypeCreature},
@@ -2858,12 +2849,10 @@ func registerCreatures() {
 								damaged.DiscardCard(c.ID())
 							}
 						}
-						token := NewToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"})
+						token := NewToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"}, []Color{Black})
 						token.SetOwner(controller)
-						colors := []Color{Black}
-						perm := g.PutOnBattlefield(token, controller)
+						perm := g.PutTokenOnBattlefield(token, controller)
 						if perm != nil {
-							perm.ColorOverride = &colors
 							g.TapPermanent(perm)
 						}
 						return nil
@@ -3050,8 +3039,8 @@ func registerCreatures() {
 				if evt.SourceID == sourceID {
 					return false
 				}
-				c := g.FindCardAnywhere(evt.SourceID)
-				return c != nil && !c.IsToken()
+				obj := g.LookupObject(evt.SourceID)
+				return obj != nil && !obj.ViewIsToken()
 			}).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 				EventSourceWasOfType{Type: TypeCreature},
@@ -4263,9 +4252,9 @@ func registerCreatures() {
 					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 						x := g.CountBattlefield(And(ControlledBy(controller), HasSubType("Goblin")))
 						for range x {
-							tok := NewToken("Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"})
+							tok := NewToken("Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"}, []Color{Red})
 							tok.SetOwner(controller)
-							g.PutOnBattlefield(tok, controller)
+							g.PutTokenOnBattlefield(tok, controller)
 						}
 						return nil
 					}),
@@ -4289,7 +4278,7 @@ func registerCreatures() {
 				CreateToken("Dragon", 5, 5, []CardType{TypeCreature}, []string{"Dragon"}, Flying),
 				false,
 				NewPermanentFilter("another nontoken Dragon you control", func(p *Permanent, _ *Game) bool {
-					return p.HasSubType("Dragon") && !p.Card.IsToken()
+					return p.HasSubType("Dragon") && !p.IsToken
 				}),
 			).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventSourceNotSelf{},
@@ -4624,7 +4613,7 @@ func registerCreatures() {
 				CreateToken("Minotaur", 2, 3, []CardType{TypeCreature}, []string{"Minotaur"}),
 				false,
 				NewPermanentFilter("Sethron or another nontoken Minotaur you control", func(p *Permanent, _ *Game) bool {
-					return p.HasSubType("Minotaur") && !p.Card.IsToken()
+					return p.HasSubType("Minotaur") && !p.IsToken
 				}),
 			).AndConditionData(EventSourceControlledByController{})),
 			WithActivatedAbility(
@@ -6005,7 +5994,7 @@ func registerCreatures() {
 	// Whenever another nontoken creature you control enters, you may draw a card.
 	Register("Soul of the Harvest", func() Card {
 		nontokenCreature := NewPermanentFilter("nontoken creature", func(p *Permanent, _ *Game) bool {
-			return p.HasType(TypeCreature) && !p.Card.IsToken()
+			return p.HasType(TypeCreature) && !p.IsToken
 		})
 		return NewCreature("Soul of the Harvest", "{4}{G}{G}", 6, 6,
 			WithSubTypes("Elemental"),

@@ -48,9 +48,6 @@ func NewGameWithAnte(playerA, playerB Player, anteA, anteB []Card) (*Game, error
 			if actual.Owner() != player.PlayerID() {
 				return fmt.Errorf("ante card %s is not owned by %s", actual.Name(), player.Name())
 			}
-			if actual.IsToken() {
-				return fmt.Errorf("token %s cannot be anted", actual.Name())
-			}
 		}
 		return nil
 	}
@@ -139,7 +136,7 @@ func (g *Game) MoveToAnte(ownerID, cardID uuid.UUID) error {
 	if card.Owner() != ownerID {
 		return errors.New("only a card's owner can ante it")
 	}
-	if card.IsToken() {
+	if perm := g.FindPermanent(cardID); perm != nil && perm.IsToken {
 		return errors.New("tokens cannot be anted")
 	}
 	from := g.CardZone(cardID)
@@ -248,7 +245,7 @@ func (g *Game) ChangeOwner(cardID, newOwnerID uuid.UUID) error {
 	if card == nil {
 		return fmt.Errorf("card not found: %s", cardID)
 	}
-	if card.IsToken() {
+	if perm := g.FindPermanent(cardID); perm != nil && perm.IsToken {
 		return errors.New("tokens cannot change ownership")
 	}
 	if card.Owner() == newOwnerID {

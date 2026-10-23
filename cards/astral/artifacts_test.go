@@ -67,7 +67,7 @@ func TestPandorasBox_CreatureOnlyLibraryCopyAndIndependentFlips(t *testing.T) {
 	if tokenCopy == nil {
 		t.Fatal("token copy not found")
 	}
-	if !tokenCopy.IsToken || !tokenCopy.Card.IsToken() {
+	if !tokenCopy.IsToken {
 		t.Fatal("copy is not represented as a token")
 	}
 	if tokenCopy.Card.ID() == creatureID {

@@ -417,14 +417,13 @@ func registerArtifacts() {
 					"create a 1/1 colorless Snake artifact creature token with poison",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						token := NewToken("Snake", 1, 1, []CardType{TypeArtifact, TypeCreature}, []string{"Snake"})
+						token := NewToken("Snake", 1, 1, []CardType{TypeArtifact, TypeCreature}, []string{"Snake"}, nil)
 						token.SetOwner(controller)
 						// Add poison trigger: whenever this creature deals damage to a player, that player gets a poison counter
 						token.AddAbility(NewTriggered(EvtDamageDealt, false,
 							PoisonTargetPlayer(1),
 						).SetConditionData(EventSourceIsSelfDamageToPlayer{}))
-						perm := g.PutOnBattlefield(token, controller)
-						perm.IsToken = true
+						g.PutTokenOnBattlefield(token, controller)
 						return nil
 					},
 				),

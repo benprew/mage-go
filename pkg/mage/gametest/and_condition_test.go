@@ -19,7 +19,7 @@ func TestAndConditionData_PreservesConstructorFilter(t *testing.T) {
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			nontokenCreature := mage.NewPermanentFilter("nontoken creature", func(p *mage.Permanent, _ *mage.Game) bool {
-				return p.HasType(core.TypeCreature) && !p.Card.IsToken()
+				return p.HasType(core.TypeCreature) && !p.IsToken
 			})
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(

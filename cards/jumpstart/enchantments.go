@@ -116,7 +116,7 @@ func registerEnchantments() {
 	// Whenever a nontoken creature you control enters, create a 2/2 white Unicorn creature token.
 	Register("Blessed Sanctuary", func() Card {
 		nontokenCreatureYouControl := NewPermanentFilter("nontoken creature you control", func(p *Permanent, _ *Game) bool {
-			return p.HasType(TypeCreature) && !p.Card.IsToken()
+			return p.HasType(TypeCreature) && !p.IsToken
 		})
 		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}",
 			WithStaticAbility(PreventNoncombatDamageToControllerAndCreatures()),
@@ -659,9 +659,9 @@ func registerEnchantments() {
 							g.DoSacrifice(host)
 						}
 						token := NewToken("Myr", 1, 1,
-							[]CardType{TypeArtifact, TypeCreature}, []string{"Phyrexian", "Myr"})
+							[]CardType{TypeArtifact, TypeCreature}, []string{"Phyrexian", "Myr"}, nil)
 						token.SetOwner(controller)
-						g.PutOnBattlefield(token, controller)
+						g.PutTokenOnBattlefield(token, controller)
 						return nil
 					},
 				),

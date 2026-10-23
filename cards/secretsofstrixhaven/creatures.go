@@ -352,12 +352,11 @@ func registerCreatures() {
 						}
 						inklingToken := NewToken("Inkling Token", 1, 1,
 							[]CardType{TypeCreature},
-							[]string{"Inkling"},
+							[]string{"Inkling"}, []Color{White, Black},
 							Flying,
 						)
 						inklingToken.SetOwner(targetPlayerID)
-						inklingToken.SetColorOverride([]Color{White, Black})
-						g.PutOnBattlefield(inklingToken, targetPlayerID)
+						g.PutTokenOnBattlefield(inklingToken, targetPlayerID)
 
 						// Step 2: if an opponent controls more creatures than you, become prepared.
 						myCount := len(g.FilterBattlefield(And(IsCreature, ControlledBy(controller))))
@@ -1178,11 +1177,10 @@ func registerCreatures() {
 						for range x {
 							token := NewToken("Fractal Token", 0, 0,
 								[]CardType{TypeCreature},
-								[]string{"Fractal"},
+								[]string{"Fractal"}, []Color{Green, Blue},
 							)
-							token.SetColorOverride([]Color{Green, Blue})
 							token.SetOwner(controller)
-							g.PutOnBattlefield(token, controller)
+							g.PutTokenOnBattlefield(token, controller)
 						}
 						if x > 0 {
 							for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), fractalFilter)) {
@@ -2964,11 +2962,10 @@ func registerCreatures() {
 						// Create a 0/0 green and blue Fractal creature token.
 						token := NewToken("Fractal Token", 0, 0,
 							[]CardType{TypeCreature},
-							[]string{"Fractal"},
+							[]string{"Fractal"}, []Color{Green, Blue},
 						)
-						token.SetColorOverride([]Color{Green, Blue})
 						token.SetOwner(controller)
-						perm := g.PutOnBattlefield(token, controller)
+						perm := g.PutTokenOnBattlefield(token, controller)
 						if perm == nil {
 							return nil
 						}
@@ -3065,11 +3062,10 @@ func registerCreatures() {
 						// Create a 0/0 green and blue Fractal creature token.
 						token := NewToken("Fractal Token", 0, 0,
 							[]CardType{TypeCreature},
-							[]string{"Fractal"},
+							[]string{"Fractal"}, []Color{Green, Blue},
 						)
-						token.SetColorOverride([]Color{Green, Blue})
 						token.SetOwner(controller)
-						perm := g.PutOnBattlefield(token, controller)
+						perm := g.PutTokenOnBattlefield(token, controller)
 						if perm != nil && x > 0 {
 							perm.AddCounter(P1P1, x)
 							g.ApplyContinuousEffects()
@@ -3712,11 +3708,10 @@ func registerCreatures() {
 						x := g.XValue()
 						token := NewToken("Fractal Token", 0, 0,
 							[]CardType{TypeCreature},
-							[]string{"Fractal"},
+							[]string{"Fractal"}, []Color{Green, Blue},
 						)
-						token.SetColorOverride([]Color{Green, Blue})
 						token.SetOwner(controller)
-						perm := g.PutOnBattlefield(token, controller)
+						perm := g.PutTokenOnBattlefield(token, controller)
 						if perm == nil {
 							return nil
 						}
@@ -3811,7 +3806,7 @@ func registerCreatures() {
 						// If five or more mana was spent, create a token copy.
 						if manaSpent >= 5 {
 							tokenCard := perm.Card.Copy()
-							g.PutOnBattlefield(tokenCard, controller)
+							g.PutTokenOnBattlefield(tokenCard, controller)
 						}
 						return nil
 					},
@@ -4113,10 +4108,9 @@ func registerCreatures() {
 				// Clear the flag.
 				perm.RemoveCounter(Charge, int(perm.Counters[Charge]))
 				token := NewToken("Fractal Token", 0, 0,
-					[]CardType{TypeCreature}, []string{"Fractal"})
+					[]CardType{TypeCreature}, []string{"Fractal"}, []Color{Green, Blue})
 				token.SetOwner(controller)
-				token.SetColorOverride([]Color{Green, Blue})
-				tokenPerm := g.PutOnBattlefield(token, controller)
+				tokenPerm := g.PutTokenOnBattlefield(token, controller)
 				if tokenPerm == nil {
 					return nil
 				}

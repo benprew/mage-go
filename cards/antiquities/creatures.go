@@ -763,12 +763,11 @@ func registerCreatures() {
 						for range n {
 							token := NewToken("Tetravite", 1, 1,
 								[]CardType{TypeArtifact, TypeCreature},
-								[]string{"Tetravite"},
+								[]string{"Tetravite"}, nil,
 								Flying, AttrCantBeEnchanted,
 							)
 							token.SetOwner(controller)
-							perm := g.PutOnBattlefield(token, controller)
-							perm.IsToken = true
+							perm := g.PutTokenOnBattlefield(token, controller)
 							perm.CreatedBy = sourceID
 						}
 						return nil

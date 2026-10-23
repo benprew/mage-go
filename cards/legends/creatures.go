@@ -2401,13 +2401,10 @@ func registerCreatures() {
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g *Game, _ uuid.UUID, controller uuid.UUID, _ []uuid.UUID) error {
 								x := g.CountBattlefield(And(ControlledBy(controller), IsLand))
-								colors := []Color{Red, Green, White}
 								for range x {
-									token := NewToken("Sand Warrior", 1, 1, []CardType{TypeCreature}, []string{"Sand", "Warrior"})
+									token := NewToken("Sand Warrior", 1, 1, []CardType{TypeCreature}, []string{"Sand", "Warrior"}, []Color{Red, Green, White})
 									token.SetOwner(controller)
-									perm := g.PutOnBattlefield(token, controller)
-									perm.IsToken = true
-									perm.ColorOverride = &colors
+									g.PutTokenOnBattlefield(token, controller)
 								}
 								return nil
 							},
@@ -3012,13 +3009,10 @@ func registerCreatures() {
 				"create Stangg Twin token",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					token := NewToken("Stangg Twin", 3, 4, []CardType{TypeCreature}, []string{"Human", "Warrior"})
+					token := NewToken("Stangg Twin", 3, 4, []CardType{TypeCreature}, []string{"Human", "Warrior"}, []Color{Red, Green})
 					token.SetOwner(controller)
 					WithSuperTypes(SuperLegendary)(token)
-					perm := g.PutOnBattlefield(token, controller)
-					perm.IsToken = true
-					colors := []Color{Red, Green}
-					perm.ColorOverride = &colors
+					perm := g.PutTokenOnBattlefield(token, controller)
 					twinID = perm.ID()
 					return nil
 				},

@@ -343,14 +343,23 @@ func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
-	return g.putOnBattlefield(card, controller, nil, uuid.Nil)
+	return g.putOnBattlefield(card, controller, nil, uuid.Nil, false)
 }
 
-func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
+// PutTokenOnBattlefield puts a token onto the battlefield under the given controller.
+func (g *Game) PutTokenOnBattlefield(card Card, controller uuid.UUID) *Permanent {
+	if card.Owner() == uuid.Nil {
+		card.SetOwner(controller)
+	}
+	return g.putOnBattlefield(card, controller, nil, uuid.Nil, true)
+}
+
+func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, isToken bool) *Permanent {
 	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
 		return nil
 	}
 	perm := NewPermanent(card, controller)
+	perm.IsToken = isToken
 	if colors != nil {
 		override := append([]Color(nil), (*colors)...)
 		perm.ColorOverride = &override
@@ -441,13 +450,15 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 	for _, a := range perm.RuntimeAbilities {
 		if asEnter, ok := UnwrapAbility(a).(AsEntersBattlefieldAbility); ok {
 			if !asEnter.OnEnter(g, perm) {
-				owner := perm.Card.Owner()
-				if owner == uuid.Nil {
-					owner = perm.ControllerID()
-				}
-				p := g.GetPlayer(owner)
-				if p != nil {
-					p.AddToGraveyard(perm.Card)
+				if !perm.IsToken {
+					owner := perm.Card.Owner()
+					if owner == uuid.Nil {
+						owner = perm.ControllerID()
+					}
+					p := g.GetPlayer(owner)
+					if p != nil {
+						p.AddToGraveyard(perm.Card)
+					}
 				}
 				return nil
 			}
@@ -506,11 +517,21 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 // specified defender is no longer in the game (zero UUID or unknown player),
 // the creature still enters but never becomes an attacking creature.
 func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID) *Permanent {
+	return g.putOnBattlefieldAttacking(card, controller, defenderID, false)
+}
+
+// PutTokenOnBattlefieldAttacking puts a token creature onto the battlefield
+// attacking the given defender (CR 508.4).
+func (g *Game) PutTokenOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID) *Permanent {
+	return g.putOnBattlefieldAttacking(card, controller, defenderID, true)
+}
+
+func (g *Game) putOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID, isToken bool) *Permanent {
 	if card.Owner() == uuid.Nil {
 		card.SetOwner(controller)
 	}
-	perm := g.PutOnBattlefield(card, controller)
-	if defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
+	perm := g.putOnBattlefield(card, controller, nil, uuid.Nil, isToken)
+	if perm == nil || defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
 		return perm
 	}
 	g.combat.AddAttacker(perm.ID(), defenderID)
@@ -523,11 +544,21 @@ func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.
 // if the specified attacker is no longer attacking, the creature still enters
 // but never becomes a blocking creature.
 func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID) *Permanent {
+	return g.putOnBattlefieldBlocking(card, controller, attackerID, false)
+}
+
+// PutTokenOnBattlefieldBlocking puts a token creature onto the battlefield
+// blocking the given attacker (CR 509.4).
+func (g *Game) PutTokenOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID) *Permanent {
+	return g.putOnBattlefieldBlocking(card, controller, attackerID, true)
+}
+
+func (g *Game) putOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID, isToken bool) *Permanent {
 	if card.Owner() == uuid.Nil {
 		card.SetOwner(controller)
 	}
-	perm := g.PutOnBattlefield(card, controller)
-	if attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
+	perm := g.putOnBattlefield(card, controller, nil, uuid.Nil, isToken)
+	if perm == nil || attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
 		return perm
 	}
 	g.combat.AddBlocker(perm.ID(), attackerID)
@@ -2079,7 +2110,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	if obj.Card != nil && !obj.IsAbility {
 		// Permanents go to the battlefield instead
 		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
-			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.ColorOverride, obj.SourceID)
+			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.ColorOverride, obj.SourceID, false)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {

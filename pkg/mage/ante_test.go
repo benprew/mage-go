@@ -56,12 +56,6 @@ func TestNewGameWithAnteValidation(t *testing.T) {
 			return []Card{c, c}, nil
 		}},
 		{"missing", func(a, b *BasePlayer) ([]Card, []Card) { c := ownedTestCard(a.PlayerID(), "x"); return []Card{c}, nil }},
-		{"token", func(a, b *BasePlayer) ([]Card, []Card) {
-			c := NewToken("x", 1, 1, []CardType{TypeCreature}, nil)
-			c.SetOwner(a.PlayerID())
-			a.SetLibrary([]Card{c})
-			return []Card{c}, nil
-		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -108,6 +102,15 @@ func TestAnteOperationsRequireAnteAndOwner(t *testing.T) {
 	removed, err := g.RemoveFromAnte(c.ID(), ZoneHand)
 	if err != nil || removed.ID() != c.ID() || g.CardZone(c.ID()) != ZoneAny {
 		t.Fatalf("RemoveFromAnte = %v, %v, zone %v", removed, err, g.CardZone(c.ID()))
+	}
+	tok := NewToken("token", 1, 1, []CardType{TypeCreature}, nil, nil)
+	tok.SetOwner(a.PlayerID())
+	g.PutTokenOnBattlefield(tok, a.PlayerID())
+	if err := g.MoveToAnte(a.PlayerID(), tok.ID()); err == nil {
+		t.Fatal("MoveToAnte accepted a token")
+	}
+	if err := g.ChangeOwner(tok.ID(), b.PlayerID()); err == nil {
+		t.Fatal("ChangeOwner accepted a token")
 	}
 }
 

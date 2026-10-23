@@ -24,10 +24,9 @@ func registerEnchantments() {
 					EffectProperties{Outcome: OutcomeBenefit, TokenPower: 0, TokenToughness: 0},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						token := NewToken("Fractal Token", 0, 0,
-							[]CardType{TypeCreature}, []string{"Fractal"})
+							[]CardType{TypeCreature}, []string{"Fractal"}, []Color{Green, Blue})
 						token.SetOwner(controller)
-						token.SetColorOverride([]Color{Green, Blue})
-						perm := g.PutOnBattlefield(token, controller)
+						perm := g.PutTokenOnBattlefield(token, controller)
 						if perm == nil {
 							return nil
 						}

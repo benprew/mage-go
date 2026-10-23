@@ -37,7 +37,6 @@ type Card interface {
 	CloneFrom(Card)
 	SetBasePT(power, toughness int)
 	SetModes([]string)
-	IsToken() bool
 }
 
 // BaseCard provides the common card implementation.
@@ -59,7 +58,6 @@ type BaseCard struct {
 	alternateCosts  []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
 	castTargets     []Target        // targeting requirements when casting (auras, targeted ETBs)
 	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
-	isToken         bool            // true for token cards (created by NewToken)
 	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
 }
 
@@ -86,13 +84,6 @@ func (c *BaseCard) AuraAIProfile() (AuraAIProfile, bool) {
 // NewPermanent uses these to populate the permanent's baseAttrs.
 func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
 
-// SetColorOverride sets the colors of a card directly, bypassing mana cost
-// derivation. Used by token-creation paths that produce colored tokens
-// (CreateColoredToken).
-func (c *BaseCard) SetColorOverride(colors []Color) {
-	c.colorOverride = append([]Color(nil), colors...)
-}
-
 func (c *BaseCard) ID() uuid.UUID           { return c.id }
 func (c *BaseCard) Name() string            { return c.name }
 func (c *BaseCard) ManaCost() ManaCost      { return c.manaCost }
@@ -104,7 +95,6 @@ func (c *BaseCard) Owner() uuid.UUID        { return c.owner }
 func (c *BaseCard) Power() int              { return c.power }
 func (c *BaseCard) Toughness() int          { return c.toughness }
 func (c *BaseCard) Modes() []string         { return c.modes }
-func (c *BaseCard) IsToken() bool           { return c.isToken }
 func (c *BaseCard) SetModes(m []string)     { c.modes = m }
 func (c *BaseCard) SetBasePT(p, t int)      { c.power = p; c.toughness = t }
 func (c *BaseCard) SetOwner(id uuid.UUID)   { c.owner = id }
@@ -156,6 +146,11 @@ func (c *BaseCard) CloneFrom(other Card) {
 		copy(c.castTargets, ct)
 	}
 	if bc, ok := other.(*BaseCard); ok {
+		if len(bc.colorOverride) > 0 {
+			c.colorOverride = append([]Color(nil), bc.colorOverride...)
+		} else {
+			c.colorOverride = nil
+		}
 		if len(bc.attrSeeds) > 0 {
 			c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
 			maps.Copy(c.attrSeeds, bc.attrSeeds)
@@ -179,6 +174,9 @@ func (c *BaseCard) Copy() Card {
 	copy(cp.subTypes, c.subTypes)
 	cp.abilities = make([]Ability, len(c.abilities))
 	copy(cp.abilities, c.abilities)
+	if len(c.colorOverride) > 0 {
+		cp.colorOverride = append([]Color(nil), c.colorOverride...)
+	}
 	if len(c.modes) > 0 {
 		cp.modes = make([]string, len(c.modes))
 		copy(cp.modes, c.modes)
@@ -412,16 +410,16 @@ func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *B
 	return c
 }
 
-// NewToken creates a token creature card. Tokens have no mana cost.
-func NewToken(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) *BaseCard {
+// NewToken creates a token with the given colors and no mana cost.
+func NewToken(name string, power, toughness int, types []CardType, subTypes []string, colors []Color, keywords ...Keyword) *BaseCard {
 	c := &BaseCard{
-		id:        uuid.New(),
-		name:      name,
-		types:     types,
-		subTypes:  subTypes,
-		power:     power,
-		toughness: toughness,
-		isToken:   true,
+		id:            uuid.New(),
+		name:          name,
+		types:         types,
+		subTypes:      subTypes,
+		power:         power,
+		toughness:     toughness,
+		colorOverride: append([]Color(nil), colors...),
 	}
 	for _, kw := range keywords {
 		if c.attrSeeds == nil {
@@ -624,7 +622,6 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		incarnationID:      uuid.New(),
 		computedController: controller,
 		baseController:     controller,
-		IsToken:            card.IsToken(),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {

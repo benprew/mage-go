@@ -33,10 +33,9 @@ func registerEnchantments() {
 					func(g *Game, _ uuid.UUID, controllerID uuid.UUID, _ []uuid.UUID) error {
 						power := g.RandIntn(3) + 1
 						toughness := g.RandIntn(3) + 1
-						token := NewToken("Spawn of Azar", power, toughness, []CardType{TypeCreature}, []string{"Spawn"}, Swampwalk)
-						token.SetColorOverride([]Color{Black})
+						token := NewToken("Spawn of Azar", power, toughness, []CardType{TypeCreature}, []string{"Spawn"}, []Color{Black}, Swampwalk)
 						token.SetOwner(controllerID)
-						g.PutOnBattlefield(token, controllerID)
+						g.PutTokenOnBattlefield(token, controllerID)
 						return nil
 					},
 				),
