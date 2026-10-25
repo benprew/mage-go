@@ -17,7 +17,7 @@ func registerArtifacts() {
 	// Artifact
 	// Whenever one or more cards leave your graveyard, this artifact deals 1 damage to each opponent and you gain 1 life.
 	// {T}: Mill a card. You may play that card this turn.
-	Register("Ark of Hunger", func() Card {
+	Register("Ark of Hunger", func() *Card {
 		// XXX: "You may play that card this turn" — graveyard play permissions
 		// are not supported in the engine (only exile via GrantCastFromExile).
 		// The tap ability mills one card from the controller's library only.
@@ -54,7 +54,7 @@ func registerArtifacts() {
 	// Artifact
 	// Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.
 	// {1}{B}{G}, {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.
-	Register("Cauldron of Essence", func() Card {
+	Register("Cauldron of Essence", func() *Card {
 		drainEffect := FuncEffect(
 			"each opponent loses 1 life and you gain 1 life",
 			EffectProperties{Outcome: OutcomeBenefit},
@@ -90,7 +90,7 @@ func registerArtifacts() {
 	// Artifact — Book
 	// Whenever you cast an instant or sorcery spell, put a page counter on this artifact.
 	// {5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact.
-	Register("Diary of Dreams", func() Card {
+	Register("Diary of Dreams", func() *Card {
 		counterTrigger := WheneverYouCastSpellTrigger(
 			AddCounters(Page, Fixed(1)).Targeting(ToSource()),
 			false, IsInstantOrSorceryCard,
@@ -127,7 +127,7 @@ func registerArtifacts() {
 	// Artifact
 	// {T}: Add one mana of any color.
 	// {T}: You gain 2 life. Activate only if you've cast an instant or sorcery spell this turn.
-	Register("Potioner's Trove", func() Card {
+	Register("Potioner's Trove", func() *Card {
 		lifeGainCondition := func(g *Game, src *Permanent, controller uuid.UUID) bool {
 			return g.GetInstantOrSorceryCastThisTurn(controller) > 0
 		}
@@ -145,7 +145,7 @@ func registerArtifacts() {
 	// Artifact
 	// Lands you control have "{T}: Add two mana of any one color. Spend this mana only to cast instant and sorcery spells."
 	// {T}: Draw a card. Activate only if you have seven or more cards in your hand.
-	Register("Resonating Lute", func() Card {
+	Register("Resonating Lute", func() *Card {
 		// XXX: "Lands you control have '{T}: Add two mana of any one color.
 		// Spend this mana only to cast instant and sorcery spells.'" —
 		// GrantActivatedAbilityToAll only works for creatures, not lands.
@@ -173,7 +173,7 @@ func registerArtifacts() {
 	// Flying
 	// When this Vehicle enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
 	// Crew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)
-	Register("Strixhaven Skycoach", func() Card {
+	Register("Strixhaven Skycoach", func() *Card {
 		// XXX: Vehicle/Crew mechanics are not implemented in the engine.
 		// The 3/2 P/T and Crew 2 ability are not modeled.
 		// XXX: "reveal it" — reveal to opponent is not modeled; the card just
@@ -198,7 +198,7 @@ func registerArtifacts() {
 	// When this artifact enters, mill a card. You may play that card this turn. (To mill a card, put the top card of your library into your graveyard.)
 	// {T}: Add {R}.
 	// {T}: Add {R}{R}. Spend this mana only to cast instant and sorcery spells.
-	Register("Tablet of Discovery", func() Card {
+	Register("Tablet of Discovery", func() *Card {
 		// XXX: "You may play that card this turn" — graveyard play permissions
 		// are not supported in the engine (only exile via GrantCastFromExile).
 		// XXX: "Spend this mana only to cast instant and sorcery spells" —

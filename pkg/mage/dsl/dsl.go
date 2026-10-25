@@ -65,7 +65,6 @@ type (
 	DamageToPlayerAction                      = mage.DamageToPlayerAction
 	GameEvent                                 = core.GameEvent
 	ExiledCard                                = mage.ExiledCard
-	BaseCard                                  = mage.BaseCard
 	Effect                                    = mage.Effect
 	EffectProperties                          = mage.EffectProperties
 	AIHint                                    = mage.AIHint

@@ -19,7 +19,7 @@ func TargetCardYouOwnInAnte() Target {
 	return &cardYouOwnInAnteTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
 }
 
-func (t *cardYouOwnInAnteTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *cardYouOwnInAnteTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
 	cards, err := g.AnteCardsOwnedBy(controller)
 	if err != nil {
 		return nil
@@ -31,7 +31,7 @@ func (t *cardYouOwnInAnteTarget) Possible(controller uuid.UUID, _ Card, g *Game)
 	return possible
 }
 
-func (t *cardYouOwnInAnteTarget) Choose(controller uuid.UUID, source Card, g *Game, chosen []uuid.UUID) error {
+func (t *cardYouOwnInAnteTarget) Choose(controller uuid.UUID, source *Card, g *Game, chosen []uuid.UUID) error {
 	if len(chosen) != 1 || !slices.Contains(t.Possible(controller, source, g), chosen[0]) {
 		return fmt.Errorf("must target a card you own in the ante")
 	}
@@ -106,7 +106,7 @@ func (*exchangeTargetAnteCardWithLibraryTopEffect) Apply(ctx *EffectContext) err
 	if err != nil {
 		return err
 	}
-	if anteCard == nil || !slices.ContainsFunc(ownedAnte, func(card Card) bool { return card.ID() == anteCard.ID() }) || top.Owner() != ctx.Controller {
+	if anteCard == nil || !slices.ContainsFunc(ownedAnte, func(card *Card) bool { return card.ID() == anteCard.ID() }) || top.Owner() != ctx.Controller {
 		return nil
 	}
 	if err := ctx.Game.MoveToAnte(ctx.Controller, top.ID()); err != nil {
@@ -116,6 +116,6 @@ func (*exchangeTargetAnteCardWithLibraryTopEffect) Apply(ctx *EffectContext) err
 	if err != nil {
 		return err
 	}
-	player.SetLibrary(append([]Card{anteCard}, player.Library()...))
+	player.SetLibrary(append([]*Card{anteCard}, player.Library()...))
 	return nil
 }

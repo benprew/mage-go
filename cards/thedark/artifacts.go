@@ -19,7 +19,7 @@ func registerArtifacts() {
 	// Barl's Cage {4}
 	// Artifact
 	// {3}: Target creature doesn't untap during its controller's next untap step.
-	Register("Barl's Cage", func() Card {
+	Register("Barl's Cage", func() *Card {
 		return NewArtifact("Barl's Cage", "{4}",
 			WithActivatedAbility(
 				SkipNextUntapTarget(),
@@ -32,7 +32,7 @@ func registerArtifacts() {
 	// Bone Flute {3}
 	// Artifact
 	// {2}, {T}: All creatures get -1/-0 until end of turn.
-	Register("Bone Flute", func() Card {
+	Register("Bone Flute", func() *Card {
 		return NewArtifact("Bone Flute", "{3}",
 			WithActivatedAbility(
 				Boost(Fixed(-1), Fixed(0)).Targeting(ToAllMatching(IsCreature)),
@@ -45,7 +45,7 @@ func registerArtifacts() {
 	// Book of Rass {6}
 	// Artifact
 	// {2}, Pay 2 life: Draw a card.
-	Register("Book of Rass", func() Card {
+	Register("Book of Rass", func() *Card {
 		return NewArtifact("Book of Rass", "{6}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
@@ -58,7 +58,7 @@ func registerArtifacts() {
 	// Dark Sphere {0}
 	// Artifact
 	// {T}, Sacrifice this artifact: The next time a source of your choice would deal damage to you this turn, prevent half that damage, rounded down.
-	Register("Dark Sphere", func() Card {
+	Register("Dark Sphere", func() *Card {
 		return NewArtifact("Dark Sphere", "{0}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -82,7 +82,7 @@ func registerArtifacts() {
 	// Fountain of Youth {0}
 	// Artifact
 	// {2}, {T}: You gain 1 life.
-	Register("Fountain of Youth", func() Card {
+	Register("Fountain of Youth", func() *Card {
 		return NewArtifact("Fountain of Youth", "{0}",
 			WithActivatedAbility(
 				GainLife(1),
@@ -95,7 +95,7 @@ func registerArtifacts() {
 	// Living Armor {4}
 	// Artifact
 	// {T}, Sacrifice this artifact: Put X +0/+1 counters on target creature, where X is that creature's mana value.
-	Register("Living Armor", func() Card {
+	Register("Living Armor", func() *Card {
 		return NewArtifact("Living Armor", "{4}",
 			WithActivatedAbility(
 				AddCounters(P0P1, TargetPermanentManaValue()),
@@ -109,7 +109,7 @@ func registerArtifacts() {
 	// Reflecting Mirror {4}
 	// Artifact
 	// {X}, {T}: Change the target of target spell with a single target if that target is you. The new target must be a player. X is twice the mana value of that spell.
-	Register("Reflecting Mirror", func() Card {
+	Register("Reflecting Mirror", func() *Card {
 		return NewArtifact("Reflecting Mirror", "{4}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -146,7 +146,7 @@ func registerArtifacts() {
 	// Runesword {6}
 	// Artifact
 	// {3}, {T}: Target attacking creature gets +2/+0 until end of turn. When that creature leaves the battlefield this turn, sacrifice this artifact. If the creature deals damage to a creature this turn, the creature dealt damage can't be regenerated this turn. If a creature dealt damage by the targeted creature would die this turn, exile that creature instead.
-	Register("Runesword", func() Card {
+	Register("Runesword", func() *Card {
 		return NewArtifact("Runesword", "{6}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -216,7 +216,7 @@ func registerArtifacts() {
 	// Skull of Orm {3}
 	// Artifact
 	// {5}, {T}: Return target enchantment card from your graveyard to your hand.
-	Register("Skull of Orm", func() Card {
+	Register("Skull of Orm", func() *Card {
 		return NewArtifact("Skull of Orm", "{3}",
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
@@ -230,7 +230,7 @@ func registerArtifacts() {
 	// Standing Stones {3}
 	// Artifact
 	// {1}, {T}, Pay 1 life: Add one mana of any color.
-	Register("Standing Stones", func() Card {
+	Register("Standing Stones", func() *Card {
 		return NewArtifact("Standing Stones", "{3}",
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
@@ -244,7 +244,7 @@ func registerArtifacts() {
 	// Stone Calendar {5}
 	// Artifact
 	// Spells you cast cost {1} less to cast.
-	Register("Stone Calendar", func() Card {
+	Register("Stone Calendar", func() *Card {
 		return NewArtifact("Stone Calendar", "{5}",
 			WithStaticAbility(ReduceSpellCostStatic(
 				SpellAny(),
@@ -257,7 +257,7 @@ func registerArtifacts() {
 	// Tormod's Crypt {0}
 	// Artifact
 	// {T}, Sacrifice this artifact: Exile target player's graveyard.
-	Register("Tormod's Crypt", func() Card {
+	Register("Tormod's Crypt", func() *Card {
 		return NewArtifact("Tormod's Crypt", "{0}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -292,7 +292,7 @@ func registerArtifacts() {
 	// Tower of Coireall {2}
 	// Artifact
 	// {T}: Target creature can't be blocked by Walls this turn.
-	Register("Tower of Coireall", func() Card {
+	Register("Tower of Coireall", func() *Card {
 		return NewArtifact("Tower of Coireall", "{2}",
 			WithActivatedAbility(
 				GrantKeyword(CantBeBlockedByWalls),
@@ -305,7 +305,7 @@ func registerArtifacts() {
 	// Wand of Ith {4}
 	// Artifact
 	// {3}, {T}: Target player reveals a card at random from their hand. If it's a land card, that player discards it unless they pay 1 life. If it isn't a land card, the player discards it unless they pay life equal to its mana value. Activate only during your turn.
-	Register("Wand of Ith", func() Card {
+	Register("Wand of Ith", func() *Card {
 		return NewArtifact("Wand of Ith", "{4}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -361,7 +361,7 @@ func registerArtifacts() {
 	// War Barge {4}
 	// Artifact
 	// {3}: Target creature gains islandwalk until end of turn. When this artifact leaves the battlefield this turn, destroy that creature. A creature destroyed this way can't be regenerated. (A creature with islandwalk can't be blocked as long as defending player controls an Island.)
-	Register("War Barge", func() Card {
+	Register("War Barge", func() *Card {
 		return NewArtifact("War Barge", "{4}",
 			WithActivatedAbility(
 				FuncEffect(

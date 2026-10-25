@@ -170,7 +170,7 @@ func (ai *AIPlayer) ShouldMulligan(handSize int) bool {
 	return false
 }
 
-func handLandColors(hand []mage.Card) map[core.Color]int {
+func handLandColors(hand []*mage.Card) map[core.Color]int {
 	colors := make(map[core.Color]int)
 	for _, c := range hand {
 		if !c.HasType(core.TypeLand) {

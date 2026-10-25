@@ -17,7 +17,7 @@ func registerEnchantments() {
 	// Blood Moon {2}{R}
 	// Enchantment
 	// Nonbasic lands are Mountains.
-	Register("Blood Moon", func() Card {
+	Register("Blood Moon", func() *Card {
 		return NewEnchantment("Blood Moon", "{2}{R}",
 			WithStaticAbility(
 				BecomesBasicLandsEffect(
@@ -34,7 +34,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant artifact
 	// At the beginning of the upkeep of enchanted artifact's controller, this Aura deals 2 damage to that player unless they sacrifice that artifact.
-	Register("Curse Artifact", func() Card {
+	Register("Curse Artifact", func() *Card {
 		return NewAura("Curse Artifact", "{2}{B}{B}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
@@ -73,7 +73,7 @@ func registerEnchantments() {
 	// When this enchantment leaves the battlefield, exile the token.
 	// When the token leaves the battlefield, sacrifice this enchantment.
 	// At the beginning of your upkeep, sacrifice this enchantment unless you pay {U}{U}.
-	Register("Dance of Many", func() Card {
+	Register("Dance of Many", func() *Card {
 		return NewEnchantment("Dance of Many", "{U}{U}",
 			WithAbility(SacrificeAtUpkeepUnlessPay("{U}{U}")),
 			WithAbility(NewTriggered(EvtZoneChange, false,
@@ -135,7 +135,7 @@ func registerEnchantments() {
 	// Dark Heart of the Wood {B}{G}
 	// Enchantment
 	// Sacrifice a Forest: You gain 3 life.
-	Register("Dark Heart of the Wood", func() Card {
+	Register("Dark Heart of the Wood", func() *Card {
 		return NewEnchantment("Dark Heart of the Wood", "{B}{G}",
 			WithActivatedAbility(
 				GainLife(3),
@@ -148,7 +148,7 @@ func registerEnchantments() {
 	// Deep Water {U}{U}
 	// Enchantment
 	// {U}: Until end of turn, if you tap a land you control for mana, it produces {U} instead of any other type.
-	Register("Deep Water", func() Card {
+	Register("Deep Water", func() *Card {
 		return NewEnchantment("Deep Water", "{U}{U}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -169,7 +169,7 @@ func registerEnchantments() {
 	// At the beginning of your upkeep, put a hunger counter on this enchantment. Then destroy this enchantment if it has five or more hunger counters on it.
 	// If you would begin your draw step, you may skip that step instead. If you do, you gain 2 life.
 	// When you draw a card, destroy this enchantment.
-	Register("Fasting", func() Card {
+	Register("Fasting", func() *Card {
 		return NewEnchantment("Fasting", "{W}",
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect(
@@ -217,7 +217,7 @@ func registerEnchantments() {
 	// Enchantment
 	// {0}: You may put a basic Forest card from your hand onto the battlefield. Activate only as a sorcery and only once each turn.
 	// Sacrifice this enchantment: Add {G}{G}.
-	Register("Gaea's Touch", func() Card {
+	Register("Gaea's Touch", func() *Card {
 		return NewEnchantment("Gaea's Touch", "{G}{G}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -228,7 +228,7 @@ func registerEnchantments() {
 						if p == nil {
 							return nil
 						}
-						var forests []Card
+						var forests []*Card
 						for _, c := range p.Hand() {
 							if c.HasType(TypeLand) && c.HasSuperType(SuperBasic) && c.HasSubType("Forest") {
 								forests = append(forests, c)
@@ -266,7 +266,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant land
 	// As long as enchanted land is a basic Mountain, Goblin creatures get +0/+2.
-	Register("Goblin Caves", func() Card {
+	Register("Goblin Caves", func() *Card {
 		return NewAura("Goblin Caves", "{1}{R}{R}",
 			WithCastTarget(TargetLand()),
 			WithStaticAbility(
@@ -293,7 +293,7 @@ func registerEnchantments() {
 	// Enchant land
 	// As long as enchanted land is a basic Mountain, Goblin creatures get +1/+0.
 	// When this Aura leaves the battlefield, it deals 1 damage to each Goblin creature.
-	Register("Goblin Shrine", func() Card {
+	Register("Goblin Shrine", func() *Card {
 		return NewAura("Goblin Shrine", "{1}{R}{R}",
 			WithCastTarget(TargetLand()),
 			WithStaticAbility(
@@ -328,7 +328,7 @@ func registerEnchantments() {
 	// Hidden Path {2}{G}{G}{G}{G}
 	// Enchantment
 	// Green creatures have forestwalk. (They can't be blocked as long as defending player controls a Forest.)
-	Register("Hidden Path", func() Card {
+	Register("Hidden Path", func() *Card {
 		return NewEnchantment("Hidden Path", "{2}{G}{G}{G}{G}",
 			WithStaticAbility(
 				GrantKeywordToAllIncludingSource(Forestwalk, And(IsCreature, HasColorFilter(Green))),
@@ -341,7 +341,7 @@ func registerEnchantments() {
 	// When you cast this spell, counter it unless you sacrifice a land.
 	// At the beginning of each player's upkeep, that player sacrifices a land of their choice.
 	// When there are no lands on the battlefield, sacrifice this enchantment.
-	Register("Mana Vortex", func() Card {
+	Register("Mana Vortex", func() *Card {
 		return NewEnchantment("Mana Vortex", "{1}{U}{U}",
 			WithAbility(NewTriggered(EvtSpellCast, false,
 				FuncEffect(
@@ -410,7 +410,7 @@ func registerEnchantments() {
 	// As this enchantment enters, choose a color.
 	// At the beginning of each opponent's upkeep, this enchantment deals X damage to that player, where X is the number of nontoken permanents of the chosen color they control.
 	// At the beginning of your upkeep, destroy this enchantment unless you sacrifice two Islands.
-	Register("Psychic Allergy", func() Card {
+	Register("Psychic Allergy", func() *Card {
 		return NewEnchantment("Psychic Allergy", "{3}{U}{U}",
 			WithETBEffect(ChooseColorStep("Choose a color for Psychic Allergy")),
 			WithAbility(BeginningOfEachUpkeepTrigger(
@@ -488,7 +488,7 @@ func registerEnchantments() {
 	// Enchantment
 	// At the beginning of your upkeep, sacrifice this enchantment unless you pay 2 life.
 	// At the beginning of the end step, destroy all untapped creatures that didn't attack this turn, except for creatures that couldn't attack.
-	Register("Season of the Witch", func() Card {
+	Register("Season of the Witch", func() *Card {
 		return NewEnchantment("Season of the Witch", "{B}{B}{B}",
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect(
@@ -549,7 +549,7 @@ func registerEnchantments() {
 	// Enchant creature
 	// When this Aura enters, tap enchanted creature.
 	// Enchanted creature doesn't untap during its controller's untap step if it attacked during its controller's last turn.
-	Register("Tangle Kelp", func() Card {
+	Register("Tangle Kelp", func() *Card {
 		return NewAura("Tangle Kelp", "{U}",
 			WithCastTarget(TargetCreature()),
 			WithAbility(EntersBattlefieldTrigger(
@@ -585,7 +585,7 @@ func registerEnchantments() {
 	// Players can't play lands.
 	// Lands can't enter the battlefield.
 	// At the beginning of each upkeep, any player may sacrifice two lands of their choice or have this enchantment deal 5 damage to that player. If a player does either, destroy this enchantment.
-	Register("Worms of the Earth", func() Card {
+	Register("Worms of the Earth", func() *Card {
 		return NewEnchantment("Worms of the Earth", "{2}{B}{B}{B}",
 			WithStaticAbility(
 				WormsOfTheEarthEffect(),

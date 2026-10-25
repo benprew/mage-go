@@ -6,14 +6,11 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func cardColors(card Card) []Color {
+func cardColors(card *Card) []Color {
 	if card == nil {
 		return nil
 	}
-	if base, ok := card.(*BaseCard); ok && len(base.colorOverride) > 0 {
-		return append([]Color(nil), base.colorOverride...)
-	}
-	return card.ManaCost().Colors()
+	return card.Colors()
 }
 
 // EffectiveColors returns an object's current colors. objectID may identify a

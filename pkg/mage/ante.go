@@ -21,13 +21,13 @@ type OwnershipChange struct {
 
 // NewGameWithAnte creates an ante-enabled game and moves the explicitly
 // selected cards from each player's library into the shared ante zone.
-func NewGameWithAnte(playerA, playerB Player, anteA, anteB []Card) (*Game, error) {
+func NewGameWithAnte(playerA, playerB Player, anteA, anteB []*Card) (*Game, error) {
 	if playerA == nil || playerB == nil {
 		return nil, ErrPlayerNotFound
 	}
 	seen := make(map[uuid.UUID]struct{}, len(anteA)+len(anteB))
-	validate := func(player Player, selected []Card) error {
-		library := make(map[uuid.UUID]Card, len(player.Library()))
+	validate := func(player Player, selected []*Card) error {
+		library := make(map[uuid.UUID]*Card, len(player.Library()))
 		for _, c := range player.Library() {
 			if c != nil {
 				library[c.ID()] = c
@@ -59,12 +59,12 @@ func NewGameWithAnte(playerA, playerB Player, anteA, anteB []Card) (*Game, error
 	}
 
 	g := newGame(playerA, playerB, true)
-	moveInitial := func(player Player, selected []Card) {
+	moveInitial := func(player Player, selected []*Card) {
 		ids := make(map[uuid.UUID]struct{}, len(selected))
 		for _, c := range selected {
 			ids[c.ID()] = struct{}{}
 		}
-		kept := make([]Card, 0, len(player.Library())-len(selected))
+		kept := make([]*Card, 0, len(player.Library())-len(selected))
 		for _, c := range player.Library() {
 			if _, ok := ids[c.ID()]; ok {
 				player.AddToAnte(c)
@@ -83,19 +83,19 @@ func NewGameWithAnte(playerA, playerB Player, anteA, anteB []Card) (*Game, error
 func (g *Game) AnteEnabled() bool { return g != nil && g.anteEnabled }
 
 // AnteCards lists every card in the shared, public ante zone.
-func (g *Game) AnteCards() ([]Card, error) {
+func (g *Game) AnteCards() ([]*Card, error) {
 	if g == nil || !g.anteEnabled {
 		return nil, ErrAnteDisabled
 	}
-	var cards []Card
+	var cards []*Card
 	for _, player := range g.players {
 		cards = append(cards, player.Ante()...)
 	}
-	return append([]Card(nil), cards...), nil
+	return append([]*Card(nil), cards...), nil
 }
 
 // AnteCardsOwnedBy lists ante cards whose current owner is ownerID.
-func (g *Game) AnteCardsOwnedBy(ownerID uuid.UUID) ([]Card, error) {
+func (g *Game) AnteCardsOwnedBy(ownerID uuid.UUID) ([]*Card, error) {
 	if g == nil || !g.anteEnabled {
 		return nil, ErrAnteDisabled
 	}
@@ -103,7 +103,7 @@ func (g *Game) AnteCardsOwnedBy(ownerID uuid.UUID) ([]Card, error) {
 		return nil, ErrPlayerNotFound
 	}
 	cards, _ := g.AnteCards()
-	owned := make([]Card, 0, len(cards))
+	owned := make([]*Card, 0, len(cards))
 	for _, c := range cards {
 		if c.Owner() == ownerID {
 			owned = append(owned, c)
@@ -156,7 +156,7 @@ func (g *Game) MoveToAnte(ownerID, cardID uuid.UUID) error {
 	return nil
 }
 
-func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (Card, uuid.UUID, []Ability, error) {
+func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (*Card, uuid.UUID, []Ability, error) {
 	switch from {
 	case ZoneBattlefield:
 		perm := g.FindPermanent(cardID)
@@ -172,7 +172,8 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (Card, uuid.UUID, 
 		if !ok {
 			return nil, uuid.Nil, nil, errors.New("card not found in exile")
 		}
-		return card, card.Owner(), nil, nil
+		owner := card.Owner()
+		return card, owner, nil, nil
 	case ZoneStack:
 		for i, obj := range g.stack.objects {
 			if obj.Card != nil && obj.Card.ID() == cardID {
@@ -190,7 +191,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (Card, uuid.UUID, 
 			case ZoneLibrary:
 				for i, c := range player.Library() {
 					if c.ID() == cardID {
-						lib := append([]Card(nil), player.Library()...)
+						lib := append([]*Card(nil), player.Library()...)
 						player.SetLibrary(append(lib[:i], lib[i+1:]...))
 						return c, player.PlayerID(), nil, nil
 					}
@@ -209,7 +210,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (Card, uuid.UUID, 
 // RemoveFromAnte removes cardID from the shared ante zone. If a destination
 // is supplied, the emitted zone-change event records it; otherwise ZoneAny is
 // used and the caller remains responsible for placing the returned card.
-func (g *Game) RemoveFromAnte(cardID uuid.UUID, destination ...Zone) (Card, error) {
+func (g *Game) RemoveFromAnte(cardID uuid.UUID, destination ...Zone) (*Card, error) {
 	if !g.anteEnabled {
 		return nil, ErrAnteDisabled
 	}
@@ -263,10 +264,10 @@ func (g *Game) ChangeOwner(cardID, newOwnerID uuid.UUID) error {
 	return nil
 }
 
-func replaceCardInSlice(cards []Card, cardID uuid.UUID, replacement Card) ([]Card, bool) {
+func replaceCardInSlice(cards []*Card, cardID uuid.UUID, replacement *Card) ([]*Card, bool) {
 	for i, c := range cards {
 		if c.ID() == cardID {
-			out := append([]Card(nil), cards...)
+			out := append([]*Card(nil), cards...)
 			out[i] = replacement
 			return out, true
 		}
@@ -274,7 +275,7 @@ func replaceCardInSlice(cards []Card, cardID uuid.UUID, replacement Card) ([]Car
 	return cards, false
 }
 
-func (g *Game) replaceCardReference(cardID uuid.UUID, replacement Card) bool {
+func (g *Game) replaceCardReference(cardID uuid.UUID, replacement *Card) bool {
 	if perm := g.FindPermanentIncludingPhased(cardID); perm != nil {
 		mutable := g.MutablePermanent(cardID)
 		mutable.Card = replacement

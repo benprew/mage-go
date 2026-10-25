@@ -17,7 +17,7 @@ import (
 func TestAndConditionData_PreservesConstructorFilter(t *testing.T) {
 	const cardName = "ANDCOND Token Maker"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			nontokenCreature := mage.NewPermanentFilter("nontoken creature", func(p *mage.Permanent, _ *mage.Game) bool {
 				return p.HasType(core.TypeCreature) && !p.IsToken
 			})
@@ -38,7 +38,7 @@ func TestAndConditionData_PreservesConstructorFilter(t *testing.T) {
 
 	const fakeDragonName = "ANDCOND Beast Maker"
 	if !mage.CardRegistered(fakeDragonName) {
-		mage.Register(fakeDragonName, func() mage.Card {
+		mage.Register(fakeDragonName, func() *mage.Card {
 			return mage.NewCreature(fakeDragonName, "{0}", 1, 1)
 		})
 	}

@@ -155,7 +155,7 @@ writes the shift-down in place. That corrupts shared backing arrays.
 
 Options:
 
-- Rewrite `RemoveFromX` to allocate a new slice (`make([]Card, len-1)`
+- Rewrite `RemoveFromX` to allocate a new slice (`make([]*Card, len-1)`
   + two copies). Costs one alloc per removal but removals are much
   rarer than clones.
 - Or track a `shared` bit per zone and copy before mutation.

@@ -91,7 +91,7 @@ func NewModalSpell(modes []Mode) *ModalSpellAbility {
 }
 
 // getModalSpellAbility returns the *ModalSpellAbility on a card, if any.
-func getModalSpellAbility(card Card) (*ModalSpellAbility, bool) {
+func getModalSpellAbility(card *Card) (*ModalSpellAbility, bool) {
 	if card == nil {
 		return nil, false
 	}

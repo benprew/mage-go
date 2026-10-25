@@ -11,7 +11,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	mage.Register("Centaur Courser", func() mage.Card {
+	mage.Register("Centaur Courser", func() *mage.Card {
 		return mage.NewCreature("Centaur Courser", "{2}{G}", 3, 3,
 			mage.WithSubTypes("Centaur", "Warrior"),
 		)

@@ -15,7 +15,7 @@ var basicLandNamesSOS = map[string]bool{
 	"Plains": true, "Island": true, "Swamp": true, "Mountain": true, "Forest": true,
 }
 
-func isBasicLandCardSOS(c Card) bool { return basicLandNamesSOS[c.Name()] }
+func isBasicLandCardSOS(c *Card) bool { return basicLandNamesSOS[c.Name()] }
 
 // searchBasicLandToBattlefieldTappedSOS searches the controller's library for
 // a basic land card, puts it onto the battlefield tapped, then shuffles.
@@ -25,7 +25,7 @@ func searchBasicLandToBattlefieldTappedSOS(g *Game, controller uuid.UUID) {
 		return
 	}
 	lib := p.Library()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range lib {
 		if isBasicLandCardSOS(c) {
 			candidates = append(candidates, c)
@@ -40,7 +40,7 @@ func searchBasicLandToBattlefieldTappedSOS(g *Game, controller uuid.UUID) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != chosen.ID() {
 			newLib = append(newLib, c)
@@ -62,7 +62,7 @@ func searchBasicLandToHandSOS(g *Game, controller uuid.UUID) {
 		return
 	}
 	lib := p.Library()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range lib {
 		if isBasicLandCardSOS(c) {
 			candidates = append(candidates, c)
@@ -77,7 +77,7 @@ func searchBasicLandToHandSOS(g *Game, controller uuid.UUID) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != chosen.ID() {
 			newLib = append(newLib, c)
@@ -114,7 +114,7 @@ func (c *exileCreatureFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *
 	if p == nil {
 		return fmt.Errorf("player not found")
 	}
-	var candidates []Card
+	var candidates []*Card
 	for _, card := range p.Graveyard() {
 		if card.HasType(TypeCreature) {
 			candidates = append(candidates, card)
@@ -200,7 +200,7 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, put a +1/+1 counter on another target creature you control.
 	// At the beginning of combat on your turn, exile up to one target card from a graveyard.
-	Register("Ascendant Dustspeaker", func() Card {
+	Register("Ascendant Dustspeaker", func() *Card {
 		return NewCreature("Ascendant Dustspeaker", "{4}{W}", 3, 4,
 			WithSubTypes("Orc", "Cleric"),
 			WithKeyword(Flying),
@@ -215,7 +215,7 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// Collect all graveyard cards
-						var candidates []Card
+						var candidates []*Card
 						for _, pl := range g.AllPlayers() {
 							candidates = append(candidates, pl.Graveyard()...)
 						}
@@ -247,7 +247,7 @@ func registerCreatures() {
 	// Creature — Cat Cleric
 	// 3/3
 	// When this creature enters, create a 1/1 white and black Inkling creature token with flying.
-	Register("Eager Glyphmage", func() Card {
+	Register("Eager Glyphmage", func() *Card {
 		return NewCreature("Eager Glyphmage", "{3}{W}", 3, 3,
 			WithSubTypes("Cat", "Cleric"),
 			WithAbility(EntersBattlefieldTrigger(
@@ -271,8 +271,8 @@ func registerCreatures() {
 	// Rejoinder {1}{W}
 	// Sorcery
 	// You may tap or untap target creature. Draw a card.
-	Register("Elite Interceptor // Rejoinder", func() Card {
-		spellFactory := func() Card {
+	Register("Elite Interceptor // Rejoinder", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Rejoinder", "{1}{W}",
 				NewTargetedSpell(TargetCreature(),
 					FuncEffect("you may tap or untap target creature; draw a card",
@@ -318,8 +318,8 @@ func registerCreatures() {
 	// Swords to Plowshares {W}
 	// Instant
 	// Exile target creature. Its controller gains life equal to its power.
-	Register("Emeritus of Truce // Swords to Plowshares", func() Card {
-		stpFactory := func() Card {
+	Register("Emeritus of Truce // Swords to Plowshares", func() *Card {
+		stpFactory := func() *Card {
 			return NewInstant("Swords to Plowshares", "{W}",
 				NewTargetedSpell(TargetCreature(), Pipeline(
 					"exile target creature. Its controller gains life equal to its power",
@@ -386,7 +386,7 @@ func registerCreatures() {
 	// 1/1
 	// When Ennis enters, exile up to one other target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.
 	// At the beginning of your end step, if one or more cards were put into exile this turn, put a +1/+1 counter on Ennis.
-	Register("Ennis, Debate Moderator", func() Card {
+	Register("Ennis, Debate Moderator", func() *Card {
 		return NewCreature("Ennis, Debate Moderator", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
 			WithSuperTypes(SuperLegendary),
@@ -418,8 +418,8 @@ func registerCreatures() {
 	// Forum's Favor {W}
 	// Sorcery
 	// Target creature gets +1/+0 and gains flying until end of turn.
-	Register("Honorbound Page // Forum's Favor", func() Card {
-		spellFactory := func() Card {
+	Register("Honorbound Page // Forum's Favor", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Forum's Favor", "{W}",
 				NewTargetedSpell(TargetCreature(),
 					CompositeEffects("target creature gets +1/+0 and gains flying until end of turn",
@@ -441,7 +441,7 @@ func registerCreatures() {
 	// Vigilance
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
 	// create a 1/1 white and black Inkling creature token with flying.
-	Register("Informed Inkwright", func() Card {
+	Register("Informed Inkwright", func() *Card {
 		return NewCreature("Informed Inkwright", "{1}{W}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 			WithKeyword(Vigilance),
@@ -457,7 +457,7 @@ func registerCreatures() {
 	// opponent controls, counter it unless that player pays {2}.)
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
 	// this creature gets +1/+0 and gains lifelink until end of turn.
-	Register("Inkshape Demonstrator", func() Card {
+	Register("Inkshape Demonstrator", func() *Card {
 		wardEffect := FuncEffect(
 			"counter that spell or ability unless its controller pays {2}",
 			EffectProperties{Outcome: OutcomeBenefit},
@@ -527,8 +527,8 @@ func registerCreatures() {
 	// Secret Rendezvous {1}{W}{W}
 	// Sorcery
 	// You and target opponent each draw three cards.
-	Register("Joined Researchers // Secret Rendezvous", func() Card {
-		srFactory := func() Card {
+	Register("Joined Researchers // Secret Rendezvous", func() *Card {
+		srFactory := func() *Card {
 			return NewSorcery("Secret Rendezvous", "{1}{W}{W}",
 				NewTargetedSpell(TargetOpponent(),
 					FuncEffect(
@@ -602,7 +602,7 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
 	// Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.
-	Register("Owlin Historian", func() Card {
+	Register("Owlin Historian", func() *Card {
 		return NewCreature("Owlin Historian", "{2}{W}", 2, 3,
 			WithSubTypes("Bird", "Cleric"),
 			WithKeyword(Flying),
@@ -626,8 +626,8 @@ func registerCreatures() {
 	// Twofold Intent {1}{W}
 	// Sorcery
 	// Target creature gets +1/+0 and gains double strike until end of turn.
-	Register("Quill-Blade Laureate // Twofold Intent", func() Card {
-		spellFactory := func() Card {
+	Register("Quill-Blade Laureate // Twofold Intent", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Twofold Intent", "{1}{W}",
 				NewTargetedSpell(TargetCreature(),
 					CompositeEffects("target creature gets +1/+0 and gains double strike until end of turn",
@@ -648,7 +648,7 @@ func registerCreatures() {
 	// 3/3
 	// Vigilance
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+1 until end of turn.
-	Register("Rehearsed Debater", func() Card {
+	Register("Rehearsed Debater", func() *Card {
 		return NewCreature("Rehearsed Debater", "{2}{W}", 3, 3,
 			WithSubTypes("Djinn", "Bard"),
 			WithKeyword(Vigilance),
@@ -663,7 +663,7 @@ func registerCreatures() {
 	// 2/2
 	// Lifelink
 	// {1}, Sacrifice this creature: Destroy target artifact or enchantment.
-	Register("Shattered Acolyte", func() Card {
+	Register("Shattered Acolyte", func() *Card {
 		return NewCreature("Shattered Acolyte", "{1}{W}", 2, 2,
 			WithSubTypes("Dwarf", "Warlock"),
 			WithKeyword(Lifelink),
@@ -681,7 +681,7 @@ func registerCreatures() {
 	// 4/3
 	// As an additional cost to cast this spell, exile two cards from your graveyard or pay {1}{W}.
 	// Flying, vigilance
-	Register("Soaring Stoneglider", func() Card {
+	Register("Soaring Stoneglider", func() *Card {
 		return NewCreature("Soaring Stoneglider", "{2}{W}", 4, 3,
 			WithSubTypes("Elephant", "Cleric"),
 			WithAdditionalCost(EitherCost(ExileFromGraveyardCost(2), ManaCostOf("{1}{W}"))),
@@ -699,8 +699,8 @@ func registerCreatures() {
 	// Scrollboost {1}{W}
 	// Sorcery
 	// One or two target creatures each get +2/+2 until end of turn.
-	Register("Spiritcall Enthusiast // Scrollboost", func() Card {
-		sbFactory := func() Card {
+	Register("Spiritcall Enthusiast // Scrollboost", func() *Card {
+		sbFactory := func() *Card {
 			return NewSorcery("Scrollboost", "{1}{W}",
 				NewMultiTargetSpell(
 					[]Target{TargetUpToNCreatures(2)},
@@ -745,7 +745,7 @@ func registerCreatures() {
 	// 1/3
 	// Flying, lifelink
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control.
-	Register("Stirring Hopesinger", func() Card {
+	Register("Stirring Hopesinger", func() *Card {
 		return NewCreature("Stirring Hopesinger", "{2}{W}", 1, 3,
 			WithSubTypes("Bird", "Bard"),
 			WithKeyword(Flying),
@@ -774,7 +774,7 @@ func registerCreatures() {
 	// Creature — Spirit Chimera
 	// 3/1
 	// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)
-	Register("Stone Docent", func() Card {
+	Register("Stone Docent", func() *Card {
 		return NewCreature("Stone Docent", "{1}{W}", 3, 1,
 			WithSubTypes("Spirit", "Chimera"),
 			// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery.
@@ -794,7 +794,7 @@ func registerCreatures() {
 	// 4/3
 	// Vigilance
 	// {1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.
-	Register("Summoned Dromedary", func() Card {
+	Register("Summoned Dromedary", func() *Card {
 		return NewCreature("Summoned Dromedary", "{3}{W}", 4, 3,
 			WithSubTypes("Spirit", "Camel"),
 			WithKeyword(Vigilance),
@@ -817,8 +817,8 @@ func registerCreatures() {
 	// Aqueous Aria {4}{U}
 	// Sorcery
 	// Create a 3/3 blue and red Elemental creature token with flying.
-	Register("Campus Composer // Aqueous Aria", func() Card {
-		spellFactory := func() Card {
+	Register("Campus Composer // Aqueous Aria", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Aqueous Aria", "{4}{U}",
 				NewSpellAbility(
 					CreateColoredToken(
@@ -842,8 +842,8 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.
-	Register("Deluge Virtuoso", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Deluge Virtuoso", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Deluge Virtuoso", "{2}{U}", 2, 2,
@@ -917,8 +917,8 @@ func registerCreatures() {
 	// Ancestral Recall {U}
 	// Instant
 	// Target player draws three cards.
-	Register("Emeritus of Ideation // Ancestral Recall", func() Card {
-		spellFactory := func() Card {
+	Register("Emeritus of Ideation // Ancestral Recall", func() *Card {
+		spellFactory := func() *Card {
 			return NewInstant("Ancestral Recall", "{U}",
 				NewTargetedSpell(
 					TargetPlayer(),
@@ -973,8 +973,8 @@ func registerCreatures() {
 	// Jump {U}
 	// Instant
 	// Target creature gains flying until end of turn.
-	Register("Encouraging Aviator // Jump", func() Card {
-		spellFactory := func() Card {
+	Register("Encouraging Aviator // Jump", func() *Card {
+		spellFactory := func() *Card {
 			return NewInstant("Jump", "{U}",
 				NewTargetedSpell(
 					TargetCreature(),
@@ -1004,8 +1004,8 @@ func registerCreatures() {
 	// Creature — Djinn Wizard
 	// 0/2
 	// Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.
-	Register("Exhibition Tidecaller", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Exhibition Tidecaller", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Exhibition Tidecaller", "{U}", 0, 2,
@@ -1068,8 +1068,8 @@ func registerCreatures() {
 	// an activated ability ({T}, tap two untapped creatures), not automatically
 	// at ETB. Prepared mechanics are wired manually here; HasPreparedSpell will
 	// return false for Tomekeeper lookups (intended — it enters unprepared).
-	Register("Harmonized Trio // Brainstorm", func() Card {
-		spellFactory := func() Card {
+	Register("Harmonized Trio // Brainstorm", func() *Card {
+		spellFactory := func() *Card {
 			return NewInstant("Brainstorm", "{U}",
 				NewSpellAbility(FuncEffect(
 					"draw three cards, then put two cards from your hand on top of your library in any order",
@@ -1137,7 +1137,7 @@ func registerCreatures() {
 	// 1/3
 	// {T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.
 	// {1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.
-	Register("Hydro-Channeler", func() Card {
+	Register("Hydro-Channeler", func() *Card {
 		return NewCreature("Hydro-Channeler", "{1}{U}", 1, 3,
 			WithSubTypes("Merfolk", "Wizard"),
 			// {T}: Add {U}.
@@ -1163,11 +1163,11 @@ func registerCreatures() {
 	// Sorcery
 	// Create X 0/0 green and blue Fractal creature tokens, then put X +1/+1 counters on each Fractal you control.
 	//
-	Register("Jadzi, Steward of Fate // Oracle's Gift", func() Card {
+	Register("Jadzi, Steward of Fate // Oracle's Gift", func() *Card {
 		fractalFilter := NewPermanentFilter("Fractal", func(p *Permanent, _ *Game) bool {
 			return slices.Contains(p.Card.SubTypes(), "Fractal")
 		})
-		spellFactory := func() Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Oracle's Gift", "{X}{X}{U}",
 				NewSpellAbility(FuncEffect(
 					"create X 0/0 green and blue Fractal tokens, then put X +1/+1 counters on each Fractal you control",
@@ -1233,8 +1233,8 @@ func registerCreatures() {
 	// Vibrant Idea {4}{U}
 	// Sorcery
 	// Draw two cards.
-	Register("Landscape Painter // Vibrant Idea", func() Card {
-		spellFactory := func() Card {
+	Register("Landscape Painter // Vibrant Idea", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Vibrant Idea", "{4}{U}",
 				NewSpellAbility(DrawCards(Fixed(2))))
 		}
@@ -1249,8 +1249,8 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, return up to one other target creature to its owner's hand.
 	// Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
-	Register("Matterbending Mage", func() Card {
-		hasXFilter := NewCardFilter("spell with {X} in mana cost", func(c Card) bool {
+	Register("Matterbending Mage", func() *Card {
+		hasXFilter := NewCardFilter("spell with {X} in mana cost", func(c *Card) bool {
 			return c.ManaCost().HasX
 		})
 		return NewCreature("Matterbending Mage", "{2}{U}", 2, 2,
@@ -1313,8 +1313,8 @@ func registerCreatures() {
 	// Creature — Elf Wizard
 	// 1/2
 	// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell.
-	Register("Muse Seeker", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Muse Seeker", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Muse Seeker", "{1}{U}", 1, 2,
@@ -1354,8 +1354,8 @@ func registerCreatures() {
 	// 2/2
 	// This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.
 	// When Orysa enters, draw two cards.
-	Register("Orysa, Tide Choreographer", func() Card {
-		totalToughnessGTE10 := func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
+	Register("Orysa, Tide Choreographer", func() *Card {
+		totalToughnessGTE10 := func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) bool {
 			total := 0
 			for _, perm := range g.AllBattlefield() {
 				if perm.ControllerID() == controller && perm.HasAttr(AttrIsCreature) {
@@ -1379,7 +1379,7 @@ func registerCreatures() {
 	// 0/2
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// Whenever one or more +1/+1 counters are put on this creature, draw a card.
-	Register("Pensive Professor", func() Card {
+	Register("Pensive Professor", func() *Card {
 		return NewCreature("Pensive Professor", "{1}{U}{U}", 0, 2,
 			WithSubTypes("Human", "Wizard"),
 			// Increment
@@ -1400,9 +1400,9 @@ func registerCreatures() {
 	// All Aboard {U}
 	// Instant
 	// Exile target non-Pilot creature you control, then return that card to the battlefield under its owner's control.
-	Register("Skycoach Conductor // All Aboard", func() Card {
+	Register("Skycoach Conductor // All Aboard", func() *Card {
 		nonPilot := Not(HasSubType("Pilot"))
-		spellFactory := func() Card {
+		spellFactory := func() *Card {
 			return NewInstant("All Aboard", "{U}",
 				NewTargetedSpell(
 					TargetCreatureYouControl(nonPilot),
@@ -1447,8 +1447,8 @@ func registerCreatures() {
 	// Careful Study {U}
 	// Sorcery
 	// Draw two cards, then discard two cards.
-	Register("Spellbook Seeker // Careful Study", func() Card {
-		spellFactory := func() Card {
+	Register("Spellbook Seeker // Careful Study", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Careful Study", "{U}",
 				NewSpellAbility(CompositeEffects(
 					"draw two cards, then discard two cards",
@@ -1483,7 +1483,7 @@ func registerCreatures() {
 	// 1/1
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.
-	Register("Tester of the Tangential", func() Card {
+	Register("Tester of the Tangential", func() *Card {
 		return NewCreature("Tester of the Tangential", "{1}{U}", 1, 1,
 			WithSubTypes("Djinn", "Wizard"),
 			// Increment
@@ -1549,7 +1549,7 @@ func registerCreatures() {
 	// 0/3
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-	Register("Textbook Tabulator", func() Card {
+	Register("Textbook Tabulator", func() *Card {
 		return NewCreature("Textbook Tabulator", "{2}{U}", 0, 3,
 			WithSubTypes("Frog", "Wizard"),
 			// Increment
@@ -1569,8 +1569,8 @@ func registerCreatures() {
 	// Have a Bite {B}
 	// Sorcery
 	// Put a +1/+1 counter on target creature. You gain 1 life.
-	Register("Adventurous Eater // Have a Bite", func() Card {
-		spellFactory := func() Card {
+	Register("Adventurous Eater // Have a Bite", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Have a Bite", "{B}",
 				NewTargetedSpell(
 					TargetCreature(),
@@ -1592,7 +1592,7 @@ func registerCreatures() {
 	// 2/2
 	// Deathtouch
 	// Whenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life.
-	Register("Arnyn, Deathbloom Botanist", func() Card {
+	Register("Arnyn, Deathbloom Botanist", func() *Card {
 		return NewCreature("Arnyn, Deathbloom Botanist", "{2}{B}", 2, 2,
 			WithSubTypes("Vampire", "Druid"),
 			WithSuperTypes(SuperLegendary),
@@ -1638,7 +1638,7 @@ func registerCreatures() {
 	// 1/1
 	// Deathtouch
 	// {1}{B}: This creature gets +1/+1 until end of turn.
-	Register("Burrog Banemaker", func() Card {
+	Register("Burrog Banemaker", func() *Card {
 		return NewCreature("Burrog Banemaker", "{B}", 1, 1,
 			WithSubTypes("Frog", "Warlock"),
 			WithKeyword(Deathtouch),
@@ -1658,8 +1658,8 @@ func registerCreatures() {
 	// Raise Dead {B}
 	// Sorcery
 	// Return target creature card from your graveyard to your hand.
-	Register("Cheerful Osteomancer // Raise Dead", func() Card {
-		spellFactory := func() Card {
+	Register("Cheerful Osteomancer // Raise Dead", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Raise Dead", "{B}",
 				NewTargetedSpell(
 					TargetCardInYourGraveyard(IsCreatureCard),
@@ -1681,8 +1681,8 @@ func registerCreatures() {
 	// Demonic Tutor {1}{B}
 	// Sorcery
 	// Search your library for a card, put that card into your hand, then shuffle.
-	Register("Emeritus of Woe // Demonic Tutor", func() Card {
-		spellFactory := func() Card {
+	Register("Emeritus of Woe // Demonic Tutor", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Demonic Tutor", "{1}{B}",
 				NewSpellAbility(SearchLibraryToHand()))
 		}
@@ -1711,7 +1711,7 @@ func registerCreatures() {
 	// Creature — Zombie Warlock
 	// 4/2
 	// {1}{B}, Exile this card from your graveyard: Create two 1/1 white and black Inkling creature tokens with flying.
-	Register("Eternal Student", func() Card {
+	Register("Eternal Student", func() *Card {
 		inklingTokenEffect := CreateColoredToken("Inkling Token", 1, 1,
 			[]Color{White, Black},
 			[]CardType{TypeCreature},
@@ -1737,7 +1737,7 @@ func registerCreatures() {
 	// 5/4
 	// Ward—Discard a card.
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, return target creature card from your graveyard to the battlefield.
-	Register("Forum Necroscribe", func() Card {
+	Register("Forum Necroscribe", func() *Card {
 		return NewCreature("Forum Necroscribe", "{5}{B}", 5, 4,
 			WithSubTypes("Troll", "Warlock"),
 			WithWard(DiscardCost(1)),
@@ -1759,8 +1759,8 @@ func registerCreatures() {
 	// Sorcery
 	// Put target creature card from a graveyard onto the battlefield under your control.
 	// You lose life equal to that card's mana value.
-	Register("Grave Researcher // Reanimate", func() Card {
-		spellFactory := func() Card {
+	Register("Grave Researcher // Reanimate", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Reanimate", "{B}",
 				NewTargetedSpell(
 					TargetCreatureCardInAnyGraveyard(),
@@ -1775,7 +1775,7 @@ func registerCreatures() {
 							if ctrl == nil {
 								return nil
 							}
-							var picked Card
+							var picked *Card
 							var ok bool
 							picked, ok = ctrl.RemoveFromGraveyard(targets[0])
 							if !ok {
@@ -1848,7 +1848,7 @@ func registerCreatures() {
 	// 1/1
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
 	// put a +1/+1 counter on this creature.
-	Register("Lecturing Scornmage", func() Card {
+	Register("Lecturing Scornmage", func() *Card {
 		return NewCreature("Lecturing Scornmage", "{B}", 1, 1,
 			WithSubTypes("Human", "Warlock"),
 			WithAbility(NewTriggered(EvtSpellCast, false,
@@ -1865,8 +1865,8 @@ func registerCreatures() {
 	// Bloodletting {B}
 	// Sorcery
 	// Each opponent loses 2 life.
-	Register("Leech Collector // Bloodletting", func() Card {
-		spellFactory := func() Card {
+	Register("Leech Collector // Bloodletting", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Bloodletting", "{B}",
 				NewSpellAbility(FuncEffect(
 					"each opponent loses 2 life",
@@ -1924,7 +1924,7 @@ func registerCreatures() {
 	// Creature — Elf Bard
 	// 2/2
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, each opponent loses 1 life and you gain 1 life.
-	Register("Melancholic Poet", func() Card {
+	Register("Melancholic Poet", func() *Card {
 		return NewCreature("Melancholic Poet", "{1}{B}", 2, 2,
 			WithSubTypes("Elf", "Bard"),
 			// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
@@ -1954,7 +1954,7 @@ func registerCreatures() {
 	// Flying
 	// When Moseo enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
 	// Infusion — At the beginning of your end step, if you gained life this turn, return up to one target creature card with mana value X or less from your graveyard to the battlefield, where X is the amount of life you gained this turn.
-	Register("Moseo, Vein's New Dean", func() Card {
+	Register("Moseo, Vein's New Dean", func() *Card {
 		pestTokenEffect := TokenWithAbilities(
 			CreateColoredToken("Pest Token", 1, 1,
 				[]Color{Black, Green},
@@ -1988,7 +1988,7 @@ func registerCreatures() {
 							if lifeGained <= 0 {
 								return nil
 							}
-							var eligible []Card
+							var eligible []*Card
 							for _, c := range p.Graveyard() {
 								if !c.HasType(TypeCreature) {
 									continue
@@ -2018,7 +2018,7 @@ func registerCreatures() {
 	// Creature — Orc Warlock
 	// 2/2
 	// Infusion — When this creature enters, target creature an opponent controls gets -4/-4 until end of turn if you gained life this turn.
-	Register("Poisoner's Apprentice", func() Card {
+	Register("Poisoner's Apprentice", func() *Card {
 		return NewCreature("Poisoner's Apprentice", "{2}{B}", 2, 2,
 			WithSubTypes("Orc", "Warlock"),
 			// Infusion — When this creature enters, target creature an opponent controls gets
@@ -2039,7 +2039,7 @@ func registerCreatures() {
 	// This creature can't block.
 	// Whenever this creature attacks, each opponent loses 1 life and you gain 1 life.
 	// {1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.
-	Register("Postmortem Professor", func() Card {
+	Register("Postmortem Professor", func() *Card {
 		return NewCreature("Postmortem Professor", "{1}{B}", 2, 2,
 			WithSubTypes("Zombie", "Warlock"),
 			// This creature can't block.
@@ -2109,8 +2109,8 @@ func registerCreatures() {
 	// Venomous Words {B}
 	// Sorcery
 	// Target creature you control gets +2/+0 and gains deathtouch until end of turn.
-	Register("Scathing Shadelock // Venomous Words", func() Card {
-		spellFactory := func() Card {
+	Register("Scathing Shadelock // Venomous Words", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Venomous Words", "{B}",
 				NewTargetedSpell(TargetControlledCreature(),
 					CompositeEffects("target creature you control gets +2/+0 and gains deathtouch until end of turn",
@@ -2144,8 +2144,8 @@ func registerCreatures() {
 	// Sign in Blood {B}{B}
 	// Sorcery
 	// Target player draws two cards and loses 2 life.
-	Register("Scheming Silvertongue // Sign in Blood", func() Card {
-		spellFactory := func() Card {
+	Register("Scheming Silvertongue // Sign in Blood", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Sign in Blood", "{B}{B}",
 				NewTargetedSpell(TargetPlayer(),
 					FuncEffect(
@@ -2214,7 +2214,7 @@ func registerCreatures() {
 	// 3/3
 	// Flying
 	// When this creature enters, each opponent loses 2 life and you gain 2 life.
-	Register("Sneering Shadewriter", func() Card {
+	Register("Sneering Shadewriter", func() *Card {
 		return NewCreature("Sneering Shadewriter", "{4}{B}", 3, 3,
 			WithSubTypes("Vampire", "Warlock"),
 			WithKeyword(Flying),
@@ -2245,7 +2245,7 @@ func registerCreatures() {
 	// Trample
 	// Ward—Discard a card.
 	// Infusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.
-	Register("Tragedy Feaster", func() Card {
+	Register("Tragedy Feaster", func() *Card {
 		return NewCreature("Tragedy Feaster", "{2}{B}{B}", 7, 6,
 			WithSubTypes("Demon"),
 			WithKeyword(Trample),
@@ -2291,7 +2291,7 @@ func registerCreatures() {
 	// 2/3
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Infusion — This creature gets +2/+0 as long as you gained life this turn.
-	Register("Ulna Alley Shopkeep", func() Card {
+	Register("Ulna Alley Shopkeep", func() *Card {
 		return NewCreature("Ulna Alley Shopkeep", "{2}{B}", 2, 3,
 			WithSubTypes("Goblin", "Warlock"),
 			WithKeyword(Menace),
@@ -2319,8 +2319,8 @@ func registerCreatures() {
 	// Seething Song {2}{R}
 	// Instant
 	// Add {R}{R}{R}{R}{R}.
-	Register("Blazing Firesinger // Seething Song", func() Card {
-		spellFactory := func() Card {
+	Register("Blazing Firesinger // Seething Song", func() *Card {
+		spellFactory := func() *Card {
 			return NewInstant("Seething Song", "{2}{R}",
 				NewSpellAbility(FuncEffect(
 					"add {R}{R}{R}{R}{R}",
@@ -2347,7 +2347,7 @@ func registerCreatures() {
 	// 3/3
 	// Haste
 	// {T}, Discard a card: Draw a card.
-	Register("Charging Strifeknight", func() Card {
+	Register("Charging Strifeknight", func() *Card {
 		return NewCreature("Charging Strifeknight", "{2}{R}", 3, 3,
 			WithSubTypes("Spirit", "Knight"),
 			WithKeyword(Haste),
@@ -2370,8 +2370,8 @@ func registerCreatures() {
 	// Lightning Bolt {R}
 	// Instant
 	// Lightning Bolt deals 3 damage to any target.
-	Register("Emeritus of Conflict // Lightning Bolt", func() Card {
-		spellFactory := func() Card {
+	Register("Emeritus of Conflict // Lightning Bolt", func() *Card {
+		spellFactory := func() *Card {
 			return NewInstant("Lightning Bolt", "{R}",
 				NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 			)
@@ -2404,8 +2404,8 @@ func registerCreatures() {
 	// Creature — Human Sorcerer
 	// 2/2
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.
-	Register("Expressive Firedancer", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Expressive Firedancer", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Expressive Firedancer", "{1}{R}", 2, 2,
@@ -2437,7 +2437,7 @@ func registerCreatures() {
 	// 3/4
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.
-	Register("Garrison Excavator", func() Card {
+	Register("Garrison Excavator", func() *Card {
 		return NewCreature("Garrison Excavator", "{3}{R}", 3, 4,
 			WithSubTypes("Orc", "Sorcerer"),
 			WithKeyword(Menace),
@@ -2461,8 +2461,8 @@ func registerCreatures() {
 	// Craft with Pride {R}
 	// Sorcery
 	// Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
-	Register("Goblin Glasswright // Craft with Pride", func() Card {
-		spellFactory := func() Card {
+	Register("Goblin Glasswright // Craft with Pride", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Craft with Pride", "{R}",
 				NewSpellAbility(CreateTreasureToken()),
 			)
@@ -2482,11 +2482,11 @@ func registerCreatures() {
 	// Rocket Volley {1}{R}
 	// Sorcery
 	// Destroy target nonbasic land.
-	Register("Maelstrom Artisan // Rocket Volley", func() Card {
+	Register("Maelstrom Artisan // Rocket Volley", func() *Card {
 		nonbasicLand := NewPermanentFilter("nonbasic land", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeLand) && !p.Card.HasSuperType(SuperBasic)
 		})
-		spellFactory := func() Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Rocket Volley", "{1}{R}",
 				NewTargetedSpell(TargetPermanent(nonbasicLand), DestroyTarget()),
 			)
@@ -2504,8 +2504,8 @@ func registerCreatures() {
 	// Trample, reach
 	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
 	// Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.
-	Register("Magmablood Archaic", func() Card {
-		isInstantOrSorceryCard := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Magmablood Archaic", func() *Card {
+		isInstantOrSorceryCard := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Magmablood Archaic", "{2/R}{2/R}{2/R}", 2, 2,
@@ -2580,8 +2580,8 @@ func registerCreatures() {
 	// 4/4
 	// Ward—Pay 3 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 3 life.)
 	// Whenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy.
-	Register("Mica, Reader of Ruins", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Mica, Reader of Ruins", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Mica, Reader of Ruins", "{3}{R}", 4, 4,
@@ -2646,8 +2646,8 @@ func registerCreatures() {
 	// 2/2
 	// Menace
 	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.
-	Register("Molten-Core Maestro", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Molten-Core Maestro", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Molten-Core Maestro", "{1}{R}", 2, 2,
@@ -2692,8 +2692,8 @@ func registerCreatures() {
 	// Striking Palette {R}
 	// Sorcery
 	// When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.
-	Register("Pigment Wrangler // Striking Palette", func() Card {
-		spellFactory := func() Card {
+	Register("Pigment Wrangler // Striking Palette", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Striking Palette", "{R}",
 				NewSpellAbility(FuncEffect(
 					"when you next cast an instant or sorcery spell this turn, copy that spell",
@@ -2716,7 +2716,7 @@ func registerCreatures() {
 	// Creature — Horse Beast
 	// 4/5
 	// Reach, haste
-	Register("Rearing Embermare", func() Card {
+	Register("Rearing Embermare", func() *Card {
 		return NewCreature("Rearing Embermare", "{4}{R}", 4, 5,
 			WithSubTypes("Horse", "Beast"),
 			WithKeyword(Reach),
@@ -2729,7 +2729,7 @@ func registerCreatures() {
 	// 1/4
 	// When this creature enters, you may discard a card. If you do, draw a card.
 	// {T}, Exile a card from your graveyard: Add {R}. When you do, this creature deals 1 damage to each opponent.
-	Register("Rubble Rouser", func() Card {
+	Register("Rubble Rouser", func() *Card {
 		return NewCreature("Rubble Rouser", "{2}{R}", 1, 4,
 			WithSubTypes("Dwarf", "Sorcerer"),
 			WithAbility(EntersBattlefieldTrigger(
@@ -2773,8 +2773,8 @@ func registerCreatures() {
 	// Awaken the Ages {5}{R}
 	// Sorcery
 	// Create two 2/2 red and white Spirit creature tokens.
-	Register("Strife Scholar // Awaken the Ages", func() Card {
-		spellFactory := func() Card {
+	Register("Strife Scholar // Awaken the Ages", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Awaken the Ages", "{5}{R}",
 				NewSpellAbility(FuncEffect(
 					"create two 2/2 red and white Spirit creature tokens",
@@ -2807,8 +2807,8 @@ func registerCreatures() {
 	// 4/3
 	// Trample
 	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.
-	Register("Tackle Artist", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Tackle Artist", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Tackle Artist", "{3}{R}", 4, 3,
@@ -2843,8 +2843,8 @@ func registerCreatures() {
 	// 1/3
 	// Reach
 	// Opus — Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. If five or more mana was spent to cast that spell, this creature deals 3 damage to each opponent instead.
-	Register("Thunderdrum Soloist", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Thunderdrum Soloist", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Thunderdrum Soloist", "{1}{R}", 1, 3,
@@ -2878,7 +2878,7 @@ func registerCreatures() {
 	// Creature — Giant Sorcerer
 	// 4/4
 	// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
-	Register("Zealous Lorecaster", func() Card {
+	Register("Zealous Lorecaster", func() *Card {
 		return NewCreature("Zealous Lorecaster", "{5}{R}", 4, 4,
 			WithSubTypes("Giant", "Sorcerer"),
 			// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
@@ -2896,8 +2896,8 @@ func registerCreatures() {
 	// 2/5
 	// Trample
 	// Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell.
-	Register("Aberrant Manawurm", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Aberrant Manawurm", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Aberrant Manawurm", "{3}{G}", 2, 5,
@@ -2928,7 +2928,7 @@ func registerCreatures() {
 	// 1/1
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// When this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.
-	Register("Ambitious Augmenter", func() Card {
+	Register("Ambitious Augmenter", func() *Card {
 		return NewCreature("Ambitious Augmenter", "{G}", 1, 1,
 			WithSubTypes("Turtle", "Wizard"),
 			// Increment
@@ -2994,8 +2994,8 @@ func registerCreatures() {
 	// Regrowth {1}{G}
 	// Sorcery
 	// Return target card from your graveyard to your hand.
-	Register("Emeritus of Abundance // Regrowth", func() Card {
-		spellFactory := func() Card {
+	Register("Emeritus of Abundance // Regrowth", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Regrowth", "{1}{G}",
 				NewTargetedSpell(TargetCardInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
 			)
@@ -3026,7 +3026,7 @@ func registerCreatures() {
 	// 3/3
 	// Creatures you control with +1/+1 counters on them have trample.
 	// {4}{G}, {T}: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of differently named lands you control.
-	Register("Emil, Vastlands Roamer", func() Card {
+	Register("Emil, Vastlands Roamer", func() *Card {
 		return NewCreature("Emil, Vastlands Roamer", "{2}{G}", 3, 3,
 			WithSubTypes("Elf", "Druid"),
 			WithSuperTypes(SuperLegendary),
@@ -3083,7 +3083,7 @@ func registerCreatures() {
 	// Creature — Human Druid
 	// 2/2
 	// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
-	Register("Environmental Scientist", func() Card {
+	Register("Environmental Scientist", func() *Card {
 		return NewCreature("Environmental Scientist", "{1}{G}", 2, 2,
 			WithSubTypes("Human", "Druid"),
 			// When this creature enters, you may search your library for a basic land card,
@@ -3106,7 +3106,7 @@ func registerCreatures() {
 	// 3/4
 	// Reach
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-	Register("Hungry Graffalon", func() Card {
+	Register("Hungry Graffalon", func() *Card {
 		return NewCreature("Hungry Graffalon", "{3}{G}", 3, 4,
 			WithSubTypes("Giraffe"),
 			WithKeyword(Reach),
@@ -3122,8 +3122,8 @@ func registerCreatures() {
 	// Stream of Life {X}{G}
 	// Sorcery
 	// Target player gains X life.
-	Register("Infirmary Healer // Stream of Life", func() Card {
-		spellFactory := func() Card {
+	Register("Infirmary Healer // Stream of Life", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Stream of Life", "{X}{G}",
 				NewTargetedSpell(TargetPlayer(), GainLifeTarget(XValue())),
 			)
@@ -3139,7 +3139,7 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, you gain 1 life.
 	// {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
-	Register("Mindful Biomancer", func() Card {
+	Register("Mindful Biomancer", func() *Card {
 		return NewCreature("Mindful Biomancer", "{1}{G}", 2, 2,
 			WithSubTypes("Dryad", "Druid"),
 			// When this creature enters, you gain 1 life.
@@ -3158,7 +3158,7 @@ func registerCreatures() {
 	// 1/2
 	// Deathtouch
 	// {T}: Add {G}.
-	Register("Noxious Newt", func() Card {
+	Register("Noxious Newt", func() *Card {
 		return NewCreature("Noxious Newt", "{1}{G}", 1, 2,
 			WithSubTypes("Salamander"),
 			WithKeyword(Deathtouch),
@@ -3171,7 +3171,7 @@ func registerCreatures() {
 	// 4/4
 	// Reach
 	// When this creature dies, create two 1/1 black and green Pest creature tokens with "Whenever this token attacks, you gain 1 life."
-	Register("Pestbrood Sloth", func() Card {
+	Register("Pestbrood Sloth", func() *Card {
 		makePestToken := func() Effect {
 			return TokenWithAbilities(
 				CreateColoredToken("Pest Token", 1, 1,
@@ -3204,7 +3204,7 @@ func registerCreatures() {
 	// 4/2
 	// Trample
 	// Whenever this creature attacks, you gain 2 life.
-	Register("Shopkeeper's Bane", func() Card {
+	Register("Shopkeeper's Bane", func() *Card {
 		return NewCreature("Shopkeeper's Bane", "{2}{G}", 4, 2,
 			WithSubTypes("Badger", "Pest"),
 			WithKeyword(Trample),
@@ -3216,7 +3216,7 @@ func registerCreatures() {
 	// Creature — Plant Beast
 	// 6/6
 	// This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-	Register("Slumbering Trudge", func() Card {
+	Register("Slumbering Trudge", func() *Card {
 		// Both EntersWithComputedCounters callbacks run during PutOnBattlefield
 		// while g.ResolvingCastContext() is still live — safe to read XValue here.
 		// The ETB trigger fires later after the context is cleared, so we use a
@@ -3270,8 +3270,8 @@ func registerCreatures() {
 	// Rampant Growth {1}{G}
 	// Sorcery
 	// Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.
-	Register("Studious First-Year // Rampant Growth", func() Card {
-		spellFactory := func() Card {
+	Register("Studious First-Year // Rampant Growth", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Rampant Growth", "{1}{G}",
 				NewSpellAbility(FuncEffect(
 					"search your library for a basic land card, put that card onto the battlefield tapped, then shuffle",
@@ -3295,7 +3295,7 @@ func registerCreatures() {
 	// Vigilance
 	// Whenever this creature becomes the target of a spell or ability an opponent controls, you may draw a card.
 	// Infusion — This creature gets +2/+0 as long as you gained life this turn.
-	Register("Tenured Concocter", func() Card {
+	Register("Tenured Concocter", func() *Card {
 		return NewCreature("Tenured Concocter", "{4}{G}", 4, 5,
 			WithSubTypes("Troll", "Druid"),
 			WithKeyword(Vigilance),
@@ -3326,7 +3326,7 @@ func registerCreatures() {
 	// 3/3
 	// Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)
 	// Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.
-	Register("Thornfist Striker", func() Card {
+	Register("Thornfist Striker", func() *Card {
 		wardEffect := FuncEffect(
 			"counter that spell or ability unless its controller pays {1}",
 			EffectProperties{Outcome: OutcomeBenefit},
@@ -3414,7 +3414,7 @@ func registerCreatures() {
 	// 1/2
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// {T}: Add an amount of {G} equal to this creature's power.
-	Register("Topiary Lecturer", func() Card {
+	Register("Topiary Lecturer", func() *Card {
 		return NewCreature("Topiary Lecturer", "{2}{G}", 1, 2,
 			WithSubTypes("Elf", "Druid"),
 			// Increment
@@ -3458,8 +3458,8 @@ func registerCreatures() {
 	// Bind to Life {4}{G}
 	// Instant
 	// Mill seven cards. Then put a creature card from among them onto the battlefield.
-	Register("Vastlands Scavenger // Bind to Life", func() Card {
-		spellFactory := func() Card {
+	Register("Vastlands Scavenger // Bind to Life", func() *Card {
+		spellFactory := func() *Card {
 			return NewInstant("Bind to Life", "{4}{G}",
 				NewSpellAbility(FuncEffect(
 					"mill seven cards; then put a creature card from among them onto the battlefield",
@@ -3472,7 +3472,7 @@ func registerCreatures() {
 						// Mill seven cards from the controller's library.
 						lib := p.Library()
 						milledCount := min(7, len(lib))
-						var milled []Card
+						var milled []*Card
 						for i := range milledCount {
 							milled = append(milled, lib[i])
 						}
@@ -3481,7 +3481,7 @@ func registerCreatures() {
 						}
 						p.SetLibrary(lib[milledCount:])
 						// Collect creature cards from the milled batch.
-						var creatures []Card
+						var creatures []*Card
 						for _, c := range milled {
 							if c.HasType(TypeCreature) {
 								creatures = append(creatures, c)
@@ -3520,7 +3520,7 @@ func registerCreatures() {
 	// parser; it parses to zero cost, so no mana is recorded as spent and DistinctColorsSpent() is
 	// always 0. Converge and the creature-spell trigger cannot function until the engine gains
 	// support for generic-hybrid mana symbols.
-	Register("Wildgrowth Archaic", func() Card {
+	Register("Wildgrowth Archaic", func() *Card {
 		return NewCreature("Wildgrowth Archaic", "{2/G}{2/G}", 0, 0,
 			WithSubTypes("Avatar"),
 			WithKeyword(Trample),
@@ -3541,8 +3541,8 @@ func registerCreatures() {
 	// Heroic Stanza {1}{W/B}
 	// Sorcery
 	// Put a +1/+1 counter on target creature.
-	Register("Abigale, Poet Laureate // Heroic Stanza", func() Card {
-		spellFactory := func() Card {
+	Register("Abigale, Poet Laureate // Heroic Stanza", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Heroic Stanza", "{1}{W/B}",
 				NewTargetedSpell(
 					TargetCreature(),
@@ -3591,7 +3591,7 @@ func registerCreatures() {
 	// Creature — Djinn Sorcerer
 	// 2/2
 	// At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells.
-	Register("Abstract Paintmage", func() Card {
+	Register("Abstract Paintmage", func() *Card {
 		return NewCreature("Abstract Paintmage", "{U}{U/R}{R}", 2, 2,
 			WithSubTypes("Djinn", "Sorcerer"),
 			// At the beginning of your first main phase, add {U}{R}.
@@ -3610,7 +3610,7 @@ func registerCreatures() {
 	// Legendary Creature — Djinn Sorcerer
 	// 2/2
 	// Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.
-	Register("Aziza, Mage Tower Captain", func() Card {
+	Register("Aziza, Mage Tower Captain", func() *Card {
 		return NewCreature("Aziza, Mage Tower Captain", "{R}{W}", 2, 2,
 			WithSubTypes("Djinn", "Sorcerer"),
 			WithSuperTypes(SuperLegendary),
@@ -3690,7 +3690,7 @@ func registerCreatures() {
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// Whenever one or more +1/+1 counters are put on Berta, add one mana of any color.
 	// {X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.
-	Register("Berta, Wise Extrapolator", func() Card {
+	Register("Berta, Wise Extrapolator", func() *Card {
 		return NewCreature("Berta, Wise Extrapolator", "{2}{G}{U}", 1, 4,
 			WithSubTypes("Frog", "Druid"),
 			WithSuperTypes(SuperLegendary),
@@ -3732,7 +3732,7 @@ func registerCreatures() {
 	// Legendary Creature — Pest
 	// 3/4
 	// Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.
-	Register("Blech, Loafing Pest", func() Card {
+	Register("Blech, Loafing Pest", func() *Card {
 		isPestBatInsectSnakeSpider := func(perm *Permanent, _ *Game) bool {
 			return perm.HasSubType("Pest") || perm.HasSubType("Bat") ||
 				perm.HasSubType("Insect") || perm.HasSubType("Snake") ||
@@ -3763,7 +3763,7 @@ func registerCreatures() {
 	// Creature — Spirit Frog
 	// 2/2
 	// Whenever this creature or another creature you control enters, you gain 1 life.
-	Register("Bogwater Lumaret", func() Card {
+	Register("Bogwater Lumaret", func() *Card {
 		return NewCreature("Bogwater Lumaret", "{B}{G}", 2, 2,
 			WithSubTypes("Spirit", "Frog"),
 			// Whenever this creature or another creature you control enters, you gain 1 life.
@@ -3780,8 +3780,8 @@ func registerCreatures() {
 	// 3/3
 	// Ward {1}, haste
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.
-	Register("Colorstorm Stallion", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Colorstorm Stallion", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Colorstorm Stallion", "{1}{U}{R}", 3, 3,
@@ -3822,7 +3822,7 @@ func registerCreatures() {
 	// 6/6
 	// When this creature enters, it deals 3 damage to each opponent and you gain 3 life.
 	// When this creature dies, discard any number of cards, then draw that many cards plus one.
-	Register("Colossus of the Blood Age", func() Card {
+	Register("Colossus of the Blood Age", func() *Card {
 		return NewCreature("Colossus of the Blood Age", "{4}{R}{W}", 6, 6,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -3882,7 +3882,7 @@ func registerCreatures() {
 	// 4/3
 	// When this creature enters, draw a card. Each player loses 1 life.
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, exile up to one target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.
-	Register("Conciliator's Duelist", func() Card {
+	Register("Conciliator's Duelist", func() *Card {
 		return NewCreature("Conciliator's Duelist", "{W}{W}{B}{B}", 4, 3,
 			WithSubTypes("Kor", "Warlock"),
 			// When this creature enters, draw a card. Each player loses 1 life.
@@ -3919,7 +3919,7 @@ func registerCreatures() {
 	// Flash
 	// Flying, trample
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-	Register("Cuboid Colony", func() Card {
+	Register("Cuboid Colony", func() *Card {
 		return NewCreature("Cuboid Colony", "{G}{U}", 1, 1,
 			WithSubTypes("Insect"),
 			WithKeyword(Flash),
@@ -3934,8 +3934,8 @@ func registerCreatures() {
 	// 1/4
 	// Flying, vigilance
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.
-	Register("Elemental Mascot", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Elemental Mascot", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Elemental Mascot", "{1}{U}{R}", 1, 4,
@@ -3983,7 +3983,7 @@ func registerCreatures() {
 	// 3/1
 	// When this creature enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
 	// At the beginning of your end step, if a creature died under your control this turn, draw a card.
-	Register("Essenceknit Scholar", func() Card {
+	Register("Essenceknit Scholar", func() *Card {
 		pestTokenWithAttack := TokenWithAbilities(
 			CreateColoredToken("Pest Token", 1, 1,
 				[]Color{Black, Green},
@@ -4023,7 +4023,7 @@ func registerCreatures() {
 	// 6/6
 	// Trample
 	// When this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-	Register("Fractal Mascot", func() Card {
+	Register("Fractal Mascot", func() *Card {
 		return NewCreature("Fractal Mascot", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Fractal", "Elk"),
 			WithKeyword(Trample),
@@ -4071,7 +4071,7 @@ func registerCreatures() {
 	// Ward {2}
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// At the beginning of each end step, if you put a counter on this creature this turn, create a 0/0 green and blue Fractal creature token and put three +1/+1 counters on it.
-	Register("Fractal Tender", func() Card {
+	Register("Fractal Tender", func() *Card {
 		// incrementAndFlagEffect adds a +1/+1 counter when the Increment condition is
 		// met and marks the creature with a Charge counter as a "counter-placed-this-turn"
 		// flag. The Charge counter is a repurposed flag marker — Fractal Tender has no
@@ -4131,7 +4131,7 @@ func registerCreatures() {
 	// Creature — Fractal Crab
 	// 1/4
 	// Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order.
-	Register("Geometer's Arthropod", func() Card {
+	Register("Geometer's Arthropod", func() *Card {
 		return NewCreature("Geometer's Arthropod", "{G}{U}", 1, 4,
 			WithSubTypes("Fractal", "Crab"),
 			WithAbility(WheneverYouCastSpellTrigger(
@@ -4160,7 +4160,7 @@ func registerCreatures() {
 							return nil
 						}
 						chosen := p.ChooseCardFromLibrary(revealed, "put into hand", g)
-						var rest []Card
+						var rest []*Card
 						for _, c := range revealed {
 							if chosen == nil || c.ID() != chosen.ID() {
 								rest = append(rest, c)
@@ -4194,7 +4194,7 @@ func registerCreatures() {
 	// Flying, haste
 	// Discard a card: This creature gains lifelink until end of turn.
 	// Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
-	Register("Hardened Academic", func() Card {
+	Register("Hardened Academic", func() *Card {
 		return NewCreature("Hardened Academic", "{R}{W}", 2, 1,
 			WithSubTypes("Bird", "Cleric"),
 			WithKeyword(Flying),
@@ -4216,7 +4216,7 @@ func registerCreatures() {
 	// 3/3
 	// Vigilance
 	// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-	Register("Imperious Inkmage", func() Card {
+	Register("Imperious Inkmage", func() *Card {
 		return NewCreature("Imperious Inkmage", "{1}{W}{B}", 3, 3,
 			WithSubTypes("Orc", "Warlock"),
 			WithKeyword(Vigilance),
@@ -4230,7 +4230,7 @@ func registerCreatures() {
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
 	// this creature gains flying until end of turn. Surveil 1. (Look at the top card of
 	// your library. You may put it into your graveyard.)
-	Register("Inkling Mascot", func() Card {
+	Register("Inkling Mascot", func() *Card {
 		return NewCreature("Inkling Mascot", "{W}{B}", 2, 2,
 			WithSubTypes("Inkling", "Cat"),
 			WithAbility(NewTriggered(EvtSpellCast, false,
@@ -4250,8 +4250,8 @@ func registerCreatures() {
 	// Pack a Punch {1}{R}{W}
 	// Sorcery
 	// Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn.
-	Register("Kirol, History Buff // Pack a Punch", func() Card {
-		spellFactory := func() Card {
+	Register("Kirol, History Buff // Pack a Punch", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Pack a Punch", "{1}{R}{W}",
 				NewTargetedSpell(
 					TargetCreature(),
@@ -4326,7 +4326,7 @@ func registerCreatures() {
 	// Pest Friend {B/G}
 	// Sorcery
 	// Create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
-	Register("Lluwen, Exchange Student // Pest Friend", func() Card {
+	Register("Lluwen, Exchange Student // Pest Friend", func() *Card {
 		pestToken := TokenWithAbilities(
 			CreateColoredToken("Pest Token", 1, 1,
 				[]Color{Black, Green},
@@ -4335,7 +4335,7 @@ func registerCreatures() {
 			),
 			AttacksTrigger(GainLife(1), false),
 		)
-		spellFactory := func() Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Pest Friend", "{B/G}",
 				NewSpellAbility(pestToken))
 		}
@@ -4367,7 +4367,7 @@ func registerCreatures() {
 	// Flying, haste
 	// Each instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)
 	// At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
-	Register("Lorehold, the Historian", func() Card {
+	Register("Lorehold, the Historian", func() *Card {
 		return NewCreature("Lorehold, the Historian", "{3}{R}{W}", 5, 5,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
@@ -4405,10 +4405,10 @@ func registerCreatures() {
 	// 2/3
 	// Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control.
 	// {2}, Sacrifice another creature: Exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead. Activate only as a sorcery.
-	Register("Nita, Forum Conciliator", func() Card {
+	Register("Nita, Forum Conciliator", func() *Card {
 		// XXX: "Whenever you cast a spell you don't own" trigger not implemented — engine
 		// does not track spell ownership separately from controller.
-		instantOrSorceryCard := NewCardFilter("instant or sorcery card", func(c Card) bool {
+		instantOrSorceryCard := NewCardFilter("instant or sorcery card", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Nita, Forum Conciliator", "{1}{W}{B}", 2, 3,
@@ -4428,7 +4428,7 @@ func registerCreatures() {
 							return nil
 						}
 						// Collect instant/sorcery cards from all opponents' graveyards.
-						var candidates []Card
+						var candidates []*Card
 						for _, opp := range g.AllPlayers() {
 							if opp.PlayerID() == controller {
 								continue
@@ -4470,7 +4470,7 @@ func registerCreatures() {
 	// 4/4
 	// Vigilance, reach
 	// Infusion — When this creature enters, put two +1/+1 counters on it if you gained life this turn.
-	Register("Old-Growth Educator", func() Card {
+	Register("Old-Growth Educator", func() *Card {
 		return NewCreature("Old-Growth Educator", "{2}{B}{G}", 4, 4,
 			WithSubTypes("Treefolk", "Druid"),
 			WithKeyword(Vigilance),
@@ -4501,8 +4501,8 @@ func registerCreatures() {
 	// 3/3
 	// Reach
 	// When this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it into your hand. Put the rest on the bottom of your library in a random order.
-	Register("Paradox Surveyor", func() Card {
-		landOrXCostCard := NewCardFilter("land card or card with {X} in its mana cost", func(c Card) bool {
+	Register("Paradox Surveyor", func() *Card {
+		landOrXCostCard := NewCardFilter("land card or card with {X} in its mana cost", func(c *Card) bool {
 			if c.HasType(TypeLand) {
 				return true
 			}
@@ -4528,7 +4528,7 @@ func registerCreatures() {
 						taken := g.RemoveTopN(p, 5)
 						rest := taken
 						if chosen != nil {
-							rest = make([]Card, 0, len(taken))
+							rest = make([]*Card, 0, len(taken))
 							for _, c := range taken {
 								if c.ID() == chosen.ID() {
 									p.AddToHand(c)
@@ -4551,7 +4551,7 @@ func registerCreatures() {
 	// 2/3
 	// Trample
 	// Whenever you gain life, put a +1/+1 counter on this creature.
-	Register("Pest Mascot", func() Card {
+	Register("Pest Mascot", func() *Card {
 		return NewCreature("Pest Mascot", "{1}{B}{G}", 2, 3,
 			WithSubTypes("Pest", "Ape"),
 			WithKeyword(Trample),
@@ -4567,8 +4567,8 @@ func registerCreatures() {
 	// 3/2
 	// First strike
 	// When this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card.
-	Register("Practiced Scrollsmith", func() Card {
-		isNonCreatureNonLandCard := NewCardFilter("noncreature, nonland card", func(c Card) bool {
+	Register("Practiced Scrollsmith", func() *Card {
+		isNonCreatureNonLandCard := NewCardFilter("noncreature, nonland card", func(c *Card) bool {
 			return !c.HasType(TypeCreature) && !c.HasType(TypeLand)
 		})
 		return NewCreature("Practiced Scrollsmith", "{R}{R/W}{W}", 3, 2,
@@ -4610,7 +4610,7 @@ func registerCreatures() {
 	// Flying
 	// Ward—Pay 5 life.
 	// Instant and sorcery spells you cast have storm. (Whenever you cast an instant or sorcery spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)
-	Register("Prismari, the Inspiration", func() Card {
+	Register("Prismari, the Inspiration", func() *Card {
 		return NewCreature("Prismari, the Inspiration", "{5}{U}{R}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
@@ -4628,7 +4628,7 @@ func registerCreatures() {
 	// Flying
 	// This creature enters with X +1/+1 counters on it.
 	// When this creature enters, you gain 2 life.
-	Register("Pterafractyl", func() Card {
+	Register("Pterafractyl", func() *Card {
 		return NewCreature("Pterafractyl", "{X}{G}{U}", 1, 0,
 			WithSubTypes("Dinosaur", "Fractal"),
 			WithKeyword(Flying),
@@ -4643,7 +4643,7 @@ func registerCreatures() {
 	// Flying, trample
 	// Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)
 	// Instant and sorcery spells you cast from your hand have cascade.
-	Register("Quandrix, the Proof", func() Card {
+	Register("Quandrix, the Proof", func() *Card {
 		return NewCreature("Quandrix, the Proof", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
@@ -4665,8 +4665,8 @@ func registerCreatures() {
 	// Wild Idea {3}{U}{R}
 	// Sorcery
 	// Search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle.
-	Register("Sanar, Unfinished Genius // Wild Idea", func() Card {
-		spellFactory := func() Card {
+	Register("Sanar, Unfinished Genius // Wild Idea", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Wild Idea", "{3}{U}{R}",
 				NewSpellAbility(FuncEffect(
 					"search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle",
@@ -4677,7 +4677,7 @@ func registerCreatures() {
 							return nil
 						}
 						lib := p.Library()
-						var candidates []Card
+						var candidates []*Card
 						for _, c := range lib {
 							if c.HasType(TypeInstant) || c.HasType(TypeSorcery) {
 								candidates = append(candidates, c)
@@ -4692,7 +4692,7 @@ func registerCreatures() {
 							p.ShuffleLibrary()
 							return nil
 						}
-						newLib := make([]Card, 0, len(lib)-1)
+						newLib := make([]*Card, 0, len(lib)-1)
 						for _, c := range lib {
 							if c.ID() != chosen.ID() {
 								newLib = append(newLib, c)
@@ -4737,7 +4737,7 @@ func registerCreatures() {
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
 	// When this creature dies, if it had counters on it, put those counters on up to one target creature.
-	Register("Scolding Administrator", func() Card {
+	Register("Scolding Administrator", func() *Card {
 		return NewCreature("Scolding Administrator", "{W}{B}", 2, 2,
 			WithSubTypes("Dwarf", "Cleric"),
 			WithKeyword(Menace),
@@ -4792,7 +4792,7 @@ func registerCreatures() {
 	// Flying, vigilance
 	// Each instant and sorcery spell you cast has casualty 1. (As you cast that spell, you may sacrifice a creature with power 1 or greater. When you do, copy the spell and you may choose new targets for the copy.)
 	// XXX: Casualty is not implemented in the engine (no mechanism to add an optional sacrifice cost to all spells of a given type, nor to copy the spell on sacrifice).
-	Register("Silverquill, the Disputant", func() Card {
+	Register("Silverquill, the Disputant", func() *Card {
 		return NewCreature("Silverquill, the Disputant", "{2}{W}{B}", 4, 4,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
@@ -4806,7 +4806,7 @@ func registerCreatures() {
 	// 2/3
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn.
 	// Whenever this creature deals combat damage to a player, you draw a card and lose 1 life.
-	Register("Snooping Page", func() Card {
+	Register("Snooping Page", func() *Card {
 		return NewCreature("Snooping Page", "{1}{W}{B}", 2, 3,
 			WithSubTypes("Human", "Cleric"),
 			// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
@@ -4851,8 +4851,8 @@ func registerCreatures() {
 	// 1/4
 	// Flying
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. If five or more mana was spent to cast that spell, put three +1/+1 counters on this creature instead.
-	Register("Spectacular Skywhale", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+	Register("Spectacular Skywhale", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		return NewCreature("Spectacular Skywhale", "{2}{U}{R}", 1, 4,
@@ -4888,7 +4888,7 @@ func registerCreatures() {
 	// Creature — Spirit Ox
 	// 2/2
 	// Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature.
-	Register("Spirit Mascot", func() Card {
+	Register("Spirit Mascot", func() *Card {
 		return NewCreature("Spirit Mascot", "{R}{W}", 2, 2,
 			WithSubTypes("Spirit", "Ox"),
 			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
@@ -4902,7 +4902,7 @@ func registerCreatures() {
 	// Creature — Djinn Sorcerer
 	// 4/4
 	// Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.
-	Register("Stadium Tidalmage", func() Card {
+	Register("Stadium Tidalmage", func() *Card {
 		drawDiscard := FuncEffect(
 			"you may draw a card, if you do discard a card",
 			EffectProperties{Outcome: OutcomeBenefit},
@@ -4942,7 +4942,7 @@ func registerCreatures() {
 	// 4/4
 	// Trample, lifelink
 	// At the beginning of combat on your turn, exile up to one target card from a graveyard.
-	Register("Startled Relic Sloth", func() Card {
+	Register("Startled Relic Sloth", func() *Card {
 		return NewCreature("Startled Relic Sloth", "{2}{R}{W}", 4, 4,
 			WithSubTypes("Sloth", "Beast"),
 			WithKeyword(Trample),
@@ -4951,7 +4951,7 @@ func registerCreatures() {
 				FuncEffect("exile up to one target card from a graveyard",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						var candidates []Card
+						var candidates []*Card
 						for _, pl := range g.AllPlayers() {
 							candidates = append(candidates, pl.Graveyard()...)
 						}
@@ -4982,7 +4982,7 @@ func registerCreatures() {
 	// Creature — Rhino Bard
 	// 4/5
 	// When this creature enters, look at the top X cards of your library, where X is the number of creatures you control. Put one of those cards into your hand and the rest into your graveyard.
-	Register("Stirring Honormancer", func() Card {
+	Register("Stirring Honormancer", func() *Card {
 		return NewCreature("Stirring Honormancer", "{2}{W}{W/B}{B}", 4, 5,
 			WithSubTypes("Rhino", "Bard"),
 			WithAbility(EntersBattlefieldTrigger(
@@ -5027,8 +5027,8 @@ func registerCreatures() {
 	// Deep Sight {G}{U}
 	// Sorcery
 	// You draw a card and gain 1 life.
-	Register("Tam, Observant Sequencer // Deep Sight", func() Card {
-		spellFactory := func() Card {
+	Register("Tam, Observant Sequencer // Deep Sight", func() *Card {
+		spellFactory := func() *Card {
 			return NewSorcery("Deep Sight", "{G}{U}",
 				NewSpellAbility(CompositeEffects(
 					"draw a card and gain 1 life",
@@ -5081,7 +5081,7 @@ func registerCreatures() {
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Whenever this creature attacks, you gain 1 life.
 	// {B}{G}: Return this card from your graveyard to the battlefield tapped.
-	Register("Teacher's Pest", func() Card {
+	Register("Teacher's Pest", func() *Card {
 		return NewCreature("Teacher's Pest", "{B}{G}", 1, 1,
 			WithSubTypes("Skeleton", "Pest"),
 			WithKeyword(Menace),
@@ -5118,7 +5118,7 @@ func registerCreatures() {
 	// Affinity for creatures (This spell costs {1} less to cast for each creature you control.)
 	// Flying, deathtouch
 	// Instant and sorcery spells you cast have affinity for creatures.
-	Register("Witherbloom, the Balancer", func() Card {
+	Register("Witherbloom, the Balancer", func() *Card {
 		return NewCreature("Witherbloom, the Balancer", "{6}{B}{G}", 5, 5,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
@@ -5139,7 +5139,7 @@ func registerCreatures() {
 	// Legendary Creature — Human Bard Sorcerer
 	// 5/7
 	// Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.
-	Register("Zaffai and the Tempests", func() Card {
+	Register("Zaffai and the Tempests", func() *Card {
 		return NewCreature("Zaffai and the Tempests", "{5}{U}{R}", 5, 7,
 			WithSubTypes("Human", "Bard", "Sorcerer"),
 			WithSuperTypes(SuperLegendary),
@@ -5154,7 +5154,7 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						var candidates []Card
+						var candidates []*Card
 						for _, c := range p.Hand() {
 							if c.HasType(TypeInstant) || c.HasType(TypeSorcery) {
 								candidates = append(candidates, c)
@@ -5206,7 +5206,7 @@ func registerCreatures() {
 	// When this creature enters, choose up to one —
 	// • Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)
 	// • Target creature becomes unprepared.
-	Register("Biblioplex Tomekeeper", func() Card {
+	Register("Biblioplex Tomekeeper", func() *Card {
 		// hasPreparedSpellFilter matches creatures that have a prepared spell.
 		hasPreparedSpellFilter := NewPermanentFilter("creature with a prepared spell", func(perm *Permanent, _ *Game) bool {
 			return HasPreparedSpell(perm.Card)
@@ -5263,8 +5263,8 @@ func registerCreatures() {
 	// Artifact Creature — Construct
 	// 2/1
 	// Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
-	Register("Mage Tower Referee", func() Card {
-		isMulticoloredCard := NewCardFilter("multicolored", func(c Card) bool {
+	Register("Mage Tower Referee", func() *Card {
+		isMulticoloredCard := NewCardFilter("multicolored", func(c *Card) bool {
 			return len(c.ManaCost().Colors()) >= 2
 		})
 		return NewCreature("Mage Tower Referee", "{2}", 2, 1,
@@ -5284,8 +5284,8 @@ func registerCreatures() {
 	// 0/2
 	// {T}: Add {C}.
 	// Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.
-	Register("Page, Loose Leaf", func() Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery card", func(c Card) bool {
+	Register("Page, Loose Leaf", func() *Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery card", func(c *Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 		})
 		grandeurEffect := FuncEffect(
@@ -5297,8 +5297,8 @@ func registerCreatures() {
 					return nil
 				}
 				// Walk library from the top, collecting revealed cards until an instant or sorcery is found.
-				var revealed []Card
-				var found Card
+				var revealed []*Card
+				var found *Card
 				for _, c := range p.Library() {
 					revealed = append(revealed, c)
 					if isInstantOrSorcery.Match(c) {
@@ -5311,7 +5311,7 @@ func registerCreatures() {
 					g.PutOnBottomInRandomOrder(p, taken)
 					return nil
 				}
-				var rest []Card
+				var rest []*Card
 				for _, c := range taken {
 					if c.ID() == found.ID() {
 						p.AddToHand(c)
@@ -5343,7 +5343,7 @@ func registerCreatures() {
 	// 2/2
 	// Trample, reach
 	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-	Register("Rancorous Archaic", func() Card {
+	Register("Rancorous Archaic", func() *Card {
 		return NewCreature("Rancorous Archaic", "{5}", 2, 2,
 			WithSubTypes("Avatar"),
 			WithKeyword(Trample),
@@ -5365,7 +5365,7 @@ func registerCreatures() {
 	// 3/3
 	// Converge — When this creature enters, exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spent to cast this creature.
 	// {2}: Put target card from a graveyard on the bottom of its owner's library.
-	Register("Sundering Archaic", func() Card {
+	Register("Sundering Archaic", func() *Card {
 		return NewCreature("Sundering Archaic", "{6}", 3, 3,
 			WithSubTypes("Avatar"),
 			// Converge — capture colors-spent during PutOnBattlefield (while resolvingCastContext is live)
@@ -5424,7 +5424,7 @@ func registerCreatures() {
 								if owner == nil {
 									owner = pl
 								}
-								g.PutOnBottomInRandomOrder(owner, []Card{removed})
+								g.PutOnBottomInRandomOrder(owner, []*Card{removed})
 								break
 							}
 						}
@@ -5443,7 +5443,7 @@ func registerCreatures() {
 	// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
 	// Reach
 	// Whenever The Dawning Archaic attacks, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead.
-	Register("The Dawning Archaic", func() Card {
+	Register("The Dawning Archaic", func() *Card {
 		return NewCreature("The Dawning Archaic", "{10}", 7, 7,
 			WithSubTypes("Avatar"),
 			WithSuperTypes(SuperLegendary),
@@ -5461,7 +5461,7 @@ func registerCreatures() {
 	// 6/6
 	// Vigilance
 	// Converge — When this creature enters, you may draw X cards, where X is the number of colors of mana spent to cast this spell. If you draw one or more cards this way, discard two cards.
-	Register("Transcendent Archaic", func() Card {
+	Register("Transcendent Archaic", func() *Card {
 		return NewCreature("Transcendent Archaic", "{7}", 6, 6,
 			WithSubTypes("Avatar"),
 			WithKeyword(Vigilance),

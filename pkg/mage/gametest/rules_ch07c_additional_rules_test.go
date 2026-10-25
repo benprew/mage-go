@@ -32,7 +32,7 @@ func TestCR704_5d_TokenCeasesInGraveyard(t *testing.T) {
 	const killName = "SBA Token Kill Spell"
 	const tokenCreatorName = "SBA Token Creator"
 	if !mage.CardRegistered(tokenCreatorName) {
-		mage.Register(tokenCreatorName, func() mage.Card {
+		mage.Register(tokenCreatorName, func() *mage.Card {
 			return mage.NewSorcery(tokenCreatorName, "{1}{G}",
 				mage.NewSpellAbility(mage.CreateToken(
 					"SBA Test Saproling", 1, 1,
@@ -43,7 +43,7 @@ func TestCR704_5d_TokenCeasesInGraveyard(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(killName) {
-		mage.Register(killName, func() mage.Card {
+		mage.Register(killName, func() *mage.Card {
 			return mage.NewInstant(killName, "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 			)
@@ -72,7 +72,7 @@ func TestCR704_5d_TokenCeasesInGraveyard(t *testing.T) {
 func TestCR704_5f_NegativeToughnessDies(t *testing.T) {
 	const crName = "SBA Minus Two Toughness Creature"
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 3, 2, mage.WithSubTypes("Beast"))
 		})
 	}
@@ -93,7 +93,7 @@ func TestCR704_5f_NegativeToughnessDies(t *testing.T) {
 func TestCR704_5f_ZeroToughnessNoRegeneration(t *testing.T) {
 	const regenName = "SBA Regen Creature Zero Tough"
 	if !mage.CardRegistered(regenName) {
-		mage.Register(regenName, func() mage.Card {
+		mage.Register(regenName, func() *mage.Card {
 			return mage.NewCreature(regenName, "{2}{G}", 3, 1,
 				mage.WithSubTypes("Troll"),
 				mage.WithActivatedAbility(
@@ -128,12 +128,12 @@ func TestCR704_5g_LethalDamageDestroysCreature(t *testing.T) {
 	const atkName = "SBA Lethal Attacker"
 	const defName = "SBA Lethal Defender"
 	if !mage.CardRegistered(atkName) {
-		mage.Register(atkName, func() mage.Card {
+		mage.Register(atkName, func() *mage.Card {
 			return mage.NewCreature(atkName, "{3}{R}", 5, 5, mage.WithSubTypes("Dragon"))
 		})
 	}
 	if !mage.CardRegistered(defName) {
-		mage.Register(defName, func() mage.Card {
+		mage.Register(defName, func() *mage.Card {
 			return mage.NewCreature(defName, "{1}{W}", 2, 2, mage.WithSubTypes("Knight"))
 		})
 	}
@@ -158,12 +158,12 @@ func TestCR704_5g_LethalDamageExact(t *testing.T) {
 	const atkName = "SBA Exact Lethal Attacker"
 	const defName = "SBA Exact Lethal Defender"
 	if !mage.CardRegistered(atkName) {
-		mage.Register(atkName, func() mage.Card {
+		mage.Register(atkName, func() *mage.Card {
 			return mage.NewCreature(atkName, "{1}{R}", 2, 2, mage.WithSubTypes("Goblin"))
 		})
 	}
 	if !mage.CardRegistered(defName) {
-		mage.Register(defName, func() mage.Card {
+		mage.Register(defName, func() *mage.Card {
 			return mage.NewCreature(defName, "{1}{W}", 2, 2, mage.WithSubTypes("Soldier"))
 		})
 	}
@@ -190,7 +190,7 @@ func TestCR704_5g_RegenerationSavesFromLethalDamage(t *testing.T) {
 	const defName = "SBA Regen Troll Lethal"
 	const killSpell = "SBA Regen Lethal Kill"
 	if !mage.CardRegistered(defName) {
-		mage.Register(defName, func() mage.Card {
+		mage.Register(defName, func() *mage.Card {
 			return mage.NewCreature(defName, "{2}{G}", 3, 3,
 				mage.WithSubTypes("Troll"),
 				mage.WithActivatedAbility(
@@ -201,7 +201,7 @@ func TestCR704_5g_RegenerationSavesFromLethalDamage(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(killSpell) {
-		mage.Register(killSpell, func() mage.Card {
+		mage.Register(killSpell, func() *mage.Card {
 			return mage.NewInstant(killSpell, "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 			)
@@ -231,7 +231,7 @@ func TestCR704_5h_DeathtouchDestroys(t *testing.T) {
 	const atkName = "SBA Deathtouch Attacker"
 	const defName = "SBA Deathtouch Victim"
 	if !mage.CardRegistered(atkName) {
-		mage.Register(atkName, func() mage.Card {
+		mage.Register(atkName, func() *mage.Card {
 			return mage.NewCreature(atkName, "{1}{B}", 1, 1,
 				mage.WithSubTypes("Snake"),
 				mage.WithKeyword(core.Deathtouch),
@@ -239,7 +239,7 @@ func TestCR704_5h_DeathtouchDestroys(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(defName) {
-		mage.Register(defName, func() mage.Card {
+		mage.Register(defName, func() *mage.Card {
 			return mage.NewCreature(defName, "{3}{G}", 6, 6, mage.WithSubTypes("Wurm"))
 		})
 	}
@@ -265,7 +265,7 @@ func TestCR704_5h_RegenerationSavesFromDeathtouch(t *testing.T) {
 	const atkName = "SBA DT Regen Attacker"
 	const defName = "SBA DT Regen Defender"
 	if !mage.CardRegistered(atkName) {
-		mage.Register(atkName, func() mage.Card {
+		mage.Register(atkName, func() *mage.Card {
 			return mage.NewCreature(atkName, "{1}{B}", 1, 1,
 				mage.WithSubTypes("Snake"),
 				mage.WithKeyword(core.Deathtouch),
@@ -273,7 +273,7 @@ func TestCR704_5h_RegenerationSavesFromDeathtouch(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(defName) {
-		mage.Register(defName, func() mage.Card {
+		mage.Register(defName, func() *mage.Card {
 			return mage.NewCreature(defName, "{2}{G}", 3, 3,
 				mage.WithSubTypes("Troll"),
 				mage.WithActivatedAbility(
@@ -307,7 +307,7 @@ func TestCR704_5h_RegenerationSavesFromDeathtouch(t *testing.T) {
 func TestCR704_5j_LegendRulePlayerChooses(t *testing.T) {
 	const legName = "SBA Legend Rule Chooser"
 	if !mage.CardRegistered(legName) {
-		mage.Register(legName, func() mage.Card {
+		mage.Register(legName, func() *mage.Card {
 			return mage.NewCreature(legName, "{2}{W}", 3, 3,
 				mage.WithSuperTypes(core.SuperLegendary),
 				mage.WithSubTypes("Human", "Knight"),
@@ -331,7 +331,7 @@ func TestCR704_5j_LegendRuleDoesNotCountAsSacrifice(t *testing.T) {
 	registerTriggerLifeDiscardSacrificeCards()
 	const legName = "SBA Legend Rule Non-Sacrifice"
 	if !mage.CardRegistered(legName) {
-		mage.Register(legName, func() mage.Card {
+		mage.Register(legName, func() *mage.Card {
 			return mage.NewCreature(legName, "{2}{W}", 3, 3,
 				mage.WithSuperTypes(core.SuperLegendary),
 			)
@@ -357,7 +357,7 @@ func TestCR704_5j_LegendRuleDoesNotCountAsSacrifice(t *testing.T) {
 func TestCR704_5j_LegendRuleDifferentControllers(t *testing.T) {
 	const legName = "SBA Legend Rule Each Player"
 	if !mage.CardRegistered(legName) {
-		mage.Register(legName, func() mage.Card {
+		mage.Register(legName, func() *mage.Card {
 			return mage.NewCreature(legName, "{2}{W}", 3, 3,
 				mage.WithSuperTypes(core.SuperLegendary),
 				mage.WithSubTypes("Human", "Knight"),
@@ -389,17 +389,17 @@ func TestCR704_5m_AuraFallsOffDestroyedCreature(t *testing.T) {
 	const crName = "SBA Aura Host Creature"
 	const killName = "SBA Aura Host Killer"
 	if !mage.CardRegistered(auraName) {
-		mage.Register(auraName, func() mage.Card {
+		mage.Register(auraName, func() *mage.Card {
 			return mage.NewBoostAura(auraName, "{1}{G}", 2, 2)
 		})
 	}
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(killName) {
-		mage.Register(killName, func() mage.Card {
+		mage.Register(killName, func() *mage.Card {
 			return mage.NewInstant(killName, "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 			)
@@ -470,19 +470,19 @@ func TestCR704_5n_EquipmentDetachesOnCreatureDeath(t *testing.T) {
 	const crName = "SBA Equipment Host Creature"
 	const killName = "SBA Equipment Host Killer"
 	if !mage.CardRegistered(equipName) {
-		mage.Register(equipName, func() mage.Card {
+		mage.Register(equipName, func() *mage.Card {
 			return mage.NewEquipment(equipName, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(2, 2, core.AttachEquipment))),
 			)
 		})
 	}
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Soldier"))
 		})
 	}
 	if !mage.CardRegistered(killName) {
-		mage.Register(killName, func() mage.Card {
+		mage.Register(killName, func() *mage.Card {
 			return mage.NewInstant(killName, "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 			)
@@ -516,7 +516,7 @@ func TestCR704_5n_EquipmentDetachesOnCreatureDeath(t *testing.T) {
 func TestCR704_5q_CountersCancelOut(t *testing.T) {
 	const crName = "SBA Counter Cancel Creature"
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -539,7 +539,7 @@ func TestCR704_5q_CountersCancelOut(t *testing.T) {
 func TestCR704_5q_CountersCancelOutPartial(t *testing.T) {
 	const crName = "SBA Counter Partial Cancel"
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Wolf"))
 		})
 	}
@@ -569,7 +569,7 @@ func TestCR704_3_SBARepeated(t *testing.T) {
 	for _, n := range []string{crA, crB} {
 
 		if !mage.CardRegistered(n) {
-			mage.Register(n, func() mage.Card {
+			mage.Register(n, func() *mage.Card {
 				return mage.NewCreature(n, "{G}", 1, 1, mage.WithSubTypes("Insect"))
 			})
 		}

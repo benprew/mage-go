@@ -84,7 +84,7 @@ func TestPrimevalBounty_LandfallGainsThreeLife(t *testing.T) {
 
 	pa := g.GetPlayer(gametest.PlayerA)
 	pid := pa.PlayerID()
-	var forest mage.Card
+	var forest *mage.Card
 	for _, c := range pa.Hand() {
 		if c.Name() == "Forest" {
 			forest = c
@@ -113,7 +113,7 @@ func TestPrimevalBounty_OpponentLandDoesNotTrigger(t *testing.T) {
 
 	pb := g.GetPlayer(gametest.PlayerB)
 	pid := pb.PlayerID()
-	var forest mage.Card
+	var forest *mage.Card
 	for _, c := range pb.Hand() {
 		if c.Name() == "Forest" {
 			forest = c

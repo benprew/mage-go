@@ -54,7 +54,7 @@ func (mp *ManaPool) Add(c Color, amount int) {
 // Pass this into ManaPool.CanPay / ManaPool.Pay (and Game.CanAfford /
 // Game.MaxXValue) at every spell-cast site so restricted mana (Mishra's
 // Workshop, Metamorphosis) can be spent on eligible spells.
-func SpellContextForCard(c Card) *SpellPaymentContext {
+func SpellContextForCard(c *Card) *SpellPaymentContext {
 	if c == nil {
 		return nil
 	}

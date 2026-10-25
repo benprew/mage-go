@@ -387,8 +387,8 @@ func parseUUIDs(ss []string) ([]uuid.UUID, error) {
 	return out, nil
 }
 
-func buildLibrary(spec deckSpec, ownerID uuid.UUID, rng *rand.Rand, shuffle bool) ([]mage.Card, error) {
-	var deck []mage.Card
+func buildLibrary(spec deckSpec, ownerID uuid.UUID, rng *rand.Rand, shuffle bool) ([]*mage.Card, error) {
+	var deck []*mage.Card
 	for _, entry := range spec.Cards {
 		for i := 0; i < entry.Count; i++ {
 			card, err := mage.CreateCard(entry.Name)

@@ -14,7 +14,7 @@ func registerSpells() {
 	// Instant
 	// Dwarven Catapult deals X damage divided evenly, rounded down, among all creatures target opponent controls.
 	// TODO: implement
-	Register("Dwarven Catapult", withExpansion(func() Card {
+	Register("Dwarven Catapult", withExpansion(func() *Card {
 		return NewInstant("Dwarven Catapult", "{X}{R}",
 			NewSpellAbility(),
 		)
@@ -24,7 +24,7 @@ func registerSpells() {
 	// Sorcery
 	// As an additional cost to cast this spell, sacrifice a Goblin.
 	// Goblin Grenade deals 5 damage to any target.
-	Register("Goblin Grenade", withExpansion(func() Card {
+	Register("Goblin Grenade", withExpansion(func() *Card {
 		return NewSorcery("Goblin Grenade", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(5))),
 			WithAdditionalCost(SacrificeMatchingCost(HasSubType("Goblin"), "Sacrifice a Goblin")),
@@ -35,7 +35,7 @@ func registerSpells() {
 	// Instant
 	// Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.
 	// TODO: implement
-	Register("High Tide", withExpansion(func() Card {
+	Register("High Tide", withExpansion(func() *Card {
 		return NewInstant("High Tide", "{U}",
 			NewSpellAbility(),
 		)
@@ -44,7 +44,7 @@ func registerSpells() {
 	// Hymn to Tourach {B}{B}
 	// Sorcery
 	// Target player discards two cards at random.
-	Register("Hymn to Tourach", withExpansion(func() Card {
+	Register("Hymn to Tourach", withExpansion(func() *Card {
 		return NewSorcery("Hymn to Tourach", "{B}{B}",
 			NewTargetedSpell(TargetPlayer(), DiscardRandom(2)),
 		)
@@ -53,7 +53,7 @@ func registerSpells() {
 	// Icatian Town {5}{W}
 	// Sorcery
 	// Create four 1/1 white Citizen creature tokens.
-	Register("Icatian Town", withExpansion(func() Card {
+	Register("Icatian Town", withExpansion(func() *Card {
 		return NewSorcery("Icatian Town", "{5}{W}",
 			NewSpellAbility(CreateTokens(4, "Citizen", 1, 1, []CardType{TypeCreature}, []string{"Citizen"})),
 		)
@@ -64,7 +64,7 @@ func registerSpells() {
 	// As an additional cost to cast this spell, exile a creature you control.
 	// Return target creature card from your graveyard to the battlefield. Put a +2/+2 counter on that creature if the exiled creature was a Thrull.
 	// TODO: implement
-	Register("Soul Exchange", withExpansion(func() Card {
+	Register("Soul Exchange", withExpansion(func() *Card {
 		return NewSorcery("Soul Exchange", "{B}{B}",
 			NewSpellAbility(),
 		)
@@ -74,7 +74,7 @@ func registerSpells() {
 	// Instant
 	// Tap all blocking creatures. Prevent all combat damage that would be dealt this turn. Each attacking creature and each blocking creature doesn't untap during its controller's next untap step.
 	// TODO: implement
-	Register("Spore Cloud", withExpansion(func() Card {
+	Register("Spore Cloud", withExpansion(func() *Card {
 		return NewInstant("Spore Cloud", "{1}{G}{G}",
 			NewSpellAbility(),
 		)

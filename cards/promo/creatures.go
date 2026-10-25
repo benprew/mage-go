@@ -17,7 +17,7 @@ func registerCreatures() {
 	// Creature — Centaur
 	// 2/2
 	// Vigilance
-	Register("Windseeker Centaur", func() Card {
+	Register("Windseeker Centaur", func() *Card {
 		return NewCreature("Windseeker Centaur", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Centaur"),
 			WithKeyword(Vigilance),
@@ -30,7 +30,7 @@ func registerCreatures() {
 	// Creature — Badger
 	// 2/2
 	// Whenever this creature blocks, it gets +2/+2 until end of turn.
-	Register("Giant Badger", func() Card {
+	Register("Giant Badger", func() *Card {
 		return NewCreature("Giant Badger", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Badger"),
 			WithAbility(BlocksTrigger(

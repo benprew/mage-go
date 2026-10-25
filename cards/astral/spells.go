@@ -60,7 +60,7 @@ func registerSpells() {
 	// Call from the Grave {2}{B}
 	// Sorcery
 	// Put a random creature from a random graveyard into play under your control. Call from the Grave deals to you an amount of damage equal to that creature's casting cost.
-	Register("Call from the Grave", func() Card {
+	Register("Call from the Grave", func() *Card {
 		return NewSorcery("Call from the Grave", "{2}{B}",
 			NewSpellAbility(FuncEffect("return a random creature from a random graveyard and take damage equal to its mana value", EffectProperties{},
 				func(g *Game, sourceID, controllerID uuid.UUID, _ []uuid.UUID) error {
@@ -86,7 +86,7 @@ func registerSpells() {
 	// Orcish Catapult {X}{R}{R}
 	// Instant
 	// Randomly distribute X -0/-1 counters among a random number of random target creatures.
-	Register("Orcish Catapult", func() Card {
+	Register("Orcish Catapult", func() *Card {
 		return NewInstant("Orcish Catapult", "{X}{R}{R}",
 			NewSpell(
 				RandomCounterDistribution(M0M1, XValue()),
@@ -98,7 +98,7 @@ func registerSpells() {
 	// Whimsy {X}{U}{U}
 	// Sorcery
 	// Play X random fast effects.
-	Register("Whimsy", func() Card {
+	Register("Whimsy", func() *Card {
 		return NewSorcery("Whimsy", "{X}{U}{U}",
 			NewSpellAbility(FuncEffect("perform X random actions", EffectProperties{},
 				func(g *Game, sourceID, controllerID uuid.UUID, _ []uuid.UUID) error {

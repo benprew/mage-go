@@ -12,12 +12,12 @@ var controlChangeTriggerControllerOnce sync.Once
 
 func registerControlChangeTriggerControllerCards() {
 	controlChangeTriggerControllerOnce.Do(func() {
-		mage.Register("Trigger Controller Upkeep Creature", func() mage.Card {
+		mage.Register("Trigger Controller Upkeep Creature", func() *mage.Card {
 			return mage.NewCreature("Trigger Controller Upkeep Creature", "{3}{U}", 4, 1,
 				mage.WithAbility(mage.SacrificeAtUpkeepUnlessPay("{U}")),
 			)
 		})
-		mage.Register("Trigger Controller Control Aura", func() mage.Card {
+		mage.Register("Trigger Controller Control Aura", func() *mage.Card {
 			return mage.NewAura("Trigger Controller Control Aura", "{2}{U}{U}",
 				mage.WithStaticAbility(mage.ControlChangeContinuous()),
 			)

@@ -50,7 +50,7 @@ func TestCR201_2_NameEqualitySameNameTwoInstances(t *testing.T) {
 	// Two permanents with the same name satisfy "destroy all creatures named X."
 	const cardName = "Name Equality Test Bear"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -70,7 +70,7 @@ func TestCR202_1_ManaCostColoredSymbolsRequired(t *testing.T) {
 	// A {2}{W} card has 1 white pip and 2 generic in its cost, CMC 3.
 	const name = "Mana Cost White Test"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{W}", 2, 2, mage.WithSubTypes("Human"))
 		})
 	}
@@ -95,7 +95,7 @@ func TestCR202_1_ManaCostGenericCanBeAnyColor(t *testing.T) {
 	// {3}{U}: generic component allows any mana combination.
 	const name = "Mana Cost Generic Test"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{3}{U}", 3, 3, mage.WithSubTypes("Illusion"))
 		})
 	}
@@ -119,7 +119,7 @@ func TestCR202_2_NoManaCostLandIsUnpayable(t *testing.T) {
 	// A land card has mana value 0 because it has no mana cost.
 	const name = "Ch02 Test Land No Cost"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewLand(name, mage.WithSubTypes("Forest"), mage.WithManaAbility(core.Green))
 		})
 	}
@@ -138,7 +138,7 @@ func TestCR202_2c_ColorSingleColor(t *testing.T) {
 	// {2}{W}: permanent is white and only white.
 	const name = "Ch02 Single Color White"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{W}", 2, 2, mage.WithSubTypes("Unicorn"))
 		})
 	}
@@ -159,7 +159,7 @@ func TestCR202_2c_ColorColorless(t *testing.T) {
 	// {3}: artifact creature is colorless (no colored mana symbols).
 	const name = "Ch02 Colorless Artifact Creature"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{3}", 2, 2,
 				mage.WithCardType(core.TypeArtifact),
 				mage.WithSubTypes("Golem"),
@@ -183,7 +183,7 @@ func TestCR202_2c_ColorMultiColor(t *testing.T) {
 	// {B}{R}{G}: permanent is black, red, and green.
 	const name = "Ch02 Multi Color BRG"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{B}{R}{G}", 3, 3, mage.WithSubTypes("Beast"))
 		})
 	}
@@ -204,7 +204,7 @@ func TestCR202_2c_ColorMultiColorSatisfiesEachColor(t *testing.T) {
 	// Rule 202.2c: a {U}{B} card satisfies both blue and black checks independently.
 	const name = "Ch02 Blue Black Creature"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{U}{B}", 2, 2, mage.WithSubTypes("Horror"))
 		})
 	}
@@ -243,7 +243,7 @@ func TestCR202_3_ManaValueBasicCalculation(t *testing.T) {
 	// A {2}{U} card has mana value 3.
 	const name = "Ch02 Mana Value 2U Creature"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{U}", 2, 2, mage.WithSubTypes("Djinn"))
 		})
 	}
@@ -286,7 +286,7 @@ func TestCR118_9_AdditionalCostNotPartOfManaCost(t *testing.T) {
 	// Additional costs are not part of the mana cost; CMC counts only mana symbols.
 	const name = "AdditionalCostNotInCMC"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{2}{B}",
 				mage.NewSpellAbility(mage.DrawCards(mage.Fixed(1))),
 				mage.WithAdditionalCost(mage.LifePayCost(2)),
@@ -323,7 +323,7 @@ func TestCR205_1_TypeLineArtifactCreatureHasBothTypes(t *testing.T) {
 	// An artifact creature satisfies both the Artifact and Creature type checks.
 	const name = "Ch02 Artifact Creature Golem"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{4}", 2, 4,
 				mage.WithCardType(core.TypeArtifact),
 				mage.WithSubTypes("Golem"),
@@ -426,7 +426,7 @@ func TestCR205_3g_ArtifactSubtypeEquipmentRecognized(t *testing.T) {
 	// An Equipment artifact has the Equipment subtype and TypeArtifact.
 	const name = "Ch02 Test Scimitar"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewEquipment(name, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(1, 1, core.AttachEquipment))),
 				mage.WithAbility(mage.NewEquipAbility(mage.ManaCostOf("{2}"))),
@@ -507,7 +507,7 @@ func TestCR205_4_SupertypeLegendaryRecognized(t *testing.T) {
 	// A Legendary creature has the Legendary supertype.
 	const name = "Ch02 Legendary Test Hero"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{R}{G}", 1, 1,
 				mage.WithSuperTypes(core.SuperLegendary),
 				mage.WithSubTypes("Human", "Warrior"),
@@ -529,7 +529,7 @@ func TestCR205_4_SupertypeBasicRecognized(t *testing.T) {
 	// this test documents the engine gap.
 	const name = "Ch02 Basic Land Test Plains"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewLand(name,
 				mage.WithSuperTypes(core.SuperBasic),
 				mage.WithSubTypes("Plains"),
@@ -552,7 +552,7 @@ func TestCR205_4_SupertypeIndependentOfTypeChange(t *testing.T) {
 	// A Legendary Land has both the Legendary supertype and the Land type simultaneously (CR 205.4b).
 	const name = "Ch02 Legendary Land Test"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewLand(name,
 				mage.WithSuperTypes(core.SuperLegendary),
 				mage.WithSubTypes("Mountain"),
@@ -608,7 +608,7 @@ func TestCR205_4_LegendaryRuleDifferentNamesNoProblem(t *testing.T) {
 	for _, n := range []string{nameA, nameB} {
 
 		if !mage.CardRegistered(n) {
-			mage.Register(n, func() mage.Card {
+			mage.Register(n, func() *mage.Card {
 				return mage.NewCreature(n, "{2}{G}", 2, 2,
 					mage.WithSuperTypes(core.SuperLegendary),
 					mage.WithSubTypes("Human"),
@@ -636,14 +636,14 @@ func TestCR205_4d_WorldRuleSecondWorldKills(t *testing.T) {
 	const worldA = "World Rule Ch02 Test A"
 	const worldB = "World Rule Ch02 Test B"
 	if !mage.CardRegistered(worldA) {
-		mage.Register(worldA, func() mage.Card {
+		mage.Register(worldA, func() *mage.Card {
 			return mage.NewEnchantment(worldA, "{3}{G}",
 				mage.WithSuperTypes(core.SuperWorld),
 			)
 		})
 	}
 	if !mage.CardRegistered(worldB) {
-		mage.Register(worldB, func() mage.Card {
+		mage.Register(worldB, func() *mage.Card {
 			return mage.NewEnchantment(worldB, "{3}{R}",
 				mage.WithSuperTypes(core.SuperWorld),
 			)
@@ -725,7 +725,7 @@ func TestCR208_4_PTChoiceETBSetsChosenValues(t *testing.T) {
 	// CR 208.2b: as-enters choices set P/T. Inline clay-analog: mode 0 = 3/3, mode 1 = 2/2 flying.
 	const name = "Ch02 ETB PT Choice Golem"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			c := mage.NewCreature(name, "{4}", 3, 3,
 				mage.WithCardType(core.TypeArtifact),
 				mage.WithSubTypes("Golem"),

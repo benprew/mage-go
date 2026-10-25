@@ -9,7 +9,7 @@ func init() {
 }
 
 func registerWraithbloom() {
-	Register("Wraithbloom Cultivator", func() Card {
+	Register("Wraithbloom Cultivator", func() *Card {
 		return NewCreature("Wraithbloom Cultivator", "{1}{B}{G}", 2, 3,
 			WithSubTypes("Elf", "Shaman"),
 

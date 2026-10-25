@@ -332,7 +332,7 @@ func (tp *TestPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 }
 
 // ChooseCardsFromHand picks cards from hand by name.
-func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
+func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []*mage.Card {
 	hand := tp.Hand()
 	if amount > len(hand) {
 		amount = len(hand)
@@ -340,7 +340,7 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 	if len(tp.chooseDiscard) > 0 {
 		names := tp.chooseDiscard[0]
 		tp.chooseDiscard = tp.chooseDiscard[1:]
-		var result []mage.Card
+		var result []*mage.Card
 		for _, name := range names {
 			for _, c := range hand {
 				if c.Name() == name {
@@ -354,7 +354,7 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 		}
 		return result
 	}
-	result := make([]mage.Card, amount)
+	result := make([]*mage.Card, amount)
 	copy(result, hand[:amount])
 	return result
 }
@@ -363,7 +363,7 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 // Consumes the next entry from the chooseDiscard queue (matching by name);
 // the queued name must refer to a candidate. Falls back to the first
 // candidate when no scripted choice is queued.
-func (tp *TestPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (tp *TestPlayer) ChooseCardFromHand(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -409,7 +409,7 @@ func (tp *TestPlayer) ChooseString(options []string, reason string) string {
 }
 
 // ChooseCardFromLibrary picks a card from candidates.
-func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (tp *TestPlayer) ChooseCardFromLibrary(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -439,7 +439,7 @@ func (tp *TestPlayer) AddScryDecision(bottom, topOrder []string) {
 
 // ChooseScryPlacement consumes one queued decision; with no queued decision
 // the BasePlayer default applies (keep all on top in current order).
-func (tp *TestPlayer) ChooseScryPlacement(top []mage.Card, reason string, g mage.GameReader) (bottom, topOrder []uuid.UUID) {
+func (tp *TestPlayer) ChooseScryPlacement(top []*mage.Card, reason string, g mage.GameReader) (bottom, topOrder []uuid.UUID) {
 	if len(tp.chooseScryDecisions) == 0 {
 		return tp.BasePlayer.ChooseScryPlacement(top, reason, g)
 	}
@@ -490,7 +490,7 @@ func (tp *TestPlayer) AddSurveilDecision(graveyard, topOrder []string) {
 
 // ChooseSurveilPlacement consumes one queued decision; with no queued
 // decision the BasePlayer default applies (keep all on top in current order).
-func (tp *TestPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g mage.GameReader) (graveyard, topOrder []uuid.UUID) {
+func (tp *TestPlayer) ChooseSurveilPlacement(top []*mage.Card, reason string, g mage.GameReader) (graveyard, topOrder []uuid.UUID) {
 	if len(tp.chooseSurveilDecisions) == 0 {
 		return tp.BasePlayer.ChooseSurveilPlacement(top, reason, g)
 	}

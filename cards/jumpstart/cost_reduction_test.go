@@ -15,7 +15,7 @@ import (
 // confirms the spell still casts and resolves through the normal pipeline.
 
 // handCard returns the first card named name in p's hand.
-func handCard(g *gametest.TestGame, p gametest.PlayerRef, name string) mage.Card {
+func handCard(g *gametest.TestGame, p gametest.PlayerRef, name string) *mage.Card {
 	pl := g.GetPlayer(p)
 	for _, c := range pl.Hand() {
 		if c.Name() == name {

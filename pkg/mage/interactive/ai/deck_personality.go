@@ -15,7 +15,7 @@ type DeckCard struct {
 
 // InferPersonalityFromDeck chooses an AI personality from a deck list.
 func InferPersonalityFromDeck(entries []DeckCard) WeightedPersonality {
-	var cards []mage.Card
+	var cards []*mage.Card
 	for _, entry := range entries {
 		for range entry.Count {
 			card, err := mage.CreateCard(entry.Name)
@@ -30,7 +30,7 @@ func InferPersonalityFromDeck(entries []DeckCard) WeightedPersonality {
 
 // InferPersonalityFromCards chooses an AI personality from card mix, curve, and
 // effect metadata.
-func InferPersonalityFromCards(cards []mage.Card) WeightedPersonality {
+func InferPersonalityFromCards(cards []*mage.Card) WeightedPersonality {
 	stats := analyzeDeck(cards)
 	if stats.total == 0 {
 		return MidrangeWeighted
@@ -146,7 +146,7 @@ func (s deckStats) counterScore() float64 {
 	return float64(s.counterspells) / float64(max(s.total-s.lands, 1))
 }
 
-func analyzeDeck(cards []mage.Card) deckStats {
+func analyzeDeck(cards []*mage.Card) deckStats {
 	var stats deckStats
 	for _, card := range cards {
 		if card == nil {
@@ -182,7 +182,7 @@ func analyzeDeck(cards []mage.Card) deckStats {
 	return stats
 }
 
-func classifyDeckCardEffects(card mage.Card, stats *deckStats) {
+func classifyDeckCardEffects(card *mage.Card, stats *deckStats) {
 	for _, ability := range card.Abilities() {
 		switch ab := mage.UnwrapAbility(ability).(type) {
 		case *mage.SpellAbility:
@@ -195,7 +195,7 @@ func classifyDeckCardEffects(card mage.Card, stats *deckStats) {
 	}
 }
 
-func classifyEffects(effects []mage.Effect, card mage.Card, stats *deckStats) {
+func classifyEffects(effects []mage.Effect, card *mage.Card, stats *deckStats) {
 	for _, effect := range effects {
 		props := effect.Properties()
 		if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
@@ -227,7 +227,7 @@ func classifyEffects(effects []mage.Effect, card mage.Card, stats *deckStats) {
 	}
 }
 
-func hasDeckEvasion(card mage.Card) bool {
+func hasDeckEvasion(card *mage.Card) bool {
 	attrs := card.AttrSeeds()
 	for _, attr := range []core.Attr{
 		core.Flying, core.Fear, core.Menace, core.UnblockableKW,
@@ -241,7 +241,7 @@ func hasDeckEvasion(card mage.Card) bool {
 	return false
 }
 
-func hasManaAcceleration(card mage.Card) bool {
+func hasManaAcceleration(card *mage.Card) bool {
 	if card.HasType(core.TypeLand) {
 		return false
 	}

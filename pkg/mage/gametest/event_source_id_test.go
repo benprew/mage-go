@@ -22,7 +22,7 @@ func registerEventSourceIDCards() {
 		// "Whenever this creature is dealt damage, do something with the
 		// damaging source." We capture g.EventSourceID() during resolution.
 		if !mage.CardRegistered("Test Vengeful Bear") {
-			mage.Register("Test Vengeful Bear", func() mage.Card {
+			mage.Register("Test Vengeful Bear", func() *mage.Card {
 				captureEffect := mage.FuncEffect(
 					"capture damage source",
 					mage.EffectProperties{},
@@ -38,7 +38,7 @@ func registerEventSourceIDCards() {
 			})
 		}
 		if !mage.CardRegistered("Test ESID Bolt") {
-			mage.Register("Test ESID Bolt", func() mage.Card {
+			mage.Register("Test ESID Bolt", func() *mage.Card {
 				return mage.NewSorcery("Test ESID Bolt", "{R}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(2))),
 				)

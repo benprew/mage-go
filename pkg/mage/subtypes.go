@@ -77,7 +77,7 @@ func subtypeNameSet(names ...string) map[string]bool {
 	return result
 }
 
-func subtypeFamilyForCard(card Card, subtype string) (SubtypeFamily, bool) {
+func subtypeFamilyForCard(card *Card, subtype string) (SubtypeFamily, bool) {
 	if family, ok := knownSubtypeFamily(subtype); ok {
 		return family, true
 	}

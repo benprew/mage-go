@@ -11,7 +11,7 @@ func TestUnifiedActionSpellAndActivatedAbilityResolve(t *testing.T) {
 	boltName := "Unified Action Bolt"
 	pingerName := "Unified Action Pinger"
 	if !mage.CardRegistered(boltName) {
-		mage.Register(boltName, func() mage.Card {
+		mage.Register(boltName, func() *mage.Card {
 			return mage.NewInstant(boltName, "{R}",
 				mage.NewSpell(
 					mage.DealDamage(mage.Fixed(3)),
@@ -21,7 +21,7 @@ func TestUnifiedActionSpellAndActivatedAbilityResolve(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(pingerName) {
-		mage.Register(pingerName, func() mage.Card {
+		mage.Register(pingerName, func() *mage.Card {
 			return mage.NewCreature(pingerName, "{2}{U}", 1, 1,
 				mage.WithAction(mage.NewActivated(
 					mage.Tap(),
@@ -48,14 +48,14 @@ func TestUnifiedActionCompatibilityWrappers(t *testing.T) {
 	spellName := "Unified Compat Drain"
 	abilityName := "Unified Compat Healer"
 	if !mage.CardRegistered(spellName) {
-		mage.Register(spellName, func() mage.Card {
+		mage.Register(spellName, func() *mage.Card {
 			return mage.NewSorcery(spellName, "{B}",
 				mage.NewTargetedSpell(mage.TargetPlayer(), mage.DealDamage(mage.Fixed(2))),
 			)
 		})
 	}
 	if !mage.CardRegistered(abilityName) {
-		mage.Register(abilityName, func() mage.Card {
+		mage.Register(abilityName, func() *mage.Card {
 			return mage.NewArtifact(abilityName, "{1}",
 				mage.WithActivatedAbility(
 					mage.GainLife(1),
@@ -81,7 +81,7 @@ func TestNewActionBuilderForSpell(t *testing.T) {
 	name := "Unified NewAction Growth"
 	creatureName := "Unified NewAction Bear"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewInstant(name, "{G}",
 				mage.NewAction(
 					mage.ActionSpell,
@@ -92,7 +92,7 @@ func TestNewActionBuilderForSpell(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(creatureName) {
-		mage.Register(creatureName, func() mage.Card {
+		mage.Register(creatureName, func() *mage.Card {
 			return mage.NewCreature(creatureName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -111,7 +111,7 @@ func TestUnifiedSpellActionPaysActionCosts(t *testing.T) {
 	name := "Unified Costed Spell"
 	discardName := "Unified Cost Fodder"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewInstant(name, "{R}",
 				mage.NewSpell(
 					mage.DealDamage(mage.Fixed(3)),
@@ -122,7 +122,7 @@ func TestUnifiedSpellActionPaysActionCosts(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(discardName) {
-		mage.Register(discardName, func() mage.Card {
+		mage.Register(discardName, func() *mage.Card {
 			return mage.NewCreature(discardName, "{1}", 1, 1, mage.WithSubTypes("Test"))
 		})
 	}
@@ -144,7 +144,7 @@ func TestInstantAndSorceryAcceptActionParts(t *testing.T) {
 	wrathName := "Unified Direct Wrath"
 	bearName := "Unified Direct Bear"
 	if !mage.CardRegistered(boltName) {
-		mage.Register(boltName, func() mage.Card {
+		mage.Register(boltName, func() *mage.Card {
 			return mage.NewInstant(boltName, "{R}",
 				mage.DealDamage(mage.Fixed(3)),
 				mage.WithTarget(mage.TargetDamageAnyTarget()),
@@ -152,14 +152,14 @@ func TestInstantAndSorceryAcceptActionParts(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(wrathName) {
-		mage.Register(wrathName, func() mage.Card {
+		mage.Register(wrathName, func() *mage.Card {
 			return mage.NewSorcery(wrathName, "{2}{W}{W}",
 				mage.DestroyAllCreatures(),
 			)
 		})
 	}
 	if !mage.CardRegistered(bearName) {
-		mage.Register(bearName, func() mage.Card {
+		mage.Register(bearName, func() *mage.Card {
 			return mage.NewCreature(bearName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}

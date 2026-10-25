@@ -12,7 +12,7 @@ import (
 func TestCounterAnnihilation(t *testing.T) {
 	name := "Counter Test Bear"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -36,7 +36,7 @@ func TestCounterAnnihilation(t *testing.T) {
 func TestZeroToughnessDies(t *testing.T) {
 	name := "Fragile Creature"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{G}", 1, 1, mage.WithSubTypes("Insect"))
 		})
 	}
@@ -61,7 +61,7 @@ func TestSearchLibraryToHand(t *testing.T) {
 	target2 := "Library Card B"
 	target3 := "Library Card C"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{B}",
 				mage.NewSpellAbility(mage.SearchLibraryToHand()),
 			)
@@ -70,7 +70,7 @@ func TestSearchLibraryToHand(t *testing.T) {
 	for _, n := range []string{target1, target2, target3} {
 
 		if !mage.CardRegistered(n) {
-			mage.Register(n, func() mage.Card {
+			mage.Register(n, func() *mage.Card {
 				return mage.NewCreature(n, "{1}", 1, 1, mage.WithSubTypes("Test"))
 			})
 		}
@@ -96,7 +96,7 @@ func TestSearchLibraryToHand(t *testing.T) {
 func TestSearchLibraryToTop(t *testing.T) {
 	name := "Test Tutor Top"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{B}",
 				mage.NewSpellAbility(mage.SearchLibraryToTop()),
 			)
@@ -122,7 +122,7 @@ func TestSearchLibraryToTop(t *testing.T) {
 func TestDiscardCost(t *testing.T) {
 	name := "Discard Spell"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{R}",
 				mage.NewSpellAbility(mage.DealDamageToPlayers(mage.Fixed(3), mage.SelectEachOpponent())),
 				mage.WithAdditionalCost(mage.DiscardCost(1)),
@@ -149,14 +149,14 @@ func TestEquipmentStaysOnCreature(t *testing.T) {
 	equipName := "Test Sword"
 	crName := "Equip Target"
 	if !mage.CardRegistered(equipName) {
-		mage.Register(equipName, func() mage.Card {
+		mage.Register(equipName, func() *mage.Card {
 			return mage.NewEquipment(equipName, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(2, 2, core.AttachEquipment))),
 			)
 		})
 	}
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{W}", 1, 1, mage.WithSubTypes("Soldier"))
 		})
 	}
@@ -178,7 +178,7 @@ func TestEquipmentStaysOnCreature(t *testing.T) {
 func TestLegendRule(t *testing.T) {
 	name := "Test Legend"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{W}", 3, 3,
 				mage.WithSuperTypes(core.SuperLegendary),
 				mage.WithSubTypes("Human", "Knight"),
@@ -202,14 +202,14 @@ func TestWorldRule(t *testing.T) {
 	name1 := "Test World Enchantment A"
 	name2 := "Test World Enchantment B"
 	if !mage.CardRegistered(name1) {
-		mage.Register(name1, func() mage.Card {
+		mage.Register(name1, func() *mage.Card {
 			return mage.NewEnchantment(name1, "{2}{G}",
 				mage.WithSuperTypes(core.SuperWorld),
 			)
 		})
 	}
 	if !mage.CardRegistered(name2) {
-		mage.Register(name2, func() mage.Card {
+		mage.Register(name2, func() *mage.Card {
 			return mage.NewEnchantment(name2, "{3}{R}",
 				mage.WithSuperTypes(core.SuperWorld),
 			)
@@ -231,7 +231,7 @@ func TestWorldRule(t *testing.T) {
 func TestCumulativeUpkeep(t *testing.T) {
 	name := "Cumulative Test Creature"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{U}", 4, 4,
 				mage.WithSubTypes("Beast"),
 				mage.WithCumulativeUpkeep("{U}"),
@@ -267,7 +267,7 @@ func TestTapCreatureCost(t *testing.T) {
 	name := "Tap Creature Artifact"
 	helperName := "Tap Helper"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewArtifact(name, "{2}",
 				mage.WithAbility(mage.NewActivatedAbility(
 					mage.GainLife(2),
@@ -277,7 +277,7 @@ func TestTapCreatureCost(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(helperName) {
-		mage.Register(helperName, func() mage.Card {
+		mage.Register(helperName, func() *mage.Card {
 			return mage.NewCreature(helperName, "{G}", 1, 1, mage.WithSubTypes("Elf"))
 		})
 	}
@@ -298,7 +298,7 @@ func TestTapCreatureCost(t *testing.T) {
 func TestProtectionFromCreatureType(t *testing.T) {
 	protName := "Protected Spirit"
 	if !mage.CardRegistered(protName) {
-		mage.Register(protName, func() mage.Card {
+		mage.Register(protName, func() *mage.Card {
 			return mage.NewCreature(protName, "{2}{W}", 2, 2,
 				mage.WithSubTypes("Spirit"),
 				mage.WithAbility(mage.ProtectionFromCardType(core.TypeCreature)),
@@ -329,7 +329,7 @@ func TestProtectionFromCreatureType(t *testing.T) {
 func TestProtectionFromSubType(t *testing.T) {
 	name := "Anti-Goblin Knight"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{1}{W}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 				mage.WithAbility(mage.ProtectionFromSubType("Goblin")),
@@ -350,7 +350,7 @@ func TestProtectionFromSubType(t *testing.T) {
 func TestDeckOutLoss(t *testing.T) {
 	name := "Mass Draw"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{U}",
 				mage.NewSpellAbility(mage.DrawCards(mage.Fixed(100))),
 			)
@@ -374,19 +374,19 @@ func TestSpellFizzlesWhenTargetGone(t *testing.T) {
 	bearName := "Fizzle Bear"
 	killName := "Test Kill"
 	if !mage.CardRegistered(boltName) {
-		mage.Register(boltName, func() mage.Card {
+		mage.Register(boltName, func() *mage.Card {
 			return mage.NewInstant(boltName, "{R}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))),
 			)
 		})
 	}
 	if !mage.CardRegistered(bearName) {
-		mage.Register(bearName, func() mage.Card {
+		mage.Register(bearName, func() *mage.Card {
 			return mage.NewCreature(bearName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(killName) {
-		mage.Register(killName, func() mage.Card {
+		mage.Register(killName, func() *mage.Card {
 			return mage.NewInstant(killName, "{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 			)
@@ -414,14 +414,14 @@ func TestExileZoneMetadata(t *testing.T) {
 	exilerName := "Test Exiler"
 	targetName := "Exile Target"
 	if !mage.CardRegistered(exilerName) {
-		mage.Register(exilerName, func() mage.Card {
+		mage.Register(exilerName, func() *mage.Card {
 			return mage.NewSorcery(exilerName, "{W}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTarget()),
 			)
 		})
 	}
 	if !mage.CardRegistered(targetName) {
-		mage.Register(targetName, func() mage.Card {
+		mage.Register(targetName, func() *mage.Card {
 			return mage.NewCreature(targetName, "{G}", 1, 1, mage.WithSubTypes("Saproling"))
 		})
 	}
@@ -443,14 +443,14 @@ func TestCostReduction(t *testing.T) {
 	reducerName := "Cost Reducer"
 	spellName := "Reduced Spell"
 	if !mage.CardRegistered(reducerName) {
-		mage.Register(reducerName, func() mage.Card {
+		mage.Register(reducerName, func() *mage.Card {
 			return mage.NewEnchantment(reducerName, "{1}{U}",
 				mage.WithStaticAbility(mage.ReduceSpellCostForColor(core.Blue, 1)),
 			)
 		})
 	}
 	if !mage.CardRegistered(spellName) {
-		mage.Register(spellName, func() mage.Card {
+		mage.Register(spellName, func() *mage.Card {
 			return mage.NewSorcery(spellName, "{2}{U}",
 				mage.NewSpellAbility(mage.GainLife(5)),
 			)
@@ -476,14 +476,14 @@ func TestPutFromHandOntoBattlefield(t *testing.T) {
 	name := "Test Cheat Spell"
 	bigCreature := "Cheated Creature"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{G}",
 				mage.NewSpellAbility(mage.PutFromHandOntoBattlefield(mage.CardFilter{})),
 			)
 		})
 	}
 	if !mage.CardRegistered(bigCreature) {
-		mage.Register(bigCreature, func() mage.Card {
+		mage.Register(bigCreature, func() *mage.Card {
 			return mage.NewCreature(bigCreature, "{8}{G}{G}", 10, 10, mage.WithSubTypes("Beast"))
 		})
 	}
@@ -505,7 +505,7 @@ func TestPutFromHandOntoBattlefield(t *testing.T) {
 func TestChooseColor(t *testing.T) {
 	name := "Color Chooser"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewEnchantment(name, "{1}{W}",
 				mage.WithAbility(mage.EntersBattlefieldTrigger(
 					mage.ChooseColor("choose a color"), false,
@@ -533,7 +533,7 @@ func TestChooseColor(t *testing.T) {
 func TestHasSuperType(t *testing.T) {
 	name := "Legendary Beast"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{3}{G}", 4, 4,
 				mage.WithSuperTypes(core.SuperLegendary),
 				mage.WithSubTypes("Beast"),
@@ -560,7 +560,7 @@ func TestHasSuperType(t *testing.T) {
 func TestAdditionalCostLifePay(t *testing.T) {
 	name := "Life Pay Spell"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{B}",
 				mage.NewSpellAbility(mage.DrawCards(mage.Fixed(3))),
 				mage.WithAdditionalCost(mage.LifePayCost(3)),
@@ -583,7 +583,7 @@ func TestAdditionalCostLifePay(t *testing.T) {
 func TestShuffleLibraryEffect(t *testing.T) {
 	name := "Shuffle Spell"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{G}",
 				mage.NewSpellAbility(mage.ShuffleLibrary()),
 			)
@@ -611,12 +611,12 @@ func TestTargetedSpellNotCastableWithoutTargets(t *testing.T) {
 	auraName := "Test Aura No Targets"
 	crName := "Test Aura Bear"
 	if !mage.CardRegistered(auraName) {
-		mage.Register(auraName, func() mage.Card {
+		mage.Register(auraName, func() *mage.Card {
 			return mage.NewBoostAura(auraName, "{0}", 1, 1)
 		})
 	}
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{0}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -664,19 +664,19 @@ func TestAttachmentsOnSacrifice(t *testing.T) {
 	equipName := "Sac Test Sword"
 	crName := "Sac Test Bear"
 	if !mage.CardRegistered(auraName) {
-		mage.Register(auraName, func() mage.Card {
+		mage.Register(auraName, func() *mage.Card {
 			return mage.NewAura(auraName, "{W}")
 		})
 	}
 	if !mage.CardRegistered(equipName) {
-		mage.Register(equipName, func() mage.Card {
+		mage.Register(equipName, func() *mage.Card {
 			return mage.NewEquipment(equipName, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(1, 1, core.AttachEquipment))),
 			)
 		})
 	}
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -720,19 +720,19 @@ func TestAttachmentsOnExile(t *testing.T) {
 	equipName := "Exile Test Sword"
 	crName := "Exile Test Bear"
 	if !mage.CardRegistered(auraName) {
-		mage.Register(auraName, func() mage.Card {
+		mage.Register(auraName, func() *mage.Card {
 			return mage.NewAura(auraName, "{W}")
 		})
 	}
 	if !mage.CardRegistered(equipName) {
-		mage.Register(equipName, func() mage.Card {
+		mage.Register(equipName, func() *mage.Card {
 			return mage.NewEquipment(equipName, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(1, 1, core.AttachEquipment))),
 			)
 		})
 	}
 	if !mage.CardRegistered(crName) {
-		mage.Register(crName, func() mage.Card {
+		mage.Register(crName, func() *mage.Card {
 			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}

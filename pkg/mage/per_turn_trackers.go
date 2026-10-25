@@ -34,7 +34,7 @@ func (g *Game) PlayerHadCardLeaveGraveyardThisTurn(playerID uuid.UUID) bool {
 }
 
 // recordCardPutIntoExile updates the global per-turn exile count.
-func (g *Game) recordCardPutIntoExile(card Card) {
+func (g *Game) recordCardPutIntoExile(card *Card) {
 	g.trackers.Turn.RecordCardPutIntoExile(card)
 }
 

@@ -27,14 +27,14 @@ func registerArtifacts() {
 	for _, m := range moxen {
 		name := m.name
 		color := m.color
-		Register(name, func() Card {
+		Register(name, func() *Card {
 			return NewArtifact(name, "{0}", WithManaAbility(color))
 		})
 	}
 
 	// ===== MANA ARTIFACTS =====
 
-	Register("Black Lotus", func() Card {
+	Register("Black Lotus", func() *Card {
 		return NewArtifact("Black Lotus", "{0}",
 			// {T}, Sacrifice: Add 3 mana of any one color
 			WithActivatedAbility(
@@ -45,14 +45,14 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Sol Ring", func() Card {
+	Register("Sol Ring", func() *Card {
 		return NewArtifact("Sol Ring", "{1}",
 			// {T}: Add {C}{C}
 			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}),
 		)
 	})
 
-	Register("Basalt Monolith", func() Card {
+	Register("Basalt Monolith", func() *Card {
 		return NewArtifact("Basalt Monolith", "{3}",
 			WithKeyword(DoesNotUntapKW),
 			// {T}: Add {C}{C}{C}
@@ -68,7 +68,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Mana Vault", func() Card {
+	Register("Mana Vault", func() *Card {
 		return NewArtifact("Mana Vault", "{1}",
 			WithKeyword(DoesNotUntapKW),
 			// {T}: Add {C}{C}{C}
@@ -94,7 +94,7 @@ func registerArtifacts() {
 
 	// ===== UTILITY ARTIFACTS =====
 
-	Register("Jayemdae Tome", func() Card {
+	Register("Jayemdae Tome", func() *Card {
 		return NewArtifact("Jayemdae Tome", "{4}",
 			// {4}, {T}: Draw a card
 			WithActivatedAbility(
@@ -108,7 +108,7 @@ func registerArtifacts() {
 	// Disrupting Scepter {3}
 	// Artifact
 	// {3}, {T}: Target player discards a card. Activate only during your turn.
-	Register("Disrupting Scepter", func() Card {
+	Register("Disrupting Scepter", func() *Card {
 		return NewArtifact("Disrupting Scepter", "{3}",
 			WithActivatedAbility(
 				DisruptingScepterEffect(),
@@ -120,7 +120,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Icy Manipulator", func() Card {
+	Register("Icy Manipulator", func() *Card {
 		return NewArtifact("Icy Manipulator", "{4}",
 			// {1}, {T}: Tap target permanent
 			WithActivatedAbility(
@@ -132,7 +132,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Rod of Ruin", func() Card {
+	Register("Rod of Ruin", func() *Card {
 		return NewArtifact("Rod of Ruin", "{4}",
 			// {3}, {T}: Deal 1 damage to any target
 			WithActivatedAbility(
@@ -144,7 +144,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("The Hive", func() Card {
+	Register("The Hive", func() *Card {
 		return NewArtifact("The Hive", "{5}",
 			// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp.
 			WithActivatedAbility(
@@ -155,13 +155,13 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Winter Orb", func() Card {
+	Register("Winter Orb", func() *Card {
 		return NewArtifact("Winter Orb", "{2}",
 			WithStaticAbility(LimitLandUntaps(1)),
 		)
 	})
 
-	Register("Meekstone", func() Card {
+	Register("Meekstone", func() *Card {
 		return NewArtifact("Meekstone", "{1}",
 			WithStaticAbility(
 				PreventUntapForMatching(And(IsCreature, HasPowerGTE(3))),
@@ -169,13 +169,13 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Howling Mine", func() Card {
+	Register("Howling Mine", func() *Card {
 		return NewArtifact("Howling Mine", "{2}",
 			WithAbility(BeginningOfEachDrawStepTrigger(DrawCardsActivePlayer(Fixed(1)), false)),
 		)
 	})
 
-	Register("Forcefield", func() Card {
+	Register("Forcefield", func() *Card {
 		// Oracle: "{1}: The next time an unblocked creature of your choice
 		// would deal combat damage to you this turn, prevent all but 1 of
 		// that damage."
@@ -194,7 +194,7 @@ func registerArtifacts() {
 
 	// ===== GAUNTLET =====
 
-	Register("Gauntlet of Might", func() Card {
+	Register("Gauntlet of Might", func() *Card {
 		return NewArtifact("Gauntlet of Might", "{4}",
 			// Red creatures get +1/+1
 			WithStaticAbility(
@@ -208,7 +208,7 @@ func registerArtifacts() {
 	// ===== MISC ARTIFACTS =====
 
 	// Whenever a land enters, this artifact deals 2 damage to that land's controller.
-	Register("Ankh of Mishra", func() Card {
+	Register("Ankh of Mishra", func() *Card {
 		return NewArtifact("Ankh of Mishra", "{2}",
 			WithAbility(WheneverLandEntersBattlefieldTrigger(
 				DealDamageToPlayers(Fixed(2), SelectTargetPermanentController()), false,
@@ -219,7 +219,7 @@ func registerArtifacts() {
 	// Dingus Egg {4}
 	// Artifact
 	// Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller.
-	Register("Dingus Egg", func() Card {
+	Register("Dingus Egg", func() *Card {
 		return NewArtifact("Dingus Egg", "{4}",
 			WithAbility(NewTriggered(EvtZoneChange, false,
 				DealDamageToPlayers(Fixed(2), SelectTargetPermanentController()),
@@ -234,7 +234,7 @@ func registerArtifacts() {
 	// Artifact
 	// You have no maximum hand size.
 	// If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.
-	Register("Library of Leng", func() Card {
+	Register("Library of Leng", func() *Card {
 		return NewArtifact("Library of Leng", "{1}",
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
@@ -249,7 +249,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Copper Tablet", func() Card {
+	Register("Copper Tablet", func() *Card {
 		return NewArtifact("Copper Tablet", "{2}",
 			WithAbility(BeginningOfEachUpkeepTrigger(DealDamageToPlayers(Fixed(1), SelectActivePlayer()), false)),
 		)
@@ -260,14 +260,14 @@ func registerArtifacts() {
 	// As this artifact enters, choose an opponent.
 	// At the beginning of the chosen player's upkeep, this artifact deals X damage
 	// to that player, where X is the number of cards in their hand minus 4.
-	Register("Black Vise", func() Card {
+	Register("Black Vise", func() *Card {
 		return NewArtifact("Black Vise", "{1}",
 			WithAbility(ChooseOpponentOnETB()),
 			WithAbility(ChosenPlayerUpkeepTrigger(BlackViseEffect(), false)),
 		)
 	})
 
-	Register("Jade Monolith", func() Card {
+	Register("Jade Monolith", func() *Card {
 		return NewArtifact("Jade Monolith", "{4}",
 			WithActivatedAbility(
 				// TODO: convert to pipeline when damage redirect step is available
@@ -288,7 +288,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Jade Statue", func() Card {
+	Register("Jade Statue", func() *Card {
 		// XXX: missing "Activate only during combat" restriction
 		return NewArtifact("Jade Statue", "{4}",
 			// {2}: Jade Statue becomes a 3/6 artifact creature until end of combat.
@@ -308,7 +308,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Glasses of Urza", func() Card {
+	Register("Glasses of Urza", func() *Card {
 		return NewArtifact("Glasses of Urza", "{1}",
 			WithActivatedAbility(
 				FuncEffect("look at target player's hand", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -320,7 +320,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Helm of Chatzuk", func() Card {
+	Register("Helm of Chatzuk", func() *Card {
 		return NewArtifact("Helm of Chatzuk", "{1}",
 			// {1}, {T}: Target creature gains banding until end of turn.
 			WithActivatedAbility(
@@ -332,13 +332,13 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Sunglasses of Urza", func() Card {
+	Register("Sunglasses of Urza", func() *Card {
 		return NewArtifact("Sunglasses of Urza", "{3}",
 			WithStaticAbility(ManaConversion(White, Red)),
 		)
 	})
 
-	Register("Kormus Bell", func() Card {
+	Register("Kormus Bell", func() *Card {
 		return NewArtifact("Kormus Bell", "{4}",
 			WithStaticAbility(
 				AnimateLands(And(IsLand, HasSubType("Swamp")), 1, 1),
@@ -347,7 +347,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Cyclopean Tomb", func() Card {
+	Register("Cyclopean Tomb", func() *Card {
 		return NewArtifact("Cyclopean Tomb", "{4}",
 			WithStaticAbility(CyclopeanTombEffect()),
 			// {2}, {T}: Put a mire counter on target non-Swamp land.
@@ -360,7 +360,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Illusionary Mask", func() Card {
+	Register("Illusionary Mask", func() *Card {
 		return NewArtifact("Illusionary Mask", "{2}",
 			WithActivatedAbility(
 				// TODO: convert to pipeline — complex face-down mechanic
@@ -391,7 +391,7 @@ func registerArtifacts() {
 		)
 	})
 
-	Register("Nevinyrral's Disk", func() Card {
+	Register("Nevinyrral's Disk", func() *Card {
 		return NewArtifact("Nevinyrral's Disk", "{4}",
 			WithKeyword(EntersTapped),
 			// {1}, {T}: Destroy all artifacts, creatures, and enchantments
@@ -406,7 +406,7 @@ func registerArtifacts() {
 	// Celestial Prism {3}
 	// Artifact
 	// {2}, {T}: Add one mana of any color.
-	Register("Celestial Prism", func() Card {
+	Register("Celestial Prism", func() *Card {
 		return NewArtifact("Celestial Prism", "{3}",
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
@@ -419,7 +419,7 @@ func registerArtifacts() {
 	// Conservator {4}
 	// Artifact
 	// {3}, {T}: Prevent the next 2 damage that would be dealt to you this turn.
-	Register("Conservator", func() Card {
+	Register("Conservator", func() *Card {
 		return NewArtifact("Conservator", "{4}",
 			WithActivatedAbility(
 				AddPreventionShieldToControllerStep(2),
@@ -431,33 +431,33 @@ func registerArtifacts() {
 
 	// ===== LUCKY CHARMS =====
 
-	Register("Crystal Rod", func() Card {
+	Register("Crystal Rod", func() *Card {
 		return NewLuckyCharm("Crystal Rod", "{1}", Blue)
 	})
 
-	Register("Iron Star", func() Card {
+	Register("Iron Star", func() *Card {
 		return NewLuckyCharm("Iron Star", "{1}", Red)
 	})
 
-	Register("Ivory Cup", func() Card {
+	Register("Ivory Cup", func() *Card {
 		return NewLuckyCharm("Ivory Cup", "{1}", White)
 	})
 
-	Register("Throne of Bone", func() Card {
+	Register("Throne of Bone", func() *Card {
 		return NewLuckyCharm("Throne of Bone", "{1}", Black)
 	})
 
-	Register("Wooden Sphere", func() Card {
+	Register("Wooden Sphere", func() *Card {
 		return NewLuckyCharm("Wooden Sphere", "{1}", Green)
 	})
 
-	Register("Soul Net", func() Card {
+	Register("Soul Net", func() *Card {
 		return NewArtifact("Soul Net", "{1}",
 			WithAbility(AnyCreatureDiesTrigger(GainLife(1), true)),
 		)
 	})
 
-	Register("Chaos Orb", func() Card {
+	Register("Chaos Orb", func() *Card {
 		return NewArtifact("Chaos Orb", "{2}",
 			// {1}, {T}: Destroy a random nontoken permanent you don't control, then destroy Chaos Orb.
 			WithActivatedAbility(

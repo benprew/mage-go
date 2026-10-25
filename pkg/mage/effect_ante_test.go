@@ -24,7 +24,7 @@ func TestTargetCardYouOwnInAnteUsesSharedZoneAndCurrentOwner(t *testing.T) {
 	g, a, b := anteEffectTestGame(t)
 	owned := ownedTestCard(b.PlayerID(), "owned")
 	notOwned := ownedTestCard(b.PlayerID(), "not owned")
-	b.SetAnte([]Card{owned, notOwned})
+	b.SetAnte([]*Card{owned, notOwned})
 	if err := g.ChangeOwner(owned.ID(), a.PlayerID()); err != nil {
 		t.Fatal(err)
 	}
@@ -44,8 +44,8 @@ func TestAnteLibraryTopTargetsControllerOrEachPlayer(t *testing.T) {
 		g, a, b := anteEffectTestGame(t)
 		aTop := ownedTestCard(a.PlayerID(), "A top")
 		bTop := ownedTestCard(b.PlayerID(), "B top")
-		a.SetLibrary([]Card{aTop})
-		b.SetLibrary([]Card{bTop})
+		a.SetLibrary([]*Card{aTop})
+		b.SetLibrary([]*Card{bTop})
 
 		if err := AnteLibraryTop().Apply(&EffectContext{Game: g, Controller: a.PlayerID()}); err != nil {
 			t.Fatal(err)
@@ -59,8 +59,8 @@ func TestAnteLibraryTopTargetsControllerOrEachPlayer(t *testing.T) {
 		g, a, b := anteEffectTestGame(t)
 		aTop := ownedTestCard(a.PlayerID(), "A top")
 		bTop := ownedTestCard(b.PlayerID(), "B top")
-		a.SetLibrary([]Card{aTop})
-		b.SetLibrary([]Card{bTop})
+		a.SetLibrary([]*Card{aTop})
+		b.SetLibrary([]*Card{bTop})
 
 		if err := AnteLibraryTop().Targeting(SelectEachPlayer()).Apply(&EffectContext{Game: g}); err != nil {
 			t.Fatal(err)
@@ -74,8 +74,8 @@ func TestAnteLibraryTopTargetsControllerOrEachPlayer(t *testing.T) {
 		g, a, b := anteEffectTestGame(t)
 		aTop := ownedTestCard(b.PlayerID(), "opponent-owned A top")
 		bTop := ownedTestCard(b.PlayerID(), "B top")
-		a.SetLibrary([]Card{aTop})
-		b.SetLibrary([]Card{bTop})
+		a.SetLibrary([]*Card{aTop})
+		b.SetLibrary([]*Card{bTop})
 
 		if err := AnteLibraryTop().Targeting(SelectEachPlayer()).Apply(&EffectContext{Game: g}); err != nil {
 			t.Fatal(err)
@@ -89,13 +89,13 @@ func TestAnteLibraryTopTargetsControllerOrEachPlayer(t *testing.T) {
 func TestExchangeTargetAnteCardWithLibraryTop(t *testing.T) {
 	g, a, b := anteEffectTestGame(t)
 	anteCard := ownedTestCard(b.PlayerID(), "ante card")
-	b.SetAnte([]Card{anteCard})
+	b.SetAnte([]*Card{anteCard})
 	if err := g.ChangeOwner(anteCard.ID(), a.PlayerID()); err != nil {
 		t.Fatal(err)
 	}
 	top := ownedTestCard(a.PlayerID(), "library top")
 	next := ownedTestCard(a.PlayerID(), "next")
-	a.SetLibrary([]Card{top, next})
+	a.SetLibrary([]*Card{top, next})
 
 	effect := ExchangeTargetAnteCardWithLibraryTop()
 	if err := effect.Apply(&EffectContext{Game: g, Controller: a.PlayerID(), Targets: []uuid.UUID{anteCard.ID()}}); err != nil {
@@ -112,9 +112,9 @@ func TestExchangeTargetAnteCardWithLibraryTop(t *testing.T) {
 func TestExchangeTargetAnteCardRequiresBothSides(t *testing.T) {
 	g, a, b := anteEffectTestGame(t)
 	anteCard := ownedTestCard(a.PlayerID(), "ante card")
-	a.SetAnte([]Card{anteCard})
+	a.SetAnte([]*Card{anteCard})
 	opponentOwnedTop := ownedTestCard(b.PlayerID(), "opponent-owned top")
-	a.SetLibrary([]Card{opponentOwnedTop})
+	a.SetLibrary([]*Card{opponentOwnedTop})
 
 	if err := ExchangeTargetAnteCardWithLibraryTop().Apply(&EffectContext{Game: g, Controller: a.PlayerID(), Targets: []uuid.UUID{anteCard.ID()}}); err != nil {
 		t.Fatal(err)

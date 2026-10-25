@@ -15,7 +15,7 @@ func registerArtifacts() {
 	// Dingus Egg {4}
 	// Artifact
 	// Whenever a land is put into a graveyard from the battlefield, Dingus Egg deals 2 damage to that land's controller.
-	Register("Dingus Egg", func() Card {
+	Register("Dingus Egg", func() *Card {
 		return NewArtifact("Dingus Egg", "{4}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, false,
@@ -31,7 +31,7 @@ func registerArtifacts() {
 	// Fellwar Stone {2}
 	// Artifact
 	// {T}: Add one mana of any color that a land an opponent controls could produce.
-	Register("Fellwar Stone", func() Card {
+	Register("Fellwar Stone", func() *Card {
 		return NewArtifact("Fellwar Stone", "{2}",
 			WithStaticAbility(SourceHasManaAbilitiesOpponentLandsCouldProduce()),
 		)
@@ -41,7 +41,7 @@ func registerArtifacts() {
 	// Artifact
 	// You have no maximum hand size.
 	// If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.
-	Register("Library of Leng", func() Card {
+	Register("Library of Leng", func() *Card {
 		return NewArtifact("Library of Leng", "{1}",
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {

@@ -14,7 +14,7 @@ import (
 func TestCreateTokensWithAbilities_DanceWithDevils(t *testing.T) {
 	const cardName = "CTWA Dance-with-Devils-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			tokenAbility := mage.PutIntoGraveyardFromBattlefieldTrigger(
 				mage.DealDamage(mage.Fixed(1)), false,
 			).AddTarget(mage.TargetPlayer())

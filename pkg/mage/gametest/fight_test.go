@@ -19,7 +19,7 @@ func registerFightCards() {
 		// Simpler: a 4/4 with an activated tap ability "this creature fights
 		// target creature you don't control."
 		if !mage.CardRegistered("Test Fight Ox") {
-			mage.Register("Test Fight Ox", func() mage.Card {
+			mage.Register("Test Fight Ox", func() *mage.Card {
 				return mage.NewCreature("Test Fight Ox", "{2}{G}", 4, 4,
 					mage.WithActivatedAbility(
 						mage.FightTarget(),
@@ -29,19 +29,19 @@ func registerFightCards() {
 			})
 		}
 		if !mage.CardRegistered("Test Fight 1/1") {
-			mage.Register("Test Fight 1/1", func() mage.Card {
+			mage.Register("Test Fight 1/1", func() *mage.Card {
 				return mage.NewCreature("Test Fight 1/1", "{1}", 1, 1)
 			})
 		}
 		if !mage.CardRegistered("Test Fight 5/5") {
-			mage.Register("Test Fight 5/5", func() mage.Card {
+			mage.Register("Test Fight 5/5", func() *mage.Card {
 				return mage.NewCreature("Test Fight 5/5", "{4}", 5, 5)
 			})
 		}
 		// A creature with a "when this dies, gain 3 life" delayed-trigger
 		// activated ability: tap, register OnPermanentDiesThisTurn(self).
 		if !mage.CardRegistered("Test On-Death Self Watcher") {
-			mage.Register("Test On-Death Self Watcher", func() mage.Card {
+			mage.Register("Test On-Death Self Watcher", func() *mage.Card {
 				return mage.NewCreature("Test On-Death Self Watcher", "{1}{W}", 1, 2,
 					mage.WithActivatedAbility(
 						mage.OnTargetDiesThisTurn(mage.GainLife(3)),

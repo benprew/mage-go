@@ -17,7 +17,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever a non-black creature is put into any graveyard from play, put a husk counter on Necropolis of Azar.
 	// {5}, Remove a husk counter from Necropolis of Azar: Put a Spawn of Azar token into play. Treat this token as a black creature with a random power and toughness, each no less than 1 and no greater than 3, that has swampwalk.
-	Register("Necropolis of Azar", func() Card {
+	Register("Necropolis of Azar", func() *Card {
 		return NewEnchantment("Necropolis of Azar", "{2}{B}{B}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, false,
@@ -48,7 +48,7 @@ func registerEnchantments() {
 	// Power Struggle {2}{U}{U}{U}
 	// Enchantment
 	// During each player's upkeep, that player exchanges control of random target artifact, creature or land he or she controls, for control of random target permanent of the same type that a random opponent controls.
-	Register("Power Struggle", func() Card {
+	Register("Power Struggle", func() *Card {
 		return NewEnchantment("Power Struggle", "{2}{U}{U}{U}",
 			WithAbility(
 				BeginningOfEachUpkeepTrigger(

@@ -354,12 +354,12 @@ func (zs *ZoneSystem) Exile() []ExiledCard {
 }
 
 // ExileCard moves a card to the exile zone face up.
-func (zs *ZoneSystem) ExileCard(card Card, exiledBy uuid.UUID) {
+func (zs *ZoneSystem) ExileCard(card *Card, exiledBy uuid.UUID) {
 	zs.exile = append(zs.exile, ExiledCard{Card: card, ExiledBy: exiledBy})
 }
 
 // ExileCardFaceDown moves a card to the exile zone face down.
-func (zs *ZoneSystem) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
+func (zs *ZoneSystem) ExileCardFaceDown(card *Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
 	rev := append([]uuid.UUID(nil), revealedTo...)
 	zs.exile = append(zs.exile, ExiledCard{
 		Card:       card,
@@ -398,7 +398,7 @@ func (zs *ZoneSystem) FindExiledCard(cardID uuid.UUID) *ExiledCard {
 }
 
 // RemoveFromExile removes a card from exile by ID and returns it.
-func (zs *ZoneSystem) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
+func (zs *ZoneSystem) RemoveFromExile(cardID uuid.UUID) (*Card, bool) {
 	for i, ec := range zs.exile {
 		if ec.Card.ID() == cardID {
 			zs.exile = append(zs.exile[:i], zs.exile[i+1:]...)
@@ -424,7 +424,7 @@ func (zs *ZoneSystem) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard 
 }
 
 // ReplaceExiledCard replaces an exiled card matching cardID with replacement.
-func (zs *ZoneSystem) ReplaceExiledCard(cardID uuid.UUID, replacement Card) bool {
+func (zs *ZoneSystem) ReplaceExiledCard(cardID uuid.UUID, replacement *Card) bool {
 	for i := range zs.exile {
 		if zs.exile[i].Card.ID() == cardID {
 			zs.exile = append([]ExiledCard(nil), zs.exile...)

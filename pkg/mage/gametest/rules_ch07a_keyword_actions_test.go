@@ -15,40 +15,40 @@ var ch07aOnce sync.Once
 func registerCh07aCards() {
 	ch07aOnce.Do(func() {
 		if !mage.CardRegistered("Ch07a Bear") {
-			mage.Register("Ch07a Bear", func() mage.Card {
+			mage.Register("Ch07a Bear", func() *mage.Card {
 				return mage.NewCreature("Ch07a Bear", "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
 		if !mage.CardRegistered("Ch07a Destroy Spell") {
-			mage.Register("Ch07a Destroy Spell", func() mage.Card {
+			mage.Register("Ch07a Destroy Spell", func() *mage.Card {
 				return mage.NewInstant("Ch07a Destroy Spell", "{1}{B}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Ch07a Exile Spell") {
-			mage.Register("Ch07a Exile Spell", func() mage.Card {
+			mage.Register("Ch07a Exile Spell", func() *mage.Card {
 				return mage.NewInstant("Ch07a Exile Spell", "{1}{W}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTarget()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Ch07a Discard Spell") {
-			mage.Register("Ch07a Discard Spell", func() mage.Card {
+			mage.Register("Ch07a Discard Spell", func() *mage.Card {
 				return mage.NewSorcery("Ch07a Discard Spell", "{1}{B}",
 					mage.NewTargetedSpell(mage.TargetPlayer(), mage.DiscardCards(mage.Fixed(1))),
 				)
 			})
 		}
 		if !mage.CardRegistered("Ch07a Random Discard Spell") {
-			mage.Register("Ch07a Random Discard Spell", func() mage.Card {
+			mage.Register("Ch07a Random Discard Spell", func() *mage.Card {
 				return mage.NewSorcery("Ch07a Random Discard Spell", "{1}{B}",
 					mage.NewTargetedSpell(mage.TargetPlayer(), mage.DiscardRandom(1)),
 				)
 			})
 		}
 		if !mage.CardRegistered("Ch07a Death Watcher") {
-			mage.Register("Ch07a Death Watcher", func() mage.Card {
+			mage.Register("Ch07a Death Watcher", func() *mage.Card {
 				return mage.NewCreature("Ch07a Death Watcher", "{1}{B}", 1, 1,
 					mage.WithSubTypes("Zombie"),
 					mage.WithAbility(mage.AnyCreatureDiesTrigger(
@@ -59,7 +59,7 @@ func registerCh07aCards() {
 			})
 		}
 		if !mage.CardRegistered("Ch07a Indestructible Creature") {
-			mage.Register("Ch07a Indestructible Creature", func() mage.Card {
+			mage.Register("Ch07a Indestructible Creature", func() *mage.Card {
 				return mage.NewCreature("Ch07a Indestructible Creature", "{2}{W}", 2, 2,
 					mage.WithSubTypes("Angel"),
 					mage.WithKeyword(core.Indestructible),
@@ -147,19 +147,19 @@ func TestCR701_3_AttachEquipMovesToNewCreature(t *testing.T) {
 		bear2Name = "Attach Test Bear Two"
 	)
 	if !mage.CardRegistered(equipName) {
-		mage.Register(equipName, func() mage.Card {
+		mage.Register(equipName, func() *mage.Card {
 			return mage.NewEquipment(equipName, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(2, 2, core.AttachEquipment))),
 			)
 		})
 	}
 	if !mage.CardRegistered(bear1Name) {
-		mage.Register(bear1Name, func() mage.Card {
+		mage.Register(bear1Name, func() *mage.Card {
 			return mage.NewCreature(bear1Name, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(bear2Name) {
-		mage.Register(bear2Name, func() mage.Card {
+		mage.Register(bear2Name, func() *mage.Card {
 			return mage.NewCreature(bear2Name, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -192,14 +192,14 @@ func TestCR701_3_UnattachEquipmentStaysOnBattlefield(t *testing.T) {
 		hostName  = "Unattach Test Warrior"
 	)
 	if !mage.CardRegistered(equipName) {
-		mage.Register(equipName, func() mage.Card {
+		mage.Register(equipName, func() *mage.Card {
 			return mage.NewEquipment(equipName, "{2}",
 				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(2, 2, core.AttachEquipment))),
 			)
 		})
 	}
 	if !mage.CardRegistered(hostName) {
-		mage.Register(hostName, func() mage.Card {
+		mage.Register(hostName, func() *mage.Card {
 			return mage.NewCreature(hostName, "{1}{W}", 1, 1, mage.WithSubTypes("Warrior"))
 		})
 	}
@@ -424,7 +424,7 @@ func TestCR701_13_ExileFromGraveyard(t *testing.T) {
 
 	const exileGY = "Exile GY Spell"
 	if !mage.CardRegistered(exileGY) {
-		mage.Register(exileGY, func() mage.Card {
+		mage.Register(exileGY, func() *mage.Card {
 			return mage.NewInstant(exileGY, "{1}{W}",
 				mage.NewTargetedSpell(
 					mage.TargetCardInYourGraveyard(),
@@ -623,12 +623,12 @@ func TestCR701_21_SacrificeMovesToGraveyard(t *testing.T) {
 	const sacrificeMe = "Sac To Graveyard Test Creature"
 	const sacrificer = "Sac To GY Spell"
 	if !mage.CardRegistered(sacrificeMe) {
-		mage.Register(sacrificeMe, func() mage.Card {
+		mage.Register(sacrificeMe, func() *mage.Card {
 			return mage.NewCreature(sacrificeMe, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(sacrificer) {
-		mage.Register(sacrificer, func() mage.Card {
+		mage.Register(sacrificer, func() *mage.Card {
 			return mage.NewSorcery(sacrificer, "{B}",
 				mage.NewTargetedSpell(
 					mage.TargetControlledCreature(),
@@ -669,7 +669,7 @@ func TestCR701_21_SacrificeRegenerationDoesNotApply(t *testing.T) {
 	const sacrificeMe = "Regen Sac Test Skeleton"
 	const sacrificer = "Regen Sac Spell"
 	if !mage.CardRegistered(sacrificeMe) {
-		mage.Register(sacrificeMe, func() mage.Card {
+		mage.Register(sacrificeMe, func() *mage.Card {
 			return mage.NewCreature(sacrificeMe, "{1}{B}", 1, 1,
 				mage.WithSubTypes("Skeleton"),
 				mage.WithActivatedAbility(mage.RegenerateSource(), mage.ManaCostOf("{B}")),
@@ -677,7 +677,7 @@ func TestCR701_21_SacrificeRegenerationDoesNotApply(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(sacrificer) {
-		mage.Register(sacrificer, func() mage.Card {
+		mage.Register(sacrificer, func() *mage.Card {
 			return mage.NewSorcery(sacrificer, "{1}{B}",
 				mage.NewTargetedSpell(
 					mage.TargetControlledCreature(),
@@ -720,7 +720,7 @@ func TestCR701_21_IndestructibleCanBeSacrificed(t *testing.T) {
 
 	const sacrificer = "Indestructible Sac Spell"
 	if !mage.CardRegistered(sacrificer) {
-		mage.Register(sacrificer, func() mage.Card {
+		mage.Register(sacrificer, func() *mage.Card {
 			return mage.NewSorcery(sacrificer, "{1}{B}",
 				mage.NewTargetedSpell(
 					mage.TargetControlledCreature(),
@@ -813,7 +813,7 @@ func TestCR701_24_ShuffleLibraryRandomized(t *testing.T) {
 
 	const shuffleSpell = "Ch07a Shuffle Spell"
 	if !mage.CardRegistered(shuffleSpell) {
-		mage.Register(shuffleSpell, func() mage.Card {
+		mage.Register(shuffleSpell, func() *mage.Card {
 			return mage.NewSorcery(shuffleSpell, "{G}",
 				mage.NewSpellAbility(mage.ShuffleLibrary()),
 			)

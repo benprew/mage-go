@@ -25,7 +25,7 @@ type GraveyardActivatedAbility struct {
 // looked up by [Game.ActivateGraveyardAbility]. The cost typically
 // includes [ExileSelfFromGraveyardCost] to prevent infinite reuse.
 func WithGraveyardActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		opts = append(opts, WithSorcerySpeed())
 		base := NewActivatedAbility(effect, cost, opts...)
 		c.AddAbility(&GraveyardActivatedAbility{SimpleActivatedAbility: base})
@@ -77,7 +77,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 	if pl == nil {
 		return ErrPlayerNotFound
 	}
-	var card Card
+	var card *Card
 	for _, c := range pl.Graveyard() {
 		if c.ID() == cardID {
 			card = c

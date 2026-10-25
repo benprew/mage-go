@@ -15,7 +15,7 @@ func registerCreatures() {
 
 	// Oracle: "When Abu Ja'far dies, destroy all creatures blocking or blocked by it.
 	// They can't be regenerated."
-	Register("Abu Ja'far", func() Card {
+	Register("Abu Ja'far", func() *Card {
 		return NewCreature("Abu Ja'far", "{W}", 0, 1,
 			WithSubTypes("Human"),
 			WithAbility(
@@ -32,7 +32,7 @@ func registerCreatures() {
 
 	// Oracle: "Banding. As long as Camel is attacking, prevent all damage Deserts
 	// would deal to Camel and to creatures banded with Camel."
-	Register("Camel", func() Card {
+	Register("Camel", func() *Card {
 		return NewCreature("Camel", "{W}", 0, 1,
 			WithSubTypes("Camel"),
 			WithKeyword(Banding),
@@ -47,7 +47,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "{T}: Destroy target Djinn or Efreet."
-	Register("King Suleiman", func() Card {
+	Register("King Suleiman", func() *Card {
 		return NewCreature("King Suleiman", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Noble"),
 			WithActivatedAbility(
@@ -61,7 +61,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Trample"
-	Register("Moorish Cavalry", func() Card {
+	Register("Moorish Cavalry", func() *Card {
 		return NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
 			WithKeyword(Trample),
@@ -69,7 +69,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Protection from red"
-	Register("Repentant Blacksmith", func() Card {
+	Register("Repentant Blacksmith", func() *Card {
 		return NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2,
 			WithSubTypes("Human"),
 			WithAbility(ProtectionFromColor(Red)),
@@ -77,7 +77,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Trample; banding"
-	Register("War Elephant", func() Card {
+	Register("War Elephant", func() *Card {
 		return NewCreature("War Elephant", "{3}{W}", 2, 2,
 			WithSubTypes("Elephant"),
 			WithKeyword(Trample),
@@ -89,7 +89,7 @@ func registerCreatures() {
 
 	// Oracle: "Dandân can't attack unless defending player controls an Island.
 	// When you control no Islands, sacrifice Dandân."
-	Register("Dandân", func() Card {
+	Register("Dandân", func() *Card {
 		return NewCreature("Dandân", "{U}{U}", 4, 1,
 			WithSubTypes("Fish"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
@@ -99,7 +99,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Flying"
-	Register("Flying Men", func() Card {
+	Register("Flying Men", func() *Card {
 		return NewCreature("Flying Men", "{U}", 1, 1,
 			WithSubTypes("Human"),
 			WithKeyword(Flying),
@@ -107,7 +107,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Giant Tortoise gets +0/+3 as long as it's untapped."
-	Register("Giant Tortoise", func() Card {
+	Register("Giant Tortoise", func() *Card {
 		return NewCreature("Giant Tortoise", "{1}{U}", 1, 1,
 			WithSubTypes("Turtle"),
 			WithStaticAbility(BoostSelf(0, 3, WhileSourceUntapped)),
@@ -118,7 +118,7 @@ func registerCreatures() {
 	// At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it.
 	// It can't attack unless defending player controls an Island.
 	// When you control no Islands, sacrifice it."
-	Register("Island Fish Jasconius", func() Card {
+	Register("Island Fish Jasconius", func() *Card {
 		return NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8,
 			WithSubTypes("Fish"),
 			WithKeyword(DoesNotUntapKW),
@@ -141,7 +141,7 @@ func registerCreatures() {
 	// Oracle: "Merchant Ship can't attack unless defending player controls an Island.
 	// Whenever Merchant Ship attacks and isn't blocked, you gain 2 life.
 	// When you control no Islands, sacrifice Merchant Ship."
-	Register("Merchant Ship", func() Card {
+	Register("Merchant Ship", func() *Card {
 		return NewCreature("Merchant Ship", "{U}", 0, 2,
 			WithSubTypes("Human"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
@@ -159,7 +159,7 @@ func registerCreatures() {
 	// {T}: Gain control of target creature with power less than or equal to Old Man of
 	// the Sea's power for as long as Old Man of the Sea remains tapped and that creature's
 	// power remains less than or equal to Old Man of the Sea's power."
-	Register("Old Man of the Sea", func() Card {
+	Register("Old Man of the Sea", func() *Card {
 		return NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3,
 			WithSubTypes("Djinn"),
 			WithKeyword(AttrMayNotUntap),
@@ -178,7 +178,7 @@ func registerCreatures() {
 	// Oracle: "Flying. At the beginning of your upkeep, sacrifice a land. If you sacrifice
 	// an Island this way, Serendib Djinn deals 3 damage to you.
 	// When you control no lands, sacrifice Serendib Djinn."
-	Register("Serendib Djinn", func() Card {
+	Register("Serendib Djinn", func() *Card {
 		return NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6,
 			WithSubTypes("Djinn"),
 			WithKeyword(Flying),
@@ -219,7 +219,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Flying. At the beginning of your upkeep, Serendib Efreet deals 1 damage to you."
-	Register("Serendib Efreet", func() Card {
+	Register("Serendib Efreet", func() *Card {
 		return NewCreature("Serendib Efreet", "{2}{U}", 3, 4,
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
@@ -230,7 +230,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "{T}: Draw a card and reveal it. If it isn't a land card, discard it."
-	Register("Sindbad", func() Card {
+	Register("Sindbad", func() *Card {
 		return NewCreature("Sindbad", "{1}{U}", 1, 1,
 			WithSubTypes("Human"),
 			WithActivatedAbility(
@@ -244,7 +244,7 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Cuombajj Witches deals 1 damage to any target and 1 damage to any
 	// target of an opponent's choice."
-	Register("Cuombajj Witches", func() Card {
+	Register("Cuombajj Witches", func() *Card {
 		return NewCreature("Cuombajj Witches", "{B}{B}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
@@ -298,7 +298,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Whenever El-Hajjâj deals damage, you gain that much life."
-	Register("El-Hajjâj", func() Card {
+	Register("El-Hajjâj", func() *Card {
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
@@ -309,7 +309,7 @@ func registerCreatures() {
 
 	// Oracle: "At the beginning of your end step, if Erg Raiders didn't attack this turn,
 	// Erg Raiders deals 2 damage to you unless it came under your control this turn."
-	Register("Erg Raiders", func() Card {
+	Register("Erg Raiders", func() *Card {
 		return NewCreature("Erg Raiders", "{1}{B}", 2, 3,
 			WithSubTypes("Human", "Warrior"),
 			WithAbility(
@@ -327,7 +327,7 @@ func registerCreatures() {
 	// Oracle: "As long as Guardian Beast is untapped, noncreature artifacts you control
 	// can't be enchanted, they have indestructible, and other players can't gain control
 	// of them."
-	Register("Guardian Beast", func() Card {
+	Register("Guardian Beast", func() *Card {
 		return NewCreature("Guardian Beast", "{3}{B}", 2, 4,
 			WithSubTypes("Beast"),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
@@ -356,7 +356,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Whenever Hasran Ogress attacks, it deals 3 damage to you unless you pay {2}."
-	Register("Hasran Ogress", func() Card {
+	Register("Hasran Ogress", func() *Card {
 		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2,
 			WithSubTypes("Ogre"),
 			WithAbility(AttacksTrigger(
@@ -366,7 +366,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Flying. At the beginning of your upkeep, sacrifice Junún Efreet unless you pay {B}{B}."
-	Register("Junún Efreet", func() Card {
+	Register("Junún Efreet", func() *Card {
 		return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3,
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
@@ -375,7 +375,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "At the beginning of your upkeep, Juzám Djinn deals 1 damage to you."
-	Register("Juzám Djinn", func() Card {
+	Register("Juzám Djinn", func() *Card {
 		return NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5,
 			WithSubTypes("Djinn"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -386,7 +386,7 @@ func registerCreatures() {
 
 	// Oracle: "At the beginning of each end step, put a +1/+1 counter on Khabál Ghoul
 	// for each creature that died this turn."
-	Register("Khabál Ghoul", func() Card {
+	Register("Khabál Ghoul", func() *Card {
 		return NewCreature("Khabál Ghoul", "{2}{B}", 1, 1,
 			WithSubTypes("Zombie"),
 			WithAbility(
@@ -411,7 +411,7 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Target creature other than Sorceress Queen has base power and
 	// toughness 0/2 until end of turn."
-	Register("Sorceress Queen", func() Card {
+	Register("Sorceress Queen", func() *Card {
 		return NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard", "Sorcerer"),
 			WithActivatedAbility(
@@ -423,7 +423,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "First strike"
-	Register("Stone-Throwing Devils", func() Card {
+	Register("Stone-Throwing Devils", func() *Card {
 		return NewCreature("Stone-Throwing Devils", "{B}", 1, 1,
 			WithSubTypes("Devil"),
 			WithKeyword(FirstStrike),
@@ -434,7 +434,7 @@ func registerCreatures() {
 
 	// Oracle: "{1}{R}{R}, {T}: Gain control of target artifact for as long as you
 	// control Aladdin."
-	Register("Aladdin", func() Card {
+	Register("Aladdin", func() *Card {
 		return NewCreature("Aladdin", "{2}{R}{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
@@ -447,7 +447,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "{R}: Tap target Wall."
-	Register("Ali Baba", func() Card {
+	Register("Ali Baba", func() *Card {
 		return NewCreature("Ali Baba", "{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
@@ -459,7 +459,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Damage that would reduce your life total to less than 1 reduces it to 1 instead."
-	Register("Ali from Cairo", func() Card {
+	Register("Ali from Cairo", func() *Card {
 		return NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1,
 			WithSubTypes("Human"),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
@@ -475,7 +475,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Flying"
-	Register("Bird Maiden", func() Card {
+	Register("Bird Maiden", func() *Card {
 		return NewCreature("Bird Maiden", "{2}{R}", 1, 2,
 			WithSubTypes("Human", "Bird"),
 			WithKeyword(Flying),
@@ -483,7 +483,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Desertwalk. Prevent all damage that would be dealt to Desert Nomads by Deserts."
-	Register("Desert Nomads", func() Card {
+	Register("Desert Nomads", func() *Card {
 		return NewCreature("Desert Nomads", "{2}{R}", 2, 2,
 			WithSubTypes("Human", "Nomad"),
 			WithKeyword(Desertwalk),
@@ -497,7 +497,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "{T}: Target creature can't be regenerated this turn."
-	Register("Hurr Jackal", func() Card {
+	Register("Hurr Jackal", func() *Card {
 		return NewCreature("Hurr Jackal", "{R}", 1, 1,
 			WithSubTypes("Jackal"),
 			WithActivatedAbility(
@@ -509,7 +509,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Kird Ape gets +1/+2 as long as you control a Forest."
-	Register("Kird Ape", func() Card {
+	Register("Kird Ape", func() *Card {
 		return NewCreature("Kird Ape", "{R}", 1, 1,
 			WithSubTypes("Ape"),
 			WithStaticAbility(BoostSelf(1, 2, WhileControlling(HasSubType("Forest")))),
@@ -518,7 +518,7 @@ func registerCreatures() {
 
 	// Oracle: "Whenever Mijae Djinn attacks, flip a coin. If you lose the flip,
 	// remove Mijae Djinn from combat and tap it."
-	Register("Mijae Djinn", func() Card {
+	Register("Mijae Djinn", func() *Card {
 		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3,
 			WithSubTypes("Djinn"),
 			WithAbility(AttacksTrigger(
@@ -540,7 +540,7 @@ func registerCreatures() {
 
 	// Oracle: "When Rukh Egg dies, create a 4/4 red Bird creature token with flying
 	// at the beginning of the next end step."
-	Register("Rukh Egg", func() Card {
+	Register("Rukh Egg", func() *Card {
 		return NewCreature("Rukh Egg", "{3}{R}", 0, 3,
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
@@ -556,7 +556,7 @@ func registerCreatures() {
 
 	// Oracle: "Whenever Ydwen Efreet blocks, flip a coin. If you lose the flip,
 	// remove Ydwen Efreet from combat and it can't block this turn."
-	Register("Ydwen Efreet", func() Card {
+	Register("Ydwen Efreet", func() *Card {
 		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
 			WithSubTypes("Efreet"),
 			WithAbility(BlocksTrigger(
@@ -581,7 +581,7 @@ func registerCreatures() {
 
 	// Oracle: "At the beginning of your upkeep, target non-Wall creature an opponent
 	// controls gains forestwalk until your next upkeep."
-	Register("Erhnam Djinn", func() Card {
+	Register("Erhnam Djinn", func() *Card {
 		return NewCreature("Erhnam Djinn", "{3}{G}", 4, 5,
 			WithSubTypes("Djinn"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -623,7 +623,7 @@ func registerCreatures() {
 
 	// Oracle: "At the beginning of your upkeep, if a player has more life than each
 	// other player, the player with the most life gains control of Ghazbán Ogre."
-	Register("Ghazbán Ogre", func() Card {
+	Register("Ghazbán Ogre", func() *Card {
 		return NewCreature("Ghazbán Ogre", "{G}", 2, 2,
 			WithSubTypes("Ogre"),
 			// Upkeep trigger: determine who should control Ghazbán Ogre based on life totals.
@@ -665,7 +665,7 @@ func registerCreatures() {
 
 	// Oracle: "Flying. {G}: Ifh-Bíff Efreet deals 1 damage to each creature with flying
 	// and each player. Any player may activate this ability."
-	Register("Ifh-Bíff Efreet", func() Card {
+	Register("Ifh-Bíff Efreet", func() *Card {
 		return NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3,
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
@@ -683,7 +683,7 @@ func registerCreatures() {
 
 	// Oracle: "Whenever Nafs Asp deals damage to a player, that player loses 1 life at
 	// the beginning of their next draw step unless they pay {1} before that draw step."
-	Register("Nafs Asp", func() Card {
+	Register("Nafs Asp", func() *Card {
 		return NewCreature("Nafs Asp", "{G}", 1, 1,
 			WithSubTypes("Snake"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
@@ -722,7 +722,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "{T}: Target attacking creature has base power 0 until end of turn."
-	Register("Singing Tree", func() Card {
+	Register("Singing Tree", func() *Card {
 		return NewCreature("Singing Tree", "{3}{G}", 0, 3,
 			WithSubTypes("Plant"),
 			WithActivatedAbility(
@@ -734,7 +734,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "{T}: Target creature gets +1/+1 until end of turn."
-	Register("Wyluli Wolf", func() Card {
+	Register("Wyluli Wolf", func() *Card {
 		return NewCreature("Wyluli Wolf", "{1}{G}", 1, 1,
 			WithSubTypes("Wolf"),
 			WithActivatedAbility(
@@ -749,7 +749,7 @@ func registerCreatures() {
 
 	// Oracle: "Brass Man doesn't untap during your untap step. At the beginning of your
 	// upkeep, you may pay {1}. If you do, untap Brass Man."
-	Register("Brass Man", func() Card {
+	Register("Brass Man", func() *Card {
 		return NewCreature("Brass Man", "{1}", 1, 3,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -767,7 +767,7 @@ func registerCreatures() {
 	})
 
 	// Oracle: "Flying"
-	Register("Dancing Scimitar", func() Card {
+	Register("Dancing Scimitar", func() *Card {
 		return NewCreature("Dancing Scimitar", "{4}", 1, 5,
 			WithSubTypes("Spirit"),
 			WithCardType(TypeArtifact),

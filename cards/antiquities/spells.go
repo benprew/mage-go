@@ -16,7 +16,7 @@ func registerSpells() {
 	// Artifact Blast {R}
 	// Instant
 	// Counter target artifact spell.
-	Register("Artifact Blast", func() Card {
+	Register("Artifact Blast", func() *Card {
 		return NewInstant("Artifact Blast", "{R}",
 			NewTargetedSpell(TargetSpellOnStack(IsArtifactCard), CounterSpell()),
 		)
@@ -26,7 +26,7 @@ func registerSpells() {
 	// Instant
 	// Destroy target artifact. It can't be regenerated. That artifact's controller gains life
 	// equal to its mana value.
-	Register("Crumble", func() Card {
+	Register("Crumble", func() *Card {
 		return NewInstant("Crumble", "{G}",
 			NewTargetedSpell(TargetArtifact(), CrumbleEffect()),
 		)
@@ -35,7 +35,7 @@ func registerSpells() {
 	// Hurkyl's Recall {1}{U}
 	// Instant
 	// Return all artifacts target player owns to their hand.
-	Register("Hurkyl's Recall", func() Card {
+	Register("Hurkyl's Recall", func() *Card {
 		return NewInstant("Hurkyl's Recall", "{1}{U}",
 			// TODO: convert to pipeline — needs "bounce all matching owned by target player" step
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
@@ -71,7 +71,7 @@ func registerSpells() {
 	// Reverse Polarity {W}{W}
 	// Instant
 	// You gain X life, where X is twice the damage dealt to you so far this turn by artifacts.
-	Register("Reverse Polarity", func() Card {
+	Register("Reverse Polarity", func() *Card {
 		return NewInstant("Reverse Polarity", "{W}{W}",
 			// TODO: convert to pipeline — needs "get artifact damage taken" ValueSource
 			NewSpellAbility(FuncEffect("gain life equal to twice artifact damage",
@@ -95,7 +95,7 @@ func registerSpells() {
 	// Sorcery
 	// Destroy target artifact with mana value X. It can't be regenerated. Detonate deals X damage
 	// to that artifact's controller.
-	Register("Detonate", func() Card {
+	Register("Detonate", func() *Card {
 		return NewSorcery("Detonate", "{X}{R}",
 			NewTargetedSpell(TargetArtifactWithManaValueX(),
 				Pipeline("destroy target artifact with CMC X; deal X damage to controller",
@@ -115,7 +115,7 @@ func registerSpells() {
 	// this requires dependent multi-targeting (second target pool depends on chosen player).
 	// The engine doesn't support dependent targets. Currently uses resolution-time choices.
 	// The order placed on top is the order chosen (last chosen = top).
-	Register("Drafna's Restoration", func() Card {
+	Register("Drafna's Restoration", func() *Card {
 		return NewSorcery("Drafna's Restoration", "{U}",
 			// TODO: convert to pipeline — needs "choose cards from graveyard" iterative step
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
@@ -134,7 +134,7 @@ func registerSpells() {
 						return nil
 					}
 					// Collect artifact cards from graveyard
-					var artifactCards []Card
+					var artifactCards []*Card
 					for _, card := range targetPlayer.Graveyard() {
 						if card.HasType(TypeArtifact) {
 							artifactCards = append(artifactCards, card)
@@ -145,7 +145,7 @@ func registerSpells() {
 					}
 					// Caster chooses which artifact cards to put back, one at a time
 					// (last chosen ends up on top of library)
-					var chosen []Card
+					var chosen []*Card
 					for len(artifactCards) > 0 {
 						if !caster.ChooseMayAbility("put an artifact card on top of library") {
 							break
@@ -156,7 +156,7 @@ func registerSpells() {
 						}
 						chosen = append(chosen, pick)
 						// Remove from candidates
-						var remaining []Card
+						var remaining []*Card
 						for _, c := range artifactCards {
 							if c.ID() != pick.ID() {
 								remaining = append(remaining, c)
@@ -183,7 +183,7 @@ func registerSpells() {
 	// Reconstruction {U}
 	// Sorcery
 	// Return target artifact card from your graveyard to your hand.
-	Register("Reconstruction", func() Card {
+	Register("Reconstruction", func() *Card {
 		return NewSorcery("Reconstruction", "{U}",
 			NewTargetedSpell(TargetCardInYourGraveyard(IsArtifactCard), ReturnFromGraveyardToHandTarget()),
 		)
@@ -192,7 +192,7 @@ func registerSpells() {
 	// Shatterstorm {2}{R}{R}
 	// Sorcery
 	// Destroy all artifacts. They can't be regenerated.
-	Register("Shatterstorm", func() Card {
+	Register("Shatterstorm", func() *Card {
 		return NewSorcery("Shatterstorm", "{2}{R}{R}",
 			NewSpellAbility(DestroyAllMatchingNoRegen(IsArtifact, "destroy all artifacts; they can't be regenerated")),
 		)
@@ -204,7 +204,7 @@ func registerSpells() {
 	// mana value is less than or equal to the sacrificed artifact's mana value, put it onto the
 	// battlefield. If not, you may pay {X}, where X is the difference. If you pay, put it onto
 	// the battlefield. If you don't, put it into its owner's graveyard. Then shuffle.
-	Register("Transmute Artifact", func() Card {
+	Register("Transmute Artifact", func() *Card {
 		return NewSorcery("Transmute Artifact", "{U}{U}",
 			// TODO: convert to pipeline — needs "search library" + conditional payment steps
 			NewSpellAbility(FuncEffect("search library for artifact, put on battlefield",
@@ -216,7 +216,7 @@ func registerSpells() {
 					}
 					sacrificedCMC := g.XValue()
 					lib := p.Library()
-					var candidates []Card
+					var candidates []*Card
 					for _, c := range lib {
 						if c.HasType(TypeArtifact) {
 							candidates = append(candidates, c)
@@ -232,7 +232,7 @@ func registerSpells() {
 						return nil
 					}
 					// Remove from library
-					newLib := make([]Card, 0, len(lib)-1)
+					newLib := make([]*Card, 0, len(lib)-1)
 					for _, c := range lib {
 						if c.ID() != chosen.ID() {
 							newLib = append(newLib, c)

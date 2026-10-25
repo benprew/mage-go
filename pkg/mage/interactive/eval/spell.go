@@ -29,7 +29,7 @@ func ThreatPerManaInGame(perm *mage.Permanent, g *mage.Game) float64 {
 
 // SpellIsWorthless returns true if the spell requires at least one target but
 // has no valid targets available right now.
-func SpellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
+func SpellIsWorthless(card *mage.Card, p mage.Player, g *mage.Game) bool {
 	playerID := p.PlayerID()
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
@@ -53,7 +53,7 @@ func SpellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
 // SpellValue computes a context-sensitive score for a spell in the AI's hand.
 // Board-relative: mass removal is worth more when behind, damage spells get
 // lethal-enabling bonuses, and draw spells scale with hand emptiness.
-func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
+func SpellValue(card *mage.Card, p mage.Player, g *mage.Game) int {
 	playerID := p.PlayerID()
 	cmc := card.ManaCost().CMC()
 	manaValue := manaSourceSpellValue(card)
@@ -221,7 +221,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	return cmc
 }
 
-func manaSourceSpellValue(card mage.Card) int {
+func manaSourceSpellValue(card *mage.Card) int {
 	cmc := card.ManaCost().CMC()
 	isCreature := card.HasType(core.TypeCreature)
 	best := 0
@@ -280,7 +280,7 @@ func manaSourceSpellValue(card mage.Card) int {
 // abilities (which carry no EffectProperties for SpellValue to read). It uses
 // the card's AuraAIProfile so the AI values steal/debuff auras like removal and
 // only values toughness-lowering buffs (Immolation) when they can kill.
-func auraSpellValue(card mage.Card, playerID uuid.UUID, g *mage.Game, oppBestScore int) (int, bool) {
+func auraSpellValue(card *mage.Card, playerID uuid.UUID, g *mage.Game, oppBestScore int) (int, bool) {
 	profile, ok := auraAIProfile(card)
 	if !ok {
 		return 0, false
@@ -318,16 +318,14 @@ func auraSpellValue(card mage.Card, playerID uuid.UUID, g *mage.Game, oppBestSco
 	return 0, false
 }
 
-func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
-	if profiler, ok := card.(interface {
-		AuraAIProfile() (mage.AuraAIProfile, bool)
-	}); ok {
-		return profiler.AuraAIProfile()
+func auraAIProfile(card *mage.Card) (mage.AuraAIProfile, bool) {
+	if card == nil {
+		return mage.AuraAIProfile{}, false
 	}
-	return mage.AuraAIProfile{}, false
+	return card.AuraAIProfile()
 }
 
-func aiHintScore(props mage.EffectProperties, card mage.Card, p mage.Player, g *mage.Game) int {
+func aiHintScore(props mage.EffectProperties, card *mage.Card, p mage.Player, g *mage.Game) int {
 	score := props.ValueBias
 	for _, role := range props.AIRoles {
 		score += aiRoleScore(role, props, card, p, g)
@@ -335,12 +333,12 @@ func aiHintScore(props mage.EffectProperties, card mage.Card, p mage.Player, g *
 	return score
 }
 
-func aiActionHintScore(hint mage.AIHint, card mage.Card, p mage.Player, g *mage.Game) int {
+func aiActionHintScore(hint mage.AIHint, card *mage.Card, p mage.Player, g *mage.Game) int {
 	props := mage.EffectProperties{AIRoles: hint.Roles, ValueBias: hint.ValueBias}
 	return aiHintScore(props, card, p, g)
 }
 
-func aiRoleScore(role mage.AIRole, props mage.EffectProperties, card mage.Card, p mage.Player, g *mage.Game) int {
+func aiRoleScore(role mage.AIRole, props mage.EffectProperties, card *mage.Card, p mage.Player, g *mage.Game) int {
 	switch role {
 	case mage.AIRoleRemoval:
 		return 7
@@ -383,7 +381,7 @@ func CountAvailableMana(g mage.GameReader, playerID uuid.UUID) int {
 }
 
 // HandCMCs returns the CMC of each non-land, non-instant card in a player's hand.
-func HandCMCs(hand []mage.Card) []int {
+func HandCMCs(hand []*mage.Card) []int {
 	var cmcs []int
 	for _, c := range hand {
 		if c.HasType(core.TypeLand) || c.HasType(core.TypeInstant) {

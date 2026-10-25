@@ -33,11 +33,12 @@ import (
 // it countered. Pass any Cost — typically ManaCostOf("{2}"), LifePayCost(3),
 // or DiscardCost(1).
 func WithWard(cost Cost) CardOption {
-	return func(c *BaseCard) {
-		if c.attrSeeds == nil {
-			c.attrSeeds = make(map[Attr]int)
+	return func(c *Card) {
+		data := c.mutableCharacteristics()
+		if data.attrSeeds == nil {
+			data.attrSeeds = make(map[Attr]int)
 		}
-		c.attrSeeds[Ward]++
+		data.attrSeeds[Ward]++
 		c.AddAbility(WardTrigger(cost))
 	}
 }

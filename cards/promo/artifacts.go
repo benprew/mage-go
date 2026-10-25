@@ -14,7 +14,7 @@ func registerArtifacts() {
 	// Artifact
 	// At the beginning of your upkeep, flip a coin. If you lose the flip, this artifact deals 3 damage to you.
 	// {T}: Add {C}{C}.
-	Register("Mana Crypt", func() Card {
+	Register("Mana Crypt", func() *Card {
 		return NewArtifact("Mana Crypt", "{0}",
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("flip a coin",

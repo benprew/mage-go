@@ -67,7 +67,7 @@ func TestDeclareAttackers(t *testing.T) {
 	t.Run("CR 508.1a summoning-sick creature without haste cannot attack", func(t *testing.T) {
 		name := "Combat Sick Bear"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -85,7 +85,7 @@ func TestDeclareAttackers(t *testing.T) {
 	t.Run("CR 508.1a haste bypasses summoning sickness", func(t *testing.T) {
 		name := "Combat Hasty Bear"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{R}", 2, 2,
 					mage.WithSubTypes("Bear"),
 					mage.WithKeyword(core.Haste))
@@ -107,7 +107,7 @@ func TestDeclareAttackers(t *testing.T) {
 	t.Run("CR 508.1a tapped creature cannot attack", func(t *testing.T) {
 		name := "Combat Tap Bear"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -134,7 +134,7 @@ func TestDeclareAttackers(t *testing.T) {
 	t.Run("CR 508.1f attacking causes creatures to become tapped", func(t *testing.T) {
 		name := "Combat Tap-On-Attack Bear"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -166,7 +166,7 @@ func TestDeclareAttackers(t *testing.T) {
 		lace := "508.2a Green Lace"
 
 		if !mage.CardRegistered(watcher) {
-			mage.Register(watcher, func() mage.Card {
+			mage.Register(watcher, func() *mage.Card {
 				// "Whenever a green creature attacks, you gain 5 life."
 				trig := mage.NewTriggered(core.EvtDeclaredAttacker, false,
 					mage.GainLife(5)).
@@ -183,13 +183,13 @@ func TestDeclareAttackers(t *testing.T) {
 			})
 		}
 		if !mage.CardRegistered(attacker) {
-			mage.Register(attacker, func() mage.Card {
+			mage.Register(attacker, func() *mage.Card {
 				return mage.NewCreature(attacker, "{1}{U}", 2, 2,
 					mage.WithSubTypes("Bear"))
 			})
 		}
 		if !mage.CardRegistered(lace) {
-			mage.Register(lace, func() mage.Card {
+			mage.Register(lace, func() *mage.Card {
 				// Instant: target permanent becomes green (color override).
 				return mage.NewInstant(lace, "{G}",
 					mage.NewTargetedSpell(mage.TargetPermanent(),

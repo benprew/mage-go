@@ -55,7 +55,7 @@ func registerCreatures() {
 	// Argivian Archaeologist {1}{W}{W}
 	// Creature — Human Artificer
 	// {W}{W}, {T}: Return target artifact card from your graveyard to your hand.
-	Register("Argivian Archaeologist", func() Card {
+	Register("Argivian Archaeologist", func() *Card {
 		return NewCreature("Argivian Archaeologist", "{1}{W}{W}", 1, 1,
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
@@ -70,7 +70,7 @@ func registerCreatures() {
 	// Argivian Blacksmith {1}{W}{W}
 	// Creature — Human Artificer
 	// {T}: Prevent the next 2 damage that would be dealt to target artifact creature this turn.
-	Register("Argivian Blacksmith", func() Card {
+	Register("Argivian Blacksmith", func() *Card {
 		return NewCreature("Argivian Blacksmith", "{1}{W}{W}", 2, 2,
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
@@ -85,7 +85,7 @@ func registerCreatures() {
 	// Creature — Human
 	// As long as Martyrs of Korlis is untapped, all damage that would be dealt to you by
 	// artifacts is dealt to Martyrs of Korlis instead.
-	Register("Martyrs of Korlis", func() Card {
+	Register("Martyrs of Korlis", func() *Card {
 		return NewCreature("Martyrs of Korlis", "{3}{W}{W}", 1, 6,
 			WithSubTypes("Human"),
 			WithStaticAbility(
@@ -106,7 +106,7 @@ func registerCreatures() {
 	// Sage of Lat-Nam {1}{U}
 	// Creature — Human Artificer
 	// {T}, Sacrifice an artifact: Draw a card.
-	Register("Sage of Lat-Nam", func() Card {
+	Register("Sage of Lat-Nam", func() *Card {
 		return NewCreature("Sage of Lat-Nam", "{1}{U}", 1, 2,
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
@@ -124,7 +124,7 @@ func registerCreatures() {
 	// You may choose not to untap Phyrexian Gremlins during your untap step.
 	// {T}: Tap target artifact. It doesn't untap during its controller's untap step for as long as
 	// Phyrexian Gremlins remains tapped.
-	Register("Phyrexian Gremlins", func() Card {
+	Register("Phyrexian Gremlins", func() *Card {
 		return NewCreature("Phyrexian Gremlins", "{2}{B}", 1, 1,
 			WithSubTypes("Phyrexian", "Gremlin"),
 			WithKeyword(AttrMayNotUntap),
@@ -165,7 +165,7 @@ func registerCreatures() {
 	// Priest of Yawgmoth {1}{B}
 	// Creature — Phyrexian Human Cleric
 	// {T}, Sacrifice an artifact: Add an amount of {B} equal to the sacrificed artifact's mana value.
-	Register("Priest of Yawgmoth", func() Card {
+	Register("Priest of Yawgmoth", func() *Card {
 		return NewCreature("Priest of Yawgmoth", "{1}{B}", 1, 2,
 			WithSubTypes("Phyrexian", "Human", "Cleric"),
 			WithActivatedAbility(
@@ -194,7 +194,7 @@ func registerCreatures() {
 	// Creature — Spirit
 	// {T}: Until your next upkeep, target noncreature artifact becomes an artifact creature with
 	// power and toughness each equal to its mana value.
-	Register("Xenic Poltergeist", func() Card {
+	Register("Xenic Poltergeist", func() *Card {
 		return NewCreature("Xenic Poltergeist", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
@@ -226,7 +226,7 @@ func registerCreatures() {
 	// Flying, first strike
 	// At the beginning of your upkeep, you may sacrifice an artifact. If you don't, tap
 	// Yawgmoth Demon and it deals 2 damage to you.
-	Register("Yawgmoth Demon", func() Card {
+	Register("Yawgmoth Demon", func() *Card {
 		return NewCreature("Yawgmoth Demon", "{4}{B}{B}", 6, 6,
 			WithSubTypes("Phyrexian", "Demon"),
 			WithKeyword(Flying),
@@ -264,7 +264,7 @@ func registerCreatures() {
 	// Atog {1}{R}
 	// Creature — Atog
 	// Sacrifice an artifact: Atog gets +2/+2 until end of turn.
-	Register("Atog", func() Card {
+	Register("Atog", func() *Card {
 		return NewCreature("Atog", "{1}{R}", 1, 2,
 			WithSubTypes("Atog"),
 			WithActivatedAbility(
@@ -278,7 +278,7 @@ func registerCreatures() {
 	// Creature — Dwarf Artificer
 	// {T}, Sacrifice an artifact: Put a +1/+1 counter on target creature.
 	// Activate only during your upkeep.
-	Register("Dwarven Weaponsmith", func() Card {
+	Register("Dwarven Weaponsmith", func() *Card {
 		return NewCreature("Dwarven Weaponsmith", "{1}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Artificer"),
 			WithActivatedAbility(
@@ -298,7 +298,7 @@ func registerCreatures() {
 	// If you lose the flip, counter that spell.
 	// XXX: The "not targeted by another Goblin Artisans" restriction is not enforced (extremely
 	// rare edge case requiring stack-targeting tracking).
-	Register("Goblin Artisans", func() Card {
+	Register("Goblin Artisans", func() *Card {
 		return NewCreature("Goblin Artisans", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Artificer"),
 			WithActivatedAbility(
@@ -319,7 +319,7 @@ func registerCreatures() {
 	// Orcish Mechanics {2}{R}
 	// Creature — Orc
 	// {T}, Sacrifice an artifact: Orcish Mechanics deals 2 damage to any target.
-	Register("Orcish Mechanics", func() Card {
+	Register("Orcish Mechanics", func() *Card {
 		return NewCreature("Orcish Mechanics", "{2}{R}", 1, 1,
 			WithSubTypes("Orc"),
 			WithActivatedAbility(
@@ -337,7 +337,7 @@ func registerCreatures() {
 	// Creature — Faerie
 	// Argothian Pixies can't be blocked by artifact creatures.
 	// Prevent all damage that would be dealt to Argothian Pixies by artifact creatures.
-	Register("Argothian Pixies", func() Card {
+	Register("Argothian Pixies", func() *Card {
 		return NewCreature("Argothian Pixies", "{1}{G}", 2, 1,
 			WithSubTypes("Faerie"),
 			WithStaticAbility(
@@ -368,7 +368,7 @@ func registerCreatures() {
 	// Argothian Treefolk {3}{G}{G}
 	// Creature — Treefolk
 	// Prevent all damage that would be dealt to Argothian Treefolk by artifact sources.
-	Register("Argothian Treefolk", func() Card {
+	Register("Argothian Treefolk", func() *Card {
 		return NewCreature("Argothian Treefolk", "{3}{G}{G}", 3, 5,
 			WithSubTypes("Treefolk"),
 			// Prevent all damage from artifact sources
@@ -384,7 +384,7 @@ func registerCreatures() {
 	// Citanul Druid {1}{G}
 	// Creature — Human Druid
 	// Whenever an opponent casts an artifact spell, put a +1/+1 counter on Citanul Druid.
-	Register("Citanul Druid", func() Card {
+	Register("Citanul Druid", func() *Card {
 		return NewCreature("Citanul Druid", "{1}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
 			WithAbility(
@@ -399,7 +399,7 @@ func registerCreatures() {
 	// Gaea's Avenger {1}{G}{G}
 	// Creature — Treefolk
 	// Power and toughness are each equal to 1 plus the number of artifacts opponents control.
-	Register("Gaea's Avenger", func() Card {
+	Register("Gaea's Avenger", func() *Card {
 		return NewCreature("Gaea's Avenger", "{1}{G}{G}", 1, 1,
 			WithSubTypes("Treefolk"),
 			WithStaticAbility(
@@ -422,7 +422,7 @@ func registerCreatures() {
 	// Artifact Creature — Construct
 	// At the beginning of combat on your turn, Battering Ram gains banding until end of combat.
 	// Whenever Battering Ram becomes blocked by a Wall, destroy that Wall at end of combat.
-	Register("Battering Ram", func() Card {
+	Register("Battering Ram", func() *Card {
 		return NewCreature("Battering Ram", "{2}", 1, 1,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -451,7 +451,7 @@ func registerCreatures() {
 	// Clay Statue {4}
 	// Artifact Creature — Golem
 	// {2}: Regenerate Clay Statue.
-	Register("Clay Statue", func() Card {
+	Register("Clay Statue", func() *Card {
 		return NewCreature("Clay Statue", "{4}", 3, 1,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
@@ -469,7 +469,7 @@ func registerCreatures() {
 	// At end of combat, if Clockwork Avian attacked or blocked this combat, remove a +1/+0 counter.
 	// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Activate only
 	// during your upkeep.
-	Register("Clockwork Avian", func() Card {
+	Register("Clockwork Avian", func() *Card {
 		return NewCreature("Clockwork Avian", "{5}", 0, 4,
 			WithSubTypes("Bird"),
 			WithCardType(TypeArtifact),
@@ -503,7 +503,7 @@ func registerCreatures() {
 	// Trample
 	// Colossus of Sardia doesn't untap during your untap step.
 	// {9}: Untap Colossus of Sardia. Activate only during your upkeep.
-	Register("Colossus of Sardia", func() Card {
+	Register("Colossus of Sardia", func() *Card {
 		return NewCreature("Colossus of Sardia", "{9}", 9, 9,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
@@ -520,7 +520,7 @@ func registerCreatures() {
 	// Dragon Engine {3}
 	// Artifact Creature — Construct
 	// {2}: Dragon Engine gets +1/+0 until end of turn.
-	Register("Dragon Engine", func() Card {
+	Register("Dragon Engine", func() *Card {
 		return NewCreature("Dragon Engine", "{3}", 1, 3,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -534,7 +534,7 @@ func registerCreatures() {
 	// Grapeshot Catapult {4}
 	// Artifact Creature — Construct
 	// {T}: Grapeshot Catapult deals 1 damage to target creature with flying.
-	Register("Grapeshot Catapult", func() Card {
+	Register("Grapeshot Catapult", func() *Card {
 		return NewCreature("Grapeshot Catapult", "{4}", 2, 3,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -551,7 +551,7 @@ func registerCreatures() {
 	// Banding
 	// At the beginning of your upkeep, Mishra's War Machine deals 3 damage to you unless you
 	// discard a card. If it deals damage to you this way, tap it.
-	Register("Mishra's War Machine", func() Card {
+	Register("Mishra's War Machine", func() *Card {
 		return NewCreature("Mishra's War Machine", "{7}", 5, 5,
 			WithSubTypes("Juggernaut"),
 			WithCardType(TypeArtifact),
@@ -589,7 +589,7 @@ func registerCreatures() {
 	// Onulet {3}
 	// Artifact Creature — Construct
 	// When Onulet dies, you gain 2 life.
-	Register("Onulet", func() Card {
+	Register("Onulet", func() *Card {
 		return NewCreature("Onulet", "{3}", 2, 2,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -602,7 +602,7 @@ func registerCreatures() {
 	// Ornithopter {0}
 	// Artifact Creature — Thopter
 	// Flying
-	Register("Ornithopter", func() Card {
+	Register("Ornithopter", func() *Card {
 		return NewCreature("Ornithopter", "{0}", 0, 2,
 			WithSubTypes("Thopter"),
 			WithCardType(TypeArtifact),
@@ -614,7 +614,7 @@ func registerCreatures() {
 	// Artifact Creature — Shapeshifter
 	// As Primal Clay enters the battlefield, it becomes your choice of a 3/3 artifact creature,
 	// a 2/2 artifact creature with flying, or a 1/6 Wall artifact creature with defender.
-	Register("Primal Clay", func() Card {
+	Register("Primal Clay", func() *Card {
 		c := NewCreature("Primal Clay", "{4}", 3, 3,
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
@@ -633,9 +633,7 @@ func registerCreatures() {
 						perm.GrantBaseAttr(Flying)
 					case 2: // 1/6 Wall with defender
 						perm.Card.SetBasePT(1, 6)
-						if bc, ok := perm.Card.(*BaseCard); ok {
-							bc.AddSubType("Wall")
-						}
+						perm.Card.AddSubType("Wall")
 						perm.GrantBaseAttr(Defender)
 						// case 0: 3/3 is the default
 					}
@@ -653,7 +651,7 @@ func registerCreatures() {
 	// Shapeshifter's power is equal to the last chosen number and its toughness is equal to
 	// 7 minus that number.
 	shapeshifterModes := []string{"0", "1", "2", "3", "4", "5", "6", "7"}
-	Register("Shapeshifter", func() Card {
+	Register("Shapeshifter", func() *Card {
 		c := NewCreature("Shapeshifter", "{6}", 0, 7, // base P/T overridden by continuous effect
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
@@ -716,7 +714,7 @@ func registerCreatures() {
 	// Su-Chi {4}
 	// Artifact Creature — Construct
 	// When Su-Chi dies, add {C}{C}{C}{C}.
-	Register("Su-Chi", func() Card {
+	Register("Su-Chi", func() *Card {
 		return NewCreature("Su-Chi", "{4}", 4, 4,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -734,7 +732,7 @@ func registerCreatures() {
 	// If you do, create that many 1/1 colorless Tetravite artifact creature tokens with flying.
 	// At the beginning of your upkeep, you may exile any number of tokens created with Tetravus.
 	// If you do, put that many +1/+1 counters on Tetravus.
-	Register("Tetravus", func() Card {
+	Register("Tetravus", func() *Card {
 		return NewCreature("Tetravus", "{6}", 1, 1,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -812,7 +810,7 @@ func registerCreatures() {
 	// Artifact Creature — Construct
 	// Triskelion enters the battlefield with three +1/+1 counters on it.
 	// Remove a +1/+1 counter from Triskelion: It deals 1 damage to any target.
-	Register("Triskelion", func() Card {
+	Register("Triskelion", func() *Card {
 		return NewCreature("Triskelion", "{6}", 1, 1,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
@@ -829,7 +827,7 @@ func registerCreatures() {
 	// Artifact Creature — Shapeshifter
 	// {0}: Urza's Avenger gets -1/-1 and gains your choice of banding, flying, first strike,
 	// or trample until end of turn.
-	Register("Urza's Avenger", func() Card {
+	Register("Urza's Avenger", func() *Card {
 		c := NewCreature("Urza's Avenger", "{6}", 4, 4,
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
@@ -882,7 +880,7 @@ func registerCreatures() {
 	// Wall of Spears {3}
 	// Artifact Creature — Wall
 	// Defender, first strike
-	Register("Wall of Spears", func() Card {
+	Register("Wall of Spears", func() *Card {
 		return NewCreature("Wall of Spears", "{3}", 2, 3,
 			WithSubTypes("Wall"),
 			WithCardType(TypeArtifact),
@@ -894,7 +892,7 @@ func registerCreatures() {
 	// Yotian Soldier {3}
 	// Artifact Creature — Soldier
 	// Vigilance
-	Register("Yotian Soldier", func() Card {
+	Register("Yotian Soldier", func() *Card {
 		return NewCreature("Yotian Soldier", "{3}", 1, 4,
 			WithSubTypes("Soldier"),
 			WithCardType(TypeArtifact),

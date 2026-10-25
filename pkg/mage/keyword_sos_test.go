@@ -19,7 +19,7 @@ func TestPrepared_ETBSetsPreparedAttr(t *testing.T) {
 	b := newRecordingPlayer("B")
 	g := NewGame(a, b)
 
-	spellFactory := func() Card {
+	spellFactory := func() *Card {
 		return NewInstant("Rejoinder", "{1}{W}",
 			NewSpellAbility(DrawCards(Fixed(1))))
 	}
@@ -48,7 +48,7 @@ func TestPrepared_ActivateCastsCopyAndUnprepares(t *testing.T) {
 		}
 	}
 
-	spellFactory := func() Card {
+	spellFactory := func() *Card {
 		return NewInstant("Rejoinder", "{1}{W}",
 			NewSpellAbility(DrawCards(Fixed(1))))
 	}
@@ -93,7 +93,7 @@ func TestPrepared_CannotCastWhenUnprepared(t *testing.T) {
 	b := newRecordingPlayer("B")
 	g := NewGame(a, b)
 
-	spellFactory := func() Card {
+	spellFactory := func() *Card {
 		return NewInstant("Rejoinder", "{1}{W}",
 			NewSpellAbility(DrawCards(Fixed(1))))
 	}
@@ -126,7 +126,7 @@ func TestPrepared_CastPreparedCopyForwardsCurrentX(t *testing.T) {
 		}
 	}
 
-	spellFactory := func() Card {
+	spellFactory := func() *Card {
 		return NewInstant("Draw X", "{X}",
 			NewSpellAbility(DrawCards(XValue())))
 	}
@@ -159,7 +159,7 @@ func TestPrepared_CastPreparedModalCopyUsesChosenMode(t *testing.T) {
 		a.AddToLibrary(NewLand("Plains"))
 	}
 
-	spellFactory := func() Card {
+	spellFactory := func() *Card {
 		c := NewSorcery("Modal Lesson", "{1}{U}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{

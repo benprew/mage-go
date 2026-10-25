@@ -19,7 +19,7 @@ func registerActivationConditionCards() {
 		// printed power is 2, so the activation should be rejected until
 		// some +N/+0 effect lifts the source above the threshold.
 		if !mage.CardRegistered("Test Power Gate Trainee") {
-			mage.Register("Test Power Gate Trainee", func() mage.Card {
+			mage.Register("Test Power Gate Trainee", func() *mage.Card {
 				return mage.NewCreature("Test Power Gate Trainee", "{2}{R}", 2, 3,
 					mage.WithActivatedAbility(
 						mage.DealDamage(mage.Fixed(4)),
@@ -37,14 +37,14 @@ func registerActivationConditionCards() {
 		}
 		// A pump-source spell to push power above the gate.
 		if !mage.CardRegistered("Test Pump Source +3/+0") {
-			mage.Register("Test Pump Source +3/+0", func() mage.Card {
+			mage.Register("Test Pump Source +3/+0", func() *mage.Card {
 				return mage.NewInstant("Test Pump Source +3/+0", "{G}",
 					mage.NewTargetedSpell(mage.TargetCreature(),
 						mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(0), mage.SelectTarget)))
 			})
 		}
 		if !mage.CardRegistered("Test Gate Victim") {
-			mage.Register("Test Gate Victim", func() mage.Card {
+			mage.Register("Test Gate Victim", func() *mage.Card {
 				return mage.NewCreature("Test Gate Victim", "{1}", 1, 1)
 			})
 		}

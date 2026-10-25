@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	cloneCardSliceSink []Card
+	cloneCardSliceSink []*Card
 	cloneGameSink      *Game
 )
 
@@ -979,7 +979,7 @@ func TestCloneNestedUUIDMapIsolation(t *testing.T) {
 
 func TestCloneCardSliceAllocFree(t *testing.T) {
 	card := NewCreature("Alloc Bear", "{1}{G}", 2, 2)
-	cards := []Card{card, card, card}
+	cards := []*Card{card, card, card}
 	allocs := testing.AllocsPerRun(1000, func() {
 		cloneCardSliceSink = cloneCardSlice(cards)
 	})
@@ -1077,7 +1077,7 @@ func setupRogueBoardCloneBenchmarkGame() *Game {
 	var lastEquipment *Permanent
 	for i := range 96 {
 		owner := owners[i%len(owners)]
-		var card Card
+		var card *Card
 		switch i % 4 {
 		case 0:
 			card = NewCreature("Rogue Board Creature", "{2}{B}", 2+i%4, 2+i%5, WithSubTypes("Human", "Rogue"))

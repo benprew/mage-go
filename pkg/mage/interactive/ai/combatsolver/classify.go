@@ -42,7 +42,7 @@ func (r CombatRole) String() string {
 // positives. An unrecognised pump degrades to today's behaviour (cast
 // pre-combat); a misclassified sorcery would cause the AI to sit on a card
 // it should cast.
-func ClassifyCombat(card mage.Card) CombatRole {
+func ClassifyCombat(card *mage.Card) CombatRole {
 	if card == nil || !card.HasType(core.TypeInstant) {
 		return RoleNone
 	}

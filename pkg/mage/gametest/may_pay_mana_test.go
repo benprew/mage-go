@@ -19,7 +19,7 @@ func registerMayPayManaTestCards() {
 	mayPayManaRegistered.Do(func() {
 		// A 2/2 Bear used as a counter target.
 		if !mage.CardRegistered("MayPay Bear") {
-			mage.Register("MayPay Bear", func() mage.Card {
+			mage.Register("MayPay Bear", func() *mage.Card {
 				return mage.NewCreature("MayPay Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"),
 				)

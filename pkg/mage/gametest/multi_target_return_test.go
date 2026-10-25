@@ -14,7 +14,7 @@ import (
 func TestMultiTargetReturnFromGraveyard(t *testing.T) {
 	const spell = "Test Two Target Return"
 	if !mage.CardRegistered(spell) {
-		mage.Register(spell, func() mage.Card {
+		mage.Register(spell, func() *mage.Card {
 			return mage.NewSorcery(spell, "{2}{B}",
 				mage.NewMultiTargetSpell(
 					[]mage.Target{mage.TargetCardInYourGraveyard(mage.IsCreatureCard), mage.TargetCardInYourGraveyard(mage.IsCreatureCard)},

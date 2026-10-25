@@ -7,7 +7,7 @@ import (
 )
 
 type castStackObjectOptions struct {
-	Card              Card
+	Card              *Card
 	Controller        uuid.UUID
 	Targets           []uuid.UUID
 	XValue            int
@@ -72,7 +72,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	return obj, nil
 }
 
-func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid.UUID, promptTargets bool, modePrompt string) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
+func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uuid.UUID, promptTargets bool, modePrompt string) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
 	if ms, ok := getModalSpellAbility(card); ok {
 		if modePrompt == "" {
 			modePrompt = card.Name()
@@ -115,7 +115,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid
 	return effects, targets, nil, modeChoice
 }
 
-func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card Card, controller Player) {
+func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card *Card, controller Player) {
 	if obj == nil || card == nil || controller == nil {
 		return
 	}
@@ -132,7 +132,7 @@ func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card Card, controll
 	}
 }
 
-func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {
+func (g *Game) recordSpellCast(card *Card, playerID uuid.UUID) {
 	if card == nil {
 		return
 	}

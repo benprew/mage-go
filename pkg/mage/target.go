@@ -10,8 +10,8 @@ import (
 
 // Target represents a targeting requirement.
 type Target interface {
-	Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID
-	Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error
+	Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID
+	Choose(controller uuid.UUID, sourceCard *Card, g *Game, chosen []uuid.UUID) error
 	Chosen() []uuid.UUID
 	IsChosen() bool
 	Min() int
@@ -48,10 +48,10 @@ type countBoundTarget struct {
 	oneToX bool
 }
 
-func (t *countBoundTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *countBoundTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	return t.inner.Possible(controller, sourceCard, g)
 }
-func (t *countBoundTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+func (t *countBoundTarget) Choose(controller uuid.UUID, sourceCard *Card, g *Game, chosen []uuid.UUID) error {
 	return t.inner.Choose(controller, sourceCard, g, chosen)
 }
 func (t *countBoundTarget) Chosen() []uuid.UUID { return t.inner.Chosen() }
@@ -113,10 +113,10 @@ func TargetRandomCount(inner Target) Target {
 	return &randomTarget{inner: inner, randomCount: true}
 }
 
-func (t *randomTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *randomTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	return t.inner.Possible(controller, sourceCard, g)
 }
-func (t *randomTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+func (t *randomTarget) Choose(controller uuid.UUID, sourceCard *Card, g *Game, chosen []uuid.UUID) error {
 	return t.inner.Choose(controller, sourceCard, g, chosen)
 }
 func (t *randomTarget) Chosen() []uuid.UUID { return t.inner.Chosen() }
@@ -146,11 +146,11 @@ func uniqueTargetCandidates(ids []uuid.UUID) []uuid.UUID {
 	return unique
 }
 
-func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target *randomTarget, x int) []uuid.UUID {
+func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard *Card, target *randomTarget, x int) []uuid.UUID {
 	if target == nil {
 		return nil
 	}
-	target.Reset()
+
 	candidates := uniqueTargetCandidates(target.Possible(controller, sourceCard, g))
 	minimum, maximum := TargetBounds(target, x)
 	maximum = min(maximum, len(candidates))
@@ -172,14 +172,14 @@ func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target
 		chosen = append(chosen, candidates[idx])
 		candidates = append(candidates[:idx], candidates[idx+1:]...)
 	}
-	_ = target.Choose(controller, sourceCard, g, chosen)
+
 	return chosen
 }
 
 // acquireRandomTargets replaces random target declarations with engine-chosen
 // identities. Supplied UUIDs correspond only to ordinary declarations; random
 // declarations obtain their variable count from the controller or RNG.
-func (g *Game) acquireRandomTargets(controller uuid.UUID, sourceCard Card, specs []Target, supplied []uuid.UUID, x int) []uuid.UUID {
+func (g *Game) acquireRandomTargets(controller uuid.UUID, sourceCard *Card, specs []Target, supplied []uuid.UUID, x int) []uuid.UUID {
 	if !slices.ContainsFunc(specs, isRandomTarget) {
 		return supplied
 	}
@@ -224,7 +224,7 @@ func TargetRandomActivePlayerExchangePair() Target {
 	return &randomActivePlayerExchangePairTarget{BaseTarget: BaseTarget{min: 0, max: 2}}
 }
 
-func (t *randomActivePlayerExchangePairTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *randomActivePlayerExchangePairTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	possible := make([]uuid.UUID, 0)
 	for _, permanent := range g.zones.battlefield {
 		if !isExchangePermanent(permanent) || !permanent.CanBeTargetedBy(sourceCard, controller, g) {
@@ -235,13 +235,12 @@ func (t *randomActivePlayerExchangePairTarget) Possible(controller uuid.UUID, so
 	return possible
 }
 
-func (t *randomActivePlayerExchangePairTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+func (t *randomActivePlayerExchangePairTarget) Choose(_ uuid.UUID, _ *Card, _ *Game, chosen []uuid.UUID) error {
 	t.chosen = append([]uuid.UUID(nil), chosen...)
 	return nil
 }
 
-func (t *randomActivePlayerExchangePairTarget) chooseForTrigger(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	t.Reset()
+func (t *randomActivePlayerExchangePairTarget) chooseForTrigger(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	active := g.ActivePlayerObj()
 	if active == nil {
 		return nil
@@ -279,7 +278,7 @@ func (t *randomActivePlayerExchangePairTarget) chooseForTrigger(controller uuid.
 	pair := pairs[g.RandIntn(len(pairs))]
 	second := pair.partners[g.RandIntn(len(pair.partners))]
 	chosen := []uuid.UUID{pair.first.ID(), second.ID()}
-	_ = t.Choose(controller, sourceCard, g, chosen)
+
 	return chosen
 }
 
@@ -313,11 +312,11 @@ func TargetOpponentChoice(inner Target) Target {
 	return &opponentChosenTarget{inner: inner}
 }
 
-func (t *opponentChosenTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *opponentChosenTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	return t.inner.Possible(controller, sourceCard, g)
 }
 
-func (t *opponentChosenTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+func (t *opponentChosenTarget) Choose(controller uuid.UUID, sourceCard *Card, g *Game, chosen []uuid.UUID) error {
 	return t.inner.Choose(controller, sourceCard, g, chosen)
 }
 
@@ -342,7 +341,7 @@ func hasOpponentChosenTarget(targets []Target) bool {
 // candidates are still computed using the action's controller and source, so
 // changing who makes the choice does not change control restrictions,
 // protection, hexproof, or any other targeting requirement.
-func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard Card, specs []Target, supplied []uuid.UUID) []uuid.UUID {
+func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Card, specs []Target, supplied []uuid.UUID) []uuid.UUID {
 	if len(specs) == 0 {
 		return supplied
 	}
@@ -370,7 +369,6 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard Car
 			continue
 		}
 
-		spec.Reset()
 		possible := spec.Possible(controller, sourceCard, g)
 		chooser := g.GetOpponent(controller)
 		var requested []uuid.UUID
@@ -397,7 +395,7 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard Car
 		if len(chosen) == 0 && spec.Min() > 0 {
 			chosen = append(chosen, uuid.Nil)
 		}
-		_ = spec.Choose(controller, sourceCard, g, chosen)
+
 		out = append(out, chosen...)
 		offset += consumed
 	}
@@ -581,7 +579,7 @@ func TargetUpToNCardsInYourGraveyard(n int, filters ...CardFilter) Target {
 	}
 }
 
-func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	sourceID := sourceCard.ID()
 	for _, p := range g.zones.battlefield {
@@ -614,7 +612,7 @@ func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game
 	return result
 }
 
-func (t *CreatureTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+func (t *CreatureTarget) Choose(controller uuid.UUID, sourceCard *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -636,7 +634,7 @@ func TargetPlayer() Target {
 	}
 }
 
-func (t *PlayerTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *PlayerTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
 	result := make([]uuid.UUID, 0, len(g.players))
 	for _, p := range g.players {
 		result = append(result, p.PlayerID())
@@ -644,7 +642,7 @@ func (t *PlayerTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UU
 	return result
 }
 
-func (t *PlayerTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *PlayerTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -662,11 +660,11 @@ func TargetController() Target {
 	}
 }
 
-func (t *ControllerTarget) Possible(controller uuid.UUID, _ Card, _ *Game) []uuid.UUID {
+func (t *ControllerTarget) Possible(controller uuid.UUID, _ *Card, _ *Game) []uuid.UUID {
 	return []uuid.UUID{controller}
 }
 
-func (t *ControllerTarget) Choose(controller uuid.UUID, _ Card, _ *Game, _ []uuid.UUID) error {
+func (t *ControllerTarget) Choose(controller uuid.UUID, _ *Card, _ *Game, _ []uuid.UUID) error {
 	t.chosen = []uuid.UUID{controller}
 	return nil
 }
@@ -682,13 +680,12 @@ func (t *ControllerTarget) Choose(controller uuid.UUID, _ Card, _ *Game, _ []uui
 // The interactive layer uses this to suppress pointless "pick a target"
 // prompts, and ActivateAbilityByIndex uses it to fill those targets in, since
 // activated-ability targets are otherwise supplied by the caller.
-func ForcedActivationTargets(controller uuid.UUID, card Card, declared []Target, g *Game) []uuid.UUID {
+func ForcedActivationTargets(controller uuid.UUID, card *Card, declared []Target, g *Game) []uuid.UUID {
 	if len(declared) == 0 {
 		return nil
 	}
 	var out []uuid.UUID
 	for _, t := range declared {
-		t.Reset()
 		possible := t.Possible(controller, card, g)
 		if t.Min() <= 0 || t.Min() != t.Max() || len(possible) != t.Min() {
 			return nil
@@ -710,7 +707,7 @@ func TargetDamageAnyTarget() Target {
 	}
 }
 
-func (t *DamageAnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *DamageAnyTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if (p.HasType(TypeCreature) || p.HasType(TypePlaneswalker)) && p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -723,7 +720,7 @@ func (t *DamageAnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	return result
 }
 
-func (t *DamageAnyTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *DamageAnyTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -741,7 +738,7 @@ func TargetPlayerOrPlaneswalker() Target {
 	}
 }
 
-func (t *PlayerOrPlaneswalkerTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *PlayerOrPlaneswalkerTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if p.HasType(TypePlaneswalker) && p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -754,7 +751,7 @@ func (t *PlayerOrPlaneswalkerTarget) Possible(controller uuid.UUID, sourceCard C
 	return result
 }
 
-func (t *PlayerOrPlaneswalkerTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *PlayerOrPlaneswalkerTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -777,7 +774,7 @@ func TargetControlledCreature() Target {
 	}
 }
 
-func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if p.HasType(TypeCreature) && p.ControllerID() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -787,7 +784,7 @@ func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard Car
 	return result
 }
 
-func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -851,7 +848,7 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 	return TargetUpToNPermanents(1, filters...)
 }
 
-func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if t.opponentOnly && p.ControllerID() == controller {
@@ -877,7 +874,7 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	return result
 }
 
-func (t *PermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *PermanentTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -911,7 +908,7 @@ type auraAttachedToCreatureYouControlTarget struct {
 	BaseTarget
 }
 
-func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if !p.IsAttached() || (!p.HasType(TypeEnchantment) && !p.HasSubType("Aura")) {
@@ -929,7 +926,7 @@ func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, 
 	return result
 }
 
-func (t *auraAttachedToCreatureYouControlTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *auraAttachedToCreatureYouControlTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -947,7 +944,7 @@ type artifactWithManaValueXTarget struct {
 	BaseTarget
 }
 
-func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	x := g.resolution.X()
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
@@ -965,7 +962,7 @@ func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard
 	return result
 }
 
-func (t *artifactWithManaValueXTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *artifactWithManaValueXTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -992,7 +989,7 @@ func TargetCreatureOfSourceChosenSubtype() Target {
 	return &sourceChosenSubtypeCreatureTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
 }
 
-func (t *sourceChosenSubtypeCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *sourceChosenSubtypeCreatureTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	source := g.FindPermanent(sourceCard.ID())
 	if source == nil || source.ChosenSubtype == "" {
 		return nil
@@ -1006,7 +1003,7 @@ func (t *sourceChosenSubtypeCreatureTarget) Possible(controller uuid.UUID, sourc
 	return possible
 }
 
-func (t *sourceChosenSubtypeCreatureTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+func (t *sourceChosenSubtypeCreatureTarget) Choose(_ uuid.UUID, _ *Card, _ *Game, chosen []uuid.UUID) error {
 	t.chosen = append([]uuid.UUID(nil), chosen...)
 	return nil
 }
@@ -1018,13 +1015,13 @@ func TargetSpellOrPermanent() Target {
 	return &SpellOrPermanentTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
 }
 
-func (t *SpellOrPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *SpellOrPermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	permanents := TargetPermanent().Possible(controller, sourceCard, g)
 	spells := TargetSpellOnStack().Possible(controller, sourceCard, g)
 	return uniqueTargetCandidates(append(permanents, spells...))
 }
 
-func (t *SpellOrPermanentTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+func (t *SpellOrPermanentTarget) Choose(_ uuid.UUID, _ *Card, _ *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1039,13 +1036,13 @@ func TargetDamageSource() Target {
 	return &DamageSourceTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
 }
 
-func (t *DamageSourceTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *DamageSourceTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	permanents := TargetPermanent().Possible(controller, sourceCard, g)
 	spells := TargetSpellOnStack().Possible(controller, sourceCard, g)
 	return uniqueTargetCandidates(append(permanents, spells...))
 }
 
-func (t *DamageSourceTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+func (t *DamageSourceTarget) Choose(_ uuid.UUID, _ *Card, _ *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1076,7 +1073,7 @@ func TargetOwnSpellOnStack(filters ...CardFilter) Target {
 	}
 }
 
-func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, obj := range g.stack.Objects() {
 		if !obj.IsAbility && obj.Card != nil {
@@ -1098,7 +1095,7 @@ func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ Card, g *Game) []u
 	return result
 }
 
-func (t *SpellOnStackTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *SpellOnStackTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1131,7 +1128,7 @@ func TargetOtherCreatureInYourGraveyard() Target {
 	}
 }
 
-func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
@@ -1159,7 +1156,7 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g 
 	return result
 }
 
-func (t *GraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *GraveyardCardTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1198,7 +1195,7 @@ func TargetCreatureCardInAnyGraveyard() Target {
 	return TargetCardInAnyGraveyard(IsCreatureCard)
 }
 
-func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.players {
 		for _, c := range p.Graveyard() {
@@ -1217,7 +1214,7 @@ func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card,
 	return result
 }
 
-func (t *AnyGraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *AnyGraveyardCardTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1243,7 +1240,7 @@ func TargetCreatureInHand() Target {
 	return TargetCardInHand(IsCreatureCard)
 }
 
-func (t *HandCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *HandCardTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
@@ -1264,7 +1261,7 @@ func (t *HandCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.
 	return result
 }
 
-func (t *HandCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *HandCardTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1281,7 +1278,7 @@ func TargetControlledPermanent() Target {
 	}
 }
 
-func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && p.Card.Owner() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -1291,7 +1288,7 @@ func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard Ca
 	return result
 }
 
-func (t *ControlledPermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *ControlledPermanentTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1308,7 +1305,7 @@ func TargetOpponent() Target {
 	}
 }
 
-func (t *OpponentTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *OpponentTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.players {
 		if p.PlayerID() != controller {
@@ -1318,7 +1315,7 @@ func (t *OpponentTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.
 	return result
 }
 
-func (t *OpponentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *OpponentTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1337,7 +1334,7 @@ func TargetCreatureWithPowerLESource() Target {
 	}
 }
 
-func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	src := g.FindPermanent(sourceCard.ID())
 	if src == nil {
 		return nil
@@ -1358,7 +1355,7 @@ func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard 
 	return result
 }
 
-func (t *PowerLESourceCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *PowerLESourceCreatureTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -1377,7 +1374,7 @@ func TargetCreatureBlockingOrBlockedBySource() Target {
 	}
 }
 
-func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	sourceID := sourceCard.ID()
 	var result []uuid.UUID
 	for _, group := range g.CombatGroups() {
@@ -1400,7 +1397,7 @@ func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceC
 	return result
 }
 
-func (t *BlockingOrBlockedBySourceTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *BlockingOrBlockedBySourceTarget) Choose(controller uuid.UUID, _ *Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

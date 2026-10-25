@@ -20,7 +20,7 @@ var animateLandOnce sync.Once
 
 func registerAnimateLandTestCards() {
 	animateLandOnce.Do(func() {
-		reg := func(name string, f func() mage.Card) {
+		reg := func(name string, f func() *mage.Card) {
 			if !mage.CardRegistered(name) {
 				mage.Register(name, f)
 			}
@@ -28,7 +28,7 @@ func registerAnimateLandTestCards() {
 
 		// Aura that animates the enchanted land into a 6/4 green
 		// Elemental creature with trample (mirrors Vastwood Zendikon).
-		reg("Test Land Animator Aura", func() mage.Card {
+		reg("Test Land Animator Aura", func() *mage.Card {
 			return mage.NewAura("Test Land Animator Aura", "{2}{G}",
 				mage.WithCastTarget(mage.TargetLand()),
 				mage.WithStaticAbility(
@@ -46,7 +46,7 @@ func registerAnimateLandTestCards() {
 		// Creature whose ETB animates target Forest into a 4/5 green
 		// Treefolk creature for as long as it remains on the
 		// battlefield (mirrors Awakener Druid).
-		reg("Test Awakener", func() mage.Card {
+		reg("Test Awakener", func() *mage.Card {
 			return mage.NewCreature("Test Awakener", "{2}{G}", 1, 1,
 				mage.WithSubTypes("Druid"),
 				mage.WithAbility(mage.EntersBattlefieldTrigger(
@@ -75,7 +75,7 @@ func registerAnimateLandTestCards() {
 
 		// Instant: target land you control becomes a 4/4 Elemental
 		// creature with trample until end of turn (Elemental Uprising).
-		reg("Test Elemental Uprising", func() mage.Card {
+		reg("Test Elemental Uprising", func() *mage.Card {
 			return mage.NewInstant("Test Elemental Uprising", "{1}{G}",
 				mage.NewTargetedSpell(
 					mage.TargetLand(),
@@ -103,7 +103,7 @@ func registerAnimateLandTestCards() {
 
 		// Aura that puts {T}: Add {G} as an additional mana ability on
 		// the enchanted land (mirrors New Horizons' mana-grant clause).
-		reg("Test Mana Grant Aura", func() mage.Card {
+		reg("Test Mana Grant Aura", func() *mage.Card {
 			return mage.NewAura("Test Mana Grant Aura", "{G}",
 				mage.WithCastTarget(mage.TargetLand()),
 				mage.WithStaticAbility(

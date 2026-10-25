@@ -15,7 +15,7 @@ func TestAssignsDamageEqualToToughnessForMatching(t *testing.T) {
 	const enchName = "ADET Assault-like"
 	const wallName = "ADET Wall 0/4"
 	if !mage.CardRegistered(enchName) {
-		mage.Register(enchName, func() mage.Card {
+		mage.Register(enchName, func() *mage.Card {
 			return mage.NewEnchantment(enchName, "{1}{G}",
 				mage.WithStaticAbility(
 					mage.AssignsDamageEqualToToughnessForCreaturesYouControl(),
@@ -24,7 +24,7 @@ func TestAssignsDamageEqualToToughnessForMatching(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(wallName) {
-		mage.Register(wallName, func() mage.Card {
+		mage.Register(wallName, func() *mage.Card {
 			return mage.NewCreature(wallName, "{G}", 0, 4,
 				mage.WithSubTypes("Wall"),
 				// Grant attack capability for the test (normally Walls have defender).

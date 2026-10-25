@@ -8,6 +8,6 @@ var basicLandNames = map[string]bool{
 }
 
 // isBasicLand returns true if a card is a basic land (by name).
-func isBasicLand(c Card) bool {
+func isBasicLand(c *Card) bool {
 	return basicLandNames[c.Name()]
 }

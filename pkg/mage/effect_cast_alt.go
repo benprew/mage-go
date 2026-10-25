@@ -26,7 +26,7 @@ import (
 // findCardInZone returns the Card with the given ID in the given player's
 // zone, or nil if not present. Stack and battlefield are not supported here
 // (those are not cast-from zones in the normal sense).
-func (g *Game) findCardInZone(playerID, cardID uuid.UUID, zone Zone) Card {
+func (g *Game) findCardInZone(playerID, cardID uuid.UUID, zone Zone) *Card {
 	return g.findCardInZoneOpt(playerID, cardID, zone, false)
 }
 
@@ -35,7 +35,7 @@ func (g *Game) findCardInZone(playerID, cardID uuid.UUID, zone Zone) Card {
 // supports effects (e.g. Etali, Primal Storm) that exile cards from each
 // player's library and let one player cast any of them, regardless of
 // original ownership.
-func (g *Game) findCardInZoneOpt(playerID, cardID uuid.UUID, zone Zone, permitForeignOwner bool) Card {
+func (g *Game) findCardInZoneOpt(playerID, cardID uuid.UUID, zone Zone, permitForeignOwner bool) *Card {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil
@@ -74,7 +74,7 @@ func (g *Game) findCardInZoneOpt(playerID, cardID uuid.UUID, zone Zone, permitFo
 
 // removeCardFromZone removes the card with the given ID from the given
 // player's zone. Returns the removed card, or nil if not present.
-func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) Card {
+func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) *Card {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil
@@ -96,7 +96,7 @@ func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) Card {
 		lib := p.Library()
 		for i, c := range lib {
 			if c.ID() == cardID {
-				newLib := append([]Card{}, lib[:i]...)
+				newLib := append([]*Card{}, lib[:i]...)
 				newLib = append(newLib, lib[i+1:]...)
 				p.SetLibrary(newLib)
 				return c
@@ -181,9 +181,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		mana = *alternateMC
 	}
 	totalCosts := append([]Cost(nil), extraCosts...)
-	if bc, ok := card.(*BaseCard); ok {
-		totalCosts = append(totalCosts, bc.AdditionalCosts()...)
-	}
+	totalCosts = append(totalCosts, card.AdditionalCosts()...)
 	var actionCosts []Cost
 	for _, ability := range card.Abilities() {
 		if spell, ok := ability.(*SpellAbility); ok && spell.Kind() == ActionSpell {

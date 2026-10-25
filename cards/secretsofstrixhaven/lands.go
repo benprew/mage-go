@@ -14,7 +14,7 @@ func init() {
 // slowLand builds the "Innistrad slow land" pattern: enters tapped unless the
 // controller controls two or more other lands. Produces color1 (primary, used by
 // autotap) or color2 via two separate mana abilities.
-func slowLand(name string, color1, color2 Color) Card {
+func slowLand(name string, color1, color2 Color) *Card {
 	return NewLand(name,
 		WithAbility(ETBEffect(FuncEffect(
 			"enter tapped unless you control two or more other lands",
@@ -45,7 +45,7 @@ func slowLand(name string, color1, color2 Color) Card {
 // harness's ActivateAbility picker — which prefers non-mana activated abilities
 // in its first pass — will correctly find the surveil ability when called without
 // a ChooseManaColor override.
-func surveilLand(name, manaCost string, color1, color2 Color) Card {
+func surveilLand(name, manaCost string, color1, color2 Color) *Card {
 	return NewLand(name,
 		WithKeyword(EntersTapped),
 		WithManaAbility(color1),
@@ -64,7 +64,7 @@ func registerLands() {
 	// Land
 	// This land enters tapped unless you control two or more other lands.
 	// {T}: Add {B} or {G}.
-	Register("Deathcap Glade", func() Card {
+	Register("Deathcap Glade", func() *Card {
 		return slowLand("Deathcap Glade", Black, Green)
 	})
 
@@ -72,7 +72,7 @@ func registerLands() {
 	// Land
 	// This land enters tapped unless you control two or more other lands.
 	// {T}: Add {G} or {U}.
-	Register("Dreamroot Cascade", func() Card {
+	Register("Dreamroot Cascade", func() *Card {
 		return slowLand("Dreamroot Cascade", Green, Blue)
 	})
 
@@ -81,7 +81,7 @@ func registerLands() {
 	// This land enters tapped.
 	// {T}: Add {R} or {W}.
 	// {2}{R}{W}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-	Register("Fields of Strife", func() Card {
+	Register("Fields of Strife", func() *Card {
 		return surveilLand("Fields of Strife", "{2}{R}{W}", Red, White)
 	})
 
@@ -90,7 +90,7 @@ func registerLands() {
 	// This land enters tapped.
 	// {T}: Add {W} or {B}.
 	// {2}{W}{B}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-	Register("Forum of Amity", func() Card {
+	Register("Forum of Amity", func() *Card {
 		return surveilLand("Forum of Amity", "{2}{W}{B}", White, Black)
 	})
 
@@ -100,7 +100,7 @@ func registerLands() {
 	// {T}, Pay 1 life: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.
 	// {5}: If this land isn't a creature, it becomes a 2/4 Wizard creature with "Whenever you cast an
 	// instant or sorcery spell, this creature gets +1/+0 until end of turn." It's still a land.
-	Register("Great Hall of the Biblioplex", func() Card {
+	Register("Great Hall of the Biblioplex", func() *Card {
 		// XXX: The second ability "Add one mana of any color. Spend this mana only to cast an instant
 		// or sorcery spell." is only partially implemented — the mana restriction ("spend only on
 		// instant or sorcery") is not enforceable by the engine, which has no per-mana-pool tagging
@@ -141,7 +141,7 @@ func registerLands() {
 	// This land enters tapped.
 	// {T}: Add {G} or {U}.
 	// {2}{G}{U}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-	Register("Paradox Gardens", func() Card {
+	Register("Paradox Gardens", func() *Card {
 		return surveilLand("Paradox Gardens", "{2}{G}{U}", Green, Blue)
 	})
 
@@ -151,7 +151,7 @@ func registerLands() {
 	// Activated abilities of sources with the chosen name can't be activated unless they're mana abilities.
 	// Lands with the chosen name have "{T}: Add {C}."
 	// {T}: Add {C}.
-	Register("Petrified Hamlet", func() Card {
+	Register("Petrified Hamlet", func() *Card {
 		// The chosen name is stored in ChosenSubtype (repurposed for land card names).
 		//
 		// XXX: The static ability "Activated abilities of sources with the chosen name can't be
@@ -197,7 +197,7 @@ func registerLands() {
 	// Land
 	// This land enters tapped unless you control two or more other lands.
 	// {T}: Add {W} or {B}.
-	Register("Shattered Sanctum", func() Card {
+	Register("Shattered Sanctum", func() *Card {
 		return slowLand("Shattered Sanctum", White, Black)
 	})
 
@@ -205,7 +205,7 @@ func registerLands() {
 	// Land
 	// {T}: Add {C}.
 	// {3}, {T}: Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)
-	Register("Skycoach Waypoint", func() Card {
+	Register("Skycoach Waypoint", func() *Card {
 		preparedFilter := NewPermanentFilter("creature with a prepare spell",
 			func(p *Permanent, g *Game) bool {
 				return p != nil && p.Card != nil && HasPreparedSpell(p.Card)
@@ -243,7 +243,7 @@ func registerLands() {
 	// This land enters tapped.
 	// {T}: Add {U} or {R}.
 	// {2}{U}{R}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-	Register("Spectacle Summit", func() Card {
+	Register("Spectacle Summit", func() *Card {
 		return surveilLand("Spectacle Summit", "{2}{U}{R}", Blue, Red)
 	})
 
@@ -251,7 +251,7 @@ func registerLands() {
 	// Land
 	// This land enters tapped unless you control two or more other lands.
 	// {T}: Add {U} or {R}.
-	Register("Stormcarved Coast", func() Card {
+	Register("Stormcarved Coast", func() *Card {
 		return slowLand("Stormcarved Coast", Blue, Red)
 	})
 
@@ -259,7 +259,7 @@ func registerLands() {
 	// Land
 	// This land enters tapped unless you control two or more other lands.
 	// {T}: Add {R} or {W}.
-	Register("Sundown Pass", func() Card {
+	Register("Sundown Pass", func() *Card {
 		return slowLand("Sundown Pass", Red, White)
 	})
 
@@ -274,7 +274,7 @@ func registerLands() {
 	// This land enters tapped.
 	// {T}: Add {B} or {G}.
 	// {2}{B}{G}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-	Register("Titan's Grave", func() Card {
+	Register("Titan's Grave", func() *Card {
 		return surveilLand("Titan's Grave", "{2}{B}{G}", Black, Green)
 	})
 

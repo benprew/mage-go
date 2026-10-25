@@ -115,11 +115,7 @@ func TestScourgeOfNelToth_RegistersAlternateCost(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateCard: %v", err)
 	}
-	bc, ok := card.(*mage.BaseCard)
-	if !ok {
-		t.Fatalf("expected *BaseCard")
-	}
-	alts := bc.AlternateCosts()
+	alts := card.AlternateCosts()
 	if len(alts) != 1 {
 		t.Fatalf("expected 1 alternate cost, got %d", len(alts))
 	}

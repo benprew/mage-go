@@ -14,7 +14,7 @@ func registerPandoraTestCards() {
 	if mage.CardRegistered(pandoraTestCreature) {
 		return
 	}
-	mage.Register(pandoraTestCreature, func() mage.Card {
+	mage.Register(pandoraTestCreature, func() *mage.Card {
 		return mage.NewCreature(pandoraTestCreature, "{3}{W}", 3, 4,
 			mage.WithSubTypes("Angel"),
 			mage.WithKeyword(core.Flying),

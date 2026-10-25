@@ -10,7 +10,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func buildRulesText(c mage.Card) string {
+func buildRulesText(c *mage.Card) string {
 	var parts []string
 	formatActivated := func(ab mage.ActivatedAbility) string {
 		costParts := make([]string, 0, len(ab.Costs()))

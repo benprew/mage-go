@@ -89,7 +89,7 @@ func (s *baselineStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlay
 		availMana := eval.CountAvailableMana(g, playerID)
 		cmcs := eval.HandCMCs(p.Hand())
 
-		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card mage.Card) (int, bool) {
+		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card *mage.Card) (int, bool) {
 			if card.HasType(core.TypeInstant) {
 				return 0, false
 			}
@@ -176,7 +176,7 @@ func (s *baselineStrategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID)
 	return false
 }
 
-func (s *baselineStrategy) bestSpellAction(p mage.Player, g *mage.Game, cards []mage.Card, scoreCard func(mage.Card) (int, bool)) *interactive.PriorityAction {
+func (s *baselineStrategy) bestSpellAction(p mage.Player, g *mage.Game, cards []*mage.Card, scoreCard func(*mage.Card) (int, bool)) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	var bestAction *interactive.PriorityAction
 	bestScore := 0
@@ -356,11 +356,11 @@ func oldEvaluateResponse(p mage.Player, g *mage.Game, w ai.WeightedPersonality) 
 	return nil
 }
 
-func (s *baselineStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
+func (s *baselineStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Card) []uuid.UUID {
 	return oldAutoSelectTargets(p, g, card, s.Weights)
 }
 
-func oldAutoSelectTargets(p mage.Player, g *mage.Game, card mage.Card, w ai.WeightedPersonality) []uuid.UUID {
+func oldAutoSelectTargets(p mage.Player, g *mage.Game, card *mage.Card, w ai.WeightedPersonality) []uuid.UUID {
 	playerID := p.PlayerID()
 	opponent := g.GetOpponent(playerID)
 	for _, a := range card.Abilities() {

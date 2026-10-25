@@ -191,7 +191,7 @@ func TestHasType_Land_DelegatesToAttrIsLand(t *testing.T) {
 	}
 }
 
-// TestHasType_CardLevel_StillUsesTypesSlice verifies that BaseCard.HasType
+// TestHasType_CardLevel_StillUsesTypesSlice verifies that Card.HasType
 // still works via the types slice (not affected by Permanent.HasType).
 func TestHasType_CardLevel_StillUsesTypesSlice(t *testing.T) {
 	card := NewCreature("Test", "{1}", 1, 1)

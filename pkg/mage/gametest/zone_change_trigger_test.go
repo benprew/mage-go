@@ -15,7 +15,7 @@ import (
 func TestOnEnterZone_LegacySanity(t *testing.T) {
 	const cardName = "OEZ Legacy Sanity"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{2}", 1, 1,
 				mage.WithAbility(mage.EntersBattlefieldTrigger(
 					mage.DrawCards(mage.Fixed(1)),
@@ -40,7 +40,7 @@ func TestOnEnterZone_LegacySanity(t *testing.T) {
 func TestOnEnterZone_FiresOnETB(t *testing.T) {
 	const cardName = "OEZ ETB Draw"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{2}", 1, 1,
 				mage.WithAbility(mage.OnEnterZone(
 					core.ZoneBattlefield,
@@ -69,7 +69,7 @@ func TestOnEnterZone_FiresOnETB(t *testing.T) {
 func TestOnLeaveZone_AnyDestination_Exile(t *testing.T) {
 	const cardName = "OLZ Any-Exile"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewArtifact(cardName, "{1}",
 				mage.WithAbility(mage.OnLeaveZone(
 					core.ZoneBattlefield,
@@ -80,7 +80,7 @@ func TestOnLeaveZone_AnyDestination_Exile(t *testing.T) {
 			)
 		})
 	}
-	mage.Register("OLZ Exile-self", func() mage.Card {
+	mage.Register("OLZ Exile-self", func() *mage.Card {
 		return mage.NewSorcery("OLZ Exile-self", "{0}",
 			mage.NewSpellAbility(mage.FuncEffect("self-exile",
 				mage.EffectProperties{},
@@ -113,7 +113,7 @@ func TestOnLeaveZone_AnyDestination_Exile(t *testing.T) {
 func TestOnLeaveZone_FiresOnSacrifice(t *testing.T) {
 	const cardName = "OLZ Terrarion-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewArtifact(cardName, "{1}",
 				mage.WithActivatedAbility(
 					mage.FuncEffect("noop", mage.EffectProperties{},

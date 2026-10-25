@@ -126,8 +126,8 @@ var Archetypes = []DeckArchetype{
 
 // BuildDeck makes a shuffled deck of cards from a deck list.
 // The function sets the owner for each card.
-func BuildDeck(entries []DeckEntry, ownerID uuid.UUID) []mage.Card {
-	var deck []mage.Card
+func BuildDeck(entries []DeckEntry, ownerID uuid.UUID) []*mage.Card {
+	var deck []*mage.Card
 	for _, entry := range entries {
 		for i := 0; i < entry.Count; i++ {
 			card, err := mage.CreateCard(entry.Name)

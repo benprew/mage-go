@@ -15,7 +15,7 @@ func registerOpponentChoosesTargetCards() {
 		// Mausoleum Turnkey analog: ETB returns target creature card of
 		// an opponent's choice from your graveyard to your hand.
 		if !mage.CardRegistered("Test Opponent Picks Bear") {
-			mage.Register("Test Opponent Picks Bear", func() mage.Card {
+			mage.Register("Test Opponent Picks Bear", func() *mage.Card {
 				return mage.NewCreature("Test Opponent Picks Bear", "{3}{B}", 3, 2,
 					mage.WithSubTypes("Ogre"),
 					mage.WithAbility(mage.EntersBattlefieldTrigger(
@@ -28,7 +28,7 @@ func registerOpponentChoosesTargetCards() {
 			})
 		}
 		if !mage.CardRegistered("Test Filler Bear") {
-			mage.Register("Test Filler Bear", func() mage.Card {
+			mage.Register("Test Filler Bear", func() *mage.Card {
 				return mage.NewCreature("Test Filler Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"))
 			})

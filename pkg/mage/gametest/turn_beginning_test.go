@@ -100,7 +100,7 @@ func TestTurnStructureBeginning_Untap_UntapsOnOwnTurnAfterStayingTapped(t *testi
 func TestTurnStructureBeginning_Untap_NoPriority_TriggerHeldUntilUpkeep(t *testing.T) {
 	name := "TSB Untap Life Gainer"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewArtifact(name, "{2}",
 				mage.WithAbility(mage.NewTriggered(
 					core.EvtBecameUntapped,
@@ -152,7 +152,7 @@ func TestTurnStructureBeginning_Untap_NoPriority_TriggerHeldUntilUpkeep(t *testi
 func TestTurnStructureBeginning_Upkeep_TriggerResolvesBeforeDraw(t *testing.T) {
 	name := "TSB Upkeep Draw Trigger"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewArtifact(name, "{2}",
 				mage.WithAbility(mage.NewTriggered(
 					core.EvtUpkeep,
@@ -200,7 +200,7 @@ func TestTurnStructureBeginning_Upkeep_MultipleUpkeepSteps(t *testing.T) {
 	// turn; with an extra upkeep step inserted, 2 life per turn.
 	pinger := "CR 503.2 Upkeep Lifegainer"
 	if !mage.CardRegistered(pinger) {
-		mage.Register(pinger, func() mage.Card {
+		mage.Register(pinger, func() *mage.Card {
 			return mage.NewArtifact(pinger, "{0}",
 				mage.WithAbility(mage.NewTriggered(
 					core.EvtUpkeep,

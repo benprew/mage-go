@@ -240,7 +240,7 @@ func TestRandomCardFromGraveyard_FiltersAndDoesNotRemove(t *testing.T) {
 	zombie := NewCreature("Zombie A", "{1}{B}", 2, 2, WithSubTypes("Zombie"))
 	a.AddToGraveyard(zombie)
 	a.AddToGraveyard(NewLand("Swamp"))
-	zombieFilter := NewCardFilter("zombie", func(c Card) bool {
+	zombieFilter := NewCardFilter("zombie", func(c *Card) bool {
 		if !c.HasType(TypeCreature) {
 			return false
 		}
@@ -259,7 +259,7 @@ func TestRandomCardFromGraveyard_FiltersAndDoesNotRemove(t *testing.T) {
 func TestRandomCardFromGraveyard_NoMatchReturnsNil(t *testing.T) {
 	g, a, _ := randomTestGame()
 	a.AddToGraveyard(NewLand("Forest"))
-	zombieFilter := NewCardFilter("zombie", func(c Card) bool {
+	zombieFilter := NewCardFilter("zombie", func(c *Card) bool {
 		if !c.HasType(TypeCreature) {
 			return false
 		}

@@ -18,20 +18,20 @@ var hybridOnce sync.Once
 
 func registerHybridCards() {
 	hybridOnce.Do(func() {
-		reg := func(name string, f func() mage.Card) {
+		reg := func(name string, f func() *mage.Card) {
 			if !mage.CardRegistered(name) {
 				mage.Register(name, f)
 			}
 		}
-		reg("Hybrid WU Bear", func() mage.Card {
+		reg("Hybrid WU Bear", func() *mage.Card {
 			return mage.NewCreature("Hybrid WU Bear", "{W/U}", 1, 1,
 				mage.WithSubTypes("Bear"))
 		})
-		reg("Hybrid Two WU Bear", func() mage.Card {
+		reg("Hybrid Two WU Bear", func() *mage.Card {
 			return mage.NewCreature("Hybrid Two WU Bear", "{W/U}{W/U}", 2, 2,
 				mage.WithSubTypes("Bear"))
 		})
-		reg("Hybrid Mixed Bear", func() mage.Card {
+		reg("Hybrid Mixed Bear", func() *mage.Card {
 			return mage.NewCreature("Hybrid Mixed Bear", "{1}{G}{G/W}", 3, 3,
 				mage.WithSubTypes("Bear"))
 		})

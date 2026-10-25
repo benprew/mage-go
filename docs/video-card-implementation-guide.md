@@ -82,7 +82,7 @@ Execute runs. Then assert.*
 ## SLIDE 5 — Grizzly Bears: Implementation
 
 ```go
-mage.Register("Grizzly Bears", func() mage.Card {
+mage.Register("Grizzly Bears", func() *mage.Card {
     return mage.NewCreature(
         "Grizzly Bears",
         "{1}{G}",

@@ -15,67 +15,67 @@ var registerOnce sync.Once
 
 func registerTestCards() {
 	registerOnce.Do(func() {
-		mage.Register("Doom Blade", func() mage.Card {
+		mage.Register("Doom Blade", func() *mage.Card {
 			return mage.NewInstant("Doom Blade", "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(mage.Not(mage.HasColorFilter(core.Black))), mage.DestroyTarget()),
 			)
 		})
 
-		mage.Register("Elvish Mystic", func() mage.Card {
+		mage.Register("Elvish Mystic", func() *mage.Card {
 			return mage.NewCreature("Elvish Mystic", "{G}", 1, 1,
 				mage.WithSubTypes("Elf", "Druid"),
 				mage.WithManaAbility(core.Green),
 			)
 		})
 
-		mage.Register("Fencing Ace", func() mage.Card {
+		mage.Register("Fencing Ace", func() *mage.Card {
 			return mage.NewCreature("Fencing Ace", "{1}{W}", 1, 1,
 				mage.WithSubTypes("Human", "Soldier"),
 				mage.WithKeyword(core.DoubleStrike),
 			)
 		})
 
-		mage.Register("Boros Swiftblade", func() mage.Card {
+		mage.Register("Boros Swiftblade", func() *mage.Card {
 			return mage.NewCreature("Boros Swiftblade", "{R}{W}", 1, 2,
 				mage.WithSubTypes("Human", "Soldier"),
 				mage.WithKeyword(core.DoubleStrike),
 			)
 		})
 
-		mage.Register("Gladecover Scout", func() mage.Card {
+		mage.Register("Gladecover Scout", func() *mage.Card {
 			return mage.NewCreature("Gladecover Scout", "{G}", 1, 1,
 				mage.WithSubTypes("Elf", "Scout"),
 				mage.WithKeyword(core.Hexproof),
 			)
 		})
 
-		mage.Register("Blurred Mongoose", func() mage.Card {
+		mage.Register("Blurred Mongoose", func() *mage.Card {
 			return mage.NewCreature("Blurred Mongoose", "{1}{G}", 2, 1,
 				mage.WithSubTypes("Mongoose"),
 				mage.WithKeyword(core.Shroud),
 			)
 		})
 
-		mage.Register("Kor Firewalker", func() mage.Card {
+		mage.Register("Kor Firewalker", func() *mage.Card {
 			return mage.NewCreature("Kor Firewalker", "{W}{W}", 2, 2,
 				mage.WithSubTypes("Kor", "Soldier"),
 				mage.WithAbility(mage.ProtectionFromColor(core.Red)),
 			)
 		})
 
-		mage.Register("Centaur Courser", func() mage.Card {
+		mage.Register("Centaur Courser", func() *mage.Card {
 			return mage.NewCreature("Centaur Courser", "{2}{G}", 3, 3,
 				mage.WithSubTypes("Centaur", "Warrior"),
 			)
 		})
 
-		mage.Register("Goblin Piker", func() mage.Card {
+		mage.Register("Goblin Piker", func() *mage.Card {
 			return mage.NewCreature("Goblin Piker", "{1}{R}", 2, 1,
 				mage.WithSubTypes("Goblin", "Warrior"),
 			)
 		})
 
-		mage.Register("Rancor", func() mage.Card {
+		mage.Register("Rancor", func() *mage.Card {
 			return mage.NewAura("Rancor", "{G}",
 				mage.WithStaticAbility(
 					mage.BoostAttached(2, 0, core.AttachAura),
@@ -87,7 +87,7 @@ func registerTestCards() {
 			)
 		})
 
-		mage.Register("Pacifism", func() mage.Card {
+		mage.Register("Pacifism", func() *mage.Card {
 			return mage.NewAura("Pacifism", "{1}{W}",
 				mage.WithStaticAbility(
 					mage.PreventAttachedFromAttacking(core.AttachAura),
@@ -95,7 +95,7 @@ func registerTestCards() {
 			)
 		})
 
-		mage.Register("Bonesplitter", func() mage.Card {
+		mage.Register("Bonesplitter", func() *mage.Card {
 			return mage.NewEquipment("Bonesplitter", "{1}",
 				mage.WithStaticAbility(
 					mage.BoostAttached(2, 0, core.AttachEquipment),
@@ -104,7 +104,7 @@ func registerTestCards() {
 			)
 		})
 
-		mage.Register("Lightning Greaves", func() mage.Card {
+		mage.Register("Lightning Greaves", func() *mage.Card {
 			return mage.NewEquipment("Lightning Greaves", "{2}",
 				mage.WithStaticAbility(
 					mage.GrantAbilityToAttached(core.Haste, core.AttachEquipment),

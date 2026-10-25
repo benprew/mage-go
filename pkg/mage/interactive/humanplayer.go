@@ -269,7 +269,7 @@ func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 	return candidates[0]
 }
 
-func (p *HumanPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (p *HumanPlayer) ChooseCardFromHand(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -288,7 +288,7 @@ func (p *HumanPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, 
 	return candidates[0]
 }
 
-func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
+func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []*mage.Card {
 	hand := p.Hand()
 	if amount <= 0 || len(hand) == 0 {
 		return nil
@@ -305,7 +305,7 @@ func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 	for _, id := range resp.SelectedIDs {
 		idSet[id] = true
 	}
-	var result []mage.Card
+	var result []*mage.Card
 	for _, c := range hand {
 		if idSet[c.ID()] {
 			result = append(result, c)
@@ -329,7 +329,7 @@ func (p *HumanPlayer) ChooseManaColor(reason string) core.Color {
 	return resp.SelectedColor
 }
 
-func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (p *HumanPlayer) ChooseCardFromLibrary(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}

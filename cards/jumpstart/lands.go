@@ -22,7 +22,7 @@ func init() {
 // Splitting the Oracle text's "X or chosen" into two abilities preserves
 // the player's choice (each tap picks one of the two productions) while
 // matching the engine's mana-ability detection conventions.
-func thrivingLand(name string, onColor Color) Card {
+func thrivingLand(name string, onColor Color) *Card {
 	reason := "color other than " + onColor.String()
 	return NewLand(name,
 		WithKeyword(EntersTapped),
@@ -59,7 +59,7 @@ func registerLands() {
 	// Land
 	// {T}: Add {C}.
 	// {2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.
-	Register("Buried Ruin", func() Card {
+	Register("Buried Ruin", func() *Card {
 		return NewLand("Buried Ruin",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -77,7 +77,7 @@ func registerLands() {
 	// {T}: Add {C}.
 	// {T}: Put a charge counter on this land.
 	// {T}, Remove a charge counter from this land: Add one mana of any color.
-	Register("Mirrodin's Core", func() Card {
+	Register("Mirrodin's Core", func() *Card {
 		return NewLand("Mirrodin's Core",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -96,7 +96,7 @@ func registerLands() {
 	// Legendary Land
 	// {T}: Add {C}.
 	// {T}, Sacrifice a creature: Add {B}{B}.
-	Register("Phyrexian Tower", func() Card {
+	Register("Phyrexian Tower", func() *Card {
 		return NewLand("Phyrexian Tower",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Colorless),
@@ -112,7 +112,7 @@ func registerLands() {
 	// Land
 	// {T}: Add {C}.
 	// {1}{U}, {T}: Return target Wizard you control to its owner's hand.
-	Register("Riptide Laboratory", func() Card {
+	Register("Riptide Laboratory", func() *Card {
 		return NewLand("Riptide Laboratory",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -129,7 +129,7 @@ func registerLands() {
 	// This land enters tapped.
 	// When this land enters, sacrifice it unless you pay {1}.
 	// {T}: Add one mana of any color.
-	Register("Rupture Spire", func() Card {
+	Register("Rupture Spire", func() *Card {
 		return NewLand("Rupture Spire",
 			WithKeyword(EntersTapped),
 			WithAbility(
@@ -147,7 +147,7 @@ func registerLands() {
 	// Terramorphic Expanse
 	// Land
 	// {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
-	Register("Terramorphic Expanse", func() Card {
+	Register("Terramorphic Expanse", func() *Card {
 		return NewLand("Terramorphic Expanse",
 			WithActivatedAbility(
 				FuncEffect(
@@ -159,7 +159,7 @@ func registerLands() {
 							return nil
 						}
 						lib := p.Library()
-						var candidates []Card
+						var candidates []*Card
 						for _, c := range lib {
 							if isBasicLandCard(c) {
 								candidates = append(candidates, c)
@@ -174,7 +174,7 @@ func registerLands() {
 							p.ShuffleLibrary()
 							return nil
 						}
-						newLib := make([]Card, 0, len(lib)-1)
+						newLib := make([]*Card, 0, len(lib)-1)
 						for _, c := range lib {
 							if c.ID() != chosen.ID() {
 								newLib = append(newLib, c)
@@ -198,35 +198,35 @@ func registerLands() {
 	// Land
 	// This land enters tapped. As it enters, choose a color other than red.
 	// {T}: Add {R} or one mana of the chosen color.
-	Register("Thriving Bluff", func() Card { return thrivingLand("Thriving Bluff", Red) })
+	Register("Thriving Bluff", func() *Card { return thrivingLand("Thriving Bluff", Red) })
 
 	// Thriving Grove
 	// Land
 	// This land enters tapped. As it enters, choose a color other than green.
 	// {T}: Add {G} or one mana of the chosen color.
-	Register("Thriving Grove", func() Card { return thrivingLand("Thriving Grove", Green) })
+	Register("Thriving Grove", func() *Card { return thrivingLand("Thriving Grove", Green) })
 
 	// Thriving Heath
 	// Land
 	// This land enters tapped. As it enters, choose a color other than white.
 	// {T}: Add {W} or one mana of the chosen color.
-	Register("Thriving Heath", func() Card { return thrivingLand("Thriving Heath", White) })
+	Register("Thriving Heath", func() *Card { return thrivingLand("Thriving Heath", White) })
 
 	// Thriving Isle
 	// Land
 	// This land enters tapped. As it enters, choose a color other than blue.
 	// {T}: Add {U} or one mana of the chosen color.
-	Register("Thriving Isle", func() Card { return thrivingLand("Thriving Isle", Blue) })
+	Register("Thriving Isle", func() *Card { return thrivingLand("Thriving Isle", Blue) })
 
 	// Thriving Moor
 	// Land
 	// This land enters tapped. As it enters, choose a color other than black.
 	// {T}: Add {B} or one mana of the chosen color.
-	Register("Thriving Moor", func() Card { return thrivingLand("Thriving Moor", Black) })
+	Register("Thriving Moor", func() *Card { return thrivingLand("Thriving Moor", Black) })
 }
 
 // isBasicLandCard returns true if a card is a basic land (by name).
-func isBasicLandCard(c Card) bool {
+func isBasicLandCard(c *Card) bool {
 	switch c.Name() {
 	case "Plains", "Island", "Swamp", "Mountain", "Forest":
 		return true

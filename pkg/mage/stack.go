@@ -1,6 +1,9 @@
 package mage
 
 import (
+	"maps"
+	"slices"
+
 	. "github.com/benprew/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
@@ -10,7 +13,7 @@ import (
 type StackObject struct {
 	stateKey stateTriggerKey
 	ID       uuid.UUID
-	Card     Card // non-nil for spells
+	Card     *Card // non-nil for spells
 	// ColorOverride is a layer-5 color-changing effect applied to this spell.
 	// It is carried to the permanent the spell becomes, but is not copiable.
 	ColorOverride *[]Color
@@ -24,7 +27,7 @@ type StackObject struct {
 	// TargetSource is the card whose spell or ability chose the targets. For
 	// spells this is Card; for activated abilities Card remains nil because no
 	// card object is resolving on the stack.
-	TargetSource Card
+	TargetSource *Card
 	IsAbility    bool
 	XValue       int // value of X for X-cost spells
 	ModeChoice   int // chosen mode for modal spells (0-indexed)
@@ -107,7 +110,7 @@ type CastContext struct {
 	// Draconic Roar ("If you revealed a Dragon card... as you cast this
 	// spell"). Card references are LKI: even if the card later changes
 	// zones, this slice continues to point at the snapshotted Card.
-	RevealedAtCast []Card
+	RevealedAtCast []*Card
 
 	// ColorsSpent records how many mana of each color were spent paying
 	// the spell's mana cost (the colored portion plus any colored mana
@@ -241,4 +244,15 @@ func (s *Stack) FindBySourceID(sourceID uuid.UUID) *StackObject {
 // Objects returns all objects on the stack for inspection.
 func (s *Stack) Objects() []*StackObject {
 	return s.objects
+}
+
+func cloneCastContext(context *CastContext) *CastContext {
+	if context == nil {
+		return nil
+	}
+	cloned := *context
+	cloned.RevealedAtCast = slices.Clone(context.RevealedAtCast)
+	cloned.ColorsSpent = maps.Clone(context.ColorsSpent)
+	cloned.ControllerSubtypesAtCast = maps.Clone(context.ControllerSubtypesAtCast)
+	return &cloned
 }

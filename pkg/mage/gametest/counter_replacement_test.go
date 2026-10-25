@@ -21,7 +21,7 @@ func registerCounterReplacementTestCards() {
 	counterReplacementRegistered.Do(func() {
 		// A vanilla 2/2 creature target.
 		if !mage.CardRegistered("Counter Bear") {
-			mage.Register("Counter Bear", func() mage.Card {
+			mage.Register("Counter Bear", func() *mage.Card {
 				return mage.NewCreature("Counter Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"),
 				)
@@ -30,7 +30,7 @@ func registerCounterReplacementTestCards() {
 
 		// A 1/1 Rogue creature for ETB-additional-counter testing.
 		if !mage.CardRegistered("Counter Rogue") {
-			mage.Register("Counter Rogue", func() mage.Card {
+			mage.Register("Counter Rogue", func() *mage.Card {
 				return mage.NewCreature("Counter Rogue", "{B}", 1, 1,
 					mage.WithSubTypes("Rogue"),
 				)
@@ -40,7 +40,7 @@ func registerCounterReplacementTestCards() {
 		// A 1/1 non-Rogue creature to verify the Rogue filter excludes
 		// non-matching permanents.
 		if !mage.CardRegistered("Counter Wizard") {
-			mage.Register("Counter Wizard", func() mage.Card {
+			mage.Register("Counter Wizard", func() *mage.Card {
 				return mage.NewCreature("Counter Wizard", "{U}", 1, 1,
 					mage.WithSubTypes("Wizard"),
 				)
@@ -50,7 +50,7 @@ func registerCounterReplacementTestCards() {
 		// A creature with EntersWithNCounters (fixed). Used to test ETB
 		// counter doubling on the entering permanent itself.
 		if !mage.CardRegistered("Counter Hydra Fixed") {
-			mage.Register("Counter Hydra Fixed", func() mage.Card {
+			mage.Register("Counter Hydra Fixed", func() *mage.Card {
 				return mage.NewCreature("Counter Hydra Fixed", "{2}{G}", 0, 0,
 					mage.WithSubTypes("Hydra"),
 					mage.WithAbility(mage.EntersWithNCounters(core.P1P1, 3)),

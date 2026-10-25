@@ -12,7 +12,8 @@ import (
 type UUIDMap[V any] map[uuid.UUID]V
 
 // Clone creates a deep copy of the game state for AI search.
-// Card objects and Effect interfaces are shared (immutable during play).
+// Card definitions and immutable effects are shared. Card state is copied.
+// Legacy card objects retain their existing copy-on-write contract.
 // Battlefield permanents are shared copy-on-write; other mutable state is
 // deep-copied.
 // Interactive callbacks (OnPriority, etc.) are nil'd in the clone.
@@ -53,6 +54,7 @@ func (g *Game) Clone() *Game {
 	c.effects = cloneEffectManager(g.effects)
 
 	c.customState = cloneCustomState(g.customState)
+	c.isolateCards()
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
 	// OnPriority, AfterPriorityAction, BeforeStackResolve all remain nil.
@@ -218,19 +220,21 @@ func cloneStack(s *Stack) *Stack {
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
-		ID:            obj.ID,
-		Card:          obj.Card, // shared Card ref
-		Controller:    obj.Controller,
-		SourceID:      obj.SourceID,
-		TargetSource:  obj.TargetSource,
-		IsAbility:     obj.IsAbility,
-		XValue:        obj.XValue,
-		ModeChoice:    obj.ModeChoice,
-		EventAmount:   obj.EventAmount,
-		EventSourceID: obj.EventSourceID,
-		IsCopy:        obj.IsCopy,
-		CastZone:      obj.CastZone,
-		CastContext:   obj.CastContext,
+		stateKey:          obj.stateKey,
+		ExileOnLeaveStack: obj.ExileOnLeaveStack,
+		ID:                obj.ID,
+		Card:              obj.Card, // shared Card ref
+		Controller:        obj.Controller,
+		SourceID:          obj.SourceID,
+		TargetSource:      obj.TargetSource,
+		IsAbility:         obj.IsAbility,
+		XValue:            obj.XValue,
+		ModeChoice:        obj.ModeChoice,
+		EventAmount:       obj.EventAmount,
+		EventSourceID:     obj.EventSourceID,
+		IsCopy:            obj.IsCopy,
+		CastZone:          obj.CastZone,
+		CastContext:       obj.CastContext,
 	}
 	if obj.ColorOverride != nil {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)
@@ -395,7 +399,7 @@ func cloneGameRules(gr *GameRules) *GameRules {
 // Mutation paths that would otherwise touch shared memory (middle-element
 // removal in RemoveFromHand/Graveyard/Ante, ShuffleLibrary) are required to
 // allocate fresh slices — see player.go.
-func cloneCardSlice(src []Card) []Card {
+func cloneCardSlice(src []*Card) []*Card {
 	if len(src) == 0 {
 		return nil
 	}

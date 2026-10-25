@@ -14,8 +14,8 @@ import (
 func TestCastAsThoughHadFlash_LiftsSorcerySpeedGate(t *testing.T) {
 	const cardName = "CASTPERM Spirit Granter"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
-			isSpirit := mage.NewCardFilter("Spirit creature", func(c mage.Card) bool {
+		mage.Register(cardName, func() *mage.Card {
+			isSpirit := mage.NewCardFilter("Spirit creature", func(c *mage.Card) bool {
 				return c.HasType(core.TypeCreature) && c.HasSubType("Spirit")
 			})
 			return mage.NewEnchantment(cardName, "{0}",
@@ -26,7 +26,7 @@ func TestCastAsThoughHadFlash_LiftsSorcerySpeedGate(t *testing.T) {
 
 	const spiritName = "CASTPERM Spirit Token Card"
 	if !mage.CardRegistered(spiritName) {
-		mage.Register(spiritName, func() mage.Card {
+		mage.Register(spiritName, func() *mage.Card {
 			return mage.NewCreature(spiritName, "{0}", 1, 1, mage.WithSubTypes("Spirit"))
 		})
 	}
@@ -48,8 +48,8 @@ func TestCastAsThoughHadFlash_LiftsSorcerySpeedGate(t *testing.T) {
 func TestCastAsThoughHadFlash_FilterRestricts(t *testing.T) {
 	const cardName = "CASTPERM Spirit-only Granter"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
-			isSpirit := mage.NewCardFilter("Spirit creature", func(c mage.Card) bool {
+		mage.Register(cardName, func() *mage.Card {
+			isSpirit := mage.NewCardFilter("Spirit creature", func(c *mage.Card) bool {
 				return c.HasType(core.TypeCreature) && c.HasSubType("Spirit")
 			})
 			return mage.NewEnchantment(cardName, "{0}",
@@ -60,7 +60,7 @@ func TestCastAsThoughHadFlash_FilterRestricts(t *testing.T) {
 
 	const goblinName = "CASTPERM Goblin"
 	if !mage.CardRegistered(goblinName) {
-		mage.Register(goblinName, func() mage.Card {
+		mage.Register(goblinName, func() *mage.Card {
 			return mage.NewCreature(goblinName, "{0}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}

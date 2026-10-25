@@ -14,7 +14,7 @@ func init() {
 // Sacrifice ability reads counters before sacrificing, so it's handled in FuncEffect
 // rather than using SacrificeSourceCost (which would destroy the permanent before
 // the effect could read its counter count).
-func moneychangerFactory() Card {
+func moneychangerFactory() *Card {
 	return NewCreature("Icatian Moneychanger", "{W}", 0, 2,
 		WithSubTypes("Human"),
 		// Enters with three credit counters
@@ -53,7 +53,7 @@ func registerCreatures() {
 	// Creature — Human Cleric Soldier
 	// 0/2
 	// {1}{W}: Prevent the next 1 damage that would be dealt to any target this turn.
-	Register("Combat Medic", withExpansion(func() Card {
+	Register("Combat Medic", withExpansion(func() *Card {
 		return NewCreature("Combat Medic", "{2}{W}", 0, 2,
 			WithSubTypes("Human", "Cleric", "Soldier"),
 			WithActivatedAbility(
@@ -68,7 +68,7 @@ func registerCreatures() {
 	// Creature — Human
 	// 2/2
 	// Whenever this creature attacks and isn't blocked, you may have it deal 3 damage to target creature. If you do, this creature assigns no combat damage this turn.
-	Register("Farrel's Zealot", withExpansion(func() Card {
+	Register("Farrel's Zealot", withExpansion(func() *Card {
 		return NewCreature("Farrel's Zealot", "{1}{W}{W}", 2, 2,
 			WithSubTypes("Human"),
 			// TODO: convert to pipeline — needs ChoosePermanentStep + DealDamageToPermanent + RemoveFromCombat steps
@@ -105,7 +105,7 @@ func registerCreatures() {
 	// 1/3
 	// {1}: Add {W}. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.
 	// TODO: implement
-	Register("Farrelite Priest", withExpansion(func() Card {
+	Register("Farrelite Priest", withExpansion(func() *Card {
 		return NewCreature("Farrelite Priest", "{1}{W}{W}", 1, 3,
 			WithSubTypes("Human", "Cleric"),
 		)
@@ -116,7 +116,7 @@ func registerCreatures() {
 	// 2/6
 	// {T}, Tap three untapped white creatures you control: Destroy target creature.
 	// TODO: implement
-	Register("Hand of Justice", withExpansion(func() Card {
+	Register("Hand of Justice", withExpansion(func() *Card {
 		return NewCreature("Hand of Justice", "{5}{W}", 2, 6,
 			WithSubTypes("Avatar"),
 		)
@@ -127,7 +127,7 @@ func registerCreatures() {
 	// 1/1
 	// {1}: This creature gains first strike until end of turn.
 	// {1}: This creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-	Register("Icatian Infantry", withExpansion(func() Card {
+	Register("Icatian Infantry", withExpansion(func() *Card {
 		return NewCreature("Icatian Infantry", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 			WithActivatedAbility(
@@ -146,7 +146,7 @@ func registerCreatures() {
 	// 1/1
 	// This creature enters with a javelin counter on it.
 	// {T}, Remove a javelin counter from this creature: It deals 1 damage to any target.
-	Register("Icatian Javelineers", withExpansion(func() Card {
+	Register("Icatian Javelineers", withExpansion(func() *Card {
 		return NewCreature("Icatian Javelineers", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 			// Enters with a javelin counter
@@ -165,7 +165,7 @@ func registerCreatures() {
 	// Creature — Human Soldier
 	// 1/2
 	// {1}{W}: Target Soldier creature gets +1/+0 until end of turn.
-	Register("Icatian Lieutenant", withExpansion(func() Card {
+	Register("Icatian Lieutenant", withExpansion(func() *Card {
 		return NewCreature("Icatian Lieutenant", "{W}{W}", 1, 2,
 			WithSubTypes("Human", "Soldier"),
 			WithActivatedAbility(
@@ -189,7 +189,7 @@ func registerCreatures() {
 	// Creature — Human Soldier
 	// 2/4
 	// Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-	Register("Icatian Phalanx", withExpansion(func() Card {
+	Register("Icatian Phalanx", withExpansion(func() *Card {
 		return NewCreature("Icatian Phalanx", "{4}{W}", 2, 4,
 			WithSubTypes("Human", "Soldier"),
 			WithKeyword(Banding),
@@ -200,7 +200,7 @@ func registerCreatures() {
 	// Creature — Human Cleric
 	// 1/1
 	// {1}{W}{W}: Target creature gets +1/+1 until end of turn.
-	Register("Icatian Priest", withExpansion(func() Card {
+	Register("Icatian Priest", withExpansion(func() *Card {
 		return NewCreature("Icatian Priest", "{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
 			WithActivatedAbility(
@@ -215,7 +215,7 @@ func registerCreatures() {
 	// Creature — Human Soldier Scout
 	// 1/1
 	// {1}, {T}: Target creature gains first strike until end of turn.
-	Register("Icatian Scout", withExpansion(func() Card {
+	Register("Icatian Scout", withExpansion(func() *Card {
 		return NewCreature("Icatian Scout", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier", "Scout"),
 			WithActivatedAbility(
@@ -233,7 +233,7 @@ func registerCreatures() {
 	// First strike; banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
 	// Whenever this creature attacks, all creatures banded with it gain first strike until end of turn.
 	// TODO: implement
-	Register("Icatian Skirmishers", withExpansion(func() Card {
+	Register("Icatian Skirmishers", withExpansion(func() *Card {
 		return NewCreature("Icatian Skirmishers", "{3}{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 		)
@@ -245,7 +245,7 @@ func registerCreatures() {
 	// Protection from black
 	// {W}: This creature gains first strike until end of turn.
 	// {W}{W}: This creature gets +1/+0 until end of turn.
-	Register("Order of Leitbur", withExpansion(func() Card {
+	Register("Order of Leitbur", withExpansion(func() *Card {
 		return NewCreature("Order of Leitbur", "{W}{W}", 2, 1,
 			WithSubTypes("Human", "Cleric", "Knight"),
 			WithAbility(ProtectionFromColor(Black)),
@@ -268,7 +268,7 @@ func registerCreatures() {
 	// Trample
 	// At the beginning of your upkeep, sacrifice this creature unless you mill two cards.
 	// {U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap this creature. (A creature with shroud can't be the target of spells or abilities.)
-	Register("Deep Spawn", withExpansion(func() Card {
+	Register("Deep Spawn", withExpansion(func() *Card {
 		return NewCreature("Deep Spawn", "{5}{U}{U}{U}", 6, 6,
 			WithSubTypes("Homarid"),
 			WithKeyword(Trample),
@@ -309,7 +309,7 @@ func registerCreatures() {
 	// As long as there is exactly one tide counter on this creature, it gets -1/-1.
 	// As long as there are exactly three tide counters on this creature, it gets +1/+1.
 	// Whenever there are four or more tide counters on this creature, remove all tide counters from it.
-	Register("Homarid", withExpansion(func() Card {
+	Register("Homarid", withExpansion(func() *Card {
 		return NewCreature("Homarid", "{2}{U}", 2, 2,
 			WithSubTypes("Homarid"),
 			// ETB with 1 tide counter
@@ -357,7 +357,7 @@ func registerCreatures() {
 	// Creature — Homarid Shaman
 	// 2/1
 	// {U}: Tap target green creature.
-	Register("Homarid Shaman", withExpansion(func() Card {
+	Register("Homarid Shaman", withExpansion(func() *Card {
 		return NewCreature("Homarid Shaman", "{2}{U}{U}", 2, 1,
 			WithSubTypes("Homarid", "Shaman"),
 			WithActivatedAbility(
@@ -372,7 +372,7 @@ func registerCreatures() {
 	// Creature — Homarid Warrior
 	// 3/3
 	// {U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap it. (A creature with shroud can't be the target of spells or abilities.)
-	Register("Homarid Warrior", withExpansion(func() Card {
+	Register("Homarid Warrior", withExpansion(func() *Card {
 		return NewCreature("Homarid Warrior", "{4}{U}", 3, 3,
 			WithSubTypes("Homarid", "Warrior"),
 			WithActivatedAbility(
@@ -397,7 +397,7 @@ func registerCreatures() {
 	// Creature — Merfolk
 	// 2/1
 	// {U}: This creature gains mountainwalk until end of turn. (It can't be blocked as long as defending player controls a Mountain.)
-	Register("River Merfolk", withExpansion(func() Card {
+	Register("River Merfolk", withExpansion(func() *Card {
 		return NewCreature("River Merfolk", "{U}{U}", 2, 1,
 			WithSubTypes("Merfolk"),
 			WithActivatedAbility(
@@ -414,7 +414,7 @@ func registerCreatures() {
 	// You may choose not to untap this creature during your untap step.
 	// {T}: Gain control of target creature whose controller controls an Island for as long as you control this creature and this creature remains tapped.
 	// TODO: implement
-	Register("Seasinger", withExpansion(func() Card {
+	Register("Seasinger", withExpansion(func() *Card {
 		return NewCreature("Seasinger", "{1}{U}{U}", 0, 1,
 			WithSubTypes("Merfolk"),
 		)
@@ -424,7 +424,7 @@ func registerCreatures() {
 	// Creature — Merfolk Cleric
 	// 1/1
 	// {U}{U}, {T}: Target creature gains shroud until end of turn. Activate only during your upkeep. (It can't be the target of spells or abilities.)
-	Register("Svyelunite Priest", withExpansion(func() Card {
+	Register("Svyelunite Priest", withExpansion(func() *Card {
 		return NewCreature("Svyelunite Priest", "{1}{U}", 1, 1,
 			WithSubTypes("Merfolk", "Cleric"),
 			WithActivatedAbility(
@@ -444,7 +444,7 @@ func registerCreatures() {
 	// This creature can't attack unless defending player controls an Island.
 	// When you control no Islands, sacrifice this creature.
 	// {U}: This creature gains flying until end of turn.
-	Register("Vodalian Knights", withExpansion(func() Card {
+	Register("Vodalian Knights", withExpansion(func() *Card {
 		return NewCreature("Vodalian Knights", "{1}{U}{U}", 2, 2,
 			WithSubTypes("Merfolk", "Knight"),
 			WithKeyword(FirstStrike),
@@ -464,7 +464,7 @@ func registerCreatures() {
 	// Creature — Merfolk Wizard
 	// 1/1
 	// {U}, {T}: Counter target spell unless its controller pays {1}.
-	Register("Vodalian Mage", withExpansion(func() Card {
+	Register("Vodalian Mage", withExpansion(func() *Card {
 		return NewCreature("Vodalian Mage", "{2}{U}", 1, 1,
 			WithSubTypes("Merfolk", "Wizard"),
 			WithActivatedAbility(
@@ -479,7 +479,7 @@ func registerCreatures() {
 	// Vodalian Soldiers {1}{U}
 	// Creature — Merfolk Soldier
 	// 1/2
-	Register("Vodalian Soldiers", withExpansion(func() Card {
+	Register("Vodalian Soldiers", withExpansion(func() *Card {
 		return NewCreature("Vodalian Soldiers", "{1}{U}", 1, 2,
 			WithSubTypes("Merfolk", "Soldier"),
 		)
@@ -493,7 +493,7 @@ func registerCreatures() {
 	// Tap an untapped Merfolk you control: This creature gets +2/+1 until end of turn.
 	// When this creature dies, destroy all Merfolk tapped this turn to pay for its abilities.
 	// TODO: implement
-	Register("Vodalian War Machine", withExpansion(func() Card {
+	Register("Vodalian War Machine", withExpansion(func() *Card {
 		return NewCreature("Vodalian War Machine", "{1}{U}{U}", 0, 4,
 			WithSubTypes("Wall"),
 		)
@@ -505,7 +505,7 @@ func registerCreatures() {
 	// Creature — Thrull
 	// 1/3
 	// {T}, Sacrifice this creature: Put a +1/+2 counter on target creature.
-	Register("Armor Thrull", withExpansion(func() Card {
+	Register("Armor Thrull", withExpansion(func() *Card {
 		return NewCreature("Armor Thrull", "{2}{B}", 1, 3,
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
@@ -521,7 +521,7 @@ func registerCreatures() {
 	// Creature — Thrull
 	// 1/2
 	// {T}, Sacrifice this creature: Add {B}{B}.
-	Register("Basal Thrull", withExpansion(func() Card {
+	Register("Basal Thrull", withExpansion(func() *Card {
 		return NewCreature("Basal Thrull", "{B}{B}", 1, 2,
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
@@ -537,7 +537,7 @@ func registerCreatures() {
 	// 4/4
 	// Black spells you cast cost {B} more to cast.
 	// TODO: implement
-	Register("Derelor", withExpansion(func() Card {
+	Register("Derelor", withExpansion(func() *Card {
 		return NewCreature("Derelor", "{3}{B}", 4, 4,
 			WithSubTypes("Thrull"),
 			// Black spells you cast cost {B} more to cast.
@@ -554,7 +554,7 @@ func registerCreatures() {
 	// At the beginning of your upkeep, put a -2/-2 counter on this creature.
 	// Sacrifice a creature: Remove a -2/-2 counter from this creature. If the sacrificed creature was a Thrull, put a +1/+0 counter on this creature. Activate only during your upkeep and only once each turn.
 	// TODO: implement
-	Register("Ebon Praetor", withExpansion(func() Card {
+	Register("Ebon Praetor", withExpansion(func() *Card {
 		return NewCreature("Ebon Praetor", "{4}{B}{B}", 5, 5,
 			WithSubTypes("Avatar", "Praetor"),
 		)
@@ -565,7 +565,7 @@ func registerCreatures() {
 	// 1/1
 	// {1}: Add {B}. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.
 	// TODO: implement
-	Register("Initiates of the Ebon Hand", withExpansion(func() Card {
+	Register("Initiates of the Ebon Hand", withExpansion(func() *Card {
 		return NewCreature("Initiates of the Ebon Hand", "{B}", 1, 1,
 			WithSubTypes("Cleric"),
 		)
@@ -575,7 +575,7 @@ func registerCreatures() {
 	// Creature — Thrull
 	// 2/2
 	// Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, defending player discards three cards.
-	Register("Mindstab Thrull", withExpansion(func() Card {
+	Register("Mindstab Thrull", withExpansion(func() *Card {
 		return NewCreature("Mindstab Thrull", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
@@ -589,7 +589,7 @@ func registerCreatures() {
 	// Creature — Thrull
 	// 2/2
 	// Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, destroy target creature defending player controls. It can't be regenerated.
-	Register("Necrite", withExpansion(func() Card {
+	Register("Necrite", withExpansion(func() *Card {
 		return NewCreature("Necrite", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
 			// TODO: convert to pipeline — needs SacrificeSourceStep + ChoosePermanentStep (defending player's creatures) + DestroyGatheredNoRegen
@@ -635,7 +635,7 @@ func registerCreatures() {
 	// Protection from white
 	// {B}: This creature gains first strike until end of turn.
 	// {B}{B}: This creature gets +1/+0 until end of turn.
-	Register("Order of the Ebon Hand", withExpansion(func() Card {
+	Register("Order of the Ebon Hand", withExpansion(func() *Card {
 		return NewCreature("Order of the Ebon Hand", "{B}{B}", 2, 1,
 			WithSubTypes("Cleric", "Knight"),
 			WithAbility(ProtectionFromColor(White)),
@@ -655,7 +655,7 @@ func registerCreatures() {
 	// 2/2
 	// Thrull creatures get +1/+1.
 	// {T}: Gain control of target Thrull for as long as you control this creature.
-	Register("Thrull Champion", withExpansion(func() Card {
+	Register("Thrull Champion", withExpansion(func() *Card {
 		return NewCreature("Thrull Champion", "{4}{B}", 2, 2,
 			WithSubTypes("Thrull"),
 			// Thrull creatures get +1/+1 (lord effect, doesn't boost self)
@@ -668,7 +668,7 @@ func registerCreatures() {
 	// 1/1
 	// {1}{B}: Counter target black spell unless that spell's controller pays {B} or {3}.
 	// TODO: implement
-	Register("Thrull Wizard", withExpansion(func() Card {
+	Register("Thrull Wizard", withExpansion(func() *Card {
 		return NewCreature("Thrull Wizard", "{2}{B}", 1, 1,
 			WithSubTypes("Thrull", "Wizard"),
 		)
@@ -680,7 +680,7 @@ func registerCreatures() {
 	// Creature — Orc
 	// 3/2
 	// This creature can't block creatures with power 2 or greater.
-	Register("Brassclaw Orcs", withExpansion(func() Card {
+	Register("Brassclaw Orcs", withExpansion(func() *Card {
 		return NewCreature("Brassclaw Orcs", "{2}{R}", 3, 2,
 			WithSubTypes("Orc"),
 			WithStaticAbility(SourceCanBlockOnly(HasPowerLTE(1))),
@@ -692,7 +692,7 @@ func registerCreatures() {
 	// 0/2
 	// {R}, {T}, Discard a card: Put a +0/+1 counter or a +1/+0 counter on target creature.
 	// TODO: implement
-	Register("Dwarven Armorer", withExpansion(func() Card {
+	Register("Dwarven Armorer", withExpansion(func() *Card {
 		return NewCreature("Dwarven Armorer", "{R}", 0, 2,
 			WithSubTypes("Dwarf"),
 		)
@@ -702,7 +702,7 @@ func registerCreatures() {
 	// Creature — Dwarf Soldier
 	// 1/2
 	// {1}{R}: Target Dwarf creature gets +1/+0 until end of turn.
-	Register("Dwarven Lieutenant", withExpansion(func() Card {
+	Register("Dwarven Lieutenant", withExpansion(func() *Card {
 		return NewCreature("Dwarven Lieutenant", "{R}{R}", 1, 2,
 			WithSubTypes("Dwarf", "Soldier"),
 			WithActivatedAbility(
@@ -717,7 +717,7 @@ func registerCreatures() {
 	// Creature — Dwarf Soldier
 	// 2/1
 	// Whenever this creature blocks or becomes blocked by one or more Orcs, this creature gets +0/+2 until end of turn.
-	Register("Dwarven Soldier", withExpansion(func() Card {
+	Register("Dwarven Soldier", withExpansion(func() *Card {
 		return NewCreature("Dwarven Soldier", "{1}{R}", 2, 1,
 			WithSubTypes("Dwarf", "Soldier"),
 			// Trigger when this creature blocks an Orc
@@ -742,7 +742,7 @@ func registerCreatures() {
 	// 0/2
 	// Sacrifice a Goblin: Regenerate target creature.
 	// TODO: implement
-	Register("Goblin Chirurgeon", withExpansion(func() Card {
+	Register("Goblin Chirurgeon", withExpansion(func() *Card {
 		return NewCreature("Goblin Chirurgeon", "{R}", 0, 2,
 			WithSubTypes("Goblin", "Shaman"),
 		)
@@ -754,7 +754,7 @@ func registerCreatures() {
 	// Islandwalk (This creature can't be blocked as long as defending player controls an Island.)
 	// At the beginning of each combat, unless you pay {R}, whenever this creature blocks or becomes blocked by a creature this combat, that creature gains first strike until end of turn.
 	// TODO: implement
-	Register("Goblin Flotilla", withExpansion(func() Card {
+	Register("Goblin Flotilla", withExpansion(func() *Card {
 		return NewCreature("Goblin Flotilla", "{2}{R}", 2, 2,
 			WithSubTypes("Goblin"),
 		)
@@ -764,7 +764,7 @@ func registerCreatures() {
 	// Creature — Orc Warrior
 	// 1/1
 	// {1}: Flip a coin. If you win the flip, target Orc creature gets +2/+0 until end of turn. If you lose the flip, it gets -0/-2 until end of turn.
-	Register("Orcish Captain", withExpansion(func() Card {
+	Register("Orcish Captain", withExpansion(func() *Card {
 		return NewCreature("Orcish Captain", "{R}", 1, 1,
 			WithSubTypes("Orc", "Warrior"),
 			WithActivatedAbility(
@@ -784,7 +784,7 @@ func registerCreatures() {
 	// 1/1
 	// {T}: Look at the top three cards of target player's library.
 	// TODO: implement
-	Register("Orcish Spy", withExpansion(func() Card {
+	Register("Orcish Spy", withExpansion(func() *Card {
 		return NewCreature("Orcish Spy", "{R}", 1, 1,
 			WithSubTypes("Orc", "Rogue"),
 		)
@@ -795,7 +795,7 @@ func registerCreatures() {
 	// 2/2
 	// This creature can't block white creatures with power 2 or greater.
 	// {R}: This creature gains first strike until end of turn.
-	Register("Orcish Veteran", withExpansion(func() Card {
+	Register("Orcish Veteran", withExpansion(func() *Card {
 		return NewCreature("Orcish Veteran", "{2}{R}", 2, 2,
 			WithSubTypes("Orc"),
 			// Can't block white creatures with power 2 or greater
@@ -813,7 +813,7 @@ func registerCreatures() {
 	// Trample
 	// This creature can't attack if defending player controls an untapped creature with power 3 or greater.
 	// This creature can't block creatures with power 3 or greater.
-	Register("Orgg", withExpansion(func() Card {
+	Register("Orgg", withExpansion(func() *Card {
 		return NewCreature("Orgg", "{3}{R}{R}", 6, 6,
 			WithSubTypes("Orgg"),
 			WithKeyword(Trample),
@@ -840,7 +840,7 @@ func registerCreatures() {
 	// Remove three spore counters from this creature: Create a 1/1 green Saproling creature token.
 	// Sacrifice a Saproling: You gain 2 life.
 	// NOTE: Third ability (Sacrifice a Saproling) skipped — requires SacrificeMatchingCost engine work.
-	Register("Elvish Farmer", withExpansion(func() Card {
+	Register("Elvish Farmer", withExpansion(func() *Card {
 		return NewCreature("Elvish Farmer", "{1}{G}", 0, 2,
 			WithSubTypes("Elf"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -857,7 +857,7 @@ func registerCreatures() {
 	// Creature — Elf Archer
 	// 1/1
 	// {1}{G}, {T}: Target creature doesn't untap during its controller's next untap step.
-	Register("Elvish Hunter", withExpansion(func() Card {
+	Register("Elvish Hunter", withExpansion(func() *Card {
 		return NewCreature("Elvish Hunter", "{1}{G}", 1, 1,
 			WithSubTypes("Elf", "Archer"),
 			// TODO: convert to pipeline — needs DoesNotUntapStep (creates FuncContinuousEffect with expiry)
@@ -896,7 +896,7 @@ func registerCreatures() {
 	// 1/1
 	// {G}, {T}: Untap target attacking creature you control. Prevent all combat damage that would be dealt to and dealt by it this turn.
 	// TODO: implement
-	Register("Elvish Scout", withExpansion(func() Card {
+	Register("Elvish Scout", withExpansion(func() *Card {
 		return NewCreature("Elvish Scout", "{G}", 1, 1,
 			WithSubTypes("Elf", "Scout"),
 		)
@@ -907,7 +907,7 @@ func registerCreatures() {
 	// 6/3
 	// At the beginning of your upkeep, put a spore counter on this creature.
 	// Remove three spore counters from this creature: Regenerate this creature.
-	Register("Feral Thallid", withExpansion(func() Card {
+	Register("Feral Thallid", withExpansion(func() *Card {
 		return NewCreature("Feral Thallid", "{3}{G}{G}{G}", 6, 3,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -925,7 +925,7 @@ func registerCreatures() {
 	// 0/1
 	// At the beginning of your upkeep, put a spore counter on this creature.
 	// Remove three spore counters from this creature: Prevent all combat damage that would be dealt this turn.
-	Register("Spore Flower", withExpansion(func() Card {
+	Register("Spore Flower", withExpansion(func() *Card {
 		return NewCreature("Spore Flower", "{G}{G}", 0, 1,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -943,7 +943,7 @@ func registerCreatures() {
 	// 1/1
 	// At the beginning of your upkeep, put a spore counter on this creature.
 	// Remove three spore counters from this creature: Create a 1/1 green Saproling creature token.
-	Register("Thallid", withExpansion(func() Card {
+	Register("Thallid", withExpansion(func() *Card {
 		return NewCreature("Thallid", "{G}", 1, 1,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -963,7 +963,7 @@ func registerCreatures() {
 	// Remove three spore counters from this creature: Create a 1/1 green Saproling creature token.
 	// Sacrifice a Saproling: This creature gets +1/+2 until end of turn.
 	// NOTE: Third ability (Sacrifice a Saproling) skipped — requires SacrificeMatchingCost engine work.
-	Register("Thallid Devourer", withExpansion(func() Card {
+	Register("Thallid Devourer", withExpansion(func() *Card {
 		return NewCreature("Thallid Devourer", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -981,7 +981,7 @@ func registerCreatures() {
 	// 1/1
 	// {1}{G}, {T}, Sacrifice a creature: Forests you control become 2/3 creatures until end of turn. They're still lands.
 	// TODO: implement
-	Register("Thelonite Druid", withExpansion(func() Card {
+	Register("Thelonite Druid", withExpansion(func() *Card {
 		return NewCreature("Thelonite Druid", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Cleric", "Druid"),
 		)
@@ -991,7 +991,7 @@ func registerCreatures() {
 	// Creature — Insect Monk Cleric
 	// 1/2
 	// {T}, Sacrifice a green creature: Target land becomes a Forest. (This effect lasts indefinitely.)
-	Register("Thelonite Monk", withExpansion(func() Card {
+	Register("Thelonite Monk", withExpansion(func() *Card {
 		return NewCreature("Thelonite Monk", "{2}{G}{G}", 1, 2,
 			WithSubTypes("Insect", "Monk", "Cleric"),
 			WithActivatedAbility(
@@ -1020,7 +1020,7 @@ func registerCreatures() {
 	// 2/2
 	// At the beginning of your upkeep, put a spore counter on this creature.
 	// Remove three spore counters from this creature: It deals 1 damage to any target.
-	Register("Thorn Thallid", withExpansion(func() Card {
+	Register("Thorn Thallid", withExpansion(func() *Card {
 		return NewCreature("Thorn Thallid", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(

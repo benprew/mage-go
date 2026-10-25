@@ -17,7 +17,7 @@ import (
 func TestCombatDamageSourcesThisStep_NonHumanFilter(t *testing.T) {
 	const cardName = "CDS Keeper-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			cond := func(evt *core.GameEvent, g mage.GameReader, sourceID, controllerID uuid.UUID) bool {
 				if evt.PlayerID != controllerID {
 					return false
@@ -43,11 +43,11 @@ func TestCombatDamageSourcesThisStep_NonHumanFilter(t *testing.T) {
 		})
 	}
 
-	mage.Register("CDS Human Soldier", func() mage.Card {
+	mage.Register("CDS Human Soldier", func() *mage.Card {
 		return mage.NewCreature("CDS Human Soldier", "{1}{W}", 2, 2,
 			mage.WithSubTypes("Human", "Soldier"))
 	})
-	mage.Register("CDS Wolf", func() mage.Card {
+	mage.Register("CDS Wolf", func() *mage.Card {
 		return mage.NewCreature("CDS Wolf", "{1}{G}", 2, 2,
 			mage.WithSubTypes("Wolf"))
 	})

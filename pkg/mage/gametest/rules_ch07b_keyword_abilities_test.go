@@ -17,7 +17,7 @@ func registerCh07bTestCards() {
 	// ── Cards from implemented sets (registered here to avoid import cycle) ──
 
 	if !mage.CardRegistered("Serra Angel") {
-		mage.Register("Serra Angel", func() mage.Card {
+		mage.Register("Serra Angel", func() *mage.Card {
 			return mage.NewCreature("Serra Angel", "{3}{W}{W}", 4, 4,
 				mage.WithSubTypes("Angel"),
 				mage.WithKeyword(core.Flying),
@@ -26,17 +26,17 @@ func registerCh07bTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Hill Giant") {
-		mage.Register("Hill Giant", func() mage.Card {
+		mage.Register("Hill Giant", func() *mage.Card {
 			return mage.NewCreature("Hill Giant", "{3}{R}", 3, 3, mage.WithSubTypes("Giant"))
 		})
 	}
 	if !mage.CardRegistered("Grizzly Bears") {
-		mage.Register("Grizzly Bears", func() mage.Card {
+		mage.Register("Grizzly Bears", func() *mage.Card {
 			return mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered("Scryb Sprites") {
-		mage.Register("Scryb Sprites", func() mage.Card {
+		mage.Register("Scryb Sprites", func() *mage.Card {
 			return mage.NewCreature("Scryb Sprites", "{G}", 1, 1,
 				mage.WithSubTypes("Faerie"),
 				mage.WithKeyword(core.Flying),
@@ -44,7 +44,7 @@ func registerCh07bTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Bog Wraith") {
-		mage.Register("Bog Wraith", func() mage.Card {
+		mage.Register("Bog Wraith", func() *mage.Card {
 			return mage.NewCreature("Bog Wraith", "{3}{B}", 3, 3,
 				mage.WithSubTypes("Wraith"),
 				mage.WithKeyword(core.Swampwalk),
@@ -52,7 +52,7 @@ func registerCh07bTestCards() {
 		})
 	}
 	if !mage.CardRegistered("White Knight") {
-		mage.Register("White Knight", func() mage.Card {
+		mage.Register("White Knight", func() *mage.Card {
 			return mage.NewCreature("White Knight", "{W}{W}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 				mage.WithKeyword(core.FirstStrike),
@@ -61,7 +61,7 @@ func registerCh07bTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Black Knight") {
-		mage.Register("Black Knight", func() mage.Card {
+		mage.Register("Black Knight", func() *mage.Card {
 			return mage.NewCreature("Black Knight", "{B}{B}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 				mage.WithKeyword(core.FirstStrike),
@@ -70,7 +70,7 @@ func registerCh07bTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Fear") {
-		mage.Register("Fear", func() mage.Card {
+		mage.Register("Fear", func() *mage.Card {
 			return mage.NewAura("Fear", "{B}{B}",
 				mage.WithStaticAbility(
 					mage.GrantAbilityToAttached(core.Fear, core.AttachAura),
@@ -79,7 +79,7 @@ func registerCh07bTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Swamp") {
-		mage.Register("Swamp", func() mage.Card {
+		mage.Register("Swamp", func() *mage.Card {
 			return mage.NewLand("Swamp",
 				mage.WithManaAbility(core.Black),
 				mage.WithSubTypes("Swamp"),
@@ -88,7 +88,7 @@ func registerCh07bTestCards() {
 	}
 	// Aerathi Berserker: 2/4, Rampage 3
 	if !mage.CardRegistered("Aerathi Berserker") {
-		mage.Register("Aerathi Berserker", func() mage.Card {
+		mage.Register("Aerathi Berserker", func() *mage.Card {
 			return mage.NewCreature("Aerathi Berserker", "{2}{R}{R}{R}", 2, 4,
 				mage.WithSubTypes("Human", "Berserker"),
 				mage.WithAbility(mage.RampageTrigger(3)),
@@ -100,7 +100,7 @@ func registerCh07bTestCards() {
 
 	// Deathtouch 1/1 — kills any creature it damages in combat.
 	if !mage.CardRegistered("Test Deathtouch Creature") {
-		mage.Register("Test Deathtouch Creature", func() mage.Card {
+		mage.Register("Test Deathtouch Creature", func() *mage.Card {
 			return mage.NewCreature("Test Deathtouch Creature", "{B}", 1, 1,
 				mage.WithSubTypes("Snake"),
 				mage.WithKeyword(core.Deathtouch),
@@ -109,7 +109,7 @@ func registerCh07bTestCards() {
 	}
 	// Lifelink 3/3 — gains life when it deals damage.
 	if !mage.CardRegistered("Test Lifelink Creature") {
-		mage.Register("Test Lifelink Creature", func() mage.Card {
+		mage.Register("Test Lifelink Creature", func() *mage.Card {
 			return mage.NewCreature("Test Lifelink Creature", "{2}{W}", 3, 3,
 				mage.WithSubTypes("Angel"),
 				mage.WithKeyword(core.Lifelink),
@@ -118,7 +118,7 @@ func registerCh07bTestCards() {
 	}
 	// Indestructible 3/3 — survives lethal damage and destroy effects.
 	if !mage.CardRegistered("Test Indestructible Creature") {
-		mage.Register("Test Indestructible Creature", func() mage.Card {
+		mage.Register("Test Indestructible Creature", func() *mage.Card {
 			return mage.NewCreature("Test Indestructible Creature", "{4}{W}", 3, 3,
 				mage.WithSubTypes("Angel"),
 				mage.WithKeyword(core.Indestructible),
@@ -127,7 +127,7 @@ func registerCh07bTestCards() {
 	}
 	// Destroy spell — "Destroy target creature."
 	if !mage.CardRegistered("Test Destroy Spell") {
-		mage.Register("Test Destroy Spell", func() mage.Card {
+		mage.Register("Test Destroy Spell", func() *mage.Card {
 			return mage.NewInstant("Test Destroy Spell", "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 			)
@@ -135,7 +135,7 @@ func registerCh07bTestCards() {
 	}
 	// Shroud 2/2 — cannot be targeted by any spell or ability.
 	if !mage.CardRegistered("Test Shroud Creature") {
-		mage.Register("Test Shroud Creature", func() mage.Card {
+		mage.Register("Test Shroud Creature", func() *mage.Card {
 			return mage.NewCreature("Test Shroud Creature", "{1}{G}", 2, 2,
 				mage.WithSubTypes("Bear"),
 				mage.WithKeyword(core.Shroud),
@@ -144,7 +144,7 @@ func registerCh07bTestCards() {
 	}
 	// Hexproof 2/2 — cannot be targeted by opponent's spells or abilities.
 	if !mage.CardRegistered("Test Hexproof Creature") {
-		mage.Register("Test Hexproof Creature", func() mage.Card {
+		mage.Register("Test Hexproof Creature", func() *mage.Card {
 			return mage.NewCreature("Test Hexproof Creature", "{1}{G}", 2, 2,
 				mage.WithSubTypes("Bear"),
 				mage.WithKeyword(core.Hexproof),
@@ -153,7 +153,7 @@ func registerCh07bTestCards() {
 	}
 	// Trample 5/5 — assigns excess damage to defending player.
 	if !mage.CardRegistered("Test Trample Creature") {
-		mage.Register("Test Trample Creature", func() mage.Card {
+		mage.Register("Test Trample Creature", func() *mage.Card {
 			return mage.NewCreature("Test Trample Creature", "{3}{G}{G}", 5, 5,
 				mage.WithSubTypes("Beast"),
 				mage.WithKeyword(core.Trample),
@@ -162,7 +162,7 @@ func registerCh07bTestCards() {
 	}
 	// Menace 2/2 — must be blocked by two or more creatures.
 	if !mage.CardRegistered("Test Menace Creature") {
-		mage.Register("Test Menace Creature", func() mage.Card {
+		mage.Register("Test Menace Creature", func() *mage.Card {
 			return mage.NewCreature("Test Menace Creature", "{1}{R}", 2, 2,
 				mage.WithSubTypes("Goblin"),
 				mage.WithKeyword(core.Menace),
@@ -171,7 +171,7 @@ func registerCh07bTestCards() {
 	}
 	// Artifact creature — can always block Fear creatures.
 	if !mage.CardRegistered("Test Artifact Creature") {
-		mage.Register("Test Artifact Creature", func() mage.Card {
+		mage.Register("Test Artifact Creature", func() *mage.Card {
 			return mage.NewCreature("Test Artifact Creature", "{2}", 2, 2,
 				mage.WithSubTypes("Construct"),
 				mage.WithCardType(core.TypeArtifact),
@@ -180,7 +180,7 @@ func registerCh07bTestCards() {
 	}
 	// Boost spell targeting own creature (for Hexproof / Shroud tests).
 	if !mage.CardRegistered("Test Boost Own Creature") {
-		mage.Register("Test Boost Own Creature", func() mage.Card {
+		mage.Register("Test Boost Own Creature", func() *mage.Card {
 			return mage.NewInstant("Test Boost Own Creature", "{G}",
 				mage.NewTargetedSpell(
 					mage.TargetCreatureYouControl(),
@@ -191,7 +191,7 @@ func registerCh07bTestCards() {
 	}
 	// Rampage 2 creature (custom) for single-blocker no-bonus test.
 	if !mage.CardRegistered("Test Rampage 2 Creature") {
-		mage.Register("Test Rampage 2 Creature", func() mage.Card {
+		mage.Register("Test Rampage 2 Creature", func() *mage.Card {
 			return mage.NewCreature("Test Rampage 2 Creature", "{2}{R}", 3, 3,
 				mage.WithSubTypes("Beast"),
 				mage.WithAbility(mage.RampageTrigger(2)),
@@ -200,7 +200,7 @@ func registerCh07bTestCards() {
 	}
 	// Flash 2/2 — creature castable at instant speed (CR 702.8).
 	if !mage.CardRegistered("Test Flash Creature") {
-		mage.Register("Test Flash Creature", func() mage.Card {
+		mage.Register("Test Flash Creature", func() *mage.Card {
 			return mage.NewCreature("Test Flash Creature", "{1}{U}", 2, 2,
 				mage.WithSubTypes("Spirit"),
 				mage.WithKeyword(core.Flash),
@@ -209,7 +209,7 @@ func registerCh07bTestCards() {
 	}
 	// Flash aura — castable at instant speed; enchant creature, +1/+1.
 	if !mage.CardRegistered("Test Flash Aura") {
-		mage.Register("Test Flash Aura", func() mage.Card {
+		mage.Register("Test Flash Aura", func() *mage.Card {
 			return mage.NewAura("Test Flash Aura", "{U}",
 				mage.WithKeyword(core.Flash),
 				mage.WithStaticAbility(mage.BoostAttached(1, 1, core.AttachAura)),
@@ -218,7 +218,7 @@ func registerCh07bTestCards() {
 	}
 	// Island land for blue Flash test mana.
 	if !mage.CardRegistered("Island") {
-		mage.Register("Island", func() mage.Card {
+		mage.Register("Island", func() *mage.Card {
 			return mage.NewLand("Island",
 				mage.WithSubTypes("Island"),
 				mage.WithManaAbility(core.Blue),
@@ -529,7 +529,7 @@ func TestCR702_23b_RampageBonusPerExtraBlocker(t *testing.T) {
 	for _, n := range []string{bearA, bearB} {
 
 		if !mage.CardRegistered(n) {
-			mage.Register(n, func() mage.Card {
+			mage.Register(n, func() *mage.Card {
 				return mage.NewCreature(n, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}

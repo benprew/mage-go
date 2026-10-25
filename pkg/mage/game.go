@@ -35,7 +35,7 @@ var (
 // Other players see only that a face-down card is in exile.
 // Unauthorized players cannot inspect card characteristics.
 type ExiledCard struct {
-	Card       Card
+	Card       *Card
 	ExiledBy   uuid.UUID // ID of the permanent/spell that caused the exile
 	FaceDown   bool
 	RevealedTo []uuid.UUID
@@ -261,7 +261,7 @@ func (g *Game) CountBattlefield(f PermanentFilter) int {
 // FindCardAnywhere finds a card by ID anywhere in the game.
 // Also checks the currently resolving card (which may be in limbo between
 // stack pop and graveyard placement during resolution).
-func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
+func (g *Game) FindCardAnywhere(id uuid.UUID) *Card {
 	for _, p := range g.zones.battlefield {
 		if p.ID() == id {
 			return p.Card
@@ -309,7 +309,7 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 
 // findCardForDamageSource finds the Card associated with a damage source ID.
 // This looks at permanents, graveyard, and the currently resolving card.
-func (g *Game) findCardForDamageSource(sourceID uuid.UUID) Card {
+func (g *Game) findCardForDamageSource(sourceID uuid.UUID) *Card {
 	perm := g.FindPermanent(sourceID)
 	if perm != nil {
 		return perm.Card
@@ -342,19 +342,19 @@ func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
 }
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
-func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
+func (g *Game) PutOnBattlefield(card *Card, controller uuid.UUID) *Permanent {
 	return g.putOnBattlefield(card, controller, nil, uuid.Nil, false)
 }
 
 // PutTokenOnBattlefield puts a token onto the battlefield under the given controller.
-func (g *Game) PutTokenOnBattlefield(card Card, controller uuid.UUID) *Permanent {
+func (g *Game) PutTokenOnBattlefield(card *Card, controller uuid.UUID) *Permanent {
 	if card.Owner() == uuid.Nil {
 		card.SetOwner(controller)
 	}
 	return g.putOnBattlefield(card, controller, nil, uuid.Nil, true)
 }
 
-func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, isToken bool) *Permanent {
+func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, isToken bool) *Permanent {
 	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
 		return nil
 	}
@@ -516,17 +516,17 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 // never "attacked" — AttacksTrigger does not fire. Per CR 508.4a, if the
 // specified defender is no longer in the game (zero UUID or unknown player),
 // the creature still enters but never becomes an attacking creature.
-func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID) *Permanent {
+func (g *Game) PutOnBattlefieldAttacking(card *Card, controller, defenderID uuid.UUID) *Permanent {
 	return g.putOnBattlefieldAttacking(card, controller, defenderID, false)
 }
 
 // PutTokenOnBattlefieldAttacking puts a token creature onto the battlefield
 // attacking the given defender (CR 508.4).
-func (g *Game) PutTokenOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID) *Permanent {
+func (g *Game) PutTokenOnBattlefieldAttacking(card *Card, controller, defenderID uuid.UUID) *Permanent {
 	return g.putOnBattlefieldAttacking(card, controller, defenderID, true)
 }
 
-func (g *Game) putOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID, isToken bool) *Permanent {
+func (g *Game) putOnBattlefieldAttacking(card *Card, controller, defenderID uuid.UUID, isToken bool) *Permanent {
 	if card.Owner() == uuid.Nil {
 		card.SetOwner(controller)
 	}
@@ -543,17 +543,17 @@ func (g *Game) putOnBattlefieldAttacking(card Card, controller, defenderID uuid.
 // "blocking" but never "blocked" — BlocksTrigger does not fire. Per CR 509.4a,
 // if the specified attacker is no longer attacking, the creature still enters
 // but never becomes a blocking creature.
-func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID) *Permanent {
+func (g *Game) PutOnBattlefieldBlocking(card *Card, controller, attackerID uuid.UUID) *Permanent {
 	return g.putOnBattlefieldBlocking(card, controller, attackerID, false)
 }
 
 // PutTokenOnBattlefieldBlocking puts a token creature onto the battlefield
 // blocking the given attacker (CR 509.4).
-func (g *Game) PutTokenOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID) *Permanent {
+func (g *Game) PutTokenOnBattlefieldBlocking(card *Card, controller, attackerID uuid.UUID) *Permanent {
 	return g.putOnBattlefieldBlocking(card, controller, attackerID, true)
 }
 
-func (g *Game) putOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID, isToken bool) *Permanent {
+func (g *Game) putOnBattlefieldBlocking(card *Card, controller, attackerID uuid.UUID, isToken bool) *Permanent {
 	if card.Owner() == uuid.Nil {
 		card.SetOwner(controller)
 	}
@@ -828,7 +828,7 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 // The function returns the removed card, or nil and false if the card was not present.
 //
 // When multiple cards leave a graveyard together (CR 603.10), use MoveCardsFromGraveyard.
-func (g *Game) MoveFromGraveyard(playerID, cardID uuid.UUID, to Zone) (Card, bool) {
+func (g *Game) MoveFromGraveyard(playerID, cardID uuid.UUID, to Zone) (*Card, bool) {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil, false
@@ -854,7 +854,7 @@ func (g *Game) MoveFromGraveyard(playerID, cardID uuid.UUID, to Zone) (Card, boo
 
 // MoveFromAnyGraveyard removes a card from whichever player's graveyard
 // contains it and returns that player's ID for zone-change attribution.
-func (g *Game) MoveFromAnyGraveyard(cardID uuid.UUID, to Zone) (Card, uuid.UUID, bool) {
+func (g *Game) MoveFromAnyGraveyard(cardID uuid.UUID, to Zone) (*Card, uuid.UUID, bool) {
 	for _, player := range g.players {
 		if card, ok := g.MoveFromGraveyard(player.PlayerID(), cardID, to); ok {
 			return card, player.PlayerID(), true
@@ -869,12 +869,12 @@ func (g *Game) MoveFromAnyGraveyard(cardID uuid.UUID, to Zone) (Card, uuid.UUID,
 // cards moving via the same effect form one zone-change event for the
 // purposes of "one or more cards leave your graveyard" triggers). Returns
 // the removed cards in input order, skipping any that weren't found.
-func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, to Zone) []Card {
+func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, to Zone) []*Card {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil
 	}
-	removed := make([]Card, 0, len(cardIDs))
+	removed := make([]*Card, 0, len(cardIDs))
 	for _, id := range cardIDs {
 		c, ok := p.RemoveFromGraveyard(id)
 		if !ok {
@@ -902,7 +902,7 @@ func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, t
 // PlayerDiscard removes a card from the player's hand into their graveyard and
 // fires EvtDiscard. SourceID = card ID, PlayerID = discarding player.
 // Returns the card and true on success.
-func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
+func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (*Card, bool) {
 	c, ok := p.DiscardCard(cardID)
 	if !ok {
 		return nil, false
@@ -917,7 +917,7 @@ func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
 
 // PlayerDiscardByEffect discards a card through the replacement pipeline.
 // Costs and turn-based discards must continue to use PlayerDiscard.
-func (g *Game) PlayerDiscardByEffect(p Player, cardID, sourceID uuid.UUID) (Card, bool) {
+func (g *Game) PlayerDiscardByEffect(p Player, cardID, sourceID uuid.UUID) (*Card, bool) {
 	if p == nil {
 		return nil, false
 	}
@@ -933,7 +933,7 @@ func (g *Game) PlayerDiscardByEffect(p Player, cardID, sourceID uuid.UUID) (Card
 	return g.executeDiscard(discard)
 }
 
-func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
+func (g *Game) executeDiscard(action *DiscardAction) (*Card, bool) {
 	p := g.GetPlayer(action.PlayerID())
 	if p == nil {
 		return nil, false
@@ -943,7 +943,7 @@ func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
 		return nil, false
 	}
 	if action.Destination() == ZoneLibrary {
-		p.SetLibrary(append([]Card{c}, p.Library()...))
+		p.SetLibrary(append([]*Card{c}, p.Library()...))
 	} else {
 		p.AddToGraveyard(c)
 	}
@@ -1048,7 +1048,7 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 }
 
 // ExileCard moves a card (from any zone) to the exile zone.
-func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
+func (g *Game) ExileCard(card *Card, exiledBy uuid.UUID) {
 	g.zones.ExileCard(card, exiledBy)
 	g.recordCardPutIntoExile(card)
 }
@@ -1059,7 +1059,7 @@ func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
 // exiling player (not the card's owner) sees the identity — pass that player's
 // ID in revealedTo. Owners of face-down exiled cards do not automatically see
 // the identity, matching Gonti's printed ruling.
-func (g *Game) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
+func (g *Game) ExileCardFaceDown(card *Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
 	g.zones.ExileCardFaceDown(card, exiledBy, revealedTo...)
 	g.recordCardPutIntoExile(card)
 }
@@ -1077,7 +1077,7 @@ func (g *Game) FindExiledCard(cardID uuid.UUID) *ExiledCard {
 }
 
 // RemoveFromExile removes a card from exile by ID and returns it.
-func (g *Game) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
+func (g *Game) RemoveFromExile(cardID uuid.UUID) (*Card, bool) {
 	return g.zones.RemoveFromExile(cardID)
 }
 
@@ -1129,7 +1129,7 @@ func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
 // EvtCardDrawn fires. The draw is marked isNormalDraw=false because this
 // entry point is used by effect-driven draws; the turn-based draw step
 // builds its own action with isNormalDraw=true.
-func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
+func (g *Game) PlayerDrawCard(p Player) (*Card, bool) {
 	if p == nil {
 		return nil, false
 	}
@@ -1146,7 +1146,7 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 // normal draw step (which applies replacements itself) and by
 // replacement implementations that need to draw after rearranging the
 // library (Aladdin's Lamp).
-func (g *Game) drawCardRaw(p Player) (Card, bool) {
+func (g *Game) drawCardRaw(p Player) (*Card, bool) {
 	c, ok := p.DrawCard()
 	if ok {
 		g.FireEvent(GameEvent{
@@ -1176,19 +1176,19 @@ func (g *Game) PerformScry(p Player, n int) int {
 		return 0
 	}
 	count := min(n, len(lib))
-	top := make([]Card, count)
+	top := make([]*Card, count)
 	copy(top, lib[:count])
 
 	bottom, topOrder := p.ChooseScryPlacement(top, "scry", g)
 	bottom, topOrder = validateScryPlacement(top, bottom, topOrder)
 
-	idToCard := make(map[uuid.UUID]Card, count)
+	idToCard := make(map[uuid.UUID]*Card, count)
 	for _, c := range top {
 		idToCard[c.ID()] = c
 	}
 
 	rest := lib[count:]
-	newLib := make([]Card, 0, len(lib))
+	newLib := make([]*Card, 0, len(lib))
 	for _, id := range topOrder {
 		newLib = append(newLib, idToCard[id])
 	}
@@ -1224,19 +1224,19 @@ func (g *Game) PerformSurveil(p Player, n int) int {
 		return 0
 	}
 	count := min(n, len(lib))
-	top := make([]Card, count)
+	top := make([]*Card, count)
 	copy(top, lib[:count])
 
 	graveyard, topOrder := p.ChooseSurveilPlacement(top, "surveil", g)
 	graveyard, topOrder = validateScryPlacement(top, graveyard, topOrder)
 
-	idToCard := make(map[uuid.UUID]Card, count)
+	idToCard := make(map[uuid.UUID]*Card, count)
 	for _, c := range top {
 		idToCard[c.ID()] = c
 	}
 
 	rest := lib[count:]
-	newLib := make([]Card, 0, len(lib))
+	newLib := make([]*Card, 0, len(lib))
 	for _, id := range topOrder {
 		newLib = append(newLib, idToCard[id])
 	}
@@ -1253,7 +1253,7 @@ func (g *Game) PerformSurveil(p Player, n int) int {
 // validateScryPlacement ensures the player's choice is a valid partition of
 // `top`. On any inconsistency it returns the safe default (all on top in the
 // original order) so cards are never dropped.
-func validateScryPlacement(top []Card, bottom, topOrder []uuid.UUID) (validBottom, validTopOrder []uuid.UUID) {
+func validateScryPlacement(top []*Card, bottom, topOrder []uuid.UUID) (validBottom, validTopOrder []uuid.UUID) {
 	want := make(map[uuid.UUID]bool, len(top))
 	for _, c := range top {
 		want[c.ID()] = true
@@ -1277,7 +1277,7 @@ func validateScryPlacement(top []Card, bottom, topOrder []uuid.UUID) (validBotto
 	return bottom, topOrder
 }
 
-func defaultScryTopOrder(top []Card) []uuid.UUID {
+func defaultScryTopOrder(top []*Card) []uuid.UUID {
 	out := make([]uuid.UUID, len(top))
 	for i, c := range top {
 		out[i] = c.ID()
@@ -1309,7 +1309,7 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 // (CR 303.4c). It checks the aura's cast-target filter against the host,
 // ignoring targeting restrictions (shroud/hexproof don't make an already-attached
 // aura fall off — see CR 702.11b).
-func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
+func auraHostIsLegal(auraCard *Card, host *Permanent, g *Game) bool {
 	targets := auraCard.CastTargets()
 	if len(targets) == 0 {
 		return true
@@ -1918,7 +1918,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 			}
 			continue
 		}
-		t.Reset()
+
 		possible := t.Possible(pt.controller, sourceCard, g)
 		if len(possible) == 0 {
 			if t.Min() > 0 {
@@ -1944,7 +1944,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 		if len(chosen) == 0 && t.Min() > 0 {
 			chosen = possible[:1]
 		}
-		_ = t.Choose(pt.controller, sourceCard, g, chosen)
+
 		out = append(out, chosen...)
 	}
 	return out
@@ -2024,7 +2024,7 @@ func (g *Game) pushStack(obj *StackObject) {
 
 // Check if target is still legal at resolution time. Used in stack responses and
 // resolutions.
-func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone, spec Target) bool {
+func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controller uuid.UUID, expectedZone Zone, spec Target) bool {
 	if g.GetPlayer(targetID) != nil {
 		return true
 	}
@@ -2200,7 +2200,7 @@ func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total
 	return out
 }
 
-func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, specs []Target, chosen []uuid.UUID, x int, label string) error {
+func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard *Card, specs []Target, chosen []uuid.UUID, x int, label string) error {
 	if len(specs) == 0 {
 		return nil
 	}
@@ -2233,7 +2233,7 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, spec
 	return nil
 }
 
-func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard Card, chosen []uuid.UUID, x int) error {
+func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard *Card, chosen []uuid.UUID, x int) error {
 	specs := sourceCard.CastTargets()
 	if len(specs) != 1 {
 		return nil
@@ -2291,7 +2291,7 @@ func (g *Game) prepareActionCosts(costs []Cost, targets []uuid.UUID, x int) []Co
 	return resolved
 }
 
-func newStackObject(controller, sourceID uuid.UUID, card Card, effects []Effect, targets []uuid.UUID, xValue int, isAbility bool) *StackObject {
+func newStackObject(controller, sourceID uuid.UUID, card *Card, effects []Effect, targets []uuid.UUID, xValue int, isAbility bool) *StackObject {
 	obj := &StackObject{
 		ID:         uuid.New(),
 		Card:       card,
@@ -2320,7 +2320,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	// Find card in hand
-	var card Card
+	var card *Card
 	for _, c := range p.Hand() {
 		if c.Name() == name {
 			card = c
@@ -2429,10 +2429,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
-	var totalCosts []Cost
-	if bc, ok := card.(*BaseCard); ok {
-		totalCosts = append(totalCosts, bc.AdditionalCosts()...)
-	}
+	totalCosts := append([]Cost(nil), card.AdditionalCosts()...)
 
 	var actionCosts []Cost
 	for _, a := range card.Abilities() {
@@ -2863,20 +2860,20 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 	if count == 0 {
 		return
 	}
-	candidates := make([]Card, count)
+	candidates := make([]*Card, count)
 	copy(candidates, lib[:count])
 	chosen := p.ChooseCardFromLibrary(candidates, "choose card from Aladdin's Lamp", g)
 	if chosen == nil {
 		chosen = candidates[0]
 	}
-	var rest []Card
+	var rest []*Card
 	for _, c := range candidates {
 		if c.ID() != chosen.ID() {
 			rest = append(rest, c)
 		}
 	}
 	rand.Shuffle(len(rest), func(i, j int) { rest[i], rest[j] = rest[j], rest[i] })
-	newLib := make([]Card, 1, 1+len(lib)-count+len(rest))
+	newLib := make([]*Card, 1, 1+len(lib)-count+len(rest))
 	newLib[0] = chosen
 	newLib = append(newLib, lib[count:]...)
 	newLib = append(newLib, rest...)
@@ -3368,7 +3365,7 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	if !card.HasType(TypeLand) {
 		if fromZone == ZoneLibrary {
 			// Restore to top of library.
-			p.SetLibrary(append([]Card{card}, p.Library()...))
+			p.SetLibrary(append([]*Card{card}, p.Library()...))
 		} else {
 			p.AddToHand(card)
 		}
@@ -3377,7 +3374,7 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	// Check expansion block (City in a Bottle)
 	if g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
 		if fromZone == ZoneLibrary {
-			p.SetLibrary(append([]Card{card}, p.Library()...))
+			p.SetLibrary(append([]*Card{card}, p.Library()...))
 		} else {
 			p.AddToHand(card)
 		}
@@ -3543,7 +3540,7 @@ type ActivatableInfo struct {
 }
 
 // GetCastableSpells returns cards in a player's hand they can currently cast.
-func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
+func (g *Game) GetCastableSpells(playerID uuid.UUID) []*Card {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil
@@ -3551,7 +3548,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 	isMainPhase := g.turns.Step().IsMainPhase()
 	isActive := g.ActivePlayerObj().PlayerID() == playerID
 
-	var castable []Card
+	var castable []*Card
 	for _, card := range p.Hand() {
 		if card.HasType(TypeLand) {
 			continue
@@ -3609,7 +3606,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 // GetPlayableLands returns the lands a player can legally play right now.
 // Checks: main phase, active player, land-play limit (respects Fastbond etc.),
 // and expansion blocks.
-func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
+func (g *Game) GetPlayableLands(playerID uuid.UUID) []*Card {
 	if !g.turns.Step().IsMainPhase() {
 		return nil
 	}
@@ -3623,7 +3620,7 @@ func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
 	if p == nil {
 		return nil
 	}
-	var lands []Card
+	var lands []*Card
 	for _, c := range p.Hand() {
 		if c.HasType(TypeLand) {
 			lands = append(lands, c)
@@ -3702,7 +3699,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	var card Card
+	var card *Card
 	for _, c := range p.Hand() {
 		if c.ID() == cardID {
 			card = c

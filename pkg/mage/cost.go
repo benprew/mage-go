@@ -411,9 +411,9 @@ func DiscardCardsWithDifferentNamesCost(n int) Cost {
 // distinctNameCards returns up to amount cards from hand with mutually
 // distinct names, in hand order. Used by both CanPay (length check) and
 // Pay (deterministic fallback).
-func (c *discardCardsWithDifferentNamesCost) distinctNameCards(hand []Card) []Card {
+func (c *discardCardsWithDifferentNamesCost) distinctNameCards(hand []*Card) []*Card {
 	seen := make(map[string]bool, c.amount)
-	out := make([]Card, 0, c.amount)
+	out := make([]*Card, 0, c.amount)
 	for _, card := range hand {
 		if seen[card.Name()] {
 			continue
@@ -520,7 +520,7 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	var matches []Card
+	var matches []*Card
 	for _, card := range p.Hand() {
 		if card.ID() == sourceID {
 			continue
@@ -539,7 +539,7 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	// otherwise pick the first match.
 	chosen := matches[0]
 	if cp, ok := p.(interface {
-		ChooseFromCards(cards []Card, reason string) Card
+		ChooseFromCards(cards []*Card, reason string) *Card
 	}); ok {
 		if c2 := cp.ChooseFromCards(matches, c.label); c2 != nil {
 			chosen = c2
@@ -553,7 +553,7 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 
 // LastCostReveal returns the most recently revealed card from a
 // [RevealFromHandCost] payment, or nil if none.
-func (g *Game) LastCostReveal() Card { return g.resolution.LastCostReveal() }
+func (g *Game) LastCostReveal() *Card { return g.resolution.LastCostReveal() }
 
 func (c *revealFromHandCost) Text() string {
 	if c.label != "" {
@@ -691,7 +691,7 @@ func (c *exileMatchingCardFromGraveyardCost) Pay(sourceID, controller uuid.UUID,
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	var candidates []Card
+	var candidates []*Card
 	for _, card := range p.Graveyard() {
 		if c.filter.Match(card) {
 			candidates = append(candidates, card)

@@ -250,8 +250,8 @@ func (r *replay) shouldDrawOpeningHands() bool {
 	return true // no PRIORITY events at all; default behavior
 }
 
-func buildLibrary(cardNames []string) ([]mage.Card, error) {
-	cards := make([]mage.Card, 0, len(cardNames))
+func buildLibrary(cardNames []string) ([]*mage.Card, error) {
+	cards := make([]*mage.Card, 0, len(cardNames))
 	for _, name := range cardNames {
 		c, err := mage.CreateCard(name)
 		if err != nil {
@@ -1172,7 +1172,7 @@ func (p *replayPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	return out
 }
 
-func (p *replayPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
+func (p *replayPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []*mage.Card {
 	if p.r.divergence != "" {
 		return nil
 	}
@@ -1193,7 +1193,7 @@ func (p *replayPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Gam
 	}
 	hand := p.Hand()
 	used := make(map[int]bool)
-	var picked []mage.Card
+	var picked []*mage.Card
 	for _, ref := range ev.Action.Discarded {
 		for i, c := range hand {
 			if used[i] {

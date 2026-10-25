@@ -39,7 +39,7 @@ type AlternateCost struct {
 // this path (CR 117.9). additional costs (sacrifice, discard, pay life, etc.)
 // are paid in addition to the alt mana cost.
 func WithAlternateCost(zone Zone, mana ManaCost, additional ...Cost) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		c.alternateCosts = append(c.alternateCosts, AlternateCost{
 			Zone:       zone,
 			Mana:       mana,
@@ -53,7 +53,7 @@ func WithAlternateCost(zone Zone, mana ManaCost, additional ...Cost) CardOption 
 // additional costs). On resolution or fizzle the card is exiled instead of
 // being put into the graveyard.
 func WithFlashback(mana ManaCost, additional ...Cost) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		c.alternateCosts = append(c.alternateCosts, AlternateCost{
 			Zone:       ZoneGraveyard,
 			Mana:       mana,
@@ -65,7 +65,7 @@ func WithFlashback(mana ManaCost, additional ...Cost) CardOption {
 
 // AlternateCosts returns the alternate-cost options registered on this card.
 // Returns nil when the card has no alternate costs.
-func (c *BaseCard) AlternateCosts() []AlternateCost { return c.alternateCosts }
+func (c *Card) AlternateCosts() []AlternateCost { return c.alternateCosts }
 
 // CastCardWithAlternateCost casts the named card via the altIdx'th alternate
 // cost on the card. The card must currently be in the alt's source zone.
@@ -78,7 +78,7 @@ func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int,
 	}
 	// Locate the card across plausible zones so we can read its
 	// alternate-cost list. The alt itself names the legal source zone.
-	var card Card
+	var card *Card
 	for _, zone := range []Zone{ZoneGraveyard, ZoneHand, ZoneExile, ZoneLibrary} {
 		if c := g.findCardInZone(playerID, cardID, zone); c != nil {
 			card = c
@@ -88,14 +88,10 @@ func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int,
 	if card == nil {
 		return fmt.Errorf("card %s not found in any cast-from zone", cardID)
 	}
-	bc, ok := card.(*BaseCard)
-	if !ok {
-		return fmt.Errorf("card %s does not support alternate costs", card.Name())
-	}
-	if altIdx < 0 || altIdx >= len(bc.alternateCosts) {
+	if altIdx < 0 || altIdx >= len(card.alternateCosts) {
 		return fmt.Errorf("alternate-cost index %d out of range for %s", altIdx, card.Name())
 	}
-	alt := bc.alternateCosts[altIdx]
+	alt := card.alternateCosts[altIdx]
 
 	if g.findCardInZone(playerID, cardID, alt.Zone) == nil {
 		return fmt.Errorf("%s is not in %s for alt-cost", card.Name(), alt.Zone)

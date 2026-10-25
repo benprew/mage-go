@@ -153,7 +153,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		availMana := eval.CountAvailableMana(g, playerID)
 		cmcs := eval.HandCMCs(p.Hand())
 
-		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card mage.Card) (int, bool) {
+		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card *mage.Card) (int, bool) {
 			if card.HasType(core.TypeInstant) {
 				return 0, false
 			}
@@ -245,7 +245,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 	return interactive.PriorityAction{Type: interactive.ActionPass}
 }
 
-func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []mage.Card, scoreCard func(mage.Card) (int, bool)) *interactive.PriorityAction {
+func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []*mage.Card, scoreCard func(*mage.Card) (int, bool)) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	var bestAction *interactive.PriorityAction
 	bestScore := 0
@@ -524,7 +524,7 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 	return r.Blocks
 }
 
-func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
+func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Card) []uuid.UUID {
 	playerID := p.PlayerID()
 	xValue := s.bestXValue(g, playerID, card, nil)
 
@@ -691,7 +691,7 @@ func (s *Strategy) selectSingleBurnTarget(g *mage.Game, playerID uuid.UUID, poss
 // have enough mana left to cast `reserve` afterward. It checks affordability of
 // the two costs combined, so the mana solver honors colors, dual lands, and
 // conversions rather than a color-blind mana count.
-func canCastWhileReserving(g *mage.Game, playerID uuid.UUID, cast, reserve mage.Card) bool {
+func canCastWhileReserving(g *mage.Game, playerID uuid.UUID, cast, reserve *mage.Card) bool {
 	combined := combinedManaCost(cast.ManaCost(), reserve.ManaCost())
 	return g.CanAfford(playerID, combined, mage.SpellContextForCard(cast))
 }
@@ -720,7 +720,7 @@ func hasOpponentPermanentTarget(g *mage.Game, playerID uuid.UUID, possible []uui
 	return false
 }
 
-func requiresTargets(card mage.Card) bool {
+func requiresTargets(card *mage.Card) bool {
 	if len(card.CastTargets()) > 0 {
 		return true
 	}
@@ -734,13 +734,11 @@ func requiresTargets(card mage.Card) bool {
 }
 
 // auraAIProfile retrieves an aura's AI targeting profile, if the card declares one.
-func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
-	if profiler, ok := card.(interface {
-		AuraAIProfile() (mage.AuraAIProfile, bool)
-	}); ok {
-		return profiler.AuraAIProfile()
+func auraAIProfile(card *mage.Card) (mage.AuraAIProfile, bool) {
+	if card == nil {
+		return mage.AuraAIProfile{}, false
 	}
-	return mage.AuraAIProfile{}, false
+	return card.AuraAIProfile()
 }
 
 // bestAuraTarget chooses the enchant target for an aura. Beneficial auras go on
@@ -749,7 +747,7 @@ func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
 // lower toughness (Immolation, +2/-2) only help us when they kill the creature,
 // so they only target an opponent creature whose toughness they would reduce to
 // zero — otherwise they would buff the opponent.
-func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, possible []uuid.UUID) []uuid.UUID {
+func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card *mage.Card, possible []uuid.UUID) []uuid.UUID {
 	profile, ok := auraAIProfile(card)
 	detrimental := ok && (profile.StealsControl || profile.PowerBoost < 0 || profile.ToughnessBoost < 0)
 	if !detrimental {
@@ -980,7 +978,7 @@ func shouldAimBurnAtFace(g *mage.Game, playerID uuid.UUID, damage int) bool {
 	return race.Racing && race.MyClock <= race.TheirClock && opponent.Life() <= 10
 }
 
-func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	damage := 0
 	for _, ab := range card.Abilities() {
 		if sa, ok := ab.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
@@ -994,7 +992,7 @@ func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, tar
 	return damage
 }
 
-func cardAIHint(card mage.Card) mage.AIHint {
+func cardAIHint(card *mage.Card) mage.AIHint {
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
@@ -1097,7 +1095,7 @@ func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects
 	return damage
 }
 
-func isCardDamageSpell(card mage.Card) bool {
+func isCardDamageSpell(card *mage.Card) bool {
 	for _, a := range card.Abilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, t := range sa.Targets() {
@@ -1115,7 +1113,7 @@ func isCardDamageSpell(card mage.Card) bool {
 	return false
 }
 
-func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	mc := card.ManaCost()
 	if !mc.HasX {
 		return 0
@@ -1146,7 +1144,7 @@ func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, 
 
 // bestXValue picks the best X value for an X-cost spell.
 // For damage spells it tries lethal values; otherwise it spends all available mana.
-func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+func bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	mc := card.ManaCost()
 	if !mc.HasX {
 		return 0
@@ -1209,7 +1207,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 	return maxX
 }
 
-func isDetrimentalTapXSpell(card mage.Card) bool {
+func isDetrimentalTapXSpell(card *mage.Card) bool {
 	for _, a := range card.Abilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
@@ -1225,10 +1223,10 @@ func isDetrimentalTapXSpell(card mage.Card) bool {
 
 // chooseBestLand selects the best land to play from hand. It prefers lands that
 // make the highest-value currently stranded spells castable.
-func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
+func chooseBestLand(p mage.Player, g *mage.Game) *mage.Card {
 	hand := p.Hand()
 
-	var lands []mage.Card
+	var lands []*mage.Card
 	neededColors := make(map[core.Color]int)
 	baseColors, baseTotal := boardManaSources(g, p.PlayerID())
 
@@ -1253,7 +1251,7 @@ func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
 	}
 
 	// Score each land by how many needed colors it produces.
-	var bestLand mage.Card
+	var bestLand *mage.Card
 	bestScore := -1
 
 	for _, land := range lands {
@@ -1345,7 +1343,7 @@ func boardManaSources(g *mage.Game, playerID uuid.UUID) (colors map[core.Color]i
 	return colors, total
 }
 
-func landManaColors(card mage.Card) ([]core.Color, bool) {
+func landManaColors(card *mage.Card) ([]core.Color, bool) {
 	var colors []core.Color
 	anyColor := false
 	for _, a := range card.Abilities() {
@@ -1392,7 +1390,7 @@ func coloredManaProgress(mc core.ManaCost, colors map[core.Color]int) int {
 	return score
 }
 
-func isPrecombatSpell(card mage.Card) bool {
+func isPrecombatSpell(card *mage.Card) bool {
 	if card.HasType(core.TypeCreature) && card.AttrSeeds()[core.Haste] > 0 {
 		return true
 	}

@@ -13,7 +13,7 @@ import (
 func TestWheneverOneOrMoreCreaturesAttack_FiresOncePerCombat(t *testing.T) {
 	const cardName = "AD One-Or-More Sentinel"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.WheneverOneOrMoreCreaturesYouControlAttackTrigger(
 					mage.GainLife(5), false,
@@ -37,7 +37,7 @@ func TestWheneverOneOrMoreCreaturesAttack_FiresOncePerCombat(t *testing.T) {
 func TestWheneverOneOrMoreCreaturesAttack_NoFireIfNoneAttack(t *testing.T) {
 	const cardName = "AD No-Attack Sentinel"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.WheneverOneOrMoreCreaturesYouControlAttackTrigger(
 					mage.GainLife(5), false,

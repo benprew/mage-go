@@ -21,8 +21,8 @@ type discardCardOfTypeCost struct {
 	label  string
 }
 
-func (c *discardCardOfTypeCost) candidates(p Player) []Card {
-	var out []Card
+func (c *discardCardOfTypeCost) candidates(p Player) []*Card {
+	var out []*Card
 	for _, card := range p.Hand() {
 		if c.filter.IsZero() || c.filter.Match(card) {
 			out = append(out, card)
@@ -94,7 +94,7 @@ func registerSpells() {
 	// Act of Treason {2}{R}
 	// Sorcery
 	// Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.
-	Register("Act of Treason", func() Card {
+	Register("Act of Treason", func() *Card {
 		return NewSorcery("Act of Treason", "{2}{R}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"gain control until end of turn, untap, gains haste",
@@ -108,7 +108,7 @@ func registerSpells() {
 	// Aegis of the Heavens {1}{W}
 	// Instant
 	// Target creature gets +1/+7 until end of turn.
-	Register("Aegis of the Heavens", func() Card {
+	Register("Aegis of the Heavens", func() *Card {
 		return NewInstant("Aegis of the Heavens", "{1}{W}",
 			NewTargetedSpell(TargetCreature(), Boost(Fixed(1), Fixed(7))),
 		)
@@ -117,7 +117,7 @@ func registerSpells() {
 	// Aerial Assault {2}{W}
 	// Sorcery
 	// Destroy target tapped creature. You gain 1 life for each creature you control with flying.
-	Register("Aerial Assault", func() Card {
+	Register("Aerial Assault", func() *Card {
 		return NewSorcery("Aerial Assault", "{2}{W}",
 			NewTargetedSpell(TargetCreature(IsTapped), CompositeEffects(
 				"destroy tapped creature; gain 1 life per flying creature you control",
@@ -131,7 +131,7 @@ func registerSpells() {
 	// Instant
 	// Target creature gets +1/+1 until end of turn.
 	// Draw a card.
-	Register("Aggressive Urge", func() Card {
+	Register("Aggressive Urge", func() *Card {
 		return NewInstant("Aggressive Urge", "{1}{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+1/+1 and draw a card",
@@ -144,7 +144,7 @@ func registerSpells() {
 	// Agonizing Syphon {3}{B}
 	// Sorcery
 	// Agonizing Syphon deals 3 damage to any target and you gain 3 life.
-	Register("Agonizing Syphon", func() Card {
+	Register("Agonizing Syphon", func() *Card {
 		return NewSorcery("Agonizing Syphon", "{3}{B}",
 			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 3 damage and gain 3 life",
@@ -157,7 +157,7 @@ func registerSpells() {
 	// Angelic Edict {4}{W}
 	// Sorcery
 	// Exile target creature or enchantment.
-	Register("Angelic Edict", func() Card {
+	Register("Angelic Edict", func() *Card {
 		return NewSorcery("Angelic Edict", "{4}{W}",
 			NewTargetedSpell(TargetPermanent(Or(IsCreature, IsEnchantment)), ExileTarget()),
 		)
@@ -166,7 +166,7 @@ func registerSpells() {
 	// Arbor Armament {G}
 	// Instant
 	// Put a +1/+1 counter on target creature. That creature gains reach until end of turn.
-	Register("Arbor Armament", func() Card {
+	Register("Arbor Armament", func() *Card {
 		return NewInstant("Arbor Armament", "{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+1/+1 counter and reach",
@@ -179,7 +179,7 @@ func registerSpells() {
 	// Assassin's Strike {4}{B}{B}
 	// Sorcery
 	// Destroy target creature. Its controller discards a card.
-	Register("Assassin's Strike", func() Card {
+	Register("Assassin's Strike", func() *Card {
 		return NewSorcery("Assassin's Strike", "{4}{B}{B}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"destroy target creature; its controller discards a card",
@@ -211,7 +211,7 @@ func registerSpells() {
 	// Auger Spree {1}{B}{R}
 	// Instant
 	// Target creature gets +4/-4 until end of turn.
-	Register("Auger Spree", func() Card {
+	Register("Auger Spree", func() *Card {
 		return NewInstant("Auger Spree", "{1}{B}{R}",
 			NewTargetedSpell(TargetCreature(), Boost(Fixed(4), Fixed(-4))),
 		)
@@ -220,7 +220,7 @@ func registerSpells() {
 	// Bake into a Pie {2}{B}{B}
 	// Instant
 	// Destroy target creature. Create a Food token.
-	Register("Bake into a Pie", func() Card {
+	Register("Bake into a Pie", func() *Card {
 		return NewInstant("Bake into a Pie", "{2}{B}{B}",
 			NewTargetedSpell(TargetCreature(), DestroyTarget(), CreateFoodToken()),
 		)
@@ -229,7 +229,7 @@ func registerSpells() {
 	// Barter in Blood {2}{B}{B}
 	// Sorcery
 	// Each player sacrifices two creatures of their choice.
-	Register("Barter in Blood", func() Card {
+	Register("Barter in Blood", func() *Card {
 		return NewSorcery("Barter in Blood", "{2}{B}{B}",
 			NewSpellAbility(eachPlayerSacrificesNCreatures(2)),
 		)
@@ -238,7 +238,7 @@ func registerSpells() {
 	// Bathe in Dragonfire {2}{R}
 	// Sorcery
 	// Bathe in Dragonfire deals 4 damage to target creature.
-	Register("Bathe in Dragonfire", func() Card {
+	Register("Bathe in Dragonfire", func() *Card {
 		return NewSorcery("Bathe in Dragonfire", "{2}{R}",
 			NewTargetedSpell(TargetCreature(), DealDamage(Fixed(4))),
 		)
@@ -247,7 +247,7 @@ func registerSpells() {
 	// Battlefield Promotion {1}{W}
 	// Instant
 	// Put a +1/+1 counter on target creature. That creature gains first strike until end of turn. You gain 2 life.
-	Register("Battlefield Promotion", func() Card {
+	Register("Battlefield Promotion", func() *Card {
 		return NewInstant("Battlefield Promotion", "{1}{W}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+1/+1 counter, first strike, gain 2 life",
@@ -262,7 +262,7 @@ func registerSpells() {
 	// Instant
 	// Target creature gets -4/-0 until end of turn.
 	// Draw a card.
-	Register("Befuddle", func() Card {
+	Register("Befuddle", func() *Card {
 		return NewInstant("Befuddle", "{2}{U}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"-4/-0 and draw a card",
@@ -276,7 +276,7 @@ func registerSpells() {
 	// Instant
 	// Blindblast deals 1 damage to target creature. That creature can't block this turn.
 	// Draw a card.
-	Register("Blindblast", func() Card {
+	Register("Blindblast", func() *Card {
 		return NewInstant("Blindblast", "{2}{R}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"1 damage, can't block, draw a card",
@@ -291,7 +291,7 @@ func registerSpells() {
 	// Sorcery
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Draw three cards.
-	Register("Blood Divination", func() Card {
+	Register("Blood Divination", func() *Card {
 		return NewSorcery("Blood Divination", "{3}{B}",
 			NewSpellAbility(drawSelfCard(3)),
 			WithAdditionalCost(SacrificeCreatureCost()),
@@ -302,7 +302,7 @@ func registerSpells() {
 	// Sorcery
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Destroy target creature.
-	Register("Bone Splinters", func() Card {
+	Register("Bone Splinters", func() *Card {
 		return NewSorcery("Bone Splinters", "{B}",
 			NewTargetedSpell(TargetCreature(), DestroyTarget()),
 			WithAdditionalCost(SacrificeCreatureCost()),
@@ -312,7 +312,7 @@ func registerSpells() {
 	// Cemetery Recruitment {1}{B}
 	// Sorcery
 	// Return target creature card from your graveyard to your hand. If it's a Zombie card, draw a card.
-	Register("Cemetery Recruitment", func() Card {
+	Register("Cemetery Recruitment", func() *Card {
 		return NewSorcery("Cemetery Recruitment", "{1}{B}",
 			NewTargetedSpell(TargetCardInYourGraveyard(IsCreatureCard), FuncEffect(
 				"return creature card; if Zombie, draw a card",
@@ -342,7 +342,7 @@ func registerSpells() {
 	// Chart a Course {1}{U}
 	// Sorcery
 	// Draw two cards. Then discard a card unless you attacked this turn.
-	Register("Chart a Course", func() Card {
+	Register("Chart a Course", func() *Card {
 		return NewSorcery("Chart a Course", "{1}{U}",
 			NewSpellAbility(FuncEffect(
 				"draw two; discard one unless attacked this turn",
@@ -380,7 +380,7 @@ func registerSpells() {
 	// Cloudshift {W}
 	// Instant
 	// Exile target creature you control, then return that card to the battlefield under your control.
-	Register("Cloudshift", func() Card {
+	Register("Cloudshift", func() *Card {
 		return NewInstant("Cloudshift", "{W}",
 			NewTargetedSpell(TargetControlledCreature(), flickerEffect(false)),
 		)
@@ -390,7 +390,7 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Collateral Damage deals 3 damage to any target.
-	Register("Collateral Damage", func() Card {
+	Register("Collateral Damage", func() *Card {
 		return NewInstant("Collateral Damage", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 			WithAdditionalCost(SacrificeCreatureCost()),
@@ -400,8 +400,8 @@ func registerSpells() {
 	// Commune with Dinosaurs {G}
 	// Sorcery
 	// Look at the top five cards of your library. You may reveal a Dinosaur or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.
-	Register("Commune with Dinosaurs", func() Card {
-		dinoOrLandCard := NewCardFilter("Dinosaur or land card", func(c Card) bool {
+	Register("Commune with Dinosaurs", func() *Card {
+		dinoOrLandCard := NewCardFilter("Dinosaur or land card", func(c *Card) bool {
 			if c.HasType(TypeLand) {
 				return true
 			}
@@ -424,7 +424,7 @@ func registerSpells() {
 					taken := g.RemoveTopN(p, 5)
 					rest := taken
 					if chosen != nil {
-						rest = make([]Card, 0, len(taken))
+						rest = make([]*Card, 0, len(taken))
 						for _, c := range taken {
 							if c.ID() == chosen.ID() {
 								p.AddToHand(c)
@@ -445,7 +445,7 @@ func registerSpells() {
 	// Choose one —
 	// • Destroy target creature with flying.
 	// • Destroy target enchantment.
-	Register("Crushing Canopy", func() Card {
+	Register("Crushing Canopy", func() *Card {
 		c := NewInstant("Crushing Canopy", "{2}{G}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{
@@ -465,7 +465,7 @@ func registerSpells() {
 	// Dance with Devils {3}{R}
 	// Instant
 	// Create two 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target."
-	Register("Dance with Devils", func() Card {
+	Register("Dance with Devils", func() *Card {
 		return NewInstant("Dance with Devils", "{3}{R}",
 			NewSpellAbility(TokenWithAbilities(
 				CreateTokens(2, "Devil", 1, 1,
@@ -481,7 +481,7 @@ func registerSpells() {
 	// Dauntless Onslaught {2}{W}
 	// Instant
 	// Up to two target creatures each get +2/+2 until end of turn.
-	Register("Dauntless Onslaught", func() Card {
+	Register("Dauntless Onslaught", func() *Card {
 		return NewInstant("Dauntless Onslaught", "{2}{W}",
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCreatures(2)},
@@ -493,7 +493,7 @@ func registerSpells() {
 	// Divine Arrow {1}{W}
 	// Instant
 	// Divine Arrow deals 4 damage to target attacking or blocking creature.
-	Register("Divine Arrow", func() Card {
+	Register("Divine Arrow", func() *Card {
 		return NewInstant("Divine Arrow", "{1}{W}",
 			NewTargetedSpell(TargetCreature(Or(IsAttacking, IsBlocking)), DealDamage(Fixed(4))),
 		)
@@ -502,7 +502,7 @@ func registerSpells() {
 	// Doublecast {R}{R}
 	// Sorcery
 	// When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.
-	Register("Doublecast", func() Card {
+	Register("Doublecast", func() *Card {
 		return NewSorcery("Doublecast", "{R}{R}",
 			NewSpellAbility(FuncEffect(
 				"register delayed trigger: copy next instant/sorcery spell you cast this turn",
@@ -518,7 +518,7 @@ func registerSpells() {
 	// Douse in Gloom {2}{B}
 	// Instant
 	// Douse in Gloom deals 2 damage to target creature and you gain 2 life.
-	Register("Douse in Gloom", func() Card {
+	Register("Douse in Gloom", func() *Card {
 		return NewInstant("Douse in Gloom", "{2}{B}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"2 damage, gain 2 life",
@@ -534,8 +534,8 @@ func registerSpells() {
 	// Draconic Roar deals 3 damage to target creature. If you revealed a Dragon card or controlled a Dragon as you cast this spell, Draconic Roar deals 3 damage to that creature's controller.
 	// CR 608.2g: both halves of the bonus condition are evaluated against
 	// the cast-time snapshot (CastContext), not live state at resolution.
-	Register("Draconic Roar", func() Card {
-		dragonCard := NewCardFilter("Dragon card", func(c Card) bool {
+	Register("Draconic Roar", func() *Card {
+		dragonCard := NewCardFilter("Dragon card", func(c *Card) bool {
 			return c.HasSubType("Dragon")
 		})
 		return NewInstant("Draconic Roar", "{1}{R}",
@@ -575,7 +575,7 @@ func registerSpells() {
 	// Dragon Fodder {1}{R}
 	// Sorcery
 	// Create two 1/1 red Goblin creature tokens.
-	Register("Dragon Fodder", func() Card {
+	Register("Dragon Fodder", func() *Card {
 		return NewSorcery("Dragon Fodder", "{1}{R}",
 			NewSpellAbility(CreateTokens(2, "Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"})),
 		)
@@ -584,7 +584,7 @@ func registerSpells() {
 	// Elemental Uprising {1}{G}
 	// Instant
 	// Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. It must be blocked this turn if able.
-	Register("Elemental Uprising", func() Card {
+	Register("Elemental Uprising", func() *Card {
 		return NewInstant("Elemental Uprising", "{1}{G}",
 			NewTargetedSpell(
 				TargetPermanent(IsLand),
@@ -621,7 +621,7 @@ func registerSpells() {
 	// Enlarge {3}{G}{G}
 	// Sorcery
 	// Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able.
-	Register("Enlarge", func() Card {
+	Register("Enlarge", func() *Card {
 		return NewSorcery("Enlarge", "{3}{G}{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+7/+7, trample, must be blocked if able",
@@ -647,7 +647,7 @@ func registerSpells() {
 	// Essence Flux {U}
 	// Instant
 	// Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it.
-	Register("Essence Flux", func() Card {
+	Register("Essence Flux", func() *Card {
 		return NewInstant("Essence Flux", "{U}",
 			NewTargetedSpell(TargetControlledCreature(), flickerEffect(true)),
 		)
@@ -657,7 +657,7 @@ func registerSpells() {
 	// Instant
 	// Counter target creature spell.
 	// Draw a card.
-	Register("Exclude", func() Card {
+	Register("Exclude", func() *Card {
 		return NewInstant("Exclude", "{2}{U}",
 			NewTargetedSpell(TargetSpellOnStack(creatureSpellFilter), CompositeEffects(
 				"counter creature spell, draw a card",
@@ -670,7 +670,7 @@ func registerSpells() {
 	// Exhume {1}{B}
 	// Sorcery
 	// Each player puts a creature card from their graveyard onto the battlefield.
-	Register("Exhume", func() Card {
+	Register("Exhume", func() *Card {
 		return NewSorcery("Exhume", "{1}{B}",
 			NewSpellAbility(FuncEffect(
 				"each player puts a creature card from their graveyard onto the battlefield",
@@ -681,7 +681,7 @@ func registerSpells() {
 						if p == nil {
 							continue
 						}
-						var candidates []Card
+						var candidates []*Card
 						for _, c := range p.Graveyard() {
 							if c.HasType(TypeCreature) {
 								candidates = append(candidates, c)
@@ -708,7 +708,7 @@ func registerSpells() {
 	// Sorcery
 	// You may play an additional land this turn.
 	// Draw a card.
-	Register("Explore", func() Card {
+	Register("Explore", func() *Card {
 		return NewSorcery("Explore", "{1}{G}",
 			NewSpellAbility(
 				FuncEffect(
@@ -727,7 +727,7 @@ func registerSpells() {
 	// Flame Lash {3}{R}
 	// Instant
 	// Flame Lash deals 4 damage to any target.
-	Register("Flame Lash", func() Card {
+	Register("Flame Lash", func() *Card {
 		return NewInstant("Flame Lash", "{3}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(4))),
 		)
@@ -736,7 +736,7 @@ func registerSpells() {
 	// Flames of the Firebrand {2}{R}
 	// Sorcery
 	// Flames of the Firebrand deals 3 damage divided as you choose among one, two, or three targets.
-	Register("Flames of the Firebrand", func() Card {
+	Register("Flames of the Firebrand", func() *Card {
 		return NewSorcery("Flames of the Firebrand", "{2}{R}",
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCreaturesOrPlayers(3)},
@@ -748,7 +748,7 @@ func registerSpells() {
 	// Flames of the Raze-Boar {5}{R}
 	// Instant
 	// Flames of the Raze-Boar deals 4 damage to target creature an opponent controls. Then Flames of the Raze-Boar deals 2 damage to each other creature that player controls if you control a creature with power 4 or greater.
-	Register("Flames of the Raze-Boar", func() Card {
+	Register("Flames of the Raze-Boar", func() *Card {
 		return NewInstant("Flames of the Raze-Boar", "{5}{R}",
 			NewTargetedSpell(TargetPermanentOpponentControls(IsCreature), FuncEffect(
 				"4 damage; then 2 to each other of that player's creatures if you control power-4+",
@@ -786,7 +786,7 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Fling deals damage equal to the sacrificed creature's power to any target.
-	Register("Fling", func() Card {
+	Register("Fling", func() *Card {
 		return NewInstant("Fling", "{1}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(),
 				FuncEffect("Fling deals damage equal to the sacrificed creature's power to any target",
@@ -814,7 +814,7 @@ func registerSpells() {
 	// Flurry of Horns {4}{R}
 	// Sorcery
 	// Create two 2/3 red Minotaur creature tokens with haste.
-	Register("Flurry of Horns", func() Card {
+	Register("Flurry of Horns", func() *Card {
 		return NewSorcery("Flurry of Horns", "{4}{R}",
 			NewSpellAbility(CreateTokens(2, "Minotaur", 2, 3, []CardType{TypeCreature}, []string{"Minotaur"}, Haste)),
 		)
@@ -825,7 +825,7 @@ func registerSpells() {
 	// Choose one —
 	// • Creatures you control get +2/+0 until end of turn.
 	// • Creatures you control get +0/+2 until end of turn.
-	Register("Fortify", func() Card {
+	Register("Fortify", func() *Card {
 		c := NewInstant("Fortify", "{2}{W}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{
@@ -843,7 +843,7 @@ func registerSpells() {
 	// Funeral Rites {2}{B}
 	// Sorcery
 	// You draw two cards, lose 2 life, then mill two cards.
-	Register("Funeral Rites", func() Card {
+	Register("Funeral Rites", func() *Card {
 		return NewSorcery("Funeral Rites", "{2}{B}",
 			NewSpellAbility(FuncEffect(
 				"draw two, lose 2, mill two",
@@ -866,7 +866,7 @@ func registerSpells() {
 	// Gird for Battle {W}
 	// Sorcery
 	// Put a +1/+1 counter on each of up to two target creatures.
-	Register("Gird for Battle", func() Card {
+	Register("Gird for Battle", func() *Card {
 		return NewSorcery("Gird for Battle", "{W}",
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCreatures(2)},
@@ -878,7 +878,7 @@ func registerSpells() {
 	// Goblin Lore {1}{R}
 	// Sorcery
 	// Draw four cards, then discard three cards at random.
-	Register("Goblin Lore", func() Card {
+	Register("Goblin Lore", func() *Card {
 		return NewSorcery("Goblin Lore", "{1}{R}",
 			NewSpellAbility(
 				drawSelfCard(4),
@@ -899,7 +899,7 @@ func registerSpells() {
 	// Goblin Rally {3}{R}{R}
 	// Sorcery
 	// Create four 1/1 red Goblin creature tokens.
-	Register("Goblin Rally", func() Card {
+	Register("Goblin Rally", func() *Card {
 		return NewSorcery("Goblin Rally", "{3}{R}{R}",
 			NewSpellAbility(CreateTokens(4, "Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"})),
 		)
@@ -909,7 +909,7 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature or planeswalker.
 	// Heartfire deals 4 damage to any target.
-	Register("Heartfire", func() Card {
+	Register("Heartfire", func() *Card {
 		return NewInstant("Heartfire", "{1}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(4))),
 			WithAdditionalCost(SacrificeMatchingCost(Or(IsCreature, IsPlaneswalker), "Sacrifice a creature or planeswalker")),
@@ -919,7 +919,7 @@ func registerSpells() {
 	// Homing Lightning {2}{R}{R}
 	// Instant
 	// Homing Lightning deals 4 damage to target creature and each other creature with the same name as that creature.
-	Register("Homing Lightning", func() Card {
+	Register("Homing Lightning", func() *Card {
 		return NewInstant("Homing Lightning", "{2}{R}{R}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"4 damage to target and each other same-named creature",
@@ -945,7 +945,7 @@ func registerSpells() {
 	// Hungry Flames {2}{R}
 	// Instant
 	// Hungry Flames deals 3 damage to target creature and 2 damage to target player or planeswalker.
-	Register("Hungry Flames", func() Card {
+	Register("Hungry Flames", func() *Card {
 		return NewInstant("Hungry Flames", "{2}{R}",
 			NewMultiTargetSpell(
 				[]Target{TargetCreature(), TargetPlayerOrPlaneswalker()},
@@ -980,7 +980,7 @@ func registerSpells() {
 	// Hunter's Insight {2}{G}
 	// Instant
 	// Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards.
-	Register("Hunter's Insight", func() Card {
+	Register("Hunter's Insight", func() *Card {
 		return NewInstant("Hunter's Insight", "{2}{G}",
 			NewTargetedSpell(TargetCreatureYouControl(),
 				FuncEffect("register a delayed trigger this turn",
@@ -1008,7 +1008,7 @@ func registerSpells() {
 	// Immolating Gyre {4}{R}{R}
 	// Sorcery
 	// Immolating Gyre deals X damage to each creature and planeswalker you don't control, where X is the number of instant and sorcery cards in your graveyard.
-	Register("Immolating Gyre", func() Card {
+	Register("Immolating Gyre", func() *Card {
 		return NewSorcery("Immolating Gyre", "{4}{R}{R}",
 			NewSpellAbility(FuncEffect(
 				"X damage to each creature and planeswalker you don't control",
@@ -1039,7 +1039,7 @@ func registerSpells() {
 	// Innocent Blood {B}
 	// Sorcery
 	// Each player sacrifices a creature of their choice.
-	Register("Innocent Blood", func() Card {
+	Register("Innocent Blood", func() *Card {
 		return NewSorcery("Innocent Blood", "{B}",
 			NewSpellAbility(eachPlayerSacrificesNCreatures(1)),
 		)
@@ -1048,7 +1048,7 @@ func registerSpells() {
 	// Inspired Charge {2}{W}{W}
 	// Instant
 	// Creatures you control get +2/+1 until end of turn.
-	Register("Inspired Charge", func() Card {
+	Register("Inspired Charge", func() *Card {
 		return NewInstant("Inspired Charge", "{2}{W}{W}",
 			NewSpellAbility(BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(1), AnyPermanent)),
 		)
@@ -1057,7 +1057,7 @@ func registerSpells() {
 	// Inspiring Call {2}{G}
 	// Instant
 	// Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn.
-	Register("Inspiring Call", func() Card {
+	Register("Inspiring Call", func() *Card {
 		return NewInstant("Inspiring Call", "{2}{G}",
 			NewSpellAbility(FuncEffect(
 				"draw card per +1/+1 creature; those gain indestructible EOT",
@@ -1097,7 +1097,7 @@ func registerSpells() {
 	// Sorcery
 	// Target creature must be blocked this turn if able.
 	// Draw a card.
-	Register("Irresistible Prey", func() Card {
+	Register("Irresistible Prey", func() *Card {
 		return NewSorcery("Irresistible Prey", "{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"must be blocked if able, draw a card",
@@ -1122,7 +1122,7 @@ func registerSpells() {
 	// Languish {2}{B}{B}
 	// Sorcery
 	// All creatures get -4/-4 until end of turn.
-	Register("Languish", func() Card {
+	Register("Languish", func() *Card {
 		return NewSorcery("Languish", "{2}{B}{B}",
 			NewSpellAbility(Boost(Fixed(-4), Fixed(-4)).Targeting(ToAllMatching(AnyPermanent)).Until(EndOfTurn)),
 		)
@@ -1131,7 +1131,7 @@ func registerSpells() {
 	// Last Gasp {1}{B}
 	// Instant
 	// Target creature gets -3/-3 until end of turn.
-	Register("Last Gasp", func() Card {
+	Register("Last Gasp", func() *Card {
 		return NewInstant("Last Gasp", "{1}{B}",
 			NewTargetedSpell(TargetCreature(), Boost(Fixed(-3), Fixed(-3))),
 		)
@@ -1141,7 +1141,7 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Destroy target creature. Its controller loses 2 life.
-	Register("Launch Party", func() Card {
+	Register("Launch Party", func() *Card {
 		return NewInstant("Launch Party", "{3}{B}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"destroy target; its controller loses 2 life",
@@ -1170,7 +1170,7 @@ func registerSpells() {
 	// Instant
 	// Return target nonland permanent to its owner's hand.
 	// Draw a card.
-	Register("Leave in the Dust", func() Card {
+	Register("Leave in the Dust", func() *Card {
 		return NewInstant("Leave in the Dust", "{3}{U}",
 			NewTargetedSpell(TargetPermanent(Not(IsLand)), CompositeEffects(
 				"bounce nonland permanent and draw a card",
@@ -1183,7 +1183,7 @@ func registerSpells() {
 	// Lifecrafter's Gift {3}{G}
 	// Instant
 	// Put a +1/+1 counter on target creature, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it.
-	Register("Lifecrafter's Gift", func() Card {
+	Register("Lifecrafter's Gift", func() *Card {
 		return NewInstant("Lifecrafter's Gift", "{3}{G}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"+1/+1 on target then +1/+1 on each of yours with a counter",
@@ -1215,7 +1215,7 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, discard a card or pay {5}.
 	// Lightning Axe deals 5 damage to target creature.
-	Register("Lightning Axe", func() Card {
+	Register("Lightning Axe", func() *Card {
 		return NewInstant("Lightning Axe", "{R}",
 			NewTargetedSpell(TargetCreature(), DealDamage(Fixed(5))),
 			WithAdditionalCost(EitherCost(DiscardCost(1), ManaCostOf("{5}"))),
@@ -1225,7 +1225,7 @@ func registerSpells() {
 	// Long Road Home {1}{W}
 	// Instant
 	// Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it.
-	Register("Long Road Home", func() Card {
+	Register("Long Road Home", func() *Card {
 		return NewInstant("Long Road Home", "{1}{W}",
 			NewTargetedSpell(TargetCreature(),
 				ExileTargetReturnAtEndStep(ReturnWithCounter(P1P1, 1)),
@@ -1236,7 +1236,7 @@ func registerSpells() {
 	// Macabre Waltz {1}{B}
 	// Sorcery
 	// Return up to two target creature cards from your graveyard to your hand, then discard a card.
-	Register("Macabre Waltz", func() Card {
+	Register("Macabre Waltz", func() *Card {
 		return NewSorcery("Macabre Waltz", "{1}{B}",
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCardsInYourGraveyard(2, IsCreatureCard)},
@@ -1261,7 +1261,7 @@ func registerSpells() {
 	// Magma Jet {1}{R}
 	// Instant
 	// Magma Jet deals 2 damage to any target. Scry 2.
-	Register("Magma Jet", func() Card {
+	Register("Magma Jet", func() *Card {
 		return NewInstant("Magma Jet", "{1}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(2)), Scry(Fixed(2))),
 		)
@@ -1270,7 +1270,7 @@ func registerSpells() {
 	// Magmaquake {X}{R}{R}
 	// Instant
 	// Magmaquake deals X damage to each creature without flying and each planeswalker.
-	Register("Magmaquake", func() Card {
+	Register("Magmaquake", func() *Card {
 		return NewInstant("Magmaquake", "{X}{R}{R}",
 			NewSpellAbility(DealDamageToAllCreatures(XValue(), NotHasKeywordFilter(Flying))),
 		)
@@ -1279,7 +1279,7 @@ func registerSpells() {
 	// Moment of Heroism {1}{W}
 	// Instant
 	// Target creature gets +2/+2 and gains lifelink until end of turn.
-	Register("Moment of Heroism", func() Card {
+	Register("Moment of Heroism", func() *Card {
 		return NewInstant("Moment of Heroism", "{1}{W}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+2/+2 and lifelink",
@@ -1293,7 +1293,7 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// You draw cards equal to the sacrificed creature's power, then you gain life equal to its toughness.
-	Register("Momentous Fall", func() Card {
+	Register("Momentous Fall", func() *Card {
 		return NewInstant("Momentous Fall", "{2}{G}{G}",
 			NewSpellAbility(
 				FuncEffect("draw cards equal to the sacrificed creature's power, then you gain life equal to its toughness",
@@ -1323,7 +1323,7 @@ func registerSpells() {
 	// Mugging {R}
 	// Sorcery
 	// Mugging deals 2 damage to target creature. That creature can't block this turn.
-	Register("Mugging", func() Card {
+	Register("Mugging", func() *Card {
 		return NewSorcery("Mugging", "{R}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"2 damage and can't block",
@@ -1336,7 +1336,7 @@ func registerSpells() {
 	// Nature's Way {1}{G}
 	// Sorcery
 	// Target creature you control gains vigilance and trample until end of turn. It deals damage equal to its power to target creature you don't control.
-	Register("Nature's Way", func() Card {
+	Register("Nature's Way", func() *Card {
 		return NewSorcery("Nature's Way", "{1}{G}",
 			NewMultiTargetSpell(
 				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
@@ -1368,7 +1368,7 @@ func registerSpells() {
 	// Outnumber {R}
 	// Instant
 	// Outnumber deals damage to target creature equal to the number of creatures you control.
-	Register("Outnumber", func() Card {
+	Register("Outnumber", func() *Card {
 		return NewInstant("Outnumber", "{R}",
 			NewTargetedSpell(TargetCreature(), DealDamage(CountBattlefield(SelectController(), IsCreature))),
 		)
@@ -1377,7 +1377,7 @@ func registerSpells() {
 	// Path to Exile {W}
 	// Instant
 	// Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.
-	Register("Path to Exile", func() Card {
+	Register("Path to Exile", func() *Card {
 		return NewInstant("Path to Exile", "{W}",
 			NewTargetedSpell(TargetCreature(),
 				FuncEffect("exile target creature; its controller may search their library for a basic land",
@@ -1400,7 +1400,7 @@ func registerSpells() {
 						if mode != 0 {
 							return nil
 						}
-						var basics []Card
+						var basics []*Card
 						for _, c := range p.Library() {
 							if c.HasType(TypeLand) && c.HasSuperType(SuperBasic) {
 								basics = append(basics, c)
@@ -1409,7 +1409,7 @@ func registerSpells() {
 						if len(basics) > 0 {
 							chosen := p.ChooseCardFromLibrary(basics, "basic land", g)
 							if chosen != nil {
-								newLib := make([]Card, 0, len(p.Library())-1)
+								newLib := make([]*Card, 0, len(p.Library())-1)
 								for _, c := range p.Library() {
 									if c.ID() != chosen.ID() {
 										newLib = append(newLib, c)
@@ -1433,7 +1433,7 @@ func registerSpells() {
 	// Peel from Reality {1}{U}
 	// Instant
 	// Return target creature you control and target creature you don't control to their owners' hands.
-	Register("Peel from Reality", func() Card {
+	Register("Peel from Reality", func() *Card {
 		return NewInstant("Peel from Reality", "{1}{U}",
 			NewMultiTargetSpell(
 				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
@@ -1469,7 +1469,7 @@ func registerSpells() {
 	// Pillar of Flame {R}
 	// Sorcery
 	// Pillar of Flame deals 2 damage to any target. If a creature dealt damage this way would die this turn, exile it instead.
-	Register("Pillar of Flame", func() Card {
+	Register("Pillar of Flame", func() *Card {
 		return NewSorcery("Pillar of Flame", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 2 damage; if a creature, exile it if it would die this turn",
@@ -1499,7 +1499,7 @@ func registerSpells() {
 	// Raise the Alarm {1}{W}
 	// Instant
 	// Create two 1/1 white Soldier creature tokens.
-	Register("Raise the Alarm", func() Card {
+	Register("Raise the Alarm", func() *Card {
 		return NewInstant("Raise the Alarm", "{1}{W}",
 			NewSpellAbility(CreateTokens(2, "Soldier", 1, 1, []CardType{TypeCreature}, []string{"Soldier"})),
 		)
@@ -1508,7 +1508,7 @@ func registerSpells() {
 	// Read the Runes {X}{U}
 	// Instant
 	// Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent.
-	Register("Read the Runes", func() Card {
+	Register("Read the Runes", func() *Card {
 		anyPermanent := NewPermanentFilter("a permanent", func(p *Permanent, _ *Game) bool { return true })
 		return NewInstant("Read the Runes", "{X}{U}",
 			NewSpellAbility(
@@ -1555,7 +1555,7 @@ func registerSpells() {
 	// Reanimate {B}
 	// Sorcery
 	// Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value.
-	Register("Reanimate", func() Card {
+	Register("Reanimate", func() *Card {
 		return NewSorcery("Reanimate", "{B}",
 			NewTargetedSpell(TargetCreatureCardInAnyGraveyard(), FuncEffect(
 				"reanimate; lose life = mana value",
@@ -1588,7 +1588,7 @@ func registerSpells() {
 	// Release the Dogs {3}{W}
 	// Sorcery
 	// Create four 1/1 white Dog creature tokens.
-	Register("Release the Dogs", func() Card {
+	Register("Release the Dogs", func() *Card {
 		return NewSorcery("Release the Dogs", "{3}{W}",
 			NewSpellAbility(CreateTokens(4, "Dog", 1, 1, []CardType{TypeCreature}, []string{"Dog"})),
 		)
@@ -1597,7 +1597,7 @@ func registerSpells() {
 	// Riddle of Lightning {3}{R}{R}
 	// Instant
 	// Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or player.
-	Register("Riddle of Lightning", func() Card {
+	Register("Riddle of Lightning", func() *Card {
 		return NewInstant("Riddle of Lightning", "{3}{R}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"scry 3, reveal top, deal damage equal to its mana value",
@@ -1610,7 +1610,7 @@ func registerSpells() {
 	// Rise of the Dark Realms {7}{B}{B}
 	// Sorcery
 	// Put all creature cards from all graveyards onto the battlefield under your control.
-	Register("Rise of the Dark Realms", func() Card {
+	Register("Rise of the Dark Realms", func() *Card {
 		return NewSorcery("Rise of the Dark Realms", "{7}{B}{B}",
 			NewSpellAbility(FuncEffect(
 				"reanimate all creature cards from all graveyards under your control",
@@ -1638,7 +1638,7 @@ func registerSpells() {
 	// Sarkhan's Rage {4}{R}
 	// Instant
 	// Sarkhan's Rage deals 5 damage to any target. If you control no Dragons, Sarkhan's Rage deals 2 damage to you.
-	Register("Sarkhan's Rage", func() Card {
+	Register("Sarkhan's Rage", func() *Card {
 		return NewInstant("Sarkhan's Rage", "{4}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"5 damage; if no Dragons, 2 to you",
@@ -1668,7 +1668,7 @@ func registerSpells() {
 	// Sorcery
 	// This spell costs {2} less to cast if it targets a Dinosaur you control.
 	// Put a +1/+1 counter on target creature you control. Then that creature fights target creature you don't control.
-	Register("Savage Stomp", func() Card {
+	Register("Savage Stomp", func() *Card {
 		return NewSorcery("Savage Stomp", "{2}{G}",
 			NewMultiTargetSpell(
 				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
@@ -1685,7 +1685,7 @@ func registerSpells() {
 					},
 				),
 			),
-			WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c Card, targets []uuid.UUID) bool {
+			WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c *Card, targets []uuid.UUID) bool {
 				for _, id := range targets {
 					perm := g.FindPermanent(id)
 					if perm == nil {
@@ -1706,7 +1706,7 @@ func registerSpells() {
 	// Settle the Score {2}{B}{B}
 	// Sorcery
 	// Exile target creature. Put two loyalty counters on a planeswalker you control.
-	Register("Settle the Score", func() Card {
+	Register("Settle the Score", func() *Card {
 		return NewSorcery("Settle the Score", "{2}{B}{B}",
 			NewTargetedSpell(TargetCreature(),
 				ExileTarget(),
@@ -1737,7 +1737,7 @@ func registerSpells() {
 	// Soul Salvage {2}{B}
 	// Sorcery
 	// Return up to two target creature cards from your graveyard to your hand.
-	Register("Soul Salvage", func() Card {
+	Register("Soul Salvage", func() *Card {
 		return NewSorcery("Soul Salvage", "{2}{B}",
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCardsInYourGraveyard(2, IsCreatureCard)},
@@ -1749,7 +1749,7 @@ func registerSpells() {
 	// Spitting Earth {1}{R}
 	// Sorcery
 	// Spitting Earth deals damage to target creature equal to the number of Mountains you control.
-	Register("Spitting Earth", func() Card {
+	Register("Spitting Earth", func() *Card {
 		return NewSorcery("Spitting Earth", "{1}{R}",
 			NewTargetedSpell(TargetCreature(), DealDamage(CountBattlefield(SelectController(), And(IsLand, HasSubType("Mountain"))))),
 		)
@@ -1758,7 +1758,7 @@ func registerSpells() {
 	// Sweep Away {2}{U}
 	// Instant
 	// Return target creature to its owner's hand. If that creature is attacking, you may put it on top of its owner's library instead.
-	Register("Sweep Away", func() Card {
+	Register("Sweep Away", func() *Card {
 		return NewInstant("Sweep Away", "{2}{U}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"return to owner's hand; if attacking, may put on top of library instead",
@@ -1784,7 +1784,7 @@ func registerSpells() {
 						permID := perm.ID()
 						permController := perm.ControllerID()
 						g.RemoveFromBattlefield(perm)
-						ownerPlayer.SetLibrary(append([]Card{card}, ownerPlayer.Library()...))
+						ownerPlayer.SetLibrary(append([]*Card{card}, ownerPlayer.Library()...))
 						g.FireEvent(GameEvent{
 							Type:     EvtZoneChange,
 							SourceID: permID,
@@ -1804,7 +1804,7 @@ func registerSpells() {
 	// Take Heart {W}
 	// Instant
 	// Target creature gets +2/+2 until end of turn. You gain 1 life for each attacking creature you control.
-	Register("Take Heart", func() Card {
+	Register("Take Heart", func() *Card {
 		return NewInstant("Take Heart", "{W}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+2/+2 and gain 1 life per attacking creature you control",
@@ -1817,7 +1817,7 @@ func registerSpells() {
 	// Talrand's Invocation {2}{U}{U}
 	// Sorcery
 	// Create two 2/2 blue Drake creature tokens with flying.
-	Register("Talrand's Invocation", func() Card {
+	Register("Talrand's Invocation", func() *Card {
 		return NewSorcery("Talrand's Invocation", "{2}{U}{U}",
 			NewSpellAbility(CreateTokens(2, "Drake", 2, 2, []CardType{TypeCreature}, []string{"Drake"}, Flying)),
 		)
@@ -1826,7 +1826,7 @@ func registerSpells() {
 	// Tandem Tactics {1}{W}
 	// Instant
 	// Up to two target creatures each get +1/+2 until end of turn. You gain 2 life.
-	Register("Tandem Tactics", func() Card {
+	Register("Tandem Tactics", func() *Card {
 		return NewInstant("Tandem Tactics", "{1}{W}",
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCreatures(2)},
@@ -1839,8 +1839,8 @@ func registerSpells() {
 	// Thirst for Knowledge {2}{U}
 	// Instant
 	// Draw three cards. Then discard two cards unless you discard an artifact card.
-	Register("Thirst for Knowledge", func() Card {
-		artifactCard := NewCardFilter("artifact card", func(c Card) bool {
+	Register("Thirst for Knowledge", func() *Card {
+		artifactCard := NewCardFilter("artifact card", func(c *Card) bool {
 			return c.HasType(TypeArtifact)
 		})
 		return NewInstant("Thirst for Knowledge", "{2}{U}",
@@ -1874,7 +1874,7 @@ func registerSpells() {
 	// Thought Collapse {1}{U}{U}
 	// Instant
 	// Counter target spell. Its controller mills three cards.
-	Register("Thought Collapse", func() Card {
+	Register("Thought Collapse", func() *Card {
 		return NewInstant("Thought Collapse", "{1}{U}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), FuncEffect(
 				"counter spell; its controller mills 3",
@@ -1902,7 +1902,7 @@ func registerSpells() {
 	// Instant
 	// Target player mills two cards.
 	// Draw a card.
-	Register("Thought Scour", func() Card {
+	Register("Thought Scour", func() *Card {
 		return NewInstant("Thought Scour", "{U}",
 			NewTargetedSpell(TargetPlayer(), CompositeEffects(
 				"target mills two; draw one",
@@ -1915,7 +1915,7 @@ func registerSpells() {
 	// Time to Feed {2}{G}
 	// Sorcery
 	// Choose target creature an opponent controls. When that creature dies this turn, you gain 3 life. Target creature you control fights that creature.
-	Register("Time to Feed", func() Card {
+	Register("Time to Feed", func() *Card {
 		return NewSorcery("Time to Feed", "{2}{G}",
 			NewMultiTargetSpell(
 				[]Target{TargetCreatureOpponentControls(), TargetCreatureYouControl()},
@@ -1944,7 +1944,7 @@ func registerSpells() {
 	// Choose one —
 	// • Target creature gains indestructible until end of turn.
 	// • Destroy target creature with toughness 4 or greater.
-	Register("Valorous Stance", func() Card {
+	Register("Valorous Stance", func() *Card {
 		c := NewInstant("Valorous Stance", "{1}{W}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{
@@ -1965,7 +1965,7 @@ func registerSpells() {
 	// Instant
 	// This spell can't be countered.
 	// Volcanic Fallout deals 2 damage to each creature and each player.
-	Register("Volcanic Fallout", func() Card {
+	Register("Volcanic Fallout", func() *Card {
 		return NewInstant("Volcanic Fallout", "{1}{R}{R}",
 			NewSpellAbility(CompositeEffects(
 				"2 damage to each creature and each player",
@@ -1979,7 +1979,7 @@ func registerSpells() {
 	// Voyage's End {1}{U}
 	// Instant
 	// Return target creature to its owner's hand. Scry 1.
-	Register("Voyage's End", func() Card {
+	Register("Voyage's End", func() *Card {
 		return NewInstant("Voyage's End", "{1}{U}",
 			NewTargetedSpell(TargetCreature(), ReturnToHandTarget(), Scry(Fixed(1))),
 		)
@@ -1988,7 +1988,7 @@ func registerSpells() {
 	// Whelming Wave {2}{U}{U}
 	// Sorcery
 	// Return all creatures to their owners' hands except for Krakens, Leviathans, Octopuses, and Serpents.
-	Register("Whelming Wave", func() Card {
+	Register("Whelming Wave", func() *Card {
 		return NewSorcery("Whelming Wave", "{2}{U}{U}",
 			NewSpellAbility(FuncEffect(
 				"bounce all creatures except Krakens, Leviathans, Octopuses, Serpents",
@@ -2029,7 +2029,7 @@ func registerSpells() {
 	// Instant
 	// Target creature gets +2/+2 and gains trample until end of turn.
 	// Draw a card.
-	Register("Wildsize", func() Card {
+	Register("Wildsize", func() *Card {
 		return NewInstant("Wildsize", "{2}{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+2/+2 and trample, draw a card",
@@ -2044,7 +2044,7 @@ func registerSpells() {
 	// Sorcery
 	// This spell costs {1} less to cast if you control a creature with flying.
 	// Draw two cards.
-	Register("Winged Words", func() Card {
+	Register("Winged Words", func() *Card {
 		return NewSorcery("Winged Words", "{2}{U}",
 			NewSpellAbility(drawSelfCard(2)),
 			WithSelfCostReduction(
@@ -2058,7 +2058,7 @@ func registerSpells() {
 	// Instant
 	// This spell costs {1} less to cast if you control a Wizard.
 	// Counter target spell.
-	Register("Wizard's Retort", func() Card {
+	Register("Wizard's Retort", func() *Card {
 		return NewInstant("Wizard's Retort", "{1}{U}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpell()),
 			WithSelfCostReduction(
@@ -2196,7 +2196,7 @@ func apnapOrder(g *Game) []uuid.UUID {
 }
 
 // hasSubType reports whether the card has the given subtype.
-func hasSubType(c Card, st string) bool {
+func hasSubType(c *Card, st string) bool {
 	return slices.Contains(c.SubTypes(), st)
 }
 
@@ -2212,7 +2212,7 @@ func millSelf(g *Game, p Player, n int) {
 }
 
 // creatureSpellFilter matches creature spells on the stack.
-var creatureSpellFilter = NewCardFilter("creature spell", func(c Card) bool {
+var creatureSpellFilter = NewCardFilter("creature spell", func(c *Card) bool {
 	return c.HasType(TypeCreature)
 })
 
@@ -2246,7 +2246,7 @@ func registerDoublecastDelayedTrigger(g *Game, sourceID, controller uuid.UUID) {
 }
 
 // instantOrSorcerySpellFilter matches instant or sorcery spells on the stack.
-var instantOrSorcerySpellFilter = NewCardFilter("instant or sorcery spell", func(c Card) bool {
+var instantOrSorcerySpellFilter = NewCardFilter("instant or sorcery spell", func(c *Card) bool {
 	return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 })
 

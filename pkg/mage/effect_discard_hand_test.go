@@ -10,7 +10,7 @@ func TestDiscardHandDiscardsSelectedPlayersHand(t *testing.T) {
 	g, a, _ := anteEffectTestGame(t)
 	one := ownedTestCard(a.PlayerID(), "one")
 	two := ownedTestCard(a.PlayerID(), "two")
-	a.SetHand([]Card{one, two})
+	a.SetHand([]*Card{one, two})
 
 	if err := DiscardHand().Apply(&EffectContext{Game: g, Controller: a.PlayerID(), SourceID: uuid.New()}); err != nil {
 		t.Fatal(err)

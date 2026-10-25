@@ -32,6 +32,46 @@
 // [PlayerReader], [BattlefieldReader], [ResolutionReader], [TurnReader],
 // [CombatReader], [TrackerReader], and [StackReader], which compose into [GameReader].
 //
+// # Card Definitions and Instances
+//
+// Runtime APIs use *Card to preserve the identity of each mutable card object.
+// Use [Card.Copy] for a distinct object and [Card.CloneInstance] for a search
+// branch. Both operations retain the shared definition.
+//
+// [CardDefinition] stores printed name, type line, mana cost, power, toughness,
+// colors, keywords, mode descriptions, and compiled [RuleDefinition] values.
+// [NewCardDefinition] copies its input containers. Read methods return private
+// copies. Source parsers must compile and validate syntax before this boundary.
+//
+// Each rule uses a function to create private ability context and target data.
+// The function and its callbacks must capture only immutable data. Effects and
+// costs must keep execution state on the game or source object. Definition
+// construction checks that rules create distinct abilities with clone support.
+// It cannot prove that a Go callback has no mutable captured data.
+//
+// [NewCard] creates private state from a shared definition. Card options
+// apply to that card. [CardDefinition.NewInstance] also assigns an owner.
+// It creates a [Card] with a new identity and
+// an owner. [Card.Copy] creates another identity. For search branches,
+// [Card.CloneInstance] preserves identity and copies ability state.
+// [Game.Clone] keeps references to each instance consistent within the branch.
+// Definitions are shared. Battlefield state stays on [Permanent]. Targets,
+// selected modes, X, payments, and distributions stay on [StackObject] or in
+// local announcement state. Target requirements do not store announcement choices.
+//
+// [Registry.RegisterDefinition] and [Registry.RegisterDefinitions] publish
+// definitions. Batch registration rejects conflicts before it changes the registry.
+// [Registry.CreateInstance] assigns an owner. [Registry.CreateCard] also accepts
+// definition entries and creates an instance with no assigned owner.
+//
+// Existing [Card] constructors and factory registrations remain supported.
+// Factory-built cards retain their construction data until their definitions
+// are migrated. Definition-backed cards use private characteristic snapshots
+// for the legacy Card mutation API. These snapshots contain characteristic
+// values only. Identity and execution state stay on Card. New battlefield
+// effects must change Permanent state or use continuous effects. These adapters
+// can be removed after legacy construction and characteristic changes migrate.
+//
 // # Controllers and Layer 2
 //
 // A [Permanent] has a default controller and a computed controller.

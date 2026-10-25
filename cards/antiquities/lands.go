@@ -17,7 +17,7 @@ func registerLands() {
 	// {1}: Mishra's Factory becomes a 2/2 Assembly-Worker artifact creature until end of turn.
 	// It's still a land.
 	// {T}: Target Assembly-Worker creature gets +1/+1 until end of turn.
-	Register("Mishra's Factory", func() Card {
+	Register("Mishra's Factory", func() *Card {
 		return NewLand("Mishra's Factory",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -57,7 +57,7 @@ func registerLands() {
 	// Mishra's Workshop
 	// Land
 	// {T}: Add {C}{C}{C}. Spend this mana only to cast artifact spells.
-	Register("Mishra's Workshop", func() Card {
+	Register("Mishra's Workshop", func() *Card {
 		return NewLand("Mishra's Workshop",
 			WithMultiManaAbility(ManaProduction{
 				Color:       Colorless,
@@ -71,7 +71,7 @@ func registerLands() {
 	// Land
 	// {T}: Add {C}.
 	// {T}, Sacrifice Strip Mine: Destroy target land.
-	Register("Strip Mine", func() Card {
+	Register("Strip Mine", func() *Card {
 		return NewLand("Strip Mine",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -86,7 +86,7 @@ func registerLands() {
 	// Urza's Mine
 	// Land — Urza's Mine
 	// {T}: Add {C}. If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead.
-	Register("Urza's Mine", func() Card {
+	Register("Urza's Mine", func() *Card {
 		return NewLand("Urza's Mine",
 			WithSubTypes("Urza's", "Mine"),
 			WithActivatedAbility(
@@ -115,7 +115,7 @@ func registerLands() {
 	// Urza's Power Plant
 	// Land — Urza's Power-Plant
 	// {T}: Add {C}. If you control an Urza's Mine and an Urza's Tower, add {C}{C} instead.
-	Register("Urza's Power Plant", func() Card {
+	Register("Urza's Power Plant", func() *Card {
 		return NewLand("Urza's Power Plant",
 			WithSubTypes("Urza's", "Power-Plant"),
 			WithActivatedAbility(
@@ -144,7 +144,7 @@ func registerLands() {
 	// Urza's Tower
 	// Land — Urza's Tower
 	// {T}: Add {C}. If you control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C} instead.
-	Register("Urza's Tower", func() Card {
+	Register("Urza's Tower", func() *Card {
 		return NewLand("Urza's Tower",
 			WithSubTypes("Urza's", "Tower"),
 			WithActivatedAbility(

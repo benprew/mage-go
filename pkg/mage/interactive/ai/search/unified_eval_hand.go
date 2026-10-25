@@ -20,7 +20,7 @@ func handValue(g *mage.Game, p mage.Player) float64 {
 	return v
 }
 
-func cardHandValue(g *mage.Game, p mage.Player, c mage.Card) float64 {
+func cardHandValue(g *mage.Game, p mage.Player, c *mage.Card) float64 {
 	if c.HasType(core.TypeLand) {
 		return wLandInHand
 	}
@@ -66,7 +66,7 @@ func cardHandValue(g *mage.Game, p mage.Player, c mage.Card) float64 {
 // Order matters: damage > boost > life-gain > single-target removal. Damage
 // outranks "detrimental" because damage effects are also OutcomeDetriment but
 // have a more specific valuation model (lethal-on-creature vs. finisher).
-func spellEffectValue(g *mage.Game, p mage.Player, c mage.Card) (float64, bool) {
+func spellEffectValue(g *mage.Game, p mage.Player, c *mage.Card) (float64, bool) {
 	action := spellAction(c)
 	if action == nil {
 		return 0, false
@@ -112,7 +112,7 @@ func spellEffectValue(g *mage.Game, p mage.Player, c mage.Card) (float64, bool) 
 
 // spellAction returns the card's spell ability (the one cast from hand), or
 // nil if the card has no spell ability (e.g. a land).
-func spellAction(c mage.Card) *mage.ActionDefinition {
+func spellAction(c *mage.Card) *mage.ActionDefinition {
 	for _, ab := range c.Abilities() {
 		if a, ok := ab.(*mage.ActionDefinition); ok && a.Kind() == mage.ActionSpell {
 			return a
@@ -142,7 +142,7 @@ func topLifeGain(e mage.Effect) int {
 // engine's Target.Possible to enumerate legal targets. This automatically
 // honors target-filter restrictions like Terror's "non-black, non-artifact"
 // without us re-implementing them.
-func removalValueFromTarget(g *mage.Game, owner mage.Player, c mage.Card, t mage.Target) float64 {
+func removalValueFromTarget(g *mage.Game, owner mage.Player, c *mage.Card, t mage.Target) float64 {
 	opp := g.GetOpponent(owner.PlayerID())
 	if opp == nil {
 		return wSpellInHand

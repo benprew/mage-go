@@ -14,7 +14,7 @@ import (
 func TestETB_TargetOpponentDiscards(t *testing.T) {
 	const cardName = "ETB Target Opponent Discards"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{3}{B}", 1, 3,
 				mage.WithSubTypes("Specter"),
 				mage.WithAbility(

@@ -31,7 +31,7 @@ func (e *DiscardHandEffect) Apply(ctx *EffectContext) error {
 		if player == nil {
 			continue
 		}
-		for _, card := range append([]Card(nil), player.Hand()...) {
+		for _, card := range append([]*Card(nil), player.Hand()...) {
 			ctx.Game.PlayerDiscardByEffect(player, card.ID(), ctx.SourceID)
 		}
 	}

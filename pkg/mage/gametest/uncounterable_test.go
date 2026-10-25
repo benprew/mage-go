@@ -15,7 +15,7 @@ func registerUncounterableCards() {
 	uncounterableOnce.Do(func() {
 		// A vanilla creature spell that is intrinsically uncounterable.
 		if !mage.CardRegistered("Test Uncounterable Bear") {
-			mage.Register("Test Uncounterable Bear", func() mage.Card {
+			mage.Register("Test Uncounterable Bear", func() *mage.Card {
 				return mage.NewCreature("Test Uncounterable Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"),
 					mage.WithUncounterable(),
@@ -25,14 +25,14 @@ func registerUncounterableCards() {
 		// A vanilla green creature spell that should benefit from a static
 		// "green spells you control can't be countered" filter.
 		if !mage.CardRegistered("Test Vanilla Green Bear") {
-			mage.Register("Test Vanilla Green Bear", func() mage.Card {
+			mage.Register("Test Vanilla Green Bear", func() *mage.Card {
 				return mage.NewCreature("Test Vanilla Green Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"))
 			})
 		}
 		// A simple counterspell.
 		if !mage.CardRegistered("Test Counterspell") {
-			mage.Register("Test Counterspell", func() mage.Card {
+			mage.Register("Test Counterspell", func() *mage.Card {
 				return mage.NewInstant("Test Counterspell", "{U}{U}",
 					mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpell()),
 				)
@@ -41,7 +41,7 @@ func registerUncounterableCards() {
 		// A permanent that grants uncounterable to its controller's green
 		// spells while on the battlefield.
 		if !mage.CardRegistered("Test Green Shield") {
-			mage.Register("Test Green Shield", func() mage.Card {
+			mage.Register("Test Green Shield", func() *mage.Card {
 				return mage.NewEnchantment("Test Green Shield", "{G}",
 					mage.WithStaticAbility(mage.RegisterUncounterableStatic(
 						func(g *mage.Game, obj *mage.StackObject) bool {

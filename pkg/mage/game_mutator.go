@@ -34,11 +34,11 @@ type ResolutionReader interface {
 	ModeValue() int
 	EventAmount() int
 	EventSourceID() uuid.UUID
-	GetResolvingCard() Card
+	GetResolvingCard() *Card
 	ResolvingCastZone() Zone
 	ResolvingCastContext() *CastContext
 	GetResolvingTargets() []uuid.UUID
-	LastExiledCard() Card
+	LastExiledCard() *Card
 }
 
 // TurnReader provides read-only queries for turn and active player progression.
@@ -91,7 +91,7 @@ type GameReader interface {
 	TrackerReader
 	StackReader
 
-	FindCardAnywhere(uuid.UUID) Card
+	FindCardAnywhere(uuid.UUID) *Card
 	LookupObject(uuid.UUID) LKIView
 	GetArtifactUntapMax() int
 	HypotheticalMana(uuid.UUID) int
@@ -117,10 +117,10 @@ var (
 // --- GameReader proxy methods on *Game ---
 
 // LastExiledCard returns the most recently exiled card recorded during cost payment or effect resolution.
-func (g *Game) LastExiledCard() Card { return g.resolution.LastExiledCard() }
+func (g *Game) LastExiledCard() *Card { return g.resolution.LastExiledCard() }
 
 // SetLastExiledCard sets the most recently exiled card.
-func (g *Game) SetLastExiledCard(c Card) { g.resolution.SetLastExiledCard(c) }
+func (g *Game) SetLastExiledCard(c *Card) { g.resolution.SetLastExiledCard(c) }
 
 // AllPlayers returns all players in the game.
 func (g *Game) AllPlayers() []Player { return g.players }
@@ -141,7 +141,7 @@ func (g *Game) EventAmount() int { return g.resolution.EventAmount() }
 func (g *Game) EventSourceID() uuid.UUID { return g.resolution.EventSourceID() }
 
 // GetResolvingCard returns the card currently being resolved from the stack.
-func (g *Game) GetResolvingCard() Card { return g.resolution.ResolvingCard() }
+func (g *Game) GetResolvingCard() *Card { return g.resolution.ResolvingCard() }
 
 // ResolvingCastZone returns the zone the resolving spell was cast from
 // (CR 601.2a). Returns ZoneAny when no spell is resolving or the resolving
@@ -1025,7 +1025,7 @@ func (g *Game) ExecuteCombatDamage() {
 
 // PutOnBattlefieldForSetup adds a starting permanent without state-trigger checks.
 // State triggers observe the complete fixture when game actions begin.
-func (g *Game) PutOnBattlefieldForSetup(card Card, controller uuid.UUID) *Permanent {
+func (g *Game) PutOnBattlefieldForSetup(card *Card, controller uuid.UUID) *Permanent {
 	paused := g.triggers.stateChecksPaused
 	g.triggers.stateChecksPaused = true
 	defer func() { g.triggers.stateChecksPaused = paused }()

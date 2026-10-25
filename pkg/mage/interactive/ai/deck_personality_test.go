@@ -8,7 +8,7 @@ import (
 )
 
 func TestInferPersonalityFromCards_Aggro(t *testing.T) {
-	cards := make([]mage.Card, 0, 22)
+	cards := make([]*mage.Card, 0, 22)
 	for range 16 {
 		cards = append(cards, mage.NewCreature("One Drop", "{W}", 2, 1))
 	}
@@ -23,7 +23,7 @@ func TestInferPersonalityFromCards_Aggro(t *testing.T) {
 }
 
 func TestInferPersonalityFromCards_Burn(t *testing.T) {
-	cards := make([]mage.Card, 0, 18)
+	cards := make([]*mage.Card, 0, 18)
 	for range 14 {
 		cards = append(cards, mage.NewInstant("Bolt", "{R}",
 			mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -40,7 +40,7 @@ func TestInferPersonalityFromCards_Burn(t *testing.T) {
 }
 
 func TestInferPersonalityFromCards_Control(t *testing.T) {
-	cards := make([]mage.Card, 0, 17)
+	cards := make([]*mage.Card, 0, 17)
 	for range 8 {
 		cards = append(cards, mage.NewSorcery("Destroy", "{2}{B}",
 			mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),

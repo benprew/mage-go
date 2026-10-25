@@ -17,7 +17,7 @@ func registerEnchantments() {
 	// Enchantment
 	// When this enchantment enters, create a 0/0 green and blue Fractal creature token. Put three +1/+1 counters on it.
 	// At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains vigilance until end of turn.
-	Register("Additive Evolution", func() Card {
+	Register("Additive Evolution", func() *Card {
 		return NewEnchantment("Additive Evolution", "{3}{G}{G}",
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("create 0/0 green and blue Fractal token, put three +1/+1 counters on it",
@@ -49,7 +49,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever you gain life, put a growth counter on this enchantment.
 	// As long as there are five or more growth counters on this enchantment, creatures you control get +3/+3.
-	Register("Comforting Counsel", func() Card {
+	Register("Comforting Counsel", func() *Card {
 		lifeGainTrigger := WheneverYouGainLifeTrigger(
 			AddCounters(Growth, Fixed(1)).Targeting(ToSource()),
 			false,
@@ -82,7 +82,7 @@ func registerEnchantments() {
 	// Graduation Day {W}
 	// Enchantment
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control.
-	Register("Graduation Day", func() Card {
+	Register("Graduation Day", func() *Card {
 		return NewEnchantment("Graduation Day", "{W}",
 			WithAbility(
 				WheneverYouCastInstantOrSorceryTargetingCreatureTrigger(
@@ -97,7 +97,7 @@ func registerEnchantments() {
 	// Enchantment
 	// When this enchantment enters, create a 2/2 red and white Spirit creature token.
 	// Whenever you attack, if a card left your graveyard this turn, target attacking creature gets +2/+0 until end of turn.
-	Register("Living History", func() Card {
+	Register("Living History", func() *Card {
 		return NewEnchantment("Living History", "{1}{R}",
 			WithAbility(EntersBattlefieldTrigger(
 				CreateColoredToken("Spirit Token", 2, 2,
@@ -126,8 +126,8 @@ func registerEnchantments() {
 	// Enchantment
 	// When this enchantment enters, return target nonland permanent card with mana value 3 or less from your graveyard to the battlefield.
 	// At the beginning of your end step, if a card left your graveyard this turn, draw a card.
-	Register("Primary Research", func() Card {
-		nonlandMV3OrLess := NewCardFilter("nonland permanent card with mana value 3 or less", func(c Card) bool {
+	Register("Primary Research", func() *Card {
+		nonlandMV3OrLess := NewCardFilter("nonland permanent card with mana value 3 or less", func(c *Card) bool {
 			if c.HasType(TypeLand) {
 				return false
 			}

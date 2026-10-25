@@ -490,7 +490,7 @@ func (v countZoneValue) Resolve(g GameReader, sourceID, controller uuid.UUID, ta
 		if p == nil {
 			continue
 		}
-		var cards []Card
+		var cards []*Card
 		switch v.zone {
 		case ZoneHand:
 			cards = p.Hand()

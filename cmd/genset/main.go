@@ -352,7 +352,7 @@ func creatureStub(c Card) string {
 		optStr += "\t\t"
 	}
 
-	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() *Card {\n", c.Name)
 	fmt.Fprintf(&b, "\t\treturn NewCreature(%q, %q, %s, %s,%s)\n",
 		c.Name, c.ManaCost, ptValue(c.Power), ptValue(c.Toughness), optStr)
 	b.WriteString("\t})\n")
@@ -363,7 +363,7 @@ func artifactStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() *Card {\n", c.Name)
 	fmt.Fprintf(&b, "\t\treturn NewArtifact(%q, %q)\n", c.Name, c.ManaCost)
 	b.WriteString("\t})\n")
 	return b.String()
@@ -373,7 +373,7 @@ func enchantmentStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() *Card {\n", c.Name)
 	if isAura(c) {
 		fmt.Fprintf(&b, "\t\treturn NewAura(%q, %q)\n", c.Name, c.ManaCost)
 	} else if isWorld(c) {
@@ -391,7 +391,7 @@ func spellStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() *Card {\n", c.Name)
 	if isInstant(c) {
 		fmt.Fprintf(&b, "\t\treturn NewInstant(%q, %q,\n", c.Name, c.ManaCost)
 	} else {
@@ -407,7 +407,7 @@ func landStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() *Card {\n", c.Name)
 	if isLegendary(c) {
 		fmt.Fprintf(&b, "\t\treturn NewLand(%q,\n", c.Name)
 		fmt.Fprintf(&b, "\t\t\tWithSuperTypes(SuperLegendary),\n")

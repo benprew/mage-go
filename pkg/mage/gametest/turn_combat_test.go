@@ -20,7 +20,7 @@ func registerRemovalBolt(name string) {
 	if mage.CardRegistered(name) {
 		return
 	}
-	mage.Register(name, func() mage.Card {
+	mage.Register(name, func() *mage.Card {
 		return mage.NewInstant(name, "{R}",
 			mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))))
 	})
@@ -33,7 +33,7 @@ func registerRemovalTapRay(name string) {
 	if mage.CardRegistered(name) {
 		return
 	}
-	mage.Register(name, func() mage.Card {
+	mage.Register(name, func() *mage.Card {
 		return mage.NewInstant(name, "{U}",
 			mage.NewTargetedSpell(mage.TargetCreature(), mage.Tap()))
 	})
@@ -47,7 +47,7 @@ func registerRemovalCantAttack(name string) {
 	if mage.CardRegistered(name) {
 		return
 	}
-	mage.Register(name, func() mage.Card {
+	mage.Register(name, func() *mage.Card {
 		return mage.NewInstant(name, "{W}",
 			mage.NewTargetedSpell(mage.TargetCreature(), mage.PreventAttackingTargetUntilEndOfTurn()))
 	})
@@ -60,7 +60,7 @@ func registerRemovalBear(name string, power, toughness int) {
 	if mage.CardRegistered(name) {
 		return
 	}
-	mage.Register(name, func() mage.Card {
+	mage.Register(name, func() *mage.Card {
 		return mage.NewCreature(name, "{2}{G}", power, toughness, mage.WithSubTypes("Bear"))
 	})
 }
@@ -112,7 +112,7 @@ func TestCombatPhaseGeneral(t *testing.T) {
 	t.Run("CR 511.2 at-end-of-combat triggers fire during end-of-combat step", func(t *testing.T) {
 		name := "Combat EOC Lifegain"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{2}", 1, 1,
 					mage.WithSubTypes("Spirit"),
 					mage.WithAbility(mage.NewTriggered(core.EvtEndOfCombat, false,
@@ -134,7 +134,7 @@ func TestCombatPhaseGeneral(t *testing.T) {
 	t.Run("CR 511.3 creatures removed from combat after end-of-combat step", func(t *testing.T) {
 		attacker := "ECU2 511.3 Attacker"
 		if !mage.CardRegistered(attacker) {
-			mage.Register(attacker, func() mage.Card {
+			mage.Register(attacker, func() *mage.Card {
 				return mage.NewCreature(attacker, "{2}{G}", 3, 3, mage.WithSubTypes("Beast"))
 			})
 		}

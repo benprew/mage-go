@@ -17,7 +17,7 @@ import (
 func TestLKI_DeathTriggerReadsOpponentController(t *testing.T) {
 	const cardName = "LKI Death Sentinel"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.NewTriggered(core.EvtZoneChange, false,
 					mage.GainLife(1),
@@ -54,7 +54,7 @@ func TestLKI_DirectAccessor(t *testing.T) {
 	captured := false
 	var capturedController uuid.UUID
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.NewTriggered(core.EvtZoneChange, false,
 					mage.FuncEffect("probe", mage.EffectProperties{},

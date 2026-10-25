@@ -117,7 +117,7 @@ type GameMsg struct {
 
 type undoSnapshot struct {
 	valid          bool
-	hand           []mage.Card
+	hand           []*mage.Card
 	manaPool       []core.Mana
 	landsPlayed    int
 	battlefieldLen int

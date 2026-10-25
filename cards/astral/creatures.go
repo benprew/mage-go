@@ -69,7 +69,7 @@ func registerCreatures() {
 	// 2/2
 	// When Aswan Jaguar comes into play, choose a random creature type from those in target opponent's deck.
 	// {G}{G}, {T}: Bury target creature of the chosen type.
-	Register("Aswan Jaguar", func() Card {
+	Register("Aswan Jaguar", func() *Card {
 		return NewCreature("Aswan Jaguar", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Jaguar"),
 			WithAbility(
@@ -90,7 +90,7 @@ func registerCreatures() {
 	// 1/3
 	// Flying
 	// {1}{G}{G}: Play a random effect.
-	Register("Faerie Dragon", func() Card {
+	Register("Faerie Dragon", func() *Card {
 		return NewCreature("Faerie Dragon", "{2}{G}{G}", 1, 3,
 			WithSubTypes("Dragon"), WithKeyword(Flying),
 			WithActivatedAbility(
@@ -106,7 +106,7 @@ func registerCreatures() {
 	// Summon Goblin
 	// 1/1
 	// {2}, {T}, Pay {R} for each target: Tap any number of random target creatures. Goblins tapped in this way do not untap during their controllers' next untap phases.
-	Register("Goblin Polka Band", func() Card {
+	Register("Goblin Polka Band", func() *Card {
 		return NewCreature("Goblin Polka Band", "{R}{R}", 1, 1,
 			WithSubTypes("Goblin"),
 			WithActivatedAbility(
@@ -138,7 +138,7 @@ func registerCreatures() {
 	// Flying
 	// During your upkeep, Prismatic Dragon becomes a random color permanently.
 	// {2}: Prismatic Dragon becomes a random color permanently.
-	Register("Prismatic Dragon", func() Card {
+	Register("Prismatic Dragon", func() *Card {
 		return NewCreature("Prismatic Dragon", "{2}{W}{W}", 2, 3,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
@@ -153,7 +153,7 @@ func registerCreatures() {
 	// When Rainbow Knights comes into play, it gains protection from a random color permanently.
 	// {1}: First strike until end of turn.
 	// {W}{W}: +0/+0, +1/+0 or +2/+0 until end of turn chosen at random.
-	Register("Rainbow Knights", func() Card {
+	Register("Rainbow Knights", func() *Card {
 		return NewCreature("Rainbow Knights", "{W}{W}", 2, 1,
 			WithSubTypes("Knights"),
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(

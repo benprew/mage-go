@@ -25,7 +25,7 @@ import (
 // "Look at" and "reveal" both use this primitive at the engine level — the
 // distinction (private knowledge vs public knowledge) is a UI concern that
 // the engine does not currently model.
-func (g *Game) RevealTopN(p Player, n int) []Card {
+func (g *Game) RevealTopN(p Player, n int) []*Card {
 	if p == nil || n <= 0 {
 		return nil
 	}
@@ -34,7 +34,7 @@ func (g *Game) RevealTopN(p Player, n int) []Card {
 		return nil
 	}
 	count := min(n, len(lib))
-	out := make([]Card, count)
+	out := make([]*Card, count)
 	copy(out, lib[:count])
 	return out
 }
@@ -42,7 +42,7 @@ func (g *Game) RevealTopN(p Player, n int) []Card {
 // RemoveTopN removes and returns the top n cards of the player's library.
 // If the library has fewer than n cards, it returns whatever is present.
 // Used together with relocation primitives such as PutOnBottomInRandomOrder.
-func (g *Game) RemoveTopN(p Player, n int) []Card {
+func (g *Game) RemoveTopN(p Player, n int) []*Card {
 	if p == nil || n <= 0 {
 		return nil
 	}
@@ -51,9 +51,9 @@ func (g *Game) RemoveTopN(p Player, n int) []Card {
 		return nil
 	}
 	count := min(n, len(lib))
-	taken := make([]Card, count)
+	taken := make([]*Card, count)
 	copy(taken, lib[:count])
-	rest := make([]Card, len(lib)-count)
+	rest := make([]*Card, len(lib)-count)
 	copy(rest, lib[count:])
 	p.SetLibrary(rest)
 	return taken
@@ -74,12 +74,12 @@ func (g *Game) RemoveTopN(p Player, n int) []Card {
 // chosen card from the library and place the rest somewhere; the typical
 // pattern is RemoveTopN followed by inserting the chosen card into the
 // destination zone and bottoming the rest in random order.
-func (g *Game) RevealAndPickFromTop(chooser, owner Player, n int, filter CardFilter, mayDecline bool, reason string) (chosen Card, revealed []Card) {
+func (g *Game) RevealAndPickFromTop(chooser, owner Player, n int, filter CardFilter, mayDecline bool, reason string) (chosen *Card, revealed []*Card) {
 	revealed = g.RevealTopN(owner, n)
 	if len(revealed) == 0 {
 		return nil, revealed
 	}
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range revealed {
 		if filter.Match(c) {
 			candidates = append(candidates, c)
@@ -101,17 +101,17 @@ func (g *Game) RevealAndPickFromTop(chooser, owner Player, n int, filter CardFil
 // order" used by Aladdin's Lamp, Commune with Dinosaurs, Muxus, etc.). The
 // cards must NOT currently be in the library. The caller is responsible for
 // having removed them first (typically via RemoveTopN).
-func (g *Game) PutOnBottomInRandomOrder(p Player, cards []Card) {
+func (g *Game) PutOnBottomInRandomOrder(p Player, cards []*Card) {
 	if p == nil || len(cards) == 0 {
 		return
 	}
-	shuffled := make([]Card, len(cards))
+	shuffled := make([]*Card, len(cards))
 	copy(shuffled, cards)
 	rand.Shuffle(len(shuffled), func(i, j int) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 	lib := p.Library()
-	newLib := make([]Card, 0, len(lib)+len(shuffled))
+	newLib := make([]*Card, 0, len(lib)+len(shuffled))
 	newLib = append(newLib, lib...)
 	newLib = append(newLib, shuffled...)
 	p.SetLibrary(newLib)
@@ -131,20 +131,20 @@ func (g *Game) PutOnBottomInRandomOrder(p Player, cards []Card) {
 //
 // Powers Oracle phrases of the form "Put the rest on the bottom of your
 // library in any order" (Commune with Dinosaurs, Mausoleum Secrets, etc.).
-func (g *Game) PutOnBottomInChosenOrder(p Player, cards []Card) {
+func (g *Game) PutOnBottomInChosenOrder(p Player, cards []*Card) {
 	if p == nil || len(cards) == 0 {
 		return
 	}
-	snapshot := make([]Card, len(cards))
+	snapshot := make([]*Card, len(cards))
 	copy(snapshot, cards)
 	bottom, topOrder := p.ChooseScryPlacement(snapshot, "put on bottom in any order", g)
 	bottom, topOrder = validateScryPlacement(snapshot, bottom, topOrder)
 
-	idToCard := make(map[uuid.UUID]Card, len(snapshot))
+	idToCard := make(map[uuid.UUID]*Card, len(snapshot))
 	for _, c := range snapshot {
 		idToCard[c.ID()] = c
 	}
-	ordered := make([]Card, 0, len(snapshot))
+	ordered := make([]*Card, 0, len(snapshot))
 	for _, id := range bottom {
 		if c, ok := idToCard[id]; ok {
 			ordered = append(ordered, c)
@@ -156,7 +156,7 @@ func (g *Game) PutOnBottomInChosenOrder(p Player, cards []Card) {
 		}
 	}
 	lib := p.Library()
-	newLib := make([]Card, 0, len(lib)+len(ordered))
+	newLib := make([]*Card, 0, len(lib)+len(ordered))
 	newLib = append(newLib, lib...)
 	newLib = append(newLib, ordered...)
 	p.SetLibrary(newLib)
@@ -165,12 +165,12 @@ func (g *Game) PutOnBottomInChosenOrder(p Player, cards []Card) {
 // PutOnTopInChosenOrder places the given cards on top of the player's
 // library in the supplied order (first element becomes the new top card).
 // The cards must NOT currently be in the library.
-func (g *Game) PutOnTopInChosenOrder(p Player, cards []Card) {
+func (g *Game) PutOnTopInChosenOrder(p Player, cards []*Card) {
 	if p == nil || len(cards) == 0 {
 		return
 	}
 	lib := p.Library()
-	newLib := make([]Card, 0, len(lib)+len(cards))
+	newLib := make([]*Card, 0, len(lib)+len(cards))
 	newLib = append(newLib, cards...)
 	newLib = append(newLib, lib...)
 	p.SetLibrary(newLib)
@@ -181,12 +181,12 @@ func (g *Game) PutOnTopInChosenOrder(p Player, cards []Card) {
 // engine does not currently track per-player private knowledge — but cards
 // often phrase the effect as "target opponent reveals their hand" and we
 // preserve that vocabulary for clarity at the call site.
-func (g *Game) RevealHand(viewer, owner Player) []Card {
+func (g *Game) RevealHand(viewer, owner Player) []*Card {
 	if owner == nil {
 		return nil
 	}
 	hand := owner.Hand()
-	out := make([]Card, len(hand))
+	out := make([]*Card, len(hand))
 	copy(out, hand)
 	return out
 }
@@ -200,12 +200,12 @@ func (g *Game) RevealHand(viewer, owner Player) []Card {
 // This is the primitive behind "target opponent reveals their hand. You
 // choose a [filter] card from it. That player discards that card." (Corpse
 // Traders, Entomber Exarch mode 2).
-func (g *Game) PickFromHand(chooser, owner Player, filter CardFilter, mayDecline bool, reason string) Card {
+func (g *Game) PickFromHand(chooser, owner Player, filter CardFilter, mayDecline bool, reason string) *Card {
 	if chooser == nil || owner == nil {
 		return nil
 	}
 	hand := owner.Hand()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range hand {
 		if filter.Match(c) {
 			candidates = append(candidates, c)

@@ -7,21 +7,21 @@ package mage
 // each card-side card can wire up via small CardOptions:
 //
 //	Prepared    — ETB grants a sorcery-speed "cast a copy of [spell] for free"
-//	              ability that unprepares the creature on use.
+//				  ability that unprepares the creature on use.
 //	Repartee    — Triggered ability shorthand: "Whenever you cast an instant
-//	              or sorcery spell that targets a creature, …".
+//				  or sorcery spell that targets a creature, …".
 //	Paradigm    — Self-exile-on-resolve plus a recurring main-phase free copy
-//	              from exile, gated on "after you first resolve a spell with
-//	              this name".
+//				  from exile, gated on "after you first resolve a spell with
+//				  this name".
 //	Opus        — Cast-trigger shorthand whose effect closure receives the
-//	              total amount of mana the controller spent to cast that
-//	              spell (CR 118.9 — colored + generic together).
+//				  total amount of mana the controller spent to cast that
+//				  spell (CR 118.9 — colored + generic together).
 //	Increment   — Cast-trigger shorthand: "if mana spent > self.power or
-//	              self.toughness, put a +1/+1 counter on this".
+//				  self.toughness, put a +1/+1 counter on this".
 //	Infusion    — Convenience flag for "if you gained life this turn" — the
-//	              effect closure receives the per-turn life-gain count.
+//				  effect closure receives the per-turn life-gain count.
 //	Grandeur    — Activated ability whose cost includes "discard another
-//	              card with the same name as this".
+//				  card with the same name as this".
 //
 // All helpers are safe to combine with normal CardOptions / triggers; they
 // produce regular Ability / Cost / Effect values.
@@ -76,7 +76,7 @@ func (g *Game) SetPrepared(permID uuid.UUID, prepared bool) {
 // EvtSpellCast, and unprepares the source permanent. Returns an error if the
 // permanent can't be found, isn't prepared, or the spell card cannot be
 // constructed.
-func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory func() Card) error {
+func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory func() *Card) error {
 	perm := g.FindPermanent(permID)
 	if perm == nil {
 		return fmt.Errorf("permanent not found")
@@ -128,8 +128,8 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 //
 // Cards generally still want to declare the front-face creature stats with
 // NewCreature; WithPreparedSpell layers the Prepared mechanics on top.
-func WithPreparedSpell(spellFactory func() Card) CardOption {
-	return func(c *BaseCard) {
+func WithPreparedSpell(spellFactory func() *Card) CardOption {
+	return func(c *Card) {
 		// Mark the card with the keyword seed so AttrPrepared shows in keyword
 		// listings / cardHasKeyword lookups (e.g. for a hypothetical
 		// "creatures with prepare spells" filter — Biblioplex Tomekeeper).
@@ -170,13 +170,13 @@ func WithPreparedSpell(spellFactory func() Card) CardOption {
 // preparedSpellFactories stores the spell factory associated with a
 // Prepared creature card, keyed by card name. Card-level lookup
 // (HasPreparedSpell) is per-card-name rather than per-instance because each
-// invocation of a card factory creates a fresh *BaseCard pointer, so a
+// invocation of a card factory creates a fresh *Card pointer, so a
 // pointer-keyed map would miss every lookup against a card on the battlefield.
-var preparedSpellFactories = map[string]func() Card{}
+var preparedSpellFactories = map[string]func() *Card{}
 
 // HasPreparedSpell reports whether the given card was registered with a
 // Prepared spell side via WithPreparedSpell.
-func HasPreparedSpell(c Card) bool {
+func HasPreparedSpell(c *Card) bool {
 	if c == nil {
 		return false
 	}
@@ -402,7 +402,7 @@ func (c *discardAnotherNamedSelfCost) sourceName(sourceID uuid.UUID, g *Game) st
 	return ""
 }
 
-func (c *discardAnotherNamedSelfCost) findCandidate(sourceID, controller uuid.UUID, g *Game) Card {
+func (c *discardAnotherNamedSelfCost) findCandidate(sourceID, controller uuid.UUID, g *Game) *Card {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil

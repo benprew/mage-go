@@ -12,8 +12,8 @@ func init() {
 
 // sacLandFactory creates a sacrifice land that enters tapped, taps for one mana
 // of the given color, and can be sacrificed (with tap) to add two mana of that color.
-func sacLandFactory(name string, color Color) func() Card {
-	return withExpansion(func() Card {
+func sacLandFactory(name string, color Color) func() *Card {
+	return withExpansion(func() *Card {
 		return NewLand(name,
 			WithKeyword(EntersTapped),
 			WithManaAbility(color),
@@ -29,8 +29,8 @@ func sacLandFactory(name string, color Color) func() Card {
 // storageLandFactory creates a storage land that enters tapped, may choose not to untap,
 // gains storage counters each upkeep while tapped, and taps to remove all storage counters
 // for mana of the given color.
-func storageLandFactory(name string, color Color) func() Card {
-	return withExpansion(func() Card {
+func storageLandFactory(name string, color Color) func() *Card {
+	return withExpansion(func() *Card {
 		return NewLand(name,
 			WithKeyword(EntersTapped),
 			WithKeyword(AttrMayNotUntap),
@@ -136,7 +136,7 @@ func registerLands() {
 	// Land
 	// {T}: Add one mana of any color. An opponent gains control of this land at the beginning of the next end step.
 	// TODO: implement
-	Register("Rainbow Vale", withExpansion(func() Card {
+	Register("Rainbow Vale", withExpansion(func() *Card {
 		return NewLand("Rainbow Vale")
 	}))
 
