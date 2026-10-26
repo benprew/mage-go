@@ -80,9 +80,7 @@ func (d *CardDefinition) SubTypes() []string      { return slices.Clone(d.printe
 func (d *CardDefinition) Power() int              { return d.printed.Power }
 func (d *CardDefinition) Toughness() int          { return d.printed.Toughness }
 func (d *CardDefinition) Colors() []Color         { return slices.Clone(d.printed.Colors) }
-func (d *CardDefinition) AttrSeeds() map[Attr]int { return maps.Clone(d.printed.Keywords) }
 func (d *CardDefinition) Modes() []string         { return slices.Clone(d.printed.Modes) }
-func (d *CardDefinition) Rules() []RuleDefinition { return slices.Clone(d.printed.Rules) }
 
 // NewInstance creates a card with a new identity and private ability state.
 func (d *CardDefinition) NewInstance(owner uuid.UUID) *Card {

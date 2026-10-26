@@ -36,6 +36,34 @@ func (a *BaseAbility) Controller() uuid.UUID      { return a.controller }
 func (a *BaseAbility) SetController(id uuid.UUID) { a.controller = id }
 func (a *BaseAbility) Type() AbilityType          { return a.abilityType }
 
+// AttributeAbility is a static ability whose behavior uses an attribute.
+type AttributeAbility struct {
+	BaseAbility
+	attribute Attr
+}
+
+// NewAttributeAbility creates a static ability for an ability attribute.
+func NewAttributeAbility(attribute Attr) *AttributeAbility {
+	if !IsAbilityAttr(attribute) {
+		panic("mage: attribute does not represent an ability")
+	}
+	return &AttributeAbility{
+		BaseAbility: BaseAbility{id: uuid.New(), abilityType: AbilityStatic},
+		attribute:   attribute,
+	}
+}
+
+// Attribute returns the attribute that this ability supplies.
+func (a *AttributeAbility) Attribute() Attr { return a.attribute }
+
+// AbilityAttribute returns the attribute of an ability, or zero if it has none.
+func AbilityAttribute(a Ability) Attr {
+	if provider, ok := UnwrapAbility(a).(interface{ Attribute() Attr }); ok {
+		return provider.Attribute()
+	}
+	return 0
+}
+
 // ProtectionAbility grants protection from specific colors.
 type ProtectionAbility struct {
 	BaseAbility

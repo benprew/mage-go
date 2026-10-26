@@ -508,8 +508,8 @@ func (em *EffectManager) Apply(g *Game) {
 			for _, a := range p.RuntimeAbilities {
 				existing[a.AbilityID()] = true
 			}
-			restored := make([]Ability, 0, len(p.Card.Abilities())+len(p.RuntimeAbilities))
-			for _, a := range p.Card.Abilities() {
+			restored := make([]Ability, 0, len(p.Card.abilities)+len(p.RuntimeAbilities))
+			for _, a := range p.Card.abilities {
 				if !existing[a.AbilityID()] {
 					restored = append(restored, a)
 				}

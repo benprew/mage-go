@@ -242,7 +242,7 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	// Target-aware X values: add toughness values of opponent creatures
 	// and opponent life total if the spell deals damage.
 	isDamageSpell := false
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue

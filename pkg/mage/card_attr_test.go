@@ -124,8 +124,7 @@ func TestNewToken_HasAttr_IsCreature(t *testing.T) {
 	}
 }
 
-// TestWithKeyword_Flying_ReflectedInHasAttr verifies that WithKeyword populates
-// the attrSeeds so NewPermanent reflects it in baseAttrs.
+// TestWithKeyword_Flying_ReflectedInHasAttr checks the attribute from the ability.
 func TestWithKeyword_Flying_ReflectedInHasAttr(t *testing.T) {
 	card := NewCreature("Angel", "{4}{W}{W}", 4, 4, WithKeyword(Flying))
 	perm := NewPermanent(card, uuid.New())

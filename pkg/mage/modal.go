@@ -95,7 +95,7 @@ func getModalSpellAbility(card *Card) (*ModalSpellAbility, bool) {
 	if card == nil {
 		return nil, false
 	}
-	for _, a := range card.Abilities() {
+	for _, a := range card.abilities {
 		if ms, ok := a.(*ModalSpellAbility); ok {
 			return ms, true
 		}

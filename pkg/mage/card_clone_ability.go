@@ -8,6 +8,9 @@ import (
 // cloneInstanceAbility copies ability context. Compiled effects and costs are immutable.
 func cloneInstanceAbility(ability Ability) Ability {
 	switch a := ability.(type) {
+	case *AttributeAbility:
+		cloned := *a
+		return &cloned
 	case *ProtectionAbility:
 		cloned := *a
 		cloned.FromColors = slices.Clone(a.FromColors)

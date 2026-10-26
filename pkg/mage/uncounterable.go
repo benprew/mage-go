@@ -23,10 +23,6 @@ import (
 // from the stack via [Game.CounterSpellOnStack]. If either matches, the
 // counter has no effect (the spell stays on the stack).
 
-// uncounterableMarker is set as a CardOption flag on Card via the
-// attrSeeds map under a sentinel key. We use a dedicated bool field
-// instead so the flag is preserved across CloneFrom/Copy.
-
 // WithUncounterable marks a card as inherently uncounterable. This works
 // regardless of the card's color or type — it applies to the spell once
 // it is on the stack.

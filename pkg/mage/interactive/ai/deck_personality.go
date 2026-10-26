@@ -183,7 +183,7 @@ func analyzeDeck(cards []*mage.Card) deckStats {
 }
 
 func classifyDeckCardEffects(card *mage.Card, stats *deckStats) {
-	for _, ability := range card.Abilities() {
+	for _, ability := range card.AllAbilities() {
 		switch ab := mage.UnwrapAbility(ability).(type) {
 		case *mage.SpellAbility:
 			classifyEffects(ab.Effects(), card, stats)
@@ -228,13 +228,11 @@ func classifyEffects(effects []mage.Effect, card *mage.Card, stats *deckStats) {
 }
 
 func hasDeckEvasion(card *mage.Card) bool {
-	attrs := card.AttrSeeds()
-	for _, attr := range []core.Attr{
-		core.Flying, core.Fear, core.Menace, core.UnblockableKW,
-		core.Islandwalk, core.Swampwalk, core.Forestwalk,
-		core.Mountainwalk, core.Plainswalk, core.Trample,
-	} {
-		if attrs[attr] > 0 {
+	for _, ability := range card.AllAbilities() {
+		switch mage.AbilityAttribute(ability) {
+		case core.Flying, core.Fear, core.Menace, core.UnblockableKW,
+			core.Islandwalk, core.Swampwalk, core.Forestwalk,
+			core.Mountainwalk, core.Plainswalk, core.Trample:
 			return true
 		}
 	}
@@ -245,7 +243,7 @@ func hasManaAcceleration(card *mage.Card) bool {
 	if card.HasType(core.TypeLand) {
 		return false
 	}
-	for _, ability := range card.Abilities() {
+	for _, ability := range card.AllAbilities() {
 		if _, ok := mage.UnwrapAbility(ability).(*mage.ManaAbility); ok {
 			return true
 		}

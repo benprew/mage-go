@@ -188,7 +188,7 @@ func handLandColors(hand []*mage.Card) map[core.Color]int {
 		case "Swamp":
 			colors[core.Black]++
 		}
-		for _, a := range c.Abilities() {
+		for _, a := range c.AllAbilities() {
 			if ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility); ok {
 				if ma.HasAnyColor() {
 					for _, col := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {

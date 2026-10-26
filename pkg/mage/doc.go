@@ -34,6 +34,12 @@
 //
 // # Card Definitions and Instances
 //
+// [Card.Abilities] returns a private slice of all card abilities, including keywords.
+// Use [Card.AllAbilities] to inspect the same list without a slice copy.
+// [AbilityAttribute] identifies abilities that use an attribute. [AttributeAbility]
+// supplies simple static abilities. Ward uses its triggered ability directly.
+// Capability and type attributes do not appear in the ability list.
+//
 // Runtime APIs use *Card to preserve the identity of each mutable card object.
 // Use [Card.Copy] for a distinct object and [Card.CloneInstance] for a search
 // branch. Both operations retain the shared definition.
@@ -42,6 +48,7 @@
 // colors, keywords, mode descriptions, and compiled [RuleDefinition] values.
 // [NewCardDefinition] copies its input containers. Read methods return private
 // copies. Source parsers must compile and validate syntax before this boundary.
+// Permanent ability attributes come from [Card.Abilities].
 //
 // Each rule uses a function to create private ability context and target data.
 // The function and its callbacks must capture only immutable data. Effects and

@@ -1663,7 +1663,7 @@ func registerSpells() {
 							}
 							// Gather targets for the chosen spell.
 							var castTargets []uuid.UUID
-							for _, a := range ec.Card.Abilities() {
+							for _, a := range ec.Card.AllAbilities() {
 								sa, ok := a.(*SpellAbility)
 								if !ok {
 									continue

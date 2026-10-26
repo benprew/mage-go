@@ -88,7 +88,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		return fmt.Errorf("card %s not in %s graveyard", cardID, playerID)
 	}
 
-	abilities := card.Abilities()
+	abilities := card.abilities
 	if abilityIdx < 0 || abilityIdx >= len(abilities) {
 		return fmt.Errorf("invalid ability index %d", abilityIdx)
 	}
@@ -156,7 +156,7 @@ func (g *Game) FindGraveyardActivatableCard(playerID uuid.UUID, name string) (uu
 		if name != "" && c.Name() != name {
 			continue
 		}
-		for i, a := range c.Abilities() {
+		for i, a := range c.abilities {
 			gaa, ok := a.(*GraveyardActivatedAbility)
 			if !ok {
 				continue

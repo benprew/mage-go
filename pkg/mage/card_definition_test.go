@@ -37,8 +37,8 @@ func TestCardDefinitionPublication(t *testing.T) {
 	def.Types()[0] = TypeLand
 	def.SubTypes()[0] = "Goblin"
 	def.ManaCost().Hybrid[0].A = Green
-	def.AttrSeeds()[Flying] = 7
-	if def.Types()[0] != TypeCreature || def.SubTypes()[0] != "Bear" || def.ManaCost().Hybrid[0].A != White || def.AttrSeeds()[Flying] != 1 {
+	def.NewInstance(uuid.Nil).Abilities()[0].SetController(uuid.New())
+	if def.Types()[0] != TypeCreature || def.SubTypes()[0] != "Bear" || def.ManaCost().Hybrid[0].A != White || countCardAbility(def.NewInstance(uuid.Nil), Flying) != 1 {
 		t.Fatal("definition has writable aliases")
 	}
 }
@@ -326,10 +326,10 @@ func TestNewCardSupportsCardOptions(t *testing.T) {
 		WithAdditionalCost(LifePayCost(1)), WithAlternateCost(ZoneHand, ParseManaCost("{G}")),
 		WithUncounterable(), WithAuraAIProfile(AuraAIProfile{PowerBoost: 1}), WithCastTarget(TargetCreature()),
 	)
-	if !card.HasSuperType(SuperLegendary) || !card.HasSubType("Spirit") || card.AttrSeeds()[Flying] != 1 || card.AttrSeeds()[Ward] != 1 {
+	if !card.HasSuperType(SuperLegendary) || !card.HasSubType("Spirit") || countCardAbility(card, Flying) != 1 || countCardAbility(card, Ward) != 1 {
 		t.Fatal("card options did not change private characteristics")
 	}
-	if len(def.SuperTypes()) != 0 || len(def.SubTypes()) != 0 || len(def.AttrSeeds()) != 0 {
+	if len(def.SuperTypes()) != 0 || len(def.SubTypes()) != 0 || len(def.NewInstance(uuid.Nil).Abilities()) != 0 {
 		t.Fatal("card options changed the shared definition")
 	}
 	if len(card.AdditionalCosts()) != 1 || len(card.AlternateCosts()) != 1 || !card.IsUncounterable() || len(card.CastTargets()) != 1 {

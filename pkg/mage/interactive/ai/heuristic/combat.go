@@ -583,7 +583,7 @@ func (s *Strategy) considerCombatPumpSpell(p mage.Player, g *mage.Game) *interac
 }
 
 func spellPumpBoost(card *mage.Card) (powerBoost, toughnessBoost int) {
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				props := e.Properties()
@@ -596,7 +596,7 @@ func spellPumpBoost(card *mage.Card) (powerBoost, toughnessBoost int) {
 }
 
 func isLegalSpellTarget(g *mage.Game, playerID uuid.UUID, card *mage.Card, targetID uuid.UUID) bool {
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, t := range sa.Targets() {
 				if slices.Contains(t.Possible(playerID, card, g), targetID) {
@@ -772,7 +772,7 @@ func (s *Strategy) regenerationAbilityAction(playerID uuid.UUID, g *mage.Game, a
 func (s *Strategy) regenerationSpellAction(p mage.Player, g *mage.Game, target *mage.Permanent) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	for _, card := range g.GetCastableSpells(playerID) {
-		for _, ability := range card.Abilities() {
+		for _, ability := range card.AllAbilities() {
 			sa, ok := ability.(*mage.SpellAbility)
 			if !ok || sa.Kind() != mage.ActionSpell || !regeneratesEffects(sa.Effects()) {
 				continue
@@ -1042,7 +1042,7 @@ func bestHoldableInstant(p mage.Player, g *mage.Game) (card *mage.Card, value fl
 			continue
 		}
 		hasUsableEffect := false
-		for _, a := range card.Abilities() {
+		for _, a := range card.AllAbilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 				if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 					hasUsableEffect = true
@@ -1054,7 +1054,7 @@ func bestHoldableInstant(p mage.Player, g *mage.Game) (card *mage.Card, value fl
 			continue
 		}
 		sv := float64(eval.SpellValue(card, p, g))
-		for _, a := range card.Abilities() {
+		for _, a := range card.AllAbilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 				switch mage.SpellOutcome(sa.Effects()) {
 				case mage.OutcomeDetriment:
@@ -1155,7 +1155,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 		}
 
 		hasUsableEffect := false
-		for _, a := range card.Abilities() {
+		for _, a := range card.AllAbilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 				if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 					hasUsableEffect = true
@@ -1173,7 +1173,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 			sv += 3
 		}
 
-		for _, a := range card.Abilities() {
+		for _, a := range card.AllAbilities() {
 			sa, ok := a.(*mage.SpellAbility)
 			if !ok || sa.Kind() != mage.ActionSpell {
 				continue
@@ -1194,7 +1194,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 
 		// At end of opponent's turn, castable instant draw, token generation, or burn is free tempo.
 		if isOpponentEndStep {
-			for _, a := range card.Abilities() {
+			for _, a := range card.AllAbilities() {
 				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 					for _, e := range sa.Effects() {
 						props := e.Properties()

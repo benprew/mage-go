@@ -130,17 +130,6 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 // NewCreature; WithPreparedSpell layers the Prepared mechanics on top.
 func WithPreparedSpell(spellFactory func() *Card) CardOption {
 	return func(c *Card) {
-		// Mark the card with the keyword seed so AttrPrepared shows in keyword
-		// listings / cardHasKeyword lookups (e.g. for a hypothetical
-		// "creatures with prepare spells" filter — Biblioplex Tomekeeper).
-		if c.attrSeeds == nil {
-			c.attrSeeds = make(map[Attr]int)
-		}
-		// Seed at zero so the creature only becomes prepared via ETB; the
-		// AttrSeeds map is also probed by cardHasKeyword which only cares
-		// about >0 — so we use a distinct seed key (see HasPreparedSpell
-		// below). We mark this with a separate sentinel via SubTypes? No —
-		// keep it simple: stash on a side map tracked by HasPreparedSpell.
 		preparedSpellFactories[c.Name()] = spellFactory
 		// ETB: become prepared.
 		c.AddAbility(EntersBattlefieldTrigger(FuncEffect(

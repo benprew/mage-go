@@ -218,7 +218,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 				continue
 			}
 			hasUsableEffect := false
-			for _, a := range card.Abilities() {
+			for _, a := range card.AllAbilities() {
 				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 					if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 						hasUsableEffect = true
@@ -303,7 +303,7 @@ func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.Pri
 		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
-		for _, a := range card.Abilities() {
+		for _, a := range card.AllAbilities() {
 			sa, ok := a.(*mage.SpellAbility)
 			if !ok || sa.Kind() != mage.ActionSpell {
 				continue
@@ -530,7 +530,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Car
 
 	var targets []uuid.UUID
 
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -724,7 +724,7 @@ func requiresTargets(card *mage.Card) bool {
 	if len(card.CastTargets()) > 0 {
 		return true
 	}
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if ok && sa.Kind() == mage.ActionSpell && len(sa.Targets()) > 0 {
 			return true
@@ -980,7 +980,7 @@ func shouldAimBurnAtFace(g *mage.Game, playerID uuid.UUID, damage int) bool {
 
 func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	damage := 0
-	for _, ab := range card.Abilities() {
+	for _, ab := range card.AllAbilities() {
 		if sa, ok := ab.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				if dv := e.Properties().DamageValue; dv != nil {
@@ -993,7 +993,7 @@ func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, ta
 }
 
 func cardAIHint(card *mage.Card) mage.AIHint {
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -1096,7 +1096,7 @@ func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects
 }
 
 func isCardDamageSpell(card *mage.Card) bool {
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, t := range sa.Targets() {
 				if _, ok := t.(*mage.DamageAnyTarget); ok {
@@ -1158,7 +1158,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uui
 
 	// For damage spells, try to pick a lethal X value.
 	isDamageSpell := false
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				if e.Properties().DamageValue != nil {
@@ -1208,7 +1208,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uui
 }
 
 func isDetrimentalTapXSpell(card *mage.Card) bool {
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				props := e.Properties()
@@ -1346,7 +1346,7 @@ func boardManaSources(g *mage.Game, playerID uuid.UUID) (colors map[core.Color]i
 func landManaColors(card *mage.Card) ([]core.Color, bool) {
 	var colors []core.Color
 	anyColor := false
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
 		if !ok {
 			continue
@@ -1391,18 +1391,22 @@ func coloredManaProgress(mc core.ManaCost, colors map[core.Color]int) int {
 }
 
 func isPrecombatSpell(card *mage.Card) bool {
-	if card.HasType(core.TypeCreature) && card.AttrSeeds()[core.Haste] > 0 {
-		return true
-	}
-	if card.HasType(core.TypeSorcery) || card.HasType(core.TypeEnchantment) {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
-				outcome := mage.SpellOutcome(sa.Effects())
-				if outcome == mage.OutcomeDetriment {
+	creature := card.HasType(core.TypeCreature)
+	checkSpell := card.HasType(core.TypeSorcery) || card.HasType(core.TypeEnchantment)
+	if creature || checkSpell {
+		for _, ability := range card.AllAbilities() {
+			if creature && mage.AbilityAttribute(ability) == core.Haste {
+				return true
+			}
+			if !checkSpell {
+				continue
+			}
+			if sa, ok := ability.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+				if mage.SpellOutcome(sa.Effects()) == mage.OutcomeDetriment {
 					return true
 				}
-				for _, e := range sa.Effects() {
-					props := e.Properties()
+				for _, effect := range sa.Effects() {
+					props := effect.Properties()
 					if props.PowerBoost > 0 || props.Mass {
 						return true
 					}

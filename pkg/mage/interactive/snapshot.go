@@ -23,13 +23,12 @@ func buildRulesText(c *mage.Card) string {
 		}
 		return fmt.Sprintf("%s: %s", joinStrings(costParts), joinStrings(effParts))
 	}
-	// Keywords come from the card's attr seeds (canonical storage).
-	for a, count := range c.AttrSeeds() {
-		if count > 0 && core.IsKeywordAttr(a) {
-			parts = append(parts, a.String())
+	seenKeywords := make(map[core.Attr]bool)
+	for _, a := range c.AllAbilities() {
+		if attr := mage.AbilityAttribute(a); attr != 0 && core.IsKeywordAttr(attr) && !seenKeywords[attr] {
+			parts = append(parts, attr.String())
+			seenKeywords[attr] = true
 		}
-	}
-	for _, a := range c.Abilities() {
 		switch ab := a.(type) {
 		case *mage.ProtectionAbility:
 			colors := make([]string, 0, len(ab.FromColors))

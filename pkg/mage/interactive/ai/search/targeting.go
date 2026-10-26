@@ -24,7 +24,7 @@ func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card *mage.Card, x i
 	purpose := eval.TargetGeneric
 	outcome := mage.OutcomeUnknown
 	damage := 0
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue

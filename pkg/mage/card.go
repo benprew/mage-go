@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"iter"
 	"maps"
 	"slices"
 	"strings"
@@ -17,6 +18,7 @@ type Card struct {
 	definition      *CardDefinition
 	characteristics *cardCharacteristics
 	id              uuid.UUID
+	capabilityAttrs map[Attr]int
 	abilities       []Ability
 	owner           uuid.UUID
 	additionalCosts []Cost          // additional costs paid when casting (sacrifice, discard, etc.)
@@ -59,6 +61,7 @@ func NewCard(definition *CardDefinition, opts ...CardOption) *Card {
 		}
 		c.abilities = append(c.abilities, ability)
 	}
+	c.addDefinitionAbilities()
 	applyCardOpts(c, opts)
 	return c
 }
@@ -140,20 +143,26 @@ func (c *Card) Modes() []string {
 	}
 	return c.definition.Modes()
 }
-func (c *Card) AttrSeeds() map[Attr]int {
-	if c.definition == nil {
-		return c.attrSeeds
-	}
-	if c.characteristics != nil {
-		return maps.Clone(c.characteristics.attrSeeds)
-	}
-	return c.definition.AttrSeeds()
-}
+
+// Abilities returns a private slice of all card abilities, including keywords.
+// Use AllAbilities to inspect abilities without a slice copy.
+// The returned slice is private. Ability objects retain their identity.
+// This list does not include temporary abilities granted to a permanent.
 func (c *Card) Abilities() []Ability {
-	if c.definition == nil {
-		return c.abilities
-	}
 	return slices.Clone(c.abilities)
+}
+
+// AllAbilities visits all card abilities in list order without a slice copy.
+// Do not add or remove abilities during iteration. Ability objects retain
+// their identity. Temporary permanent abilities are not part of this list.
+func (c *Card) AllAbilities() iter.Seq2[int, Ability] {
+	return func(yield func(int, Ability) bool) {
+		for index, ability := range c.abilities {
+			if !yield(index, ability) {
+				return
+			}
+		}
+	}
 }
 func (c *Card) HasType(t CardType) bool {
 	if c.definition == nil {
@@ -221,7 +230,7 @@ func (c *Card) mutableCharacteristics() *cardCharacteristics {
 	if c.characteristics == nil {
 		c.characteristics = &cardCharacteristics{
 			name: c.Name(), manaCost: c.ManaCost(), types: c.Types(), superTypes: c.SuperTypes(), subTypes: c.SubTypes(),
-			power: c.Power(), toughness: c.Toughness(), modes: c.Modes(), attrSeeds: c.AttrSeeds(), colorOverride: c.definition.Colors(),
+			power: c.Power(), toughness: c.Toughness(), modes: c.Modes(), colorOverride: c.definition.Colors(),
 		}
 	}
 	return c.characteristics
@@ -241,8 +250,55 @@ func (c *Card) AddSubType(t string) {
 	data := c.mutableCharacteristics()
 	data.subTypes = append(data.subTypes, t)
 }
-func (c *Card) AddAbility(a Ability) { c.abilities = append(c.abilities, a) }
+
+// AddAbility adds an ability to the card.
+func (c *Card) AddAbility(a Ability) {
+	if _, simple := a.(*AttributeAbility); simple {
+		c.abilities = append(c.abilities, a)
+	} else {
+		// Keep actions and triggers at their existing indices.
+		index := len(c.abilities)
+		for i, ability := range c.abilities {
+			if _, simple := ability.(*AttributeAbility); simple {
+				index = i
+				break
+			}
+		}
+		c.abilities = slices.Insert(c.abilities, index, a)
+	}
+}
+
+// addDefinitionAbilities converts definition inputs into the complete ability list.
+// A rule can already supply an ability, as with Ward and its trigger.
+func (c *Card) addDefinitionAbilities() {
+	covered := make(map[Attr]int)
+	for _, ability := range c.abilities {
+		if attr := AbilityAttribute(ability); attr != 0 {
+			covered[attr]++
+		}
+	}
+
+	for attr := Attr(1); int(attr) < NumAttrs; attr++ {
+		count := c.definition.printed.Keywords[attr]
+		if IsAbilityAttr(attr) {
+			for range count - covered[attr] {
+				c.AddAbility(NewAttributeAbility(attr))
+			}
+		} else if count != 0 {
+			c.addCapability(attr, count)
+		}
+	}
+}
+
+func (c *Card) addCapability(attr Attr, count int) {
+	if c.capabilityAttrs == nil {
+		c.capabilityAttrs = make(map[Attr]int)
+	}
+	c.capabilityAttrs[attr] += count
+}
+
 func (c *Card) CloneFrom(other *Card) {
+	c.capabilityAttrs = maps.Clone(other.capabilityAttrs)
 	if c.definition == nil {
 		c.cloneLegacyFrom(other)
 		return
@@ -251,11 +307,11 @@ func (c *Card) CloneFrom(other *Card) {
 		name: other.Name(), manaCost: copyPrintedManaCost(other.ManaCost()),
 		types: slices.Clone(other.Types()), superTypes: slices.Clone(other.SuperTypes()), subTypes: slices.Clone(other.SubTypes()),
 		power: other.Power(), toughness: other.Toughness(), modes: slices.Clone(other.Modes()),
-		attrSeeds: maps.Clone(other.AttrSeeds()), colorOverride: cardColors(other),
+		colorOverride: cardColors(other),
 	}
 	castTargets := cloneInstanceTargets(other.CastTargets())
-	abilities := make([]Ability, 0, len(other.Abilities()))
-	for _, ability := range other.Abilities() {
+	abilities := make([]Ability, 0, len(other.abilities))
+	for _, ability := range other.abilities {
 		abilities = append(abilities, cloneInstanceAbility(ability))
 	}
 	c.characteristics = snapshot
@@ -281,6 +337,7 @@ func (c *Card) Copy() *Card {
 // CloneInstance shares the printed definition and copies the execution state.
 func (c *Card) CloneInstance() *Card {
 	cloned := *c
+	cloned.capabilityAttrs = maps.Clone(c.capabilityAttrs)
 	cloned.castTargets = cloneInstanceTargets(c.castTargets)
 	cloned.additionalCosts = slices.Clone(c.additionalCosts)
 	cloned.alternateCosts = slices.Clone(c.alternateCosts)
@@ -308,8 +365,12 @@ func (c *Card) cloneLegacyFrom(other *Card) {
 	copy(c.superTypes, other.SuperTypes())
 	c.subTypes = make([]string, len(other.SubTypes()))
 	copy(c.subTypes, other.SubTypes())
-	c.abilities = make([]Ability, len(other.Abilities()))
-	copy(c.abilities, other.Abilities())
+	c.abilities = slices.Clone(other.abilities)
+	for i, ability := range c.abilities {
+		if _, ok := ability.(*AttributeAbility); ok {
+			c.abilities[i] = cloneInstanceAbility(ability)
+		}
+	}
 	if m := other.Modes(); len(m) > 0 {
 		c.modes = make([]string, len(m))
 		copy(c.modes, m)
@@ -322,10 +383,6 @@ func (c *Card) cloneLegacyFrom(other *Card) {
 		c.colorOverride = append([]Color(nil), other.colorOverride...)
 	} else {
 		c.colorOverride = nil
-	}
-	if len(other.attrSeeds) > 0 {
-		c.attrSeeds = make(map[Attr]int, len(other.attrSeeds))
-		maps.Copy(c.attrSeeds, other.attrSeeds)
 	}
 	c.uncounterable = other.uncounterable
 	c.auraAIProfile = other.auraAIProfile
@@ -345,6 +402,13 @@ func (c *Card) copyLegacy() *Card {
 	copy(cp.subTypes, c.subTypes)
 	cp.abilities = make([]Ability, len(c.abilities))
 	copy(cp.abilities, c.abilities)
+	for i, ability := range cp.abilities {
+		if attr, ok := ability.(*AttributeAbility); ok {
+			cloned := *attr
+			cloned.id = uuid.New()
+			cp.abilities[i] = &cloned
+		}
+	}
 	if len(c.colorOverride) > 0 {
 		cp.colorOverride = append([]Color(nil), c.colorOverride...)
 	}
@@ -352,10 +416,7 @@ func (c *Card) copyLegacy() *Card {
 		cp.modes = make([]string, len(c.modes))
 		copy(cp.modes, c.modes)
 	}
-	if len(c.attrSeeds) > 0 {
-		cp.attrSeeds = make(map[Attr]int, len(c.attrSeeds))
-		maps.Copy(cp.attrSeeds, c.attrSeeds)
-	}
+	cp.capabilityAttrs = maps.Clone(c.capabilityAttrs)
 	return &cp
 }
 
@@ -403,25 +464,28 @@ func WithSubTypes(subTypes ...string) CardOption {
 	}
 }
 
-// cardHasKeyword reports whether the card was registered with the given keyword
-// attr seed. Used by the casting-permission gate (see Flash, CR 702.8) to inspect
-// keywords on a card that is not yet on the battlefield as a Permanent.
+// cardHasKeyword reports whether the card has the specified keyword ability.
 func cardHasKeyword(c *Card, kw Attr) bool {
 	if c == nil {
 		return false
 	}
-	return c.AttrSeeds()[kw] > 0
+	for _, ability := range c.abilities {
+		if AbilityAttribute(ability) == kw {
+			return true
+		}
+	}
+	return false
 }
 
-// WithKeyword adds a keyword ability to a card.
-// Seeds the card's attrSeeds so that NewPermanent can populate baseAttrs.
+// WithKeyword adds an ability and its attribute to a card.
+// Capability attributes do not add an ability.
 func WithKeyword(kw Keyword) CardOption {
 	return func(c *Card) {
-		data := c.mutableCharacteristics()
-		if data.attrSeeds == nil {
-			data.attrSeeds = make(map[Attr]int)
+		if IsAbilityAttr(kw) {
+			c.AddAbility(NewAttributeAbility(kw))
+		} else {
+			c.addCapability(kw, 1)
 		}
-		data.attrSeeds[kw]++
 	}
 }
 
@@ -586,10 +650,7 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 		},
 	}
 	for _, kw := range keywords {
-		if c.attrSeeds == nil {
-			c.attrSeeds = make(map[Attr]int)
-		}
-		c.attrSeeds[kw]++
+		WithKeyword(kw)(c)
 	}
 	return c
 }
@@ -802,11 +863,7 @@ func NewPermanent(card *Card, controller uuid.UUID) *Permanent {
 		incarnationID:      uuid.New(),
 		computedController: controller,
 		baseController:     controller,
-	}
-	// Copy base abilities
-	for _, a := range card.Abilities() {
-		cp := a
-		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
+		RuntimeAbilities:   slices.Clone(card.abilities),
 	}
 	// Populate baseAttrs from card types.
 	for _, t := range card.Types() {
@@ -829,12 +886,13 @@ func NewPermanent(card *Card, controller uuid.UUID) *Permanent {
 	// Living Lands turning Forests into creatures) honors the "continuously
 	// controlled since most recent turn began" check. Cleared at untap.
 	p.baseAttrs[AttrSummonSick]++
-	// Copy keyword seeds from the card.
-	// count is always 1 per WithKeyword call; stacking well below int8 range.
-	for a, count := range card.AttrSeeds() {
-		p.baseAttrs[a] += int8(count)
-		if IsAbilityAttr(a) {
-			p.printedAbilityAttrs[a] += int8(count)
+	for attr, count := range card.capabilityAttrs {
+		p.baseAttrs[attr] += int8(count)
+	}
+	for _, ability := range p.RuntimeAbilities {
+		if attr := AbilityAttribute(ability); attr != 0 && IsAbilityAttr(attr) {
+			p.baseAttrs[attr]++
+			p.printedAbilityAttrs[attr]++
 		}
 	}
 	return p

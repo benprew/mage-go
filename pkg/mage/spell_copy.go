@@ -130,7 +130,7 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 		return
 	}
 
-	for _, a := range card.Abilities() {
+	for _, a := range card.abilities {
 		sa, ok := a.(*SpellAbility)
 		if !ok {
 			continue

@@ -183,7 +183,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	totalCosts := append([]Cost(nil), extraCosts...)
 	totalCosts = append(totalCosts, card.AdditionalCosts()...)
 	var actionCosts []Cost
-	for _, ability := range card.Abilities() {
+	for _, ability := range card.abilities {
 		if spell, ok := ability.(*SpellAbility); ok && spell.Kind() == ActionSpell {
 			actionCosts = append(actionCosts, spell.Costs()...)
 		}

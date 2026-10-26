@@ -396,14 +396,14 @@ func WithSelfCostReduction(amount SpellAmount, condition SpellCondition) CardOpt
 	return func(c *Card) { c.AddAbility(SelfCostReduction(amount, condition)) }
 }
 
-// applySelfCostReductions walks card.Abilities() and returns the total generic
+// applySelfCostReductions checks card abilities and returns the total generic
 // reduction owed by intrinsic SelfCostReductionAbility entries. The targets
 // slice carries the chosen targets for this cast (per CR 601.2f, the total
 // cost is determined after modes and targets are chosen). Pass nil for
 // pre-target queries — target-conditional reducers will skip themselves.
 func applySelfCostReductions(g *Game, controller uuid.UUID, card *Card, targets []uuid.UUID) int {
 	total := 0
-	for _, a := range card.Abilities() {
+	for _, a := range card.abilities {
 		scr, ok := UnwrapAbility(a).(*SelfCostReductionAbility)
 		if !ok {
 			continue

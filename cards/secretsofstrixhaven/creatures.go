@@ -5169,7 +5169,7 @@ func registerCreatures() {
 						}
 						// Gather targets for the chosen spell.
 						var castTargets []uuid.UUID
-						for _, a := range chosen.Abilities() {
+						for _, a := range chosen.AllAbilities() {
 							sa, ok := a.(*SpellAbility)
 							if !ok {
 								continue

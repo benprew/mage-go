@@ -206,9 +206,8 @@ func TestKeywordAttrBoundary_NonKeywordAttrsBelowFlying(t *testing.T) {
 	}
 }
 
-// TestNewPermanent_CreatureAttrSeeds verifies that NewPermanent seeds the
-// expected creature attrs from the card's types.
-func TestNewPermanent_CreatureAttrSeeds(t *testing.T) {
+// TestNewPermanent_CreatureCapabilities checks capabilities from card types.
+func TestNewPermanent_CreatureCapabilities(t *testing.T) {
 	card := NewCreature("Test", "{1}", 1, 1)
 	p := NewPermanent(card, uuid.New())
 	for _, a := range []Attr{AttrIsCreature, AttrCanAttack, AttrCanBlock, AttrHasPowerToughness, AttrSummonSick} {

@@ -53,7 +53,7 @@ func ClassifyCombat(card *mage.Card) CombatRole {
 	// deals 2 damage") should be treated as Pump because the buff is what
 	// drives the combat decision.
 	role := RoleNone
-	for _, ab := range card.Abilities() {
+	for _, ab := range card.AllAbilities() {
 		def, ok := ab.(*mage.ActionDefinition)
 		if !ok || def.Kind() != mage.ActionSpell {
 			continue

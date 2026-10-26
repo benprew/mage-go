@@ -289,7 +289,7 @@ func gatherHandPumps(g *mage.Game, playerID uuid.UUID) []handPump {
 // pumpSpellBoost extracts the total +power/+toughness a pump spell grants and
 // whether it targets a creature (so it can be aimed at one of our combatants).
 func pumpSpellBoost(card *mage.Card) (power, toughness int, targetsCreature bool) {
-	for _, ab := range card.Abilities() {
+	for _, ab := range card.AllAbilities() {
 		def, ok := ab.(*mage.ActionDefinition)
 		if !ok || def.Kind() != mage.ActionSpell {
 			continue

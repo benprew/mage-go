@@ -113,7 +113,7 @@ func spellEffectValue(g *mage.Game, p mage.Player, c *mage.Card) (float64, bool)
 // spellAction returns the card's spell ability (the one cast from hand), or
 // nil if the card has no spell ability (e.g. a land).
 func spellAction(c *mage.Card) *mage.ActionDefinition {
-	for _, ab := range c.Abilities() {
+	for _, ab := range c.AllAbilities() {
 		if a, ok := ab.(*mage.ActionDefinition); ok && a.Kind() == mage.ActionSpell {
 			return a
 		}

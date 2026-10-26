@@ -31,7 +31,7 @@ func ThreatPerManaInGame(perm *mage.Permanent, g *mage.Game) float64 {
 // has no valid targets available right now.
 func SpellIsWorthless(card *mage.Card, p mage.Player, g *mage.Game) bool {
 	playerID := p.PlayerID()
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -96,7 +96,7 @@ func SpellValue(card *mage.Card, p mage.Player, g *mage.Game) int {
 		}
 	}
 
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -228,7 +228,7 @@ func manaSourceSpellValue(card *mage.Card) int {
 	colors := make(map[core.Color]struct{})
 	hasAnyColor := false
 
-	for _, ability := range card.Abilities() {
+	for _, ability := range card.AllAbilities() {
 		productions := mage.ManaProductionsForAbility(ability)
 		if len(productions) == 0 {
 			continue

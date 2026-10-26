@@ -98,9 +98,14 @@ func TestPandorasBox_BothHeadsCreateDistinctTokens(t *testing.T) {
 	if aCopy.ID() == bCopy.ID() || aCopy.Card.ID() == bCopy.Card.ID() {
 		t.Fatal("players received the same token object")
 	}
-	if len(aCopy.RuntimeAbilities) != 1 || len(bCopy.RuntimeAbilities) != 1 ||
-		aCopy.RuntimeAbilities[0].Source() != aCopy.ID() || bCopy.RuntimeAbilities[0].Source() != bCopy.ID() {
-		t.Fatal("token copies do not have independent ability instances")
+	if len(aCopy.RuntimeAbilities) != 2 || len(bCopy.RuntimeAbilities) != 2 {
+		t.Fatal("token copies must have their trigger and flying ability")
+	}
+	for i, ability := range aCopy.RuntimeAbilities {
+		other := bCopy.RuntimeAbilities[i]
+		if ability == other || ability.Source() != aCopy.ID() || other.Source() != bCopy.ID() {
+			t.Fatal("token copies do not have independent ability instances")
+		}
 	}
 	if aCopy.Card.Owner() != a.PlayerID() || bCopy.Card.Owner() != b.PlayerID() {
 		t.Fatalf("token owners are wrong: a=%s b=%s", aCopy.Card.Owner(), bCopy.Card.Owner())

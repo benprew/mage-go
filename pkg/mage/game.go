@@ -592,11 +592,7 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 	perm.FaceDown = false
 	perm.BasePTOverride = nil
 	// Restore original abilities from the card
-	perm.RuntimeAbilities = nil
-	for _, a := range perm.Card.Abilities() {
-		cp := a
-		perm.RuntimeAbilities = append(perm.RuntimeAbilities, cp)
-	}
+	perm.RuntimeAbilities = slices.Clone(perm.Card.abilities)
 	g.syncAbilityContext(perm)
 	// Register continuous effects from static abilities
 	for _, a := range perm.RuntimeAbilities {
@@ -1492,16 +1488,12 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 		}
 	}
 
-	// Scan card-level abilities that function while the source is in a
-	// non-battlefield zone (CR 113.6) — currently graveyard, for cards like
-	// Pia Nalaar, Consul of Revival and Nether Shadow. Card.Abilities() returns
-	// the immutable card-level ability list (not Permanent.RuntimeAbilities);
-	// we set source/controller transiently so condition predicates see the
-	// right IDs while the trigger is queued.
+	// Check card abilities that function in the graveyard (CR 113.6).
+	// Set the source and controller before checking trigger conditions.
 	for _, pl := range g.players {
 		ownerID := pl.PlayerID()
 		for _, c := range pl.Graveyard() {
-			for _, a := range c.Abilities() {
+			for _, a := range c.abilities {
 				gt, ok := UnwrapAbility(a).(*GenericTriggered)
 				if !ok {
 					continue
@@ -1533,7 +1525,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 		if obj == nil || obj.IsAbility || obj.Card == nil {
 			continue
 		}
-		for _, a := range obj.Card.Abilities() {
+		for _, a := range obj.Card.abilities {
 			gt, ok := UnwrapAbility(a).(*GenericTriggered)
 			if !ok {
 				continue
@@ -2432,7 +2424,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	totalCosts := append([]Cost(nil), card.AdditionalCosts()...)
 
 	var actionCosts []Cost
-	for _, a := range card.Abilities() {
+	for _, a := range card.abilities {
 		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
 			actionCosts = append(actionCosts, sa.Costs()...)
 		}

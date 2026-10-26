@@ -96,7 +96,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uui
 	}
 
 	targets = append([]uuid.UUID(nil), targets...)
-	for _, a := range card.Abilities() {
+	for _, a := range card.abilities {
 		sa, ok := a.(*SpellAbility)
 		if !ok {
 			continue

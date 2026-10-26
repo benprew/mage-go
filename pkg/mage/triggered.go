@@ -47,6 +47,7 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // or use [WhileInZoneTrigger]. The zone list defaults to [ZoneBattlefield] so
 // existing behavior is preserved.
 type GenericTriggered struct {
+	attribute Attr
 	BaseAbility
 	eventType      EventType
 	sourceZone     Zone
@@ -58,6 +59,9 @@ type GenericTriggered struct {
 	zones          []Zone
 	modes          []Mode
 }
+
+// Attribute returns the attribute that identifies this ability, or zero.
+func (t *GenericTriggered) Attribute() Attr { return t.attribute }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
 // Use SetCondition to add a predicate that filters which events actually trigger it.
