@@ -9,6 +9,7 @@ import (
 )
 
 // Target represents a targeting requirement.
+// Custom targets must supply CloneTarget() Target to copy their mutable state.
 type Target interface {
 	Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID
 	Choose(controller uuid.UUID, sourceCard *Card, g *Game, chosen []uuid.UUID) error

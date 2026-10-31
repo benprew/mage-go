@@ -67,6 +67,12 @@ func cloneInstanceAbility(ability Ability) Ability {
 		cloned := *a
 		cloneInstanceAction(&cloned)
 		return &cloned
+	case *GraveyardActivatedAbility:
+		cloned := *a
+		action := *a.SimpleActivatedAbility
+		cloneInstanceAction(&action)
+		cloned.SimpleActivatedAbility = &action
+		return &cloned
 	case *EquipAbility:
 		cloned := *a
 		cloneInstanceAction(&cloned.ActionDefinition)
@@ -123,6 +129,8 @@ func cloneInstanceTargets(targets []Target) []Target {
 
 func cloneInstanceTarget(target Target) Target {
 	switch t := target.(type) {
+	case interface{ CloneTarget() Target }:
+		return t.CloneTarget()
 	case *countBoundTarget:
 		cloned := *t
 		cloned.inner = cloneInstanceTarget(t.inner)
@@ -240,6 +248,9 @@ func cloneInstanceContinuous(effect ContinuousEffect) ContinuousEffect {
 		cloned := *e
 		return &cloned
 	case *attachedEffect:
+		cloned := *e
+		return &cloned
+	case *attachedControlEffect:
 		cloned := *e
 		return &cloned
 	case *targetEffect:

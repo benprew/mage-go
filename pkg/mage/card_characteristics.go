@@ -32,3 +32,19 @@ func (c *cardCharacteristics) clone() *cardCharacteristics {
 	cloned.modes = slices.Clone(c.modes)
 	return &cloned
 }
+
+func (c *Card) copyCharacteristics() *cardCharacteristics {
+	if c.definition == nil {
+		return c.clone()
+	}
+	if c.characteristics != nil {
+		return c.characteristics.clone()
+	}
+	printed := &c.definition.printed
+	data := cardCharacteristics{
+		name: printed.Name, manaCost: printed.ManaCost,
+		types: printed.TypeLine.CardTypes, superTypes: printed.TypeLine.SuperTypes, subTypes: printed.TypeLine.SubTypes,
+		power: printed.Power, toughness: printed.Toughness, modes: printed.Modes, colorOverride: printed.Colors,
+	}
+	return data.clone()
+}

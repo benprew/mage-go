@@ -147,3 +147,38 @@ func TestCardAbilitiesInitializePermanentAttributes(t *testing.T) {
 		}
 	}
 }
+
+func TestLegacyCopyOwnsWardState(t *testing.T) {
+	original := NewCreature("Ward", "{G}", 2, 2, WithWard(ManaCostOf("{2}")))
+	copied := original.Copy()
+	a, b := original.abilities[0], copied.abilities[0]
+	if a == b || a.AbilityID() == b.AbilityID() {
+		t.Fatal("Copy must create a new ability identity")
+	}
+	b.SetController(uuid.New())
+	b.SetSource(uuid.New())
+	if a.Controller() != uuid.Nil || a.Source() != uuid.Nil {
+		t.Fatal("Copy changed the original ability context")
+	}
+}
+
+func TestLegacyCloneFromDefinitionOwnsState(t *testing.T) {
+	def, err := NewCardDefinition(CardDefinitionSpec{
+		Name: "Defined Ward", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Colors: []Color{Blue},
+		Rules: []RuleDefinition{NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) })},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := NewCard(def)
+	cloned := NewCreature("Clone", "{3}{U}", 0, 0)
+	cloned.CloneFrom(original)
+	if colors := cloned.Colors(); len(colors) != 1 || colors[0] != Blue {
+		t.Fatalf("lost color indicator: %v", colors)
+	}
+	cloned.abilities[0].SetController(uuid.New())
+	cloned.abilities[0].SetSource(uuid.New())
+	if original.abilities[0].Controller() != uuid.Nil || original.abilities[0].Source() != uuid.Nil {
+		t.Fatal("CloneFrom changed the original ability context")
+	}
+}

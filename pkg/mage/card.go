@@ -299,31 +299,30 @@ func (c *Card) addCapability(attr Attr, count int) {
 
 func (c *Card) CloneFrom(other *Card) {
 	c.capabilityAttrs = maps.Clone(other.capabilityAttrs)
-	if c.definition == nil {
-		c.cloneLegacyFrom(other)
-		return
-	}
-	snapshot := &cardCharacteristics{
-		name: other.Name(), manaCost: copyPrintedManaCost(other.ManaCost()),
-		types: slices.Clone(other.Types()), superTypes: slices.Clone(other.SuperTypes()), subTypes: slices.Clone(other.SubTypes()),
-		power: other.Power(), toughness: other.Toughness(), modes: slices.Clone(other.Modes()),
-		colorOverride: cardColors(other),
-	}
+	snapshot := other.copyCharacteristics()
 	castTargets := cloneInstanceTargets(other.CastTargets())
 	abilities := make([]Ability, 0, len(other.abilities))
 	for _, ability := range other.abilities {
 		abilities = append(abilities, cloneInstanceAbility(ability))
 	}
-	c.characteristics = snapshot
+	if c.definition == nil {
+		c.cardCharacteristics = *snapshot
+		c.uncounterable = other.uncounterable
+		c.auraAIProfile = other.auraAIProfile
+		c.alternateCosts = slices.Clone(other.alternateCosts)
+		for i := range c.alternateCosts {
+			c.alternateCosts[i].Mana = copyPrintedManaCost(other.alternateCosts[i].Mana)
+			c.alternateCosts[i].Additional = slices.Clone(other.alternateCosts[i].Additional)
+		}
+	} else {
+		c.characteristics = snapshot
+	}
 	c.castTargets = castTargets
 	c.abilities = abilities
 }
 
 // Copy creates a distinct card. CloneInstance preserves the identity for search.
 func (c *Card) Copy() *Card {
-	if c.definition == nil {
-		return c.copyLegacy()
-	}
 	cloned := c.CloneInstance()
 	cloned.id = uuid.New()
 	for _, ability := range cloned.abilities {
@@ -352,72 +351,6 @@ func (c *Card) CloneInstance() *Card {
 	cloned.cardCharacteristics = *c.clone()
 	cloned.characteristics = c.characteristics.clone()
 	return &cloned
-}
-
-func (c *Card) cloneLegacyFrom(other *Card) {
-	c.name = other.Name()
-	c.manaCost = other.ManaCost()
-	c.power = other.Power()
-	c.toughness = other.Toughness()
-	c.types = make([]CardType, len(other.Types()))
-	copy(c.types, other.Types())
-	c.superTypes = make([]SuperType, len(other.SuperTypes()))
-	copy(c.superTypes, other.SuperTypes())
-	c.subTypes = make([]string, len(other.SubTypes()))
-	copy(c.subTypes, other.SubTypes())
-	c.abilities = slices.Clone(other.abilities)
-	for i, ability := range c.abilities {
-		if _, ok := ability.(*AttributeAbility); ok {
-			c.abilities[i] = cloneInstanceAbility(ability)
-		}
-	}
-	if m := other.Modes(); len(m) > 0 {
-		c.modes = make([]string, len(m))
-		copy(c.modes, m)
-	}
-	if ct := other.CastTargets(); len(ct) > 0 {
-		c.castTargets = make([]Target, len(ct))
-		copy(c.castTargets, ct)
-	}
-	if len(other.colorOverride) > 0 {
-		c.colorOverride = append([]Color(nil), other.colorOverride...)
-	} else {
-		c.colorOverride = nil
-	}
-	c.uncounterable = other.uncounterable
-	c.auraAIProfile = other.auraAIProfile
-	if len(other.alternateCosts) > 0 {
-		c.alternateCosts = append([]AlternateCost(nil), other.alternateCosts...)
-	}
-}
-
-func (c *Card) copyLegacy() *Card {
-	cp := *c
-	cp.id = uuid.New()
-	cp.types = make([]CardType, len(c.types))
-	copy(cp.types, c.types)
-	cp.superTypes = make([]SuperType, len(c.superTypes))
-	copy(cp.superTypes, c.superTypes)
-	cp.subTypes = make([]string, len(c.subTypes))
-	copy(cp.subTypes, c.subTypes)
-	cp.abilities = make([]Ability, len(c.abilities))
-	copy(cp.abilities, c.abilities)
-	for i, ability := range cp.abilities {
-		if attr, ok := ability.(*AttributeAbility); ok {
-			cloned := *attr
-			cloned.id = uuid.New()
-			cp.abilities[i] = &cloned
-		}
-	}
-	if len(c.colorOverride) > 0 {
-		cp.colorOverride = append([]Color(nil), c.colorOverride...)
-	}
-	if len(c.modes) > 0 {
-		cp.modes = make([]string, len(c.modes))
-		copy(cp.modes, c.modes)
-	}
-	cp.capabilityAttrs = maps.Clone(c.capabilityAttrs)
-	return &cp
 }
 
 // CardOption configures a card during construction.

@@ -2,6 +2,7 @@ package fourthedition
 
 import (
 	"math/rand"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -14,6 +15,10 @@ import (
 // "less than this creature's power" (filters can't see the source).
 type stoneGiantTarget struct {
 	chosen []uuid.UUID
+}
+
+func (t *stoneGiantTarget) CloneTarget() Target {
+	return &stoneGiantTarget{chosen: slices.Clone(t.chosen)}
 }
 
 func (t *stoneGiantTarget) Min() int            { return 1 }
