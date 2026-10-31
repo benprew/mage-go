@@ -23,12 +23,14 @@ func buildRulesText(c *mage.Card) string {
 		}
 		return fmt.Sprintf("%s: %s", joinStrings(costParts), joinStrings(effParts))
 	}
-	seenKeywords := make(map[core.Attr]bool)
+	var seenKeywords [core.NumAttrs]bool
 	for _, a := range c.AllAbilities() {
 		if attr := mage.AbilityAttribute(a); attr != 0 && core.IsKeywordAttr(attr) && !seenKeywords[attr] {
 			parts = append(parts, attr.String())
 			seenKeywords[attr] = true
 		}
+	}
+	for _, a := range c.AllAbilities() {
 		switch ab := a.(type) {
 		case *mage.ProtectionAbility:
 			colors := make([]string, 0, len(ab.FromColors))
