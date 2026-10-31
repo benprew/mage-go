@@ -48,7 +48,10 @@
 // colors, keywords, mode descriptions, and compiled [RuleDefinition] values.
 // [NewCardDefinition] copies its input containers. Read methods return private
 // copies. Source parsers must compile and validate syntax before this boundary.
-// Permanent ability attributes come from [Card.Abilities].
+// Keywords and executable rules use the same [RuleDefinition] factories.
+// [NewCard] combines these rules with legacy keyword inputs in [Card.Abilities].
+// Permanent ability attributes come from that complete list.
+// The pkg/mage/mtgish compiler validates mtgish JSON rules before publication.
 //
 // Each rule uses a function to create private ability context and target data.
 // The function and its callbacks must capture only immutable data. Effects and

@@ -106,6 +106,24 @@ func TestCardAbilitiesWardIsOneTriggeredAbility(t *testing.T) {
 	}
 }
 
+func TestCardAbilitiesCompiledDefinitions(t *testing.T) {
+	def, err := NewCardDefinition(CardDefinitionSpec{
+		Name: "Compiled Bird", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
+		Rules: []RuleDefinition{keywordRule(Flying), keywordRule(FirstStrike)},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	card := def.NewInstance(uuid.New())
+	counts := map[Attr]int{}
+	for _, ability := range card.Abilities() {
+		counts[AbilityAttribute(ability)]++
+	}
+	if len(card.Abilities()) != 2 || counts[Flying] != 1 || counts[FirstStrike] != 1 {
+		t.Fatalf("compiled abilities are absent or duplicated: %v", counts)
+	}
+}
+
 func TestCardAbilitiesWardDefinition(t *testing.T) {
 	for _, seeds := range []map[Attr]int{nil, {Ward: 1}} {
 		def, err := NewCardDefinition(CardDefinitionSpec{
@@ -129,8 +147,7 @@ func TestCardAbilitiesWardDefinition(t *testing.T) {
 func TestCardAbilitiesInitializePermanentAttributes(t *testing.T) {
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Mixed Abilities", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-		Keywords: map[Attr]int{Flying: 2, FirstStrike: 1},
-		Rules:    []RuleDefinition{NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) })},
+		Rules: []RuleDefinition{keywordRule(Flying), keywordRule(Flying), keywordRule(FirstStrike), NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) })},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -180,5 +197,30 @@ func TestLegacyCloneFromDefinitionOwnsState(t *testing.T) {
 	cloned.abilities[0].SetSource(uuid.New())
 	if original.abilities[0].Controller() != uuid.Nil || original.abilities[0].Source() != uuid.Nil {
 		t.Fatal("CloneFrom changed the original ability context")
+	}
+}
+
+func TestDefinitionKeywordInputsOverlap(t *testing.T) {
+	for _, attr := range []Attr{Flying, Ward} {
+		for rules := 0; rules <= 2; rules++ {
+			for keywords := 0; keywords <= 2; keywords++ {
+				spec := CardDefinitionSpec{Name: "Overlap", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Keywords: map[Attr]int{attr: keywords}}
+				for range rules {
+					spec.Rules = append(spec.Rules, NewRuleDefinition(func() Ability {
+						if attr == Ward {
+							return WardTrigger(ManaCostOf("{2}"))
+						}
+						return NewAttributeAbility(attr)
+					}))
+				}
+				def, err := NewCardDefinition(spec)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if got, want := countCardAbility(NewCard(def), attr), max(rules, keywords); got != want {
+					t.Fatalf("%v: rules=%d keywords=%d: got %d, want %d", attr, rules, keywords, got, want)
+				}
+			}
+		}
 	}
 }

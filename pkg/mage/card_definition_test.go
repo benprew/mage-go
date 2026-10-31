@@ -43,6 +43,33 @@ func TestCardDefinitionPublication(t *testing.T) {
 	}
 }
 
+func TestCardDefinitionCompiledKeywords(t *testing.T) {
+	abilities := []RuleDefinition{keywordRule(Flying), keywordRule(FirstStrike), keywordRule(Flying)}
+	def, err := NewCardDefinition(CardDefinitionSpec{
+		Name: "Compiled Knight", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
+		Rules: abilities,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	abilities[0] = keywordRule(Haste)
+	def.NewInstance(uuid.Nil).Abilities()[1].SetController(uuid.New())
+	a, b := def.NewInstance(uuid.New()), def.NewInstance(uuid.New())
+	WithKeyword(Haste)(a)
+	for _, kw := range []Attr{Flying, FirstStrike} {
+		want := 1
+		if kw == Flying {
+			want = 2
+		}
+		if countCardAbility(def.NewInstance(uuid.Nil), kw) != want || countCardAbility(b, kw) != want || !NewPermanent(b, b.Owner()).HasKeyword(kw) {
+			t.Fatalf("compiled keyword %s did not reach the instance", kw)
+		}
+	}
+	if countCardAbility(def.NewInstance(uuid.Nil), Flying) != 2 || countCardAbility(def.NewInstance(uuid.Nil), FirstStrike) != 1 || countCardAbility(b, Haste) != 0 {
+		t.Fatal("compiled abilities share writable state")
+	}
+}
+
 func TestCardDefinitionInstances(t *testing.T) {
 	def := boltDefinition(t)
 	a, b := def.NewInstance(uuid.New()), def.NewInstance(uuid.New())
@@ -370,4 +397,17 @@ func TestCardCharacteristicSnapshotHasNoCardState(t *testing.T) {
 	if def.Power() != 0 || def.Toughness() != 0 {
 		t.Fatal("characteristic changes altered the shared definition")
 	}
+}
+
+func TestCardDefinitionRejectsInvalidAttributeCounts(t *testing.T) {
+	for _, keywords := range []map[Attr]int{{0: 1}, {Attr(NumAttrs): 1}, {Flying: -1}} {
+		_, err := NewCardDefinition(CardDefinitionSpec{Name: "Invalid attributes", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Keywords: keywords})
+		if err == nil {
+			t.Fatalf("accepted invalid attribute counts: %v", keywords)
+		}
+	}
+}
+
+func keywordRule(attr Attr) RuleDefinition {
+	return NewRuleDefinition(func() Ability { return NewAttributeAbility(attr) })
 }

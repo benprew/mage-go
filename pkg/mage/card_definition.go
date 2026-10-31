@@ -37,9 +37,12 @@ type CardDefinitionSpec struct {
 	ManaCost         ManaCost
 	Power, Toughness int
 	Colors           []Color
-	Keywords         map[Attr]int
-	Modes            []string
-	Rules            []RuleDefinition
+	// Keywords supplies legacy attribute counts, including capabilities.
+	// Counts overlap with Rules. The largest count applies.
+	// New ability definitions must use Rules.
+	Keywords map[Attr]int
+	Modes    []string
+	Rules    []RuleDefinition
 }
 
 // CardDefinition owns immutable printed characteristics and compiled rules.
@@ -50,6 +53,11 @@ type CardDefinition struct{ printed CardDefinitionSpec }
 func NewCardDefinition(spec CardDefinitionSpec) (*CardDefinition, error) {
 	if spec.Name == "" || len(spec.TypeLine.CardTypes) == 0 {
 		return nil, fmt.Errorf("card definition requires a name and card types")
+	}
+	for attr, count := range spec.Keywords {
+		if attr <= 0 || int(attr) >= NumAttrs || count < 0 {
+			return nil, fmt.Errorf("card %q: invalid attribute count %d for %v", spec.Name, count, attr)
+		}
 	}
 	for i, rule := range spec.Rules {
 		if err := validateRuleDefinition(rule); err != nil {
