@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -27,7 +28,9 @@ func (m *MtgishManaSymbol) UnmarshalJSON(data []byte) error {
 		Kind string          `json:"_ManaSymbol"`
 		Args json.RawMessage `json:"args"`
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&raw); err != nil {
 		return err
 	}
 	symbol := MtgishManaSymbol{Kind: raw.Kind}

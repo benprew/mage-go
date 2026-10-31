@@ -181,3 +181,13 @@ func TestCompileLandIntrinsicMana(t *testing.T) {
 		})
 	}
 }
+
+func TestCompileRejectsUnknownManaFields(t *testing.T) {
+	card, err := mage.ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Creature"]},"ManaCost":[{"_ManaSymbol":"ManaCostG","Restriction":true}]}`))
+	if err == nil {
+		def, compileErr := Compile(card)
+		if def != nil || compileErr == nil {
+			t.Fatal("accepted an unknown mana symbol field")
+		}
+	}
+}
