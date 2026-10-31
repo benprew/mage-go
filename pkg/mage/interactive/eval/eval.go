@@ -880,8 +880,13 @@ func evalNonCreaturePermanent(perm *mage.Permanent, g *mage.Game) int {
 	baseValue := perm.Card.ManaCost().CMC() / NonCreatureCMCDiv
 
 	bonus := 0
+	hasBehavior := false
 	for _, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
+		if _, simple := inner.(*mage.AttributeAbility); simple {
+			continue
+		}
+		hasBehavior = true
 		switch ab := inner.(type) {
 		case *mage.ManaAbility:
 			// Mana-producing artifacts get a small bonus.
@@ -910,7 +915,7 @@ func evalNonCreaturePermanent(perm *mage.Permanent, g *mage.Game) int {
 
 	// Permanents with abilities we couldn't classify still get a small bonus
 	// for having any runtime abilities (e.g., continuous effects, static abilities).
-	if len(perm.RuntimeAbilities) > 0 && bonus == 0 {
+	if hasBehavior && bonus == 0 {
 		bonus = 1
 	}
 

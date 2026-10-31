@@ -1189,3 +1189,17 @@ func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
 		g.AddToBattlefield(perm)
 	}
 }
+
+func TestNonCreatureAttributeAbilitiesHaveNoFallbackBonus(t *testing.T) {
+	for _, attr := range []core.Attr{core.AttrDoesNotUntap, core.AttrEntersTapped} {
+		card := mage.NewArtifact("Drawback", "{4}", mage.WithKeyword(attr))
+		perm := mage.NewPermanent(card, uuid.New())
+		if got, want := evalNonCreaturePermanent(perm, nil), 4/NonCreatureCMCDiv; got != want {
+			t.Fatalf("%v: got %d, want %d", attr, got, want)
+		}
+		perm.RuntimeAbilities = append(perm.RuntimeAbilities, mage.StaticAbility())
+		if got, want := evalNonCreaturePermanent(perm, nil), 4/NonCreatureCMCDiv+1; got != want {
+			t.Fatalf("static ability: got %d, want %d", got, want)
+		}
+	}
+}
