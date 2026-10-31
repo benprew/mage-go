@@ -138,3 +138,46 @@ func TestCompileRejectsLightningBolt(t *testing.T) {
 		t.Fatalf("accepted uncompiled spell actions: %v, %v", def, err)
 	}
 }
+
+func TestCompileLandIntrinsicMana(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		subtypes string
+		colors   []core.Color
+	}{
+		{"Forest", `["Forest"]`, []core.Color{core.Green}},
+		{"Tundra", `["Plains","Island"]`, []core.Color{core.White, core.Blue}},
+		{"Swamp", `["Swamp"]`, []core.Color{core.Black}},
+		{"Mountain", `["Mountain"]`, []core.Color{core.Red}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			card, err := mage.ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"` + tt.name + `","Typeline":{"Cardtypes":["Land"],"Subtypes":` + tt.subtypes + `}}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			def, err := Compile(card)
+			if err != nil {
+				t.Fatal(err)
+			}
+			perm := mage.NewPermanent(def.NewInstance(uuid.New()), uuid.New())
+			if len(perm.RuntimeAbilities) != len(tt.colors) {
+				t.Fatalf("got %d abilities, want %d mana abilities", len(perm.RuntimeAbilities), len(tt.colors))
+			}
+			for i, color := range tt.colors {
+				productions := mage.ManaProductionsForAbility(perm.RuntimeAbilities[i])
+				if len(productions) != 1 || productions[0].Color != color || productions[0].Amount != 1 {
+					t.Fatalf("unexpected mana productions: %v", productions)
+				}
+			}
+			for _, color := range tt.colors {
+				tg := gametest.NewTestGame(t)
+				controller := tg.GetPlayer(gametest.PlayerA).PlayerID()
+				land := tg.PutOnBattlefield(def.NewInstance(controller), controller)
+				cost := map[core.Color]string{core.White: "{W}", core.Blue: "{U}", core.Black: "{B}", core.Red: "{R}", core.Green: "{G}"}[color]
+				if !tg.TryPayMana(controller, cost) || !land.Tapped {
+					t.Fatalf("compiled land did not pay for %s mana", color)
+				}
+			}
+		})
+	}
+}

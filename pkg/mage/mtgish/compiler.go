@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -26,6 +27,16 @@ func Compile(card mage.MtgishCard) (*mage.CardDefinition, error) {
 			return nil, fmt.Errorf("mtgish card %q: Rules[%d]: %w", card.Name, i, err)
 		}
 		spec.Rules = append(spec.Rules, ability)
+	}
+	if slices.Contains(spec.TypeLine.CardTypes, core.TypeLand) {
+		seen := make(map[core.Color]bool)
+		for _, subtype := range spec.TypeLine.SubTypes {
+			color, ok := basicLandColors[subtype]
+			if ok && !seen[color] {
+				spec.Rules = append(spec.Rules, mage.NewRuleDefinition(func() mage.Ability { return mage.NewManaAbility(color) }))
+				seen[color] = true
+			}
+		}
 	}
 	return mage.NewCardDefinition(spec)
 }
@@ -72,4 +83,8 @@ func validateFields(card mage.MtgishCard) error {
 		return fmt.Errorf("mtgish card %q: source record requires _OracleCard", card.Name)
 	}
 	return nil
+}
+
+var basicLandColors = map[string]core.Color{
+	"Plains": core.White, "Island": core.Blue, "Swamp": core.Black, "Mountain": core.Red, "Forest": core.Green,
 }

@@ -19,7 +19,7 @@ Flying, FirstStrike, DoubleStrike, Deathtouch, Defender, Flash, Haste, Hexproof,
 Indestructible, Lifelink, Menace, Reach, Shroud, Trample, Vigilance, Banding, and
 Fear. Keywords use the same `RuleDefinition` factories as executable rules.
 Instances expose them through `card.Abilities()` and the normal engine keyword
-attributes. `definition.NewInstance(owner)` creates
+attributes. Land subtypes supply their intrinsic mana abilities. `definition.NewInstance(owner)` creates
 a playable instance. Rules with arguments, other rules, and unknown card
 fields return errors. A failure returns no partial definition.
 
