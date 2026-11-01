@@ -255,8 +255,7 @@ func (g *Game) ChangeOwner(cardID, newOwnerID uuid.UUID) error {
 	if _, ok := g.originalOwners[cardID]; !ok {
 		g.originalOwners[cardID] = card.Owner()
 	}
-	replacement := card.Copy()
-	replacement.SetID(cardID)
+	replacement := card.CloneInstance()
 	replacement.SetOwner(newOwnerID)
 	if !g.replaceCardReference(cardID, replacement) {
 		return fmt.Errorf("card not found: %s", cardID)

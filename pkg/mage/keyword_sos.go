@@ -597,7 +597,7 @@ func (g *Game) CastParadigmCopyFromExile(playerID uuid.UUID, name string) (*Stac
 	if ec.Card.Name() != name {
 		return nil, fmt.Errorf("exiled Paradigm card name mismatch: got %s, want %s", ec.Card.Name(), name)
 	}
-	card := ec.Card.Copy()
+	card := ec.Card.NewCopy()
 	card.SetID(cardID)
 	card.SetOwner(playerID)
 

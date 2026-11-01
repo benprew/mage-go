@@ -1576,6 +1576,12 @@ type doppelgangerCopyEffect struct {
 	keywords       []Keyword
 }
 
+func (e *doppelgangerCopyEffect) cloneEffect() ContinuousEffect {
+	cloned := *e
+	cloned.keywords = slices.Clone(e.keywords)
+	return &cloned
+}
+
 func (e *doppelgangerCopyEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }

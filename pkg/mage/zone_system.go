@@ -28,27 +28,26 @@ func NewZoneSystem() ZoneSystem {
 	}
 }
 
-// Clone creates a search clone with copy-on-write battlefield sharing and deep-copied exile.
+// Clone creates an independent copy of the zone state.
 func (zs *ZoneSystem) Clone() ZoneSystem {
-	clone := ZoneSystem{}
+	return zs.clone(newGameCloneContext())
+}
 
-	// Share battlefield permanents copy-on-write. Cap-limiting forces appends in
-	// either branch to allocate a distinct slice header/backing array.
-	if len(zs.battlefield) > 0 {
-		clone.battlefield = zs.battlefield[:len(zs.battlefield):len(zs.battlefield)]
-		zs.battlefieldSliceShared = true
-		clone.battlefieldSliceShared = true
+func (zs *ZoneSystem) clone(ctx *gameCloneContext) ZoneSystem {
+	clone := ZoneSystem{}
+	if zs.battlefield != nil {
+		clone.battlefield = make([]*Permanent, len(zs.battlefield))
+		for i, permanent := range zs.battlefield {
+			clone.battlefield[i] = ctx.permanent(permanent)
+		}
 	}
-	zs.battlefieldShared = true
-	zs.ownedPermanents = nil
-	clone.battlefieldShared = true
 
 	// Deep copy exile zone.
 	if len(zs.exile) > 0 {
 		clone.exile = make([]ExiledCard, len(zs.exile))
 		for i, ec := range zs.exile {
 			clone.exile[i] = ExiledCard{
-				Card:       ec.Card, // shared Card ref
+				Card:       ctx.card(ec.Card),
 				ExiledBy:   ec.ExiledBy,
 				FaceDown:   ec.FaceDown,
 				RevealedTo: append([]uuid.UUID(nil), ec.RevealedTo...),
@@ -57,13 +56,20 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	}
 
 	if zs.enteringPermanent != nil {
-		clone.enteringPermanent = zs.enteringPermanent
+		clone.enteringPermanent = ctx.permanent(zs.enteringPermanent)
 	}
 
 	// Deep copy LKI snapshots.
 	if len(zs.lki) > 0 {
 		clone.lki = make(map[uuid.UUID]*PermanentLKI, len(zs.lki))
-		maps.Copy(clone.lki, zs.lki)
+		for id, snapshot := range zs.lki {
+			if snapshot == nil {
+				continue
+			}
+			copied := *snapshot
+			copied.Snapshot = ctx.permanent(snapshot.Snapshot)
+			clone.lki[id] = &copied
+		}
 	}
 
 	// Deep copy cast-from-exile permissions.

@@ -68,7 +68,7 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 		}, nil
 	}
 
-	validation := cloneGameForCostPayment(g)
+	validation := g.Clone()
 	validation.resolution.SetX(spec.XValue)
 	if validation.removeCardFromZone(spec.Controller, spec.Card.ID(), spec.Zone) == nil {
 		return nil, fmt.Errorf("could not move %s from %s while validating its total cost", spec.Card.Name(), spec.Zone)

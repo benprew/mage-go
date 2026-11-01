@@ -1,112 +1,154 @@
 package mage
 
-// isolateCards preserves references to the same instance within a clone.
-// Legacy cards retain their existing copy-on-write contract.
-func (g *Game) isolateCards() {
-	instances := make(map[*Card]*Card)
-	abilities := make(map[Ability]Ability)
-	cloneCard := func(card *Card) *Card {
-		instance := card
-		if instance == nil || instance.definition == nil {
-			return card
-		}
-		if cloned, found := instances[instance]; found {
-			return cloned
-		}
-		cloned := instance.CloneInstance()
-		instances[instance] = cloned
-		for i, ability := range instance.abilities {
-			abilities[ability] = cloned.abilities[i]
-		}
-		return cloned
+import (
+	"maps"
+	"slices"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+// gameCloneContext preserves object identity within one simulation branch.
+// Rules copies use a separate operation to reset execution state.
+type gameCloneContext struct {
+	games            map[*Game]*Game
+	cards            map[*Card]*Card
+	abilities        map[Ability]Ability
+	targets          map[Target]Target
+	permanents       map[*Permanent]*Permanent
+	castContexts     map[*CastContext]*CastContext
+	events           map[*GameEvent]*GameEvent
+	effects          map[ContinuousEffect]ContinuousEffect
+	cardStorage      []Card
+	permanentStorage []Permanent
+}
+
+func newGameCloneContext() *gameCloneContext {
+	return &gameCloneContext{}
+}
+
+func newGameCloneContextForGame(g *Game) *gameCloneContext {
+	ctx := newGameCloneContext()
+	permanentCount := len(g.zones.battlefield) + len(g.zones.lki)
+	if g.zones.enteringPermanent != nil {
+		permanentCount++
 	}
-	cloneCards := func(cards []*Card) []*Card {
-		var result []*Card
-		for i, card := range cards {
-			cloned := cloneCard(card)
-			if cloned != card {
-				if result == nil {
-					result = append([]*Card(nil), cards...)
-				}
-				result[i] = cloned
-			}
-		}
-		if result != nil {
-			return result
-		}
-		return cards
-	}
+	cardCount := permanentCount + len(g.zones.exile)
 	for _, player := range g.players {
-		bp := player.(*SearchPlayer).BasePlayer
-		bp.hand = cloneCards(bp.hand)
-		bp.library = cloneCards(bp.library)
-		bp.graveyard = cloneCards(bp.graveyard)
-		bp.ante = cloneCards(bp.ante)
+		cardCount += len(player.Hand()) + len(player.Library()) + len(player.Graveyard()) + len(player.Ante())
 	}
-	for i, exiled := range g.zones.exile {
-		g.zones.exile[i].Card = cloneCard(exiled.Card)
+	ctx.cardStorage = make([]Card, cardCount)
+	ctx.permanentStorage = make([]Permanent, permanentCount)
+	ctx.cards = make(map[*Card]*Card, cardCount)
+	ctx.permanents = make(map[*Permanent]*Permanent, permanentCount)
+	return ctx
+}
+
+func (ctx *gameCloneContext) card(card *Card) *Card {
+	if card == nil {
+		return nil
 	}
-	permanents := make(map[*Permanent]*Permanent)
-	clonePermanent := func(permanent *Permanent) *Permanent {
-		if permanent == nil {
-			return nil
-		}
-		if cloned, ok := permanents[permanent]; ok {
-			return cloned
-		}
-		card := cloneCard(permanent.Card)
-		if card == permanent.Card {
-			return permanent
-		}
-		cloned := &Permanent{}
-		clonePermanentInto(cloned, permanent)
-		cloned.Card = card
-		cloned.RuntimeAbilities = make([]Ability, len(permanent.RuntimeAbilities))
-		for i, ability := range permanent.RuntimeAbilities {
-			mapped, ok := abilities[ability]
-			if !ok {
-				mapped = cloneInstanceAbility(ability)
-				abilities[ability] = mapped
-			}
-			cloned.RuntimeAbilities[i] = mapped
-		}
-		permanents[permanent] = cloned
+	if cloned, ok := ctx.cards[card]; ok {
 		return cloned
 	}
-	for i, permanent := range g.zones.battlefield {
-		cloned := clonePermanent(permanent)
-		if cloned != permanent {
-			g.zones.ensureBattlefieldSliceOwned()
-			g.zones.battlefield[i] = cloned
-			g.zones.addOwnedPermanent(cloned)
-		}
+	var cloned *Card
+	if len(ctx.cardStorage) > 0 {
+		cloned = &ctx.cardStorage[0]
+		ctx.cardStorage = ctx.cardStorage[1:]
+	} else {
+		cloned = &Card{}
 	}
-	g.zones.enteringPermanent = clonePermanent(g.zones.enteringPermanent)
-	cloneContext := func(context *CastContext) *CastContext {
-		if context == nil {
-			return nil
-		}
-		cloned := cloneCastContext(context)
-		cloned.RevealedAtCast = cloneCards(context.RevealedAtCast)
+	*cloned = *card
+	if ctx.cards == nil {
+		ctx.cards = make(map[*Card]*Card)
+	}
+	ctx.cards[card] = cloned
+	cloned.capabilityAttrs = maps.Clone(card.capabilityAttrs)
+	cloned.castTargets = ctx.targetList(card.castTargets)
+	cloned.additionalCosts = slices.Clone(card.additionalCosts)
+	cloned.alternateCosts = cloneAlternateCosts(card.alternateCosts)
+	cloned.abilities = ctx.abilityList(card.abilities)
+	cloned.cardCharacteristics = *card.clone()
+	cloned.characteristics = card.characteristics.clone()
+	if card.auraAIProfile != nil {
+		profile := *card.auraAIProfile
+		cloned.auraAIProfile = &profile
+	}
+	return cloned
+}
+
+func (ctx *gameCloneContext) cardList(cards []*Card) []*Card {
+	if cards == nil {
+		return nil
+	}
+	cloned := make([]*Card, len(cards))
+	for i, card := range cards {
+		cloned[i] = ctx.card(card)
+	}
+	return cloned
+}
+
+func (ctx *gameCloneContext) abilityList(abilities []Ability) []Ability {
+	if abilities == nil {
+		return nil
+	}
+	cloned := make([]Ability, len(abilities))
+	for i, ability := range abilities {
+		cloned[i] = ctx.ability(ability)
+	}
+	return cloned
+}
+
+func (ctx *gameCloneContext) permanent(permanent *Permanent) *Permanent {
+	if permanent == nil {
+		return nil
+	}
+	if cloned, ok := ctx.permanents[permanent]; ok {
 		return cloned
 	}
-	for _, object := range g.stack.objects {
-		object.Card = cloneCard(object.Card)
-		object.TargetSource = cloneCard(object.TargetSource)
-		modernCard := object.Card != nil && object.Card.definition != nil
-		modernSource := object.TargetSource != nil && object.TargetSource.definition != nil
-		if modernCard || modernSource {
-			object.TargetSpecs = cloneInstanceTargets(object.TargetSpecs)
-		}
-		object.CastContext = cloneContext(object.CastContext)
+	var cloned *Permanent
+	if len(ctx.permanentStorage) > 0 {
+		cloned = &ctx.permanentStorage[0]
+		ctx.permanentStorage = ctx.permanentStorage[1:]
+	} else {
+		cloned = &Permanent{}
 	}
-	g.resolution.resolvingCard = cloneCard(g.resolution.resolvingCard)
-	g.resolution.lastCostReveal = cloneCard(g.resolution.lastCostReveal)
-	g.resolution.lastExiledCard = cloneCard(g.resolution.lastExiledCard)
-	g.resolution.resolvingCastContext = cloneContext(g.resolution.resolvingCastContext)
-	for _, trigger := range g.triggers.pending {
-		if mapped, ok := abilities[trigger.ability]; ok {
-			trigger.ability = mapped.(TriggeredAbility)
-		}
+	if ctx.permanents == nil {
+		ctx.permanents = make(map[*Permanent]*Permanent)
 	}
+	ctx.permanents[permanent] = cloned
+	clonePermanentInto(cloned, permanent)
+	cloned.Card = ctx.card(permanent.Card)
+	cloned.RuntimeAbilities = ctx.abilityList(permanent.RuntimeAbilities)
+	return cloned
+}
+
+func (ctx *gameCloneContext) castContext(context *CastContext) *CastContext {
+	if context == nil {
+		return nil
+	}
+	if cloned, ok := ctx.castContexts[context]; ok {
+		return cloned
+	}
+	cloned := cloneCastContext(context)
+	if ctx.castContexts == nil {
+		ctx.castContexts = make(map[*CastContext]*CastContext)
+	}
+	ctx.castContexts[context] = cloned
+	cloned.RevealedAtCast = ctx.cardList(context.RevealedAtCast)
+	return cloned
+}
+
+func (ctx *gameCloneContext) event(event *GameEvent) *GameEvent {
+	if event == nil {
+		return nil
+	}
+	if cloned, ok := ctx.events[event]; ok {
+		return cloned
+	}
+	cloned := *event
+	if ctx.events == nil {
+		ctx.events = make(map[*GameEvent]*GameEvent)
+	}
+	ctx.events[event] = &cloned
+	return &cloned
 }

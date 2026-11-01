@@ -142,11 +142,19 @@ func (ts *TriggerSystem) ClearEndOfTurn() {
 
 // Clone creates an independent deep copy of TriggerSystem.
 func (ts *TriggerSystem) Clone() TriggerSystem {
+	return ts.clone(newGameCloneContext())
+}
+
+func (ts *TriggerSystem) clone(ctx *gameCloneContext) TriggerSystem {
 	var clonedPending []*pendingTrigger
 	if len(ts.pending) > 0 {
 		clonedPending = make([]*pendingTrigger, len(ts.pending))
 		for i, pt := range ts.pending {
 			clone := *pt
+			if pt.ability != nil {
+				clone.ability = ctx.ability(pt.ability).(TriggeredAbility)
+			}
+			clone.event = ctx.event(pt.event)
 			clonedPending[i] = &clone
 		}
 	}
@@ -171,7 +179,7 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 
 	var batch *zoneChangeBatch
 	if ts.zoneBatch != nil {
-		batch = &zoneChangeBatch{before: ts.zoneBatch.before, events: append([]GameEvent(nil), ts.zoneBatch.events...)}
+		batch = &zoneChangeBatch{before: ctx.game(ts.zoneBatch.before), events: append([]GameEvent(nil), ts.zoneBatch.events...)}
 	}
 	return TriggerSystem{
 		stateChecksPaused: ts.stateChecksPaused,

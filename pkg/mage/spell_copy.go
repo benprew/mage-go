@@ -47,7 +47,7 @@ func (g *Game) CopyStackObjectDirect(obj *StackObject, controller uuid.UUID, may
 func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayChooseNewTargets bool) *StackObject {
 	var copiedCard *Card
 	if original.Card != nil {
-		copiedCard = original.Card.Copy()
+		copiedCard = original.Card.NewCopy()
 		copiedCard.SetOwner(controller)
 	}
 
@@ -76,10 +76,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp.Targets = append([]uuid.UUID(nil), original.Targets...)
-	cp.TargetSpecs = append([]Target(nil), original.TargetSpecs...)
-	if copiedCard != nil && copiedCard.definition != nil {
-		cp.TargetSpecs = cloneInstanceTargets(original.TargetSpecs)
-	}
+	cp.TargetSpecs = cloneInstanceTargets(original.TargetSpecs)
 
 	if len(original.ModalTargets) > 0 {
 		cp.ModalTargets = make([][]uuid.UUID, len(original.ModalTargets))

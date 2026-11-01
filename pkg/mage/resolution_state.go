@@ -156,18 +156,22 @@ func (s *ResolutionState) SetLastExiledCard(c *Card)        { s.lastExiledCard =
 
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
+	return s.clone(newGameCloneContext())
+}
+
+func (s *ResolutionState) clone(ctx *gameCloneContext) ResolutionState {
 	c := ResolutionState{
 		currentX:               s.currentX,
 		currentMode:            s.currentMode,
 		currentEventAmount:     s.currentEventAmount,
 		currentEventSourceID:   s.currentEventSourceID,
-		resolvingCard:          s.resolvingCard,
+		resolvingCard:          ctx.card(s.resolvingCard),
 		resolvingColorSourceID: s.resolvingColorSourceID,
 		resolvingCastZone:      s.resolvingCastZone,
-		resolvingCastContext:   s.resolvingCastContext,
+		resolvingCastContext:   ctx.castContext(s.resolvingCastContext),
 		lastSacrificedID:       s.lastSacrificedID,
-		lastCostReveal:         s.lastCostReveal,
-		lastExiledCard:         s.lastExiledCard,
+		lastCostReveal:         ctx.card(s.lastCostReveal),
+		lastExiledCard:         ctx.card(s.lastExiledCard),
 	}
 	if s.resolvingColorOverride != nil {
 		colors := append([]Color(nil), (*s.resolvingColorOverride)...)

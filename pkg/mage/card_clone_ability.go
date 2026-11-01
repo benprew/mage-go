@@ -7,6 +7,25 @@ import (
 
 // cloneInstanceAbility copies ability context. Compiled effects and costs are immutable.
 func cloneInstanceAbility(ability Ability) Ability {
+	return newGameCloneContext().ability(ability)
+}
+
+func (ctx *gameCloneContext) ability(ability Ability) Ability {
+	if ability == nil {
+		return nil
+	}
+	if cloned, ok := ctx.abilities[ability]; ok {
+		return cloned
+	}
+	cloned := ctx.copyAbility(ability)
+	if ctx.abilities == nil {
+		ctx.abilities = make(map[Ability]Ability)
+	}
+	ctx.abilities[ability] = cloned
+	return cloned
+}
+
+func (ctx *gameCloneContext) copyAbility(ability Ability) Ability {
 	switch a := ability.(type) {
 	case *AttributeAbility:
 		cloned := *a
@@ -19,7 +38,7 @@ func cloneInstanceAbility(ability Ability) Ability {
 		cloned := *a
 		cloned.Effects = make([]ContinuousEffect, len(a.Effects))
 		for i, effect := range a.Effects {
-			cloned.Effects[i] = cloneInstanceContinuous(effect)
+			cloned.Effects[i] = ctx.continuous(effect)
 		}
 		return &cloned
 	case *SacrificeUnlessLandAbility:
@@ -65,79 +84,99 @@ func cloneInstanceAbility(ability Ability) Ability {
 		return &cloned
 	case *ActionDefinition:
 		cloned := *a
-		cloneInstanceAction(&cloned)
+		ctx.action(&cloned)
 		return &cloned
 	case *GraveyardActivatedAbility:
 		cloned := *a
-		action := *a.SimpleActivatedAbility
-		cloneInstanceAction(&action)
-		cloned.SimpleActivatedAbility = &action
+		cloned.SimpleActivatedAbility = ctx.ability(a.SimpleActivatedAbility).(*ActionDefinition)
 		return &cloned
 	case *EquipAbility:
 		cloned := *a
-		cloneInstanceAction(&cloned.ActionDefinition)
+		ctx.action(&cloned.ActionDefinition)
 		return &cloned
 	case *GenericTriggered:
 		cloned := *a
 		cloned.effects = slices.Clone(a.effects)
-		cloned.targets = cloneInstanceTargets(a.targets)
+		cloned.targets = ctx.targetList(a.targets)
 		cloned.zones = slices.Clone(a.zones)
-		cloned.modes = cloneInstanceModes(a.modes)
+		cloned.modes = ctx.modes(a.modes)
 		return &cloned
 	case *ModalSpellAbility:
 		cloned := *a
-		cloneInstanceAction(&cloned.SpellAbility)
-		cloned.modes = cloneInstanceModes(a.modes)
+		ctx.action(&cloned.SpellAbility)
+		cloned.modes = ctx.modes(a.modes)
 		return &cloned
 	case *grantedByEffect:
 		cloned := *a
-		cloned.Ability = cloneInstanceAbility(a.Ability)
+		cloned.Ability = ctx.ability(a.Ability)
 		return &cloned
 	default:
 		panic(fmt.Sprintf("mage: ability %T needs an instance clone operation", ability))
 	}
 }
 
-func cloneInstanceAction(action *ActionDefinition) {
+func (ctx *gameCloneContext) action(action *ActionDefinition) {
 	action.effects = slices.Clone(action.effects)
 	action.costs = slices.Clone(action.costs)
-	action.targets = cloneInstanceTargets(action.targets)
+	action.targets = ctx.targetList(action.targets)
 	action.activationConds = slices.Clone(action.activationConds)
 	action.aiHints = slices.Clone(action.aiHints)
 	for i := range action.aiHints {
 		action.aiHints[i].Roles = slices.Clone(action.aiHints[i].Roles)
 	}
-	action.modes = cloneInstanceModes(action.modes)
+	action.modes = ctx.modes(action.modes)
 }
 
-func cloneInstanceModes(modes []Mode) []Mode {
+func (ctx *gameCloneContext) modes(modes []Mode) []Mode {
 	result := slices.Clone(modes)
 	for i := range result {
-		result[i].Targets = cloneInstanceTargets(modes[i].Targets)
+		result[i].Targets = ctx.targetList(modes[i].Targets)
 		result[i].Effects = slices.Clone(modes[i].Effects)
 	}
 	return result
 }
 
 func cloneInstanceTargets(targets []Target) []Target {
+	return newGameCloneContext().targetList(targets)
+}
+
+func (ctx *gameCloneContext) targetList(targets []Target) []Target {
+	if targets == nil {
+		return nil
+	}
 	result := make([]Target, len(targets))
 	for i, target := range targets {
-		result[i] = cloneInstanceTarget(target)
+		result[i] = ctx.target(target)
 	}
 	return result
 }
 
-func cloneInstanceTarget(target Target) Target {
+func (ctx *gameCloneContext) target(target Target) Target {
+	if target == nil {
+		return nil
+	}
+	if cloned, ok := ctx.targets[target]; ok {
+		return cloned
+	}
+	cloned := ctx.copyTarget(target)
+	if ctx.targets == nil {
+		ctx.targets = make(map[Target]Target)
+	}
+	ctx.targets[target] = cloned
+	return cloned
+}
+
+func (ctx *gameCloneContext) copyTarget(target Target) Target {
 	switch t := target.(type) {
 	case interface{ CloneTarget() Target }:
 		return t.CloneTarget()
 	case *countBoundTarget:
 		cloned := *t
-		cloned.inner = cloneInstanceTarget(t.inner)
+		cloned.inner = ctx.target(t.inner)
 		return &cloned
 	case *randomTarget:
 		cloned := *t
-		cloned.inner = cloneInstanceTarget(t.inner)
+		cloned.inner = ctx.target(t.inner)
 		return &cloned
 	case *randomActivePlayerExchangePairTarget:
 		cloned := *t
@@ -145,7 +184,7 @@ func cloneInstanceTarget(target Target) Target {
 		return &cloned
 	case *opponentChosenTarget:
 		cloned := *t
-		cloned.inner = cloneInstanceTarget(t.inner)
+		cloned.inner = ctx.target(t.inner)
 		return &cloned
 	case *CreatureTarget:
 		cloned := *t
@@ -242,7 +281,19 @@ func cloneInstanceTarget(target Target) Target {
 	}
 }
 
-func cloneInstanceContinuous(effect ContinuousEffect) ContinuousEffect {
+func (ctx *gameCloneContext) continuous(effect ContinuousEffect) ContinuousEffect {
+	if cloned, ok := ctx.effects[effect]; ok {
+		return cloned
+	}
+	cloned := ctx.copyContinuous(effect)
+	if ctx.effects == nil {
+		ctx.effects = make(map[ContinuousEffect]ContinuousEffect)
+	}
+	ctx.effects[effect] = cloned
+	return cloned
+}
+
+func (ctx *gameCloneContext) copyContinuous(effect ContinuousEffect) ContinuousEffect {
 	switch e := effect.(type) {
 	case *funcContinuousEffect:
 		cloned := *e
@@ -264,16 +315,32 @@ func cloneInstanceContinuous(effect ContinuousEffect) ContinuousEffect {
 		cloned := *e
 		return &cloned
 	case *doppelgangerCopyEffect:
-		cloned := *e
-		cloned.keywords = slices.Clone(e.keywords)
-		return &cloned
+		return e.cloneEffect()
 	case *objectColorEffect:
 		cloned := *e
 		cloned.colors = slices.Clone(e.colors)
 		return &cloned
 	case *printedAbilityContinuousEffect:
-		return &printedAbilityContinuousEffect{ContinuousEffect: cloneInstanceContinuous(e.ContinuousEffect)}
+		return &printedAbilityContinuousEffect{ContinuousEffect: ctx.continuous(e.ContinuousEffect)}
 	default:
 		panic(fmt.Sprintf("mage: continuous effect %T needs an instance clone operation", effect))
 	}
+}
+
+func (ctx *gameCloneContext) activeEffect(effect ContinuousEffect) ContinuousEffect {
+	if cloned, ok := ctx.effects[effect]; ok {
+		return cloned
+	}
+	cloned := effect
+	switch e := effect.(type) {
+	case *printedAbilityContinuousEffect:
+		cloned = &printedAbilityContinuousEffect{ContinuousEffect: ctx.activeEffect(e.ContinuousEffect)}
+	case deepCloneableEffect:
+		cloned = e.cloneEffect()
+	}
+	if ctx.effects == nil {
+		ctx.effects = make(map[ContinuousEffect]ContinuousEffect)
+	}
+	ctx.effects[effect] = cloned
+	return cloned
 }

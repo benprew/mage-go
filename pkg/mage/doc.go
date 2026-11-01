@@ -6,8 +6,8 @@
 // implementing every domain rule directly, [Game] composes cohesive, stateful
 // subsystems that each own their state invariants and cloning behavior:
 //
-//   - [ZoneSystem]: Owns battlefield storage with copy-on-write semantics for AI
-//     search, exile storage with visibility metadata, entering-permanent tracking,
+//   - [ZoneSystem]: Owns battlefield storage, exile visibility,
+//     entering-permanent tracking,
 //     and Last-Known Information (LKI) snapshots.
 //   - [TurnSystem]: Owns turn counters, current phase and step, active player
 //     index, extra turns, [TurnSchedule] lifecycle, and one-shot untap skip counters.
@@ -41,8 +41,9 @@
 // Capability and type attributes do not appear in the ability list.
 //
 // Runtime APIs use *Card to preserve the identity of each mutable card object.
-// Use [Card.Copy] for a distinct object and [Card.CloneInstance] for a search
-// branch. Both operations retain the shared definition.
+// Use [Card.NewCopy] for a distinct object with fresh ability state.
+// Use [Card.CloneInstance] to preserve identity and current execution state.
+// Both operations retain the shared definition.
 //
 // [CardDefinition] stores printed name, type line, mana cost, power, toughness,
 // colors, keywords, mode descriptions, and compiled [RuleDefinition] values.
@@ -62,12 +63,24 @@
 // [NewCard] creates private state from a shared definition. Card options
 // apply to that card. [CardDefinition.NewInstance] also assigns an owner.
 // It creates a [Card] with a new identity and
-// an owner. [Card.Copy] creates another identity. For search branches,
+// an owner. [Card.NewCopy] creates another identity. For simulation branches,
 // [Card.CloneInstance] preserves identity and copies ability state.
-// [Game.Clone] keeps references to each instance consistent within the branch.
+// [Game.Clone] uses one clone context for cards, abilities, targets, and cast
+// context. Legacy and definition-backed cards both get private mutable state.
+// References to the same object remain consistent within the branch.
+// Payment validation and simultaneous zone changes use the same operation.
 // Definitions are shared. Battlefield state stays on [Permanent]. Targets,
 // selected modes, X, payments, and distributions stay on [StackObject] or in
 // local announcement state. Target requirements do not store announcement choices.
+//
+// [Card.CopiableValues] captures a private snapshot of card characteristics.
+// [Card.ApplyCopiableValues] applies it without changing the receiver's ID,
+// owner, or original printed definition. Copied abilities get new identities,
+// no selected targets, and unused activation limits. Source execution state
+// is not part of this snapshot. Battlefield counters, status, and temporary
+// effects stay on Permanent. [Card.CloneFrom] and [Card.Copy] remain as
+// compatibility names for ApplyCopiableValues and NewCopy.
+// Spell copies use [CopySpellOnStack] to copy stack choices separately.
 //
 // [Registry.RegisterDefinition] and [Registry.RegisterDefinitions] publish
 // definitions. Batch registration rejects conflicts before it changes the registry.

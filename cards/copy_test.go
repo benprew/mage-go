@@ -59,9 +59,13 @@ func TestStoneGiantCopyOwnsTargets(t *testing.T) {
 	if err := target.Choose(uuid.Nil, card, nil, []uuid.UUID{chosen}); err != nil {
 		t.Fatal(err)
 	}
-	copyTarget := card.Copy().Abilities()[0].(mage.ActivatedAbility).Targets()[0]
-	copyTarget.Chosen()[0] = uuid.New()
-	copyTarget.Reset()
+	copyTarget := card.NewCopy().Abilities()[0].(mage.ActivatedAbility).Targets()[0]
+	if copyTarget.IsChosen() {
+		t.Fatal("rules copy retained the original targets")
+	}
+	cloneTarget := card.CloneInstance().Abilities()[0].(mage.ActivatedAbility).Targets()[0]
+	cloneTarget.Chosen()[0] = uuid.New()
+	cloneTarget.Reset()
 	if !target.IsChosen() || target.Chosen()[0] != chosen {
 		t.Fatal("copy changed the original targets")
 	}

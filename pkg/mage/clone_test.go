@@ -253,15 +253,15 @@ func TestCloneIsolation(t *testing.T) {
 	}
 }
 
-func TestCloneSharesPermanentsUntilMutation(t *testing.T) {
+func TestCloneOwnsPermanentsBeforeMutation(t *testing.T) {
 	g := setupTestGame()
 	c := g.Clone()
 
-	if !g.zones.battlefieldShared || !c.zones.battlefieldShared {
-		t.Fatal("clone should mark both branches as sharing battlefield permanents")
+	if c.zones.battlefieldShared {
+		t.Fatal("clone must own its permanent state")
 	}
-	if g.zones.battlefield[1] != c.zones.battlefield[1] {
-		t.Fatal("clone should initially share permanent pointers")
+	if g.zones.battlefield[1] == c.zones.battlefield[1] {
+		t.Fatal("clone must have private permanent pointers")
 	}
 
 	clonePerm := c.MutablePermanent(g.zones.battlefield[1].ID())
@@ -349,7 +349,7 @@ func TestCloneOriginalMutationDoesNotAffectClone(t *testing.T) {
 	}
 }
 
-func TestCloneApplyWithoutControlEffectsCopiesOnlyAffectedPermanents(t *testing.T) {
+func TestCloneApplyPreservesPrivatePermanents(t *testing.T) {
 	pA := NewBasePlayer("Alice")
 	pB := NewBasePlayer("Bob")
 	g := NewGame(pA, pB)
@@ -371,8 +371,8 @@ func TestCloneApplyWithoutControlEffectsCopiesOnlyAffectedPermanents(t *testing.
 	if clone.FindPermanent(target.ID()) == target {
 		t.Fatal("effect target should be copied before its derived state changes")
 	}
-	if clone.FindPermanent(untouched.ID()) != untouched {
-		t.Fatal("applying effects without a control effect should keep untouched permanents shared")
+	if clone.FindPermanent(untouched.ID()) == untouched {
+		t.Fatal("untouched permanents must also have private card state")
 	}
 	if target.powerBonus != 0 || clone.FindPermanent(target.ID()).powerBonus != 1 {
 		t.Fatal("temporary boost should change only the clone")
@@ -1056,7 +1056,8 @@ func TestCloneStackHeavyGameAllocationBudget(t *testing.T) {
 	allocs := testing.AllocsPerRun(100, func() {
 		cloneGameSink = g.Clone()
 	})
-	const maxAllocs = 138
+	// Card and ability state must be private, including legacy cards.
+	const maxAllocs = 220
 	if allocs > maxAllocs {
 		t.Fatalf("stack-heavy Game.Clone allocated %.0f times, budget is %d", allocs, maxAllocs)
 	}

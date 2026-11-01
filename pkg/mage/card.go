@@ -2,7 +2,6 @@ package mage
 
 import (
 	"iter"
-	"maps"
 	"slices"
 	"strings"
 
@@ -297,60 +296,21 @@ func (c *Card) addCapability(attr Attr, count int) {
 	c.capabilityAttrs[attr] += count
 }
 
+// CloneFrom applies the source's copiable values to this card.
+// Use ApplyCopiableValues for new code.
 func (c *Card) CloneFrom(other *Card) {
-	c.capabilityAttrs = maps.Clone(other.capabilityAttrs)
-	snapshot := other.copyCharacteristics()
-	castTargets := cloneInstanceTargets(other.CastTargets())
-	abilities := make([]Ability, 0, len(other.abilities))
-	for _, ability := range other.abilities {
-		abilities = append(abilities, cloneInstanceAbility(ability))
-	}
-	if c.definition == nil {
-		c.cardCharacteristics = *snapshot
-		c.uncounterable = other.uncounterable
-		c.auraAIProfile = other.auraAIProfile
-		c.alternateCosts = slices.Clone(other.alternateCosts)
-		for i := range c.alternateCosts {
-			c.alternateCosts[i].Mana = copyPrintedManaCost(other.alternateCosts[i].Mana)
-			c.alternateCosts[i].Additional = slices.Clone(other.alternateCosts[i].Additional)
-		}
-	} else {
-		c.characteristics = snapshot
-	}
-	c.castTargets = castTargets
-	c.abilities = abilities
+	c.ApplyCopiableValues(other.CopiableValues())
 }
 
-// Copy creates a distinct card. CloneInstance preserves the identity for search.
+// Copy creates a new object from this card's copiable values.
+// Use NewCopy for new code and CloneInstance to preserve execution state.
 func (c *Card) Copy() *Card {
-	cloned := c.CloneInstance()
-	cloned.id = uuid.New()
-	for _, ability := range cloned.abilities {
-		if setter, ok := ability.(interface{ setAbilityID(uuid.UUID) }); ok {
-			setter.setAbilityID(uuid.New())
-		}
-	}
-	return cloned
+	return c.NewCopy()
 }
 
-// CloneInstance shares the printed definition and copies the execution state.
+// CloneInstance preserves identity and copies current execution state.
 func (c *Card) CloneInstance() *Card {
-	cloned := *c
-	cloned.capabilityAttrs = maps.Clone(c.capabilityAttrs)
-	cloned.castTargets = cloneInstanceTargets(c.castTargets)
-	cloned.additionalCosts = slices.Clone(c.additionalCosts)
-	cloned.alternateCosts = slices.Clone(c.alternateCosts)
-	for i := range cloned.alternateCosts {
-		cloned.alternateCosts[i].Mana = copyPrintedManaCost(c.alternateCosts[i].Mana)
-		cloned.alternateCosts[i].Additional = slices.Clone(c.alternateCosts[i].Additional)
-	}
-	cloned.abilities = make([]Ability, len(c.abilities))
-	for i, ability := range c.abilities {
-		cloned.abilities[i] = cloneInstanceAbility(ability)
-	}
-	cloned.cardCharacteristics = *c.clone()
-	cloned.characteristics = c.characteristics.clone()
-	return &cloned
+	return newGameCloneContext().card(c)
 }
 
 // CardOption configures a card during construction.
