@@ -15,7 +15,7 @@ type DeckCard struct {
 
 // InferPersonalityFromDeck chooses an AI personality from a deck list.
 func InferPersonalityFromDeck(entries []DeckCard) WeightedPersonality {
-	var cards []mage.Card
+	var cards []*mage.Card
 	for _, entry := range entries {
 		for range entry.Count {
 			card, err := mage.CreateCard(entry.Name)
@@ -30,7 +30,7 @@ func InferPersonalityFromDeck(entries []DeckCard) WeightedPersonality {
 
 // InferPersonalityFromCards chooses an AI personality from card mix, curve, and
 // effect metadata.
-func InferPersonalityFromCards(cards []mage.Card) WeightedPersonality {
+func InferPersonalityFromCards(cards []*mage.Card) WeightedPersonality {
 	stats := analyzeDeck(cards)
 	if stats.total == 0 {
 		return MidrangeWeighted
@@ -146,7 +146,7 @@ func (s deckStats) counterScore() float64 {
 	return float64(s.counterspells) / float64(max(s.total-s.lands, 1))
 }
 
-func analyzeDeck(cards []mage.Card) deckStats {
+func analyzeDeck(cards []*mage.Card) deckStats {
 	var stats deckStats
 	for _, card := range cards {
 		if card == nil {
@@ -182,8 +182,8 @@ func analyzeDeck(cards []mage.Card) deckStats {
 	return stats
 }
 
-func classifyDeckCardEffects(card mage.Card, stats *deckStats) {
-	for _, ability := range card.Abilities() {
+func classifyDeckCardEffects(card *mage.Card, stats *deckStats) {
+	for _, ability := range card.AllAbilities() {
 		switch ab := mage.UnwrapAbility(ability).(type) {
 		case *mage.SpellAbility:
 			classifyEffects(ab.Effects(), card, stats)
@@ -195,7 +195,7 @@ func classifyDeckCardEffects(card mage.Card, stats *deckStats) {
 	}
 }
 
-func classifyEffects(effects []mage.Effect, card mage.Card, stats *deckStats) {
+func classifyEffects(effects []mage.Effect, card *mage.Card, stats *deckStats) {
 	for _, effect := range effects {
 		props := effect.Properties()
 		if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
@@ -227,25 +227,23 @@ func classifyEffects(effects []mage.Effect, card mage.Card, stats *deckStats) {
 	}
 }
 
-func hasDeckEvasion(card mage.Card) bool {
-	attrs := card.AttrSeeds()
-	for _, attr := range []core.Attr{
-		core.Flying, core.Fear, core.Menace, core.UnblockableKW,
-		core.Islandwalk, core.Swampwalk, core.Forestwalk,
-		core.Mountainwalk, core.Plainswalk, core.Trample,
-	} {
-		if attrs[attr] > 0 {
+func hasDeckEvasion(card *mage.Card) bool {
+	for _, ability := range card.AllAbilities() {
+		switch mage.AbilityAttribute(ability) {
+		case core.Flying, core.Fear, core.Menace, core.UnblockableKW,
+			core.Islandwalk, core.Swampwalk, core.Forestwalk,
+			core.Mountainwalk, core.Plainswalk, core.Trample:
 			return true
 		}
 	}
 	return false
 }
 
-func hasManaAcceleration(card mage.Card) bool {
+func hasManaAcceleration(card *mage.Card) bool {
 	if card.HasType(core.TypeLand) {
 		return false
 	}
-	for _, ability := range card.Abilities() {
+	for _, ability := range card.AllAbilities() {
 		if _, ok := mage.UnwrapAbility(ability).(*mage.ManaAbility); ok {
 			return true
 		}

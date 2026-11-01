@@ -38,7 +38,7 @@ type MillModifierFactory func(sourceID, controllerID uuid.UUID) MillModifierFn
 // game action whose card count is replaceable; per CR 614.6 these stack
 // additively in registration order.
 func WithMillReplacement(factory MillModifierFactory) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		c.AddAbility(EntersBattlefieldTrigger(
 			FuncEffect("install mill modifier",
 				EffectProperties{},

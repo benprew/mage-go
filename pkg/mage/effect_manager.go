@@ -8,6 +8,13 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
+// layerPostPT is not one of the CR 613.1 layers but the pass CR 613.11 asks
+// for: continuous effects that modify the game rules rather than an object's
+// characteristics are applied after all other continuous effects. Meekstone's
+// "power 3 or greater" reads the power the layers produced, so in layer 6 it
+// would still see a creature's power before the layer 7 modifications.
+const layerPostPT Layer = LayerPT + 1
+
 // ContinuousEffect represents an ongoing effect on the game.
 type ContinuousEffect interface {
 	Text() string
@@ -508,8 +515,8 @@ func (em *EffectManager) Apply(g *Game) {
 			for _, a := range p.RuntimeAbilities {
 				existing[a.AbilityID()] = true
 			}
-			restored := make([]Ability, 0, len(p.Card.Abilities())+len(p.RuntimeAbilities))
-			for _, a := range p.Card.Abilities() {
+			restored := make([]Ability, 0, len(p.Card.abilities)+len(p.RuntimeAbilities))
+			for _, a := range p.Card.abilities {
 				if !existing[a.AbilityID()] {
 					restored = append(restored, a)
 				}
@@ -557,7 +564,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.applyControlLayer(g)
 
 	// Apply the remaining layers in order. Layers 1 and 2 were applied above.
-	for _, layer := range []Layer{LayerCopy, LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerCopy, LayerControl, LayerType, LayerColor, LayerAbility, LayerPT, layerPostPT} {
 		if layer == LayerCopy || layer == LayerControl {
 			continue
 		}

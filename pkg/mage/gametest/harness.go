@@ -1228,7 +1228,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 	return targets
 }
 
-func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
+func (tg *TestGame) validateTargets(sourceCard *mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
 	cts := sourceCard.CastTargets()
 	var valid []uuid.UUID
 	for i, tid := range targets {

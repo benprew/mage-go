@@ -73,7 +73,7 @@ func NevinyrralsDiskEffect() Effect {
 // gives each player who wins a coin flip a token copy of the chosen card.
 func PandorasBoxEffect() Effect {
 	return FuncEffect("choose a random creature card from all libraries; each player who wins a coin flip creates a token copy", EffectProperties{}, func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-		var creatures []Card
+		var creatures []*Card
 		for _, player := range g.AllPlayers() {
 			for _, card := range player.Library() {
 				if card.HasType(TypeCreature) {
@@ -93,10 +93,8 @@ func PandorasBoxEffect() Effect {
 			if err != nil {
 				return err
 			}
-			token := NewToken(copySource.Name(), copySource.Power(), copySource.Toughness(), copySource.Types(), copySource.SubTypes())
-			token.CloneFrom(copySource)
-			token.SetOwner(player.PlayerID())
-			g.PutOnBattlefield(token, player.PlayerID())
+			copySource.SetOwner(player.PlayerID())
+			g.PutTokenOnBattlefield(copySource, player.PlayerID())
 		}
 		return nil
 	})

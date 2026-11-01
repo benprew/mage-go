@@ -34,7 +34,7 @@ func legalPriorityMoves(g *mage.Game, p mage.Player, isRoot bool) []Move {
 	return moves
 }
 
-func expandSpell(g *mage.Game, p mage.Player, card mage.Card) []Move {
+func expandSpell(g *mage.Game, p mage.Player, card *mage.Card) []Move {
 	playerID := p.PlayerID()
 	mc := card.ManaCost()
 
@@ -73,7 +73,7 @@ func expandSpell(g *mage.Game, p mage.Player, card mage.Card) []Move {
 	return out
 }
 
-func expandTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, mode, x int) []Move {
+func expandTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, mode, x int) []Move {
 	targets := card.CastTargets()
 	if len(targets) == 0 {
 		return []Move{{

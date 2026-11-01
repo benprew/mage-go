@@ -207,7 +207,7 @@ func TestCR105_2_ColorFromManaCostBlue(t *testing.T) {
 func TestCR105_2_ColorFromManaCostMulticolor(t *testing.T) {
 	multiName := "Two Color Test Creature"
 	if !mage.CardRegistered(multiName) {
-		mage.Register(multiName, func() mage.Card {
+		mage.Register(multiName, func() *mage.Card {
 			// {W}{B} cost makes it White and Black.
 			return mage.NewCreature(multiName, "{W}{B}", 2, 2, mage.WithSubTypes("Knight"))
 		})
@@ -268,13 +268,13 @@ func TestCR106_12_TapForManaBasic(t *testing.T) {
 func TestCR107_1b_NegativePowerNoDamage(t *testing.T) {
 	debuffName := "Neg Power Bear"
 	if !mage.CardRegistered(debuffName) {
-		mage.Register(debuffName, func() mage.Card {
+		mage.Register(debuffName, func() *mage.Card {
 			return mage.NewCreature(debuffName, "{1}{G}", 2, 4, mage.WithSubTypes("Bear"))
 		})
 	}
 	debuffEffect := "Shrink Effect"
 	if !mage.CardRegistered(debuffEffect) {
-		mage.Register(debuffEffect, func() mage.Card {
+		mage.Register(debuffEffect, func() *mage.Card {
 			// "Target creature gets -5/+0 until end of turn."
 			return mage.NewInstant(debuffEffect, "{G}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
@@ -410,7 +410,7 @@ func TestCR110_5_DefaultUntapped(t *testing.T) {
 func TestCR110_5b_EntersTapped(t *testing.T) {
 	ruinsName := "Test Enters Tapped Land"
 	if !mage.CardRegistered(ruinsName) {
-		mage.Register(ruinsName, func() mage.Card {
+		mage.Register(ruinsName, func() *mage.Card {
 			return mage.NewLand(ruinsName,
 				mage.WithKeyword(core.EntersTapped),
 				mage.WithManaAbility(core.Red),
@@ -439,7 +439,7 @@ func TestCR110_5b_EntersTapped(t *testing.T) {
 func TestCR111_6_TokenAffectedByPermanentEffects(t *testing.T) {
 	boostAll := "Boost All Creatures Enchantment"
 	if !mage.CardRegistered(boostAll) {
-		mage.Register(boostAll, func() mage.Card {
+		mage.Register(boostAll, func() *mage.Card {
 			return mage.NewEnchantment(boostAll, "{2}{G}",
 				mage.WithStaticAbility(mage.BoostAllCreaturesIncludingSelf(1, 1, mage.IsCreature)),
 			)

@@ -10,7 +10,7 @@ func registerLands() {
 	// Arena
 	// Land
 	// {3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. (Each deals damage equal to its power to the other.)
-	Register("Arena", func() Card {
+	Register("Arena", func() *Card {
 		return NewLand("Arena",
 			WithActivatedAbility(
 				Pipeline("tap those creatures; they fight each other",

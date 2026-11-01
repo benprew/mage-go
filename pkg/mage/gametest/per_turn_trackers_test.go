@@ -17,7 +17,7 @@ func registerPerTurnTrackerCards() {
 		// A sorcery whose additional cost is "discard a card" — used to drive
 		// PlayerDiscardCountThisTurn for the caster.
 		if !mage.CardRegistered("Test Discard Self") {
-			mage.Register("Test Discard Self", func() mage.Card {
+			mage.Register("Test Discard Self", func() *mage.Card {
 				return mage.NewSorcery("Test Discard Self", "{B}",
 					mage.NewSpellAbility(mage.GainLife(1)),
 					mage.WithAdditionalCost(mage.DiscardCost(1)),
@@ -26,7 +26,7 @@ func registerPerTurnTrackerCards() {
 		}
 		// A sorcery whose controller gains 3 life.
 		if !mage.CardRegistered("Test Gain 3 Life") {
-			mage.Register("Test Gain 3 Life", func() mage.Card {
+			mage.Register("Test Gain 3 Life", func() *mage.Card {
 				return mage.NewSorcery("Test Gain 3 Life", "{W}",
 					mage.NewSpellAbility(mage.GainLife(3)),
 				)
@@ -34,20 +34,20 @@ func registerPerTurnTrackerCards() {
 		}
 		// A bolt-like sorcery for damage tests.
 		if !mage.CardRegistered("Test Bolt 3") {
-			mage.Register("Test Bolt 3", func() mage.Card {
+			mage.Register("Test Bolt 3", func() *mage.Card {
 				return mage.NewSorcery("Test Bolt 3", "{R}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))),
 				)
 			})
 		}
 		if !mage.CardRegistered("Test Tracker Bear") {
-			mage.Register("Test Tracker Bear", func() mage.Card {
+			mage.Register("Test Tracker Bear", func() *mage.Card {
 				return mage.NewCreature("Test Tracker Bear", "{1}{G}", 4, 4,
 					mage.WithSubTypes("Bear"))
 			})
 		}
 		if !mage.CardRegistered("Test Exile Graveyard Cost") {
-			mage.Register("Test Exile Graveyard Cost", func() mage.Card {
+			mage.Register("Test Exile Graveyard Cost", func() *mage.Card {
 				return mage.NewSorcery("Test Exile Graveyard Cost", "{B}",
 					mage.NewSpellAbility(mage.GainLife(1)),
 					mage.WithAdditionalCost(mage.ExileFromGraveyardCost(1)),

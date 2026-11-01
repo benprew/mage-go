@@ -14,7 +14,7 @@ import (
 func TestMoveCountersFromSourceToTarget(t *testing.T) {
 	const cardName = "MCST Conduit-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{1}{G}", 2, 2,
 				mage.WithSubTypes("Cat", "Monkey"),
 				mage.WithActivatedAbility(

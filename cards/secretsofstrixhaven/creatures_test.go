@@ -17,7 +17,7 @@ var scoldingDestroyOnce sync.Once
 
 func registerScoldingDestroy() {
 	scoldingDestroyOnce.Do(func() {
-		mage.Register("Scolding Test Destroy", func() mage.Card {
+		mage.Register("Scolding Test Destroy", func() *mage.Card {
 			return mage.NewInstant("Scolding Test Destroy", "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()))
 		})

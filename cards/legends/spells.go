@@ -19,7 +19,7 @@ func registerSpells() {
 	// Acid Rain {3}{U}
 	// Sorcery
 	// Destroy all Forests.
-	Register("Acid Rain", func() Card {
+	Register("Acid Rain", func() *Card {
 		return NewSorcery("Acid Rain", "{3}{U}",
 			NewSpellAbility(DestroyAllMatching(And(IsLand, HasSubType("Forest")), "destroy all Forests")),
 		)
@@ -30,7 +30,7 @@ func registerSpells() {
 	// Choose one —
 	// • Destroy target blue permanent.
 	// • Return target Island to its owner's hand.
-	Register("Active Volcano", func() Card {
+	Register("Active Volcano", func() *Card {
 		c := NewInstant("Active Volcano", "{R}",
 			NewTargetedSpell(TargetPermanent(), Pipeline(
 				"destroy target blue permanent or return target Island to its owner's hand",
@@ -54,7 +54,7 @@ func registerSpells() {
 	// • Target player gains X life.
 	// • Prevent the next X damage that would be dealt to any target this turn.
 	// TODO: convert to pipeline — needs ModalEffect with XValue-based GainLifeTarget and PreventDamageToTarget
-	Register("Alabaster Potion", func() Card {
+	Register("Alabaster Potion", func() *Card {
 		c := NewInstant("Alabaster Potion", "{X}{W}{W}",
 			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"target player gains X life or prevent the next X damage to any target",
@@ -93,7 +93,7 @@ func registerSpells() {
 	// At the beginning of your upkeep, if this card is exiled with a scream counter on it, remove a scream counter from it. If there are no more scream counters on it, put it into your graveyard and each player returns all creature cards from their graveyard to the battlefield.
 	// XXX: requires exile-with-counters and delayed upkeep trigger from exile zone — engine lacks support for tracking counters on exiled cards
 	// TODO: implement when exile-counter tracking is available
-	Register("All Hallow's Eve", func() Card {
+	Register("All Hallow's Eve", func() *Card {
 		return NewSorcery("All Hallow's Eve", "{2}{B}{B}",
 			NewSpellAbility(),
 		)
@@ -104,7 +104,7 @@ func registerSpells() {
 	// Counter target instant or Aura spell that targets a permanent you control.
 	// XXX: requires targeting spells that target your permanents — engine lacks support for "spell that targets a permanent you control" filter
 	// TODO: implement when stack-target-filtering supports conditional target checks
-	Register("Avoid Fate", func() Card {
+	Register("Avoid Fate", func() *Card {
 		return NewInstant("Avoid Fate", "{G}",
 			NewSpellAbility(),
 		)
@@ -115,7 +115,7 @@ func registerSpells() {
 	// Choose a player who cast one or more sorcery spells this turn. Backdraft deals damage to that player equal to half the damage dealt by one of those sorcery spells this turn, rounded down.
 	// XXX: requires tracking sorcery spells cast this turn and their damage dealt — engine lacks sorcery-damage history tracking
 	// TODO: implement when spell-damage tracking is available
-	Register("Backdraft", func() Card {
+	Register("Backdraft", func() *Card {
 		return NewInstant("Backdraft", "{1}{R}",
 			NewSpellAbility(),
 		)
@@ -125,7 +125,7 @@ func registerSpells() {
 	// Instant
 	// If target creature has toughness 5 or greater, it gets +4/-4 until end of turn. Otherwise, it gets +4/-X until end of turn, where X is its toughness minus 1.
 	// TODO: convert to pipeline — needs conditional TemporaryBoost based on current toughness
-	Register("Blood Lust", func() Card {
+	Register("Blood Lust", func() *Card {
 		return NewInstant("Blood Lust", "{1}{R}",
 			NewTargetedSpell(TargetCreature(), BloodLustEffect()),
 		)
@@ -134,7 +134,7 @@ func registerSpells() {
 	// Boomerang {U}{U}
 	// Instant
 	// Return target permanent to its owner's hand.
-	Register("Boomerang", func() Card {
+	Register("Boomerang", func() *Card {
 		return NewInstant("Boomerang", "{U}{U}",
 			NewTargetedSpell(TargetPermanent(), BoomerangEffect()),
 		)
@@ -144,7 +144,7 @@ func registerSpells() {
 	// Sorcery
 	// Chain Lightning deals 3 damage to any target. Then that player or that permanent's controller may pay {R}{R}. If the player does, they may copy this spell and may choose a new target for that copy.
 	// XXX: chain copy mechanic not implemented — just deals 3 damage
-	Register("Chain Lightning", func() Card {
+	Register("Chain Lightning", func() *Card {
 		return NewSorcery("Chain Lightning", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 		)
@@ -153,7 +153,7 @@ func registerSpells() {
 	// Cleanse {2}{W}{W}
 	// Sorcery
 	// Destroy all black creatures.
-	Register("Cleanse", func() Card {
+	Register("Cleanse", func() *Card {
 		return NewSorcery("Cleanse", "{2}{W}{W}",
 			NewSpellAbility(DestroyAllMatching(And(IsCreature, HasColorFilter(Black)), "destroy all black creatures")),
 		)
@@ -162,7 +162,7 @@ func registerSpells() {
 	// Darkness {B}
 	// Instant
 	// Prevent all combat damage that would be dealt this turn.
-	Register("Darkness", func() Card {
+	Register("Darkness", func() *Card {
 		return NewInstant("Darkness", "{B}",
 			NewSpellAbility(PreventAllCombatDamage()),
 		)
@@ -173,7 +173,7 @@ func registerSpells() {
 	// Cast this spell only during combat before blockers are declared.
 	// Untap target attacking creature and remove it from combat. Gain control of that creature until end of turn.
 	// XXX: timing restriction (only before blockers) not enforced
-	Register("Disharmony", func() Card {
+	Register("Disharmony", func() *Card {
 		return NewInstant("Disharmony", "{2}{R}",
 			NewTargetedSpell(TargetCreature(IsAttacking), CompositeEffects(
 				"untap target attacking creature, remove from combat, gain control until end of turn",
@@ -187,7 +187,7 @@ func registerSpells() {
 	// Divine Offering {1}{W}
 	// Instant
 	// Destroy target artifact. You gain life equal to its mana value.
-	Register("Divine Offering", func() Card {
+	Register("Divine Offering", func() *Card {
 		return NewInstant("Divine Offering", "{1}{W}",
 			NewTargetedSpell(TargetArtifact(),
 				Pipeline("destroy target artifact; you gain life equal to its mana value",
@@ -202,7 +202,7 @@ func registerSpells() {
 	// Dwarven Song {R}
 	// Instant
 	// One or more target creatures become red until end of turn.
-	Register("Dwarven Song", func() Card {
+	Register("Dwarven Song", func() *Card {
 		return NewInstant("Dwarven Song", "{R}",
 			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Red)),
 		)
@@ -213,7 +213,7 @@ func registerSpells() {
 	// Attach target Aura attached to a creature or land to another permanent of that type.
 	// XXX: requires re-attaching an existing Aura to a new host — engine lacks support for Aura migration
 	// TODO: implement when Aura re-attachment is supported
-	Register("Enchantment Alteration", func() Card {
+	Register("Enchantment Alteration", func() *Card {
 		return NewInstant("Enchantment Alteration", "{U}",
 			NewSpellAbility(),
 		)
@@ -222,7 +222,7 @@ func registerSpells() {
 	// Energy Tap {U}
 	// Sorcery
 	// Tap target untapped creature you control. If you do, add an amount of {C} equal to that creature's mana value.
-	Register("Energy Tap", func() Card {
+	Register("Energy Tap", func() *Card {
 		return NewSorcery("Energy Tap", "{U}",
 			NewTargetedSpell(TargetCreatureYouControl(IsUntapped), Pipeline(
 				"tap target untapped creature you control; add {C} equal to its mana value",
@@ -237,14 +237,14 @@ func registerSpells() {
 	// Eureka {2}{G}{G}
 	// Sorcery
 	// Starting with you, each player may put a permanent card from their hand onto the battlefield. Repeat this process until no one puts a card onto the battlefield.
-	Register("Eureka", func() Card {
+	Register("Eureka", func() *Card {
 		return NewSorcery("Eureka", "{2}{G}{G}",
 			NewSpellAbility(FuncEffect("each player may put permanent cards from hand onto the battlefield", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 				players := g.AllPlayers()
 				for {
 					playedAny := false
 					for _, player := range players {
-						var candidates []Card
+						var candidates []*Card
 						for _, card := range player.Hand() {
 							if card.HasType(TypeArtifact) || card.HasType(TypeCreature) || card.HasType(TypeEnchantment) || card.HasType(TypeLand) || card.HasType(TypePlaneswalker) {
 								candidates = append(candidates, card)
@@ -274,7 +274,7 @@ func registerSpells() {
 	// Sorcery
 	// Flip Falling Star onto the playing area from a height of at least one foot. Falling Star deals 3 damage to each creature it lands on. Tap all creatures dealt damage by Falling Star. If Falling Star doesn't turn completely over at least once during the flip, it has no effect.
 	// UNIMPLEMENTABLE: Physical dexterity card — requires flipping a physical card onto the play area.
-	Register("Falling Star", func() Card {
+	Register("Falling Star", func() *Card {
 		return NewSorcery("Falling Star", "{2}{R}",
 			NewSpellAbility(),
 		)
@@ -283,7 +283,7 @@ func registerSpells() {
 	// Feint {R}
 	// Instant
 	// Tap all creatures blocking target attacking creature. Prevent all combat damage that would be dealt this turn by that creature and each creature blocking it.
-	Register("Feint", func() Card {
+	Register("Feint", func() *Card {
 		return NewInstant("Feint", "{R}",
 			NewTargetedSpell(TargetCreature(IsAttacking), FuncEffect(
 				"tap all blockers of target attacker; prevent all combat damage from it and its blockers this turn",
@@ -329,10 +329,10 @@ func registerSpells() {
 	// Flash Counter {1}{U}
 	// Instant
 	// Counter target instant spell.
-	Register("Flash Counter", func() Card {
+	Register("Flash Counter", func() *Card {
 		return NewInstant("Flash Counter", "{1}{U}",
 			NewTargetedSpell(
-				TargetSpellOnStack(NewCardFilter("instant", func(c Card) bool {
+				TargetSpellOnStack(NewCardFilter("instant", func(c *Card) bool {
 					return c.HasType(TypeInstant)
 				})),
 				CounterSpell(),
@@ -345,7 +345,7 @@ func registerSpells() {
 	// Choose one —
 	// • Destroy target red permanent.
 	// • Return target Mountain to its owner's hand.
-	Register("Flash Flood", func() Card {
+	Register("Flash Flood", func() *Card {
 		c := NewInstant("Flash Flood", "{U}",
 			NewTargetedSpell(TargetPermanent(), Pipeline(
 				"destroy target red permanent or return target Mountain to its owner's hand",
@@ -366,7 +366,7 @@ func registerSpells() {
 	// Force Spike {U}
 	// Instant
 	// Counter target spell unless its controller pays {1}.
-	Register("Force Spike", func() Card {
+	Register("Force Spike", func() *Card {
 		return NewInstant("Force Spike", "{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterUnlessPay("{1}")),
 		)
@@ -375,7 +375,7 @@ func registerSpells() {
 	// Glyph of Delusion {U}
 	// Instant
 	// Put X glyph counters on target creature that target Wall blocked this turn, where X is the power of that blocked creature. The creature gains "This creature doesn't untap during your untap step if it has a glyph counter on it" and "At the beginning of your upkeep, remove a glyph counter from this creature."
-	Register("Glyph of Delusion", func() Card {
+	Register("Glyph of Delusion", func() *Card {
 		return NewInstant("Glyph of Delusion", "{U}",
 			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
 				return p.HasSubType("Wall")
@@ -437,7 +437,7 @@ func registerSpells() {
 	// Glyph of Destruction {R}
 	// Instant
 	// Target blocking Wall you control gets +10/+0 until end of combat. Prevent all damage that would be dealt to it this turn. Destroy it at the beginning of the next end step.
-	Register("Glyph of Destruction", func() Card {
+	Register("Glyph of Destruction", func() *Card {
 		return NewInstant("Glyph of Destruction", "{R}",
 			NewTargetedSpell(TargetCreature(And(IsBlocking, NewPermanentFilter("Wall you control", func(p *Permanent, g *Game) bool {
 				return p.HasSubType("Wall")
@@ -482,7 +482,7 @@ func registerSpells() {
 	// Glyph of Doom {B}
 	// Instant
 	// Choose target Wall creature. At this turn's next end of combat, destroy all creatures that were blocked by that creature this turn.
-	Register("Glyph of Doom", func() Card {
+	Register("Glyph of Doom", func() *Card {
 		return NewInstant("Glyph of Doom", "{B}",
 			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
 				return p.HasSubType("Wall")
@@ -516,7 +516,7 @@ func registerSpells() {
 	// Glyph of Life {W}
 	// Instant
 	// Choose target Wall creature. Whenever that creature is dealt damage by an attacking creature this turn, you gain that much life.
-	Register("Glyph of Life", func() Card {
+	Register("Glyph of Life", func() *Card {
 		return NewInstant("Glyph of Life", "{W}",
 			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
 				return p.HasSubType("Wall")
@@ -548,7 +548,7 @@ func registerSpells() {
 	// Cast this spell only after combat.
 	// Destroy all creatures that were blocked by target Wall this turn. They can't be regenerated. For each creature that died this way, put a creature card from the graveyard of the player who controlled that creature the last time it became blocked by that Wall onto the battlefield under its owner's control.
 	// XXX: timing restriction (only after combat) not enforced
-	Register("Glyph of Reincarnation", func() Card {
+	Register("Glyph of Reincarnation", func() *Card {
 		return NewInstant("Glyph of Reincarnation", "{G}",
 			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
 				return p.HasSubType("Wall")
@@ -597,7 +597,7 @@ func registerSpells() {
 	// Instant
 	// Target creature gets +0/+X until end of turn, where X is its mana value.
 	// TODO: convert to pipeline — needs Boost to support VarInt context binding
-	Register("Great Defender", func() Card {
+	Register("Great Defender", func() *Card {
 		return NewInstant("Great Defender", "{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"target creature gets +0/+X until end of turn, where X is its mana value",
@@ -625,7 +625,7 @@ func registerSpells() {
 	// Heaven's Gate {W}
 	// Instant
 	// One or more target creatures become white until end of turn.
-	Register("Heaven's Gate", func() Card {
+	Register("Heaven's Gate", func() *Card {
 		return NewInstant("Heaven's Gate", "{W}",
 			NewTargetedSpell(TargetCreature(), ChangeColorEffect(White)),
 		)
@@ -634,7 +634,7 @@ func registerSpells() {
 	// Hell Swarm {B}
 	// Instant
 	// All creatures get -1/-0 until end of turn.
-	Register("Hell Swarm", func() Card {
+	Register("Hell Swarm", func() *Card {
 		return NewInstant("Hell Swarm", "{B}",
 			NewSpellAbility(Boost(Fixed(-1), Fixed(0)).Targeting(ToAllMatching(IsCreature))),
 		)
@@ -643,7 +643,7 @@ func registerSpells() {
 	// Hellfire {2}{B}{B}{B}
 	// Sorcery
 	// Destroy all nonblack creatures. Hellfire deals X plus 3 damage to you, where X is the number of creatures that died this way.
-	Register("Hellfire", func() Card {
+	Register("Hellfire", func() *Card {
 		return NewSorcery("Hellfire", "{2}{B}{B}{B}",
 			NewSpellAbility(FuncEffect(
 				"destroy all nonblack creatures; Hellfire deals X plus 3 damage to you where X is the number destroyed",
@@ -673,7 +673,7 @@ func registerSpells() {
 	// Holy Day {W}
 	// Instant
 	// Prevent all combat damage that would be dealt this turn.
-	Register("Holy Day", func() Card {
+	Register("Holy Day", func() *Card {
 		return NewInstant("Holy Day", "{W}",
 			NewSpellAbility(PreventAllCombatDamage()),
 		)
@@ -682,7 +682,7 @@ func registerSpells() {
 	// Indestructible Aura {W}
 	// Instant
 	// Prevent all damage that would be dealt to target creature this turn.
-	Register("Indestructible Aura", func() Card {
+	Register("Indestructible Aura", func() *Card {
 		return NewInstant("Indestructible Aura", "{W}",
 			NewTargetedSpell(TargetCreature(), PreventDamageToTarget(Fixed(999999))),
 		)
@@ -691,7 +691,7 @@ func registerSpells() {
 	// Jovial Evil {2}{B}
 	// Sorcery
 	// Jovial Evil deals X damage to target opponent, where X is twice the number of white creatures that player controls.
-	Register("Jovial Evil", func() Card {
+	Register("Jovial Evil", func() *Card {
 		return NewSorcery("Jovial Evil", "{2}{B}",
 			NewTargetedSpell(TargetOpponent(),
 				DealDamageToPlayers(
@@ -705,7 +705,7 @@ func registerSpells() {
 	// Juxtapose {3}{U}
 	// Sorcery
 	// You and target player exchange control of the creature you each control with the greatest mana value. Then exchange control of artifacts the same way. If two or more permanents a player controls are tied for greatest, their controller chooses one of them.
-	Register("Juxtapose", func() Card {
+	Register("Juxtapose", func() *Card {
 		return NewSorcery("Juxtapose", "{3}{U}",
 			NewTargetedSpell(TargetOpponent(), FuncEffect("exchange control of creatures and artifacts with the greatest mana values", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 				if len(targets) == 0 {
@@ -753,7 +753,7 @@ func registerSpells() {
 	// Mana Drain {U}{U}
 	// Instant
 	// Counter target spell. At the beginning of your next main phase, add an amount of {C} equal to that spell's mana value.
-	Register("Mana Drain", func() Card {
+	Register("Mana Drain", func() *Card {
 		return NewInstant("Mana Drain", "{U}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), FuncEffect(
 				"counter target spell; add {C} equal to its mana value at next main phase",
@@ -797,7 +797,7 @@ func registerSpells() {
 	// Part Water {X}{X}{U}
 	// Sorcery
 	// X target creatures gain islandwalk until end of turn. (They can't be blocked as long as defending player controls an Island.)
-	Register("Part Water", func() Card {
+	Register("Part Water", func() *Card {
 		return NewSorcery("Part Water", "{X}{X}{U}",
 			NewMultiTargetSpell(
 				[]Target{TargetXCreatures()},
@@ -811,7 +811,7 @@ func registerSpells() {
 	// Psychic Purge deals 1 damage to any target.
 	// When a spell or ability an opponent controls causes you to discard this card, that player loses 5 life.
 	// XXX: discard trigger not implemented — just deals 1 damage
-	Register("Psychic Purge", func() Card {
+	Register("Psychic Purge", func() *Card {
 		return NewSorcery("Psychic Purge", "{U}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(1))),
 		)
@@ -820,7 +820,7 @@ func registerSpells() {
 	// Pyrotechnics {4}{R}
 	// Sorcery
 	// Pyrotechnics deals 4 damage divided as you choose among any number of targets.
-	Register("Pyrotechnics", func() Card {
+	Register("Pyrotechnics", func() *Card {
 		return NewSorcery("Pyrotechnics", "{4}{R}",
 			NewMultiTargetSpell(
 				[]Target{TargetDamageAnyTarget(), mage.TargetUpToNCreaturesOrPlayers(3)},
@@ -834,7 +834,7 @@ func registerSpells() {
 	// Cast this spell only before blockers are declared.
 	// Target creature gains first strike until end of turn. If it doesn't have rampage, that creature gains rampage 2 until end of turn. (Whenever the creature becomes blocked, it gets +2/+2 until end of turn for each creature blocking it beyond the first.)
 	// XXX: timing restriction not enforced
-	Register("Rapid Fire", func() Card {
+	Register("Rapid Fire", func() *Card {
 		return NewInstant("Rapid Fire", "{3}{W}",
 			NewTargetedSpell(TargetCreature(),
 				Pipeline("first strike + rampage 2 unless target already has rampage",
@@ -850,7 +850,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Each player may ante the top card of their library. If a player does, that player's life total becomes 20.
-	Register("Rebirth", func() Card {
+	Register("Rebirth", func() *Card {
 		return NewSorcery("Rebirth", "{3}{G}{G}{G}",
 			NewSpellAbility(FuncEffect("each player may ante the top card of their library and set their life total to 20", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 				if !g.AnteEnabled() {
@@ -872,7 +872,7 @@ func registerSpells() {
 	// Recall {X}{X}{U}
 	// Sorcery
 	// Discard X cards, then return a card from your graveyard to your hand for each card discarded this way. Exile Recall.
-	Register("Recall", func() Card {
+	Register("Recall", func() *Card {
 		return NewSorcery("Recall", "{X}{X}{U}",
 			NewSpellAbility(FuncEffect(
 				"discard X cards, then return X cards from graveyard to hand; exile Recall",
@@ -921,7 +921,7 @@ func registerSpells() {
 	// Reincarnation {1}{G}{G}
 	// Instant
 	// Choose target creature. When that creature dies this turn, return a creature card from its owner's graveyard to the battlefield under the control of that creature's owner.
-	Register("Reincarnation", func() Card {
+	Register("Reincarnation", func() *Card {
 		return NewInstant("Reincarnation", "{1}{G}{G}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"when target creature dies this turn, reanimate from its owner's graveyard",
@@ -976,7 +976,7 @@ func registerSpells() {
 	// Return to your hand all enchantments you both own and control, all Auras you own attached to permanents you control, and all Auras you own attached to attacking creatures your opponents control. Then destroy all other enchantments you control, all other Auras attached to permanents you control, and all other Auras attached to attacking creatures your opponents control.
 	// XXX: complex enchantment/Aura sorting by ownership, control, and attachment — engine lacks fine-grained Aura ownership checks
 	// TODO: implement when Aura ownership/attachment queries are supported
-	Register("Remove Enchantments", func() Card {
+	Register("Remove Enchantments", func() *Card {
 		return NewInstant("Remove Enchantments", "{W}",
 			NewSpellAbility(),
 		)
@@ -985,10 +985,10 @@ func registerSpells() {
 	// Remove Soul {1}{U}
 	// Instant
 	// Counter target creature spell.
-	Register("Remove Soul", func() Card {
+	Register("Remove Soul", func() *Card {
 		return NewInstant("Remove Soul", "{1}{U}",
 			NewTargetedSpell(
-				TargetSpellOnStack(NewCardFilter("creature spell", func(c Card) bool {
+				TargetSpellOnStack(NewCardFilter("creature spell", func(c *Card) bool {
 					return c.HasType(TypeCreature)
 				})),
 				CounterSpell(),
@@ -1001,7 +1001,7 @@ func registerSpells() {
 	// Cast this spell only during an opponent's turn after their upkeep step.
 	// Untap all lands you control.
 	// XXX: timing restriction not enforced
-	Register("Reset", func() Card {
+	Register("Reset", func() *Card {
 		return NewInstant("Reset", "{U}{U}",
 			NewSpellAbility(ForEachControlledPermanent(
 				SelectController(),
@@ -1017,7 +1017,7 @@ func registerSpells() {
 	// All damage that would be dealt this turn by target sorcery spell is dealt to that spell's controller instead.
 	// XXX: requires redirecting all damage from a specific sorcery spell to its controller — engine lacks per-spell damage redirection
 	// TODO: implement when per-spell damage redirection is supported
-	Register("Reverberation", func() Card {
+	Register("Reverberation", func() *Card {
 		return NewInstant("Reverberation", "{2}{U}{U}",
 			NewSpellAbility(),
 		)
@@ -1028,7 +1028,7 @@ func registerSpells() {
 	// Counter target activated ability from an artifact source. (Mana abilities can't be targeted.)
 	// XXX: requires targeting activated abilities on the stack from artifact sources — engine lacks ability-on-stack targeting
 	// TODO: implement when stack-based ability targeting is supported
-	Register("Rust", func() Card {
+	Register("Rust", func() *Card {
 		return NewInstant("Rust", "{G}",
 			NewSpellAbility(),
 		)
@@ -1037,7 +1037,7 @@ func registerSpells() {
 	// Sea Kings' Blessing {U}
 	// Instant
 	// One or more target creatures become blue until end of turn.
-	Register("Sea Kings' Blessing", func() Card {
+	Register("Sea Kings' Blessing", func() *Card {
 		return NewInstant("Sea Kings' Blessing", "{U}",
 			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Blue)),
 		)
@@ -1046,7 +1046,7 @@ func registerSpells() {
 	// Shield Wall {1}{W}
 	// Instant
 	// Creatures you control get +0/+2 until end of turn.
-	Register("Shield Wall", func() Card {
+	Register("Shield Wall", func() *Card {
 		return NewInstant("Shield Wall", "{1}{W}",
 			NewSpellAbility(Boost(Fixed(0), Fixed(2)).Targeting(ToMatching(AnyPermanent))),
 		)
@@ -1057,7 +1057,7 @@ func registerSpells() {
 	// Choose target creature. If a spell or ability that targets that creature would cause a source to deal damage to that creature this turn, prevent that damage.
 	// XXX: requires conditional damage prevention based on whether the damage source targeted the creature — engine lacks this type of conditional prevention
 	// TODO: implement when targeted-source damage prevention is supported
-	Register("Silhouette", func() Card {
+	Register("Silhouette", func() *Card {
 		return NewInstant("Silhouette", "{1}{U}",
 			NewSpellAbility(),
 		)
@@ -1066,7 +1066,7 @@ func registerSpells() {
 	// Storm Seeker {3}{G}
 	// Instant
 	// Storm Seeker deals damage to target player equal to the number of cards in that player's hand.
-	Register("Storm Seeker", func() Card {
+	Register("Storm Seeker", func() *Card {
 		return NewInstant("Storm Seeker", "{3}{G}",
 			NewTargetedSpell(TargetPlayer(), HandSizeDamageEffect(0, true)),
 		)
@@ -1075,7 +1075,7 @@ func registerSpells() {
 	// Subdue {G}
 	// Instant
 	// Prevent all combat damage that would be dealt by target creature this turn. That creature gets +0/+X until end of turn, where X is its mana value.
-	Register("Subdue", func() Card {
+	Register("Subdue", func() *Card {
 		return NewInstant("Subdue", "{G}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"prevent all combat damage by target creature; it gets +0/+X where X is its mana value",
@@ -1114,7 +1114,7 @@ func registerSpells() {
 	// Sylvan Paradise {G}
 	// Instant
 	// One or more target creatures become green until end of turn.
-	Register("Sylvan Paradise", func() Card {
+	Register("Sylvan Paradise", func() *Card {
 		return NewInstant("Sylvan Paradise", "{G}",
 			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Green)),
 		)
@@ -1123,7 +1123,7 @@ func registerSpells() {
 	// Syphon Soul {2}{B}
 	// Sorcery
 	// Syphon Soul deals 2 damage to each other player. You gain life equal to the damage dealt this way.
-	Register("Syphon Soul", func() Card {
+	Register("Syphon Soul", func() *Card {
 		return NewSorcery("Syphon Soul", "{2}{B}",
 			NewSpellAbility(FuncEffect(
 				"deal 2 damage to each opponent; gain life equal to damage dealt",
@@ -1151,7 +1151,7 @@ func registerSpells() {
 	// Telekinesis {U}{U}
 	// Instant
 	// Tap target creature. Prevent all combat damage that would be dealt by that creature this turn. It doesn't untap during its controller's next two untap steps.
-	Register("Telekinesis", func() Card {
+	Register("Telekinesis", func() *Card {
 		return NewInstant("Telekinesis", "{U}{U}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"tap target creature; prevent its combat damage; it doesn't untap during next two untap steps",
@@ -1193,7 +1193,7 @@ func registerSpells() {
 	// Cast this spell only during the declare attackers step.
 	// Target creature can't be blocked this turn.
 	// XXX: timing restriction not enforced
-	Register("Teleport", func() Card {
+	Register("Teleport", func() *Card {
 		return NewInstant("Teleport", "{U}{U}{U}",
 			NewTargetedSpell(TargetCreature(), MakeUnblockableUntilEndOfTurn()),
 		)
@@ -1202,7 +1202,7 @@ func registerSpells() {
 	// Touch of Darkness {B}
 	// Instant
 	// One or more target creatures become black until end of turn.
-	Register("Touch of Darkness", func() Card {
+	Register("Touch of Darkness", func() *Card {
 		return NewInstant("Touch of Darkness", "{B}",
 			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Black)),
 		)
@@ -1211,7 +1211,7 @@ func registerSpells() {
 	// Transmutation {1}{B}
 	// Instant
 	// Switch target creature's power and toughness until end of turn.
-	Register("Transmutation", func() Card {
+	Register("Transmutation", func() *Card {
 		return NewInstant("Transmutation", "{1}{B}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"switch target creature's power and toughness until end of turn",
@@ -1239,7 +1239,7 @@ func registerSpells() {
 	// Typhoon {2}{G}
 	// Sorcery
 	// Typhoon deals damage to each opponent equal to the number of Islands that player controls.
-	Register("Typhoon", func() Card {
+	Register("Typhoon", func() *Card {
 		return NewSorcery("Typhoon", "{2}{G}",
 			NewSpellAbility(FuncEffect(
 				"deal damage to each opponent equal to the number of Islands they control",
@@ -1262,7 +1262,7 @@ func registerSpells() {
 	// Untamed Wilds {2}{G}
 	// Sorcery
 	// Search your library for a basic land card, put that card onto the battlefield, then shuffle.
-	Register("Untamed Wilds", func() Card {
+	Register("Untamed Wilds", func() *Card {
 		return NewSorcery("Untamed Wilds", "{2}{G}",
 			NewSpellAbility(SearchLibraryToBattlefield(NewCardFilter("basic land card", isBasicLand))),
 		)
@@ -1271,7 +1271,7 @@ func registerSpells() {
 	// Visions {W}
 	// Sorcery
 	// Look at the top five cards of target player's library. You may then have that player shuffle that library.
-	Register("Visions", func() Card {
+	Register("Visions", func() *Card {
 		return NewSorcery("Visions", "{W}",
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"look at the top five cards of target player's library; you may have that player shuffle",
@@ -1298,7 +1298,7 @@ func registerSpells() {
 	// Winds of Change {R}
 	// Sorcery
 	// Each player shuffles the cards from their hand into their library, then draws that many cards.
-	Register("Winds of Change", func() Card {
+	Register("Winds of Change", func() *Card {
 		return NewSorcery("Winds of Change", "{R}",
 			NewSpellAbility(FuncEffect(
 				"each player shuffles hand into library, then draws that many cards",
@@ -1327,7 +1327,7 @@ func registerSpells() {
 	// Winter Blast {X}{G}
 	// Sorcery
 	// Tap X target creatures. Winter Blast deals 2 damage to each of those creatures with flying.
-	Register("Winter Blast", func() Card {
+	Register("Winter Blast", func() *Card {
 		return NewSorcery("Winter Blast", "{X}{G}",
 			NewMultiTargetSpell([]Target{TargetXCreatures()}, FuncEffect(
 				"tap X target creatures; deal 2 damage to each with flying",

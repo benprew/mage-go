@@ -14,7 +14,7 @@ import (
 func TestTargetUpToOneCreature_AllowsZeroTargets(t *testing.T) {
 	const cardName = "T01 Brightmare-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{1}", 1, 1,
 				mage.WithCastTarget(mage.TargetUpToOneCreature()),
 				mage.WithETBEffect(mage.FuncEffect("tap optional target",
@@ -48,7 +48,7 @@ func TestTargetUpToOneCreature_AllowsZeroTargets(t *testing.T) {
 func TestTargetAnotherCreatureYouControl_ExcludesSource(t *testing.T) {
 	const cardName = "TARGET-Self-Excluder"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{1}", 1, 1,
 				mage.WithActivatedAbility(
 					mage.FuncEffect("tap target another creature you control",

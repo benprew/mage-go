@@ -17,7 +17,7 @@ func registerMillReplacementCards() {
 		// "If an opponent would mill one or more cards, they mill twice that
 		// many cards instead." Bruvac-style.
 		if !mage.CardRegistered("Test Mill Doubler") {
-			mage.Register("Test Mill Doubler", func() mage.Card {
+			mage.Register("Test Mill Doubler", func() *mage.Card {
 				return mage.NewCreature("Test Mill Doubler", "{2}{U}", 1, 4,
 					mage.WithSubTypes("Human", "Advisor"),
 					mage.WithETBEffect(mage.FuncEffect(
@@ -37,7 +37,7 @@ func registerMillReplacementCards() {
 		}
 		// Test mill spell that mills 3.
 		if !mage.CardRegistered("Test Mill 3") {
-			mage.Register("Test Mill 3", func() mage.Card {
+			mage.Register("Test Mill 3", func() *mage.Card {
 				return mage.NewSorcery("Test Mill 3", "{1}{U}",
 					mage.NewTargetedSpell(mage.TargetPlayer(),
 						mage.MillTargetPlayer(mage.Fixed(3))),

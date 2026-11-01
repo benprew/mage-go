@@ -12,7 +12,7 @@ import (
 // Register cards used only by this file.
 func init() {
 	if !mage.CardRegistered("Forest") {
-		mage.Register("Forest", func() mage.Card {
+		mage.Register("Forest", func() *mage.Card {
 			return mage.NewLand("Forest",
 				mage.WithSubTypes("Forest"),
 				mage.WithManaAbility(core.Green),
@@ -20,7 +20,7 @@ func init() {
 		})
 	}
 	if !mage.CardRegistered("TurnStructureMain Healing Salve Sorcery") {
-		mage.Register("TurnStructureMain Healing Salve Sorcery", func() mage.Card {
+		mage.Register("TurnStructureMain Healing Salve Sorcery", func() *mage.Card {
 			return mage.NewSorcery(
 				"TurnStructureMain Healing Salve Sorcery",
 				"{W}",
@@ -31,7 +31,7 @@ func init() {
 }
 
 // findLandInHand returns the ID of the first land named `name` in the given player's hand.
-func findLandInHand(tg *TestGame, p PlayerRef, name string) (mage.Card, bool) {
+func findLandInHand(tg *TestGame, p PlayerRef, name string) (*mage.Card, bool) {
 	for _, c := range tg.GetPlayer(p).Hand() {
 		if c.Name() == name {
 			return c, true

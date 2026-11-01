@@ -153,7 +153,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		availMana := eval.CountAvailableMana(g, playerID)
 		cmcs := eval.HandCMCs(p.Hand())
 
-		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card mage.Card) (int, bool) {
+		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card *mage.Card) (int, bool) {
 			if card.HasType(core.TypeInstant) {
 				return 0, false
 			}
@@ -218,7 +218,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 				continue
 			}
 			hasUsableEffect := false
-			for _, a := range card.Abilities() {
+			for _, a := range card.AllAbilities() {
 				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 					if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 						hasUsableEffect = true
@@ -245,7 +245,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 	return interactive.PriorityAction{Type: interactive.ActionPass}
 }
 
-func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []mage.Card, scoreCard func(mage.Card) (int, bool)) *interactive.PriorityAction {
+func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []*mage.Card, scoreCard func(*mage.Card) (int, bool)) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	var bestAction *interactive.PriorityAction
 	bestScore := 0
@@ -303,7 +303,7 @@ func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.Pri
 		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
-		for _, a := range card.Abilities() {
+		for _, a := range card.AllAbilities() {
 			sa, ok := a.(*mage.SpellAbility)
 			if !ok || sa.Kind() != mage.ActionSpell {
 				continue
@@ -524,13 +524,13 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 	return r.Blocks
 }
 
-func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
+func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Card) []uuid.UUID {
 	playerID := p.PlayerID()
 	xValue := s.bestXValue(g, playerID, card, nil)
 
 	var targets []uuid.UUID
 
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -691,7 +691,7 @@ func (s *Strategy) selectSingleBurnTarget(g *mage.Game, playerID uuid.UUID, poss
 // have enough mana left to cast `reserve` afterward. It checks affordability of
 // the two costs combined, so the mana solver honors colors, dual lands, and
 // conversions rather than a color-blind mana count.
-func canCastWhileReserving(g *mage.Game, playerID uuid.UUID, cast, reserve mage.Card) bool {
+func canCastWhileReserving(g *mage.Game, playerID uuid.UUID, cast, reserve *mage.Card) bool {
 	combined := combinedManaCost(cast.ManaCost(), reserve.ManaCost())
 	return g.CanAfford(playerID, combined, mage.SpellContextForCard(cast))
 }
@@ -720,11 +720,11 @@ func hasOpponentPermanentTarget(g *mage.Game, playerID uuid.UUID, possible []uui
 	return false
 }
 
-func requiresTargets(card mage.Card) bool {
+func requiresTargets(card *mage.Card) bool {
 	if len(card.CastTargets()) > 0 {
 		return true
 	}
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if ok && sa.Kind() == mage.ActionSpell && len(sa.Targets()) > 0 {
 			return true
@@ -734,13 +734,11 @@ func requiresTargets(card mage.Card) bool {
 }
 
 // auraAIProfile retrieves an aura's AI targeting profile, if the card declares one.
-func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
-	if profiler, ok := card.(interface {
-		AuraAIProfile() (mage.AuraAIProfile, bool)
-	}); ok {
-		return profiler.AuraAIProfile()
+func auraAIProfile(card *mage.Card) (mage.AuraAIProfile, bool) {
+	if card == nil {
+		return mage.AuraAIProfile{}, false
 	}
-	return mage.AuraAIProfile{}, false
+	return card.AuraAIProfile()
 }
 
 // bestAuraTarget chooses the enchant target for an aura. Beneficial auras go on
@@ -749,7 +747,7 @@ func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
 // lower toughness (Immolation, +2/-2) only help us when they kill the creature,
 // so they only target an opponent creature whose toughness they would reduce to
 // zero — otherwise they would buff the opponent.
-func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, possible []uuid.UUID) []uuid.UUID {
+func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card *mage.Card, possible []uuid.UUID) []uuid.UUID {
 	profile, ok := auraAIProfile(card)
 	detrimental := ok && (profile.StealsControl || profile.PowerBoost < 0 || profile.ToughnessBoost < 0)
 	if !detrimental {
@@ -980,9 +978,9 @@ func shouldAimBurnAtFace(g *mage.Game, playerID uuid.UUID, damage int) bool {
 	return race.Racing && race.MyClock <= race.TheirClock && opponent.Life() <= 10
 }
 
-func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	damage := 0
-	for _, ab := range card.Abilities() {
+	for _, ab := range card.AllAbilities() {
 		if sa, ok := ab.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				if dv := e.Properties().DamageValue; dv != nil {
@@ -994,8 +992,8 @@ func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, tar
 	return damage
 }
 
-func cardAIHint(card mage.Card) mage.AIHint {
-	for _, a := range card.Abilities() {
+func cardAIHint(card *mage.Card) mage.AIHint {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -1097,8 +1095,8 @@ func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects
 	return damage
 }
 
-func isCardDamageSpell(card mage.Card) bool {
-	for _, a := range card.Abilities() {
+func isCardDamageSpell(card *mage.Card) bool {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, t := range sa.Targets() {
 				if _, ok := t.(*mage.DamageAnyTarget); ok {
@@ -1115,7 +1113,7 @@ func isCardDamageSpell(card mage.Card) bool {
 	return false
 }
 
-func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	mc := card.ManaCost()
 	if !mc.HasX {
 		return 0
@@ -1146,7 +1144,7 @@ func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, 
 
 // bestXValue picks the best X value for an X-cost spell.
 // For damage spells it tries lethal values; otherwise it spends all available mana.
-func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+func bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
 	mc := card.ManaCost()
 	if !mc.HasX {
 		return 0
@@ -1160,7 +1158,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 
 	// For damage spells, try to pick a lethal X value.
 	isDamageSpell := false
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				if e.Properties().DamageValue != nil {
@@ -1209,8 +1207,8 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 	return maxX
 }
 
-func isDetrimentalTapXSpell(card mage.Card) bool {
-	for _, a := range card.Abilities() {
+func isDetrimentalTapXSpell(card *mage.Card) bool {
+	for _, a := range card.AllAbilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				props := e.Properties()
@@ -1225,10 +1223,10 @@ func isDetrimentalTapXSpell(card mage.Card) bool {
 
 // chooseBestLand selects the best land to play from hand. It prefers lands that
 // make the highest-value currently stranded spells castable.
-func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
+func chooseBestLand(p mage.Player, g *mage.Game) *mage.Card {
 	hand := p.Hand()
 
-	var lands []mage.Card
+	var lands []*mage.Card
 	neededColors := make(map[core.Color]int)
 	baseColors, baseTotal := boardManaSources(g, p.PlayerID())
 
@@ -1253,7 +1251,7 @@ func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
 	}
 
 	// Score each land by how many needed colors it produces.
-	var bestLand mage.Card
+	var bestLand *mage.Card
 	bestScore := -1
 
 	for _, land := range lands {
@@ -1345,10 +1343,10 @@ func boardManaSources(g *mage.Game, playerID uuid.UUID) (colors map[core.Color]i
 	return colors, total
 }
 
-func landManaColors(card mage.Card) ([]core.Color, bool) {
+func landManaColors(card *mage.Card) ([]core.Color, bool) {
 	var colors []core.Color
 	anyColor := false
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
 		if !ok {
 			continue
@@ -1392,19 +1390,23 @@ func coloredManaProgress(mc core.ManaCost, colors map[core.Color]int) int {
 	return score
 }
 
-func isPrecombatSpell(card mage.Card) bool {
-	if card.HasType(core.TypeCreature) && card.AttrSeeds()[core.Haste] > 0 {
-		return true
-	}
-	if card.HasType(core.TypeSorcery) || card.HasType(core.TypeEnchantment) {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
-				outcome := mage.SpellOutcome(sa.Effects())
-				if outcome == mage.OutcomeDetriment {
+func isPrecombatSpell(card *mage.Card) bool {
+	creature := card.HasType(core.TypeCreature)
+	checkSpell := card.HasType(core.TypeSorcery) || card.HasType(core.TypeEnchantment)
+	if creature || checkSpell {
+		for _, ability := range card.AllAbilities() {
+			if creature && mage.AbilityAttribute(ability) == core.Haste {
+				return true
+			}
+			if !checkSpell {
+				continue
+			}
+			if sa, ok := ability.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+				if mage.SpellOutcome(sa.Effects()) == mage.OutcomeDetriment {
 					return true
 				}
-				for _, e := range sa.Effects() {
-					props := e.Properties()
+				for _, effect := range sa.Effects() {
+					props := effect.Properties()
 					if props.PowerBoost > 0 || props.Mass {
 						return true
 					}

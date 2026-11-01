@@ -73,7 +73,7 @@ func (ai *AIPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string,
 // discard. Lower values are discarded first. Surplus lands are cheap to pitch
 // when the board is flooded but precious when mana-light; spells are valued by
 // their context-sensitive SpellValue (so bombs survive over filler).
-func (ai *AIPlayer) discardKeepValue(card mage.Card, g *mage.Game) int {
+func (ai *AIPlayer) discardKeepValue(card *mage.Card, g *mage.Game) int {
 	if card.HasType(core.TypeLand) {
 		if g == nil {
 			return 8
@@ -98,7 +98,7 @@ func (ai *AIPlayer) discardKeepValue(card mage.Card, g *mage.Game) int {
 
 // ChooseCardsFromHand returns the `amount` lowest keep-value cards to discard,
 // keeping the AI's most valuable cards.
-func (ai *AIPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
+func (ai *AIPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []*mage.Card {
 	hand := ai.Hand()
 	if amount >= len(hand) {
 		return hand
@@ -107,7 +107,7 @@ func (ai *AIPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameRe
 		return nil
 	}
 	gg := gameOf(g)
-	sorted := make([]mage.Card, len(hand))
+	sorted := make([]*mage.Card, len(hand))
 	copy(sorted, hand)
 	sort.SliceStable(sorted, func(i, j int) bool {
 		return ai.discardKeepValue(sorted[i], gg) < ai.discardKeepValue(sorted[j], gg)
@@ -118,7 +118,7 @@ func (ai *AIPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameRe
 // ChooseCardFromHand picks one card from a pre-filtered candidate list. Discard
 // and sacrifice prompts give up the lowest keep-value card; other (beneficial)
 // selections take the highest-value card.
-func (ai *AIPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (ai *AIPlayer) ChooseCardFromHand(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -142,7 +142,7 @@ func (ai *AIPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g 
 // ChooseCardFromLibrary tutors for the highest-value card. Non-land spells are
 // scored by SpellValue (so a bomb beats filler); lands score low and are only
 // fetched when nothing better is available.
-func (ai *AIPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (ai *AIPlayer) ChooseCardFromLibrary(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -159,7 +159,7 @@ func (ai *AIPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string,
 	return best
 }
 
-func (ai *AIPlayer) libraryFetchValue(card mage.Card, g *mage.Game) int {
+func (ai *AIPlayer) libraryFetchValue(card *mage.Card, g *mage.Game) int {
 	if card.HasType(core.TypeLand) {
 		return 0
 	}
@@ -331,7 +331,7 @@ func (ai *AIPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g 
 // scryPlan partitions the revealed top cards into ones to keep on top (best
 // draws first) and ones to send away (flooded surplus lands). The same logic
 // drives scry (away = bottom of library) and surveil (away = graveyard).
-func (ai *AIPlayer) scryPlan(top []mage.Card, g mage.GameReader) (keepTop, sendAway []uuid.UUID) {
+func (ai *AIPlayer) scryPlan(top []*mage.Card, g mage.GameReader) (keepTop, sendAway []uuid.UUID) {
 	gg := gameOf(g)
 	if gg == nil {
 		ids := make([]uuid.UUID, len(top))
@@ -383,14 +383,14 @@ func (ai *AIPlayer) scryPlan(top []mage.Card, g mage.GameReader) (keepTop, sendA
 
 // ChooseScryPlacement keeps the best draws on top and bottoms flooded surplus
 // lands.
-func (ai *AIPlayer) ChooseScryPlacement(top []mage.Card, reason string, g mage.GameReader) (bottom, topOrder []uuid.UUID) {
+func (ai *AIPlayer) ChooseScryPlacement(top []*mage.Card, reason string, g mage.GameReader) (bottom, topOrder []uuid.UUID) {
 	topOrder, bottom = ai.scryPlan(top, g)
 	return bottom, topOrder
 }
 
 // ChooseSurveilPlacement keeps the best draws on top and mills flooded surplus
 // lands to the graveyard.
-func (ai *AIPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g mage.GameReader) (graveyard, topOrder []uuid.UUID) {
+func (ai *AIPlayer) ChooseSurveilPlacement(top []*mage.Card, reason string, g mage.GameReader) (graveyard, topOrder []uuid.UUID) {
 	topOrder, graveyard = ai.scryPlan(top, g)
 	return graveyard, topOrder
 }

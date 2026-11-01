@@ -25,7 +25,7 @@ type GraveyardActivatedAbility struct {
 // looked up by [Game.ActivateGraveyardAbility]. The cost typically
 // includes [ExileSelfFromGraveyardCost] to prevent infinite reuse.
 func WithGraveyardActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		opts = append(opts, WithSorcerySpeed())
 		base := NewActivatedAbility(effect, cost, opts...)
 		c.AddAbility(&GraveyardActivatedAbility{SimpleActivatedAbility: base})
@@ -77,7 +77,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 	if pl == nil {
 		return ErrPlayerNotFound
 	}
-	var card Card
+	var card *Card
 	for _, c := range pl.Graveyard() {
 		if c.ID() == cardID {
 			card = c
@@ -88,7 +88,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		return fmt.Errorf("card %s not in %s graveyard", cardID, playerID)
 	}
 
-	abilities := card.Abilities()
+	abilities := card.abilities
 	if abilityIdx < 0 || abilityIdx >= len(abilities) {
 		return fmt.Errorf("invalid ability index %d", abilityIdx)
 	}
@@ -156,7 +156,7 @@ func (g *Game) FindGraveyardActivatableCard(playerID uuid.UUID, name string) (uu
 		if name != "" && c.Name() != name {
 			continue
 		}
-		for i, a := range c.Abilities() {
+		for i, a := range c.abilities {
 			gaa, ok := a.(*GraveyardActivatedAbility)
 			if !ok {
 				continue

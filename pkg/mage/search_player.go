@@ -169,7 +169,7 @@ func permValueForChoice(p *Permanent, g GameReader) int {
 }
 
 // ChooseCardsFromHand returns the cheapest cards (lowest CMC first).
-func (sp *SearchPlayer) ChooseCardsFromHand(amount int, reason string, g GameReader) []Card {
+func (sp *SearchPlayer) ChooseCardsFromHand(amount int, reason string, g GameReader) []*Card {
 	hand := sp.Hand()
 	if amount > len(hand) {
 		amount = len(hand)
@@ -179,7 +179,7 @@ func (sp *SearchPlayer) ChooseCardsFromHand(amount int, reason string, g GameRea
 	}
 	// Sort by CMC to discard cheapest.
 	type cardCMC struct {
-		card Card
+		card *Card
 		cmc  int
 	}
 	sorted := make([]cardCMC, len(hand))
@@ -196,7 +196,7 @@ func (sp *SearchPlayer) ChooseCardsFromHand(amount int, reason string, g GameRea
 		}
 		sorted[i], sorted[minIdx] = sorted[minIdx], sorted[i]
 	}
-	result := make([]Card, amount)
+	result := make([]*Card, amount)
 	for i := 0; i < amount; i++ {
 		result[i] = sorted[i].card
 	}
@@ -204,7 +204,7 @@ func (sp *SearchPlayer) ChooseCardsFromHand(amount int, reason string, g GameRea
 }
 
 // ChooseCardFromHand picks the lowest-CMC candidate (cheapest to discard).
-func (sp *SearchPlayer) ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card {
+func (sp *SearchPlayer) ChooseCardFromHand(candidates []*Card, reason string, g GameReader) *Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -232,12 +232,12 @@ func (sp *SearchPlayer) ChooseManaColor(reason string) Color {
 // ChooseCardFromLibrary prefers non-land cards over lands (tutoring for spells
 // is usually more impactful). Among non-lands, picks the highest CMC card.
 // Among lands, picks the first available.
-func (sp *SearchPlayer) ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card {
+func (sp *SearchPlayer) ChooseCardFromLibrary(candidates []*Card, reason string, g GameReader) *Card {
 	if len(candidates) == 0 {
 		return nil
 	}
 
-	var bestNonLand Card
+	var bestNonLand *Card
 	bestCMC := -1
 	for _, c := range candidates {
 		if !c.HasType(TypeLand) {

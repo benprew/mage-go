@@ -24,7 +24,7 @@ import (
 func TestETBChooseColor(t *testing.T) {
 	name := "ETB Color Picker"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewEnchantment(name, "{1}{W}",
 				mage.WithAbility(mage.ETBChooseColor("choose a color")),
 			)
@@ -51,7 +51,7 @@ func TestETBChooseColor(t *testing.T) {
 func TestETBChooseColor_DifferentChoiceForNewInstance(t *testing.T) {
 	name := "ETB Color Picker"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewEnchantment(name, "{1}{W}",
 				mage.WithAbility(mage.ETBChooseColor("choose a color")),
 			)
@@ -88,7 +88,7 @@ func TestETBChooseColor_DifferentChoiceForNewInstance(t *testing.T) {
 func TestETBChooseColorOtherThan(t *testing.T) {
 	name := "ETB Other-Color Picker"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewLand(name,
 				mage.WithAbility(mage.ETBChooseColorOtherThan(
 					"choose a color other than red", core.Red)),
@@ -114,7 +114,7 @@ func TestETBChooseColorOtherThan(t *testing.T) {
 func TestETBChooseColorOtherThan_RejectsExcluded(t *testing.T) {
 	name := "ETB Other-Color Picker"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewLand(name,
 				mage.WithAbility(mage.ETBChooseColorOtherThan(
 					"choose a color other than red", core.Red)),
@@ -144,7 +144,7 @@ func TestETBChooseColorOtherThan_RejectsExcluded(t *testing.T) {
 func TestETBChooseOpponent(t *testing.T) {
 	name := "ETB Opponent Picker"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{B}", 4, 4,
 				mage.WithAbility(mage.ETBChooseOpponent()),
 			)
@@ -169,7 +169,7 @@ func TestETBChooseOpponent(t *testing.T) {
 func TestETBChooseOpponent_PerInstance(t *testing.T) {
 	name := "ETB Opponent Picker"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{B}", 4, 4,
 				mage.WithAbility(mage.ETBChooseOpponent()),
 			)
@@ -207,7 +207,7 @@ func TestETBChooseCreatureType(t *testing.T) {
 	name := "ETB Type Picker"
 	options := []string{"Goblin", "Elf", "Wizard", "Zombie"}
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewArtifact(name, "{3}",
 				mage.WithAbility(mage.ETBChooseCreatureType(options)),
 			)
@@ -233,7 +233,7 @@ func TestETBChooseCreatureType_FallbackWhenIllegal(t *testing.T) {
 	name := "ETB Type Picker"
 	options := []string{"Goblin", "Elf", "Wizard", "Zombie"}
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewArtifact(name, "{3}",
 				mage.WithAbility(mage.ETBChooseCreatureType(options)),
 			)
@@ -258,7 +258,7 @@ func TestETBChooseCreatureType_FallbackWhenIllegal(t *testing.T) {
 func TestETBChoiceVisibleToETBTriggers(t *testing.T) {
 	name := "ETB Choice + Trigger"
 	if !mage.CardRegistered(name) {
-		mage.Register(name, func() mage.Card {
+		mage.Register(name, func() *mage.Card {
 			return mage.NewCreature(name, "{2}{R}", 2, 2,
 				mage.WithAbility(mage.ETBChooseColor("choose a color")),
 				mage.WithAbility(mage.EntersBattlefieldTrigger(

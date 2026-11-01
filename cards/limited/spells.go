@@ -19,7 +19,7 @@ func registerSpells() {
 	// Purelace {W}
 	// Instant
 	// Target spell or permanent becomes white. (Mana symbols on that permanent remain unchanged.)
-	Register("Purelace", func() Card {
+	Register("Purelace", func() *Card {
 		return NewInstant("Purelace", "{W}",
 			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(White)),
 		)
@@ -28,7 +28,7 @@ func registerSpells() {
 	// Thoughtlace {U}
 	// Instant
 	// Target spell or permanent becomes blue. (Mana symbols on that permanent remain unchanged.)
-	Register("Thoughtlace", func() Card {
+	Register("Thoughtlace", func() *Card {
 		return NewInstant("Thoughtlace", "{U}",
 			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Blue)),
 		)
@@ -37,7 +37,7 @@ func registerSpells() {
 	// Deathlace {B}
 	// Instant
 	// Target spell or permanent becomes black. (Mana symbols on that permanent remain unchanged.)
-	Register("Deathlace", func() Card {
+	Register("Deathlace", func() *Card {
 		return NewInstant("Deathlace", "{B}",
 			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Black)),
 		)
@@ -46,7 +46,7 @@ func registerSpells() {
 	// Chaoslace {R}
 	// Instant
 	// Target spell or permanent becomes red. (Its mana symbols remain unchanged.)
-	Register("Chaoslace", func() Card {
+	Register("Chaoslace", func() *Card {
 		return NewInstant("Chaoslace", "{R}",
 			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Red)),
 		)
@@ -55,7 +55,7 @@ func registerSpells() {
 	// Lifelace {G}
 	// Instant
 	// Target spell or permanent becomes green. (Mana symbols on that permanent remain unchanged.)
-	Register("Lifelace", func() Card {
+	Register("Lifelace", func() *Card {
 		return NewInstant("Lifelace", "{G}",
 			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Green)),
 		)
@@ -63,19 +63,19 @@ func registerSpells() {
 
 	// ===== WHITE SPELLS =====
 
-	Register("Swords to Plowshares", func() Card {
+	Register("Swords to Plowshares", func() *Card {
 		return NewInstant("Swords to Plowshares", "{W}",
 			NewTargetedSpell(TargetCreature(), SwordsToPlowsharesEffect()),
 		)
 	})
 
-	Register("Disenchant", func() Card {
+	Register("Disenchant", func() *Card {
 		return NewInstant("Disenchant", "{1}{W}",
 			NewTargetedSpell(TargetArtifactOrEnchantment(), DisenchantEffect()),
 		)
 	})
 
-	Register("Healing Salve", func() Card {
+	Register("Healing Salve", func() *Card {
 		c := NewInstant("Healing Salve", "{W}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{
@@ -92,26 +92,26 @@ func registerSpells() {
 		return c
 	})
 
-	Register("Armageddon", func() Card {
+	Register("Armageddon", func() *Card {
 		return NewSorcery("Armageddon", "{3}{W}",
 			NewSpellAbility(DestroyAllLands()),
 		)
 	})
 
-	Register("Balance", func() Card {
+	Register("Balance", func() *Card {
 		return NewSorcery("Balance", "{1}{W}",
 			NewSpellAbility(BalanceEffect()),
 		)
 	})
 
-	Register("Resurrection", func() Card {
+	Register("Resurrection", func() *Card {
 		return NewSorcery("Resurrection", "{2}{W}{W}",
 			NewTargetedSpell(TargetCreatureInYourGraveyard(), ReturnFromGraveyardToBattlefield()),
 		)
 	})
 
 	// The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way.
-	Register("Reverse Damage", func() Card {
+	Register("Reverse Damage", func() *Card {
 		return NewInstant("Reverse Damage", "{1}{W}{W}",
 			NewSpellAbility(Pipeline("prevent the next source of damage to you and gain that much life",
 				EffectProperties{Outcome: OutcomeBenefit},
@@ -120,13 +120,13 @@ func registerSpells() {
 		)
 	})
 
-	Register("Death Ward", func() Card {
+	Register("Death Ward", func() *Card {
 		return NewInstant("Death Ward", "{W}",
 			NewTargetedSpell(TargetCreature(), RegenerateTarget()),
 		)
 	})
 
-	Register("Guardian Angel", func() Card {
+	Register("Guardian Angel", func() *Card {
 		// XXX: missing repeatable {1} prevention ability after initial X prevention
 		return NewInstant("Guardian Angel", "{X}{W}",
 			// Prevent the next X damage that would be dealt to any target this turn
@@ -136,31 +136,31 @@ func registerSpells() {
 
 	// ===== BLUE SPELLS =====
 
-	Register("Ancestral Recall", func() Card {
+	Register("Ancestral Recall", func() *Card {
 		return NewInstant("Ancestral Recall", "{U}",
 			NewTargetedSpell(TargetPlayer(), AncestralRecallEffect()),
 		)
 	})
 
-	Register("Braingeyser", func() Card {
+	Register("Braingeyser", func() *Card {
 		return NewSorcery("Braingeyser", "{X}{U}{U}",
 			NewTargetedSpell(TargetPlayer(), DrawCards(XValue())),
 		)
 	})
 
-	Register("Counterspell", func() Card {
+	Register("Counterspell", func() *Card {
 		return NewInstant("Counterspell", "{U}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpell()),
 		)
 	})
 
-	Register("Unsummon", func() Card {
+	Register("Unsummon", func() *Card {
 		return NewInstant("Unsummon", "{U}",
 			NewTargetedSpell(TargetCreature(), UnsummonEffect()),
 		)
 	})
 
-	Register("Spell Blast", func() Card {
+	Register("Spell Blast", func() *Card {
 		return NewInstant("Spell Blast", "{X}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfXMeetsCMC()),
 		)
@@ -169,7 +169,7 @@ func registerSpells() {
 	// Power Sink {X}{U}
 	// Instant
 	// Counter target spell unless its controller pays {X}. If that player doesn't, they tap all lands with mana abilities they control and lose all unspent mana.
-	Register("Power Sink", func() Card {
+	Register("Power Sink", func() *Card {
 		return NewInstant("Power Sink", "{X}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), PowerSinkEffect()),
 		)
@@ -177,31 +177,31 @@ func registerSpells() {
 
 	// XXX: missing destroy mode — Oracle is modal: "Counter target red spell" / "Destroy target red permanent"
 	// Engine doesn't support modal targeting across zones (spell on stack vs permanent on battlefield)
-	Register("Blue Elemental Blast", func() Card {
+	Register("Blue Elemental Blast", func() *Card {
 		return NewInstant("Blue Elemental Blast", "{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfColor(Red)),
 		)
 	})
 
-	Register("Twiddle", func() Card {
+	Register("Twiddle", func() *Card {
 		return NewInstant("Twiddle", "{U}",
 			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TwiddleEffect()),
 		)
 	})
 
-	Register("Timetwister", func() Card {
+	Register("Timetwister", func() *Card {
 		return NewSorcery("Timetwister", "{2}{U}",
 			NewSpellAbility(ShuffleHandAndGraveyardIntoLibraryAndDraw(7)),
 		)
 	})
 
-	Register("Time Walk", func() Card {
+	Register("Time Walk", func() *Card {
 		return NewSorcery("Time Walk", "{1}{U}",
 			NewSpellAbility(ExtraTurn()),
 		)
 	})
 
-	Register("Sleight of Mind", func() Card {
+	Register("Sleight of Mind", func() *Card {
 		return NewInstant("Sleight of Mind", "{U}",
 			NewTargetedSpell(TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
 		)
@@ -209,13 +209,13 @@ func registerSpells() {
 
 	// ===== BLACK SPELLS =====
 
-	Register("Dark Ritual", func() Card {
+	Register("Dark Ritual", func() *Card {
 		return NewInstant("Dark Ritual", "{B}",
 			NewSpellAbility(AddMana(Black, 3)),
 		)
 	})
 
-	Register("Terror", func() Card {
+	Register("Terror", func() *Card {
 		return NewInstant("Terror", "{1}{B}",
 			NewTargetedSpell(TargetCreature(
 				Not(HasColorFilter(Black)),
@@ -224,19 +224,19 @@ func registerSpells() {
 		)
 	})
 
-	Register("Raise Dead", func() Card {
+	Register("Raise Dead", func() *Card {
 		return NewSorcery("Raise Dead", "{B}",
 			NewTargetedSpell(TargetCreatureInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
 		)
 	})
 
-	Register("Demonic Tutor", func() Card {
+	Register("Demonic Tutor", func() *Card {
 		return NewSorcery("Demonic Tutor", "{1}{B}",
 			NewSpellAbility(SearchLibraryToHand()),
 		)
 	})
 
-	Register("Drain Life", func() Card {
+	Register("Drain Life", func() *Card {
 		// XXX: missing "Spend only black mana on X" restriction
 		// TODO: convert to pipeline — needs life-capping logic (cap gain at target toughness/life)
 		return NewSorcery("Drain Life", "{X}{1}{B}",
@@ -280,19 +280,19 @@ func registerSpells() {
 		)
 	})
 
-	Register("Mind Twist", func() Card {
+	Register("Mind Twist", func() *Card {
 		return NewSorcery("Mind Twist", "{X}{B}",
 			NewTargetedSpell(TargetPlayer(), DiscardCards(XValue())),
 		)
 	})
 
-	Register("Sinkhole", func() Card {
+	Register("Sinkhole", func() *Card {
 		return NewLandDestruction("Sinkhole", "{B}{B}")
 	})
 
 	// XXX: missing destroy mode — Oracle is modal: "Counter target blue spell" / "Destroy target blue permanent"
 	// Engine doesn't support modal targeting across zones (spell on stack vs permanent on battlefield)
-	Register("Red Elemental Blast", func() Card {
+	Register("Red Elemental Blast", func() *Card {
 		return NewInstant("Red Elemental Blast", "{R}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfColor(Blue)),
 		)
@@ -300,19 +300,19 @@ func registerSpells() {
 
 	// ===== RED SPELLS =====
 
-	Register("Lightning Bolt", func() Card {
+	Register("Lightning Bolt", func() *Card {
 		return NewInstant("Lightning Bolt", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), LightningBoltEffect()),
 		)
 	})
 
-	Register("Shock", func() Card {
+	Register("Shock", func() *Card {
 		return NewInstant("Shock", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(2))),
 		)
 	})
 
-	Register("Fireball", func() Card {
+	Register("Fireball", func() *Card {
 		return NewSorcery("Fireball", "{X}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(XValue())),
 		)
@@ -320,7 +320,7 @@ func registerSpells() {
 
 	// XXX: missing exile-on-death replacement effect — Oracle: "if it would die this turn, exile it instead"
 	// TODO: convert to pipeline — needs GrantAttrToTarget primitive for CantRegenerate
-	Register("Disintegrate", func() Card {
+	Register("Disintegrate", func() *Card {
 		return NewSorcery("Disintegrate", "{X}{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"deal X damage; creature can't be regenerated this turn",
@@ -346,7 +346,7 @@ func registerSpells() {
 		)
 	})
 
-	Register("Earthquake", func() Card {
+	Register("Earthquake", func() *Card {
 		return NewSorcery("Earthquake", "{X}{R}",
 			NewSpellAbility(CompositeEffects(
 				"deal X damage to each creature without flying and each player",
@@ -356,17 +356,17 @@ func registerSpells() {
 		)
 	})
 
-	Register("Shatter", func() Card {
+	Register("Shatter", func() *Card {
 		return NewInstant("Shatter", "{1}{R}",
 			NewTargetedSpell(TargetArtifact(), DestroyTargetArtifact()),
 		)
 	})
 
-	Register("Stone Rain", func() Card {
+	Register("Stone Rain", func() *Card {
 		return NewLandDestruction("Stone Rain", "{2}{R}")
 	})
 
-	Register("Flashfires", func() Card {
+	Register("Flashfires", func() *Card {
 		return NewSorcery("Flashfires", "{3}{R}",
 			NewSpellAbility(DestroyAllMatching(
 				HasSubType("Plains"),
@@ -378,7 +378,7 @@ func registerSpells() {
 	// Wheel of Fortune {2}{R}
 	// Sorcery
 	// Each player discards their hand, then draws seven cards.
-	Register("Wheel of Fortune", func() Card {
+	Register("Wheel of Fortune", func() *Card {
 		return NewSorcery("Wheel of Fortune", "{2}{R}",
 			NewSpellAbility(Pipeline(
 				"each player discards their hand, then draws seven cards",
@@ -389,13 +389,13 @@ func registerSpells() {
 		)
 	})
 
-	Register("Fork", func() Card {
+	Register("Fork", func() *Card {
 		return NewInstant("Fork", "{R}{R}",
 			NewTargetedSpell(TargetSpellOnStack(), CopySpellOnStack()),
 		)
 	})
 
-	Register("Berserk", func() Card {
+	Register("Berserk", func() *Card {
 		return NewInstant("Berserk", "{G}",
 			NewTargetedSpell(TargetCreature(), BerserkEffect()),
 		)
@@ -403,19 +403,19 @@ func registerSpells() {
 
 	// ===== GREEN SPELLS =====
 
-	Register("Giant Growth", func() Card {
+	Register("Giant Growth", func() *Card {
 		return NewInstant("Giant Growth", "{G}",
 			NewTargetedSpell(TargetCreature(), GiantGrowthEffect()),
 		)
 	})
 
-	Register("Regrowth", func() Card {
+	Register("Regrowth", func() *Card {
 		return NewSorcery("Regrowth", "{1}{G}",
 			NewTargetedSpell(TargetCardInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
 		)
 	})
 
-	Register("Hurricane", func() Card {
+	Register("Hurricane", func() *Card {
 		return NewSorcery("Hurricane", "{X}{G}",
 			NewSpellAbility(CompositeEffects(
 				"deal X damage to each creature with flying and each player",
@@ -425,13 +425,13 @@ func registerSpells() {
 		)
 	})
 
-	Register("Tranquility", func() Card {
+	Register("Tranquility", func() *Card {
 		return NewSorcery("Tranquility", "{2}{G}",
 			NewSpellAbility(DestroyAllEnchantments()),
 		)
 	})
 
-	Register("Tsunami", func() Card {
+	Register("Tsunami", func() *Card {
 		return NewSorcery("Tsunami", "{3}{G}",
 			NewSpellAbility(DestroyAllMatching(
 				HasSubType("Island"),
@@ -440,23 +440,23 @@ func registerSpells() {
 		)
 	})
 
-	Register("Ice Storm", func() Card {
+	Register("Ice Storm", func() *Card {
 		return NewLandDestruction("Ice Storm", "{2}{G}")
 	})
 
-	Register("Stream of Life", func() Card {
+	Register("Stream of Life", func() *Card {
 		return NewSorcery("Stream of Life", "{X}{G}",
 			NewTargetedSpell(TargetPlayer(), GainLifeTarget(XValue())),
 		)
 	})
 
-	Register("Fog", func() Card {
+	Register("Fog", func() *Card {
 		return NewInstant("Fog", "{G}",
 			NewSpellAbility(FogEffect()),
 		)
 	})
 
-	Register("Channel", func() Card {
+	Register("Channel", func() *Card {
 		// TODO: convert to pipeline — needs SetChannelActive primitive
 		return NewSorcery("Channel", "{G}{G}",
 			NewSpellAbility(FuncEffect(
@@ -469,13 +469,13 @@ func registerSpells() {
 		)
 	})
 
-	Register("Howl from Beyond", func() Card {
+	Register("Howl from Beyond", func() *Card {
 		return NewInstant("Howl from Beyond", "{X}{B}",
 			NewTargetedSpell(TargetCreature(), Boost(XValue(), Fixed(0))),
 		)
 	})
 
-	Register("Righteousness", func() Card {
+	Register("Righteousness", func() *Card {
 		return NewInstant("Righteousness", "{W}",
 			NewTargetedSpell(TargetCreature(IsBlocking), Boost(Fixed(7), Fixed(7))),
 		)
@@ -483,7 +483,7 @@ func registerSpells() {
 
 	// ===== COLORLESS SPELLS =====
 
-	Register("Wrath of God", func() Card {
+	Register("Wrath of God", func() *Card {
 		return NewSorcery("Wrath of God", "{2}{W}{W}",
 			NewSpellAbility(DestroyAllCreaturesNoRegen()),
 		)
@@ -492,7 +492,7 @@ func registerSpells() {
 	// Psionic Blast {2}{U}
 	// Instant
 	// Psionic Blast deals 4 damage to any target and 2 damage to you.
-	Register("Psionic Blast", func() Card {
+	Register("Psionic Blast", func() *Card {
 		return NewInstant("Psionic Blast", "{2}{U}",
 			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 4 damage to any target and 2 damage to you",
@@ -505,7 +505,7 @@ func registerSpells() {
 	// Tunnel {R}
 	// Instant
 	// Destroy target Wall. It can't be regenerated.
-	Register("Tunnel", func() Card {
+	Register("Tunnel", func() *Card {
 		return NewInstant("Tunnel", "{R}",
 			NewTargetedSpell(TargetCreature(HasSubType("Wall")), DestroyTargetNoRegen()),
 		)
@@ -517,7 +517,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Discard your hand, ante the top card of your library, then draw seven cards.
-	Register("Contract from Below", func() Card {
+	Register("Contract from Below", func() *Card {
 		return NewSorcery("Contract from Below", "{B}",
 			NewSpellAbility(Pipeline(
 				"discard hand, ante top card, draw seven",
@@ -533,7 +533,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// You own target card in the ante. Exchange that card with the top card of your library.
-	Register("Darkpact", func() Card {
+	Register("Darkpact", func() *Card {
 		return NewSorcery("Darkpact", "{B}{B}{B}",
 			NewTargetedSpell(TargetCardYouOwnInAnte(), Pipeline(
 				"exchange ante card with top of library",
@@ -547,7 +547,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Each player antes the top card of their library.
-	Register("Demonic Attorney", func() Card {
+	Register("Demonic Attorney", func() *Card {
 		return NewSorcery("Demonic Attorney", "{1}{B}{B}",
 			NewSpellAbility(Pipeline(
 				"each player antes the top card of their library",
@@ -558,7 +558,7 @@ func registerSpells() {
 	})
 	// ===== MOVED FROM OTHER FILES =====
 
-	Register("Sacrifice", func() Card {
+	Register("Sacrifice", func() *Card {
 		return NewInstant("Sacrifice", "{B}",
 			NewTargetedSpell(TargetCreature(), Pipeline(
 				"sacrifice creature and add black mana equal to its CMC",
@@ -570,7 +570,7 @@ func registerSpells() {
 		)
 	})
 
-	Register("Word of Command", func() Card {
+	Register("Word of Command", func() *Card {
 		return NewInstant("Word of Command", "{B}{B}",
 			// TODO: convert to pipeline — complex hand/cast manipulation
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
@@ -603,7 +603,7 @@ func registerSpells() {
 		)
 	})
 
-	Register("Camouflage", func() Card {
+	Register("Camouflage", func() *Card {
 		return NewInstant("Camouflage", "{G}",
 			// TODO: convert to pipeline — needs PreventBlockingUntilEndOfCombat step
 			NewSpellAbility(FuncEffect(
@@ -623,7 +623,7 @@ func registerSpells() {
 		)
 	})
 
-	Register("Natural Selection", func() Card {
+	Register("Natural Selection", func() *Card {
 		return NewInstant("Natural Selection", "{G}",
 			// TODO: convert to pipeline — needs library manipulation steps
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
@@ -653,7 +653,7 @@ func registerSpells() {
 		)
 	})
 
-	Register("Mana Short", func() Card {
+	Register("Mana Short", func() *Card {
 		// TODO Also drain player's mana pool
 		return NewInstant("Mana Short", "{2}{U}",
 			NewTargetedSpell(TargetPlayer(), TapAllLands()),
@@ -662,13 +662,13 @@ func registerSpells() {
 
 	// TODO implement
 	// Target player activates a mana ability of each land they control. Then that player loses all unspent mana and you add the mana lost this way.
-	Register("Drain Power", func() Card {
+	Register("Drain Power", func() *Card {
 		return NewSorcery("Drain Power", "{U}{U}",
 			NewTargetedSpell(TargetPlayer(), TapAllLands()),
 		)
 	})
 
-	Register("Simulacrum", func() Card {
+	Register("Simulacrum", func() *Card {
 		return NewInstant("Simulacrum", "{1}{B}",
 			// TODO: convert to pipeline — needs DamageTakenByPlayer as ValueSource
 			NewTargetedSpell(TargetCreatureYouControl(), FuncEffect(
@@ -695,7 +695,7 @@ func registerSpells() {
 	})
 
 	// TODO implement "Also blocks if able"
-	Register("Blaze of Glory", func() Card {
+	Register("Blaze of Glory", func() *Card {
 		return NewInstant("Blaze of Glory", "{W}",
 			NewTargetedSpell(TargetCreature(), GrantKeyword(CanBlockAny)),
 		)
@@ -703,13 +703,13 @@ func registerSpells() {
 
 	// TODO implement
 	// "Text": "Cast this spell only during the declare blockers step.\nRemove target creature defending player controls from combat. Creatures it was blocking that had become blocked by only that creature this combat become unblocked. You may have it block an attacking creature of your choice.",
-	Register("False Orders", func() Card {
+	Register("False Orders", func() *Card {
 		return NewInstant("False Orders", "{R}",
 			NewTargetedSpell(TargetCreature(), RemoveFromCombat()),
 		)
 	})
 
-	Register("Siren's Call", func() Card {
+	Register("Siren's Call", func() *Card {
 		// XXX: missing cast timing restriction and "attack if able" forced attack effect
 		return NewInstant("Siren's Call", "{U}",
 			// TODO: convert to pipeline — needs delayed trigger pipeline support
@@ -746,13 +746,13 @@ func registerSpells() {
 		)
 	})
 
-	Register("Magical Hack", func() Card {
+	Register("Magical Hack", func() *Card {
 		return NewInstant("Magical Hack", "{U}",
 			NewTargetedSpell(TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
 		)
 	})
 
-	Register("Jump", func() Card {
+	Register("Jump", func() *Card {
 		return NewInstant("Jump", "{U}",
 			NewTargetedSpell(TargetCreature(), GrantKeyword(Flying)),
 		)

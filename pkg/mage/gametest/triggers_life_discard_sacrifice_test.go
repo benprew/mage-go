@@ -15,62 +15,62 @@ var triggerLifeDiscardSacrificeOnce sync.Once
 
 func registerTriggerLifeDiscardSacrificeCards() {
 	triggerLifeDiscardSacrificeOnce.Do(func() {
-		reg := func(name string, f func() mage.Card) {
+		reg := func(name string, f func() *mage.Card) {
 			if !mage.CardRegistered(name) {
 				mage.Register(name, f)
 			}
 		}
 
 		// "Whenever you gain life, draw a card."
-		reg("Trig Life Watcher", func() mage.Card {
+		reg("Trig Life Watcher", func() *mage.Card {
 			return mage.NewEnchantment("Trig Life Watcher", "{2}{W}",
 				mage.WithAbility(mage.WheneverYouGainLifeTrigger(
 					mage.DrawCards(mage.Fixed(1)), false)))
 		})
 
 		// "Whenever an opponent loses life, you gain that much life."
-		reg("Trig Blood Drinker", func() mage.Card {
+		reg("Trig Blood Drinker", func() *mage.Card {
 			return mage.NewEnchantment("Trig Blood Drinker", "{2}{B}{B}",
 				mage.WithAbility(mage.WheneverOpponentLosesLifeTrigger(
 					mage.GainLifeTarget(mage.EventAmountValue()), false)))
 		})
 
 		// "Whenever a player loses life, that player draws a card." (sentinel)
-		reg("Trig Pain Recorder", func() mage.Card {
+		reg("Trig Pain Recorder", func() *mage.Card {
 			return mage.NewEnchantment("Trig Pain Recorder", "{1}{B}",
 				mage.WithAbility(mage.WheneverPlayerLosesLifeTrigger(
 					mage.DrawCards(mage.Fixed(1)), false)))
 		})
 
 		// "Whenever an opponent discards a card, that player loses 2 life."
-		reg("Trig Spook", func() mage.Card {
+		reg("Trig Spook", func() *mage.Card {
 			return mage.NewEnchantment("Trig Spook", "{1}{B}",
 				mage.WithAbility(mage.WheneverOpponentDiscardsTrigger(
 					mage.TargetPlayerLoseLife(mage.Fixed(2)), false)))
 		})
 
 		// "Whenever you sacrifice another creature, draw a card."
-		reg("Trig Sac Watcher", func() mage.Card {
+		reg("Trig Sac Watcher", func() *mage.Card {
 			return mage.NewEnchantment("Trig Sac Watcher", "{2}{B}",
 				mage.WithAbility(mage.WheneverYouSacrificeAnotherCreatureTrigger(
 					mage.DrawCards(mage.Fixed(1)), false)))
 		})
 
 		// Source for life gain: simple gain-3 instant.
-		reg("Trig Healing Salve", func() mage.Card {
+		reg("Trig Healing Salve", func() *mage.Card {
 			return mage.NewInstant("Trig Healing Salve", "{W}",
 				mage.NewSpellAbility(mage.GainLife(3)))
 		})
 
 		// Targeted discard: target opponent discards 1 card.
-		reg("Trig Mind Pluck", func() mage.Card {
+		reg("Trig Mind Pluck", func() *mage.Card {
 			return mage.NewSorcery("Trig Mind Pluck", "{B}",
 				mage.NewTargetedSpell(mage.TargetPlayer(),
 					mage.DiscardCards(mage.Fixed(1))))
 		})
 
 		// Activated ability: sacrifice a creature, gain 1 life.
-		reg("Trig Altar", func() mage.Card {
+		reg("Trig Altar", func() *mage.Card {
 			return mage.NewArtifact("Trig Altar", "{2}",
 				mage.WithActivatedAbility(
 					mage.GainLife(1),
@@ -78,19 +78,19 @@ func registerTriggerLifeDiscardSacrificeCards() {
 		})
 
 		// Vanilla 1/1 token-style creature for sacrifice fodder.
-		reg("Trig Goat", func() mage.Card {
+		reg("Trig Goat", func() *mage.Card {
 			return mage.NewCreature("Trig Goat", "{G}", 1, 1)
 		})
 
 		// Direct life-loss: target player loses 1.
-		reg("Trig Drain", func() mage.Card {
+		reg("Trig Drain", func() *mage.Card {
 			return mage.NewInstant("Trig Drain", "{B}",
 				mage.NewTargetedSpell(mage.TargetPlayer(),
 					mage.TargetPlayerLoseLife(mage.Fixed(1))))
 		})
 
 		// Damage source: 3 damage to target player.
-		reg("Trig Shock Player", func() mage.Card {
+		reg("Trig Shock Player", func() *mage.Card {
 			return mage.NewInstant("Trig Shock Player", "{R}",
 				mage.NewTargetedSpell(mage.TargetPlayer(),
 					mage.DealDamage(mage.Fixed(3))))

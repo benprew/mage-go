@@ -15,7 +15,7 @@ import (
 func TestBeginningOfFirstMainPhaseTrigger_FiresOnceOnControllerPrecombatMain(t *testing.T) {
 	const cardName = "EVTMAIN First Main Sentinel"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.BeginningOfFirstMainPhaseTrigger(
 					mage.GainLife(2), false,
@@ -40,7 +40,7 @@ func TestBeginningOfFirstMainPhaseTrigger_FiresOnceOnControllerPrecombatMain(t *
 func TestBeginningOfPostcombatMainPhaseTrigger_FiresOnControllerPostcombat(t *testing.T) {
 	const cardName = "EVTMAIN Postcombat Sentinel"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.BeginningOfPostcombatMainPhaseTrigger(
 					mage.GainLife(1), false,

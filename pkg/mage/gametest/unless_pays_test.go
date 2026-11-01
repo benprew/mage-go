@@ -15,7 +15,7 @@ func registerUnlessPaysCards() {
 		// "Target player loses 5 life unless they pay 2 life." Modeled
 		// purely with LifePayCost so we don't need mana plumbing.
 		if !mage.CardRegistered("Test Unless Pays Drain") {
-			mage.Register("Test Unless Pays Drain", func() mage.Card {
+			mage.Register("Test Unless Pays Drain", func() *mage.Card {
 				return mage.NewSorcery("Test Unless Pays Drain", "{B}",
 					mage.NewTargetedSpell(mage.TargetPlayer(),
 						mage.UnlessTargetPays(

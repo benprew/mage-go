@@ -27,7 +27,7 @@ func TestCombatDamage(t *testing.T) {
 		for _, n := range []string{bearA, bearB} {
 
 			if !mage.CardRegistered(n) {
-				mage.Register(n, func() mage.Card {
+				mage.Register(n, func() *mage.Card {
 					return mage.NewCreature(n, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 				})
 			}
@@ -57,14 +57,14 @@ func TestCombatDamage(t *testing.T) {
 		fs := "Combat FS 2/2"
 		vn := "Combat Vanilla 2/2"
 		if !mage.CardRegistered(fs) {
-			mage.Register(fs, func() mage.Card {
+			mage.Register(fs, func() *mage.Card {
 				return mage.NewCreature(fs, "{1}{W}", 2, 2,
 					mage.WithSubTypes("Soldier"),
 					mage.WithKeyword(core.FirstStrike))
 			})
 		}
 		if !mage.CardRegistered(vn) {
-			mage.Register(vn, func() mage.Card {
+			mage.Register(vn, func() *mage.Card {
 				return mage.NewCreature(vn, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -91,14 +91,14 @@ func TestCombatDamage(t *testing.T) {
 		ds := "Combat DS 2/2"
 		big := "Combat Vanilla 4/4"
 		if !mage.CardRegistered(ds) {
-			mage.Register(ds, func() mage.Card {
+			mage.Register(ds, func() *mage.Card {
 				return mage.NewCreature(ds, "{1}{R}{W}", 2, 2,
 					mage.WithSubTypes("Soldier"),
 					mage.WithKeyword(core.DoubleStrike))
 			})
 		}
 		if !mage.CardRegistered(big) {
-			mage.Register(big, func() mage.Card {
+			mage.Register(big, func() *mage.Card {
 				return mage.NewCreature(big, "{2}{G}{G}", 4, 4, mage.WithSubTypes("Beast"))
 			})
 		}
@@ -123,12 +123,12 @@ func TestCombatDamage(t *testing.T) {
 		a := "510.1b Attacker 2/2"
 		b := "510.1b Attacker 3/3"
 		if !mage.CardRegistered(a) {
-			mage.Register(a, func() mage.Card {
+			mage.Register(a, func() *mage.Card {
 				return mage.NewCreature(a, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
 		if !mage.CardRegistered(b) {
-			mage.Register(b, func() mage.Card {
+			mage.Register(b, func() *mage.Card {
 				return mage.NewCreature(b, "{2}{G}", 3, 3, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -149,7 +149,7 @@ func TestCombatDamage(t *testing.T) {
 		attacker := "510.1c Linked Attacker 7/7"
 		blocker := "510.1c Blocker 1/1"
 		if !mage.CardRegistered(attacker) {
-			mage.Register(attacker, func() mage.Card {
+			mage.Register(attacker, func() *mage.Card {
 				return mage.NewCreature(attacker, "{3}{B}{B}{B}", 7, 7,
 					mage.WithSubTypes("Horror"),
 					mage.WithAbility(
@@ -161,7 +161,7 @@ func TestCombatDamage(t *testing.T) {
 			})
 		}
 		if !mage.CardRegistered(blocker) {
-			mage.Register(blocker, func() mage.Card {
+			mage.Register(blocker, func() *mage.Card {
 				return mage.NewCreature(blocker, "{W}", 1, 1, mage.WithSubTypes("Soldier"))
 			})
 		}
@@ -190,14 +190,14 @@ func TestCombatDamage(t *testing.T) {
 		blkA := "510.1c Blocker 2/3 A"
 		blkB := "510.1c Blocker 2/3 B"
 		if !mage.CardRegistered(atk) {
-			mage.Register(atk, func() mage.Card {
+			mage.Register(atk, func() *mage.Card {
 				return mage.NewCreature(atk, "{2}{G}{G}", 4, 4, mage.WithSubTypes("Beast"))
 			})
 		}
 		for _, n := range []string{blkA, blkB} {
 
 			if !mage.CardRegistered(n) {
-				mage.Register(n, func() mage.Card {
+				mage.Register(n, func() *mage.Card {
 					return mage.NewCreature(n, "{1}{W}{W}", 2, 3, mage.WithSubTypes("Soldier"))
 				})
 			}
@@ -236,7 +236,7 @@ func TestCombatDamage(t *testing.T) {
 	t.Run("CR 510.3a post-damage trigger resolves before post-damage priority", func(t *testing.T) {
 		name := "510.3a Lifegain Attacker 3/3"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				// Whenever CARDNAME deals combat damage to a player, you gain 2 life.
 				trig := mage.NewTriggered(core.EvtDamageDealt, false,
 					mage.GainLife(2)).

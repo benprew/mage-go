@@ -23,7 +23,7 @@ func TestCR500_8_ExtraPhaseInsertedAfterSpecified(t *testing.T) {
 	var beginCombatFires atomic.Int32
 	watchName := "CR500.8 BeginCombat Watcher"
 	if !mage.CardRegistered(watchName) {
-		mage.Register(watchName, func() mage.Card {
+		mage.Register(watchName, func() *mage.Card {
 			return mage.NewCreature(watchName, "{1}", 1, 1,
 				mage.WithSubTypes("Spirit"),
 				mage.WithAbility(mage.NewTriggered(core.EvtBeginCombat, false,
@@ -186,7 +186,7 @@ func TestCR506_3_OnlyCreaturesAttack(t *testing.T) {
 func TestCR506_6_HadToAttackRequirementPresent(t *testing.T) {
 	const mustAtkName = "CR506.6 Must Attack Bear"
 	if !mage.CardRegistered(mustAtkName) {
-		mage.Register(mustAtkName, func() mage.Card {
+		mage.Register(mustAtkName, func() *mage.Card {
 			return mage.NewCreature(mustAtkName, "{1}{R}", 2, 2,
 				mage.WithSubTypes("Bear"),
 				mage.WithKeyword(core.MustAttack))
@@ -208,7 +208,7 @@ func TestCR506_6_HadToAttackRequirementPresent(t *testing.T) {
 func TestCR507_2_PriorityAtBeginningOfCombat(t *testing.T) {
 	const healName = "CR507.2 BeginCombat Instant"
 	if !mage.CardRegistered(healName) {
-		mage.Register(healName, func() mage.Card {
+		mage.Register(healName, func() *mage.Card {
 			return mage.NewInstant(healName, "{W}",
 				mage.NewSpellAbility(mage.GainLife(3)))
 		})
@@ -231,7 +231,7 @@ func TestCR507_2_PriorityAtBeginningOfCombat(t *testing.T) {
 func TestCR508_1c_DeclareAttackersRestrictionIllegal(t *testing.T) {
 	const restrictedName = "CR508.1c Restricted Bear"
 	if !mage.CardRegistered(restrictedName) {
-		mage.Register(restrictedName, func() mage.Card {
+		mage.Register(restrictedName, func() *mage.Card {
 			return mage.NewCreature(restrictedName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -256,7 +256,7 @@ func TestCR508_1c_DeclareAttackersRestrictionIllegal(t *testing.T) {
 func TestCR508_1d_DeclareAttackersRequirementMaxObeyed(t *testing.T) {
 	const reqName = "CR508.1d Must-Attack Bear"
 	if !mage.CardRegistered(reqName) {
-		mage.Register(reqName, func() mage.Card {
+		mage.Register(reqName, func() *mage.Card {
 			return mage.NewCreature(reqName, "{1}{R}", 2, 2,
 				mage.WithSubTypes("Bear"),
 				mage.WithKeyword(core.MustAttack))
@@ -292,7 +292,7 @@ func TestCR508_1d_DeclareAttackersRequirementMaxObeyed(t *testing.T) {
 func TestCR508_3a_WhenAttacksTrigger(t *testing.T) {
 	const atkTrigName = "CR508.3 Attacks Trigger Bear"
 	if !mage.CardRegistered(atkTrigName) {
-		mage.Register(atkTrigName, func() mage.Card {
+		mage.Register(atkTrigName, func() *mage.Card {
 			return mage.NewCreature(atkTrigName, "{1}{R}", 2, 2,
 				mage.WithSubTypes("Bear"),
 				mage.WithAbility(mage.AttacksTrigger(mage.GainLife(3), false)))
@@ -317,7 +317,7 @@ func TestCR508_3a_WhenAttacksTrigger(t *testing.T) {
 	t.Run("trigger does not fire for a different creature attacking", func(t *testing.T) {
 		const otherBear = "CR508.3 Plain Bear"
 		if !mage.CardRegistered(otherBear) {
-			mage.Register(otherBear, func() mage.Card {
+			mage.Register(otherBear, func() *mage.Card {
 				return mage.NewCreature(otherBear, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -342,7 +342,7 @@ func TestCR508_3a_WhenAttacksTrigger(t *testing.T) {
 func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 	spellName := "CR508.4 Beckon Token"
 	if !mage.CardRegistered(spellName) {
-		mage.Register(spellName, func() mage.Card {
+		mage.Register(spellName, func() *mage.Card {
 			return mage.NewInstant(spellName, "{R}",
 				mage.NewSpellAbility(mage.CreateTokenAttacking("CR508.4 Marauder", 3, 3,
 					[]core.CardType{core.TypeCreature},
@@ -353,7 +353,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 	triggerName := "CR508.4 Trigger Beast"
 	var attacksFires atomic.Int32
 	if !mage.CardRegistered(triggerName) {
-		mage.Register(triggerName, func() mage.Card {
+		mage.Register(triggerName, func() *mage.Card {
 			return mage.NewCreature(triggerName, "{2}{R}", 2, 2,
 				mage.WithSubTypes("Beast"),
 				mage.WithAbility(mage.AttacksTrigger(
@@ -366,7 +366,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 	}
 	putAttackingName := "CR508.4 Put Beast Attacking"
 	if !mage.CardRegistered(putAttackingName) {
-		mage.Register(putAttackingName, func() mage.Card {
+		mage.Register(putAttackingName, func() *mage.Card {
 			return mage.NewInstant(putAttackingName, "{R}",
 				mage.NewSpellAbility(mage.FuncEffect("put beast attacking", mage.EffectProperties{},
 					func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
@@ -423,7 +423,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 func TestCR508_5_DefendingPlayerRef(t *testing.T) {
 	const drainName = "CR508.5 Attacks Drains Defender"
 	if !mage.CardRegistered(drainName) {
-		mage.Register(drainName, func() mage.Card {
+		mage.Register(drainName, func() *mage.Card {
 			return mage.NewCreature(drainName, "{1}{B}", 2, 2,
 				mage.WithSubTypes("Vampire"),
 				mage.WithAbility(mage.AttacksTrigger(
@@ -486,17 +486,17 @@ func TestCR509_1c_DeclareBlockersBlockRequirementObeyed(t *testing.T) {
 	const otherAtk = "CR509.1c Other Attacker"
 	const blocker = "CR509.1c Blocker"
 	if !mage.CardRegistered(luredAtk) {
-		mage.Register(luredAtk, func() mage.Card {
+		mage.Register(luredAtk, func() *mage.Card {
 			return mage.NewCreature(luredAtk, "{2}{G}", 3, 3, mage.WithSubTypes("Beast"))
 		})
 	}
 	if !mage.CardRegistered(otherAtk) {
-		mage.Register(otherAtk, func() mage.Card {
+		mage.Register(otherAtk, func() *mage.Card {
 			return mage.NewCreature(otherAtk, "{1}{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
 	if !mage.CardRegistered(blocker) {
-		mage.Register(blocker, func() mage.Card {
+		mage.Register(blocker, func() *mage.Card {
 			return mage.NewCreature(blocker, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -530,7 +530,7 @@ func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 	var blockTriggerCount atomic.Int32
 
 	if !mage.CardRegistered(multiBlockName) {
-		mage.Register(multiBlockName, func() mage.Card {
+		mage.Register(multiBlockName, func() *mage.Card {
 			return mage.NewCreature(multiBlockName, "{3}", 1, 5,
 				mage.WithSubTypes("Wall"),
 				mage.WithKeyword(core.CanBlockAny),
@@ -545,12 +545,12 @@ func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 	const atk1 = "CR509.3a Attacker A"
 	const atk2 = "CR509.3a Attacker B"
 	if !mage.CardRegistered(atk1) {
-		mage.Register(atk1, func() mage.Card {
+		mage.Register(atk1, func() *mage.Card {
 			return mage.NewCreature(atk1, "{1}{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
 	if !mage.CardRegistered(atk2) {
-		mage.Register(atk2, func() mage.Card {
+		mage.Register(atk2, func() *mage.Card {
 			return mage.NewCreature(atk2, "{1}{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
@@ -581,7 +581,7 @@ func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 	var perBlockCount atomic.Int32
 
 	if !mage.CardRegistered(perBlockName) {
-		mage.Register(perBlockName, func() mage.Card {
+		mage.Register(perBlockName, func() *mage.Card {
 			return mage.NewCreature(perBlockName, "{3}", 1, 5,
 				mage.WithSubTypes("Wall"),
 				mage.WithKeyword(core.CanBlockAny),
@@ -600,12 +600,12 @@ func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 	const batk1 = "CR509.3b Att A"
 	const batk2 = "CR509.3b Att B"
 	if !mage.CardRegistered(batk1) {
-		mage.Register(batk1, func() mage.Card {
+		mage.Register(batk1, func() *mage.Card {
 			return mage.NewCreature(batk1, "{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
 	if !mage.CardRegistered(batk2) {
-		mage.Register(batk2, func() mage.Card {
+		mage.Register(batk2, func() *mage.Card {
 			return mage.NewCreature(batk2, "{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
@@ -635,7 +635,7 @@ func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 	var becomeBlockedCount atomic.Int32
 
 	if !mage.CardRegistered(becomeBlockedAtkName) {
-		mage.Register(becomeBlockedAtkName, func() mage.Card {
+		mage.Register(becomeBlockedAtkName, func() *mage.Card {
 			return mage.NewCreature(becomeBlockedAtkName, "{2}{G}", 4, 4,
 				mage.WithSubTypes("Beast"),
 				mage.WithAbility(
@@ -656,12 +656,12 @@ func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 	const blkA = "CR509.3c Blocker A"
 	const blkB = "CR509.3c Blocker B"
 	if !mage.CardRegistered(blkA) {
-		mage.Register(blkA, func() mage.Card {
+		mage.Register(blkA, func() *mage.Card {
 			return mage.NewCreature(blkA, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(blkB) {
-		mage.Register(blkB, func() mage.Card {
+		mage.Register(blkB, func() *mage.Card {
 			return mage.NewCreature(blkB, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -691,7 +691,7 @@ func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 	var blockedByCount atomic.Int32
 
 	if !mage.CardRegistered(blockedByAtkName) {
-		mage.Register(blockedByAtkName, func() mage.Card {
+		mage.Register(blockedByAtkName, func() *mage.Card {
 			return mage.NewCreature(blockedByAtkName, "{2}{G}", 4, 4,
 				mage.WithSubTypes("Beast"),
 				mage.WithAbility(
@@ -709,12 +709,12 @@ func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 	const bblkA = "CR509.3d Blocker A"
 	const bblkB = "CR509.3d Blocker B"
 	if !mage.CardRegistered(bblkA) {
-		mage.Register(bblkA, func() mage.Card {
+		mage.Register(bblkA, func() *mage.Card {
 			return mage.NewCreature(bblkA, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(bblkB) {
-		mage.Register(bblkB, func() mage.Card {
+		mage.Register(bblkB, func() *mage.Card {
 			return mage.NewCreature(bblkB, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -743,7 +743,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 	var threshFired atomic.Int32
 
 	if !mage.CardRegistered(threshAtkName) {
-		mage.Register(threshAtkName, func() mage.Card {
+		mage.Register(threshAtkName, func() *mage.Card {
 			return mage.NewCreature(threshAtkName, "{3}", 4, 4,
 				mage.WithSubTypes("Beast"),
 				mage.WithAbility(
@@ -762,12 +762,12 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 	const th1 = "CR509.3e Blocker 1"
 	const th2 = "CR509.3e Blocker 2"
 	if !mage.CardRegistered(th1) {
-		mage.Register(th1, func() mage.Card {
+		mage.Register(th1, func() *mage.Card {
 			return mage.NewCreature(th1, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered(th2) {
-		mage.Register(th2, func() mage.Card {
+		mage.Register(th2, func() *mage.Card {
 			return mage.NewCreature(th2, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -789,7 +789,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 	t.Run("does not fire when blocked by one", func(t *testing.T) {
 		const thOnly = "CR509.3e Only Blocker"
 		if !mage.CardRegistered(thOnly) {
-			mage.Register(thOnly, func() mage.Card {
+			mage.Register(thOnly, func() *mage.Card {
 				return mage.NewCreature(thOnly, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -821,7 +821,7 @@ func TestCR509_3f_CharacteristicChangeNoRetroTrigger(t *testing.T) {
 	const atkForBlock = "CR509.3f Attacker"
 
 	if !mage.CardRegistered(colorWatcherName) {
-		mage.Register(colorWatcherName, func() mage.Card {
+		mage.Register(colorWatcherName, func() *mage.Card {
 			trig := mage.NewTriggered(core.EvtDeclaredBlocker, false,
 				mage.GainLife(2)).
 				SetCondition(func(evt *core.GameEvent, gr mage.GameReader, _, _ uuid.UUID) bool {
@@ -837,19 +837,19 @@ func TestCR509_3f_CharacteristicChangeNoRetroTrigger(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(blueBlocker) {
-		mage.Register(blueBlocker, func() mage.Card {
+		mage.Register(blueBlocker, func() *mage.Card {
 			return mage.NewCreature(blueBlocker, "{1}{U}", 2, 2, mage.WithSubTypes("Merfolk"))
 		})
 	}
 	if !mage.CardRegistered(laceName) {
-		mage.Register(laceName, func() mage.Card {
+		mage.Register(laceName, func() *mage.Card {
 			return mage.NewInstant(laceName, "{G}",
 				mage.NewTargetedSpell(mage.TargetPermanent(),
 					mage.ChangeColorEffect(core.Green)))
 		})
 	}
 	if !mage.CardRegistered(atkForBlock) {
-		mage.Register(atkForBlock, func() mage.Card {
+		mage.Register(atkForBlock, func() *mage.Card {
 			return mage.NewCreature(atkForBlock, "{1}{R}", 2, 2, mage.WithSubTypes("Goblin"))
 		})
 	}
@@ -875,7 +875,7 @@ func TestCR509_3f_CharacteristicChangeNoRetroTrigger(t *testing.T) {
 func TestCR509_3g_AttacksAndIsntBlockedTrigger(t *testing.T) {
 	const isntBlockedName = "CR509.3g Isnt Blocked Bear"
 	if !mage.CardRegistered(isntBlockedName) {
-		mage.Register(isntBlockedName, func() mage.Card {
+		mage.Register(isntBlockedName, func() *mage.Card {
 			return mage.NewCreature(isntBlockedName, "{1}{R}", 2, 2,
 				mage.WithSubTypes("Bear"),
 				mage.WithAbility(
@@ -902,7 +902,7 @@ func TestCR509_3g_AttacksAndIsntBlockedTrigger(t *testing.T) {
 	t.Run("does not fire when blocked", func(t *testing.T) {
 		const bkr = "CR509.3g Blocker"
 		if !mage.CardRegistered(bkr) {
-			mage.Register(bkr, func() mage.Card {
+			mage.Register(bkr, func() *mage.Card {
 				return mage.NewCreature(bkr, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -928,7 +928,7 @@ func TestCR509_3g_AttacksAndIsntBlockedTrigger(t *testing.T) {
 func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 	blockTokenSpell := "CR509.4 Emergency Blocker"
 	if !mage.CardRegistered(blockTokenSpell) {
-		mage.Register(blockTokenSpell, func() mage.Card {
+		mage.Register(blockTokenSpell, func() *mage.Card {
 			return mage.NewInstant(blockTokenSpell, "{W}",
 				mage.NewTargetedSpell(mage.TargetCreature(mage.IsAttacking),
 					mage.CreateTokenBlocking("CR509.4 Shield Drone", 0, 4,
@@ -940,7 +940,7 @@ func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 	blockTriggerName := "CR509.4 Trigger Wall"
 	var blocksFires atomic.Int32
 	if !mage.CardRegistered(blockTriggerName) {
-		mage.Register(blockTriggerName, func() mage.Card {
+		mage.Register(blockTriggerName, func() *mage.Card {
 			return mage.NewCreature(blockTriggerName, "{1}{W}", 0, 4,
 				mage.WithSubTypes("Wall"),
 				mage.WithKeyword(core.Defender),
@@ -954,7 +954,7 @@ func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 	}
 	putBlockingName := "CR509.4 Put Wall Blocking"
 	if !mage.CardRegistered(putBlockingName) {
-		mage.Register(putBlockingName, func() mage.Card {
+		mage.Register(putBlockingName, func() *mage.Card {
 			return mage.NewInstant(putBlockingName, "{W}",
 				mage.NewTargetedSpell(mage.TargetCreature(mage.IsAttacking),
 					mage.FuncEffect("put wall blocking", mage.EffectProperties{},

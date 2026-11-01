@@ -14,7 +14,7 @@ func captureForUndo(g *mage.Game, playerID uuid.UUID, logLen int) undoSnapshot {
 	if p == nil {
 		return undoSnapshot{}
 	}
-	hand := make([]mage.Card, len(p.Hand()))
+	hand := make([]*mage.Card, len(p.Hand()))
 	copy(hand, p.Hand())
 	pool := p.ManaPool().SnapshotPool()
 	tapped := make(map[uuid.UUID]bool)

@@ -6,8 +6,8 @@
 // implementing every domain rule directly, [Game] composes cohesive, stateful
 // subsystems that each own their state invariants and cloning behavior:
 //
-//   - [ZoneSystem]: Owns battlefield storage with copy-on-write semantics for AI
-//     search, exile storage with visibility metadata, entering-permanent tracking,
+//   - [ZoneSystem]: Owns battlefield storage, exile visibility,
+//     entering-permanent tracking,
 //     and Last-Known Information (LKI) snapshots.
 //   - [TurnSystem]: Owns turn counters, current phase and step, active player
 //     index, extra turns, [TurnSchedule] lifecycle, and one-shot untap skip counters.
@@ -31,6 +31,69 @@
 // Read-only queries are organized into focused domain interfaces:
 // [PlayerReader], [BattlefieldReader], [ResolutionReader], [TurnReader],
 // [CombatReader], [TrackerReader], and [StackReader], which compose into [GameReader].
+//
+// # Card Definitions and Instances
+//
+// [Card.Abilities] returns a private slice of all card abilities, including keywords.
+// Use [Card.AllAbilities] to inspect the same list without a slice copy.
+// [AbilityAttribute] identifies abilities that use an attribute. [AttributeAbility]
+// supplies simple static abilities. Ward uses its triggered ability directly.
+// Capability and type attributes do not appear in the ability list.
+//
+// Runtime APIs use *Card to preserve the identity of each mutable card object.
+// Use [Card.NewCopy] for a distinct object with fresh ability state.
+// Use [Card.CloneInstance] to preserve identity and current execution state.
+// Both operations retain the shared definition.
+//
+// [CardDefinition] stores printed name, type line, mana cost, power, toughness,
+// colors, keywords, mode descriptions, and compiled [RuleDefinition] values.
+// [NewCardDefinition] copies its input containers. Read methods return private
+// copies. Source parsers must compile and validate syntax before this boundary.
+// Keywords and executable rules use the same [RuleDefinition] factories.
+// [NewCard] combines these rules with legacy keyword inputs in [Card.Abilities].
+// Permanent ability attributes come from that complete list.
+// The pkg/mage/mtgish compiler validates mtgish JSON rules before publication.
+//
+// Each rule uses a function to create private ability context and target data.
+// The function and its callbacks must capture only immutable data. Effects and
+// costs must keep execution state on the game or source object. Definition
+// construction checks that rules create distinct abilities with clone support.
+// It cannot prove that a Go callback has no mutable captured data.
+//
+// [NewCard] creates private state from a shared definition. Card options
+// apply to that card. [CardDefinition.NewInstance] also assigns an owner.
+// It creates a [Card] with a new identity and
+// an owner. [Card.NewCopy] creates another identity. For simulation branches,
+// [Card.CloneInstance] preserves identity and copies ability state.
+// [Game.Clone] uses one clone context for cards, abilities, targets, and cast
+// context. Legacy and definition-backed cards both get private mutable state.
+// References to the same object remain consistent within the branch.
+// Payment validation and simultaneous zone changes use the same operation.
+// Definitions are shared. Battlefield state stays on [Permanent]. Targets,
+// selected modes, X, payments, and distributions stay on [StackObject] or in
+// local announcement state. Target requirements do not store announcement choices.
+//
+// [Card.CopiableValues] captures a private snapshot of card characteristics.
+// [Card.ApplyCopiableValues] applies it without changing the receiver's ID,
+// owner, or original printed definition. Copied abilities get new identities,
+// no selected targets, and unused activation limits. Source execution state
+// is not part of this snapshot. Battlefield counters, status, and temporary
+// effects stay on Permanent. [Card.CloneFrom] and [Card.Copy] remain as
+// compatibility names for ApplyCopiableValues and NewCopy.
+// Spell copies use [CopySpellOnStack] to copy stack choices separately.
+//
+// [Registry.RegisterDefinition] and [Registry.RegisterDefinitions] publish
+// definitions. Batch registration rejects conflicts before it changes the registry.
+// [Registry.CreateInstance] assigns an owner. [Registry.CreateCard] also accepts
+// definition entries and creates an instance with no assigned owner.
+//
+// Existing [Card] constructors and factory registrations remain supported.
+// Factory-built cards retain their construction data until their definitions
+// are migrated. Definition-backed cards use private characteristic snapshots
+// for the legacy Card mutation API. These snapshots contain characteristic
+// values only. Identity and execution state stay on Card. New battlefield
+// effects must change Permanent state or use continuous effects. These adapters
+// can be removed after legacy construction and characteristic changes migrate.
 //
 // # Controllers and Layer 2
 //

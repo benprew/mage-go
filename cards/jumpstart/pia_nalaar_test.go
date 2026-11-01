@@ -10,7 +10,7 @@ import (
 )
 
 // mageCreate is a tiny alias around mage.CreateCard for readable test setup.
-func mageCreate(name string) (mage.Card, error) { return mage.CreateCard(name) }
+func mageCreate(name string) (*mage.Card, error) { return mage.CreateCard(name) }
 
 // Pia Nalaar, Consul of Revival {2}{R}
 // Legendary Creature — Human Artificer  3/2

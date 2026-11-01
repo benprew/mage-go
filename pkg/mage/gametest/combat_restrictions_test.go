@@ -13,7 +13,7 @@ import (
 // registerOnce registers a card factory only on first use. Tests run in a
 // single process so the global registry is shared; the helper guards against
 // duplicate-registration panics across multiple t.Run cases.
-func registerOnce(name string, factory func() mage.Card) {
+func registerOnce(name string, factory func() *mage.Card) {
 	if !mage.CardRegistered(name) {
 		mage.Register(name, factory)
 	}
@@ -26,17 +26,17 @@ func TestCantBeBlockedExceptByFilter(t *testing.T) {
 	atkName := "ComboRestr Gingerbread Attacker"
 	defaultBlk := "ComboRestr Vanilla Blocker"
 	hasteBlk := "ComboRestr Haste Blocker"
-	registerOnce(atkName, func() mage.Card {
+	registerOnce(atkName, func() *mage.Card {
 		return mage.NewCreature(atkName, "{1}", 2, 2,
 			mage.WithStaticAbility(
 				mage.SourceCantBeBlockedExceptBy(mage.HasKeywordFilter(core.Haste)),
 			),
 		)
 	})
-	registerOnce(defaultBlk, func() mage.Card {
+	registerOnce(defaultBlk, func() *mage.Card {
 		return mage.NewCreature(defaultBlk, "{1}", 2, 2)
 	})
-	registerOnce(hasteBlk, func() mage.Card {
+	registerOnce(hasteBlk, func() *mage.Card {
 		return mage.NewCreature(hasteBlk, "{1}", 2, 2, mage.WithKeyword(core.Haste))
 	})
 
@@ -72,7 +72,7 @@ func TestCanBlockOnlyFilter(t *testing.T) {
 	flyOnlyBlk := "ComboRestr FlyOnly Airship"
 	groundAtk := "ComboRestr Ground Atk"
 	flyAtk := "ComboRestr Flying Atk"
-	registerOnce(flyOnlyBlk, func() mage.Card {
+	registerOnce(flyOnlyBlk, func() *mage.Card {
 		return mage.NewCreature(flyOnlyBlk, "{2}", 2, 4,
 			mage.WithKeyword(core.Flying),
 			mage.WithStaticAbility(
@@ -80,10 +80,10 @@ func TestCanBlockOnlyFilter(t *testing.T) {
 			),
 		)
 	})
-	registerOnce(groundAtk, func() mage.Card {
+	registerOnce(groundAtk, func() *mage.Card {
 		return mage.NewCreature(groundAtk, "{2}", 3, 3)
 	})
-	registerOnce(flyAtk, func() mage.Card {
+	registerOnce(flyAtk, func() *mage.Card {
 		return mage.NewCreature(flyAtk, "{2}", 3, 3, mage.WithKeyword(core.Flying))
 	})
 
@@ -117,7 +117,7 @@ func TestCantBeBlockedByFewerThan(t *testing.T) {
 	chump1 := "ComboRestr Chump1"
 	chump2 := "ComboRestr Chump2"
 	chump3 := "ComboRestr Chump3"
-	registerOnce(goon, func() mage.Card {
+	registerOnce(goon, func() *mage.Card {
 		return mage.NewCreature(goon, "{2}{R}{R}", 6, 6,
 			mage.WithStaticAbility(
 				mage.SourceCantBeBlockedByFewerThan(3),
@@ -126,7 +126,7 @@ func TestCantBeBlockedByFewerThan(t *testing.T) {
 	})
 	for _, n := range []string{chump1, chump2, chump3} {
 		name := n
-		registerOnce(name, func() mage.Card {
+		registerOnce(name, func() *mage.Card {
 			return mage.NewCreature(name, "{1}", 1, 1)
 		})
 	}
@@ -176,13 +176,13 @@ func TestPowerLessOrEqualFilter(t *testing.T) {
 	atkName := "ComboRestr Guided"
 	smallBlk := "ComboRestr SmallBlk"
 	largeBlk := "ComboRestr LargeBlk"
-	registerOnce(atkName, func() mage.Card {
+	registerOnce(atkName, func() *mage.Card {
 		return mage.NewCreature(atkName, "{2}", 3, 3)
 	})
-	registerOnce(smallBlk, func() mage.Card {
+	registerOnce(smallBlk, func() *mage.Card {
 		return mage.NewCreature(smallBlk, "{1}", 2, 2)
 	})
-	registerOnce(largeBlk, func() mage.Card {
+	registerOnce(largeBlk, func() *mage.Card {
 		return mage.NewCreature(largeBlk, "{4}", 5, 5)
 	})
 
@@ -229,10 +229,10 @@ func TestPowerLessOrEqualFilter(t *testing.T) {
 func TestMustBeBlockedIfAble(t *testing.T) {
 	atkName := "ComboRestr LureLite Atk"
 	blkName := "ComboRestr LureLite Blk"
-	registerOnce(atkName, func() mage.Card {
+	registerOnce(atkName, func() *mage.Card {
 		return mage.NewCreature(atkName, "{2}", 4, 4)
 	})
-	registerOnce(blkName, func() mage.Card {
+	registerOnce(blkName, func() *mage.Card {
 		return mage.NewCreature(blkName, "{1}", 2, 2)
 	})
 
@@ -280,20 +280,20 @@ func TestPreventBlockByPowerLessThanSource(t *testing.T) {
 	teamMate := "ComboRestr TeamMate"
 	smallBlk := "ComboRestr Small"
 	largeBlk := "ComboRestr Large"
-	registerOnce(champ, func() mage.Card {
+	registerOnce(champ, func() *mage.Card {
 		return mage.NewCreature(champ, "{2}{G}", 3, 3,
 			mage.WithStaticAbility(
 				mage.PreventBlockByPowerLessThanSource(mage.AnyPermanent),
 			),
 		)
 	})
-	registerOnce(teamMate, func() mage.Card {
+	registerOnce(teamMate, func() *mage.Card {
 		return mage.NewCreature(teamMate, "{2}", 2, 2)
 	})
-	registerOnce(smallBlk, func() mage.Card {
+	registerOnce(smallBlk, func() *mage.Card {
 		return mage.NewCreature(smallBlk, "{1}", 2, 2)
 	})
-	registerOnce(largeBlk, func() mage.Card {
+	registerOnce(largeBlk, func() *mage.Card {
 		return mage.NewCreature(largeBlk, "{3}", 4, 4)
 	})
 
@@ -329,7 +329,7 @@ func TestPreventBlockByPowerLessThanSource(t *testing.T) {
 // controller does.
 func TestPreventAttackingIfDefenderControlsMore(t *testing.T) {
 	goon := "ComboRestr Goon-Atk"
-	registerOnce(goon, func() mage.Card {
+	registerOnce(goon, func() *mage.Card {
 		return mage.NewCreature(goon, "{2}{R}{R}", 6, 6,
 			mage.WithStaticAbility(
 				mage.PreventAttackingIfDefenderControlsMore(mage.IsCreature),
@@ -337,7 +337,7 @@ func TestPreventAttackingIfDefenderControlsMore(t *testing.T) {
 		)
 	})
 	chump := "ComboRestr Goon-Chump"
-	registerOnce(chump, func() mage.Card {
+	registerOnce(chump, func() *mage.Card {
 		return mage.NewCreature(chump, "{1}", 1, 1)
 	})
 
@@ -369,7 +369,7 @@ func TestPreventAttackingIfDefenderControlsMore(t *testing.T) {
 // revokes the attack.
 func TestPreventAttackingIfDefenderControlsAsManyOrMore(t *testing.T) {
 	goon := "ComboRestr Goon-AtkStrict"
-	registerOnce(goon, func() mage.Card {
+	registerOnce(goon, func() *mage.Card {
 		return mage.NewCreature(goon, "{2}{R}{R}", 6, 6,
 			mage.WithStaticAbility(
 				mage.PreventAttackingIfDefenderControlsAsManyOrMore(mage.IsCreature),
@@ -377,7 +377,7 @@ func TestPreventAttackingIfDefenderControlsAsManyOrMore(t *testing.T) {
 		)
 	})
 	chump := "ComboRestr Goon-ChumpStrict"
-	registerOnce(chump, func() mage.Card { return mage.NewCreature(chump, "{1}", 1, 1) })
+	registerOnce(chump, func() *mage.Card { return mage.NewCreature(chump, "{1}", 1, 1) })
 
 	t.Run("can't attack when equal", func(t *testing.T) {
 		tg := NewTestGame(t)
@@ -407,7 +407,7 @@ func TestPreventAttackingIfDefenderControlsAsManyOrMore(t *testing.T) {
 // the filter than the attacking player does.
 func TestPreventBlockingIfAttackerControlsAsManyOrMore(t *testing.T) {
 	goon := "ComboRestr Goon-Blk"
-	registerOnce(goon, func() mage.Card {
+	registerOnce(goon, func() *mage.Card {
 		return mage.NewCreature(goon, "{2}{R}{R}", 6, 6,
 			mage.WithStaticAbility(
 				mage.PreventBlockingIfAttackerControlsAsManyOrMore(mage.IsCreature),
@@ -415,7 +415,7 @@ func TestPreventBlockingIfAttackerControlsAsManyOrMore(t *testing.T) {
 		)
 	})
 	bear := "ComboRestr Goon-Blk-Bear"
-	registerOnce(bear, func() mage.Card { return mage.NewCreature(bear, "{1}{G}", 2, 2) })
+	registerOnce(bear, func() *mage.Card { return mage.NewCreature(bear, "{1}{G}", 2, 2) })
 
 	t.Run("can't block when equal", func(t *testing.T) {
 		tg := NewTestGame(t)

@@ -175,7 +175,7 @@ func TestCopySpellOnStack_CopyDoesNotEnterAnyZone(t *testing.T) {
 	}
 }
 
-func cardSliceContains(cards []Card, id uuid.UUID) bool {
+func cardSliceContains(cards []*Card, id uuid.UUID) bool {
 	for _, c := range cards {
 		if c.ID() == id {
 			return true

@@ -23,7 +23,7 @@ func TestEndStep(t *testing.T) {
 	t.Run("CR 513.1 at beginning of end step trigger fires", func(t *testing.T) {
 		name := "EndStep Life Gainer"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewArtifact(name, "{2}",
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtEndStep,
@@ -54,7 +54,7 @@ func TestEndStep(t *testing.T) {
 	t.Run("CR 513.2 permanent entering during end step does not trigger until next turn", func(t *testing.T) {
 		name := "ECU2 513.2 End Step Drainer"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewArtifact(name, "{2}",
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtEndStep,

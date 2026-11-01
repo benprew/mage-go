@@ -19,12 +19,12 @@ func TestDeclareBlockers(t *testing.T) {
 		attacker := "Combat Block-Test Attacker"
 		blocker := "Combat Block-Test Blocker"
 		if !mage.CardRegistered(attacker) {
-			mage.Register(attacker, func() mage.Card {
+			mage.Register(attacker, func() *mage.Card {
 				return mage.NewCreature(attacker, "{1}{R}", 2, 2, mage.WithSubTypes("Ogre"))
 			})
 		}
 		if !mage.CardRegistered(blocker) {
-			mage.Register(blocker, func() mage.Card {
+			mage.Register(blocker, func() *mage.Card {
 				return mage.NewCreature(blocker, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}

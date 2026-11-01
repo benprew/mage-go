@@ -13,7 +13,7 @@ func init() {
 func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
-	Register("Crusade", func() Card {
+	Register("Crusade", func() *Card {
 		return NewEnchantment("Crusade", "{W}{W}",
 			WithStaticAbility(
 				BoostAllCreaturesIncludingSelf(1, 1, HasColorFilter(White)),
@@ -21,7 +21,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Bad Moon", func() Card {
+	Register("Bad Moon", func() *Card {
 		return NewEnchantment("Bad Moon", "{1}{B}",
 			WithStaticAbility(
 				BoostAllCreaturesIncludingSelf(1, 1, HasColorFilter(Black)),
@@ -29,7 +29,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Orcish Oriflamme", func() Card {
+	Register("Orcish Oriflamme", func() *Card {
 		return NewEnchantment("Orcish Oriflamme", "{3}{R}",
 			WithStaticAbility(
 				BoostControlledCreatures(1, 0, IsAttacking),
@@ -37,7 +37,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Castle", func() Card {
+	Register("Castle", func() *Card {
 		return NewEnchantment("Castle", "{3}{W}",
 			WithStaticAbility(
 				BoostControlledCreatures(0, 2, IsUntapped),
@@ -47,19 +47,19 @@ func registerEnchantments() {
 
 	// ===== AURAS (CREATURE ENCHANTMENTS) =====
 
-	Register("Holy Strength", func() Card {
+	Register("Holy Strength", func() *Card {
 		return NewBoostAura("Holy Strength", "{W}", 1, 2)
 	})
 
-	Register("Unholy Strength", func() Card {
+	Register("Unholy Strength", func() *Card {
 		return NewBoostAura("Unholy Strength", "{B}", 2, 1)
 	})
 
-	Register("Weakness", func() Card {
+	Register("Weakness", func() *Card {
 		return NewBoostAura("Weakness", "{B}", -2, -1)
 	})
 
-	Register("Holy Armor", func() Card {
+	Register("Holy Armor", func() *Card {
 		return NewAura("Holy Armor", "{W}",
 			WithStaticAbility(
 				BoostAttached(0, 2, AttachAura),
@@ -72,7 +72,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Blessing", func() Card {
+	Register("Blessing", func() *Card {
 		return NewAura("Blessing", "{W}{W}",
 			WithStaticAbility(
 				GrantActivatedAbilityToAttached(
@@ -84,7 +84,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Lance", func() Card {
+	Register("Lance", func() *Card {
 		return NewAura("Lance", "{W}",
 			WithStaticAbility(
 				GrantAbilityToAttached(FirstStrike, AttachAura),
@@ -92,7 +92,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Web", func() Card {
+	Register("Web", func() *Card {
 		return NewAura("Web", "{G}",
 			WithStaticAbility(
 				BoostAttached(0, 2, AttachAura),
@@ -101,7 +101,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Firebreathing", func() Card {
+	Register("Firebreathing", func() *Card {
 		return NewAura("Firebreathing", "{R}",
 			WithStaticAbility(
 				GrantActivatedAbilityToAttached(
@@ -113,7 +113,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Flight", func() Card {
+	Register("Flight", func() *Card {
 		return NewAura("Flight", "{U}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Flying, AttachAura),
@@ -121,7 +121,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Fear", func() Card {
+	Register("Fear", func() *Card {
 		return NewAura("Fear", "{B}{B}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Fear, AttachAura),
@@ -129,7 +129,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Burrowing", func() Card {
+	Register("Burrowing", func() *Card {
 		return NewAura("Burrowing", "{R}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Mountainwalk, AttachAura),
@@ -137,7 +137,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Invisibility", func() Card {
+	Register("Invisibility", func() *Card {
 		return NewAura("Invisibility", "{U}{U}",
 			WithStaticAbility(
 				GrantAbilityToAttached(CantBeBlockedExceptByWalls, AttachAura),
@@ -145,7 +145,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Lure", func() Card {
+	Register("Lure", func() *Card {
 		return NewAura("Lure", "{1}{G}{G}",
 			WithStaticAbility(
 				GrantAbilityToAttached(MustBeBlocked, AttachAura),
@@ -153,7 +153,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Paralyze", func() Card {
+	Register("Paralyze", func() *Card {
 		return NewAura("Paralyze", "{B}",
 			WithAbility(EntersBattlefieldTrigger(TapAttachedCreature(), false)),
 			WithStaticAbility(
@@ -182,7 +182,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Earthbind", func() Card {
+	Register("Earthbind", func() *Card {
 		return NewAura("Earthbind", "{R}",
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"if enchanted creature has flying, deal 2 damage",
@@ -207,7 +207,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Control Magic", func() Card {
+	Register("Control Magic", func() *Card {
 		return NewAura("Control Magic", "{2}{U}{U}",
 			WithStaticAbility(ControlChangeContinuous()),
 			WithAuraAIProfile(AuraAIProfile{StealsControl: true}),
@@ -217,7 +217,7 @@ func registerEnchantments() {
 	// Oracle: Enchant creature card in a graveyard
 	// When this Aura enters, if it's on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this Aura." Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.
 	// Enchanted creature gets -1/-0.
-	Register("Animate Dead", func() Card {
+	Register("Animate Dead", func() *Card {
 		return NewAura("Animate Dead", "{1}{B}",
 			WithCastTarget(TargetCreatureCardInAnyGraveyard()),
 			WithAbility(NewSpellAbility(ReturnTargetFromAnyGraveyardToBattlefield())),
@@ -242,7 +242,7 @@ func registerEnchantments() {
 
 	// ===== ENCHANT LAND =====
 
-	Register("Wild Growth", func() Card {
+	Register("Wild Growth", func() *Card {
 		return NewAura("Wild Growth", "{G}",
 			WithCastTarget(TargetLand()),
 			WithAbility(NewAttachedManaBonusAbility(Green)),
@@ -253,7 +253,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant land
 	// Enchanted land is a Swamp.
-	Register("Evil Presence", func() Card {
+	Register("Evil Presence", func() *Card {
 		return NewAura("Evil Presence", "{B}",
 			WithCastTarget(TargetLand()),
 			WithStaticAbility(
@@ -267,7 +267,7 @@ func registerEnchantments() {
 	// Enchant land
 	// As this Aura enters, choose a basic land type.
 	// Enchanted land is the chosen type.
-	Register("Phantasmal Terrain", func() Card {
+	Register("Phantasmal Terrain", func() *Card {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
 			WithCastTarget(TargetLand()),
 			WithETBEffect(ChooseColorStep("Choose basic land type for Phantasmal Terrain")),
@@ -277,7 +277,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Psychic Venom", func() Card {
+	Register("Psychic Venom", func() *Card {
 		return NewAura("Psychic Venom", "{1}{U}",
 			WithCastTarget(TargetLand()),
 			WithAbility(WhenAttachedBecomesTappedTrigger(
@@ -301,7 +301,7 @@ func registerEnchantments() {
 	for _, cop := range copColors {
 		name := cop.name
 		color := cop.color
-		Register(name, func() Card {
+		Register(name, func() *Card {
 			return NewEnchantment(name, "{1}{W}",
 				// {1}: Prevent all damage from one source of this color this turn.
 				WithActivatedAbility(
@@ -316,7 +316,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has protection from black. This effect doesn't remove this Aura.
-	Register("Black Ward", func() Card {
+	Register("Black Ward", func() *Card {
 		return NewAura("Black Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Black, AttachAura)),
 		)
@@ -326,7 +326,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has protection from blue. This effect doesn't remove this Aura.
-	Register("Blue Ward", func() Card {
+	Register("Blue Ward", func() *Card {
 		return NewAura("Blue Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Blue, AttachAura)),
 		)
@@ -336,7 +336,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has protection from green. This effect doesn't remove this Aura.
-	Register("Green Ward", func() Card {
+	Register("Green Ward", func() *Card {
 		return NewAura("Green Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Green, AttachAura)),
 		)
@@ -346,7 +346,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has protection from red. This effect doesn't remove this Aura.
-	Register("Red Ward", func() Card {
+	Register("Red Ward", func() *Card {
 		return NewAura("Red Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Red, AttachAura)),
 		)
@@ -356,7 +356,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has protection from white. This effect doesn't remove this Aura.
-	Register("White Ward", func() Card {
+	Register("White Ward", func() *Card {
 		return NewAura("White Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(White, AttachAura)),
 		)
@@ -364,7 +364,7 @@ func registerEnchantments() {
 
 	// ===== TRIGGERED ENCHANTMENTS =====
 
-	Register("Wanderlust", func() Card {
+	Register("Wanderlust", func() *Card {
 		return NewAura("Wanderlust", "{2}{G}",
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				DealDamageToPlayers(Fixed(1), SelectAttachedController()), false,
@@ -372,7 +372,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Cursed Land", func() Card {
+	Register("Cursed Land", func() *Card {
 		return NewAura("Cursed Land", "{2}{B}{B}",
 			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
@@ -381,7 +381,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Feedback", func() Card {
+	Register("Feedback", func() *Card {
 		return NewAura("Feedback", "{2}{U}",
 			WithCastTarget(TargetPermanent(IsEnchantment)),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
@@ -390,7 +390,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Warp Artifact", func() Card {
+	Register("Warp Artifact", func() *Card {
 		return NewAura("Warp Artifact", "{B}{B}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
@@ -399,7 +399,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Karma", func() Card {
+	Register("Karma", func() *Card {
 		return NewEnchantment("Karma", "{2}{W}{W}",
 			WithAbility(BeginningOfEachUpkeepTrigger(
 				DealDamageToPlayers(
@@ -409,7 +409,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Farmstead", func() Card {
+	Register("Farmstead", func() *Card {
 		return NewAura("Farmstead", "{W}{W}{W}",
 			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -420,20 +420,20 @@ func registerEnchantments() {
 
 	// ===== MOVED FROM OTHER FILES =====
 
-	Register("Steal Artifact", func() Card {
+	Register("Steal Artifact", func() *Card {
 		return NewAura("Steal Artifact", "{2}{U}{U}",
 			WithCastTarget(TargetArtifact()),
 			WithStaticAbility(ControlChangeContinuous()),
 		)
 	})
 
-	Register("Copy Artifact", func() Card {
+	Register("Copy Artifact", func() *Card {
 		return NewArtifact("Copy Artifact", "{1}{U}",
 			WithAbility(NewTargetedSpell(TargetArtifact(), CloneTarget(TypeEnchantment))),
 		)
 	})
 
-	Register("Deathgrip", func() Card {
+	Register("Deathgrip", func() *Card {
 		return NewEnchantment("Deathgrip", "{B}{B}",
 			WithActivatedAbility(
 				CounterSpellIfColor(Green),
@@ -443,7 +443,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Lifeforce", func() Card {
+	Register("Lifeforce", func() *Card {
 		return NewEnchantment("Lifeforce", "{G}{G}",
 			WithActivatedAbility(
 				CounterSpellIfColor(Black),
@@ -453,7 +453,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Living Lands", func() Card {
+	Register("Living Lands", func() *Card {
 		return NewEnchantment("Living Lands", "{3}{G}",
 			WithStaticAbility(
 				AnimateLands(And(IsLand, HasSubType("Forest")), 1, 1),
@@ -465,7 +465,7 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature can attack as though it had haste.
 	// {0}: Untap enchanted creature. Activate only once each turn.
-	Register("Instill Energy", func() Card {
+	Register("Instill Energy", func() *Card {
 		return NewAura("Instill Energy", "{G}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Haste, AttachAura),
@@ -479,13 +479,13 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Mana Flare", func() Card {
+	Register("Mana Flare", func() *Card {
 		return NewEnchantment("Mana Flare", "{2}{R}",
 			WithAbility(NewManaFlareAbility(IsLand)),
 		)
 	})
 
-	Register("Raging River", func() Card {
+	Register("Raging River", func() *Card {
 		return NewEnchantment("Raging River", "{R}{R}",
 			// TODO: convert to pipeline — needs PreventBlockingUntilEndOfCombat step
 			WithAbility(NewTriggered(EvtDeclaredAttacker, false, FuncEffect(
@@ -515,7 +515,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Lich", func() Card {
+	Register("Lich", func() *Card {
 		return NewEnchantment("Lich", "{B}{B}{B}{B}",
 			// ETB: lose life equal to your life total
 			// TODO: convert to pipeline — needs Lich-specific game rule steps
@@ -550,7 +550,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Island Sanctuary", func() Card {
+	Register("Island Sanctuary", func() *Card {
 		// Oracle: "If you would draw a card during your draw step, instead you
 		// may skip that draw. If you do, until your next turn, you can't be
 		// attacked except by creatures with flying or islandwalk."
@@ -569,7 +569,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Power Surge", func() Card {
+	Register("Power Surge", func() *Card {
 		return NewEnchantment("Power Surge", "{R}{R}",
 			WithAbility(BeginningOfEachUpkeepTrigger(
 				DealDamageToPlayers(
@@ -579,7 +579,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Lifetap", func() Card {
+	Register("Lifetap", func() *Card {
 		return NewEnchantment("Lifetap", "{U}{U}",
 			WithAbility(WhenOpponentPermanentBecomesTappedTrigger(
 				GainLife(1), false,
@@ -592,7 +592,7 @@ func registerEnchantments() {
 	// Enchantment
 	// At the beginning of your upkeep, sacrifice this enchantment unless you pay {W}{W}.
 	// All Mountains are Plains.
-	Register("Conversion", func() Card {
+	Register("Conversion", func() *Card {
 		return NewEnchantment("Conversion", "{2}{W}{W}",
 			WithStaticAbility(
 				BecomesBasicLandsEffect(And(IsLand, HasSubType("Mountain")), "Plains"),
@@ -601,7 +601,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Gloom", func() Card {
+	Register("Gloom", func() *Card {
 		return NewEnchantment("Gloom", "{2}{B}",
 			WithStaticAbility(
 				IncreaseSpellCostForColor(White, 3),
@@ -610,7 +610,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Magnetic Mountain", func() Card {
+	Register("Magnetic Mountain", func() *Card {
 		return NewEnchantment("Magnetic Mountain", "{1}{R}{R}",
 			WithStaticAbility(
 				PreventUntapForMatching(And(IsCreature, HasColorFilter(Blue))),
@@ -643,7 +643,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant land
 	// Enchanted land has indestructible and can't be enchanted by other Auras.
-	Register("Consecrate Land", func() Card {
+	Register("Consecrate Land", func() *Card {
 		return NewAura("Consecrate Land", "{W}",
 			WithCastTarget(TargetLand()),
 			WithStaticAbility(
@@ -656,7 +656,7 @@ func registerEnchantments() {
 	// Enchantment
 	// You may play any number of lands on each of your turns.
 	// Whenever you play a land, if it wasn't the first land you played this turn, this enchantment deals 1 damage to you.
-	Register("Fastbond", func() Card {
+	Register("Fastbond", func() *Card {
 		return NewEnchantment("Fastbond", "{G}",
 			WithStaticAbility(AllowUnlimitedLandPlays()),
 			WithAbility(NewTriggered(EvtLandPlayed, false,
@@ -666,7 +666,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Kudzu", func() Card {
+	Register("Kudzu", func() *Card {
 		return NewAura("Kudzu", "{1}{G}{G}",
 			WithCastTarget(TargetLand()),
 			// TODO: convert to pipeline — complex attachment manipulation
@@ -716,7 +716,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Regeneration", func() Card {
+	Register("Regeneration", func() *Card {
 		return NewAura("Regeneration", "{1}{G}",
 			WithStaticAbility(
 				GrantActivatedAbilityToAttached(
@@ -733,7 +733,7 @@ func registerEnchantments() {
 	// Enchant artifact
 	// Whenever you're dealt damage, put that many vitality counters on this Aura.
 	// At the beginning of your upkeep, you may remove a vitality counter from this Aura. If you do, you gain 1 life.
-	Register("Living Artifact", func() Card {
+	Register("Living Artifact", func() *Card {
 		return NewAura("Living Artifact", "{G}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
@@ -758,7 +758,7 @@ func registerEnchantments() {
 	// Smoke {R}{R}
 	// Enchantment
 	// Players can't untap more than one creature during their untap steps.
-	Register("Smoke", func() Card {
+	Register("Smoke", func() *Card {
 		return NewEnchantment("Smoke", "{R}{R}",
 			WithStaticAbility(LimitCreatureUntaps(1)),
 		)
@@ -767,7 +767,7 @@ func registerEnchantments() {
 	// Manabarbs {3}{R}
 	// Enchantment
 	// Whenever a player taps a land for mana, Manabarbs deals 1 damage to that player.
-	Register("Manabarbs", func() Card {
+	Register("Manabarbs", func() *Card {
 		return NewEnchantment("Manabarbs", "{3}{R}",
 			WithAbility(NewTriggered(EvtTappedForMana, false,
 				DealDamageToPlayers(Fixed(1), SelectTargetPlayer()),
@@ -779,7 +779,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant Wall
 	// Enchanted Wall can attack as though it didn't have defender.
-	Register("Animate Wall", func() Card {
+	Register("Animate Wall", func() *Card {
 		return NewAura("Animate Wall", "{W}",
 			WithCastTarget(TargetCreature(HasSubType("Wall"))),
 			WithStaticAbility(
@@ -788,7 +788,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Aspect of Wolf", func() Card {
+	Register("Aspect of Wolf", func() *Card {
 		return NewAura("Aspect of Wolf", "{1}{G}",
 			// Enchanted creature gets +X/+Y where X is half Forests you control
 			// (rounded down) and Y is half (rounded up).
@@ -802,7 +802,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Stasis", func() Card {
+	Register("Stasis", func() *Card {
 		return NewEnchantment("Stasis", "{1}{U}",
 			// Players skip their untap steps.
 			WithStaticAbility(PreventAllUntaps()),
@@ -811,7 +811,7 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Pestilence", func() Card {
+	Register("Pestilence", func() *Card {
 		return NewEnchantment("Pestilence", "{2}{B}{B}",
 			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
 			WithAbility(BeginningOfEachEndStepTrigger(

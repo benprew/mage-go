@@ -20,11 +20,11 @@ type scoredTarget struct {
 	score int
 }
 
-func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card mage.Card, x int) (eval.TargetPurpose, int, mage.Outcome) {
+func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card *mage.Card, x int) (eval.TargetPurpose, int, mage.Outcome) {
 	purpose := eval.TargetGeneric
 	outcome := mage.OutcomeUnknown
 	damage := 0
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -44,7 +44,7 @@ func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card mage.Card, x in
 	return purpose, damage, outcome
 }
 
-func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, xValues ...int) [][]uuid.UUID {
+func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, xValues ...int) [][]uuid.UUID {
 	x := 0
 	if len(xValues) > 0 {
 		x = xValues[0]
@@ -69,7 +69,7 @@ func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage
 	return result
 }
 
-func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage, x int, allow func(uuid.UUID) bool) [][]uuid.UUID {
+func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source *mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage, x int, allow func(uuid.UUID) bool) [][]uuid.UUID {
 	if len(reqs) == 0 {
 		return [][]uuid.UUID{{}}
 	}

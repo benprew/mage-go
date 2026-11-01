@@ -20,47 +20,47 @@ var ch04Once sync.Once
 func registerCh04Cards() {
 	ch04Once.Do(func() {
 		if !mage.CardRegistered("Zone Test Bear") {
-			mage.Register("Zone Test Bear", func() mage.Card {
+			mage.Register("Zone Test Bear", func() *mage.Card {
 				return mage.NewCreature("Zone Test Bear", "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
 		if !mage.CardRegistered("Zone Test Bolt") {
-			mage.Register("Zone Test Bolt", func() mage.Card {
+			mage.Register("Zone Test Bolt", func() *mage.Card {
 				return mage.NewInstant("Zone Test Bolt", "{R}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))),
 				)
 			})
 		}
 		if !mage.CardRegistered("Zone Test Counterspell") {
-			mage.Register("Zone Test Counterspell", func() mage.Card {
+			mage.Register("Zone Test Counterspell", func() *mage.Card {
 				return mage.NewInstant("Zone Test Counterspell", "{U}{U}",
 					mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpell()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Zone Test Exiler") {
-			mage.Register("Zone Test Exiler", func() mage.Card {
+			mage.Register("Zone Test Exiler", func() *mage.Card {
 				return mage.NewInstant("Zone Test Exiler", "{W}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTarget()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Zone Test Bouncer") {
-			mage.Register("Zone Test Bouncer", func() mage.Card {
+			mage.Register("Zone Test Bouncer", func() *mage.Card {
 				return mage.NewInstant("Zone Test Bouncer", "{U}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.ReturnToHandTarget()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Zone Test Killer") {
-			mage.Register("Zone Test Killer", func() mage.Card {
+			mage.Register("Zone Test Killer", func() *mage.Card {
 				return mage.NewInstant("Zone Test Killer", "{B}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Zone Test Saproling") {
-			mage.Register("Zone Test Saproling", func() mage.Card {
+			mage.Register("Zone Test Saproling", func() *mage.Card {
 				return mage.NewCreature("Zone Test Saproling", "{G}", 1, 1, mage.WithSubTypes("Saproling"))
 			})
 		}

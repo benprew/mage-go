@@ -196,7 +196,7 @@ func (r *GameRules) AddFlashGrant(sourceID, player uuid.UUID, filter CardFilter)
 // the given card as though it had flash. A grant whose Filter is the zero
 // value matches all cards (CR semantics for "may cast as though it had
 // flash" when no card-type restriction is named).
-func (r *GameRules) HasFlashGrant(player uuid.UUID, card Card) bool {
+func (r *GameRules) HasFlashGrant(player uuid.UUID, card *Card) bool {
 	for _, g := range r.FlashGrants {
 		if g.Player != uuid.Nil && g.Player != player {
 			continue

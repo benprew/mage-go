@@ -15,14 +15,14 @@ func init() {
 func registerCreatures() {
 	// ===== WHITE CREATURES =====
 
-	Register("Benalish Hero", func() Card {
+	Register("Benalish Hero", func() *Card {
 		return NewCreature("Benalish Hero", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 			WithKeyword(Banding),
 		)
 	})
 
-	Register("Mesa Pegasus", func() Card {
+	Register("Mesa Pegasus", func() *Card {
 		return NewCreature("Mesa Pegasus", "{1}{W}", 1, 1,
 			WithSubTypes("Pegasus"),
 			WithKeyword(Flying),
@@ -30,15 +30,15 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Pearled Unicorn", func() Card {
+	Register("Pearled Unicorn", func() *Card {
 		return NewCreature("Pearled Unicorn", "{2}{W}", 2, 2, WithSubTypes("Unicorn"))
 	})
 
-	Register("Savannah Lions", func() Card {
+	Register("Savannah Lions", func() *Card {
 		return NewCreature("Savannah Lions", "{W}", 2, 1, WithSubTypes("Cat"))
 	})
 
-	Register("Serra Angel", func() Card {
+	Register("Serra Angel", func() *Card {
 		return NewCreature("Serra Angel", "{3}{W}{W}", 4, 4,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
@@ -46,7 +46,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("White Knight", func() Card {
+	Register("White Knight", func() *Card {
 		return NewCreature("White Knight", "{W}{W}", 2, 2,
 			WithSubTypes("Human", "Knight"),
 			WithKeyword(FirstStrike),
@@ -54,7 +54,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Northern Paladin", func() Card {
+	Register("Northern Paladin", func() *Card {
 		return NewCreature("Northern Paladin", "{2}{W}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
 			WithActivatedAbility(
@@ -68,36 +68,36 @@ func registerCreatures() {
 
 	// ===== BLUE CREATURES =====
 
-	Register("Air Elemental", func() Card {
+	Register("Air Elemental", func() *Card {
 		return NewCreature("Air Elemental", "{3}{U}{U}", 4, 4,
 			WithSubTypes("Elemental"),
 			WithKeyword(Flying),
 		)
 	})
 
-	Register("Mahamoti Djinn", func() Card {
+	Register("Mahamoti Djinn", func() *Card {
 		return NewCreature("Mahamoti Djinn", "{4}{U}{U}", 5, 6,
 			WithSubTypes("Djinn"),
 			WithKeyword(Flying),
 		)
 	})
 
-	Register("Phantom Monster", func() Card {
+	Register("Phantom Monster", func() *Card {
 		return NewCreature("Phantom Monster", "{3}{U}", 3, 3,
 			WithSubTypes("Illusion"),
 			WithKeyword(Flying),
 		)
 	})
 
-	Register("Water Elemental", func() Card {
+	Register("Water Elemental", func() *Card {
 		return NewCreature("Water Elemental", "{3}{U}{U}", 5, 4, WithSubTypes("Elemental"))
 	})
 
-	Register("Merfolk of the Pearl Trident", func() Card {
+	Register("Merfolk of the Pearl Trident", func() *Card {
 		return NewCreature("Merfolk of the Pearl Trident", "{U}", 1, 1, WithSubTypes("Merfolk"))
 	})
 
-	Register("Prodigal Sorcerer", func() Card {
+	Register("Prodigal Sorcerer", func() *Card {
 		return NewCreature("Prodigal Sorcerer", "{2}{U}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
@@ -108,7 +108,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Pirate Ship", func() Card {
+	Register("Pirate Ship", func() *Card {
 		return NewCreature("Pirate Ship", "{4}{U}", 4, 3,
 			WithSubTypes("Human", "Pirate"),
 			// Pirate Ship can't attack unless defending player controls an Island.
@@ -125,7 +125,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Phantasmal Forces", func() Card {
+	Register("Phantasmal Forces", func() *Card {
 		return NewCreature("Phantasmal Forces", "{3}{U}", 4, 1,
 			WithSubTypes("Illusion"),
 			WithKeyword(Flying),
@@ -134,7 +134,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Clone", func() Card {
+	Register("Clone", func() *Card {
 		return NewCreature("Clone", "{3}{U}", 0, 0,
 			WithSubTypes("Shapeshifter"),
 			WithAbility(NewTargetedSpell(TargetCreature(), CloneTarget())),
@@ -143,7 +143,7 @@ func registerCreatures() {
 
 	// ===== BLACK CREATURES =====
 
-	Register("Black Knight", func() Card {
+	Register("Black Knight", func() *Card {
 		return NewCreature("Black Knight", "{B}{B}", 2, 2,
 			WithSubTypes("Human", "Knight"),
 			WithKeyword(FirstStrike),
@@ -151,14 +151,14 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Bog Wraith", func() Card {
+	Register("Bog Wraith", func() *Card {
 		return NewCreature("Bog Wraith", "{3}{B}", 3, 3,
 			WithSubTypes("Wraith"),
 			WithKeyword(Swampwalk),
 		)
 	})
 
-	Register("Drudge Skeletons", func() Card {
+	Register("Drudge Skeletons", func() *Card {
 		return NewCreature("Drudge Skeletons", "{1}{B}", 1, 1,
 			WithSubTypes("Skeleton"),
 			// {B}: Regenerate Drudge Skeletons.
@@ -169,7 +169,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Frozen Shade", func() Card {
+	Register("Frozen Shade", func() *Card {
 		return NewCreature("Frozen Shade", "{2}{B}", 0, 1,
 			WithSubTypes("Shade"),
 			// {B}: +1/+1 until end of turn
@@ -180,7 +180,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Hypnotic Specter", func() Card {
+	Register("Hypnotic Specter", func() *Card {
 		return NewCreature("Hypnotic Specter", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Specter"),
 			WithKeyword(Flying),
@@ -188,7 +188,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Nether Shadow", func() Card {
+	Register("Nether Shadow", func() *Card {
 		return NewCreature("Nether Shadow", "{B}{B}", 1, 1,
 			WithSubTypes("Spirit"),
 			WithKeyword(Haste),
@@ -203,7 +203,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Nightmare", func() Card {
+	Register("Nightmare", func() *Card {
 		return NewCreature("Nightmare", "{5}{B}", 0, 0,
 			WithSubTypes("Nightmare", "Horse"),
 			WithKeyword(Flying),
@@ -214,7 +214,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Plague Rats", func() Card {
+	Register("Plague Rats", func() *Card {
 		return NewCreature("Plague Rats", "{2}{B}", 0, 0,
 			WithSubTypes("Rat"),
 			// P/T equal to number of Plague Rats on the battlefield
@@ -224,7 +224,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Royal Assassin", func() Card {
+	Register("Royal Assassin", func() *Card {
 		return NewCreature("Royal Assassin", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Assassin"),
 			// {T}: Destroy target tapped creature
@@ -236,11 +236,11 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Scathe Zombies", func() Card {
+	Register("Scathe Zombies", func() *Card {
 		return NewCreature("Scathe Zombies", "{2}{B}", 2, 2, WithSubTypes("Zombie"))
 	})
 
-	Register("Sengir Vampire", func() Card {
+	Register("Sengir Vampire", func() *Card {
 		return NewCreature("Sengir Vampire", "{3}{B}{B}", 4, 4,
 			WithSubTypes("Vampire"),
 			WithKeyword(Flying),
@@ -249,7 +249,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Will-o'-the-Wisp", func() Card {
+	Register("Will-o'-the-Wisp", func() *Card {
 		return NewCreature("Will-o'-the-Wisp", "{B}", 0, 1,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flying),
@@ -261,7 +261,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Lord of the Pit", func() Card {
+	Register("Lord of the Pit", func() *Card {
 		return NewCreature("Lord of the Pit", "{4}{B}{B}{B}", 7, 7,
 			WithSubTypes("Demon"),
 			WithKeyword(Flying),
@@ -274,7 +274,7 @@ func registerCreatures() {
 
 	// ===== RED CREATURES =====
 
-	Register("Dragon Whelp", func() Card {
+	Register("Dragon Whelp", func() *Card {
 		return NewCreature("Dragon Whelp", "{2}{R}{R}", 2, 3,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
@@ -318,7 +318,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Dwarven Warriors", func() Card {
+	Register("Dwarven Warriors", func() *Card {
 		return NewCreature("Dwarven Warriors", "{2}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Warrior"),
 			// {T}: Target creature with power 2 or less can't be blocked this turn.
@@ -330,15 +330,15 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Earth Elemental", func() Card {
+	Register("Earth Elemental", func() *Card {
 		return NewCreature("Earth Elemental", "{3}{R}{R}", 4, 5, WithSubTypes("Elemental"))
 	})
 
-	Register("Fire Elemental", func() Card {
+	Register("Fire Elemental", func() *Card {
 		return NewCreature("Fire Elemental", "{3}{R}{R}", 5, 4, WithSubTypes("Elemental"))
 	})
 
-	Register("Goblin Balloon Brigade", func() Card {
+	Register("Goblin Balloon Brigade", func() *Card {
 		return NewCreature("Goblin Balloon Brigade", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Warrior"),
 			// {R}: Goblin Balloon Brigade gains flying until end of turn.
@@ -349,7 +349,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Granite Gargoyle", func() Card {
+	Register("Granite Gargoyle", func() *Card {
 		return NewCreature("Granite Gargoyle", "{2}{R}", 2, 2,
 			WithSubTypes("Gargoyle"),
 			WithKeyword(Flying),
@@ -361,15 +361,15 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Gray Ogre", func() Card {
+	Register("Gray Ogre", func() *Card {
 		return NewCreature("Gray Ogre", "{2}{R}", 2, 2, WithSubTypes("Ogre"))
 	})
 
-	Register("Hill Giant", func() Card {
+	Register("Hill Giant", func() *Card {
 		return NewCreature("Hill Giant", "{3}{R}", 3, 3, WithSubTypes("Giant"))
 	})
 
-	Register("Hurloon Minotaur", func() Card {
+	Register("Hurloon Minotaur", func() *Card {
 		return NewCreature("Hurloon Minotaur", "{1}{R}{R}", 2, 3, WithSubTypes("Minotaur"))
 	})
 
@@ -377,25 +377,25 @@ func registerCreatures() {
 	// Creature — Orc
 	// 2/2
 	// This creature can't block creatures with power 2 or greater.
-	Register("Ironclaw Orcs", func() Card {
+	Register("Ironclaw Orcs", func() *Card {
 		return NewCreature("Ironclaw Orcs", "{1}{R}", 2, 2,
 			WithSubTypes("Orc"),
 			WithStaticAbility(SourceCanBlockOnly(HasPowerLTE(1))),
 		)
 	})
 
-	Register("Mons's Goblin Raiders", func() Card {
+	Register("Mons's Goblin Raiders", func() *Card {
 		return NewCreature("Mons's Goblin Raiders", "{R}", 1, 1, WithSubTypes("Goblin"))
 	})
 
-	Register("Roc of Kher Ridges", func() Card {
+	Register("Roc of Kher Ridges", func() *Card {
 		return NewCreature("Roc of Kher Ridges", "{3}{R}", 3, 3,
 			WithSubTypes("Bird"),
 			WithKeyword(Flying),
 		)
 	})
 
-	Register("Shivan Dragon", func() Card {
+	Register("Shivan Dragon", func() *Card {
 		return NewCreature("Shivan Dragon", "{4}{R}{R}", 5, 5,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
@@ -407,7 +407,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Uthden Troll", func() Card {
+	Register("Uthden Troll", func() *Card {
 		return NewCreature("Uthden Troll", "{2}{R}", 2, 2,
 			WithSubTypes("Troll"),
 			// {R}: Regenerate Uthden Troll.
@@ -418,7 +418,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Sedge Troll", func() Card {
+	Register("Sedge Troll", func() *Card {
 		return NewCreature("Sedge Troll", "{2}{R}", 2, 2,
 			WithSubTypes("Troll"),
 			// Sedge Troll gets +1/+1 as long as you control a Swamp.
@@ -433,7 +433,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Two-Headed Giant of Foriys", func() Card {
+	Register("Two-Headed Giant of Foriys", func() *Card {
 		return NewCreature("Two-Headed Giant of Foriys", "{4}{R}", 4, 4,
 			WithSubTypes("Giant"),
 			WithKeyword(Trample),
@@ -442,7 +442,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Goblin King", func() Card {
+	Register("Goblin King", func() *Card {
 		return NewCreature("Goblin King", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Goblin"),
 			// Other Goblin creatures get +1/+1 and mountainwalk
@@ -455,18 +455,18 @@ func registerCreatures() {
 
 	// ===== GREEN CREATURES =====
 
-	Register("Craw Wurm", func() Card {
+	Register("Craw Wurm", func() *Card {
 		return NewCreature("Craw Wurm", "{4}{G}{G}", 6, 4, WithSubTypes("Wurm"))
 	})
 
-	Register("Elvish Archers", func() Card {
+	Register("Elvish Archers", func() *Card {
 		return NewCreature("Elvish Archers", "{1}{G}", 2, 1,
 			WithSubTypes("Elf", "Archer"),
 			WithKeyword(FirstStrike),
 		)
 	})
 
-	Register("Force of Nature", func() Card {
+	Register("Force of Nature", func() *Card {
 		return NewCreature("Force of Nature", "{2}{G}{G}{G}{G}", 8, 8,
 			WithSubTypes("Elemental"),
 			WithKeyword(Trample),
@@ -480,7 +480,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Fungusaur", func() Card {
+	Register("Fungusaur", func() *Card {
 		return NewCreature("Fungusaur", "{3}{G}", 2, 2,
 			WithSubTypes("Fungus", "Dinosaur"),
 			// Whenever Fungusaur is dealt damage, put a +1/+1 counter on it.
@@ -488,64 +488,64 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Grizzly Bears", func() Card {
+	Register("Grizzly Bears", func() *Card {
 		return NewCreature("Grizzly Bears", "{1}{G}", 2, 2, WithSubTypes("Bear"))
 	})
 
-	Register("Ironroot Treefolk", func() Card {
+	Register("Ironroot Treefolk", func() *Card {
 		return NewCreature("Ironroot Treefolk", "{4}{G}", 3, 5, WithSubTypes("Treefolk"))
 	})
 
-	Register("Llanowar Elves", func() Card {
+	Register("Llanowar Elves", func() *Card {
 		return NewCreature("Llanowar Elves", "{G}", 1, 1,
 			WithSubTypes("Elf", "Druid"),
 			WithManaAbility(Green),
 		)
 	})
 
-	Register("Scryb Sprites", func() Card {
+	Register("Scryb Sprites", func() *Card {
 		return NewCreature("Scryb Sprites", "{G}", 1, 1,
 			WithSubTypes("Faerie"),
 			WithKeyword(Flying),
 		)
 	})
 
-	Register("Shanodin Dryads", func() Card {
+	Register("Shanodin Dryads", func() *Card {
 		return NewCreature("Shanodin Dryads", "{G}", 1, 1,
 			WithSubTypes("Nymph", "Dryad"),
 			WithKeyword(Forestwalk),
 		)
 	})
 
-	Register("Timber Wolves", func() Card {
+	Register("Timber Wolves", func() *Card {
 		return NewCreature("Timber Wolves", "{G}", 1, 1,
 			WithSubTypes("Wolf"),
 			WithKeyword(Banding),
 		)
 	})
 
-	Register("Thicket Basilisk", func() Card {
+	Register("Thicket Basilisk", func() *Card {
 		return NewCreature("Thicket Basilisk", "{3}{G}{G}", 2, 4,
 			WithSubTypes("Basilisk"),
 			WithKeyword(BasiliskTouch),
 		)
 	})
 
-	Register("War Mammoth", func() Card {
+	Register("War Mammoth", func() *Card {
 		return NewCreature("War Mammoth", "{3}{G}", 3, 3,
 			WithSubTypes("Elephant"),
 			WithKeyword(Trample),
 		)
 	})
 
-	Register("Giant Spider", func() Card {
+	Register("Giant Spider", func() *Card {
 		return NewCreature("Giant Spider", "{3}{G}", 2, 4,
 			WithSubTypes("Spider"),
 			WithKeyword(Reach),
 		)
 	})
 
-	Register("Birds of Paradise", func() Card {
+	Register("Birds of Paradise", func() *Card {
 		return NewCreature("Birds of Paradise", "{G}", 0, 1,
 			WithSubTypes("Bird"),
 			WithKeyword(Flying),
@@ -554,7 +554,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Cockatrice", func() Card {
+	Register("Cockatrice", func() *Card {
 		return NewCreature("Cockatrice", "{3}{G}{G}", 2, 4,
 			WithSubTypes("Cockatrice"),
 			WithKeyword(Flying),
@@ -562,7 +562,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Verduran Enchantress", func() Card {
+	Register("Verduran Enchantress", func() *Card {
 		return NewCreature("Verduran Enchantress", "{1}{G}{G}", 0, 2,
 			WithSubTypes("Human", "Druid"),
 			// Whenever you cast an enchantment spell, draw a card (any color enchantment)
@@ -570,7 +570,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Keldon Warlord", func() Card {
+	Register("Keldon Warlord", func() *Card {
 		return NewCreature("Keldon Warlord", "{2}{R}{R}", 0, 0,
 			WithSubTypes("Human", "Barbarian"),
 			// P/T equal to number of non-Wall creatures you control
@@ -582,7 +582,7 @@ func registerCreatures() {
 
 	// ===== WALLS =====
 
-	Register("Wall of Air", func() Card {
+	Register("Wall of Air", func() *Card {
 		return NewCreature("Wall of Air", "{1}{U}{U}", 1, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
@@ -590,7 +590,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Wall of Bone", func() Card {
+	Register("Wall of Bone", func() *Card {
 		return NewCreature("Wall of Bone", "{2}{B}", 1, 4,
 			WithSubTypes("Wall", "Skeleton"),
 			WithKeyword(Defender),
@@ -602,7 +602,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Wall of Brambles", func() Card {
+	Register("Wall of Brambles", func() *Card {
 		return NewCreature("Wall of Brambles", "{2}{G}", 2, 3,
 			WithSubTypes("Wall", "Plant"),
 			WithKeyword(Defender),
@@ -614,7 +614,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Wall of Fire", func() Card {
+	Register("Wall of Fire", func() *Card {
 		return NewCreature("Wall of Fire", "{1}{R}{R}", 0, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
@@ -626,21 +626,21 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Wall of Ice", func() Card {
+	Register("Wall of Ice", func() *Card {
 		return NewCreature("Wall of Ice", "{2}{G}", 0, 7,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 		)
 	})
 
-	Register("Wall of Stone", func() Card {
+	Register("Wall of Stone", func() *Card {
 		return NewCreature("Wall of Stone", "{1}{R}{R}", 0, 8,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 		)
 	})
 
-	Register("Wall of Swords", func() Card {
+	Register("Wall of Swords", func() *Card {
 		return NewCreature("Wall of Swords", "{3}{W}", 3, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
@@ -648,7 +648,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Wall of Water", func() Card {
+	Register("Wall of Water", func() *Card {
 		return NewCreature("Wall of Water", "{1}{U}{U}", 0, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
@@ -660,7 +660,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Wall of Wood", func() Card {
+	Register("Wall of Wood", func() *Card {
 		return NewCreature("Wall of Wood", "{G}", 0, 3,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
@@ -669,14 +669,14 @@ func registerCreatures() {
 
 	// ===== ARTIFACT CREATURES =====
 
-	Register("Obsianus Golem", func() Card {
+	Register("Obsianus Golem", func() *Card {
 		return NewCreature("Obsianus Golem", "{6}", 4, 6,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
 		)
 	})
 
-	Register("Clockwork Beast", func() Card {
+	Register("Clockwork Beast", func() *Card {
 		return NewCreature("Clockwork Beast", "{6}", 0, 4,
 			WithSubTypes("Beast"),
 			WithCardType(TypeArtifact),
@@ -697,7 +697,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Juggernaut", func() Card {
+	Register("Juggernaut", func() *Card {
 		return NewCreature("Juggernaut", "{4}", 5, 3,
 			WithSubTypes("Juggernaut"),
 			WithCardType(TypeArtifact),
@@ -707,7 +707,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Living Wall", func() Card {
+	Register("Living Wall", func() *Card {
 		return NewCreature("Living Wall", "{4}", 0, 6,
 			WithSubTypes("Wall"),
 			WithCardType(TypeArtifact),
@@ -722,7 +722,7 @@ func registerCreatures() {
 
 	// ===== LORD/ANTHEM CREATURES =====
 
-	Register("Lord of Atlantis", func() Card {
+	Register("Lord of Atlantis", func() *Card {
 		return NewCreature("Lord of Atlantis", "{U}{U}", 2, 2,
 			WithSubTypes("Merfolk"),
 			// Other Merfolk creatures get +1/+1 and islandwalk
@@ -733,7 +733,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Zombie Master", func() Card {
+	Register("Zombie Master", func() *Card {
 		return NewCreature("Zombie Master", "{1}{B}{B}", 2, 3,
 			WithSubTypes("Zombie"),
 			// Other Zombie creatures have swampwalk and "{B}: Regenerate"
@@ -750,7 +750,7 @@ func registerCreatures() {
 
 	// ===== MISC CREATURES =====
 
-	Register("Samite Healer", func() Card {
+	Register("Samite Healer", func() *Card {
 		return NewCreature("Samite Healer", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
 			// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
@@ -762,7 +762,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Ley Druid", func() Card {
+	Register("Ley Druid", func() *Card {
 		return NewCreature("Ley Druid", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
 			// {T}: Untap target land
@@ -774,7 +774,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Sea Serpent", func() Card {
+	Register("Sea Serpent", func() *Card {
 		return NewCreature("Sea Serpent", "{5}{U}", 5, 5,
 			WithSubTypes("Serpent"),
 			WithStaticAbility(
@@ -785,7 +785,7 @@ func registerCreatures() {
 	})
 
 	// {T}: Choose target non-Wall creature the active player has controlled continuously since the beginning of the turn. That creature attacks this turn if able. Destroy it at the beginning of the next end step if it didn't attack this turn. Activate only during an opponent's turn, before attackers are declared.
-	Register("Nettling Imp", func() Card {
+	Register("Nettling Imp", func() *Card {
 		validTarget := And(
 			Not(HasSubType("Wall")),
 			NewPermanentFilter("active player has controlled continuously since the beginning of the turn", func(p *Permanent, g *Game) bool {
@@ -844,7 +844,7 @@ func registerCreatures() {
 
 	// At the beginning of each end step, put a corpse counter on this creature for each creature that died this turn.
 	// Remove a corpse counter from this creature: Regenerate this creature.
-	Register("Scavenging Ghoul", func() Card {
+	Register("Scavenging Ghoul", func() *Card {
 		return NewCreature("Scavenging Ghoul", "{3}{B}", 2, 2,
 			WithSubTypes("Zombie"),
 			// End step: put corpse counters equal to creatures that died this turn
@@ -875,7 +875,7 @@ func registerCreatures() {
 	// For each 1 damage that would be dealt to this creature, if it has a +1/+1 counter on it, remove a +1/+1 counter from it and prevent that 1 damage.
 	// {R}: Prevent the next 1 damage that would be dealt to this creature this turn.
 	// {R}{R}{R}: Put a +1/+1 counter on this creature. Activate only during your upkeep.
-	Register("Rock Hydra", func() Card {
+	Register("Rock Hydra", func() *Card {
 		return NewCreature("Rock Hydra", "{X}{R}{R}", 0, 0,
 			WithSubTypes("Hydra"),
 			WithAbility(EntersWithXCounters(P1P1)),
@@ -893,7 +893,7 @@ func registerCreatures() {
 	})
 
 	// XXX: should preserve original color when copying (Oracle: "except it doesn't copy that creature's color")
-	Register("Vesuvan Doppelganger", func() Card {
+	Register("Vesuvan Doppelganger", func() *Card {
 		return NewCreature("Vesuvan Doppelganger", "{3}{U}{U}", 0, 0,
 			WithSubTypes("Shapeshifter"),
 			// As Vesuvan Doppelganger enters, copy target creature's P/T and keywords
@@ -932,7 +932,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Personal Incarnation", func() Card {
+	Register("Personal Incarnation", func() *Card {
 		return NewCreature("Personal Incarnation", "{3}{W}{W}{W}", 6, 6,
 			WithSubTypes("Avatar", "Incarnation"),
 			// {0}: The next 1 damage that would be dealt to this creature this turn
@@ -952,7 +952,7 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Veteran Bodyguard", func() Card {
+	Register("Veteran Bodyguard", func() *Card {
 		return NewCreature("Veteran Bodyguard", "{3}{W}{W}", 2, 5,
 			WithSubTypes("Human"),
 			// As long as Veteran Bodyguard is untapped, all combat damage that would
@@ -966,7 +966,7 @@ func registerCreatures() {
 	// Dwarven Demolition Team {2}{R}
 	// Creature — Dwarf 1/1
 	// {T}: Destroy target Wall.
-	Register("Dwarven Demolition Team", func() Card {
+	Register("Dwarven Demolition Team", func() *Card {
 		return NewCreature("Dwarven Demolition Team", "{2}{R}", 1, 1,
 			WithSubTypes("Dwarf"),
 			WithActivatedAbility(
@@ -980,7 +980,7 @@ func registerCreatures() {
 	// Orcish Artillery {1}{R}{R}
 	// Creature — Orc Warrior 1/3
 	// {T}: Orcish Artillery deals 2 damage to any target and 3 damage to you.
-	Register("Orcish Artillery", func() Card {
+	Register("Orcish Artillery", func() *Card {
 		return NewCreature("Orcish Artillery", "{1}{R}{R}", 1, 3,
 			WithSubTypes("Orc", "Warrior"),
 			WithActivatedAbility(

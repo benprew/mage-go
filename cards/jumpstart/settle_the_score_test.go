@@ -21,7 +21,7 @@ var settleTheScoreTestRegistered sync.Once
 func registerSettleTheScoreTestCards() {
 	settleTheScoreTestRegistered.Do(func() {
 		if !CardRegistered("Test Walker") {
-			Register("Test Walker", func() Card {
+			Register("Test Walker", func() *Card {
 				return NewPlaneswalker("Test Walker", "{3}", 3,
 					WithSubTypes("Test"),
 				)

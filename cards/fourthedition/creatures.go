@@ -2,6 +2,7 @@ package fourthedition
 
 import (
 	"math/rand"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -16,13 +17,17 @@ type stoneGiantTarget struct {
 	chosen []uuid.UUID
 }
 
+func (t *stoneGiantTarget) CloneTarget() Target {
+	return &stoneGiantTarget{chosen: slices.Clone(t.chosen)}
+}
+
 func (t *stoneGiantTarget) Min() int            { return 1 }
 func (t *stoneGiantTarget) Max() int            { return 1 }
 func (t *stoneGiantTarget) Chosen() []uuid.UUID { return t.chosen }
 func (t *stoneGiantTarget) IsChosen() bool      { return len(t.chosen) > 0 }
 func (t *stoneGiantTarget) Reset()              { t.chosen = nil }
 
-func (t *stoneGiantTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *stoneGiantTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	src := g.FindPermanent(sourceCard.ID())
 	if src == nil {
 		return nil
@@ -46,7 +51,7 @@ func (t *stoneGiantTarget) Possible(controller uuid.UUID, sourceCard Card, g *Ga
 	return result
 }
 
-func (t *stoneGiantTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+func (t *stoneGiantTarget) Choose(_ uuid.UUID, _ *Card, _ *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
@@ -64,7 +69,7 @@ func registerCreatures() {
 	// 2+*/2+*
 	// Trample
 	// During your turn, Angry Mob's power and toughness are each equal to 2 plus the number of Swamps your opponents control. During turns other than yours, Angry Mob's power and toughness are each 2.
-	Register("Angry Mob", func() Card {
+	Register("Angry Mob", func() *Card {
 		return NewCreature("Angry Mob", "{2}{W}{W}", 0, 0,
 			WithSubTypes("Human"),
 			WithKeyword(Trample),
@@ -90,7 +95,7 @@ func registerCreatures() {
 	// Creature — Human Soldier
 	// 1/1
 	// First strike; banding
-	Register("Pikemen", func() Card {
+	Register("Pikemen", func() *Card {
 		return NewCreature("Pikemen", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 			WithKeyword(FirstStrike),
@@ -104,7 +109,7 @@ func registerCreatures() {
 	// Creature — Human Wizard
 	// 0/1
 	// {U}, {T}: Add {C}{C}{C}.
-	Register("Apprentice Wizard", func() Card {
+	Register("Apprentice Wizard", func() *Card {
 		return NewCreature("Apprentice Wizard", "{1}{U}{U}", 0, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
@@ -120,7 +125,7 @@ func registerCreatures() {
 	// 2/4
 	// Flying
 	// {U}{U}{U}: Regenerate Ghost Ship.
-	Register("Ghost Ship", func() Card {
+	Register("Ghost Ship", func() *Card {
 		return NewCreature("Ghost Ship", "{2}{U}{U}", 2, 4,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flying),
@@ -138,7 +143,7 @@ func registerCreatures() {
 	// Leviathan enters the battlefield tapped and doesn't untap during your untap step.
 	// At the beginning of your upkeep, you may sacrifice two Islands. If you do, untap Leviathan.
 	// Leviathan can't attack unless you sacrifice two Islands.
-	Register("Leviathan", func() Card {
+	Register("Leviathan", func() *Card {
 		return NewCreature("Leviathan", "{5}{U}{U}{U}{U}", 10, 10,
 			WithSubTypes("Leviathan"),
 			WithKeyword(Trample),
@@ -166,7 +171,7 @@ func registerCreatures() {
 	// Creature — Imp
 	// 1/1
 	// Flying
-	Register("Bog Imp", func() Card {
+	Register("Bog Imp", func() *Card {
 		return NewCreature("Bog Imp", "{1}{B}", 1, 1,
 			WithSubTypes("Imp"),
 			WithKeyword(Flying),
@@ -177,7 +182,7 @@ func registerCreatures() {
 	// Creature — Zombie
 	// 2/2
 	// Whenever Murk Dwellers attacks and isn't blocked, it gets +2/+0 until end of combat.
-	Register("Murk Dwellers", func() Card {
+	Register("Murk Dwellers", func() *Card {
 		return NewCreature("Murk Dwellers", "{3}{B}", 2, 2,
 			WithSubTypes("Zombie"),
 			WithAbility(
@@ -192,7 +197,7 @@ func registerCreatures() {
 	// Creature — Human Minion
 	// 2/1
 	// {B}{B}{B}, {T}: Target opponent reveals their hand and discards a creature card at random. Activate only during your turn.
-	Register("Rag Man", func() Card {
+	Register("Rag Man", func() *Card {
 		return NewCreature("Rag Man", "{2}{B}{B}", 2, 1,
 			WithSubTypes("Human", "Minion"),
 			WithActivatedAbility(
@@ -207,7 +212,7 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						var creatures []Card
+						var creatures []*Card
 						for _, c := range p.Hand() {
 							if c.HasType(TypeCreature) {
 								creatures = append(creatures, c)
@@ -233,7 +238,7 @@ func registerCreatures() {
 	// Creature — Human
 	// 1/3
 	// Prevent all damage that would be dealt to Uncle Istvan by creatures.
-	Register("Uncle Istvan", func() Card {
+	Register("Uncle Istvan", func() *Card {
 		return NewCreature("Uncle Istvan", "{1}{B}{B}{B}", 1, 3,
 			WithSubTypes("Human"),
 			WithStaticAbility(
@@ -253,7 +258,7 @@ func registerCreatures() {
 	// Trample
 	// Haste
 	// At the beginning of the end step, sacrifice Ball Lightning.
-	Register("Ball Lightning", func() Card {
+	Register("Ball Lightning", func() *Card {
 		return NewCreature("Ball Lightning", "{R}{R}{R}", 6, 1,
 			WithSubTypes("Elemental"),
 			WithKeyword(Trample),
@@ -268,7 +273,7 @@ func registerCreatures() {
 	// Creature — Human Shaman
 	// 2/2
 	// {1}{R}{R}: Brothers of Fire deals 1 damage to any target and 1 damage to you.
-	Register("Brothers of Fire", func() Card {
+	Register("Brothers of Fire", func() *Card {
 		return NewCreature("Brothers of Fire", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Shaman"),
 			WithActivatedAbility(
@@ -287,7 +292,7 @@ func registerCreatures() {
 	// 1/4
 	// Whenever Cave People attacks, it gets +1/-2 until end of turn.
 	// {1}{R}{R}, {T}: Target creature gains mountainwalk until end of turn.
-	Register("Cave People", func() Card {
+	Register("Cave People", func() *Card {
 		return NewCreature("Cave People", "{1}{R}{R}", 1, 4,
 			WithSubTypes("Human"),
 			WithAbility(
@@ -311,7 +316,7 @@ func registerCreatures() {
 	// Trample
 	// Goblin Rock Sled doesn't untap during your untap step if it attacked during your last turn.
 	// Goblin Rock Sled can't attack unless defending player controls a Mountain.
-	Register("Goblin Rock Sled", func() Card {
+	Register("Goblin Rock Sled", func() *Card {
 		return NewCreature("Goblin Rock Sled", "{1}{R}", 3, 1,
 			WithSubTypes("Goblin"),
 			WithKeyword(Trample),
@@ -326,7 +331,7 @@ func registerCreatures() {
 	// Creature — Human Shaman
 	// 2/2
 	// {T}: Add {R}.
-	Register("Sisters of the Flame", func() Card {
+	Register("Sisters of the Flame", func() *Card {
 		return NewCreature("Sisters of the Flame", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Shaman"),
 			WithManaAbility(Red),
@@ -337,7 +342,7 @@ func registerCreatures() {
 	// Creature — Giant
 	// 3/4
 	// {T}: Target creature you control with toughness less than Stone Giant's power gains flying until end of turn. Destroy that creature at the beginning of the next end step.
-	Register("Stone Giant", func() Card {
+	Register("Stone Giant", func() *Card {
 		return NewCreature("Stone Giant", "{2}{R}{R}", 3, 4,
 			WithSubTypes("Giant"),
 			WithActivatedAbility(
@@ -374,7 +379,7 @@ func registerCreatures() {
 	// Creature — Plant Wall
 	// 4/5
 	// Defender
-	Register("Carnivorous Plant", func() Card {
+	Register("Carnivorous Plant", func() *Card {
 		return NewCreature("Carnivorous Plant", "{3}{G}", 4, 5,
 			WithSubTypes("Plant", "Wall"),
 			WithKeyword(Defender),
@@ -386,7 +391,7 @@ func registerCreatures() {
 	// */*
 	// As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its power and toughness are each equal to the number of Forests defending player controls.
 	// {T}: Target land becomes a Forest until Gaea's Liege leaves the battlefield.
-	Register("Gaea's Liege", func() Card {
+	Register("Gaea's Liege", func() *Card {
 		return NewCreature("Gaea's Liege", "{3}{G}{G}{G}", 0, 0,
 			WithSubTypes("Avatar"),
 			WithStaticAbility(
@@ -430,7 +435,7 @@ func registerCreatures() {
 	// Creature — Leech
 	// 2/2
 	// First strike
-	Register("Land Leeches", func() Card {
+	Register("Land Leeches", func() *Card {
 		return NewCreature("Land Leeches", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Leech"),
 			WithKeyword(FirstStrike),
@@ -441,7 +446,7 @@ func registerCreatures() {
 	// Creature — Snake
 	// 1/2
 	// Whenever Marsh Viper deals damage to a player, that player gets two poison counters.
-	Register("Marsh Viper", func() Card {
+	Register("Marsh Viper", func() *Card {
 		return NewCreature("Marsh Viper", "{3}{G}", 1, 2,
 			WithSubTypes("Snake"),
 			WithAbility(NewTriggered(EvtDamageDealt, false, PoisonTargetPlayer(2)).
@@ -455,7 +460,7 @@ func registerCreatures() {
 	// Artifact Creature — Construct
 	// 4/4
 	// {3}: Regenerate Diabolic Machine.
-	Register("Diabolic Machine", func() Card {
+	Register("Diabolic Machine", func() *Card {
 		return NewCreature("Diabolic Machine", "{7}", 4, 4,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),

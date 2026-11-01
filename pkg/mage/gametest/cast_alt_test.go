@@ -17,7 +17,7 @@ func registerCastAltTestCards() {
 		// A simple sorcery that gains 5 life — we use it as the spell that
 		// is cast from a non-hand zone.
 		if !mage.CardRegistered("Cast-Alt Heal") {
-			mage.Register("Cast-Alt Heal", func() mage.Card {
+			mage.Register("Cast-Alt Heal", func() *mage.Card {
 				return mage.NewSorcery("Cast-Alt Heal", "{2}{W}{W}",
 					mage.NewSpellAbility(mage.GainLife(5)),
 				)
@@ -26,7 +26,7 @@ func registerCastAltTestCards() {
 		// A creature spell with a printed mana cost — used to verify free
 		// casting from graveyard puts a permanent onto the battlefield.
 		if !mage.CardRegistered("Cast-Alt Bear") {
-			mage.Register("Cast-Alt Bear", func() mage.Card {
+			mage.Register("Cast-Alt Bear", func() *mage.Card {
 				return mage.NewCreature("Cast-Alt Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"),
 				)
@@ -35,7 +35,7 @@ func registerCastAltTestCards() {
 		// A sorcery with the flashback keyword — used to verify CR 702.34
 		// exile-after-resolution semantics.
 		if !mage.CardRegistered("Cast-Alt Flashback Heal") {
-			mage.Register("Cast-Alt Flashback Heal", func() mage.Card {
+			mage.Register("Cast-Alt Flashback Heal", func() *mage.Card {
 				return mage.NewSorcery("Cast-Alt Flashback Heal", "{2}{W}",
 					mage.NewSpellAbility(mage.GainLife(3)),
 					mage.WithFlashback(core.ParseManaCost("{4}{W}")),
@@ -43,7 +43,7 @@ func registerCastAltTestCards() {
 			})
 		}
 		if !mage.CardRegistered("Cast-Alt Atomic Failure") {
-			mage.Register("Cast-Alt Atomic Failure", func() mage.Card {
+			mage.Register("Cast-Alt Atomic Failure", func() *mage.Card {
 				return mage.NewSorcery("Cast-Alt Atomic Failure", "{2}{R}",
 					mage.NewSpellAbility(mage.GainLife(1)),
 					mage.WithAdditionalCost(mage.LifePayCost(100)),
@@ -52,7 +52,7 @@ func registerCastAltTestCards() {
 			})
 		}
 		if !mage.CardRegistered("Cast-Alt Combined Mana") {
-			mage.Register("Cast-Alt Combined Mana", func() mage.Card {
+			mage.Register("Cast-Alt Combined Mana", func() *mage.Card {
 				return mage.NewSorcery("Cast-Alt Combined Mana", "{3}",
 					mage.NewSpellAbility(mage.GainLife(1)),
 					mage.WithAdditionalCost(mage.ManaCostOf("{W}")),
@@ -341,7 +341,7 @@ func TestFlashbackExilesAfterResolution(t *testing.T) {
 func TestFlashbackExilesOnFizzle(t *testing.T) {
 	registerCastAltTestCards()
 	if !mage.CardRegistered("Cast-Alt Flashback Bolt") {
-		mage.Register("Cast-Alt Flashback Bolt", func() mage.Card {
+		mage.Register("Cast-Alt Flashback Bolt", func() *mage.Card {
 			return mage.NewSorcery("Cast-Alt Flashback Bolt", "{R}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(2))),
 				mage.WithFlashback(core.ParseManaCost("{2}{R}")),

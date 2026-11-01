@@ -22,106 +22,106 @@ var ch06Once sync.Once
 
 func registerCh06Cards() {
 	ch06Once.Do(func() {
-		reg := func(name string, f func() mage.Card) {
+		reg := func(name string, f func() *mage.Card) {
 			if !mage.CardRegistered(name) {
 				mage.Register(name, f)
 			}
 		}
 
 		// Generic creatures
-		reg("Ch06 Bear", func() mage.Card {
+		reg("Ch06 Bear", func() *mage.Card {
 			return mage.NewCreature("Ch06 Bear", "{1}{G}", 2, 2,
 				mage.WithSubTypes("Bear"))
 		})
-		reg("Ch06 Giant", func() mage.Card {
+		reg("Ch06 Giant", func() *mage.Card {
 			return mage.NewCreature("Ch06 Giant", "{3}{R}", 3, 3,
 				mage.WithSubTypes("Giant"))
 		})
-		reg("Ch06 Knight", func() mage.Card {
+		reg("Ch06 Knight", func() *mage.Card {
 			return mage.NewCreature("Ch06 Knight", "{W}{W}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 				mage.WithAbility(mage.ProtectionFromColor(core.Black)),
 			)
 		})
-		reg("Ch06 Black Knight", func() mage.Card {
+		reg("Ch06 Black Knight", func() *mage.Card {
 			return mage.NewCreature("Ch06 Black Knight", "{B}{B}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 			)
 		})
 
 		// Spells
-		reg("Ch06 Bolt", func() mage.Card {
+		reg("Ch06 Bolt", func() *mage.Card {
 			return mage.NewInstant("Ch06 Bolt", "{R}",
 				mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 					mage.DealDamage(mage.Fixed(3))))
 		})
-		reg("Ch06 Counter", func() mage.Card {
+		reg("Ch06 Counter", func() *mage.Card {
 			return mage.NewInstant("Ch06 Counter", "{U}{U}",
 				mage.NewTargetedSpell(mage.TargetSpellOnStack(),
 					mage.CounterSpell()))
 		})
-		reg("Ch06 Exile Spell", func() mage.Card {
+		reg("Ch06 Exile Spell", func() *mage.Card {
 			return mage.NewInstant("Ch06 Exile Spell", "{W}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
 					mage.ExileTarget()))
 		})
-		reg("Ch06 Destroy Spell", func() mage.Card {
+		reg("Ch06 Destroy Spell", func() *mage.Card {
 			return mage.NewInstant("Ch06 Destroy Spell", "{1}{B}",
 				mage.NewTargetedSpell(
 					mage.TargetCreature(),
 					mage.DestroyTarget()))
 		})
-		reg("Ch06 Wrath", func() mage.Card {
+		reg("Ch06 Wrath", func() *mage.Card {
 			return mage.NewSorcery("Ch06 Wrath", "{2}{W}{W}",
 				mage.NewSpellAbility(mage.DestroyAllCreatures()))
 		})
-		reg("Ch06 Growth", func() mage.Card {
+		reg("Ch06 Growth", func() *mage.Card {
 			return mage.NewInstant("Ch06 Growth", "{G}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
 					mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(3),
 						mage.SelectTarget)))
 		})
-		reg("Ch06 Discard Two", func() mage.Card {
+		reg("Ch06 Discard Two", func() *mage.Card {
 			return mage.NewSorcery("Ch06 Discard Two", "{B}",
 				mage.NewTargetedSpell(mage.TargetPlayer(),
 					mage.DiscardCards(mage.Fixed(2))))
 		})
-		reg("Ch06 Earthquake", func() mage.Card {
+		reg("Ch06 Earthquake", func() *mage.Card {
 			return mage.NewSorcery("Ch06 Earthquake", "{X}{R}",
 				mage.NewSpellAbility(
 					mage.DealDamageToAllCreatures(mage.XValue(), mage.AnyPermanent),
 					mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 				))
 		})
-		reg("Ch06 Delayed Kill", func() mage.Card {
+		reg("Ch06 Delayed Kill", func() *mage.Card {
 			return mage.NewInstant("Ch06 Delayed Kill", "{1}{W}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
 					mage.DestroyTargetAtEndOfTurn()))
 		})
 
 		// Aura / enchantment
-		reg("Ch06 Crusade", func() mage.Card {
+		reg("Ch06 Crusade", func() *mage.Card {
 			return mage.NewEnchantment("Ch06 Crusade", "{W}{W}",
 				mage.WithStaticAbility(
 					mage.BoostAllCreaturesIncludingSelf(1, 1,
 						mage.HasColorFilter(core.White))))
 		})
-		reg("Ch06 Bad Moon", func() mage.Card {
+		reg("Ch06 Bad Moon", func() *mage.Card {
 			return mage.NewEnchantment("Ch06 Bad Moon", "{1}{B}",
 				mage.WithStaticAbility(
 					mage.BoostAllCreaturesIncludingSelf(1, 1,
 						mage.HasColorFilter(core.Black))))
 		})
-		reg("Ch06 Control Aura", func() mage.Card {
+		reg("Ch06 Control Aura", func() *mage.Card {
 			return mage.NewAura("Ch06 Control Aura", "{2}{U}{U}",
 				mage.WithStaticAbility(mage.ControlChangeContinuous()))
 		})
-		reg("Ch06 Flight", func() mage.Card {
+		reg("Ch06 Flight", func() *mage.Card {
 			return mage.NewAura("Ch06 Flight", "{U}",
 				mage.WithStaticAbility(
 					mage.GrantAbilityToAttached(core.Flying, core.AttachAura)))
 		})
-		reg("Ch06 White Paint", func() mage.Card {
+		reg("Ch06 White Paint", func() *mage.Card {
 			return mage.NewAura("Ch06 White Paint", "{W}",
 				mage.WithStaticAbility(
 					mage.AttachedEffect(core.LayerColor,
@@ -133,32 +133,32 @@ func registerCh06Cards() {
 		})
 
 		// Triggered ability cards
-		reg("Ch06 Spell Watcher", func() mage.Card {
+		reg("Ch06 Spell Watcher", func() *mage.Card {
 			return mage.NewCreature("Ch06 Spell Watcher", "{2}{U}", 1, 1,
 				mage.WithAbility(mage.WheneverSpellCastTrigger(
 					mage.GainLife(1), false)))
 		})
-		reg("Ch06 Upkeep Gainer", func() mage.Card {
+		reg("Ch06 Upkeep Gainer", func() *mage.Card {
 			return mage.NewCreature("Ch06 Upkeep Gainer", "{1}{W}", 1, 1,
 				mage.WithAbility(mage.BeginningOfUpkeepTrigger(
 					mage.GainLife(1), false)))
 		})
-		reg("Ch06 Death Counter", func() mage.Card {
+		reg("Ch06 Death Counter", func() *mage.Card {
 			return mage.NewEnchantment("Ch06 Death Counter", "{B}",
 				mage.WithAbility(mage.AnyCreatureDiesTrigger(
 					mage.GainLife(1), false)))
 		})
-		reg("Ch06 ETB Gainer", func() mage.Card {
+		reg("Ch06 ETB Gainer", func() *mage.Card {
 			return mage.NewCreature("Ch06 ETB Gainer", "{2}{W}", 2, 2,
 				mage.WithAbility(mage.EntersBattlefieldTrigger(
 					mage.GainLife(3), false)))
 		})
-		reg("Ch06 LTB Gainer", func() mage.Card {
+		reg("Ch06 LTB Gainer", func() *mage.Card {
 			return mage.NewCreature("Ch06 LTB Gainer", "{2}{B}", 2, 2,
 				mage.WithAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
 					mage.GainLife(2), false)))
 		})
-		reg("Ch06 Death Regen", func() mage.Card {
+		reg("Ch06 Death Regen", func() *mage.Card {
 			return mage.NewCreature("Ch06 Death Regen", "{2}{G}", 2, 2,
 				mage.WithAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
 					mage.GainLife(5), false)),
@@ -166,7 +166,7 @@ func registerCh06Cards() {
 					mage.RegenerateSource(),
 					mage.ManaCostOf("{G}")))
 		})
-		reg("Ch06 Haste Pinger", func() mage.Card {
+		reg("Ch06 Haste Pinger", func() *mage.Card {
 			return mage.NewCreature("Ch06 Haste Pinger", "{2}{R}", 1, 1,
 				mage.WithKeyword(core.Haste),
 				mage.WithActivatedAbility(
@@ -174,7 +174,7 @@ func registerCh06Cards() {
 					mage.Tap(),
 					mage.WithTarget(mage.TargetDamageAnyTarget())))
 		})
-		reg("Ch06 Pinger", func() mage.Card {
+		reg("Ch06 Pinger", func() *mage.Card {
 			return mage.NewCreature("Ch06 Pinger", "{2}{U}", 1, 1,
 				mage.WithSubTypes("Human", "Wizard"),
 				mage.WithActivatedAbility(
@@ -182,12 +182,12 @@ func registerCh06Cards() {
 					mage.Tap(),
 					mage.WithTarget(mage.TargetDamageAnyTarget())))
 		})
-		reg("Ch06 Damage Watcher", func() mage.Card {
+		reg("Ch06 Damage Watcher", func() *mage.Card {
 			return mage.NewCreature("Ch06 Damage Watcher", "{2}{U}", 0, 4,
 				mage.WithAbility(mage.WhenDamageDealtToThisTrigger(
 					mage.GainLife(1), false)))
 		})
-		reg("Ch06 High Life Watcher", func() mage.Card {
+		reg("Ch06 High Life Watcher", func() *mage.Card {
 			return mage.NewCreature("Ch06 High Life Watcher", "{3}{W}{W}", 2, 4,
 				mage.WithAbility(mage.NewTriggered(core.EvtUpkeep, false,
 					mage.GainLife(10),
@@ -199,37 +199,37 @@ func registerCh06Cards() {
 					return p != nil && p.Life() >= 30
 				})))
 		})
-		reg("Ch06 Regen Skeleton", func() mage.Card {
+		reg("Ch06 Regen Skeleton", func() *mage.Card {
 			return mage.NewCreature("Ch06 Regen Skeleton", "{1}{B}", 1, 1,
 				mage.WithSubTypes("Skeleton"),
 				mage.WithActivatedAbility(
 					mage.RegenerateSource(),
 					mage.ManaCostOf("{B}")))
 		})
-		reg("Ch06 Artifact Death Watch", func() mage.Card {
+		reg("Ch06 Artifact Death Watch", func() *mage.Card {
 			return mage.NewCreature("Ch06 Artifact Death Watch", "{2}", 1, 1,
 				mage.WithCardType(core.TypeArtifact),
 				mage.WithAbility(mage.AnyCreatureDiesTrigger(
 					mage.GainLife(1), false)))
 		})
-		reg("Ch06 APNAP A Watcher", func() mage.Card {
+		reg("Ch06 APNAP A Watcher", func() *mage.Card {
 			return mage.NewCreature("Ch06 APNAP A Watcher", "{1}{W}", 1, 1,
 				mage.WithAbility(mage.WheneverSpellCastTrigger(
 					mage.GainLife(2), false)))
 		})
-		reg("Ch06 APNAP B Watcher", func() mage.Card {
+		reg("Ch06 APNAP B Watcher", func() *mage.Card {
 			return mage.NewCreature("Ch06 APNAP B Watcher", "{1}{U}", 1, 1,
 				mage.WithAbility(mage.WheneverSpellCastTrigger(
 					mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectEachOpponent()), false)))
 		})
-		reg("Ch06 Sorcery Artifact", func() mage.Card {
+		reg("Ch06 Sorcery Artifact", func() *mage.Card {
 			return mage.NewArtifact("Ch06 Sorcery Artifact", "{2}",
 				mage.WithAbility(mage.NewActivatedAbility(
 					mage.GainLife(3),
 					mage.GenericCost(1),
 					mage.WithSorcerySpeed())))
 		})
-		reg("Ch06 Sorceress Queen", func() mage.Card {
+		reg("Ch06 Sorceress Queen", func() *mage.Card {
 			return mage.NewCreature("Ch06 Sorceress Queen", "{1}{B}{B}", 1, 1,
 				mage.WithSubTypes("Human", "Wizard"),
 				mage.WithActivatedAbility(
@@ -239,19 +239,19 @@ func registerCh06Cards() {
 					mage.WithTarget(mage.TargetCreature(
 						mage.NotHasKeywordFilter(core.Flying)))))
 		})
-		reg("Ch06 Rally", func() mage.Card {
+		reg("Ch06 Rally", func() *mage.Card {
 			return mage.NewSorcery("Ch06 Rally", "{W}",
 				mage.NewSpellAbility(
 					mage.BoostMatchingUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1),
 						mage.HasColorFilter(core.White))))
 		})
-		reg("Ch06 Living Lands", func() mage.Card {
+		reg("Ch06 Living Lands", func() *mage.Card {
 			return mage.NewEnchantment("Ch06 Living Lands", "{3}{G}",
 				mage.WithStaticAbility(
 					mage.AnimateLands(
 						mage.And(mage.IsLand, mage.HasSubType("Forest")), 1, 1)))
 		})
-		reg("Ch06 Kormus Bell", func() mage.Card {
+		reg("Ch06 Kormus Bell", func() *mage.Card {
 			return mage.NewArtifact("Ch06 Kormus Bell", "{4}",
 				mage.WithStaticAbility(
 					mage.AnimateLands(

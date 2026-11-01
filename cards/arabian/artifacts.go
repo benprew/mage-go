@@ -88,7 +88,7 @@ func registerArtifacts() {
 	// Oracle: "{X}, {T}: The next time you would draw a card this turn, instead look at
 	// the top X cards of your library, put all but one of them on the bottom of your
 	// library in a random order, then draw a card. X can't be 0."
-	Register("Aladdin's Lamp", func() Card {
+	Register("Aladdin's Lamp", func() *Card {
 		return NewArtifact("Aladdin's Lamp", "{10}",
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs SetDrawReplacement primitive
@@ -109,7 +109,7 @@ func registerArtifacts() {
 	})
 
 	// Oracle: "{8}, {T}: Aladdin's Ring deals 4 damage to any target."
-	Register("Aladdin's Ring", func() Card {
+	Register("Aladdin's Ring", func() *Card {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
 				AladdinsRingEffect(),
@@ -123,7 +123,7 @@ func registerArtifacts() {
 	// Oracle: "{1}, Sacrifice Bottle of Suleiman: Flip a coin. If you win the flip,
 	// create a 5/5 colorless Djinn artifact creature token with flying. If you lose
 	// the flip, Bottle of Suleiman deals 5 damage to you."
-	Register("Bottle of Suleiman", func() Card {
+	Register("Bottle of Suleiman", func() *Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
 				BottleOfSuleimanEffect(),
@@ -137,7 +137,7 @@ func registerArtifacts() {
 	// printed in the Arabian Nights expansion are on the battlefield, their controllers
 	// sacrifice them. Players can't cast spells or play lands with a name originally
 	// printed in the Arabian Nights expansion."
-	Register("City in a Bottle", func() Card {
+	Register("City in a Bottle", func() *Card {
 		return NewArtifact("City in a Bottle", "{2}",
 			// ETB: sacrifice all other nontoken Arabian Nights permanents
 			WithAbility(
@@ -206,7 +206,7 @@ func registerArtifacts() {
 	// damage that would be dealt to and dealt by that creature this turn."
 	// Combat damage prevention achieved via RemoveFromCombat — once removed, no damage
 	// is assigned to or by the creature.
-	Register("Ebony Horse", func() Card {
+	Register("Ebony Horse", func() *Card {
 		return NewArtifact("Ebony Horse", "{3}",
 			WithActivatedAbility(
 				Pipeline("untap and remove from combat",
@@ -223,7 +223,7 @@ func registerArtifacts() {
 	})
 
 	// Oracle: "{2}, {T}: Target creature gains flying until end of turn."
-	Register("Flying Carpet", func() Card {
+	Register("Flying Carpet", func() *Card {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
 				FlyingCarpetEffect(),
@@ -235,7 +235,7 @@ func registerArtifacts() {
 	})
 
 	// Oracle: "{2}, {T}, Discard the last card you drew this turn: Draw a card."
-	Register("Jandor's Ring", func() Card {
+	Register("Jandor's Ring", func() *Card {
 		return NewArtifact("Jandor's Ring", "{6}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
@@ -247,7 +247,7 @@ func registerArtifacts() {
 	})
 
 	// Oracle: "{3}, {T}: Untap target creature."
-	Register("Jandor's Saddlebags", func() Card {
+	Register("Jandor's Saddlebags", func() *Card {
 		return NewArtifact("Jandor's Saddlebags", "{2}",
 			WithActivatedAbility(
 				UntapTarget(),
@@ -261,7 +261,7 @@ func registerArtifacts() {
 	// Oracle: "Remove Jeweled Bird from your deck before playing if you're not playing
 	// for ante. {T}: Ante Jeweled Bird. If you do, put all other cards you own from
 	// the ante zone into your graveyard, then draw a card."
-	Register("Jeweled Bird", func() Card {
+	Register("Jeweled Bird", func() *Card {
 		return NewArtifact("Jeweled Bird", "{1}",
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs ante zone manipulation primitives
@@ -281,7 +281,7 @@ func registerArtifacts() {
 						// Put Jeweled Bird into ante
 						p.AddToAnte(card)
 						// Move all other cards from ante to graveyard
-						var toReturn []Card
+						var toReturn []*Card
 						for _, c := range p.Ante() {
 							if c.ID() != card.ID() {
 								toReturn = append(toReturn, c)
@@ -303,7 +303,7 @@ func registerArtifacts() {
 
 	// Oracle: "{2}: Choose one — Destroy target Aura attached to a land. / The next time
 	// target land would be destroyed this turn, remove all damage marked on it instead."
-	Register("Pyramids", func() Card {
+	Register("Pyramids", func() *Card {
 		c := NewArtifact("Pyramids", "{6}",
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs modal with replacement effect registration
@@ -345,13 +345,13 @@ func registerArtifacts() {
 	// turn, instead put a card you own from outside the game into your hand."
 	// UNIMPLEMENTABLE: Wish/sideboard mechanic requires access to cards outside
 	// the game, which the engine does not model. Registered as a no-op artifact.
-	Register("Ring of Ma'rûf", func() Card {
+	Register("Ring of Ma'rûf", func() *Card {
 		return NewArtifact("Ring of Ma'rûf", "{5}")
 	})
 
 	// Oracle: "{2}, {T}: Target creature gains islandwalk until end of turn. When that
 	// creature dies this turn, destroy Sandals of Abdallah."
-	Register("Sandals of Abdallah", func() Card {
+	Register("Sandals of Abdallah", func() *Card {
 		return NewArtifact("Sandals of Abdallah", "{4}",
 			WithActivatedAbility(
 				Pipeline("grant islandwalk, destroy self if creature dies",

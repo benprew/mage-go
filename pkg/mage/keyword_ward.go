@@ -9,7 +9,7 @@ package mage
 // Implementation details:
 //
 //   - core.Ward is a keyword attribute. Test functions can check this attribute (CR 702.21a).
-//   - WithWard(cost) attaches the display attribute and a triggered ability.
+//   - WithWard(cost) adds one triggered ability and its display attribute.
 //     The ability triggers on EvtBecomesTarget when an opponent controls the spell or ability.
 //   - During resolution, the opponent can pay the ward cost.
 //     If the opponent pays the cost, the spell or ability continues.
@@ -33,19 +33,13 @@ import (
 // it countered. Pass any Cost — typically ManaCostOf("{2}"), LifePayCost(3),
 // or DiscardCost(1).
 func WithWard(cost Cost) CardOption {
-	return func(c *BaseCard) {
-		if c.attrSeeds == nil {
-			c.attrSeeds = make(map[Attr]int)
-		}
-		c.attrSeeds[Ward]++
+	return func(c *Card) {
 		c.AddAbility(WardTrigger(cost))
 	}
 }
 
-// WardTrigger builds the triggered ability for Ward [cost]. Exposed so cards
-// that already use WithKeyword(...) for display can still attach the trigger,
-// or to allow conditional ward (e.g. modal cards). Most callers should use
-// WithWard.
+// WardTrigger creates the triggered ability for Ward [cost].
+// AddAbility also adds its Ward attribute. Most callers should use WithWard.
 func WardTrigger(cost Cost) *GenericTriggered {
 	effect := FuncEffect(
 		"counter target spell or ability unless its controller pays the ward cost",
@@ -82,11 +76,13 @@ func WardTrigger(cost Cost) *GenericTriggered {
 			return nil
 		},
 	)
-	return NewTriggered(EvtBecomesTarget, false, effect).
+	trigger := NewTriggered(EvtBecomesTarget, false, effect).
 		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 			EventTargetIsSelf{},
 			EventPlayerIsOpponent{},
 		}})
+	trigger.attribute = Ward
+	return trigger
 }
 
 func describeWarded(g *Game, permID uuid.UUID) string {

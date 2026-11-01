@@ -13,7 +13,7 @@ func init() {
 
 func registerBandingTestCards() {
 	if !mage.CardRegistered("Benalish Hero") {
-		mage.Register("Benalish Hero", func() mage.Card {
+		mage.Register("Benalish Hero", func() *mage.Card {
 			return mage.NewCreature("Benalish Hero", "{W}", 1, 1,
 				mage.WithSubTypes("Human", "Soldier"),
 				mage.WithKeyword(core.Banding),
@@ -21,7 +21,7 @@ func registerBandingTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Mesa Pegasus") {
-		mage.Register("Mesa Pegasus", func() mage.Card {
+		mage.Register("Mesa Pegasus", func() *mage.Card {
 			return mage.NewCreature("Mesa Pegasus", "{1}{W}", 1, 1,
 				mage.WithSubTypes("Pegasus"),
 				mage.WithKeyword(core.Flying),
@@ -30,7 +30,7 @@ func registerBandingTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Timber Wolves") {
-		mage.Register("Timber Wolves", func() mage.Card {
+		mage.Register("Timber Wolves", func() *mage.Card {
 			return mage.NewCreature("Timber Wolves", "{G}", 1, 1,
 				mage.WithSubTypes("Wolf"),
 				mage.WithKeyword(core.Banding),
@@ -38,27 +38,27 @@ func registerBandingTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Grizzly Bears") {
-		mage.Register("Grizzly Bears", func() mage.Card {
+		mage.Register("Grizzly Bears", func() *mage.Card {
 			return mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered("Hill Giant") {
-		mage.Register("Hill Giant", func() mage.Card {
+		mage.Register("Hill Giant", func() *mage.Card {
 			return mage.NewCreature("Hill Giant", "{3}{R}", 3, 3, mage.WithSubTypes("Giant"))
 		})
 	}
 	if !mage.CardRegistered("Gray Ogre") {
-		mage.Register("Gray Ogre", func() mage.Card {
+		mage.Register("Gray Ogre", func() *mage.Card {
 			return mage.NewCreature("Gray Ogre", "{2}{R}", 2, 2, mage.WithSubTypes("Ogre"))
 		})
 	}
 	if !mage.CardRegistered("Craw Wurm") {
-		mage.Register("Craw Wurm", func() mage.Card {
+		mage.Register("Craw Wurm", func() *mage.Card {
 			return mage.NewCreature("Craw Wurm", "{4}{G}{G}", 6, 4, mage.WithSubTypes("Wurm"))
 		})
 	}
 	if !mage.CardRegistered("War Mammoth") {
-		mage.Register("War Mammoth", func() mage.Card {
+		mage.Register("War Mammoth", func() *mage.Card {
 			return mage.NewCreature("War Mammoth", "{3}{G}", 3, 3,
 				mage.WithSubTypes("Elephant"),
 				mage.WithKeyword(core.Trample),
@@ -66,7 +66,7 @@ func registerBandingTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Black Knight") {
-		mage.Register("Black Knight", func() mage.Card {
+		mage.Register("Black Knight", func() *mage.Card {
 			return mage.NewCreature("Black Knight", "{B}{B}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 				mage.WithKeyword(core.FirstStrike),
@@ -75,7 +75,7 @@ func registerBandingTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Helm of Chatzuk") {
-		mage.Register("Helm of Chatzuk", func() mage.Card {
+		mage.Register("Helm of Chatzuk", func() *mage.Card {
 			return mage.NewArtifact("Helm of Chatzuk", "{1}",
 				mage.WithActivatedAbility(
 					mage.GrantKeyword(core.Banding),
@@ -87,7 +87,7 @@ func registerBandingTestCards() {
 		})
 	}
 	if !mage.CardRegistered("Camel") {
-		mage.Register("Camel", func() mage.Card {
+		mage.Register("Camel", func() *mage.Card {
 			return mage.NewCreature("Camel", "{W}", 0, 1,
 				mage.WithSubTypes("Camel"),
 				mage.WithKeyword(core.Banding),

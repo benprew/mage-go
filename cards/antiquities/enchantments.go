@@ -18,7 +18,7 @@ func registerEnchantments() {
 	// artifact without {T} in its activation cost, Artifact Possession deals 2 damage to that
 	// artifact's controller.
 	artPossDmgEffect := DealDamageToPlayers(Fixed(2), SelectAttachedController())
-	Register("Artifact Possession", func() Card {
+	Register("Artifact Possession", func() *Card {
 		return NewAura("Artifact Possession", "{2}{B}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(
@@ -36,7 +36,7 @@ func registerEnchantments() {
 	// Enchanted creature can't be blocked by artifact creatures.
 	// Prevent all damage that would be dealt to enchanted creature by artifact sources.
 	// Enchanted creature can't be the target of abilities from artifact sources.
-	Register("Artifact Ward", func() Card {
+	Register("Artifact Ward", func() *Card {
 		return NewAura("Artifact Ward", "{W}",
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
@@ -84,7 +84,7 @@ func registerEnchantments() {
 	// Enchantment
 	// {2}: The next time an artifact source of your choice would deal damage to you this turn,
 	// prevent that damage.
-	Register("Circle of Protection: Artifacts", func() Card {
+	Register("Circle of Protection: Artifacts", func() *Card {
 		return NewEnchantment("Circle of Protection: Artifacts", "{1}{W}",
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs "choose permanent" + "add source prevention" step
@@ -115,7 +115,7 @@ func registerEnchantments() {
 	// Damping Field {2}{W}
 	// Enchantment
 	// Players can't untap more than one artifact during their untap steps.
-	Register("Damping Field", func() Card {
+	Register("Damping Field", func() *Card {
 		return NewEnchantment("Damping Field", "{2}{W}",
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
@@ -133,7 +133,7 @@ func registerEnchantments() {
 	// Enchantment
 	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you
 	// pay {2}."
-	Register("Energy Flux", func() Card {
+	Register("Energy Flux", func() *Card {
 		return NewEnchantment("Energy Flux", "{2}{U}",
 			WithStaticAbility(
 				GrantTriggeredAbilityToAll(
@@ -162,7 +162,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Sacrifice a creature: Destroy target artifact. Activate only during your upkeep and only
 	// once each turn.
-	Register("Gate to Phyrexia", func() Card {
+	Register("Gate to Phyrexia", func() *Card {
 		return NewEnchantment("Gate to Phyrexia", "{B}{B}",
 			WithActivatedAbility(
 				DestroyTarget(),
@@ -179,7 +179,7 @@ func registerEnchantments() {
 	// Whenever an artifact becomes tapped or a player activates an artifact's ability without
 	// {T} in its activation cost, Haunting Wind deals 1 damage to that artifact's controller.
 	hauntingWindEffect := DealDamageToPlayers(Fixed(1), SelectTargetPermanentController())
-	Register("Haunting Wind", func() Card {
+	Register("Haunting Wind", func() *Card {
 		return NewEnchantment("Haunting Wind", "{3}{B}",
 			// Trigger when any artifact becomes tapped
 			WithAbility(
@@ -202,7 +202,7 @@ func registerEnchantments() {
 	// Enchant artifact
 	// Enchanted artifact's activated abilities cost {2} less to activate. This effect can't
 	// reduce the mana in that cost to less than one mana.
-	Register("Power Artifact", func() Card {
+	Register("Power Artifact", func() *Card {
 		return NewAura("Power Artifact", "{U}{U}",
 			WithCastTarget(TargetArtifact()),
 			WithStaticAbility(
@@ -228,7 +228,7 @@ func registerEnchantments() {
 	// Whenever an artifact an opponent controls becomes tapped or an opponent activates an
 	// artifact's ability without {T} in its activation cost, you gain 1 life.
 	powerleechEffect := GainLife(1)
-	Register("Powerleech", func() Card {
+	Register("Powerleech", func() *Card {
 		return NewEnchantment("Powerleech", "{G}{G}",
 			// Trigger when opponent's artifact becomes tapped
 			WithAbility(
@@ -261,7 +261,7 @@ func registerEnchantments() {
 		return nil
 	}
 
-	Register("Titania's Song", func() Card {
+	Register("Titania's Song", func() *Card {
 		animateEffects := AnimateArtifact(ForAll(WhileOnBattlefield))
 		return NewEnchantment("Titania's Song", "{3}{G}",
 			WithStaticAbility(animateEffects[0]),

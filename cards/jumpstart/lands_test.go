@@ -133,14 +133,17 @@ func TestRiptideLaboratory(t *testing.T) {
 }
 
 func TestRuptureSpire(t *testing.T) {
-	t.Run("has enters-tapped attr seeded", func(t *testing.T) {
+	t.Run("has enters-tapped ability", func(t *testing.T) {
 		card, err := mage.CreateCard("Rupture Spire")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if card.AttrSeeds()[core.AttrEntersTapped] == 0 {
-			t.Error("Rupture Spire should have EntersTapped")
+		for _, ability := range card.Abilities() {
+			if mage.AbilityAttribute(ability) == core.AttrEntersTapped {
+				return
+			}
 		}
+		t.Error("Rupture Spire should have EntersTapped")
 	})
 
 	t.Run("taps for any color", func(t *testing.T) {

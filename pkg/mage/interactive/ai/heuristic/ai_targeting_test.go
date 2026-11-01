@@ -13,7 +13,7 @@ import (
 	_ "github.com/benprew/mage-go/cards" // register all card sets
 )
 
-func createCard(t *testing.T, name string, owner uuid.UUID) mage.Card {
+func createCard(t *testing.T, name string, owner uuid.UUID) *mage.Card {
 	t.Helper()
 	card, err := mage.CreateCard(name)
 	if err != nil {
@@ -188,7 +188,7 @@ func TestAutoSelectTargets_Counterspell_PicksBestOpposingSpell(t *testing.T) {
 	cheap := createCard(t, "Grizzly Bears", pb.PlayerID())
 	bomb := createCard(t, "Shivan Dragon", pb.PlayerID())
 	for _, sp := range []struct {
-		card mage.Card
+		card *mage.Card
 		ctrl uuid.UUID
 	}{{mine, pa.PlayerID()}, {cheap, pb.PlayerID()}, {bomb, pb.PlayerID()}} {
 		g.PushStack(&mage.StackObject{

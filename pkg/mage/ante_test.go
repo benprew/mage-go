@@ -8,7 +8,7 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func ownedTestCard(owner uuid.UUID, name string) Card {
+func ownedTestCard(owner uuid.UUID, name string) *Card {
 	c := NewArtifact(name, "{1}")
 	c.SetOwner(owner)
 	return c
@@ -20,10 +20,10 @@ func TestNewGameWithAnte(t *testing.T) {
 	a1 := ownedTestCard(a.PlayerID(), "A1")
 	a2 := ownedTestCard(a.PlayerID(), "A2")
 	b1 := ownedTestCard(b.PlayerID(), "B1")
-	a.SetLibrary([]Card{a1, a2})
-	b.SetLibrary([]Card{b1})
+	a.SetLibrary([]*Card{a1, a2})
+	b.SetLibrary([]*Card{b1})
 
-	g, err := NewGameWithAnte(a, b, []Card{a1, a2}, []Card{b1})
+	g, err := NewGameWithAnte(a, b, []*Card{a1, a2}, []*Card{b1})
 	if err != nil {
 		t.Fatalf("NewGameWithAnte: %v", err)
 	}
@@ -43,24 +43,21 @@ func TestNewGameWithAnte(t *testing.T) {
 func TestNewGameWithAnteValidation(t *testing.T) {
 	tests := []struct {
 		name  string
-		setup func(a, b *BasePlayer) ([]Card, []Card)
+		setup func(a, b *BasePlayer) ([]*Card, []*Card)
 	}{
-		{"wrong owner", func(a, b *BasePlayer) ([]Card, []Card) {
+		{"wrong owner", func(a, b *BasePlayer) ([]*Card, []*Card) {
 			c := ownedTestCard(b.PlayerID(), "x")
-			a.SetLibrary([]Card{c})
-			return []Card{c}, nil
+			a.SetLibrary([]*Card{c})
+			return []*Card{c}, nil
 		}},
-		{"duplicate", func(a, b *BasePlayer) ([]Card, []Card) {
+		{"duplicate", func(a, b *BasePlayer) ([]*Card, []*Card) {
 			c := ownedTestCard(a.PlayerID(), "x")
-			a.SetLibrary([]Card{c})
-			return []Card{c, c}, nil
+			a.SetLibrary([]*Card{c})
+			return []*Card{c, c}, nil
 		}},
-		{"missing", func(a, b *BasePlayer) ([]Card, []Card) { c := ownedTestCard(a.PlayerID(), "x"); return []Card{c}, nil }},
-		{"token", func(a, b *BasePlayer) ([]Card, []Card) {
-			c := NewToken("x", 1, 1, []CardType{TypeCreature}, nil)
-			c.SetOwner(a.PlayerID())
-			a.SetLibrary([]Card{c})
-			return []Card{c}, nil
+		{"missing", func(a, b *BasePlayer) ([]*Card, []*Card) {
+			c := ownedTestCard(a.PlayerID(), "x")
+			return []*Card{c}, nil
 		}},
 	}
 	for _, tt := range tests {
@@ -77,7 +74,7 @@ func TestNewGameWithAnteValidation(t *testing.T) {
 func TestAnteOperationsRequireAnteAndOwner(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	c := ownedTestCard(a.PlayerID(), "card")
-	a.SetLibrary([]Card{c})
+	a.SetLibrary([]*Card{c})
 	plain := NewGame(a, b)
 	if _, err := plain.AnteCards(); err == nil {
 		t.Fatal("AnteCards succeeded with ante disabled")
@@ -108,6 +105,15 @@ func TestAnteOperationsRequireAnteAndOwner(t *testing.T) {
 	removed, err := g.RemoveFromAnte(c.ID(), ZoneHand)
 	if err != nil || removed.ID() != c.ID() || g.CardZone(c.ID()) != ZoneAny {
 		t.Fatalf("RemoveFromAnte = %v, %v, zone %v", removed, err, g.CardZone(c.ID()))
+	}
+	tok := NewToken("token", 1, 1, []CardType{TypeCreature}, nil, nil)
+	tok.SetOwner(a.PlayerID())
+	g.PutTokenOnBattlefield(tok, a.PlayerID())
+	if err := g.MoveToAnte(a.PlayerID(), tok.ID()); err == nil {
+		t.Fatal("MoveToAnte accepted a token")
+	}
+	if err := g.ChangeOwner(tok.ID(), b.PlayerID()); err == nil {
+		t.Fatal("ChangeOwner accepted a token")
 	}
 }
 
@@ -141,7 +147,7 @@ func TestChangeOwnerPreservesZoneControllerAndSupportsReversal(t *testing.T) {
 func TestChangeOwnerValidationAndCloneIsolation(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	c := ownedTestCard(a.PlayerID(), "card")
-	a.SetLibrary([]Card{c})
+	a.SetLibrary([]*Card{c})
 	g, _ := NewGameWithAnte(a, b, nil, nil)
 	if err := g.ChangeOwner(uuid.New(), b.PlayerID()); err == nil {
 		t.Fatal("missing card accepted")
@@ -169,15 +175,15 @@ func TestChangeOwnerReplacesCardsInEveryModeledZone(t *testing.T) {
 	exile := ownedTestCard(a.PlayerID(), "exile")
 	battlefield := ownedTestCard(a.PlayerID(), "battlefield")
 	stack := ownedTestCard(a.PlayerID(), "stack")
-	a.SetLibrary([]Card{library})
-	a.SetHand([]Card{hand})
-	a.SetGraveyard([]Card{graveyard})
-	a.SetAnte([]Card{ante})
+	a.SetLibrary([]*Card{library})
+	a.SetHand([]*Card{hand})
+	a.SetGraveyard([]*Card{graveyard})
+	a.SetAnte([]*Card{ante})
 	g.ExileCard(exile, uuid.Nil)
 	perm := g.PutOnBattlefield(battlefield, b.PlayerID())
 	g.stack.Push(&StackObject{ID: uuid.New(), Card: stack, Controller: a.PlayerID()})
 
-	for _, card := range []Card{library, hand, graveyard, ante, exile, battlefield, stack} {
+	for _, card := range []*Card{library, hand, graveyard, ante, exile, battlefield, stack} {
 		if err := g.ChangeOwner(card.ID(), b.PlayerID()); err != nil {
 			t.Fatalf("ChangeOwner(%s): %v", card.Name(), err)
 		}
@@ -194,9 +200,9 @@ func TestAnteResultSettlesAndIsIdempotent(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	a1 := ownedTestCard(a.PlayerID(), "A ante")
 	b1 := ownedTestCard(b.PlayerID(), "B ante")
-	a.SetLibrary([]Card{a1})
-	b.SetLibrary([]Card{b1})
-	g, _ := NewGameWithAnte(a, b, []Card{a1}, []Card{b1})
+	a.SetLibrary([]*Card{a1})
+	b.SetLibrary([]*Card{b1})
+	g, _ := NewGameWithAnte(a, b, []*Card{a1}, []*Card{b1})
 	transferred := ownedTestCard(b.PlayerID(), "other")
 	b.AddToHand(transferred)
 	if err := g.ChangeOwner(transferred.ID(), a.PlayerID()); err != nil {

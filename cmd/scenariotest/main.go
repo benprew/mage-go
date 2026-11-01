@@ -337,8 +337,8 @@ func filterDeck(d *scenario.RogueDeck) (entries []tui.DeckEntry, skipped []strin
 	return entries, skipped
 }
 
-func buildDeckFromEntries(entries []tui.DeckEntry, ownerID [16]byte, rng *rand.Rand) []mage.Card {
-	var deck []mage.Card
+func buildDeckFromEntries(entries []tui.DeckEntry, ownerID [16]byte, rng *rand.Rand) []*mage.Card {
+	var deck []*mage.Card
 	for _, entry := range entries {
 		for i := 0; i < entry.Count; i++ {
 			card, err := mage.CreateCard(entry.Name)

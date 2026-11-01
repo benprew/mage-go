@@ -23,7 +23,7 @@ import (
 
 // ── Helpers shared across parity tests ──────────────────────────────────────
 
-func parityCard(t *testing.T, name string, owner uuid.UUID) mage.Card {
+func parityCard(t *testing.T, name string, owner uuid.UUID) *mage.Card {
 	t.Helper()
 	c, err := mage.CreateCard(name)
 	if err != nil {
@@ -191,7 +191,7 @@ type unholyOutcome struct {
 func unholyStrengthTargetOutcomes(t *testing.T, g *mage.Game, aliceID uuid.UUID, useTT bool) []unholyOutcome {
 	t.Helper()
 	alice := g.GetPlayer(aliceID)
-	var card mage.Card
+	var card *mage.Card
 	for _, c := range alice.Hand() {
 		if c.Name() == "Unholy Strength" {
 			card = c

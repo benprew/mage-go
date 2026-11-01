@@ -688,7 +688,7 @@ pre.tiny {
 <!-- GRIZZLY BEARS: IMPLEMENTATION -->
 <div class="slide slide--zoom" data-slide="5">
   <h2>Implementation</h2>
-  <pre class="zoom"><code>mage.<span class="fn">Register</span>(<span class="st">"Grizzly Bears"</span>, <span class="kw">func</span>() mage.Card {
+  <pre class="zoom"><code>mage.<span class="fn">Register</span>(<span class="st">"Grizzly Bears"</span>, <span class="kw">func</span>() *mage.Card {
     <span class="kw">return</span> mage.<span class="fn">NewCreature</span>(
         <span class="st">"Grizzly Bears"</span>,
         <span class="st">"{1}{G}"</span>,
@@ -1041,7 +1041,7 @@ mage.<span class="fn">TargetCreature</span>(
 
 <span class="cm">// Custom filter</span>
 mage.<span class="fn">NewCardFilter</span>(<span class="st">"instant"</span>,
-    <span class="kw">func</span>(c mage.Card) <span class="tp">bool</span> {
+    <span class="kw">func</span>(c *mage.Card) <span class="tp">bool</span> {
         <span class="kw">return</span> c.<span class="fn">HasType</span>(core.TypeInstant)
     })</code></pre>
   </div>
@@ -1656,13 +1656,13 @@ g.<span class="fn">AssertPermanentCount</span>(
 <span class="fn">AllPlayers</span>() []Player
 <span class="fn">FindPermanent</span>(uuid.UUID) *Permanent
 <span class="fn">FindPermanentByName</span>(string, uuid.UUID)
-<span class="fn">FindCardAnywhere</span>(uuid.UUID) Card
+<span class="fn">FindCardAnywhere</span>(uuid.UUID) *Card
 <span class="fn">AnyBattlefield</span>(PermanentFilter) <span class="tp">bool</span>
 <span class="fn">FilterBattlefield</span>(PermanentFilter)
 <span class="fn">CountBattlefield</span>(PermanentFilter)
 <span class="fn">XValue</span>() <span class="tp">int</span>
 <span class="fn">ModeValue</span>() <span class="tp">int</span>
-<span class="fn">GetResolvingCard</span>() Card
+<span class="fn">GetResolvingCard</span>() *Card
 <span class="fn">FindStackObject</span>(uuid.UUID)
 <span class="fn">CombatGroups</span>() []*CombatGroup</code></pre>
   </div>
@@ -1671,7 +1671,7 @@ g.<span class="fn">AssertPermanentCount</span>(
     <p class="dim" style="font-size: 0.9rem;">Read + safe mutations</p>
     <pre class="medium"><code><span class="fn">PlayerGainLife</span>(Player, <span class="tp">int</span>)
 <span class="fn">FireEvent</span>(GameEvent)
-<span class="fn">PutOnBattlefield</span>(Card, uuid.UUID)
+<span class="fn">PutOnBattlefield</span>(*Card, uuid.UUID)
 <span class="fn">RemoveFromBattlefield</span>(*Permanent)
 <span class="fn">DestroyPermanent</span>(*Permanent)
 <span class="fn">ExilePermanent</span>(*Permanent)

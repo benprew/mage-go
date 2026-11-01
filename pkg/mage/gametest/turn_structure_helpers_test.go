@@ -52,7 +52,7 @@ func registerCombatEventRecorder() {
 	if mage.CardRegistered(name) {
 		return
 	}
-	mage.Register(name, func() mage.Card {
+	mage.Register(name, func() *mage.Card {
 		recEffect := func(et core.EventType) mage.Effect {
 			return mage.FuncEffect("record combat event",
 				mage.EffectProperties{},

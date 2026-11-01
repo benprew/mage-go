@@ -1,0 +1,51 @@
+{
+  "_OracleCard": "Card",
+  "Name": "Lightning Bolt",
+  "Typeline": {
+    "Supertypes": [],
+    "Cardtypes": [
+      "Instant"
+    ],
+    "Subtypes": []
+  },
+  "ManaCost": [
+    {
+      "_ManaSymbol": "ManaCostR"
+    }
+  ],
+  "Rules": [
+    {
+      "_Rule": "SpellActions",
+      "args": {
+        "_Actions": "Targeted",
+        "args": [
+          [
+            {
+              "_Target": "AnyTarget"
+            }
+          ],
+          {
+            "_Actions": "ActionList",
+            "args": [
+              {
+                "_Action": "SpellDealsDamage",
+                "args": [
+                  {
+                    "_Spell": "ThisSpell"
+                  },
+                  {
+                    "_GameNumber": "Integer",
+                    "args": 3
+                  },
+                  {
+                    "_DamageRecipient": "Ref_AnyTarget"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

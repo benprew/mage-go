@@ -17,7 +17,7 @@ func registerSacrificedSnapshotCards() {
 		// Test "Fling" — As an additional cost, sacrifice a creature.
 		// Deals damage equal to the sacrificed creature's power to any target.
 		if !mage.CardRegistered("Test Fling") {
-			mage.Register("Test Fling", func() mage.Card {
+			mage.Register("Test Fling", func() *mage.Card {
 				return mage.NewInstant("Test Fling", "{1}{R}",
 					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 						mage.FuncEffect(

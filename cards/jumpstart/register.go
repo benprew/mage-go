@@ -11,9 +11,9 @@ var basicLandNames = map[string]bool{
 	"Plains": true, "Island": true, "Swamp": true, "Mountain": true, "Forest": true,
 }
 
-func isBasicLand(c Card) bool { return basicLandNames[c.Name()] }
+func isBasicLand(c *Card) bool { return basicLandNames[c.Name()] }
 
-func isLandCard(c Card) bool { return c.HasType(TypeLand) }
+func isLandCard(c *Card) bool { return c.HasType(TypeLand) }
 
 // searchBasicLandToBattlefieldTapped searches the controller's library for a
 // basic land card and puts it onto the battlefield tapped, then shuffles.
@@ -23,7 +23,7 @@ func searchBasicLandToBattlefieldTapped(g *Game, controller uuid.UUID) {
 		return
 	}
 	lib := p.Library()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range lib {
 		if isBasicLand(c) {
 			candidates = append(candidates, c)
@@ -38,7 +38,7 @@ func searchBasicLandToBattlefieldTapped(g *Game, controller uuid.UUID) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != chosen.ID() {
 			newLib = append(newLib, c)
@@ -59,7 +59,7 @@ func searchLandToBattlefieldTapped(g *Game, controller uuid.UUID, tapped bool) {
 		return
 	}
 	lib := p.Library()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range lib {
 		if isLandCard(c) {
 			candidates = append(candidates, c)
@@ -74,7 +74,7 @@ func searchLandToBattlefieldTapped(g *Game, controller uuid.UUID, tapped bool) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != chosen.ID() {
 			newLib = append(newLib, c)
@@ -95,7 +95,7 @@ func searchBasicLandToHand(g *Game, controller uuid.UUID) {
 		return
 	}
 	lib := p.Library()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range lib {
 		if isBasicLand(c) {
 			candidates = append(candidates, c)
@@ -110,7 +110,7 @@ func searchBasicLandToHand(g *Game, controller uuid.UUID) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != chosen.ID() {
 			newLib = append(newLib, c)

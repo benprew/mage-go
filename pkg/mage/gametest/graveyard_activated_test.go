@@ -15,7 +15,7 @@ func registerGraveyardActivatedCards() {
 		// Sanitarium-Skeleton-style: {2}{B}: Return this card from your
 		// graveyard to your hand. Activate only as a sorcery.
 		if !mage.CardRegistered("Test Skeleton") {
-			mage.Register("Test Skeleton", func() mage.Card {
+			mage.Register("Test Skeleton", func() *mage.Card {
 				return mage.NewCreature("Test Skeleton", "{B}", 1, 2,
 					mage.WithSubTypes("Skeleton"),
 					mage.WithGraveyardActivatedAbility(
@@ -28,7 +28,7 @@ func registerGraveyardActivatedCards() {
 		// Ghoulcaller's-Accomplice-style: {3}{B}, Exile this card from your
 		// graveyard: Create a 2/2 black Zombie creature token.
 		if !mage.CardRegistered("Test Accomplice") {
-			mage.Register("Test Accomplice", func() mage.Card {
+			mage.Register("Test Accomplice", func() *mage.Card {
 				return mage.NewCreature("Test Accomplice", "{1}{B}", 2, 2,
 					mage.WithSubTypes("Human", "Rogue"),
 					mage.WithGraveyardActivatedAbility(

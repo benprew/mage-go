@@ -11,7 +11,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
-func castAnteSpell(t *testing.T, g *gametest.TestGame, name string, targets ...mage.Card) {
+func castAnteSpell(t *testing.T, g *gametest.TestGame, name string, targets ...*mage.Card) {
 	t.Helper()
 	player := g.GetPlayer(gametest.PlayerA)
 	player.ManaPool().Add(core.Black, 3)

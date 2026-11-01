@@ -20,7 +20,7 @@ var typeGrantingOnce sync.Once
 
 func registerTypeGrantingTestCards() {
 	typeGrantingOnce.Do(func() {
-		reg := func(name string, f func() mage.Card) {
+		reg := func(name string, f func() *mage.Card) {
 			if !mage.CardRegistered(name) {
 				mage.Register(name, f)
 			}
@@ -29,7 +29,7 @@ func registerTypeGrantingTestCards() {
 		// Static effect that says "all Elf creatures you control are also
 		// Dinosaurs in addition to their other types" (Allosaurus Shepherd
 		// static fragment).
-		reg("Test Elf Dinosaur Lord", func() mage.Card {
+		reg("Test Elf Dinosaur Lord", func() *mage.Card {
 			return mage.NewCreature("Test Elf Dinosaur Lord", "{G}", 1, 1,
 				mage.WithSubTypes("Elf", "Shaman"),
 				mage.WithStaticAbility(
@@ -40,7 +40,7 @@ func registerTypeGrantingTestCards() {
 		})
 
 		// Plain Elf creature used as a recipient of the lord's static.
-		reg("Test Plain Elf", func() mage.Card {
+		reg("Test Plain Elf", func() *mage.Card {
 			return mage.NewCreature("Test Plain Elf", "{G}", 1, 1,
 				mage.WithSubTypes("Elf"),
 			)
@@ -48,7 +48,7 @@ func registerTypeGrantingTestCards() {
 
 		// Creature with an activated ability that turns it into a Human
 		// until end of turn (Wishful Merfolk pattern).
-		reg("Test Becomes Human", func() mage.Card {
+		reg("Test Becomes Human", func() *mage.Card {
 			return mage.NewCreature("Test Becomes Human", "{1}{U}", 2, 2,
 				mage.WithSubTypes("Merfolk"),
 				mage.WithActivatedAbility(
@@ -67,7 +67,7 @@ func registerTypeGrantingTestCards() {
 		})
 
 		// Vanilla green creature target for color change tests.
-		reg("Test Green Bear", func() mage.Card {
+		reg("Test Green Bear", func() *mage.Card {
 			return mage.NewCreature("Test Green Bear", "{1}{G}", 2, 2,
 				mage.WithSubTypes("Bear"),
 			)
@@ -75,7 +75,7 @@ func registerTypeGrantingTestCards() {
 
 		// Activated ability: target creature becomes blue until end of
 		// turn (Scuttlemutt-like color change).
-		reg("Test Color Changer", func() mage.Card {
+		reg("Test Color Changer", func() *mage.Card {
 			return mage.NewCreature("Test Color Changer", "{2}", 3, 3,
 				mage.WithSubTypes("Scarecrow"),
 				mage.WithActivatedAbility(

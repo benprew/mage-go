@@ -52,12 +52,12 @@ func TestCleanup(t *testing.T) {
 		attacker := "ECU Marked Damage Attacker"
 		blocker := "ECU Marked Damage Blocker"
 		if !mage.CardRegistered(attacker) {
-			mage.Register(attacker, func() mage.Card {
+			mage.Register(attacker, func() *mage.Card {
 				return mage.NewCreature(attacker, "{2}{G}", 3, 3, mage.WithSubTypes("Beast"))
 			})
 		}
 		if !mage.CardRegistered(blocker) {
-			mage.Register(blocker, func() mage.Card {
+			mage.Register(blocker, func() *mage.Card {
 				return mage.NewCreature(blocker, "{1}{W}", 1, 2, mage.WithSubTypes("Soldier"))
 			})
 		}
@@ -92,12 +92,12 @@ func TestCleanup(t *testing.T) {
 		creature := "ECU EOT Pump Target"
 		pump := "ECU EOT Pump Spell"
 		if !mage.CardRegistered(creature) {
-			mage.Register(creature, func() mage.Card {
+			mage.Register(creature, func() *mage.Card {
 				return mage.NewCreature(creature, "{G}", 1, 1, mage.WithSubTypes("Elf"))
 			})
 		}
 		if !mage.CardRegistered(pump) {
-			mage.Register(pump, func() mage.Card {
+			mage.Register(pump, func() *mage.Card {
 				return mage.NewInstant(pump, "{G}",
 					mage.NewTargetedSpell(
 						mage.TargetCreature(),
@@ -126,12 +126,12 @@ func TestCleanup(t *testing.T) {
 		creature := "ECU EOT Pump Target Sanity"
 		pump := "ECU EOT Pump Spell Sanity"
 		if !mage.CardRegistered(creature) {
-			mage.Register(creature, func() mage.Card {
+			mage.Register(creature, func() *mage.Card {
 				return mage.NewCreature(creature, "{G}", 1, 1, mage.WithSubTypes("Elf"))
 			})
 		}
 		if !mage.CardRegistered(pump) {
-			mage.Register(pump, func() mage.Card {
+			mage.Register(pump, func() *mage.Card {
 				return mage.NewInstant(pump, "{G}",
 					mage.NewTargetedSpell(
 						mage.TargetCreature(),
@@ -173,7 +173,7 @@ func TestCleanup(t *testing.T) {
 		cardName := "ECU Cleanup Trigger Source"
 		fired := false
 		if !mage.CardRegistered(cardName) {
-			mage.Register(cardName, func() mage.Card {
+			mage.Register(cardName, func() *mage.Card {
 				return mage.NewEnchantment(cardName, "{1}",
 					mage.WithAbility(
 						mage.BeginningOfEachCleanupStepTrigger(

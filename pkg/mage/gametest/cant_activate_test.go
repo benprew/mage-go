@@ -13,7 +13,7 @@ func TestPreventAttachedFromActivatingNonManaAbilities(t *testing.T) {
 	const auraName = "CANA Lawmage-like"
 	const creatureName = "CANA Pinger"
 	if !mage.CardRegistered(auraName) {
-		mage.Register(auraName, func() mage.Card {
+		mage.Register(auraName, func() *mage.Card {
 			return mage.NewAura(auraName, "{1}{W}{U}",
 				mage.WithStaticAbility(
 					mage.PreventAttachedFromActivatingNonManaAbilities(core.AttachAura),
@@ -22,7 +22,7 @@ func TestPreventAttachedFromActivatingNonManaAbilities(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(creatureName) {
-		mage.Register(creatureName, func() mage.Card {
+		mage.Register(creatureName, func() *mage.Card {
 			return mage.NewCreature(creatureName, "{2}", 1, 1,
 				mage.WithActivatedAbility(
 					mage.DealDamage(mage.Fixed(1)),

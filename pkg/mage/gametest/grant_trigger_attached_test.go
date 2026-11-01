@@ -16,7 +16,7 @@ func registerGrantTriggerAttachedCards() {
 		// your upkeep, you gain 1 life" triggered ability — modelled after
 		// Stalwart Aven's "enchanted creature gains <triggered ability>".
 		if !mage.CardRegistered("Test Trig Aura") {
-			mage.Register("Test Trig Aura", func() mage.Card {
+			mage.Register("Test Trig Aura", func() *mage.Card {
 				return mage.NewAura("Test Trig Aura", "{W}",
 					mage.WithStaticAbility(
 						mage.GrantTriggeredAbilityToAttached(

@@ -6,7 +6,7 @@ func TestRegistryIsolation(t *testing.T) {
 	a := NewRegistry()
 	b := NewRegistry()
 
-	a.Register("TestCard", func() Card {
+	a.Register("TestCard", func() *Card {
 		return NewCreature("TestCard", "{1}", 1, 1)
 	})
 
@@ -33,8 +33,8 @@ func TestRegistryIsolation(t *testing.T) {
 
 func TestRegistryDiacriticFold(t *testing.T) {
 	r := NewRegistry()
-	r.Register("El-Hajjâj", func() Card { return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1) })
-	r.Register("Junún Efreet", func() Card { return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3) })
+	r.Register("El-Hajjâj", func() *Card { return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1) })
+	r.Register("Junún Efreet", func() *Card { return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3) })
 
 	for _, alias := range []string{"El-Hajjaj", "Junun Efreet", "El-Hajjâj", "Junún Efreet"} {
 		c, err := r.CreateCard(alias)

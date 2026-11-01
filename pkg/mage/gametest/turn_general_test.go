@@ -78,7 +78,7 @@ func TestTurnPhases(t *testing.T) {
 	t.Run("CR 500.2 priority step ends only when stack empty and players pass", func(t *testing.T) {
 		name := "Turn Structure Upkeep Pinger"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewArtifact(name, "{2}",
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtUpkeep,
@@ -140,7 +140,7 @@ func TestTurnPhases(t *testing.T) {
 	t.Run("CR 500.6 at-the-beginning-of-X triggers fire when the step begins", func(t *testing.T) {
 		name := "Turn Structure Upkeep Lifegainer"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewArtifact(name, "{2}",
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtUpkeep,

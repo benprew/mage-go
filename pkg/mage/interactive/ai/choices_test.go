@@ -159,7 +159,7 @@ func TestChooseCardFromLibrary_PrefersSpellOverLand(t *testing.T) {
 	spell := mage.NewCreature("Dragon", "{4}{R}{R}", 6, 6)
 	spell.SetOwner(bot.PlayerID())
 
-	got := bot.ChooseCardFromLibrary([]mage.Card{land, spell}, "search", g)
+	got := bot.ChooseCardFromLibrary([]*mage.Card{land, spell}, "search", g)
 	if got != spell {
 		t.Fatalf("tutor should fetch the spell over a land, got %s", got.Name())
 	}
@@ -191,7 +191,7 @@ func TestChooseScryPlacement_BottomsFloodedLand(t *testing.T) {
 	topSpell := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 	topSpell.SetOwner(bot.PlayerID())
 
-	bottom, top := bot.ChooseScryPlacement([]mage.Card{topLand, topSpell}, "scry", g)
+	bottom, top := bot.ChooseScryPlacement([]*mage.Card{topLand, topSpell}, "scry", g)
 	if len(bottom) != 1 || bottom[0] != topLand.ID() {
 		t.Fatalf("flooded surplus land should be bottomed, got bottom=%v", bottom)
 	}

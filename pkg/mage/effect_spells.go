@@ -212,7 +212,7 @@ func CreateTokenAttacking(name string, power, toughness int, types []CardType, s
 }
 
 func (e *createTokenAttackingEffect) Apply(ctx *EffectContext) error {
-	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, nil, e.keywords...)
 	token.SetOwner(ctx.Controller)
 	var defenderID uuid.UUID
 	for _, p := range ctx.Game.AllPlayers() {
@@ -221,8 +221,7 @@ func (e *createTokenAttackingEffect) Apply(ctx *EffectContext) error {
 			break
 		}
 	}
-	perm := ctx.Game.PutOnBattlefieldAttacking(token, ctx.Controller, defenderID)
-	perm.IsToken = true
+	ctx.Game.PutTokenOnBattlefieldAttacking(token, ctx.Controller, defenderID)
 	return nil
 }
 
@@ -260,14 +259,13 @@ func CreateTokenBlocking(name string, power, toughness int, types []CardType, su
 }
 
 func (e *createTokenBlockingEffect) Apply(ctx *EffectContext) error {
-	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, nil, e.keywords...)
 	token.SetOwner(ctx.Controller)
 	var attackerID uuid.UUID
 	if len(ctx.Targets) > 0 {
 		attackerID = ctx.Targets[0]
 	}
-	perm := ctx.Game.PutOnBattlefieldBlocking(token, ctx.Controller, attackerID)
-	perm.IsToken = true
+	ctx.Game.PutTokenOnBattlefieldBlocking(token, ctx.Controller, attackerID)
 	return nil
 }
 
@@ -487,17 +485,12 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 		count = 1
 	}
 	for i := 0; i < count; i++ {
-		token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+		token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.colors, e.keywords...)
 		token.SetOwner(ctx.Controller)
-		if len(e.colors) > 0 {
-			token.colorOverride = make([]Color, len(e.colors))
-			copy(token.colorOverride, e.colors)
-		}
 		for _, a := range e.abilities {
 			token.AddAbility(a)
 		}
-		perm := ctx.Game.PutOnBattlefield(token, ctx.Controller)
-		perm.IsToken = true
+		ctx.Game.PutTokenOnBattlefield(token, ctx.Controller)
 	}
 	return nil
 }
@@ -510,7 +503,7 @@ func (e *cloneTargetEffect) Apply(ctx *EffectContext) error {
 	if target == nil {
 		return nil
 	}
-	ctx.Game.GetResolvingCard().CloneFrom(target.Card)
+	ctx.Game.GetResolvingCard().ApplyCopiableValues(target.Card.CopiableValues())
 	for _, t := range e.additionalTypes {
 		ctx.Game.GetResolvingCard().AddType(t)
 	}

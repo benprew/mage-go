@@ -502,7 +502,7 @@ func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
 	return deck
 }
 
-func handStr(hand []mage.Card) string {
+func handStr(hand []*mage.Card) string {
 	names := make([]string, len(hand))
 	for i, c := range hand {
 		names[i] = c.Name()

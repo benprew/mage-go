@@ -13,7 +13,7 @@ import (
 func TestManaProduction_AnyCombination_PerPointChoice(t *testing.T) {
 	const cardName = "ANYCOMB Selvala-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{1}{G}{G}", 2, 3,
 				mage.WithSubTypes("Elf", "Scout"),
 				mage.WithMultiManaAbility(mage.ManaProduction{

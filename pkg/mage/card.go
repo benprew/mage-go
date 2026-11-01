@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"maps"
+	"iter"
 	"slices"
 	"strings"
 
@@ -10,56 +10,20 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// Card is the interface for all cards.
-type Card interface {
-	ID() uuid.UUID
-	Name() string
-	ManaCost() ManaCost
-	Types() []CardType
-	SuperTypes() []SuperType
-	SubTypes() []string
-	Abilities() []Ability
-	AttrSeeds() map[Attr]int // keyword/attr seeds (for display and permanent creation)
-	Owner() uuid.UUID
-	Power() int
-	Toughness() int
-	Modes() []string
-	Copy() Card
-	SetOwner(uuid.UUID)
-	SetID(uuid.UUID)
-	HasType(CardType) bool
-	HasSuperType(SuperType) bool
-	HasSubType(string) bool
-	AddType(CardType)
-	AddAbility(Ability)
-	AddSubType(string)
-	CastTargets() []Target
-	CloneFrom(Card)
-	SetBasePT(power, toughness int)
-	SetModes([]string)
-	IsToken() bool
-}
-
-// BaseCard provides the common card implementation.
-type BaseCard struct {
+// Card owns card identity, ownership, and private execution state.
+// A definition supplies its printed characteristics and rules.
+type Card struct {
+	cardCharacteristics
+	definition      *CardDefinition
+	characteristics *cardCharacteristics
 	id              uuid.UUID
-	name            string
-	manaCost        ManaCost
-	types           []CardType
-	superTypes      []SuperType
-	subTypes        []string
+	capabilityAttrs map[Attr]int
 	abilities       []Ability
 	owner           uuid.UUID
-	power           int
-	toughness       int
-	colorOverride   []Color
-	modes           []string
-	attrSeeds       map[Attr]int    // keyword/attr seeds; NewPermanent copies these to baseAttrs
 	additionalCosts []Cost          // additional costs paid when casting (sacrifice, discard, etc.)
 	alternateCosts  []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
 	castTargets     []Target        // targeting requirements when casting (auras, targeted ETBs)
 	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
-	isToken         bool            // true for token cards (created by NewToken)
 	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
 }
 
@@ -75,153 +39,294 @@ type AuraAIProfile struct {
 }
 
 // AuraAIProfile returns the AI targeting profile for an aura, if one was set.
-func (c *BaseCard) AuraAIProfile() (AuraAIProfile, bool) {
+func (c *Card) AuraAIProfile() (AuraAIProfile, bool) {
 	if c.auraAIProfile == nil {
 		return AuraAIProfile{}, false
 	}
 	return *c.auraAIProfile, true
 }
 
-// AttrSeeds returns the keyword/attr seeds for this card.
-// NewPermanent uses these to populate the permanent's baseAttrs.
-func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
-
-// SetColorOverride sets the colors of a card directly, bypassing mana cost
-// derivation. Used by token-creation paths that produce colored tokens
-// (CreateColoredToken).
-func (c *BaseCard) SetColorOverride(colors []Color) {
-	c.colorOverride = append([]Color(nil), colors...)
-}
-
-func (c *BaseCard) ID() uuid.UUID           { return c.id }
-func (c *BaseCard) Name() string            { return c.name }
-func (c *BaseCard) ManaCost() ManaCost      { return c.manaCost }
-func (c *BaseCard) Types() []CardType       { return c.types }
-func (c *BaseCard) SuperTypes() []SuperType { return c.superTypes }
-func (c *BaseCard) SubTypes() []string      { return c.subTypes }
-func (c *BaseCard) Abilities() []Ability    { return c.abilities }
-func (c *BaseCard) Owner() uuid.UUID        { return c.owner }
-func (c *BaseCard) Power() int              { return c.power }
-func (c *BaseCard) Toughness() int          { return c.toughness }
-func (c *BaseCard) Modes() []string         { return c.modes }
-func (c *BaseCard) IsToken() bool           { return c.isToken }
-func (c *BaseCard) SetModes(m []string)     { c.modes = m }
-func (c *BaseCard) SetBasePT(p, t int)      { c.power = p; c.toughness = t }
-func (c *BaseCard) SetOwner(id uuid.UUID)   { c.owner = id }
-func (c *BaseCard) SetID(id uuid.UUID)      { c.id = id }
-
-func (c *BaseCard) HasType(t CardType) bool {
-	return slices.Contains(c.types, t)
-}
-
-func (c *BaseCard) HasSuperType(st SuperType) bool {
-	return slices.Contains(c.superTypes, st)
-}
-
-func (c *BaseCard) HasSubType(st string) bool {
-	return slices.Contains(c.subTypes, st)
-}
-
-func (c *BaseCard) AddType(t CardType) {
-	c.types = append(c.types, t)
-}
-
-func (c *BaseCard) AddSubType(st string) {
-	c.subTypes = append(c.subTypes, st)
-}
-
-func (c *BaseCard) AddAbility(a Ability) {
-	c.abilities = append(c.abilities, a)
-}
-
-func (c *BaseCard) CloneFrom(other Card) {
-	c.name = other.Name()
-	c.manaCost = other.ManaCost()
-	c.power = other.Power()
-	c.toughness = other.Toughness()
-	c.types = make([]CardType, len(other.Types()))
-	copy(c.types, other.Types())
-	c.superTypes = make([]SuperType, len(other.SuperTypes()))
-	copy(c.superTypes, other.SuperTypes())
-	c.subTypes = make([]string, len(other.SubTypes()))
-	copy(c.subTypes, other.SubTypes())
-	c.abilities = make([]Ability, len(other.Abilities()))
-	copy(c.abilities, other.Abilities())
-	if m := other.Modes(); len(m) > 0 {
-		c.modes = make([]string, len(m))
-		copy(c.modes, m)
+// NewCard creates private card state from a shared definition.
+// Options change only this card. They do not change the shared definition.
+func NewCard(definition *CardDefinition, opts ...CardOption) *Card {
+	if definition == nil {
+		panic("mage: nil card definition")
 	}
-	if ct := other.CastTargets(); len(ct) > 0 {
-		c.castTargets = make([]Target, len(ct))
-		copy(c.castTargets, ct)
-	}
-	if bc, ok := other.(*BaseCard); ok {
-		if len(bc.attrSeeds) > 0 {
-			c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
-			maps.Copy(c.attrSeeds, bc.attrSeeds)
+	c := &Card{definition: definition, id: uuid.New()}
+	for _, rule := range definition.printed.Rules {
+		ability := rule.instantiate()
+		if ability == nil {
+			panic("mage: rule returned a nil ability")
 		}
-		c.uncounterable = bc.uncounterable
-		c.auraAIProfile = bc.auraAIProfile
-		if len(bc.alternateCosts) > 0 {
-			c.alternateCosts = append([]AlternateCost(nil), bc.alternateCosts...)
-		}
+		c.abilities = append(c.abilities, ability)
 	}
+	c.addDefinitionAbilities()
+	applyCardOpts(c, opts)
+	return c
 }
 
-func (c *BaseCard) Copy() Card {
-	cp := *c
-	cp.id = uuid.New()
-	cp.types = make([]CardType, len(c.types))
-	copy(cp.types, c.types)
-	cp.superTypes = make([]SuperType, len(c.superTypes))
-	copy(cp.superTypes, c.superTypes)
-	cp.subTypes = make([]string, len(c.subTypes))
-	copy(cp.subTypes, c.subTypes)
-	cp.abilities = make([]Ability, len(c.abilities))
-	copy(cp.abilities, c.abilities)
-	if len(c.modes) > 0 {
-		cp.modes = make([]string, len(c.modes))
-		copy(cp.modes, c.modes)
+func (c *Card) Definition() *CardDefinition { return c.definition }
+func (c *Card) ID() uuid.UUID               { return c.id }
+func (c *Card) Owner() uuid.UUID            { return c.owner }
+func (c *Card) SetID(id uuid.UUID)          { c.id = id }
+func (c *Card) SetOwner(owner uuid.UUID)    { c.owner = owner }
+func (c *Card) Name() string {
+	if c.definition == nil {
+		return c.name
 	}
-	if len(c.attrSeeds) > 0 {
-		cp.attrSeeds = make(map[Attr]int, len(c.attrSeeds))
-		maps.Copy(cp.attrSeeds, c.attrSeeds)
+	if c.characteristics != nil {
+		return c.characteristics.name
 	}
-	return &cp
+	return c.definition.Name()
+}
+func (c *Card) ManaCost() ManaCost {
+	if c.definition == nil {
+		return c.manaCost
+	}
+	if c.characteristics != nil {
+		return copyPrintedManaCost(c.characteristics.manaCost)
+	}
+	return c.definition.ManaCost()
+}
+func (c *Card) Types() []CardType {
+	if c.definition == nil {
+		return c.types
+	}
+	if c.characteristics != nil {
+		return slices.Clone(c.characteristics.types)
+	}
+	return c.definition.Types()
+}
+func (c *Card) SuperTypes() []SuperType {
+	if c.definition == nil {
+		return c.superTypes
+	}
+	if c.characteristics != nil {
+		return slices.Clone(c.characteristics.superTypes)
+	}
+	return c.definition.SuperTypes()
+}
+func (c *Card) SubTypes() []string {
+	if c.definition == nil {
+		return c.subTypes
+	}
+	if c.characteristics != nil {
+		return slices.Clone(c.characteristics.subTypes)
+	}
+	return c.definition.SubTypes()
+}
+func (c *Card) Power() int {
+	if c.definition == nil {
+		return c.power
+	}
+	if c.characteristics != nil {
+		return c.characteristics.power
+	}
+	return c.definition.Power()
+}
+func (c *Card) Toughness() int {
+	if c.definition == nil {
+		return c.toughness
+	}
+	if c.characteristics != nil {
+		return c.characteristics.toughness
+	}
+	return c.definition.Toughness()
+}
+func (c *Card) Modes() []string {
+	if c.definition == nil {
+		return c.modes
+	}
+	if c.characteristics != nil {
+		return slices.Clone(c.characteristics.modes)
+	}
+	return c.definition.Modes()
 }
 
-// CardOption configures a card during construction.
-type CardOption func(*BaseCard)
+// Abilities returns a private slice of all card abilities, including keywords.
+// Use AllAbilities to inspect abilities without a slice copy.
+// The returned slice is private. Ability objects retain their identity.
+// This list does not include temporary abilities granted to a permanent.
+func (c *Card) Abilities() []Ability {
+	return slices.Clone(c.abilities)
+}
 
-// CastTargets returns the targeting requirements for casting this card.
-// For auras, this is the enchant target. For spells with SpellAbility targets,
-// this falls back to the first SpellAbility's targets.
-func (c *BaseCard) CastTargets() []Target {
-	if len(c.castTargets) > 0 {
-		return c.castTargets
-	}
-	// Fall back to SpellAbility targets for existing spells.
-	for _, a := range c.abilities {
-		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
-			if targets := sa.Targets(); len(targets) > 0 {
-				return targets
+// AllAbilities visits all card abilities in list order without a slice copy.
+// Do not add or remove abilities during iteration. Ability objects retain
+// their identity. Temporary permanent abilities are not part of this list.
+func (c *Card) AllAbilities() iter.Seq2[int, Ability] {
+	return func(yield func(int, Ability) bool) {
+		for index, ability := range c.abilities {
+			if !yield(index, ability) {
+				return
 			}
+		}
+	}
+}
+func (c *Card) HasType(t CardType) bool {
+	if c.definition == nil {
+		return slices.Contains(c.types, t)
+	}
+	if c.characteristics != nil {
+		return slices.Contains(c.characteristics.types, t)
+	}
+	return slices.Contains(c.definition.printed.TypeLine.CardTypes, t)
+}
+func (c *Card) HasSuperType(t SuperType) bool {
+	if c.definition == nil {
+		return slices.Contains(c.superTypes, t)
+	}
+	if c.characteristics != nil {
+		return slices.Contains(c.characteristics.superTypes, t)
+	}
+	return slices.Contains(c.definition.printed.TypeLine.SuperTypes, t)
+}
+func (c *Card) HasSubType(t string) bool {
+	if c.definition == nil {
+		return slices.Contains(c.subTypes, t)
+	}
+	if c.characteristics != nil {
+		return slices.Contains(c.characteristics.subTypes, t)
+	}
+	return slices.Contains(c.definition.printed.TypeLine.SubTypes, t)
+}
+func (c *Card) Colors() []Color {
+	if c.definition == nil {
+		if len(c.colorOverride) > 0 {
+			return slices.Clone(c.colorOverride)
+		}
+		return c.manaCost.Colors()
+	}
+	if c.characteristics != nil {
+		if len(c.characteristics.colorOverride) > 0 {
+			return slices.Clone(c.characteristics.colorOverride)
+		}
+		return c.characteristics.manaCost.Colors()
+	}
+	if len(c.definition.printed.Colors) > 0 {
+		return c.definition.Colors()
+	}
+	return c.ManaCost().Colors()
+}
+func (c *Card) CastTargets() []Target {
+	if len(c.castTargets) > 0 {
+		return slices.Clone(c.castTargets)
+	}
+	for _, ability := range c.abilities {
+		if action, ok := ability.(*ActionDefinition); ok && action.Kind() == ActionSpell {
+			return slices.Clone(action.Targets())
 		}
 	}
 	return nil
 }
 
+// mutableCharacteristics supports legacy copy and construction methods.
+// These methods cannot change the printed definition.
+func (c *Card) mutableCharacteristics() *cardCharacteristics {
+	if c.definition == nil {
+		return &c.cardCharacteristics
+	}
+	if c.characteristics == nil {
+		c.characteristics = &cardCharacteristics{
+			name: c.Name(), manaCost: c.ManaCost(), types: c.Types(), superTypes: c.SuperTypes(), subTypes: c.SubTypes(),
+			power: c.Power(), toughness: c.Toughness(), modes: c.Modes(), colorOverride: c.definition.Colors(),
+		}
+	}
+	return c.characteristics
+}
+func (c *Card) SetBasePT(p, t int) {
+	data := c.mutableCharacteristics()
+	data.power, data.toughness = p, t
+}
+func (c *Card) SetModes(modes []string) {
+	c.mutableCharacteristics().modes = slices.Clone(modes)
+}
+func (c *Card) AddType(t CardType) {
+	data := c.mutableCharacteristics()
+	data.types = append(data.types, t)
+}
+func (c *Card) AddSubType(t string) {
+	data := c.mutableCharacteristics()
+	data.subTypes = append(data.subTypes, t)
+}
+
+// AddAbility adds an ability to the card.
+func (c *Card) AddAbility(a Ability) {
+	if _, simple := a.(*AttributeAbility); simple {
+		c.abilities = append(c.abilities, a)
+	} else {
+		// Keep actions and triggers at their existing indices.
+		index := len(c.abilities)
+		for i, ability := range c.abilities {
+			if _, simple := ability.(*AttributeAbility); simple {
+				index = i
+				break
+			}
+		}
+		c.abilities = slices.Insert(c.abilities, index, a)
+	}
+}
+
+// addDefinitionAbilities converts definition inputs into the complete ability list.
+// A rule can already supply an ability, as with Ward and its trigger.
+func (c *Card) addDefinitionAbilities() {
+	covered := make(map[Attr]int)
+	for _, ability := range c.abilities {
+		if attr := AbilityAttribute(ability); attr != 0 {
+			covered[attr]++
+		}
+	}
+
+	for attr := Attr(1); int(attr) < NumAttrs; attr++ {
+		count := c.definition.printed.Keywords[attr]
+		if IsAbilityAttr(attr) {
+			for range count - covered[attr] {
+				c.AddAbility(NewAttributeAbility(attr))
+			}
+		} else if count != 0 {
+			c.addCapability(attr, count)
+		}
+	}
+}
+
+func (c *Card) addCapability(attr Attr, count int) {
+	if c.capabilityAttrs == nil {
+		c.capabilityAttrs = make(map[Attr]int)
+	}
+	c.capabilityAttrs[attr] += count
+}
+
+// CloneFrom applies the source's copiable values to this card.
+// Use ApplyCopiableValues for new code.
+func (c *Card) CloneFrom(other *Card) {
+	c.ApplyCopiableValues(other.CopiableValues())
+}
+
+// Copy creates a new object from this card's copiable values.
+// Use NewCopy for new code and CloneInstance to preserve execution state.
+func (c *Card) Copy() *Card {
+	return c.NewCopy()
+}
+
+// CloneInstance preserves identity and copies current execution state.
+func (c *Card) CloneInstance() *Card {
+	return newGameCloneContext().card(c)
+}
+
+// CardOption configures a card during construction.
+type CardOption func(*Card)
+
 // WithCastTarget sets the targeting requirement for casting this card.
 // Used for auras that enchant non-creature permanents (e.g. "enchant land").
 func WithCastTarget(t Target) CardOption {
-	return func(c *BaseCard) { c.castTargets = []Target{t} }
+	return func(c *Card) { c.castTargets = []Target{t} }
 }
 
 // WithAuraAIProfile records how an aura affects its enchanted creature so the
 // AI can pick appropriate targets (own creatures for buffs, opponent creatures
 // for debuffs/steal effects). See AuraAIProfile.
 func WithAuraAIProfile(profile AuraAIProfile) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		p := profile
 		c.auraAIProfile = &p
 	}
@@ -230,58 +335,68 @@ func WithAuraAIProfile(profile AuraAIProfile) CardOption {
 // WithAdditionalCost adds an additional cost that must be paid when casting this spell
 // (e.g. sacrifice a creature, discard a card, pay life).
 func WithAdditionalCost(cost Cost) CardOption {
-	return func(c *BaseCard) { c.additionalCosts = append(c.additionalCosts, cost) }
+	return func(c *Card) { c.additionalCosts = append(c.additionalCosts, cost) }
 }
 
 // AdditionalCosts returns the additional costs for this card.
-func (c *BaseCard) AdditionalCosts() []Cost { return c.additionalCosts }
+func (c *Card) AdditionalCosts() []Cost { return c.additionalCosts }
 
 // WithSuperTypes adds supertypes (Legendary, Basic, Snow, World) to a card.
 func WithSuperTypes(sts ...SuperType) CardOption {
-	return func(c *BaseCard) { c.superTypes = append(c.superTypes, sts...) }
+	return func(c *Card) {
+		data := c.mutableCharacteristics()
+		data.superTypes = append(data.superTypes, sts...)
+	}
 }
 
 // WithSubTypes adds creature/land subtypes to a card.
 func WithSubTypes(subTypes ...string) CardOption {
-	return func(c *BaseCard) { c.subTypes = append(c.subTypes, subTypes...) }
+	return func(c *Card) {
+		data := c.mutableCharacteristics()
+		data.subTypes = append(data.subTypes, subTypes...)
+	}
 }
 
-// cardHasKeyword reports whether the card was registered with the given keyword
-// attr seed. Used by the casting-permission gate (see Flash, CR 702.8) to inspect
-// keywords on a card that is not yet on the battlefield as a Permanent.
-func cardHasKeyword(c Card, kw Attr) bool {
+// cardHasKeyword reports whether the card has the specified keyword ability.
+func cardHasKeyword(c *Card, kw Attr) bool {
 	if c == nil {
 		return false
 	}
-	return c.AttrSeeds()[kw] > 0
+	for _, ability := range c.abilities {
+		if AbilityAttribute(ability) == kw {
+			return true
+		}
+	}
+	return false
 }
 
-// WithKeyword adds a keyword ability to a card.
-// Seeds the card's attrSeeds so that NewPermanent can populate baseAttrs.
+// WithKeyword adds an ability and its attribute to a card.
+// Capability attributes do not add an ability.
 func WithKeyword(kw Keyword) CardOption {
-	return func(c *BaseCard) {
-		if c.attrSeeds == nil {
-			c.attrSeeds = make(map[Attr]int)
+	return func(c *Card) {
+		if IsAbilityAttr(kw) {
+			c.AddAbility(NewAttributeAbility(kw))
+		} else {
+			c.addCapability(kw, 1)
 		}
-		c.attrSeeds[kw]++
 	}
 }
 
 // WithAbility adds an ability to a card.
 func WithAbility(a Ability) CardOption {
-	return func(c *BaseCard) { c.AddAbility(a) }
+	return func(c *Card) { c.AddAbility(a) }
 }
 
 // WithAction adds a spell or activated ability action to a card.
 func WithAction(a *ActionDefinition) CardOption {
-	return func(c *BaseCard) { c.AddAbility(a) }
+	return func(c *Card) { c.AddAbility(a) }
 }
 
 // WithETBEffect adds an effect that runs inline when this permanent enters
 // the battlefield, receiving the spell's targets. Used for non-aura permanents
 // that need to act on their spell targets on entry (e.g. Oubliette).
 func WithETBEffect(effect Effect) CardOption {
-	return func(c *BaseCard) { c.AddAbility(ETBWithTargets(effect)) }
+	return func(c *Card) { c.AddAbility(ETBWithTargets(effect)) }
 }
 
 // WithCumulativeUpkeep adds a cumulative upkeep trigger to a card.
@@ -289,7 +404,7 @@ func WithETBEffect(effect Effect) CardOption {
 // multiplied by the number of age counters, or sacrifice the permanent.
 // costPerAge is a mana cost string (e.g. "{1}" or "{G}") paid per age counter.
 func WithCumulativeUpkeep(costPerAge string) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		c.AddAbility(
 			BeginningOfUpkeepTrigger(
 				FuncEffect("cumulative upkeep",
@@ -319,45 +434,45 @@ func WithCumulativeUpkeep(costPerAge string) CardOption {
 
 // WithCardType adds an additional card type (e.g. TypeArtifact on a creature).
 func WithCardType(t CardType) CardOption {
-	return func(c *BaseCard) { c.AddType(t) }
+	return func(c *Card) { c.AddType(t) }
 }
 
 // WithManaAbility adds a mana ability for the given color.
 func WithManaAbility(color Color, afterProduction ...Effect) CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewManaAbility(color, afterProduction...)) }
+	return func(c *Card) { c.AddAbility(NewManaAbility(color, afterProduction...)) }
 }
 
 // WithMultiManaAbility adds a mana ability with custom productions.
 func WithMultiManaAbility(productions ...ManaProduction) CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewMultiManaAbility(productions...)) }
+	return func(c *Card) { c.AddAbility(NewMultiManaAbility(productions...)) }
 }
 
 // WithDynamicManaAbility adds a mana ability whose production is derived from
 // the source permanent and whose follow-up effects run immediately after mana
 // is produced.
 func WithDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Effect) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		c.AddAbility(NewDynamicManaAbility(productions, afterProduction...))
 	}
 }
 
 // WithAnyColorMana adds an any-color mana ability.
 func WithAnyColorMana() CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewManaAbility(AnyColor)) }
+	return func(c *Card) { c.AddAbility(NewManaAbility(AnyColor)) }
 }
 
 // WithActivatedAbility adds an activated ability built from the given effect,
 // primary cost, and optional AbilityOption modifiers.
 func WithActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewActivatedAbility(effect, cost, opts...)) }
+	return func(c *Card) { c.AddAbility(NewActivatedAbility(effect, cost, opts...)) }
 }
 
 // WithStaticAbility adds a static ability that applies continuous effects.
 func WithStaticAbility(effects ...ContinuousEffect) CardOption {
-	return func(c *BaseCard) { c.AddAbility(StaticAbility(effects...)) }
+	return func(c *Card) { c.AddAbility(StaticAbility(effects...)) }
 }
 
-func applyCardOpts(c *BaseCard, opts []CardOption) {
+func applyCardOpts(c *Card, opts []CardOption) {
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -399,48 +514,51 @@ func splitSpellConstructorParts(parts ...any) (*SpellAbility, []CardOption) {
 }
 
 // NewCreature creates a new creature card.
-func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
-		id:        uuid.New(),
-		name:      name,
-		manaCost:  ParseManaCost(cost),
-		types:     []CardType{TypeCreature},
-		power:     power,
-		toughness: toughness,
+func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:      name,
+			manaCost:  ParseManaCost(cost),
+			types:     []CardType{TypeCreature},
+			power:     power,
+			toughness: toughness,
+		},
 	}
 	applyCardOpts(c, opts)
 	return c
 }
 
-// NewToken creates a token creature card. Tokens have no mana cost.
-func NewToken(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) *BaseCard {
-	c := &BaseCard{
-		id:        uuid.New(),
-		name:      name,
-		types:     types,
-		subTypes:  subTypes,
-		power:     power,
-		toughness: toughness,
-		isToken:   true,
+// NewToken creates a token with the given colors and no mana cost.
+func NewToken(name string, power, toughness int, types []CardType, subTypes []string, colors []Color, keywords ...Keyword) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:          name,
+			types:         types,
+			subTypes:      subTypes,
+			power:         power,
+			toughness:     toughness,
+			colorOverride: append([]Color(nil), colors...),
+		},
 	}
 	for _, kw := range keywords {
-		if c.attrSeeds == nil {
-			c.attrSeeds = make(map[Attr]int)
-		}
-		c.attrSeeds[kw]++
+		WithKeyword(kw)(c)
 	}
 	return c
 }
 
 // NewInstant creates a new instant card. Pass effects and action options
 // directly, or pass an explicit [*SpellAbility] for compatibility.
-func NewInstant(name, cost string, parts ...any) *BaseCard {
+func NewInstant(name, cost string, parts ...any) *Card {
 	spell, opts := splitSpellConstructorParts(parts...)
-	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeInstant},
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypeInstant},
+		},
 	}
 	if spell != nil {
 		c.AddAbility(spell)
@@ -451,13 +569,15 @@ func NewInstant(name, cost string, parts ...any) *BaseCard {
 
 // NewSorcery creates a new sorcery card. Pass effects and action options
 // directly, or pass an explicit [*SpellAbility] for compatibility.
-func NewSorcery(name, cost string, parts ...any) *BaseCard {
+func NewSorcery(name, cost string, parts ...any) *Card {
 	spell, opts := splitSpellConstructorParts(parts...)
-	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeSorcery},
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypeSorcery},
+		},
 	}
 	if spell != nil {
 		c.AddAbility(spell)
@@ -467,35 +587,41 @@ func NewSorcery(name, cost string, parts ...any) *BaseCard {
 }
 
 // NewLand creates a new land card.
-func NewLand(name string, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
-		id:    uuid.New(),
-		name:  name,
-		types: []CardType{TypeLand},
+func NewLand(name string, opts ...CardOption) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:  name,
+			types: []CardType{TypeLand},
+		},
 	}
 	applyCardOpts(c, opts)
 	return c
 }
 
 // NewArtifact creates a new artifact card.
-func NewArtifact(name, cost string, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeArtifact},
+func NewArtifact(name, cost string, opts ...CardOption) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypeArtifact},
+		},
 	}
 	applyCardOpts(c, opts)
 	return c
 }
 
 // NewEnchantment creates a new enchantment card.
-func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeEnchantment},
+func NewEnchantment(name, cost string, opts ...CardOption) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypeEnchantment},
+		},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -508,12 +634,14 @@ func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
 // the planeswalker damage-redirection rules (CR 117.6, removed in 2018) are NOT
 // implemented. The 0-loyalty state-based action (CR 704.5i) IS implemented in
 // CheckStateBasedActions.
-func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypePlaneswalker},
+func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypePlaneswalker},
+		},
 	}
 	if startingLoyalty > 0 {
 		c.AddAbility(EntersWithNCounters(Loyalty, startingLoyalty))
@@ -524,27 +652,31 @@ func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption)
 
 // NewAura creates a new aura enchantment card. Defaults to "enchant creature"
 // targeting. Use WithCastTarget() to override (e.g. enchant land, enchant artifact).
-func NewAura(name, cost string, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
+func NewAura(name, cost string, opts ...CardOption) *Card {
+	c := &Card{
 		id:          uuid.New(),
-		name:        name,
-		manaCost:    ParseManaCost(cost),
-		types:       []CardType{TypeEnchantment},
-		subTypes:    []string{"Aura"},
 		castTargets: []Target{TargetCreature()},
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypeEnchantment},
+			subTypes: []string{"Aura"},
+		},
 	}
 	applyCardOpts(c, opts)
 	return c
 }
 
 // NewEquipment creates a new equipment artifact card.
-func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
-	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeArtifact},
-		subTypes: []string{"Equipment"},
+func NewEquipment(name, cost string, opts ...CardOption) *Card {
+	c := &Card{
+		id: uuid.New(),
+		cardCharacteristics: cardCharacteristics{
+			name:     name,
+			manaCost: ParseManaCost(cost),
+			types:    []CardType{TypeArtifact},
+			subTypes: []string{"Equipment"},
+		},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -552,7 +684,7 @@ func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 
 // Permanent represents a card on the battlefield.
 type Permanent struct {
-	Card               Card
+	Card               *Card
 	incarnationID      uuid.UUID
 	computedController uuid.UUID
 	baseController     uuid.UUID
@@ -618,18 +750,13 @@ type Permanent struct {
 }
 
 // NewPermanent creates a permanent from a card.
-func NewPermanent(card Card, controller uuid.UUID) *Permanent {
+func NewPermanent(card *Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
 		Card:               card,
 		incarnationID:      uuid.New(),
 		computedController: controller,
 		baseController:     controller,
-		IsToken:            card.IsToken(),
-	}
-	// Copy base abilities
-	for _, a := range card.Abilities() {
-		cp := a
-		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
+		RuntimeAbilities:   slices.Clone(card.abilities),
 	}
 	// Populate baseAttrs from card types.
 	for _, t := range card.Types() {
@@ -652,12 +779,13 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	// Living Lands turning Forests into creatures) honors the "continuously
 	// controlled since most recent turn began" check. Cleared at untap.
 	p.baseAttrs[AttrSummonSick]++
-	// Populate baseAttrs from card's keyword seeds via the Card interface.
-	// count is always 1 per WithKeyword call; stacking well below int8 range.
-	for a, count := range card.AttrSeeds() {
-		p.baseAttrs[a] += int8(count)
-		if IsAbilityAttr(a) {
-			p.printedAbilityAttrs[a] += int8(count)
+	for attr, count := range card.capabilityAttrs {
+		p.baseAttrs[attr] += int8(count)
+	}
+	for _, ability := range p.RuntimeAbilities {
+		if attr := AbilityAttribute(ability); attr != 0 && IsAbilityAttr(attr) {
+			p.baseAttrs[attr]++
+			p.printedAbilityAttrs[attr]++
 		}
 	}
 	return p
@@ -736,10 +864,7 @@ func (p *Permanent) Colors() []Color {
 	if p.ColorOverride != nil {
 		return *p.ColorOverride
 	}
-	if bc, ok := p.Card.(*BaseCard); ok && len(bc.colorOverride) > 0 {
-		return bc.colorOverride
-	}
-	return p.Card.ManaCost().Colors()
+	return cardColors(p.Card)
 }
 
 func (p *Permanent) HasSubType(s string) bool {
@@ -779,7 +904,7 @@ func (p *Permanent) KeywordNames() []string {
 }
 
 // HasProtectionFrom checks if this permanent has protection that blocks the given card.
-func (p *Permanent) HasProtectionFrom(card Card) bool {
+func (p *Permanent) HasProtectionFrom(card *Card) bool {
 	if p.FaceDown {
 		return false // face-down creatures have no protection
 	}
@@ -797,7 +922,7 @@ func (p *Permanent) HasProtectionFrom(card Card) bool {
 
 // HasProtectionFromInGame checks protection against the source's current
 // characteristics, including color-changing effects on spells and permanents.
-func (p *Permanent) HasProtectionFromInGame(card Card, g *Game) bool {
+func (p *Permanent) HasProtectionFromInGame(card *Card, g *Game) bool {
 	if p.FaceDown {
 		return false
 	}
@@ -810,7 +935,7 @@ func (p *Permanent) HasProtectionFromInGame(card Card, g *Game) bool {
 }
 
 // CanBeTargetedBy checks hexproof, shroud, and protection.
-func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *Game) bool {
+func (p *Permanent) CanBeTargetedBy(source *Card, sourceController uuid.UUID, g *Game) bool {
 	if p.HasKeyword(Shroud) {
 		return false
 	}
@@ -943,7 +1068,7 @@ func (p *Permanent) CanTapForEffect(g *Game) bool {
 // spell of the given color is cast (e.g. Crystal Rod, Iron Star, Ivory Cup).
 // Oracle: "Whenever a player casts a [color] spell, you may pay {1}. If you do,
 // you gain 1 life." — the inner MayPayMana models the optional mana payment.
-func NewLuckyCharm(name, cost string, color Color) *BaseCard {
+func NewLuckyCharm(name, cost string, color Color) *Card {
 	return NewArtifact(name, cost,
 		WithAbility(WheneverSpellCastTrigger(
 			MayPayMana("{1}", "gain 1 life", GainLife(1)),
@@ -955,13 +1080,13 @@ func NewLuckyCharm(name, cost string, color Color) *BaseCard {
 
 // NewLandDestruction creates a sorcery that destroys target land
 // (e.g. Stone Rain, Sinkhole, Ice Storm).
-func NewLandDestruction(name, cost string) *BaseCard {
+func NewLandDestruction(name, cost string) *Card {
 	return NewSorcery(name, cost, NewTargetedSpell(TargetLand(), DestroyTargetLand()))
 }
 
 // NewBoostAura creates an aura enchantment that gives the enchanted creature
 // +power/+toughness (e.g. Holy Strength, Unholy Strength, Giant Growth-style auras).
-func NewBoostAura(name, cost string, power, toughness int) *BaseCard {
+func NewBoostAura(name, cost string, power, toughness int) *Card {
 	return NewAura(name, cost,
 		WithAbility(StaticAbility(
 			BoostAttached(power, toughness, AttachAura),

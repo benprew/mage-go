@@ -21,7 +21,7 @@ func controls(g *mage.Game, ids []uuid.UUID, playerID uuid.UUID) bool {
 
 // upToTwoBoost mimics "Up to two target creatures each get +2/+2" (Dauntless
 // Onslaught): a beneficial multi-target instant.
-func upToTwoBoost(owner uuid.UUID) mage.Card {
+func upToTwoBoost(owner uuid.UUID) *mage.Card {
 	card := mage.NewInstant("Test Onslaught", "{2}{W}",
 		mage.NewMultiTargetSpell(
 			[]mage.Target{mage.TargetUpToNCreatures(2)},

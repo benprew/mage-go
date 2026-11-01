@@ -18,7 +18,7 @@ import (
 // and end-to-end via the cast pipeline (mana pool drain after a successful cast).
 
 // findHandCard returns the first card in playerID's hand matching name.
-func findHandCard(tg *TestGame, p PlayerRef, name string) mage.Card {
+func findHandCard(tg *TestGame, p PlayerRef, name string) *mage.Card {
 	pl := tg.Game.GetPlayer(tg.getPlayerID(p))
 	for _, c := range pl.Hand() {
 		if c.Name() == name {
@@ -43,7 +43,7 @@ func TestCostReductionBySubtype(t *testing.T) {
 	dragon := "TC Dragon Spell"
 	other := "TC Non-Dragon Spell"
 	if !mage.CardRegistered(reducer) {
-		mage.Register(reducer, func() mage.Card {
+		mage.Register(reducer, func() *mage.Card {
 			return mage.NewEnchantment(reducer, "{1}{R}",
 				mage.WithStaticAbility(mage.ReduceSpellCostStatic(
 					mage.SpellsAnd(mage.SpellHasType(core.TypeCreature), mage.SpellHasSubType("Dragon")),
@@ -53,12 +53,12 @@ func TestCostReductionBySubtype(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(dragon) {
-		mage.Register(dragon, func() mage.Card {
+		mage.Register(dragon, func() *mage.Card {
 			return mage.NewCreature(dragon, "{3}{R}", 4, 4, mage.WithSubTypes("Dragon"))
 		})
 	}
 	if !mage.CardRegistered(other) {
-		mage.Register(other, func() mage.Card {
+		mage.Register(other, func() *mage.Card {
 			return mage.NewCreature(other, "{3}{R}", 4, 4, mage.WithSubTypes("Beast"))
 		})
 	}
@@ -87,7 +87,7 @@ func TestCostReductionByKeyword(t *testing.T) {
 	flyer := "TC Flyer"
 	ground := "TC Ground"
 	if !mage.CardRegistered(warden) {
-		mage.Register(warden, func() mage.Card {
+		mage.Register(warden, func() *mage.Card {
 			return mage.NewCreature(warden, "{1}{U}", 2, 2,
 				mage.WithKeyword(core.Flying),
 				mage.WithStaticAbility(mage.ReduceSpellCostStatic(
@@ -98,13 +98,13 @@ func TestCostReductionByKeyword(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(flyer) {
-		mage.Register(flyer, func() mage.Card {
+		mage.Register(flyer, func() *mage.Card {
 			return mage.NewCreature(flyer, "{2}{U}", 2, 1,
 				mage.WithSubTypes("Bird"), mage.WithKeyword(core.Flying))
 		})
 	}
 	if !mage.CardRegistered(ground) {
-		mage.Register(ground, func() mage.Card {
+		mage.Register(ground, func() *mage.Card {
 			return mage.NewCreature(ground, "{2}{U}", 2, 2,
 				mage.WithSubTypes("Beast"))
 		})
@@ -139,15 +139,15 @@ func TestCostReductionSelfByGraveyardCount(t *testing.T) {
 	serpent := "TC Serpent"
 	jolt := "TC Tiny Instant"
 	if !mage.CardRegistered(jolt) {
-		mage.Register(jolt, func() mage.Card {
+		mage.Register(jolt, func() *mage.Card {
 			return mage.NewInstant(jolt, "{U}", mage.NewSpellAbility(mage.GainLife(1)))
 		})
 	}
-	isInstantOrSorcery := mage.NewCardFilter("instant or sorcery", func(c mage.Card) bool {
+	isInstantOrSorcery := mage.NewCardFilter("instant or sorcery", func(c *mage.Card) bool {
 		return c.HasType(core.TypeInstant) || c.HasType(core.TypeSorcery)
 	})
 	if !mage.CardRegistered(serpent) {
-		mage.Register(serpent, func() mage.Card {
+		mage.Register(serpent, func() *mage.Card {
 			return mage.NewCreature(serpent, "{6}{U}", 6, 5,
 				mage.WithSubTypes("Serpent"),
 				mage.WithSelfCostReduction(
@@ -188,12 +188,12 @@ func TestCostReductionSelfByTotalPower(t *testing.T) {
 	beef := "TC Beef"
 	ghalta := "TC Ghalta"
 	if !mage.CardRegistered(beef) {
-		mage.Register(beef, func() mage.Card {
+		mage.Register(beef, func() *mage.Card {
 			return mage.NewCreature(beef, "{2}{G}", 4, 4, mage.WithSubTypes("Beast"))
 		})
 	}
 	if !mage.CardRegistered(ghalta) {
-		mage.Register(ghalta, func() mage.Card {
+		mage.Register(ghalta, func() *mage.Card {
 			return mage.NewCreature(ghalta, "{10}{G}{G}{G}", 12, 12,
 				mage.WithSubTypes("Dinosaur"),
 				mage.WithSelfCostReduction(
@@ -244,7 +244,7 @@ func TestCostReductionSelfByTotalPower(t *testing.T) {
 func TestCostReductionIfCreatureDiedThisTurn(t *testing.T) {
 	picker := "TC Picker"
 	if !mage.CardRegistered(picker) {
-		mage.Register(picker, func() mage.Card {
+		mage.Register(picker, func() *mage.Card {
 			return mage.NewCreature(picker, "{4}{B}", 3, 2,
 				mage.WithSubTypes("Rogue"),
 				mage.WithSelfCostReduction(mage.FixedAmount(3), mage.CondCreatureDiedThisTurn()),
@@ -270,7 +270,7 @@ func TestCostReductionIfCreatureDiedThisTurn(t *testing.T) {
 	// putting it onto the battlefield and using Game.Destroy.
 	bear := "TC Picker Doomed Bear"
 	if !mage.CardRegistered(bear) {
-		mage.Register(bear, func() mage.Card {
+		mage.Register(bear, func() *mage.Card {
 			return mage.NewCreature(bear, "{1}{G}", 2, 1, mage.WithSubTypes("Bear"))
 		})
 	}
@@ -292,7 +292,7 @@ func TestCostReductionIfCreatureDiedThisTurn(t *testing.T) {
 func TestCostReductionIfCardLeftYourGraveyardThisTurn(t *testing.T) {
 	spell := "TC Graveyard Left Discount"
 	if !mage.CardRegistered(spell) {
-		mage.Register(spell, func() mage.Card {
+		mage.Register(spell, func() *mage.Card {
 			return mage.NewInstant(spell, "{3}{R}",
 				mage.NewSpellAbility(mage.DealDamage(mage.Fixed(1))),
 				mage.WithSelfCostReduction(mage.FixedAmount(2), mage.CondCardLeftYourGraveyardThisTurn()),
@@ -331,13 +331,13 @@ func TestCostReductionIfControlsMatching(t *testing.T) {
 	winged := "TC Winged Words Stand-in"
 	bird := "TC Flyer Bird"
 	if !mage.CardRegistered(bird) {
-		mage.Register(bird, func() mage.Card {
+		mage.Register(bird, func() *mage.Card {
 			return mage.NewCreature(bird, "{1}{U}", 1, 1,
 				mage.WithSubTypes("Bird"), mage.WithKeyword(core.Flying))
 		})
 	}
 	if !mage.CardRegistered(winged) {
-		mage.Register(winged, func() mage.Card {
+		mage.Register(winged, func() *mage.Card {
 			return mage.NewSorcery(winged, "{2}{U}{U}",
 				mage.NewSpellAbility(mage.GainLife(1)),
 				mage.WithSelfCostReduction(
@@ -381,7 +381,7 @@ func TestCostReductionByChosenSubtype(t *testing.T) {
 	dragon := "TC Horn Dragon"
 	knight := "TC Horn Knight"
 	if !mage.CardRegistered(horn) {
-		mage.Register(horn, func() mage.Card {
+		mage.Register(horn, func() *mage.Card {
 			return mage.NewArtifact(horn, "{3}",
 				mage.WithStaticAbility(mage.ReduceSpellCostStatic(
 					mage.SpellsAnd(mage.SpellHasType(core.TypeCreature), mage.SpellSubTypeMatchesChosen()),
@@ -391,12 +391,12 @@ func TestCostReductionByChosenSubtype(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(dragon) {
-		mage.Register(dragon, func() mage.Card {
+		mage.Register(dragon, func() *mage.Card {
 			return mage.NewCreature(dragon, "{3}{R}", 4, 4, mage.WithSubTypes("Dragon"))
 		})
 	}
 	if !mage.CardRegistered(knight) {
-		mage.Register(knight, func() mage.Card {
+		mage.Register(knight, func() *mage.Card {
 			return mage.NewCreature(knight, "{3}{W}", 3, 3, mage.WithSubTypes("Knight"))
 		})
 	}
@@ -424,7 +424,7 @@ func TestCostReductionDoesNotAffectColored(t *testing.T) {
 	mega := "TC Big Reducer"
 	huge := "TC Huge Spell"
 	if !mage.CardRegistered(mega) {
-		mage.Register(mega, func() mage.Card {
+		mage.Register(mega, func() *mage.Card {
 			return mage.NewEnchantment(mega, "{1}{U}",
 				mage.WithStaticAbility(mage.ReduceSpellCostStatic(
 					mage.SpellHasType(core.TypeCreature),
@@ -434,7 +434,7 @@ func TestCostReductionDoesNotAffectColored(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(huge) {
-		mage.Register(huge, func() mage.Card {
+		mage.Register(huge, func() *mage.Card {
 			return mage.NewCreature(huge, "{4}{U}{U}", 5, 5, mage.WithSubTypes("Whale"))
 		})
 	}
@@ -464,7 +464,7 @@ func TestCostReductionStacksAdditively(t *testing.T) {
 	stacker := "TC Stack Reducer"
 	dragon := "TC Stack Dragon"
 	if !mage.CardRegistered(stacker) {
-		mage.Register(stacker, func() mage.Card {
+		mage.Register(stacker, func() *mage.Card {
 			return mage.NewEnchantment(stacker, "{R}",
 				mage.WithStaticAbility(mage.ReduceSpellCostStatic(
 					mage.SpellHasSubType("Dragon"),
@@ -474,7 +474,7 @@ func TestCostReductionStacksAdditively(t *testing.T) {
 		})
 	}
 	if !mage.CardRegistered(dragon) {
-		mage.Register(dragon, func() mage.Card {
+		mage.Register(dragon, func() *mage.Card {
 			return mage.NewCreature(dragon, "{4}{R}", 5, 5, mage.WithSubTypes("Dragon"))
 		})
 	}

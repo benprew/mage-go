@@ -15,7 +15,7 @@ import (
 func TestAddLifeGainModifier_DoubleLifegain(t *testing.T) {
 	const cardName = "LGM Faithmender-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{3}{W}", 1, 5,
 				mage.WithSubTypes("Rhino", "Monk"),
 				mage.WithAbility(
@@ -41,7 +41,7 @@ func TestAddLifeGainModifier_DoubleLifegain(t *testing.T) {
 
 	const triggerName = "LGM Heal3"
 	if !mage.CardRegistered(triggerName) {
-		mage.Register(triggerName, func() mage.Card {
+		mage.Register(triggerName, func() *mage.Card {
 			return mage.NewSorcery(triggerName, "{W}",
 				mage.NewSpellAbility(mage.GainLife(3)),
 			)

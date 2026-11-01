@@ -12,7 +12,7 @@ func registerLands() {
 	// Land
 	// When Gem Bazaar comes into play, choose a random color.
 	// {T}: Add to your mana pool one mana of the color last chosen. Then choose a random color.
-	Register("Gem Bazaar", func() Card {
+	Register("Gem Bazaar", func() *Card {
 		return NewLand("Gem Bazaar",
 			WithAbility(EntersBattlefieldTrigger(
 				SetSourceChosenColorAtRandom(),

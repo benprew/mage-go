@@ -42,7 +42,7 @@ type LifeGainModifierFactory func(sourceID, controllerID uuid.UUID) LifeGainModi
 // additively in registration order; CR 616 governs ordering when more than
 // one replacement applies to the same event.
 func WithLifeGainReplacement(factory LifeGainModifierFactory) CardOption {
-	return func(c *BaseCard) {
+	return func(c *Card) {
 		c.AddAbility(EntersBattlefieldTrigger(
 			FuncEffect("install life-gain modifier",
 				EffectProperties{Outcome: OutcomeBenefit},

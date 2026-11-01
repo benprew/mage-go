@@ -24,7 +24,7 @@ type ResolutionState struct {
 	currentEventSourceID uuid.UUID
 
 	// Card currently being resolved from the stack
-	resolvingCard Card
+	resolvingCard *Card
 
 	// Color state installed before target legality check during resolution
 	resolvingColorSourceID uuid.UUID
@@ -49,10 +49,10 @@ type ResolutionState struct {
 	lastSacrificedID uuid.UUID
 
 	// Most recent card revealed by a RevealFromHandCost
-	lastCostReveal Card
+	lastCostReveal *Card
 
 	// Most recently exiled card recorded during cost payment or effect resolution
-	lastExiledCard Card
+	lastExiledCard *Card
 }
 
 // NewResolutionState creates an empty ResolutionState.
@@ -125,8 +125,8 @@ func (s *ResolutionState) EventAmount() int                       { return s.cur
 func (s *ResolutionState) SetEventAmount(a int)                   { s.currentEventAmount = a }
 func (s *ResolutionState) EventSourceID() uuid.UUID               { return s.currentEventSourceID }
 func (s *ResolutionState) SetEventSourceID(id uuid.UUID)          { s.currentEventSourceID = id }
-func (s *ResolutionState) ResolvingCard() Card                    { return s.resolvingCard }
-func (s *ResolutionState) SetResolvingCard(c Card)                { s.resolvingCard = c }
+func (s *ResolutionState) ResolvingCard() *Card                   { return s.resolvingCard }
+func (s *ResolutionState) SetResolvingCard(c *Card)               { s.resolvingCard = c }
 func (s *ResolutionState) ColorSourceID() uuid.UUID               { return s.resolvingColorSourceID }
 func (s *ResolutionState) ColorOverride() *[]Color                { return s.resolvingColorOverride }
 func (s *ResolutionState) ResolvingCastZone() Zone                { return s.resolvingCastZone }
@@ -149,25 +149,29 @@ func (s *ResolutionState) SetCounterDistribution(d map[uuid.UUID]int) {
 }
 func (s *ResolutionState) LastSacrificedID() uuid.UUID      { return s.lastSacrificedID }
 func (s *ResolutionState) SetLastSacrificedID(id uuid.UUID) { s.lastSacrificedID = id }
-func (s *ResolutionState) LastCostReveal() Card             { return s.lastCostReveal }
-func (s *ResolutionState) SetLastCostReveal(c Card)         { s.lastCostReveal = c }
-func (s *ResolutionState) LastExiledCard() Card             { return s.lastExiledCard }
-func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard = c }
+func (s *ResolutionState) LastCostReveal() *Card            { return s.lastCostReveal }
+func (s *ResolutionState) SetLastCostReveal(c *Card)        { s.lastCostReveal = c }
+func (s *ResolutionState) LastExiledCard() *Card            { return s.lastExiledCard }
+func (s *ResolutionState) SetLastExiledCard(c *Card)        { s.lastExiledCard = c }
 
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
+	return s.clone(newGameCloneContext())
+}
+
+func (s *ResolutionState) clone(ctx *gameCloneContext) ResolutionState {
 	c := ResolutionState{
 		currentX:               s.currentX,
 		currentMode:            s.currentMode,
 		currentEventAmount:     s.currentEventAmount,
 		currentEventSourceID:   s.currentEventSourceID,
-		resolvingCard:          s.resolvingCard,
+		resolvingCard:          ctx.card(s.resolvingCard),
 		resolvingColorSourceID: s.resolvingColorSourceID,
 		resolvingCastZone:      s.resolvingCastZone,
-		resolvingCastContext:   s.resolvingCastContext,
+		resolvingCastContext:   ctx.castContext(s.resolvingCastContext),
 		lastSacrificedID:       s.lastSacrificedID,
-		lastCostReveal:         s.lastCostReveal,
-		lastExiledCard:         s.lastExiledCard,
+		lastCostReveal:         ctx.card(s.lastCostReveal),
+		lastExiledCard:         ctx.card(s.lastExiledCard),
 	}
 	if s.resolvingColorOverride != nil {
 		colors := append([]Color(nil), (*s.resolvingColorOverride)...)

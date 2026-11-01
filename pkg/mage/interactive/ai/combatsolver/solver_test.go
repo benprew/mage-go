@@ -169,7 +169,7 @@ func addUntappedLand(g *mage.Game, owner uuid.UUID, color core.Color) {
 	g.AddToBattlefield(perm)
 }
 
-func giantGrowth(owner uuid.UUID) mage.Card {
+func giantGrowth(owner uuid.UUID) *mage.Card {
 	c := mage.NewInstant("Giant Growth", "{G}",
 		mage.NewTargetedSpell(mage.TargetCreature(), mage.Boost(mage.Fixed(3), mage.Fixed(3))))
 	c.SetOwner(owner)

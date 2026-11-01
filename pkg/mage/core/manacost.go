@@ -36,14 +36,15 @@ func colorSymbol(c Color) string {
 
 // ManaCost represents a parsed mana cost.
 type ManaCost struct {
-	Generic int
-	White   int
-	Blue    int
-	Black   int
-	Red     int
-	Green   int
-	HasX    bool // whether this cost includes {X}
-	XCount  int  // number of X's (usually 1)
+	Generic   int
+	White     int
+	Blue      int
+	Black     int
+	Red       int
+	Green     int
+	HasX      bool // whether this cost includes {X}
+	Colorless int
+	XCount    int // number of X's (usually 1)
 	// Hybrid is the list of two-color hybrid symbols in this cost. Each
 	// entry can be paid with mana of either listed color (CR 107.4d).
 	Hybrid []HybridSymbol

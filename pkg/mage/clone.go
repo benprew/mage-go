@@ -11,24 +11,36 @@ import (
 // For cloning UUID maps with generic
 type UUIDMap[V any] map[uuid.UUID]V
 
-// Clone creates a deep copy of the game state for AI search.
-// Card objects and Effect interfaces are shared (immutable during play).
-// Battlefield permanents are shared copy-on-write; other mutable state is
-// deep-copied.
-// Interactive callbacks (OnPriority, etc.) are nil'd in the clone.
-// Players are wrapped in SearchPlayer for non-interactive choice defaults.
+// Clone creates an independent simulation branch with the same object IDs.
+// Card definitions and immutable effects are shared. Mutable card, ability,
+// and target state is private. Interactive callbacks are cleared, and players
+// use SearchPlayer to make choices without user input.
 func (g *Game) Clone() *Game {
+	return newGameCloneContextForGame(g).game(g)
+}
+
+func (ctx *gameCloneContext) game(g *Game) *Game {
+	if g == nil {
+		return nil
+	}
+	if cloned, ok := ctx.games[g]; ok {
+		return cloned
+	}
 	c := &Game{
 		anteEnabled: g.anteEnabled,
 		anteSettled: g.anteSettled,
 		stopped:     g.stopped,
 	}
+	if ctx.games == nil {
+		ctx.games = make(map[*Game]*Game)
+	}
+	ctx.games[g] = c
 	c.turns = g.turns.Clone()
-	c.zones = g.zones.Clone()
-	c.resolution = g.resolution.Clone()
+	c.zones = g.zones.clone(ctx)
+	c.resolution = g.resolution.clone(ctx)
 	c.trackers = g.trackers.Clone()
 	c.random = g.random.Clone()
-	c.triggers = g.triggers.Clone()
+	c.triggers = g.triggers.clone(ctx)
 	c.mana = g.mana.Clone()
 	c.damage = g.damage.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
@@ -40,17 +52,17 @@ func (g *Game) Clone() *Game {
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
 	c.players = make([]Player, len(g.players))
 	for i, p := range g.players {
-		c.players[i] = clonePlayer(p)
+		c.players[i] = ctx.player(p)
 	}
 
 	// Deep copy stack.
-	c.stack = cloneStack(g.stack)
+	c.stack = ctx.stack(g.stack)
 
 	// Deep copy combat.
 	c.combat = cloneCombat(g.combat)
 
 	// Deep copy effect manager.
-	c.effects = cloneEffectManager(g.effects)
+	c.effects = ctx.effectManager(g.effects)
 
 	c.customState = cloneCustomState(g.customState)
 
@@ -60,8 +72,8 @@ func (g *Game) Clone() *Game {
 	return c
 }
 
-// clonePlayer creates a SearchPlayer wrapping a deep copy of the player's BasePlayer state.
-func clonePlayer(p Player) *SearchPlayer {
+// player copies player state and uses automatic choices.
+func (ctx *gameCloneContext) player(p Player) *SearchPlayer {
 	bp, ok := p.(*BasePlayer)
 	if !ok {
 		// Try to extract BasePlayer from SearchPlayer or other wrappers.
@@ -72,7 +84,7 @@ func clonePlayer(p Player) *SearchPlayer {
 			bp = extractBasePlayer(p)
 		}
 	}
-	return NewSearchPlayer(cloneBasePlayer(bp))
+	return NewSearchPlayer(ctx.basePlayer(bp))
 }
 
 // extractBasePlayer creates a BasePlayer from any Player interface.
@@ -103,8 +115,8 @@ func extractBasePlayer(p Player) *BasePlayer {
 	return bp
 }
 
-// cloneBasePlayer deep copies a BasePlayer, preserving the same UUID.
-func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
+// basePlayer copies player state and preserves identity.
+func (ctx *gameCloneContext) basePlayer(bp *BasePlayer) *BasePlayer {
 	clone := &BasePlayer{
 		id:              bp.id,
 		name:            bp.name,
@@ -115,11 +127,11 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 		poisonCounters:  bp.poisonCounters,
 		manaPool:        NewManaPool(),
 	}
-	// Copy card slices (sharing Card refs).
-	clone.hand = cloneCardSlice(bp.hand)
-	clone.graveyard = cloneCardSlice(bp.graveyard)
-	clone.library = cloneCardSlice(bp.library)
-	clone.ante = cloneCardSlice(bp.ante)
+	// Keep zone references within this simulation branch.
+	clone.hand = ctx.cardList(bp.hand)
+	clone.graveyard = ctx.cardList(bp.graveyard)
+	clone.library = ctx.cardList(bp.library)
+	clone.ante = ctx.cardList(bp.ante)
 	// Copy mana pool state.
 	clone.manaPool.RestorePool(bp.manaPool.SnapshotPool())
 	if len(bp.manaPool.ManaConversions) > 0 {
@@ -200,8 +212,8 @@ func clonePermanentInto(dst, src *Permanent) {
 	}
 }
 
-// cloneStack deep copies the Stack.
-func cloneStack(s *Stack) *Stack {
+// stack copies stack objects through the same clone context.
+func (ctx *gameCloneContext) stack(s *Stack) *Stack {
 	if s == nil {
 		return NewStack()
 	}
@@ -209,7 +221,7 @@ func cloneStack(s *Stack) *Stack {
 	if len(s.objects) > 0 {
 		clone.objects = make([]*StackObject, len(s.objects))
 		for i, obj := range s.objects {
-			clone.objects[i] = cloneStackObject(obj)
+			clone.objects[i] = ctx.stackObject(obj)
 		}
 	}
 	return clone
@@ -217,20 +229,26 @@ func cloneStack(s *Stack) *Stack {
 
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
+	return newGameCloneContext().stackObject(obj)
+}
+
+func (ctx *gameCloneContext) stackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
-		ID:            obj.ID,
-		Card:          obj.Card, // shared Card ref
-		Controller:    obj.Controller,
-		SourceID:      obj.SourceID,
-		TargetSource:  obj.TargetSource,
-		IsAbility:     obj.IsAbility,
-		XValue:        obj.XValue,
-		ModeChoice:    obj.ModeChoice,
-		EventAmount:   obj.EventAmount,
-		EventSourceID: obj.EventSourceID,
-		IsCopy:        obj.IsCopy,
-		CastZone:      obj.CastZone,
-		CastContext:   obj.CastContext,
+		stateKey:          obj.stateKey,
+		ExileOnLeaveStack: obj.ExileOnLeaveStack,
+		ID:                obj.ID,
+		Card:              ctx.card(obj.Card),
+		Controller:        obj.Controller,
+		SourceID:          obj.SourceID,
+		TargetSource:      ctx.card(obj.TargetSource),
+		IsAbility:         obj.IsAbility,
+		XValue:            obj.XValue,
+		ModeChoice:        obj.ModeChoice,
+		EventAmount:       obj.EventAmount,
+		EventSourceID:     obj.EventSourceID,
+		IsCopy:            obj.IsCopy,
+		CastZone:          obj.CastZone,
+		CastContext:       ctx.castContext(obj.CastContext),
 	}
 	if obj.ColorOverride != nil {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)
@@ -257,7 +275,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		copy(clone.Targets, obj.Targets)
 	}
 	if len(obj.TargetSpecs) > 0 {
-		clone.TargetSpecs = append([]Target(nil), obj.TargetSpecs...)
+		clone.TargetSpecs = ctx.targetList(obj.TargetSpecs)
 	}
 	if len(obj.DamageDistribution) > 0 {
 		clone.DamageDistribution = make(map[uuid.UUID]int, len(obj.DamageDistribution))
@@ -315,8 +333,8 @@ func cloneCombat(c *Combat) *Combat {
 	return clone
 }
 
-// cloneEffectManager deep copies the EffectManager.
-func cloneEffectManager(em *EffectManager) *EffectManager {
+// effectManager copies effect state and preserves definition references.
+func (ctx *gameCloneContext) effectManager(em *EffectManager) *EffectManager {
 	clone := &EffectManager{
 		// attrDeltas and blockPairRestrictions are recomputed each Apply() cycle.
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
@@ -328,11 +346,7 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 	if len(em.effects) > 0 {
 		clone.effects = make([]ContinuousEffect, len(em.effects))
 		for i, e := range em.effects {
-			if dc, ok := e.(deepCloneableEffect); ok {
-				clone.effects[i] = dc.cloneEffect()
-			} else {
-				clone.effects[i] = e
-			}
+			clone.effects[i] = ctx.activeEffect(e)
 		}
 	}
 	// Deep copy replacement effects (they hold mutable state).
@@ -395,7 +409,7 @@ func cloneGameRules(gr *GameRules) *GameRules {
 // Mutation paths that would otherwise touch shared memory (middle-element
 // removal in RemoveFromHand/Graveyard/Ante, ShuffleLibrary) are required to
 // allocate fresh slices — see player.go.
-func cloneCardSlice(src []Card) []Card {
+func cloneCardSlice(src []*Card) []*Card {
 	if len(src) == 0 {
 		return nil
 	}

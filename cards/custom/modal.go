@@ -12,7 +12,7 @@ func registerModal() {
 	// Test card: modal activated ability with two modes.
 	// Mode 1: Deal 1 damage to target opponent.
 	// Mode 2: You gain 1 life.
-	Register("Modal Test Artifact", func() Card {
+	Register("Modal Test Artifact", func() *Card {
 		c := NewArtifact("Modal Test Artifact", "{1}",
 			WithActivatedAbility(
 				ModalEffect("deal 1 damage or gain 1 life",

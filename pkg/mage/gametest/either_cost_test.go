@@ -15,7 +15,7 @@ func registerEitherCostCards() {
 		// "As an additional cost, discard a card or pay {5}."
 		// Plus a small body so we can detect the cast resolved.
 		if !mage.CardRegistered("Test Branching Cost Spell") {
-			mage.Register("Test Branching Cost Spell", func() mage.Card {
+			mage.Register("Test Branching Cost Spell", func() *mage.Card {
 				return mage.NewSorcery("Test Branching Cost Spell", "{2}{B}",
 					mage.NewSpellAbility(mage.GainLife(2)),
 					mage.WithAdditionalCost(mage.EitherCost(

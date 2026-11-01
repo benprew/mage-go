@@ -13,16 +13,16 @@ type chooserPlayer struct {
 	*BasePlayer
 	pick      string // name of the card to pick; "" => decline
 	calls     int
-	lastCands []Card
+	lastCands []*Card
 }
 
 func newChooserPlayer(name string) *chooserPlayer {
 	return &chooserPlayer{BasePlayer: NewBasePlayer(name)}
 }
 
-func (cp *chooserPlayer) ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card {
+func (cp *chooserPlayer) ChooseCardFromLibrary(candidates []*Card, reason string, g GameReader) *Card {
 	cp.calls++
-	cp.lastCands = append([]Card(nil), candidates...)
+	cp.lastCands = append([]*Card(nil), candidates...)
 	if cp.pick == "" {
 		return nil
 	}
@@ -170,7 +170,7 @@ func TestPutOnBottomInRandomOrder_PlacesAllAtBottom(t *testing.T) {
 	g, a, _ := revealTestGame()
 	a.AddToLibrary(NewLand("Forest"))
 	a.AddToLibrary(NewLand("Plains"))
-	cards := []Card{NewLand("Mountain"), NewLand("Island"), NewLand("Swamp")}
+	cards := []*Card{NewLand("Mountain"), NewLand("Island"), NewLand("Swamp")}
 	g.PutOnBottomInRandomOrder(a, cards)
 	lib := a.Library()
 	if len(lib) != 5 {
@@ -190,7 +190,7 @@ func TestPutOnBottomInRandomOrder_PlacesAllAtBottom(t *testing.T) {
 func TestPutOnTopInChosenOrder_PlacesInOrder(t *testing.T) {
 	g, a, _ := revealTestGame()
 	a.AddToLibrary(NewLand("Forest"))
-	cards := []Card{NewLand("Plains"), NewLand("Mountain")}
+	cards := []*Card{NewLand("Plains"), NewLand("Mountain")}
 	g.PutOnTopInChosenOrder(a, cards)
 	lib := a.Library()
 	if len(lib) != 3 || lib[0].Name() != "Plains" || lib[1].Name() != "Mountain" || lib[2].Name() != "Forest" {
@@ -218,7 +218,7 @@ func TestPickFromHand_ChoosesMatchingCard(t *testing.T) {
 	target := NewCreature("Goblin", "{R}", 1, 1)
 	b.AddToHand(target)
 	b.AddToHand(NewLand("Plains"))
-	noncreature := NewCardFilter("noncreature", func(c Card) bool {
+	noncreature := NewCardFilter("noncreature", func(c *Card) bool {
 		return !slices.Contains(c.Types(), TypeCreature)
 	})
 	a.pick = "Forest"
@@ -241,7 +241,7 @@ func TestPickFromHand_ChoosesMatchingCard(t *testing.T) {
 func TestPickFromHand_NoMatchReturnsNil(t *testing.T) {
 	g, a, b := revealTestGame()
 	b.AddToHand(NewCreature("Goblin", "{R}", 1, 1))
-	noncreature := NewCardFilter("noncreature", func(c Card) bool {
+	noncreature := NewCardFilter("noncreature", func(c *Card) bool {
 		return !slices.Contains(c.Types(), TypeCreature)
 	})
 	chosen := g.PickFromHand(a, b, noncreature, false, "test")

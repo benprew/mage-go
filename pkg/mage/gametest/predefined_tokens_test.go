@@ -14,14 +14,14 @@ var predefinedTokensOnce sync.Once
 func registerPredefinedTokenTestCards() {
 	predefinedTokensOnce.Do(func() {
 		if !mage.CardRegistered("Predef Make Treasure") {
-			mage.Register("Predef Make Treasure", func() mage.Card {
+			mage.Register("Predef Make Treasure", func() *mage.Card {
 				return mage.NewSorcery("Predef Make Treasure", "{0}",
 					mage.NewSpellAbility(mage.CreateTreasureToken()),
 				)
 			})
 		}
 		if !mage.CardRegistered("Predef Make Food") {
-			mage.Register("Predef Make Food", func() mage.Card {
+			mage.Register("Predef Make Food", func() *mage.Card {
 				return mage.NewSorcery("Predef Make Food", "{0}",
 					mage.NewSpellAbility(mage.CreateFoodToken()),
 				)

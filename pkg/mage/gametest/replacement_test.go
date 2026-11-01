@@ -17,7 +17,7 @@ func registerReplacementTestCards() {
 	replacementRegistered.Do(func() {
 		// A vanilla 5/5 for testing damage scenarios.
 		if !mage.CardRegistered("Test Giant") {
-			mage.Register("Test Giant", func() mage.Card {
+			mage.Register("Test Giant", func() *mage.Card {
 				return mage.NewCreature("Test Giant", "{3}{R}{R}", 5, 5,
 					mage.WithSubTypes("Giant"),
 				)
@@ -26,7 +26,7 @@ func registerReplacementTestCards() {
 
 		// A 3/3 with regeneration for testing regeneration replacement.
 		if !mage.CardRegistered("Regenerating Troll") {
-			mage.Register("Regenerating Troll", func() mage.Card {
+			mage.Register("Regenerating Troll", func() *mage.Card {
 				return mage.NewCreature("Regenerating Troll", "{2}{G}", 3, 3,
 					mage.WithSubTypes("Troll"),
 					mage.WithActivatedAbility(
@@ -39,7 +39,7 @@ func registerReplacementTestCards() {
 
 		// A 2/2 creature whose damage source is red (for color prevention).
 		if !mage.CardRegistered("Red Goblin") {
-			mage.Register("Red Goblin", func() mage.Card {
+			mage.Register("Red Goblin", func() *mage.Card {
 				return mage.NewCreature("Red Goblin", "{1}{R}", 2, 2,
 					mage.WithSubTypes("Goblin"),
 				)
@@ -48,7 +48,7 @@ func registerReplacementTestCards() {
 
 		// A sorcery that deals 6 damage for testing prevention shields.
 		if !mage.CardRegistered("Big Blast") {
-			mage.Register("Big Blast", func() mage.Card {
+			mage.Register("Big Blast", func() *mage.Card {
 				return mage.NewSorcery("Big Blast", "{4}{R}{R}",
 					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(6))),
 				)
@@ -57,7 +57,7 @@ func registerReplacementTestCards() {
 
 		// A simple destroy spell (allows regeneration) for testing regen replacement.
 		if !mage.CardRegistered("Test Destroy") {
-			mage.Register("Test Destroy", func() mage.Card {
+			mage.Register("Test Destroy", func() *mage.Card {
 				return mage.NewInstant("Test Destroy", "{1}{B}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 				)
@@ -66,7 +66,7 @@ func registerReplacementTestCards() {
 
 		// An artifact creature for testing type prevention.
 		if !mage.CardRegistered("Iron Golem") {
-			mage.Register("Iron Golem", func() mage.Card {
+			mage.Register("Iron Golem", func() *mage.Card {
 				return mage.NewCreature("Iron Golem", "{4}", 3, 3,
 					mage.WithSubTypes("Golem"),
 					mage.WithCardType(core.TypeArtifact),
@@ -75,7 +75,7 @@ func registerReplacementTestCards() {
 		}
 
 		if !mage.CardRegistered("Counter Shield Creature") {
-			mage.Register("Counter Shield Creature", func() mage.Card {
+			mage.Register("Counter Shield Creature", func() *mage.Card {
 				return mage.NewCreature("Counter Shield Creature", "{3}{G}", 5, 5,
 					mage.WithAbility(mage.EntersWithNCounters(core.P1P1, 2)),
 					mage.WithStaticAbility(mage.PreventDamageToSourceByRemovingCounters(core.P1P1)),
@@ -84,7 +84,7 @@ func registerReplacementTestCards() {
 		}
 
 		if !mage.CardRegistered("Self Shield Creature") {
-			mage.Register("Self Shield Creature", func() mage.Card {
+			mage.Register("Self Shield Creature", func() *mage.Card {
 				return mage.NewCreature("Self Shield Creature", "{2}{R}", 3, 3,
 					mage.WithActivatedAbility(
 						mage.PreventDamageToTarget(mage.Fixed(1)).Targeting(mage.ToSource()),
@@ -337,7 +337,7 @@ func TestMinimumLifeDoesNotGoBelow1(t *testing.T) {
 	// For the test, set it right before the spell resolves using a static ability.
 	// Instead, we use a test creature that re-sets it each cycle.
 	if !mage.CardRegistered("Min Life Bearer") {
-		mage.Register("Min Life Bearer", func() mage.Card {
+		mage.Register("Min Life Bearer", func() *mage.Card {
 			return mage.NewCreature("Min Life Bearer", "{2}{R}{R}", 0, 1,
 				mage.WithStaticAbility(mage.FuncContinuousEffect(core.LayerAbility, core.WhileOnBattlefield,
 					func(g *mage.Game, sourceID uuid.UUID) error {

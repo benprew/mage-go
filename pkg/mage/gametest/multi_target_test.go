@@ -16,7 +16,7 @@ import (
 func TestMultiTargetUpToN(t *testing.T) {
 	const spell = "Test Up To Two Pump"
 	if !mage.CardRegistered(spell) {
-		mage.Register(spell, func() mage.Card {
+		mage.Register(spell, func() *mage.Card {
 			return mage.NewSorcery(spell, "{1}{W}",
 				mage.NewMultiTargetSpell(
 					[]mage.Target{mage.TargetUpToNCreatures(2)},
@@ -70,7 +70,7 @@ func TestMultiTargetUpToN(t *testing.T) {
 func TestMultiTargetDistinctControllers(t *testing.T) {
 	const spell = "Test Mutual Bounce"
 	if !mage.CardRegistered(spell) {
-		mage.Register(spell, func() mage.Card {
+		mage.Register(spell, func() *mage.Card {
 			return mage.NewInstant(spell, "{1}{U}",
 				mage.NewMultiTargetSpell(
 					[]mage.Target{
@@ -123,7 +123,7 @@ func TestMultiTargetDistinctControllers(t *testing.T) {
 func TestDividedDamage(t *testing.T) {
 	const spell = "Test Divided 3"
 	if !mage.CardRegistered(spell) {
-		mage.Register(spell, func() mage.Card {
+		mage.Register(spell, func() *mage.Card {
 			return mage.NewSorcery(spell, "{2}{R}",
 				mage.NewMultiTargetSpell(
 					[]mage.Target{mage.TargetUpToNCreaturesOrPlayers(3)},

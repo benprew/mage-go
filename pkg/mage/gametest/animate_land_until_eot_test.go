@@ -18,7 +18,7 @@ import (
 func TestAnimateLandUntilEndOfTurn_WithMustBeBlocked(t *testing.T) {
 	const cardName = "ALEOT Uprising-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewInstant(cardName, "{1}{G}",
 				mage.NewTargetedSpell(
 					mage.TargetPermanent(mage.IsLand),

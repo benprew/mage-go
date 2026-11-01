@@ -23,20 +23,16 @@ import (
 // from the stack via [Game.CounterSpellOnStack]. If either matches, the
 // counter has no effect (the spell stays on the stack).
 
-// uncounterableMarker is set as a CardOption flag on BaseCard via the
-// attrSeeds map under a sentinel key. We use a dedicated bool field
-// instead so the flag is preserved across CloneFrom/Copy.
-
 // WithUncounterable marks a card as inherently uncounterable. This works
 // regardless of the card's color or type — it applies to the spell once
 // it is on the stack.
 func WithUncounterable() CardOption {
-	return func(c *BaseCard) { c.uncounterable = true }
+	return func(c *Card) { c.uncounterable = true }
 }
 
 // IsUncounterable reports whether the card itself was registered as
 // uncounterable (the per-card flag — does not consult static filters).
-func (c *BaseCard) IsUncounterable() bool { return c.uncounterable }
+func (c *Card) IsUncounterable() bool { return c.uncounterable }
 
 // UncounterableFilter is a static-effect filter: given the game and a
 // stack object representing a spell, returns true if that spell can't be
@@ -59,8 +55,8 @@ type uncounterableEntry struct {
 // countered."
 //
 //	WithStaticAbility(RegisterUncounterableStatic(func(g *Game, obj *StackObject) bool {
-//	    perm := g.FindPermanent(sourceID) // capture sourceID via closure if needed
-//	    return obj.Controller == perm.Controller && cardIsGreen(obj.Card)
+//		perm := g.FindPermanent(sourceID) // capture sourceID via closure if needed
+//		return obj.Controller == perm.Controller && cardIsGreen(obj.Card)
 //	}))
 //
 // The filter receives the live stack object so it can inspect the
@@ -79,13 +75,8 @@ func (g *Game) IsSpellUncounterable(obj *StackObject) bool {
 	if obj == nil || obj.IsAbility {
 		return false
 	}
-	if bc, ok := obj.Card.(*BaseCard); ok && bc.uncounterable {
+	if obj.Card != nil && obj.Card.IsUncounterable() {
 		return true
-	}
-	if obj.Card != nil {
-		if u, ok := obj.Card.(interface{ IsUncounterable() bool }); ok && u.IsUncounterable() {
-			return true
-		}
 	}
 	for _, e := range g.effects.Rules.UncounterableFilters {
 		if e.Filter == nil {

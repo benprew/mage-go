@@ -42,8 +42,8 @@ def scan_cards_dir(cards_dir: Path):
     """Return (implemented, stubs) sets of card names.
 
     Detects two registration patterns:
-      1. Literal:  Register("Card Name", func() Card { ... })
-      2. Looped:   Register(name, func() Card { ... }) where `name` comes
+      1. Literal:  Register("Card Name", func() *Card { ... })
+      2. Looped:   Register(name, func() *Card { ... }) where `name` comes
                    from iterating a []struct{...} literal whose first field
                    is the card name. We pick up entries `{"Card Name", ...}`
                    in any file that contains a non-literal Register call.

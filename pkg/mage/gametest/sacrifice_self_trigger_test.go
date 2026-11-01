@@ -15,7 +15,7 @@ import (
 func TestSacrificeSelfTrigger_FiresOnSacrifice(t *testing.T) {
 	const cardName = "SST Terrarion-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewArtifact(cardName, "{1}",
 				mage.WithActivatedAbility(
 					mage.FuncEffect("nothing", mage.EffectProperties{},

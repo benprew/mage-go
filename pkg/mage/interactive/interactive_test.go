@@ -300,7 +300,7 @@ func TestHumanPlayer_ChooseCardsFromHand(t *testing.T) {
 	hp.AddToHand(c2)
 
 	g, _, _ := newTestGame()
-	result := make(chan []mage.Card, 1)
+	result := make(chan []*mage.Card, 1)
 	go func() { result <- hp.ChooseCardsFromHand(1, "discard", g) }()
 
 	simulateTUI(t, hp, func(req interactive.ChoiceRequest) {
@@ -327,7 +327,7 @@ func TestHumanPlayer_ChooseCardsFromHand(t *testing.T) {
 func TestHumanPlayer_ChooseCardsFromHand_Empty(t *testing.T) {
 	hp := interactive.NewHumanPlayer("Human")
 	g, _, _ := newTestGame()
-	done := make(chan []mage.Card, 1)
+	done := make(chan []*mage.Card, 1)
 	go func() { done <- hp.ChooseCardsFromHand(1, "discard", g) }()
 	if got := <-done; len(got) != 0 {
 		t.Errorf("expected nil for empty hand, got %v", got)
@@ -340,7 +340,7 @@ func TestHumanPlayer_ChooseCardsFromHand_ZeroAmount(t *testing.T) {
 	c.SetOwner(hp.PlayerID())
 	hp.AddToHand(c)
 	g, _, _ := newTestGame()
-	done := make(chan []mage.Card, 1)
+	done := make(chan []*mage.Card, 1)
 	go func() { done <- hp.ChooseCardsFromHand(0, "discard", g) }()
 	if got := <-done; len(got) != 0 {
 		t.Errorf("expected nil for amount=0, got %v", got)
@@ -353,8 +353,8 @@ func TestHumanPlayer_ChooseCardFromLibrary(t *testing.T) {
 	c2 := mage.NewCreature("Hypnotic Specter", "{1}{B}{B}", 2, 2)
 	g, _, _ := newTestGame()
 
-	result := make(chan mage.Card, 1)
-	go func() { result <- hp.ChooseCardFromLibrary([]mage.Card{c1, c2}, "search", g) }()
+	result := make(chan *mage.Card, 1)
+	go func() { result <- hp.ChooseCardFromLibrary([]*mage.Card{c1, c2}, "search", g) }()
 
 	simulateTUI(t, hp, func(req interactive.ChoiceRequest) {
 		if req.Type != interactive.ChoiceCardFromLibrary {
@@ -380,8 +380,8 @@ func TestHumanPlayer_ChooseCardsFromLibrary(t *testing.T) {
 	i1 := mage.NewLand("Island")
 	g, _, _ := newTestGame()
 
-	result := make(chan []mage.Card, 1)
-	go func() { result <- hp.ChooseCardsFromLibrary([]mage.Card{p1, p2, i1}, 3, "search", g) }()
+	result := make(chan []*mage.Card, 1)
+	go func() { result <- hp.ChooseCardsFromLibrary([]*mage.Card{p1, p2, i1}, 3, "search", g) }()
 
 	simulateTUI(t, hp, func(req interactive.ChoiceRequest) {
 		if req.Type != interactive.ChoiceCardFromLibrary {

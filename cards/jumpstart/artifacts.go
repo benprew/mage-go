@@ -17,7 +17,7 @@ func registerArtifacts() {
 	// Artifact
 	// {U}, Sacrifice this artifact: Return target creature to its owner's hand.
 	// {1}, Sacrifice this artifact: Draw a card.
-	Register("Aether Spellbomb", func() Card {
+	Register("Aether Spellbomb", func() *Card {
 		return NewArtifact("Aether Spellbomb", "{1}",
 			WithActivatedAbility(
 				ReturnToHandTarget(),
@@ -36,7 +36,7 @@ func registerArtifacts() {
 	// Arcane Encyclopedia {3}
 	// Artifact — Book
 	// {3}, {T}: Draw a card.
-	Register("Arcane Encyclopedia", func() Card {
+	Register("Arcane Encyclopedia", func() *Card {
 		return NewArtifact("Arcane Encyclopedia", "{3}",
 			WithSubTypes("Book"),
 			WithActivatedAbility(
@@ -51,7 +51,7 @@ func registerArtifacts() {
 	// Artifact
 	// {1}, {T}, Sacrifice a creature: You gain 4 life.
 	// {1}, {T}, Sacrifice a creature named Festering Newt: Each opponent loses 4 life. You gain life equal to the life lost this way.
-	Register("Bubbling Cauldron", func() Card {
+	Register("Bubbling Cauldron", func() *Card {
 		return NewArtifact("Bubbling Cauldron", "{2}",
 			WithActivatedAbility(
 				GainLife(4),
@@ -92,7 +92,7 @@ func registerArtifacts() {
 	// Chromatic Sphere {1}
 	// Artifact
 	// {1}, {T}, Sacrifice this artifact: Add one mana of any color. Draw a card.
-	Register("Chromatic Sphere", func() Card {
+	Register("Chromatic Sphere", func() *Card {
 		return NewArtifact("Chromatic Sphere", "{1}",
 			WithActivatedAbility(
 				CompositeEffects("add one mana of any color, then draw a card",
@@ -110,7 +110,7 @@ func registerArtifacts() {
 	// Artifact
 	// {T}: Add {C}{C}{C}.
 	// {3}, {T}, Sacrifice this artifact: Draw three cards.
-	Register("Dreamstone Hedron", func() Card {
+	Register("Dreamstone Hedron", func() *Card {
 		return NewArtifact("Dreamstone Hedron", "{6}",
 			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 3}),
 			WithActivatedAbility(
@@ -127,7 +127,7 @@ func registerArtifacts() {
 	// This artifact enters tapped.
 	// {T}: Add {C}.
 	// {2}: This artifact becomes a 2/2 Golem artifact creature until end of turn.
-	Register("Guardian Idol", func() Card {
+	Register("Guardian Idol", func() *Card {
 		return NewArtifact("Guardian Idol", "{2}",
 			WithKeyword(EntersTapped),
 			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 1}),
@@ -150,7 +150,7 @@ func registerArtifacts() {
 	// Artifact
 	// {T}: Add {C}{C}.
 	// {2}, {T}, Sacrifice this artifact: Draw two cards.
-	Register("Hedron Archive", func() Card {
+	Register("Hedron Archive", func() *Card {
 		return NewArtifact("Hedron Archive", "{4}",
 			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}),
 			WithActivatedAbility(
@@ -167,7 +167,7 @@ func registerArtifacts() {
 	// As this artifact enters, choose a creature type.
 	// Creature spells you cast of the chosen type cost {1} less to cast.
 	// At the beginning of your upkeep, look at the top card of your library. If it's a creature card of the chosen type, you may reveal it and put it into your hand.
-	Register("Herald's Horn", func() Card {
+	Register("Herald's Horn", func() *Card {
 		return NewArtifact("Herald's Horn", "{3}",
 			WithAbility(ETBChooseCreatureType(heraldsHornCreatureTypes)),
 			WithStaticAbility(ReduceSpellCostStatic(
@@ -212,7 +212,7 @@ func registerArtifacts() {
 	// Artifact
 	// When this artifact enters, scry 1.
 	// {T}: Add one mana of any color.
-	Register("Mana Geode", func() Card {
+	Register("Mana Geode", func() *Card {
 		return NewArtifact("Mana Geode", "{3}",
 			WithAnyColorMana(),
 			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(1)), false)),
@@ -223,7 +223,7 @@ func registerArtifacts() {
 	// Artifact — Equipment
 	// Equipped creature gets +2/+0.
 	// Equip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)
-	Register("Marauder's Axe", func() Card {
+	Register("Marauder's Axe", func() *Card {
 		return NewEquipment("Marauder's Axe", "{2}",
 			WithStaticAbility(BoostAttached(2, 0, AttachEquipment)),
 			WithAbility(NewEquipAbility(ManaCostOf("{2}"))),
@@ -235,7 +235,7 @@ func registerArtifacts() {
 	// When this Equipment enters, attach it to target Pirate you control.
 	// Equipped creature gets +2/+1.
 	// Equip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)
-	Register("Pirate's Cutlass", func() Card {
+	Register("Pirate's Cutlass", func() *Card {
 		return NewEquipment("Pirate's Cutlass", "{3}",
 			WithStaticAbility(BoostAttached(2, 1, AttachEquipment)),
 			WithAbility(EntersBattlefieldTrigger(
@@ -267,7 +267,7 @@ func registerArtifacts() {
 	// Artifact
 	// When this artifact enters, draw a card.
 	// {1}, {T}: Add one mana of any color.
-	Register("Prophetic Prism", func() Card {
+	Register("Prophetic Prism", func() *Card {
 		return NewArtifact("Prophetic Prism", "{2}",
 			WithAbility(EntersBattlefieldTrigger(DrawCards(Fixed(1)), false)),
 			WithActivatedAbility(
@@ -282,7 +282,7 @@ func registerArtifacts() {
 	// Artifact — Equipment
 	// Whenever equipped creature deals combat damage to a player, you may draw a card.
 	// Equip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)
-	Register("Rogue's Gloves", func() Card {
+	Register("Rogue's Gloves", func() *Card {
 		return NewEquipment("Rogue's Gloves", "{2}",
 			WithAbility(NewTriggered(EvtDamageDealt, true,
 				FuncEffect("you may draw a card",
@@ -315,7 +315,7 @@ func registerArtifacts() {
 	// Scroll of Avacyn {1}
 	// Artifact
 	// {1}, Sacrifice this artifact: Draw a card. If you control an Angel, you gain 5 life.
-	Register("Scroll of Avacyn", func() Card {
+	Register("Scroll of Avacyn", func() *Card {
 		return NewArtifact("Scroll of Avacyn", "{1}",
 			WithActivatedAbility(
 				CompositeEffects("draw a card; if you control an Angel, you gain 5 life",
@@ -345,7 +345,7 @@ func registerArtifacts() {
 	// This artifact enters tapped.
 	// {2}, {T}, Sacrifice this artifact: Add two mana in any combination of colors.
 	// When this artifact is put into a graveyard from the battlefield, draw a card.
-	Register("Terrarion", func() Card {
+	Register("Terrarion", func() *Card {
 		return NewArtifact("Terrarion", "{1}",
 			WithKeyword(EntersTapped),
 			WithActivatedAbility(
@@ -364,7 +364,7 @@ func registerArtifacts() {
 	// Artifact
 	// {T}: Add {C}.
 	// {7}, {T}, Sacrifice this artifact: Destroy target permanent.
-	Register("Unstable Obelisk", func() Card {
+	Register("Unstable Obelisk", func() *Card {
 		return NewArtifact("Unstable Obelisk", "{3}",
 			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 1}),
 			WithActivatedAbility(
@@ -382,7 +382,7 @@ func registerArtifacts() {
 	// Equipped creature gets +2/+2.
 	// As long as equipped creature has defender, it can attack as though it didn't have defender.
 	// Equip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)
-	Register("Warmonger's Chariot", func() Card {
+	Register("Warmonger's Chariot", func() *Card {
 		return NewEquipment("Warmonger's Chariot", "{2}",
 			WithStaticAbility(
 				BoostAttached(2, 2, AttachEquipment),

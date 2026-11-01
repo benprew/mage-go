@@ -128,7 +128,7 @@ func (t *TurnTrackers) RecordEvent(evt *GameEvent) {
 }
 
 // RecordCardPutIntoExile updates the exile tracker.
-func (t *TurnTrackers) RecordCardPutIntoExile(card Card) {
+func (t *TurnTrackers) RecordCardPutIntoExile(card *Card) {
 	if card == nil {
 		return
 	}
@@ -456,7 +456,7 @@ func NewDuelTrackers() DuelTrackers {
 }
 
 // RecordEvent updates duel objective trackers from an emitted GameEvent.
-func (d *DuelTrackers) RecordEvent(evt *GameEvent, cardLookup func(uuid.UUID) Card, getOpponent func(uuid.UUID) uuid.UUID) {
+func (d *DuelTrackers) RecordEvent(evt *GameEvent, cardLookup func(uuid.UUID) *Card, getOpponent func(uuid.UUID) uuid.UUID) {
 	switch evt.Type {
 	case EvtSpellCast:
 		card := cardLookup(evt.SourceID)

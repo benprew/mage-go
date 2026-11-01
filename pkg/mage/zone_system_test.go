@@ -138,7 +138,7 @@ func TestZoneSystem_Exile(t *testing.T) {
 	}
 }
 
-func TestZoneSystem_CopyOnWriteCloning(t *testing.T) {
+func TestZoneSystem_CloneIsolation(t *testing.T) {
 	zs := NewZoneSystem()
 	pA := uuid.New()
 
@@ -150,12 +150,12 @@ func TestZoneSystem_CopyOnWriteCloning(t *testing.T) {
 
 	clone := zs.Clone()
 
-	// Initial shared state
+	// The clone must have private permanent and card state.
 	if len(clone.Battlefield()) != 1 {
 		t.Fatalf("expected 1 permanent in clone")
 	}
-	if clone.Battlefield()[0] != perm {
-		t.Fatalf("expected initial pointer sharing")
+	if clone.Battlefield()[0] == perm || clone.Battlefield()[0].Card == card {
+		t.Fatalf("clone retained mutable state from the source")
 	}
 
 	// Mutate clone via MutablePermanent

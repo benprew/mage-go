@@ -54,29 +54,29 @@ type Player interface {
 	DrewFromEmpty() bool
 	ClearDrewFromEmpty()
 	SetLost()
-	Hand() []Card
-	AddToHand(Card)
-	SetHand([]Card)
-	RemoveFromHand(uuid.UUID) (Card, bool)
-	DiscardCard(uuid.UUID) (Card, bool)
-	Graveyard() []Card
-	SetGraveyard([]Card)
-	AddToGraveyard(Card)
-	RemoveFromGraveyard(uuid.UUID) (Card, bool)
-	Library() []Card
-	SetLibrary([]Card)
-	DrawCard() (Card, bool)
+	Hand() []*Card
+	AddToHand(*Card)
+	SetHand([]*Card)
+	RemoveFromHand(uuid.UUID) (*Card, bool)
+	DiscardCard(uuid.UUID) (*Card, bool)
+	Graveyard() []*Card
+	SetGraveyard([]*Card)
+	AddToGraveyard(*Card)
+	RemoveFromGraveyard(uuid.UUID) (*Card, bool)
+	Library() []*Card
+	SetLibrary([]*Card)
+	DrawCard() (*Card, bool)
 	ManaPool() *ManaPool
 
-	AddToLibrary(Card)
+	AddToLibrary(*Card)
 	ShuffleLibrary()
 	ClearGraveyard()
 
 	// Ante zone
-	Ante() []Card
-	SetAnte([]Card)
-	AddToAnte(Card)
-	RemoveFromAnte(uuid.UUID) (Card, bool)
+	Ante() []*Card
+	SetAnte([]*Card)
+	AddToAnte(*Card)
+	RemoveFromAnte(uuid.UUID) (*Card, bool)
 
 	// Decision-making (overridden by TestPlayer)
 	ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *Game) []uuid.UUID
@@ -95,20 +95,19 @@ type Player interface {
 	// Player choice methods (overridden by TestPlayer for scripted choices)
 	ChooseMode(modes []string, reason string) int
 	ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent
-	ChooseCardsFromHand(amount int, reason string, g GameReader) []Card
+	ChooseCardsFromHand(amount int, reason string, g GameReader) []*Card
 	// ChooseCardFromHand picks one card from a pre-filtered candidate list
 	// drawn from the player's hand. Used when an effect or cost limits the
 	// choice to a subset of hand (e.g. "discard an artifact card"). Callers
 	// must pre-filter candidates; implementations should return a card from
 	// `candidates` (or nil if empty).
-	ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card
-	ChooseCardFromGraveyard(candidates []Card, reason string, g GameReader) Card
+	ChooseCardFromHand(candidates []*Card, reason string, g GameReader) *Card
+	ChooseCardFromGraveyard(candidates []*Card, reason string, g GameReader) *Card
 	ChooseManaColor(reason string) Color
-	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
-	// ChooseCardsFromLibrary picks up to maximum distinct cards from a
-	// pre-filtered library candidate list, for searches that find "up to N"
-	// cards. The player may stop early, so the result can be empty.
-	ChooseCardsFromLibrary(candidates []Card, maximum int, reason string, g GameReader) []Card
+	ChooseCardFromLibrary(candidates []*Card, reason string, g GameReader) *Card
+	// ChooseCardsFromLibrary selects up to maximum distinct cards from the
+	// filtered list. The player can stop before the limit or select no cards.
+	ChooseCardsFromLibrary(candidates []*Card, maximum int, reason string, g GameReader) []*Card
 	ChooseNumber(minimum, maximum int, reason string) int
 
 	// ChooseString asks the player to pick one option from a string list,
@@ -136,7 +135,7 @@ type Player interface {
 	//     back on top of the library (first ID becomes the new top card).
 	// The union of bottom and topOrder must equal the IDs in `top` exactly once each;
 	// the engine validates this and falls back to the original order on any mismatch.
-	ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID)
+	ChooseScryPlacement(top []*Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID)
 
 	// ChooseSurveilPlacement implements the controller's choice for a surveil
 	// (CR 701.42). `top` is the top N cards of the library in their current
@@ -147,7 +146,7 @@ type Player interface {
 	//     placed back on top of the library (first ID becomes the new top card).
 	// The union must equal the IDs in `top` exactly once each; the engine
 	// validates this and falls back to the original order on any mismatch.
-	ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID)
+	ChooseSurveilPlacement(top []*Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID)
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -158,10 +157,10 @@ type BasePlayer struct {
 	startingLife    int
 	lost            bool // true if the player has lost the game (e.g. deck-out)
 	drewFromEmpty   bool // set when a draw is attempted from an empty library
-	hand            []Card
-	graveyard       []Card
-	library         []Card
-	ante            []Card
+	hand            []*Card
+	graveyard       []*Card
+	library         []*Card
+	ante            []*Card
 	manaPool        *ManaPool
 	lastDrawnCardID uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
 	poisonCounters  int
@@ -214,25 +213,25 @@ func (p *BasePlayer) LoseLife(n int) {
 // removeAt returns a fresh slice with the element at index i removed.
 // Used by RemoveFromHand/Graveyard/Ante to avoid mutating a backing array
 // that may be shared with a parent game state (see cloneCardSlice).
-func removeAt(s []Card, i int) []Card {
-	out := make([]Card, len(s)-1)
+func removeAt(s []*Card, i int) []*Card {
+	out := make([]*Card, len(s)-1)
 	copy(out, s[:i])
 	copy(out[i:], s[i+1:])
 	return out
 }
 
-func (p *BasePlayer) Hand() []Card { return p.hand }
+func (p *BasePlayer) Hand() []*Card { return p.hand }
 
-func (p *BasePlayer) AddToHand(c Card) {
+func (p *BasePlayer) AddToHand(c *Card) {
 	p.assertOwner(c)
 	p.hand = append(p.hand, c)
 }
 
-func (p *BasePlayer) SetHand(cards []Card) {
+func (p *BasePlayer) SetHand(cards []*Card) {
 	p.hand = cards
 }
 
-func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
+func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (*Card, bool) {
 	for i, c := range p.hand {
 		if c.ID() == id {
 			p.hand = removeAt(p.hand, i)
@@ -242,7 +241,7 @@ func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
 	return nil, false
 }
 
-func (p *BasePlayer) DiscardCard(id uuid.UUID) (Card, bool) {
+func (p *BasePlayer) DiscardCard(id uuid.UUID) (*Card, bool) {
 	c, ok := p.RemoveFromHand(id)
 	if !ok {
 		return nil, false
@@ -251,16 +250,16 @@ func (p *BasePlayer) DiscardCard(id uuid.UUID) (Card, bool) {
 	return c, true
 }
 
-func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
+func (p *BasePlayer) Graveyard() []*Card { return p.graveyard }
 
-func (p *BasePlayer) SetGraveyard(cards []Card) { p.graveyard = cards }
+func (p *BasePlayer) SetGraveyard(cards []*Card) { p.graveyard = cards }
 
-func (p *BasePlayer) AddToGraveyard(c Card) {
+func (p *BasePlayer) AddToGraveyard(c *Card) {
 	p.assertOwner(c)
 	p.graveyard = append(p.graveyard, c)
 }
 
-func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
+func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (*Card, bool) {
 	for i, c := range p.graveyard {
 		if c.ID() == id {
 			p.graveyard = removeAt(p.graveyard, i)
@@ -270,10 +269,10 @@ func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
 	return nil, false
 }
 
-func (p *BasePlayer) Library() []Card     { return p.library }
-func (p *BasePlayer) SetLibrary(l []Card) { p.library = l }
+func (p *BasePlayer) Library() []*Card     { return p.library }
+func (p *BasePlayer) SetLibrary(l []*Card) { p.library = l }
 
-func (p *BasePlayer) AddToLibrary(c Card) {
+func (p *BasePlayer) AddToLibrary(c *Card) {
 	p.assertOwner(c)
 	p.library = append(p.library, c)
 }
@@ -282,15 +281,15 @@ func (p *BasePlayer) ClearGraveyard() {
 	p.graveyard = nil
 }
 
-func (p *BasePlayer) Ante() []Card { return p.ante }
+func (p *BasePlayer) Ante() []*Card { return p.ante }
 
-func (p *BasePlayer) SetAnte(cards []Card) { p.ante = cards }
+func (p *BasePlayer) SetAnte(cards []*Card) { p.ante = cards }
 
-func (p *BasePlayer) AddToAnte(c Card) {
+func (p *BasePlayer) AddToAnte(c *Card) {
 	p.ante = append(p.ante, c)
 }
 
-func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (Card, bool) {
+func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (*Card, bool) {
 	for i, c := range p.ante {
 		if c.ID() == id {
 			p.ante = removeAt(p.ante, i)
@@ -303,7 +302,7 @@ func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (Card, bool) {
 func (p *BasePlayer) ShuffleLibrary() {
 	// Library backing arrays are shared across game clones (see cloneCardSlice).
 	// Copy into a fresh array before shuffling so we don't mutate the parent's view.
-	fresh := make([]Card, len(p.library))
+	fresh := make([]*Card, len(p.library))
 	copy(fresh, p.library)
 	p.library = fresh
 	rand.Shuffle(len(p.library), func(i, j int) {
@@ -311,7 +310,7 @@ func (p *BasePlayer) ShuffleLibrary() {
 	})
 }
 
-func (p *BasePlayer) DrawCard() (Card, bool) {
+func (p *BasePlayer) DrawCard() (*Card, bool) {
 	if len(p.library) == 0 {
 		p.drewFromEmpty = true
 		return nil, false
@@ -377,24 +376,24 @@ func (p *BasePlayer) ChoosePermanent(candidates []*Permanent, reason string, g G
 	return nil
 }
 
-func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g GameReader) []Card {
+func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g GameReader) []*Card {
 	hand := p.Hand()
 	if amount > len(hand) {
 		amount = len(hand)
 	}
-	result := make([]Card, amount)
+	result := make([]*Card, amount)
 	copy(result, hand[:amount])
 	return result
 }
 
-func (p *BasePlayer) ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card {
+func (p *BasePlayer) ChooseCardFromHand(candidates []*Card, reason string, g GameReader) *Card {
 	if len(candidates) == 0 {
 		return nil
 	}
 	return candidates[0]
 }
 
-func (p *BasePlayer) ChooseCardFromGraveyard(candidates []Card, reason string, g GameReader) Card {
+func (p *BasePlayer) ChooseCardFromGraveyard(candidates []*Card, reason string, g GameReader) *Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -405,7 +404,7 @@ func (p *BasePlayer) ChooseManaColor(reason string) Color {
 	return White // default to White
 }
 
-func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card {
+func (p *BasePlayer) ChooseCardFromLibrary(candidates []*Card, reason string, g GameReader) *Card {
 	if len(candidates) > 0 {
 		return candidates[0]
 	}
@@ -414,7 +413,7 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 
 // ChooseCardsFromLibrary takes the first maximum candidates, like
 // ChooseCardFromLibrary takes the first one.
-func (p *BasePlayer) ChooseCardsFromLibrary(candidates []Card, maximum int, reason string, g GameReader) []Card {
+func (p *BasePlayer) ChooseCardsFromLibrary(candidates []*Card, maximum int, reason string, g GameReader) []*Card {
 	return candidates[:min(maximum, len(candidates))]
 }
 
@@ -431,7 +430,7 @@ func (p *BasePlayer) ChooseString(options []string, reason string) string {
 
 // ChooseScryPlacement: deterministic default keeps every revealed card on top
 // in its original order. Card implementations and AI players may override this.
-func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom, topOrder []uuid.UUID) {
+func (p *BasePlayer) ChooseScryPlacement(top []*Card, reason string, g GameReader) (bottom, topOrder []uuid.UUID) {
 	topOrder = make([]uuid.UUID, len(top))
 	for i, c := range top {
 		topOrder[i] = c.ID()
@@ -442,7 +441,7 @@ func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader
 // ChooseSurveilPlacement: deterministic default keeps every revealed card on
 // top in its original order (no cards milled to the graveyard). Card
 // implementations and AI players may override this.
-func (p *BasePlayer) ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard, topOrder []uuid.UUID) {
+func (p *BasePlayer) ChooseSurveilPlacement(top []*Card, reason string, g GameReader) (graveyard, topOrder []uuid.UUID) {
 	topOrder = make([]uuid.UUID, len(top))
 	for i, c := range top {
 		topOrder[i] = c.ID()
@@ -450,7 +449,7 @@ func (p *BasePlayer) ChooseSurveilPlacement(top []Card, reason string, g GameRea
 	return nil, topOrder
 }
 
-func (p *BasePlayer) assertOwner(c Card) {
+func (p *BasePlayer) assertOwner(c *Card) {
 	owner := c.Owner()
 	if owner == uuid.Nil {
 		c.SetOwner(p.id)

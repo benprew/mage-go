@@ -170,7 +170,7 @@ func (ai *AIPlayer) ShouldMulligan(handSize int) bool {
 	return false
 }
 
-func handLandColors(hand []mage.Card) map[core.Color]int {
+func handLandColors(hand []*mage.Card) map[core.Color]int {
 	colors := make(map[core.Color]int)
 	for _, c := range hand {
 		if !c.HasType(core.TypeLand) {
@@ -188,7 +188,7 @@ func handLandColors(hand []mage.Card) map[core.Color]int {
 		case "Swamp":
 			colors[core.Black]++
 		}
-		for _, a := range c.Abilities() {
+		for _, a := range c.AllAbilities() {
 			if ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility); ok {
 				if ma.HasAnyColor() {
 					for _, col := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {

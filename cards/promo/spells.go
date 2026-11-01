@@ -18,7 +18,7 @@ func registerSpells() {
 	// Sewers of Estark {2}{B}{B}
 	// Instant
 	// Choose target creature. If it's attacking, it can't be blocked this turn. If it's blocking, prevent all combat damage that would be dealt this combat by it and each creature it's blocking.
-	Register("Sewers of Estark", func() Card {
+	Register("Sewers of Estark", func() *Card {
 		return NewInstant("Sewers of Estark", "{2}{B}{B}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"if target creature is attacking, it can't be blocked this turn; if it's blocking, prevent combat damage by it and creatures it's blocking this combat",

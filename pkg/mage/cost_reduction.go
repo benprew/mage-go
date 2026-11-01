@@ -39,20 +39,20 @@ import (
 //   - card: the card being cast
 //   - sourceID: the permanent ID that registered the reducer (uuid.Nil for
 //     self-reducers — the reduction is intrinsic to the casting card)
-type SpellPredicate func(g *Game, controller uuid.UUID, card Card, sourceID uuid.UUID) bool
+type SpellPredicate func(g *Game, controller uuid.UUID, card *Card, sourceID uuid.UUID) bool
 
 // SpellAmount returns the amount of generic mana a reducer should remove from
 // the spell's cost. Receives the same context as SpellPredicate so the amount
 // can be dynamic (graveyard count, total power, etc.).
-type SpellAmount func(g *Game, controller uuid.UUID, card Card, sourceID uuid.UUID) int
+type SpellAmount func(g *Game, controller uuid.UUID, card *Card, sourceID uuid.UUID) int
 
 // SpellCondition is an optional global gate (e.g. "if you control a Wizard",
 // "if a creature died this turn"). If nil the reducer is unconditional.
-type SpellCondition func(g *Game, controller uuid.UUID, card Card, sourceID uuid.UUID) bool
+type SpellCondition func(g *Game, controller uuid.UUID, card *Card, sourceID uuid.UUID) bool
 
 // FixedAmount returns a SpellAmount that always returns n.
 func FixedAmount(n int) SpellAmount {
-	return func(_ *Game, _ uuid.UUID, _ Card, _ uuid.UUID) int { return n }
+	return func(_ *Game, _ uuid.UUID, _ *Card, _ uuid.UUID) int { return n }
 }
 
 // SpellCostReducer is a registered cost-reduction entry on GameRules. It is
@@ -70,7 +70,7 @@ type SpellCostReducer struct {
 // applies reports whether this reducer should reduce the cost of the given
 // cast. The cast's sourceID is the *card being cast*; the reducer's own
 // SourceID is the permanent that registered it.
-func (r *SpellCostReducer) applies(g *Game, casterID uuid.UUID, card Card) bool {
+func (r *SpellCostReducer) applies(g *Game, casterID uuid.UUID, card *Card) bool {
 	if r.Controller != uuid.Nil && r.Controller != casterID {
 		return false
 	}
@@ -89,12 +89,12 @@ func (r *SpellCostReducer) applies(g *Game, casterID uuid.UUID, card Card) bool 
 
 // SpellAny matches every spell.
 func SpellAny() SpellPredicate {
-	return func(_ *Game, _ uuid.UUID, _ Card, _ uuid.UUID) bool { return true }
+	return func(_ *Game, _ uuid.UUID, _ *Card, _ uuid.UUID) bool { return true }
 }
 
 // SpellHasType matches spells of the given card type (creature, artifact, etc.).
 func SpellHasType(t CardType) SpellPredicate {
-	return func(_ *Game, _ uuid.UUID, c Card, _ uuid.UUID) bool {
+	return func(_ *Game, _ uuid.UUID, c *Card, _ uuid.UUID) bool {
 		return c.HasType(t)
 	}
 }
@@ -102,7 +102,7 @@ func SpellHasType(t CardType) SpellPredicate {
 // SpellHasSubType matches spells whose card has the given (case-sensitive)
 // subtype, e.g. "Dragon" or "Wizard".
 func SpellHasSubType(st string) SpellPredicate {
-	return func(_ *Game, _ uuid.UUID, c Card, _ uuid.UUID) bool {
+	return func(_ *Game, _ uuid.UUID, c *Card, _ uuid.UUID) bool {
 		return c.HasSubType(st)
 	}
 }
@@ -110,7 +110,7 @@ func SpellHasSubType(st string) SpellPredicate {
 // SpellHasKeyword matches spells whose card was registered with the given
 // keyword attr (e.g. Flying for Warden of Evos Isle).
 func SpellHasKeyword(kw Attr) SpellPredicate {
-	return func(_ *Game, _ uuid.UUID, c Card, _ uuid.UUID) bool {
+	return func(_ *Game, _ uuid.UUID, c *Card, _ uuid.UUID) bool {
 		return cardHasKeyword(c, kw)
 	}
 }
@@ -119,7 +119,7 @@ func SpellHasKeyword(kw Attr) SpellPredicate {
 // activated/triggered abilities that grant their owner card a cost reduction).
 // Compares card IDs — the casting card must be the same Card instance.
 func SpellIsSelf() SpellPredicate {
-	return func(_ *Game, _ uuid.UUID, c Card, sourceID uuid.UUID) bool {
+	return func(_ *Game, _ uuid.UUID, c *Card, sourceID uuid.UUID) bool {
 		return c.ID() == sourceID
 	}
 }
@@ -127,7 +127,7 @@ func SpellIsSelf() SpellPredicate {
 // SpellSubTypeMatchesChosen matches spells whose card has a subtype equal to
 // the source permanent's ChosenSubtype field (Herald's Horn pattern).
 func SpellSubTypeMatchesChosen() SpellPredicate {
-	return func(g *Game, _ uuid.UUID, c Card, sourceID uuid.UUID) bool {
+	return func(g *Game, _ uuid.UUID, c *Card, sourceID uuid.UUID) bool {
 		perm := g.FindPermanent(sourceID)
 		if perm == nil || perm.ChosenSubtype == "" {
 			return false
@@ -138,7 +138,7 @@ func SpellSubTypeMatchesChosen() SpellPredicate {
 
 // SpellsAnd combines spell predicates with logical AND.
 func SpellsAnd(ps ...SpellPredicate) SpellPredicate {
-	return func(g *Game, controller uuid.UUID, c Card, sourceID uuid.UUID) bool {
+	return func(g *Game, controller uuid.UUID, c *Card, sourceID uuid.UUID) bool {
 		for _, p := range ps {
 			if p == nil {
 				continue
@@ -153,7 +153,7 @@ func SpellsAnd(ps ...SpellPredicate) SpellPredicate {
 
 // SpellsOr combines spell predicates with logical OR.
 func SpellsOr(ps ...SpellPredicate) SpellPredicate {
-	return func(g *Game, controller uuid.UUID, c Card, sourceID uuid.UUID) bool {
+	return func(g *Game, controller uuid.UUID, c *Card, sourceID uuid.UUID) bool {
 		for _, p := range ps {
 			if p != nil && p(g, controller, c, sourceID) {
 				return true
@@ -170,7 +170,7 @@ func SpellsOr(ps ...SpellPredicate) SpellPredicate {
 // CondCreatureDiedThisTurn matches when at least one creature has died this
 // turn (Bone Picker).
 func CondCreatureDiedThisTurn() SpellCondition {
-	return func(g *Game, _ uuid.UUID, _ Card, _ uuid.UUID) bool {
+	return func(g *Game, _ uuid.UUID, _ *Card, _ uuid.UUID) bool {
 		return g.CreatureDeaths() > 0
 	}
 }
@@ -178,7 +178,7 @@ func CondCreatureDiedThisTurn() SpellCondition {
 // CondCardLeftYourGraveyardThisTurn matches when at least one card has left
 // the casting player's graveyard this turn.
 func CondCardLeftYourGraveyardThisTurn() SpellCondition {
-	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
+	return func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) bool {
 		return g.PlayerHadCardLeaveGraveyardThisTurn(controller)
 	}
 }
@@ -187,7 +187,7 @@ func CondCardLeftYourGraveyardThisTurn() SpellCondition {
 // permanent satisfying f (e.g. "if you control a Wizard", "if you control a
 // creature with flying").
 func CondControlsMatching(f PermanentFilter) SpellCondition {
-	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
+	return func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) bool {
 		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != controller {
 				continue
@@ -202,7 +202,7 @@ func CondControlsMatching(f PermanentFilter) SpellCondition {
 
 // CondAnd combines conditions with logical AND. A nil entry is ignored.
 func CondAnd(cs ...SpellCondition) SpellCondition {
-	return func(g *Game, controller uuid.UUID, c Card, sourceID uuid.UUID) bool {
+	return func(g *Game, controller uuid.UUID, c *Card, sourceID uuid.UUID) bool {
 		for _, cd := range cs {
 			if cd == nil {
 				continue
@@ -222,7 +222,7 @@ func CondAnd(cs ...SpellCondition) SpellCondition {
 // AmountByGraveyardCount returns the count of cards in the casting player's
 // graveyard matching the given CardFilter (Cryptic Serpent: instant/sorcery).
 func AmountByGraveyardCount(f CardFilter) SpellAmount {
-	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
+	return func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) int {
 		p := g.GetPlayer(controller)
 		if p == nil {
 			return 0
@@ -242,7 +242,7 @@ func AmountByGraveyardCount(f CardFilter) SpellAmount {
 // Power is counted from the permanent's current value (post-effects) and
 // negative values are clamped to zero (CR 208.3).
 func AmountByTotalPower(f PermanentFilter) SpellAmount {
-	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
+	return func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) int {
 		total := 0
 		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != controller {
@@ -261,7 +261,7 @@ func AmountByTotalPower(f PermanentFilter) SpellAmount {
 // AmountByPermanentCount returns the count of permanents the casting player
 // controls matching f.
 func AmountByPermanentCount(f PermanentFilter) SpellAmount {
-	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
+	return func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) int {
 		n := 0
 		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != controller {
@@ -287,8 +287,8 @@ func AmountByPermanentCount(f PermanentFilter) SpellAmount {
 // Example: Dragonlord's Servant — "Dragon spells you cast cost {1} less."
 //
 //	WithStaticAbility(ReduceSpellCostStatic(
-//	    SpellsAnd(SpellHasType(TypeCreature), SpellHasSubType("Dragon")),
-//	    FixedAmount(1), nil,
+//		SpellsAnd(SpellHasType(TypeCreature), SpellHasSubType("Dragon")),
+//		FixedAmount(1), nil,
 //	))
 func ReduceSpellCostStatic(filter SpellPredicate, amount SpellAmount, condition SpellCondition) ContinuousEffect {
 	return ReduceSpellCostStaticLabeled("", filter, amount, condition)
@@ -341,7 +341,7 @@ type SelfCostReductionAbility struct {
 	// here. If a cost-reduction query has no targets context (e.g. a UI
 	// hint before the player picks targets), TargetPredicate is treated as
 	// false and the reducer does not apply.
-	TargetPredicate func(g *Game, controller uuid.UUID, card Card, targets []uuid.UUID) bool
+	TargetPredicate func(g *Game, controller uuid.UUID, card *Card, targets []uuid.UUID) bool
 	Label           string
 }
 
@@ -371,15 +371,15 @@ func SelfCostReductionLabeled(label string, amount SpellAmount, condition SpellC
 // a Dinosaur you control."
 //
 //	WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c Card, targets []uuid.UUID) bool {
-//	    for _, id := range targets {
-//	        if perm := g.FindPermanent(id); perm != nil && perm.Controller == controller && perm.Card.HasSubType("Dinosaur") {
-//	            return true
-//	        }
-//	    }
-//	    return false
+//		for _, id := range targets {
+//			if perm := g.FindPermanent(id); perm != nil && perm.Controller == controller && perm.Card.HasSubType("Dinosaur") {
+//				return true
+//			}
+//		}
+//		return false
 //	})
-func WithTargetConditionalCostReduction(amount int, predicate func(g *Game, controller uuid.UUID, card Card, targets []uuid.UUID) bool) CardOption {
-	return func(c *BaseCard) {
+func WithTargetConditionalCostReduction(amount int, predicate func(g *Game, controller uuid.UUID, card *Card, targets []uuid.UUID) bool) CardOption {
+	return func(c *Card) {
 		ab := SelfCostReduction(FixedAmount(amount), nil)
 		ab.TargetPredicate = predicate
 		c.AddAbility(ab)
@@ -391,19 +391,19 @@ func WithTargetConditionalCostReduction(amount int, predicate func(g *Game, cont
 // Example: Bone Picker — "This costs {3} less to cast if a creature died this turn."
 //
 //	NewCreature("Bone Picker", "{3}{B}", 3, 2,
-//	    WithSelfCostReduction(FixedAmount(3), CondCreatureDiedThisTurn()))
+//		WithSelfCostReduction(FixedAmount(3), CondCreatureDiedThisTurn()))
 func WithSelfCostReduction(amount SpellAmount, condition SpellCondition) CardOption {
-	return func(c *BaseCard) { c.AddAbility(SelfCostReduction(amount, condition)) }
+	return func(c *Card) { c.AddAbility(SelfCostReduction(amount, condition)) }
 }
 
-// applySelfCostReductions walks card.Abilities() and returns the total generic
+// applySelfCostReductions checks card abilities and returns the total generic
 // reduction owed by intrinsic SelfCostReductionAbility entries. The targets
 // slice carries the chosen targets for this cast (per CR 601.2f, the total
 // cost is determined after modes and targets are chosen). Pass nil for
 // pre-target queries — target-conditional reducers will skip themselves.
-func applySelfCostReductions(g *Game, controller uuid.UUID, card Card, targets []uuid.UUID) int {
+func applySelfCostReductions(g *Game, controller uuid.UUID, card *Card, targets []uuid.UUID) int {
 	total := 0
-	for _, a := range card.Abilities() {
+	for _, a := range card.abilities {
 		scr, ok := UnwrapAbility(a).(*SelfCostReductionAbility)
 		if !ok {
 			continue
@@ -429,7 +429,7 @@ func applySelfCostReductions(g *Game, controller uuid.UUID, card Card, targets [
 
 // applyExternalCostReductions consults registered SpellCostReducers and
 // returns the total generic reduction owed for the cast.
-func applyExternalCostReductions(g *Game, controller uuid.UUID, card Card) int {
+func applyExternalCostReductions(g *Game, controller uuid.UUID, card *Card) int {
 	total := 0
 	for _, r := range g.effects.Rules.SpellCostReducers {
 		if !r.applies(g, controller, card) {
@@ -451,7 +451,7 @@ func applyExternalCostReductions(g *Game, controller uuid.UUID, card Card) int {
 // caller's current generic cost). The targets slice carries the chosen
 // targets for the cast (CR 601.2f: total cost is calculated after modes
 // and targets are chosen). Pass nil for pre-target queries.
-func computeConditionalCostReduction(g *Game, controller uuid.UUID, card Card, currentGeneric int, targets []uuid.UUID) int {
+func computeConditionalCostReduction(g *Game, controller uuid.UUID, card *Card, currentGeneric int, targets []uuid.UUID) int {
 	red := min(max(applySelfCostReductions(g, controller, card, targets)+applyExternalCostReductions(g, controller, card), 0), currentGeneric)
 	return red
 }
@@ -462,7 +462,7 @@ func computeConditionalCostReduction(g *Game, controller uuid.UUID, card Card, c
 // The returned value is capped to the card's printed generic cost (a cost
 // can't be reduced below zero generic in a single cast). Exported for engine
 // tests and tools.
-func (g *Game) ConditionalSpellCostReduction(controller uuid.UUID, card Card) int {
+func (g *Game) ConditionalSpellCostReduction(controller uuid.UUID, card *Card) int {
 	if card == nil {
 		return 0
 	}
@@ -472,7 +472,7 @@ func (g *Game) ConditionalSpellCostReduction(controller uuid.UUID, card Card) in
 // ConditionalSpellCostReductionWithTargets is like ConditionalSpellCostReduction
 // but evaluates target-conditional reducers (CR 601.2f) against the given
 // chosen-target list. Used by the cast pipeline and for engine tests.
-func (g *Game) ConditionalSpellCostReductionWithTargets(controller uuid.UUID, card Card, targets []uuid.UUID) int {
+func (g *Game) ConditionalSpellCostReductionWithTargets(controller uuid.UUID, card *Card, targets []uuid.UUID) int {
 	if card == nil {
 		return 0
 	}

@@ -37,50 +37,6 @@ type costPaymentSpec struct {
 	ResetDrainedBeforeMana bool
 }
 
-func cloneGameForCostPayment(g *Game) *Game {
-	wasBattlefieldShared := g.zones.battlefieldShared
-	wasBattlefieldSliceShared := g.zones.battlefieldSliceShared
-	ownedPermanents := g.zones.ownedPermanents
-	clone := g.Clone()
-	g.zones.battlefieldShared = wasBattlefieldShared
-	g.zones.battlefieldSliceShared = wasBattlefieldSliceShared
-	g.zones.ownedPermanents = ownedPermanents
-
-	clone.zones.battlefield = make([]*Permanent, len(g.zones.battlefield))
-	for i, permanent := range g.zones.battlefield {
-		clonedPermanent := &Permanent{}
-		clonePermanentInto(clonedPermanent, permanent)
-		clonedPermanent.RuntimeAbilities = clonePaymentAbilities(permanent.RuntimeAbilities)
-		clone.zones.battlefield[i] = clonedPermanent
-	}
-	clone.zones.battlefieldShared = false
-	clone.zones.battlefieldSliceShared = false
-	clone.zones.ownedPermanents = nil
-	return clone
-}
-
-func clonePaymentAbilities(abilities []Ability) []Ability {
-	cloned := make([]Ability, len(abilities))
-	for i, ability := range abilities {
-		cloned[i] = clonePaymentAbility(ability)
-	}
-	return cloned
-}
-
-func clonePaymentAbility(ability Ability) Ability {
-	if granted, ok := ability.(*grantedByEffect); ok {
-		return &grantedByEffect{
-			Ability:                clonePaymentAbility(granted.Ability),
-			intrinsicBasicLandMana: granted.intrinsicBasicLandMana,
-		}
-	}
-	if action, ok := ability.(*ActionDefinition); ok {
-		cloned := *action
-		return &cloned
-	}
-	return ability
-}
-
 func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *Game) (*costPaymentTransaction, error) {
 	if g.GetPlayer(spec.Controller) == nil {
 		return nil, ErrPlayerNotFound
@@ -102,7 +58,7 @@ func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *G
 		resetDrainedBeforeMana: spec.ResetDrainedBeforeMana,
 	}
 	if validation == nil {
-		validation = cloneGameForCostPayment(g)
+		validation = g.Clone()
 	}
 	if err := tx.validate(validation); err != nil {
 		return nil, err
@@ -189,7 +145,7 @@ func (g *Game) prepareActionPaymentTransaction(spec actionPaymentSpec) (*costPay
 	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
-	validation := cloneGameForCostPayment(g)
+	validation := g.Clone()
 	locked, outcomes, err := lockPaymentCosts(spec.Costs, spec.SourceID, spec.Controller, spec.Targets, spec.XValue, validation, player)
 	if err != nil {
 		return nil, err

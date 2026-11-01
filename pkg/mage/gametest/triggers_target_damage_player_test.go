@@ -15,7 +15,7 @@ var triggerTargetDamagePlayerOnce sync.Once
 
 func registerTriggerTargetDamagePlayerCards() {
 	triggerTargetDamagePlayerOnce.Do(func() {
-		reg := func(name string, f func() mage.Card) {
+		reg := func(name string, f func() *mage.Card) {
 			if !mage.CardRegistered(name) {
 				mage.Register(name, f)
 			}
@@ -23,7 +23,7 @@ func registerTriggerTargetDamagePlayerCards() {
 
 		// "When this creature becomes the target of a spell or ability,
 		// sacrifice it." (Departed Deckhand pattern.)
-		reg("Trig Target Sac", func() mage.Card {
+		reg("Trig Target Sac", func() *mage.Card {
 			trig := mage.WheneverBecomesTargetTrigger(mage.SacrificeSource(), false)
 			return mage.NewCreature("Trig Target Sac", "{1}{U}", 2, 1,
 				mage.WithSubTypes("Spirit"),
@@ -33,7 +33,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		// "When this creature becomes the target of a spell or ability for
 		// the first time each turn, you gain 1 life." (Kira-style, simplified
 		// effect for testability.)
-		reg("Trig Target First", func() mage.Card {
+		reg("Trig Target First", func() *mage.Card {
 			trig := mage.WheneverBecomesTargetFirstTimeEachTurnTrigger(
 				mage.GainLife(1), false)
 			return mage.NewCreature("Trig Target First", "{1}{U}", 2, 2,
@@ -42,7 +42,7 @@ func registerTriggerTargetDamagePlayerCards() {
 
 		// Source spell: tap target creature. Exists purely to fire
 		// becomes-target on its target.
-		reg("Trig Tap Target", func() mage.Card {
+		reg("Trig Tap Target", func() *mage.Card {
 			return mage.NewSorcery("Trig Tap Target", "{1}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
 					mage.Tap()))
@@ -54,7 +54,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		// true multi-target spell to keep the harness simple, since the
 		// engine fires one EvtBecomesTarget per target on multi-target
 		// stack objects (already covered by event-firing logic).
-		reg("Trig Pin", func() mage.Card {
+		reg("Trig Pin", func() *mage.Card {
 			return mage.NewSorcery("Trig Pin", "{R}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
 					mage.DealDamage(mage.Fixed(0))))
@@ -62,7 +62,7 @@ func registerTriggerTargetDamagePlayerCards() {
 
 		// "Whenever a creature you control deals combat damage to a player,
 		// you gain 1 life." (Coastal Piracy pattern, simplified to GainLife.)
-		reg("Trig Combat Watcher", func() mage.Card {
+		reg("Trig Combat Watcher", func() *mage.Card {
 			return mage.NewEnchantment("Trig Combat Watcher", "{1}{U}",
 				mage.WithAbility(mage.WheneverPermanentDealsCombatDamageToPlayerTrigger(
 					mage.GainLife(1), false, mage.IsCreature)))
@@ -70,7 +70,7 @@ func registerTriggerTargetDamagePlayerCards() {
 
 		// "Whenever an artifact creature you control deals combat damage to
 		// a player, you gain 2 life." (Sharding Sphinx pattern.)
-		reg("Trig Artifact Combat Watcher", func() mage.Card {
+		reg("Trig Artifact Combat Watcher", func() *mage.Card {
 			filter := mage.And(mage.IsArtifact, mage.IsCreature)
 			return mage.NewEnchantment("Trig Artifact Combat Watcher", "{2}{U}",
 				mage.WithAbility(mage.WheneverPermanentDealsCombatDamageToPlayerTrigger(
@@ -80,19 +80,19 @@ func registerTriggerTargetDamagePlayerCards() {
 		// "When enchanted creature deals damage to a player, you gain 1 life."
 		// (Curiosity pattern, with GainLife instead of DrawCards for assertion
 		// simplicity.)
-		reg("Trig Curiosity-Like", func() mage.Card {
+		reg("Trig Curiosity-Like", func() *mage.Card {
 			return mage.NewAura("Trig Curiosity-Like", "{U}",
 				mage.WithAbility(mage.WheneverEnchantedPermanentDealsDamageToPlayerTrigger(
 					mage.GainLife(1), false)))
 		})
 
 		// Vanilla non-artifact attacker.
-		reg("Trig Vanilla 2/2", func() mage.Card {
+		reg("Trig Vanilla 2/2", func() *mage.Card {
 			return mage.NewCreature("Trig Vanilla 2/2", "{1}{G}", 2, 2)
 		})
 
 		// Vanilla artifact creature attacker.
-		reg("Trig Artifact 2/2", func() mage.Card {
+		reg("Trig Artifact 2/2", func() *mage.Card {
 			return mage.NewCreature("Trig Artifact 2/2", "{3}", 2, 2,
 				mage.WithCardType(core.TypeArtifact))
 		})

@@ -16,7 +16,7 @@ import (
 func TestGrantTriggeredAbilityToAllIncludingSource(t *testing.T) {
 	const cardName = "GTAIS Kira-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			counter := mage.FuncEffect(
 				"counter that spell or ability",
 				mage.EffectProperties{Outcome: mage.OutcomeBenefit},

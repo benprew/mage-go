@@ -27,12 +27,42 @@ type BaseAbility struct {
 	abilityType AbilityType
 }
 
+func (a *BaseAbility) setAbilityID(id uuid.UUID) { a.id = id }
+
 func (a *BaseAbility) AbilityID() uuid.UUID       { return a.id }
 func (a *BaseAbility) Source() uuid.UUID          { return a.source }
 func (a *BaseAbility) SetSource(id uuid.UUID)     { a.source = id }
 func (a *BaseAbility) Controller() uuid.UUID      { return a.controller }
 func (a *BaseAbility) SetController(id uuid.UUID) { a.controller = id }
 func (a *BaseAbility) Type() AbilityType          { return a.abilityType }
+
+// AttributeAbility is a static ability whose behavior uses an attribute.
+type AttributeAbility struct {
+	BaseAbility
+	attribute Attr
+}
+
+// NewAttributeAbility creates a static ability for an ability attribute.
+func NewAttributeAbility(attribute Attr) *AttributeAbility {
+	if !IsAbilityAttr(attribute) {
+		panic("mage: attribute does not represent an ability")
+	}
+	return &AttributeAbility{
+		BaseAbility: BaseAbility{id: uuid.New(), abilityType: AbilityStatic},
+		attribute:   attribute,
+	}
+}
+
+// Attribute returns the attribute that this ability supplies.
+func (a *AttributeAbility) Attribute() Attr { return a.attribute }
+
+// AbilityAttribute returns the attribute of an ability, or zero if it has none.
+func AbilityAttribute(a Ability) Attr {
+	if provider, ok := UnwrapAbility(a).(interface{ Attribute() Attr }); ok {
+		return provider.Attribute()
+	}
+	return 0
+}
 
 // ProtectionAbility grants protection from specific colors.
 type ProtectionAbility struct {
@@ -52,7 +82,7 @@ func ProtectionFromColor(c Color) *ProtectionAbility {
 			abilityType: AbilityStatic,
 		},
 		FromColors: []Color{c},
-		Filter: NewCardFilter(c.String(), func(card Card) bool {
+		Filter: NewCardFilter(c.String(), func(card *Card) bool {
 			return slices.Contains(card.ManaCost().Colors(), c)
 		}),
 	}
@@ -74,7 +104,7 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 			abilityType: AbilityStatic,
 		},
 		FromColors: cs,
-		Filter: NewCardFilter(strings.Join(labels, " and "), func(card Card) bool {
+		Filter: NewCardFilter(strings.Join(labels, " and "), func(card *Card) bool {
 			for _, col := range card.ManaCost().Colors() {
 				if colorSet[col] {
 					return true
@@ -93,7 +123,7 @@ func ProtectionFromCardType(ct CardType) *ProtectionAbility {
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
-		Filter: NewCardFilter(ct.String(), func(card Card) bool {
+		Filter: NewCardFilter(ct.String(), func(card *Card) bool {
 			return card.HasType(ct)
 		}),
 	}
@@ -107,7 +137,7 @@ func ProtectionFromSubType(subtype string) *ProtectionAbility {
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
-		Filter: NewCardFilter(subtype, func(card Card) bool {
+		Filter: NewCardFilter(subtype, func(card *Card) bool {
 			return slices.Contains(card.SubTypes(), subtype)
 		}),
 	}
@@ -121,27 +151,27 @@ func ProtectionFromAll() *ProtectionAbility {
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
-		Filter: NewCardFilter("everything", func(card Card) bool {
+		Filter: NewCardFilter("everything", func(card *Card) bool {
 			return true
 		}),
 	}
 }
 
 // Blocks returns true if this protection prevents interaction with the given card.
-func (pa *ProtectionAbility) Blocks(card Card) bool {
+func (pa *ProtectionAbility) Blocks(card *Card) bool {
 	if pa.exempts(card) {
 		return false
 	}
 	return pa.Filter.Match(card)
 }
 
-func (pa *ProtectionAbility) exempts(card Card) bool {
+func (pa *ProtectionAbility) exempts(card *Card) bool {
 	return card != nil && pa.ExemptCardID != uuid.Nil && card.ID() == pa.ExemptCardID
 }
 
 // BlocksInGame evaluates color protection against the source object's current
 // colors. Other protection qualities continue to use their CardFilter.
-func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
+func (pa *ProtectionAbility) BlocksInGame(card *Card, g *Game) bool {
 	if card == nil || pa.exempts(card) {
 		return false
 	}
@@ -373,7 +403,7 @@ func (a *frankensteinsMonsterAbility) OnEnter(g *Game, perm *Permanent) bool {
 	if p == nil {
 		return false
 	}
-	var creatureCards []Card
+	var creatureCards []*Card
 	for _, c := range p.Graveyard() {
 		if c.HasType(TypeCreature) {
 			creatureCards = append(creatureCards, c)

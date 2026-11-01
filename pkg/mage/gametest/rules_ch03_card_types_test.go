@@ -14,36 +14,36 @@ import (
 func ch03RegisterCards() {
 	cards := []struct {
 		name    string
-		factory func() mage.Card
+		factory func() *mage.Card
 	}{
-		{"Grizzly Bears", func() mage.Card {
+		{"Grizzly Bears", func() *mage.Card {
 			return mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		}},
-		{"Hill Giant", func() mage.Card {
+		{"Hill Giant", func() *mage.Card {
 			return mage.NewCreature("Hill Giant", "{3}{R}", 3, 3, mage.WithSubTypes("Giant"))
 		}},
-		{"White Knight", func() mage.Card {
+		{"White Knight", func() *mage.Card {
 			return mage.NewCreature("White Knight", "{W}{W}", 2, 2,
 				mage.WithSubTypes("Human", "Knight"),
 				mage.WithKeyword(core.FirstStrike),
 				mage.WithAbility(mage.ProtectionFromColor(core.Black)),
 			)
 		}},
-		{"Forest", func() mage.Card {
+		{"Forest", func() *mage.Card {
 			return mage.NewLand("Forest", mage.WithSubTypes("Forest"), mage.WithManaAbility(core.Green))
 		}},
-		{"Mountain", func() mage.Card {
+		{"Mountain", func() *mage.Card {
 			return mage.NewLand("Mountain", mage.WithSubTypes("Mountain"), mage.WithManaAbility(core.Red))
 		}},
-		{"Plains", func() mage.Card {
+		{"Plains", func() *mage.Card {
 			return mage.NewLand("Plains", mage.WithSubTypes("Plains"), mage.WithManaAbility(core.White))
 		}},
-		{"Sol Ring", func() mage.Card {
+		{"Sol Ring", func() *mage.Card {
 			return mage.NewArtifact("Sol Ring", "{1}",
 				mage.WithActivatedAbility(mage.AddMana(core.Colorless, 2), mage.Tap()),
 			)
 		}},
-		{"Black Lotus", func() mage.Card {
+		{"Black Lotus", func() *mage.Card {
 			return mage.NewArtifact("Black Lotus", "{0}",
 				mage.WithActivatedAbility(
 					mage.AddAnyMana(3, core.Green),
@@ -52,27 +52,27 @@ func ch03RegisterCards() {
 				),
 			)
 		}},
-		{"Lightning Bolt", func() mage.Card {
+		{"Lightning Bolt", func() *mage.Card {
 			return mage.NewInstant("Lightning Bolt", "{R}",
 				mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 			)
 		}},
-		{"Giant Growth", func() mage.Card {
+		{"Giant Growth", func() *mage.Card {
 			return mage.NewInstant("Giant Growth", "{G}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(3), mage.SelectTarget)),
 			)
 		}},
-		{"Holy Strength", func() mage.Card {
+		{"Holy Strength", func() *mage.Card {
 			return mage.NewAura("Holy Strength", "{W}",
 				mage.WithStaticAbility(mage.BoostAttached(1, 2, core.AttachAura)),
 			)
 		}},
-		{"Unholy Strength", func() mage.Card {
+		{"Unholy Strength", func() *mage.Card {
 			return mage.NewAura("Unholy Strength", "{B}",
 				mage.WithStaticAbility(mage.BoostAttached(2, 1, core.AttachAura)),
 			)
 		}},
-		{"Terror", func() mage.Card {
+		{"Terror", func() *mage.Card {
 			return mage.NewInstant("Terror", "{1}{B}",
 				mage.NewTargetedSpell(
 					mage.TargetCreature(
@@ -83,22 +83,22 @@ func ch03RegisterCards() {
 				),
 			)
 		}},
-		{"Shatter", func() mage.Card {
+		{"Shatter", func() *mage.Card {
 			return mage.NewInstant("Shatter", "{1}{R}",
 				mage.NewTargetedSpell(mage.TargetArtifact(), mage.DestroyTargetArtifact()),
 			)
 		}},
-		{"Stone Rain", func() mage.Card {
+		{"Stone Rain", func() *mage.Card {
 			return mage.NewSorcery("Stone Rain", "{2}{R}",
 				mage.NewTargetedSpell(mage.TargetLand(), mage.DestroyTargetLand()),
 			)
 		}},
-		{"Control Magic", func() mage.Card {
+		{"Control Magic", func() *mage.Card {
 			return mage.NewAura("Control Magic", "{2}{U}{U}",
 				mage.WithStaticAbility(mage.ControlChangeContinuous()),
 			)
 		}},
-		{"Icy Manipulator", func() mage.Card {
+		{"Icy Manipulator", func() *mage.Card {
 			return mage.NewArtifact("Icy Manipulator", "{4}",
 				mage.WithActivatedAbility(
 					mage.Tap(),
@@ -108,26 +108,26 @@ func ch03RegisterCards() {
 				),
 			)
 		}},
-		{"Ornithopter", func() mage.Card {
+		{"Ornithopter", func() *mage.Card {
 			return mage.NewCreature("Ornithopter", "{0}", 0, 2,
 				mage.WithSubTypes("Thopter"),
 				mage.WithKeyword(core.Flying),
 				mage.WithCardType(core.TypeArtifact),
 			)
 		}},
-		{"Badlands", func() mage.Card {
+		{"Badlands", func() *mage.Card {
 			return mage.NewLand("Badlands",
 				mage.WithSubTypes("Swamp", "Mountain"),
 				mage.WithManaAbility(core.Black),
 				mage.WithManaAbility(core.Red),
 			)
 		}},
-		{"Regrowth", func() mage.Card {
+		{"Regrowth", func() *mage.Card {
 			return mage.NewSorcery("Regrowth", "{1}{G}",
 				mage.NewTargetedSpell(mage.TargetCardInYourGraveyard(), mage.ReturnFromGraveyardToHandTarget()),
 			)
 		}},
-		{"Counterspell", func() mage.Card {
+		{"Counterspell", func() *mage.Card {
 			return mage.NewInstant("Counterspell", "{U}{U}",
 				mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpell()),
 			)
@@ -226,7 +226,7 @@ func TestCR301_4_ColorlessArtifactHasNoColor(t *testing.T) {
 func TestCR301_5_EquipmentAttachesToCreature(t *testing.T) {
 	const equip = "CR301_5 Bonesplitter"
 	if !mage.CardRegistered(equip) {
-		mage.Register(equip, func() mage.Card {
+		mage.Register(equip, func() *mage.Card {
 			return mage.NewEquipment(equip, "{1}",
 				mage.WithStaticAbility(mage.BoostAttached(2, 0, core.AttachEquipment)),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(1))),
@@ -248,7 +248,7 @@ func TestCR301_5_EquipmentAttachesToCreature(t *testing.T) {
 func TestCR301_5a_EquippedCreatureReference(t *testing.T) {
 	const equip = "CR301_5a Bonesplitter"
 	if !mage.CardRegistered(equip) {
-		mage.Register(equip, func() mage.Card {
+		mage.Register(equip, func() *mage.Card {
 			return mage.NewEquipment(equip, "{1}",
 				mage.WithStaticAbility(mage.BoostAttached(2, 0, core.AttachEquipment)),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(1))),
@@ -270,7 +270,7 @@ func TestCR301_5a_EquippedCreatureReference(t *testing.T) {
 func TestCR301_5b_EquipmentEntersUnattached(t *testing.T) {
 	const equip = "CR301_5b Bonesplitter"
 	if !mage.CardRegistered(equip) {
-		mage.Register(equip, func() mage.Card {
+		mage.Register(equip, func() *mage.Card {
 			return mage.NewEquipment(equip, "{1}",
 				mage.WithStaticAbility(mage.BoostAttached(2, 0, core.AttachEquipment)),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(1))),
@@ -293,7 +293,7 @@ func TestCR301_5b_EquipmentEntersUnattached(t *testing.T) {
 func TestCR301_5c_EquipmentUnattachesOnCreatureRemoval(t *testing.T) {
 	const equip = "CR301_5c Bonesplitter"
 	if !mage.CardRegistered(equip) {
-		mage.Register(equip, func() mage.Card {
+		mage.Register(equip, func() *mage.Card {
 			return mage.NewEquipment(equip, "{1}",
 				mage.WithStaticAbility(mage.BoostAttached(2, 0, core.AttachEquipment)),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(1))),
@@ -705,7 +705,7 @@ func TestCR307_2_SorceryResolvesToGraveyard(t *testing.T) {
 func TestCR307_5_AsSorceryTimingRequirements(t *testing.T) {
 	const equip = "CR307_5 Equip Test"
 	if !mage.CardRegistered(equip) {
-		mage.Register(equip, func() mage.Card {
+		mage.Register(equip, func() *mage.Card {
 			return mage.NewEquipment(equip, "{1}",
 				mage.WithStaticAbility(mage.BoostAttached(2, 0, core.AttachEquipment)),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(1))),

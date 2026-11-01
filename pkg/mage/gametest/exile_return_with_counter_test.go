@@ -14,7 +14,7 @@ import (
 func TestExileTargetReturnAtEndStepWithCounter(t *testing.T) {
 	const cardName = "ERC Long Road Home-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewInstant(cardName, "{1}{W}",
 				mage.NewTargetedSpell(
 					mage.TargetCreature(),

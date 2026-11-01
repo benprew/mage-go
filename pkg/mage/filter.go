@@ -42,12 +42,12 @@ func NewPermanentFilter(label string, fn func(*Permanent, *Game) bool) Permanent
 // The zero value matches all cards.
 type CardFilter struct {
 	label string
-	fn    func(Card) bool
+	fn    func(*Card) bool
 }
 
 // Match reports whether c satisfies this filter.
 // A zero-value filter (nil fn) matches all cards.
-func (f CardFilter) Match(c Card) bool {
+func (f CardFilter) Match(c *Card) bool {
 	if f.fn == nil {
 		return true
 	}
@@ -61,7 +61,7 @@ func (f CardFilter) Text() string { return f.label }
 func (f CardFilter) IsZero() bool { return f.fn == nil }
 
 // NewCardFilter creates a CardFilter with the given label and predicate.
-func NewCardFilter(label string, fn func(Card) bool) CardFilter {
+func NewCardFilter(label string, fn func(*Card) bool) CardFilter {
 	return CardFilter{label: label, fn: fn}
 }
 
@@ -99,7 +99,7 @@ var IsLegendary = NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bo
 })
 
 // IsCreatureCard matches creature cards.
-var IsCreatureCard = NewCardFilter("creature card", func(c Card) bool {
+var IsCreatureCard = NewCardFilter("creature card", func(c *Card) bool {
 	return slices.Contains(c.Types(), TypeCreature)
 })
 
@@ -277,54 +277,54 @@ func IsBandedWith(id uuid.UUID) PermanentFilter {
 }
 
 // IsArtifactCard matches artifact cards (for graveyard/stack filtering).
-var IsArtifactCard = NewCardFilter("artifact card", func(c Card) bool {
+var IsArtifactCard = NewCardFilter("artifact card", func(c *Card) bool {
 	return c.HasType(TypeArtifact)
 })
 
 // IsEnchantmentCard matches enchantment cards.
-var IsEnchantmentCard = NewCardFilter("enchantment card", func(c Card) bool {
+var IsEnchantmentCard = NewCardFilter("enchantment card", func(c *Card) bool {
 	return c.HasType(TypeEnchantment)
 })
 
 // IsInstantCard matches instant cards.
-var IsInstantCard = NewCardFilter("instant card", func(c Card) bool {
+var IsInstantCard = NewCardFilter("instant card", func(c *Card) bool {
 	return c.HasType(TypeInstant)
 })
 
 // IsSorceryCard matches sorcery cards.
-var IsSorceryCard = NewCardFilter("sorcery card", func(c Card) bool {
+var IsSorceryCard = NewCardFilter("sorcery card", func(c *Card) bool {
 	return c.HasType(TypeSorcery)
 })
 
 // IsInstantOrSorceryCard matches cards that are instants or sorceries.
 // Used by triggers like Opus ("Whenever you cast an instant or sorcery
 // spell, …") and by cost-reduction value sources.
-var IsInstantOrSorceryCard = NewCardFilter("instant or sorcery card", func(c Card) bool {
+var IsInstantOrSorceryCard = NewCardFilter("instant or sorcery card", func(c *Card) bool {
 	return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 })
 
 // HasColorCardFilter returns a CardFilter matching cards with the given color.
 func HasColorCardFilter(color Color) CardFilter {
-	return NewCardFilter(color.String()+" card", func(c Card) bool {
+	return NewCardFilter(color.String()+" card", func(c *Card) bool {
 		return slices.Contains(c.ManaCost().Colors(), color)
 	})
 }
 
 // HasSubTypeCardFilter returns a CardFilter matching cards with the given subtype.
 func HasSubTypeCardFilter(subType string) CardFilter {
-	return NewCardFilter(subType+" card", func(c Card) bool {
+	return NewCardFilter(subType+" card", func(c *Card) bool {
 		return c.HasSubType(subType)
 	})
 }
 
 // IsPermanentCard matches cards with permanent types (Artifact, Creature, Enchantment, Land, Planeswalker).
-var IsPermanentCard = NewCardFilter("permanent card", func(c Card) bool {
+var IsPermanentCard = NewCardFilter("permanent card", func(c *Card) bool {
 	return c.HasType(TypeArtifact) || c.HasType(TypeCreature) || c.HasType(TypeEnchantment) || c.HasType(TypeLand) || c.HasType(TypePlaneswalker)
 })
 
 // AndCardFilter returns a CardFilter that matches only if all provided filters match.
 func AndCardFilter(filters ...CardFilter) CardFilter {
-	return NewCardFilter("matching card", func(c Card) bool {
+	return NewCardFilter("matching card", func(c *Card) bool {
 		for _, f := range filters {
 			if !f.Match(c) {
 				return false

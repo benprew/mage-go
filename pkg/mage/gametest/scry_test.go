@@ -12,7 +12,7 @@ func registerScryN(name string, n int) {
 	if mage.CardRegistered(name) {
 		return
 	}
-	mage.Register(name, func() mage.Card {
+	mage.Register(name, func() *mage.Card {
 		return mage.NewSorcery(name, "{U}",
 			mage.NewSpellAbility(mage.Scry(mage.Fixed(n))),
 		)

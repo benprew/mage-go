@@ -21,7 +21,7 @@ func registerEnchantments() {
 	// Angelic Voices {2}{W}{W}
 	// Enchantment
 	// Creatures you control get +1/+1 as long as you control no nonartifact, nonwhite creatures.
-	Register("Angelic Voices", func() Card {
+	Register("Angelic Voices", func() *Card {
 		return NewEnchantment("Angelic Voices", "{2}{W}{W}",
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
@@ -54,7 +54,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature can't be the target of spells and can't be enchanted by other Auras.
-	Register("Anti-Magic Aura", func() Card {
+	Register("Anti-Magic Aura", func() *Card {
 		return NewAura("Anti-Magic Aura", "{2}{U}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Shroud, AttachAura),
@@ -66,7 +66,7 @@ func registerEnchantments() {
 	// World Enchantment
 	// Creatures can't attack a player unless that player cast a spell or put a nontoken permanent onto the battlefield during their last turn.
 	// XXX: needs tracking of per-player "cast a spell or put nontoken permanent" last turn
-	Register("Arboria", func() Card {
+	Register("Arboria", func() *Card {
 		return NewEnchantment("Arboria", "{2}{G}{G}",
 			WithSuperTypes(SuperWorld),
 		)
@@ -76,7 +76,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Whenever enchanted creature deals damage to you, this Aura deals that much damage to that creature's controller.
-	Register("Backfire", func() Card {
+	Register("Backfire", func() *Card {
 		return NewAura("Backfire", "{U}",
 			WithAbility(
 				NewTriggered(EvtDamageDealt, false,
@@ -90,7 +90,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant land
 	// When enchanted land becomes tapped, destroy it.
-	Register("Blight", func() Card {
+	Register("Blight", func() *Card {
 		return NewAura("Blight", "{B}{B}",
 			WithCastTarget(TargetLand()),
 			WithAbility(
@@ -106,7 +106,7 @@ func registerEnchantments() {
 	// No more than two creatures can attack each combat.
 	// No more than two creatures can block each combat.
 	// XXX: needs engine support for attack/block count limits
-	Register("Caverns of Despair", func() Card {
+	Register("Caverns of Despair", func() *Card {
 		return NewEnchantment("Caverns of Despair", "{2}{R}{R}",
 			WithSuperTypes(SuperWorld),
 		)
@@ -116,7 +116,7 @@ func registerEnchantments() {
 	// Enchantment
 	// If a player would draw a card except the first one they draw in each of their draw steps, that player discards a card instead. If the player discards a card this way, they draw a card. If the player doesn't discard a card this way, they mill a card.
 	// XXX: needs draw replacement effect engine support
-	Register("Chains of Mephistopheles", func() Card {
+	Register("Chains of Mephistopheles", func() *Card {
 		return NewEnchantment("Chains of Mephistopheles", "{1}{B}")
 	})
 
@@ -126,7 +126,7 @@ func registerEnchantments() {
 	// When this Aura enters, tap enchanted creature and put three pupa counters on this Aura.
 	// Enchanted creature doesn't untap during your untap step if this Aura has a pupa counter on it.
 	// At the beginning of your upkeep, remove a pupa counter from this Aura. If you can't, sacrifice it, put a +1/+1 counter on enchanted creature, and that creature gains flying.
-	Register("Cocoon", func() Card {
+	Register("Cocoon", func() *Card {
 		return NewAura("Cocoon", "{G}",
 			WithCastTarget(TargetControlledCreature()),
 			// TODO: convert to pipeline — needs TapAttached + AddCountersToSource primitives
@@ -176,7 +176,7 @@ func registerEnchantments() {
 	// Concordant Crossroads {G}
 	// World Enchantment
 	// All creatures have haste.
-	Register("Concordant Crossroads", func() Card {
+	Register("Concordant Crossroads", func() *Card {
 		return NewEnchantment("Concordant Crossroads", "{G}",
 			WithSuperTypes(SuperWorld),
 			WithStaticAbility(
@@ -188,7 +188,7 @@ func registerEnchantments() {
 	// Crevasse {2}{R}
 	// Enchantment
 	// Creatures with mountainwalk can be blocked as though they didn't have mountainwalk.
-	Register("Crevasse", func() Card {
+	Register("Crevasse", func() *Card {
 		return NewEnchantment("Crevasse", "{2}{R}",
 			WithStaticAbility(
 				NullifyLandwalkEffect(Mountainwalk),
@@ -199,7 +199,7 @@ func registerEnchantments() {
 	// Deadfall {2}{G}
 	// Enchantment
 	// Creatures with forestwalk can be blocked as though they didn't have forestwalk.
-	Register("Deadfall", func() Card {
+	Register("Deadfall", func() *Card {
 		return NewEnchantment("Deadfall", "{2}{G}",
 			WithStaticAbility(
 				NullifyLandwalkEffect(Forestwalk),
@@ -212,7 +212,7 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature can't attack.
 	// Prevent all combat damage that would be dealt by enchanted creature.
-	Register("Demonic Torment", func() Card {
+	Register("Demonic Torment", func() *Card {
 		return NewAura("Demonic Torment", "{2}{B}",
 			WithStaticAbility(
 				PreventAttachedFromAttacking(AttachAura),
@@ -232,7 +232,7 @@ func registerEnchantments() {
 	// At the beginning of your upkeep, remove an intervention counter from this enchantment.
 	// When you remove the last intervention counter from this enchantment, the game is a draw.
 	// XXX: needs game draw mechanic
-	Register("Divine Intervention", func() Card {
+	Register("Divine Intervention", func() *Card {
 		return NewEnchantment("Divine Intervention", "{6}{W}{W}",
 			WithAbility(EntersBattlefieldTrigger(
 				AddCounters(Intervention, Fixed(2)).Targeting(ToSource()), false,
@@ -248,7 +248,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature gets +3/+3.
-	Register("Divine Transformation", func() Card {
+	Register("Divine Transformation", func() *Card {
 		return NewBoostAura("Divine Transformation", "{2}{W}{W}", 3, 3)
 	})
 
@@ -256,7 +256,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// {0}: Enchanted creature becomes the color or colors of your choice. Activate only once each turn.
-	Register("Dream Coat", func() Card {
+	Register("Dream Coat", func() *Card {
 		return NewAura("Dream Coat", "{U}",
 			// TODO: convert to pipeline — needs ChooseColor + ColorOverrideAttached primitives
 			WithActivatedAbility(
@@ -290,7 +290,7 @@ func registerEnchantments() {
 	// Enchant land
 	// Enchanted land has "{T}: Counter target spell if it would destroy a land you control."
 	// XXX: needs "would destroy a land" spell detection
-	Register("Equinox", func() Card {
+	Register("Equinox", func() *Card {
 		return NewAura("Equinox", "{W}",
 			WithCastTarget(TargetLand()),
 		)
@@ -300,7 +300,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has vigilance.
-	Register("Eternal Warrior", func() Card {
+	Register("Eternal Warrior", func() *Card {
 		return NewAura("Eternal Warrior", "{R}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Vigilance, AttachAura),
@@ -311,7 +311,7 @@ func registerEnchantments() {
 	// Field of Dreams {U}
 	// World Enchantment
 	// Players play with the top card of their libraries revealed.
-	Register("Field of Dreams", func() Card {
+	Register("Field of Dreams", func() *Card {
 		return NewEnchantment("Field of Dreams", "{U}",
 			WithSuperTypes(SuperWorld),
 			WithStaticAbility(RevealTopCardsOfAllLibraries()),
@@ -321,7 +321,7 @@ func registerEnchantments() {
 	// Fortified Area {1}{W}{W}
 	// Enchantment
 	// Wall creatures you control get +1/+0 and have banding. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-	Register("Fortified Area", func() Card {
+	Register("Fortified Area", func() *Card {
 		return NewEnchantment("Fortified Area", "{1}{W}{W}",
 			WithStaticAbility(
 				BoostControlledCreatures(1, 0, HasSubType("Wall")),
@@ -334,7 +334,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Prevent all combat damage that would be dealt to and dealt by enchanted creature.
-	Register("Gaseous Form", func() Card {
+	Register("Gaseous Form", func() *Card {
 		return NewAura("Gaseous Form", "{2}{U}",
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
@@ -350,14 +350,14 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature gets +2/+2.
-	Register("Giant Strength", func() Card {
+	Register("Giant Strength", func() *Card {
 		return NewBoostAura("Giant Strength", "{R}{R}", 2, 2)
 	})
 
 	// Gravity Sphere {2}{R}
 	// World Enchantment
 	// All creatures lose flying.
-	Register("Gravity Sphere", func() Card {
+	Register("Gravity Sphere", func() *Card {
 		return NewEnchantment("Gravity Sphere", "{2}{R}",
 			WithSuperTypes(SuperWorld),
 			WithStaticAbility(
@@ -369,7 +369,7 @@ func registerEnchantments() {
 	// Great Wall {2}{W}
 	// Enchantment
 	// Creatures with plainswalk can be blocked as though they didn't have plainswalk.
-	Register("Great Wall", func() Card {
+	Register("Great Wall", func() *Card {
 		return NewEnchantment("Great Wall", "{2}{W}",
 			WithStaticAbility(
 				NullifyLandwalkEffect(Plainswalk),
@@ -380,7 +380,7 @@ func registerEnchantments() {
 	// Greater Realm of Preservation {1}{W}
 	// Enchantment
 	// {1}{W}: The next time a black or red source of your choice would deal damage to you this turn, prevent that damage.
-	Register("Greater Realm of Preservation", func() Card {
+	Register("Greater Realm of Preservation", func() *Card {
 		return NewEnchantment("Greater Realm of Preservation", "{1}{W}",
 			WithActivatedAbility(
 				FuncEffect("prevent next damage from a black or red source of your choice",
@@ -405,7 +405,7 @@ func registerEnchantments() {
 	// Greed {3}{B}
 	// Enchantment
 	// {B}, Pay 2 life: Draw a card.
-	Register("Greed", func() Card {
+	Register("Greed", func() *Card {
 		return NewEnchantment("Greed", "{3}{B}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
@@ -418,7 +418,7 @@ func registerEnchantments() {
 	// Horror of Horrors {3}{B}{B}
 	// Enchantment
 	// Sacrifice a Swamp: Regenerate target black creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
-	Register("Horror of Horrors", func() Card {
+	Register("Horror of Horrors", func() *Card {
 		return NewEnchantment("Horror of Horrors", "{3}{B}{B}",
 			WithActivatedAbility(
 				RegenerateTarget(),
@@ -432,7 +432,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature gets +2/-2.
-	Register("Immolation", func() Card {
+	Register("Immolation", func() *Card {
 		return NewBoostAura("Immolation", "{R}", 2, -2)
 	})
 
@@ -442,14 +442,14 @@ func registerEnchantments() {
 	// Whenever a player activates an ability of enchanted creature with {T} in its activation cost that isn't a mana ability, you may pay {1}. If you do, counter that ability. If you don't, destroy this Aura.
 	// Whenever enchanted creature attacks or blocks, you may pay {1}. If you do, tap the creature, remove it from combat, and creatures it was blocking that had become blocked by only that creature this combat become unblocked. If you don't, destroy this Aura.
 	// XXX: needs ability counter and tap-ability detection engine support
-	Register("Imprison", func() Card {
+	Register("Imprison", func() *Card {
 		return NewAura("Imprison", "{B}")
 	})
 
 	// In the Eye of Chaos {2}{U}
 	// World Enchantment
 	// Whenever a player casts an instant spell, counter it unless that player pays {X}, where X is its mana value.
-	Register("In the Eye of Chaos", func() Card {
+	Register("In the Eye of Chaos", func() *Card {
 		return NewEnchantment("In the Eye of Chaos", "{2}{U}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
@@ -483,7 +483,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Whenever enchanted creature blocks or becomes blocked by a creature with toughness 3 or less, destroy the other creature at end of combat. At the beginning of the next end step, if that creature was destroyed this way, put a +1/+1 counter on the first creature.
-	Register("Infinite Authority", func() Card {
+	Register("Infinite Authority", func() *Card {
 		return NewAura("Infinite Authority", "{W}{W}{W}",
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
@@ -615,7 +615,7 @@ func registerEnchantments() {
 	// Invoke Prejudice {U}{U}{U}{U}
 	// Enchantment
 	// Whenever an opponent casts a creature spell that doesn't share a color with a creature you control, counter that spell unless that player pays {X}, where X is its mana value.
-	Register("Invoke Prejudice", func() Card {
+	Register("Invoke Prejudice", func() *Card {
 		return NewEnchantment("Invoke Prejudice", "{U}{U}{U}{U}",
 			WithAbility(
 				// TODO: convert to pipeline — needs CounterUnlessPayCMC (variable cost from spell's CMC)
@@ -668,7 +668,7 @@ func registerEnchantments() {
 	// Kismet {3}{W}
 	// Enchantment
 	// Artifacts, creatures, and lands your opponents control enter tapped.
-	Register("Kismet", func() Card {
+	Register("Kismet", func() *Card {
 		return NewEnchantment("Kismet", "{3}{W}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
@@ -692,14 +692,14 @@ func registerEnchantments() {
 	// Enchantment
 	// If an opponent who controls at least as many lands as you do would put a land onto the battlefield, that player instead puts that land onto the battlefield then sacrifices a land of their choice.
 	// XXX: needs land-play replacement effect engine support
-	Register("Land Equilibrium", func() Card {
+	Register("Land Equilibrium", func() *Card {
 		return NewEnchantment("Land Equilibrium", "{2}{U}{U}")
 	})
 
 	// Land Tax {W}
 	// Enchantment
 	// At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.
-	Register("Land Tax", func() Card {
+	Register("Land Tax", func() *Card {
 		return NewEnchantment("Land Tax", "{W}",
 			WithAbility(
 				// TODO: convert to pipeline — needs SearchLibrary primitive with up-to-N and filter
@@ -720,7 +720,7 @@ func registerEnchantments() {
 							if p == nil {
 								return nil
 							}
-							var candidates []Card
+							var candidates []*Card
 							for _, c := range p.Library() {
 								if isBasicLand(c) {
 									candidates = append(candidates, c)
@@ -728,7 +728,7 @@ func registerEnchantments() {
 							}
 							for _, card := range p.ChooseCardsFromLibrary(candidates, 3, "search for up to three basic land cards", g) {
 								lib := p.Library()
-								newLib := make([]Card, 0, len(lib)-1)
+								newLib := make([]*Card, 0, len(lib)-1)
 								for _, c := range lib {
 									if c.ID() != card.ID() {
 										newLib = append(newLib, c)
@@ -749,7 +749,7 @@ func registerEnchantments() {
 	// World Enchantment
 	// Discard a card: If the discarded card was a land card, this enchantment deals 2 damage to target player or planeswalker. Any player may activate this ability.
 	// XXX: needs discard-check-type conditional damage and any-player activation
-	Register("Land's Edge", func() Card {
+	Register("Land's Edge", func() *Card {
 		return NewEnchantment("Land's Edge", "{1}{R}{R}",
 			WithSuperTypes(SuperWorld),
 			// TODO: convert to pipeline — needs discarded-card-type check conditional
@@ -778,7 +778,7 @@ func registerEnchantments() {
 	// Lifeblood {2}{W}{W}
 	// Enchantment
 	// Whenever a Mountain an opponent controls becomes tapped, you gain 1 life.
-	Register("Lifeblood", func() Card {
+	Register("Lifeblood", func() *Card {
 		return NewEnchantment("Lifeblood", "{2}{W}{W}",
 			WithAbility(
 				WhenOpponentPermanentBecomesTappedTrigger(
@@ -792,7 +792,7 @@ func registerEnchantments() {
 	// Living Plane {2}{G}{G}
 	// World Enchantment
 	// All lands are 1/1 creatures that are still lands.
-	Register("Living Plane", func() Card {
+	Register("Living Plane", func() *Card {
 		return NewEnchantment("Living Plane", "{2}{G}{G}",
 			WithSuperTypes(SuperWorld),
 			WithStaticAbility(
@@ -804,7 +804,7 @@ func registerEnchantments() {
 	// Moat {2}{W}{W}
 	// Enchantment
 	// Creatures without flying can't attack.
-	Register("Moat", func() Card {
+	Register("Moat", func() *Card {
 		return NewEnchantment("Moat", "{2}{W}{W}",
 			WithStaticAbility(
 				RevokeKeywordFromAll(AttrCanAttack, NotHasKeywordFilter(Flying)),
@@ -815,7 +815,7 @@ func registerEnchantments() {
 	// Nether Void {3}{B}
 	// World Enchantment
 	// Whenever a player casts a spell, counter it unless that player pays {3}.
-	Register("Nether Void", func() Card {
+	Register("Nether Void", func() *Card {
 		return NewEnchantment("Nether Void", "{3}{B}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
@@ -829,7 +829,7 @@ func registerEnchantments() {
 	// Presence of the Master {3}{W}
 	// Enchantment
 	// Whenever a player casts an enchantment spell, counter it.
-	Register("Presence of the Master", func() Card {
+	Register("Presence of the Master", func() *Card {
 		return NewEnchantment("Presence of the Master", "{3}{W}",
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
@@ -844,7 +844,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// When enchanted creature dies, return that card to its owner's hand. If that card is returned to its owner's hand this way, you may pay {U}{U}{U}. If you do, return this card to its owner's hand.
-	Register("Puppet Master", func() Card {
+	Register("Puppet Master", func() *Card {
 		return NewAura("Puppet Master", "{U}{U}{U}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, false,
@@ -899,7 +899,7 @@ func registerEnchantments() {
 	// Quagmire {2}{B}
 	// Enchantment
 	// Creatures with swampwalk can be blocked as though they didn't have swampwalk.
-	Register("Quagmire", func() Card {
+	Register("Quagmire", func() *Card {
 		return NewEnchantment("Quagmire", "{2}{B}",
 			WithStaticAbility(
 				NullifyLandwalkEffect(Swampwalk),
@@ -914,7 +914,7 @@ func registerEnchantments() {
 	// • This Aura deals 1 damage to target player or planeswalker.
 	// • Target player gains 1 life.
 	// XXX: needs modal triggered ability and enchant-opponent's-artifact targeting
-	Register("Relic Bind", func() Card {
+	Register("Relic Bind", func() *Card {
 		return NewAura("Relic Bind", "{2}{U}",
 			WithCastTarget(TargetPermanentOpponentControls(IsArtifact)),
 			WithAbility(
@@ -929,7 +929,7 @@ func registerEnchantments() {
 	// World Enchantment
 	// Players play with their hands revealed.
 	// XXX: needs revealed hand engine support
-	Register("Revelation", func() Card {
+	Register("Revelation", func() *Card {
 		return NewEnchantment("Revelation", "{G}",
 			WithSuperTypes(SuperWorld),
 		)
@@ -939,7 +939,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature can't be blocked except by artifact creatures and/or white creatures.
-	Register("Seeker", func() Card {
+	Register("Seeker", func() *Card {
 		return NewAura("Seeker", "{2}{W}{W}",
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
@@ -968,7 +968,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has shroud as long as it's untapped. (It can't be the target of spells or abilities.)
-	Register("Spectral Cloak", func() Card {
+	Register("Spectral Cloak", func() *Card {
 		return NewAura("Spectral Cloak", "{U}{U}",
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
@@ -985,7 +985,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)
 	// Whenever enchanted creature deals damage, you gain that much life.
-	Register("Spirit Link", func() Card {
+	Register("Spirit Link", func() *Card {
 		return NewAura("Spirit Link", "{W}",
 			WithAbility(
 				NewTriggered(EvtDamageDealt, false,
@@ -999,7 +999,7 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Whenever enchanted creature becomes tapped, put a -0/-2 counter on it.
-	Register("Spirit Shackle", func() Card {
+	Register("Spirit Shackle", func() *Card {
 		return NewAura("Spirit Shackle", "{B}{B}",
 			WithAbility(
 				NewTriggered(EvtTapped, false,
@@ -1012,7 +1012,7 @@ func registerEnchantments() {
 	// Spiritual Sanctuary {2}{W}{W}
 	// Enchantment
 	// At the beginning of each player's upkeep, if that player controls a Plains, they gain 1 life.
-	Register("Spiritual Sanctuary", func() Card {
+	Register("Spiritual Sanctuary", func() *Card {
 		return NewEnchantment("Spiritual Sanctuary", "{2}{W}{W}",
 			WithAbility(
 				// TODO: convert to pipeline — needs ActivePlayer selector + HasMatchingPermanent condition scoped to active player
@@ -1038,7 +1038,7 @@ func registerEnchantments() {
 	// Storm World {R}
 	// World Enchantment
 	// At the beginning of each player's upkeep, this enchantment deals X damage to that player, where X is 4 minus the number of cards in their hand.
-	Register("Storm World", func() Card {
+	Register("Storm World", func() *Card {
 		return NewEnchantment("Storm World", "{R}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
@@ -1051,7 +1051,7 @@ func registerEnchantments() {
 	// Enchantment
 	// At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.
 	// XXX: needs draw-step additional draw and per-card pay-or-put-back engine support
-	Register("Sylvan Library", func() Card {
+	Register("Sylvan Library", func() *Card {
 		return NewEnchantment("Sylvan Library", "{1}{G}")
 	})
 
@@ -1061,7 +1061,7 @@ func registerEnchantments() {
 	// At the beginning of the upkeep of enchanted creature's controller, put a -0/-1 counter on that creature.
 	// When enchanted creature dies, that creature's controller chooses a creature that this card could enchant. If the player does, return this card to the battlefield under your control attached to that creature. If they don't, return this card to the battlefield under your control as a non-Aura enchantment. It loses "enchant creature" and gains "At the beginning of that player's upkeep, this enchantment deals 1 damage to that player."
 	// XXX: needs aura-to-enchantment mode change engine support
-	Register("Takklemaggot", func() Card {
+	Register("Takklemaggot", func() *Card {
 		return NewAura("Takklemaggot", "{2}{B}{B}",
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				AddCounters(M0M1, Fixed(1)).Targeting(ToAttached()), false,
@@ -1072,7 +1072,7 @@ func registerEnchantments() {
 	// The Abyss {3}{B}
 	// World Enchantment
 	// At the beginning of each player's upkeep, destroy target nonartifact creature that player controls of their choice. It can't be regenerated.
-	Register("The Abyss", func() Card {
+	Register("The Abyss", func() *Card {
 		return NewEnchantment("The Abyss", "{3}{B}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
@@ -1108,7 +1108,7 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +1/+0.
 	// {R}{R}{R}: Regenerate enchanted creature.
-	Register("The Brute", func() Card {
+	Register("The Brute", func() *Card {
 		return NewAura("The Brute", "{1}{R}",
 			WithStaticAbility(
 				BoostAttached(1, 0, AttachAura),
@@ -1124,7 +1124,7 @@ func registerEnchantments() {
 	// Undertow {2}{U}
 	// Enchantment
 	// Creatures with islandwalk can be blocked as though they didn't have islandwalk.
-	Register("Undertow", func() Card {
+	Register("Undertow", func() *Card {
 		return NewEnchantment("Undertow", "{2}{U}",
 			WithStaticAbility(
 				NullifyLandwalkEffect(Islandwalk),
@@ -1135,7 +1135,7 @@ func registerEnchantments() {
 	// Underworld Dreams {B}{B}{B}
 	// Enchantment
 	// Whenever an opponent draws a card, Underworld Dreams deals 1 damage to that player.
-	Register("Underworld Dreams", func() Card {
+	Register("Underworld Dreams", func() *Card {
 		return NewEnchantment("Underworld Dreams", "{B}{B}{B}",
 			WithAbility(NewTriggered(EvtCardDrawn, false,
 				DealDamageToPlayers(Fixed(1), SelectTargetPlayer()),
@@ -1149,7 +1149,7 @@ func registerEnchantments() {
 	// When this Aura enters, tap enchanted creature and put X sleep counters on it.
 	// Enchanted creature doesn't untap during its controller's untap step if it has a sleep counter on it.
 	// At the beginning of the upkeep of enchanted creature's controller, remove a sleep counter from that creature.
-	Register("Venarian Gold", func() Card {
+	Register("Venarian Gold", func() *Card {
 		return NewAura("Venarian Gold", "{X}{U}{U}",
 			// TODO: convert to pipeline — needs TapAttached + AddCountersToAttachedFromX primitives
 			WithAbility(EntersBattlefieldTrigger(

@@ -14,7 +14,7 @@ import (
 func TestWheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayer_DrawsOnce(t *testing.T) {
 	const cardName = "CDD Keeper-like"
 	if !mage.CardRegistered(cardName) {
-		mage.Register(cardName, func() mage.Card {
+		mage.Register(cardName, func() *mage.Card {
 			return mage.NewCreature(cardName, "{3}{G}{G}", 4, 5,
 				mage.WithSubTypes("Cat"),
 				mage.WithAbility(mage.WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger(

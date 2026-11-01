@@ -22,7 +22,7 @@ func registerLands() {
 	} {
 		name := land.name
 		color := land.color
-		Register(name, func() Card {
+		Register(name, func() *Card {
 			return NewLand(name,
 				WithSuperTypes(SuperBasic),
 				WithSubTypes(name),
@@ -57,7 +57,7 @@ func registerLands() {
 		sub2 := d.sub2
 		color1 := d.color1
 		color2 := d.color2
-		Register(name, func() Card {
+		Register(name, func() *Card {
 			return NewLand(name,
 				WithSubTypes(sub1, sub2),
 				WithManaAbility(color1),

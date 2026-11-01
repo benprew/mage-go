@@ -340,8 +340,8 @@ func sendChoice(this js.Value, args []js.Value) any {
 }
 
 // buildDeck creates a shuffled deck of cards from a list of card names.
-func buildDeck(names []string, ownerID uuid.UUID) []mage.Card {
-	var deck []mage.Card
+func buildDeck(names []string, ownerID uuid.UUID) []*mage.Card {
+	var deck []*mage.Card
 	for _, name := range names {
 		card, err := mage.CreateCard(name)
 		if err != nil {

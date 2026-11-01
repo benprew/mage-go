@@ -13,6 +13,7 @@ import (
 // HumanPlayer wraps BasePlayer for interactive TUI play. It channels all
 // player decisions through the TUI rather than using silent defaults.
 type HumanPlayer struct {
+	phaseStops phaseStopSettings
 	*mage.BasePlayer
 	toTUI       chan GameMsg
 	fromTUI     chan PriorityAction
@@ -206,6 +207,50 @@ func (p *HumanPlayer) ChooseMode(modes []string, reason string) int {
 	return resp.SelectedIndex
 }
 
+// ChooseTargets asks the player to select each target.
+func (p *HumanPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *mage.Game) []uuid.UUID {
+	if len(possible) < minimum || maximum <= 0 {
+		return nil
+	}
+	opts := make([]ChoiceOption, len(possible))
+	for i, id := range possible {
+		label := id.String()
+		if player := g.GetPlayer(id); player != nil {
+			label = player.Name()
+		} else if card := g.FindCardAnywhere(id); card != nil {
+			label = card.Name()
+		}
+		opts[i] = ChoiceOption{ID: id, Label: label}
+	}
+	var selected []uuid.UUID
+	for len(selected) < maximum && len(opts) > 0 {
+		choices := append([]ChoiceOption(nil), opts...)
+		if len(selected) >= minimum {
+			choices = append(choices, ChoiceOption{Label: "Done"})
+		}
+		resp := p.requestChoice(ChoiceRequest{Type: ChoicePermanent, Reason: "Choose target", Options: choices})
+		if len(resp.SelectedIDs) == 0 || resp.SelectedIDs[0] == uuid.Nil {
+			if len(selected) >= minimum {
+				return selected
+			}
+			return nil
+		}
+		found := false
+		for i, opt := range opts {
+			if opt.ID == resp.SelectedIDs[0] {
+				selected = append(selected, opt.ID)
+				opts = append(opts[:i], opts[i+1:]...)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil
+		}
+	}
+	return selected
+}
+
 func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g mage.GameReader) *mage.Permanent {
 	if len(candidates) == 0 {
 		return nil
@@ -225,7 +270,7 @@ func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 	return candidates[0]
 }
 
-func (p *HumanPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (p *HumanPlayer) ChooseCardFromHand(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -244,7 +289,7 @@ func (p *HumanPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, 
 	return candidates[0]
 }
 
-func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
+func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []*mage.Card {
 	hand := p.Hand()
 	if amount <= 0 || len(hand) == 0 {
 		return nil
@@ -261,7 +306,7 @@ func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 	for _, id := range resp.SelectedIDs {
 		idSet[id] = true
 	}
-	var result []mage.Card
+	var result []*mage.Card
 	for _, c := range hand {
 		if idSet[c.ID()] {
 			result = append(result, c)
@@ -285,7 +330,7 @@ func (p *HumanPlayer) ChooseManaColor(reason string) core.Color {
 	return resp.SelectedColor
 }
 
-func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+func (p *HumanPlayer) ChooseCardFromLibrary(candidates []*mage.Card, reason string, g mage.GameReader) *mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -308,9 +353,9 @@ func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 // with a zero ID, so a frontend that lists options needs no change to let the
 // player stop early. Cards of the same name are interchangeable in a library,
 // so each name is offered once.
-func (p *HumanPlayer) ChooseCardsFromLibrary(candidates []mage.Card, maximum int, reason string, g mage.GameReader) []mage.Card {
+func (p *HumanPlayer) ChooseCardsFromLibrary(candidates []*mage.Card, maximum int, reason string, g mage.GameReader) []*mage.Card {
 	remaining := slices.Clone(candidates)
-	var chosen []mage.Card
+	var chosen []*mage.Card
 	for len(chosen) < maximum && len(remaining) > 0 {
 		var opts []ChoiceOption
 		offered := make(map[string]bool)
@@ -325,7 +370,7 @@ func (p *HumanPlayer) ChooseCardsFromLibrary(candidates []mage.Card, maximum int
 		resp := p.requestChoice(ChoiceRequest{Type: ChoiceCardFromLibrary, Reason: reason, Options: opts})
 		i := -1
 		if len(resp.SelectedIDs) > 0 {
-			i = slices.IndexFunc(remaining, func(c mage.Card) bool { return c.ID() == resp.SelectedIDs[0] })
+			i = slices.IndexFunc(remaining, func(c *mage.Card) bool { return c.ID() == resp.SelectedIDs[0] })
 		}
 		if i < 0 {
 			break

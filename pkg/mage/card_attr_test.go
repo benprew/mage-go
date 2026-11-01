@@ -86,9 +86,35 @@ func TestNewAura_HasAttr_IsEnchantment(t *testing.T) {
 	}
 }
 
+func TestNewToken_Colors(t *testing.T) {
+	for _, colors := range [][]Color{nil, {Colorless}, {Black}, {Green, Blue}} {
+		token := NewToken("Token", 1, 1, []CardType{TypeCreature}, nil, colors)
+		perm := NewPermanent(token, uuid.New())
+		got := perm.Colors()
+		if len(got) != len(colors) {
+			t.Fatalf("colors = %v, want %v", got, colors)
+		}
+		for i, color := range colors {
+			if got[i] != color {
+				t.Errorf("colors = %v, want %v", got, colors)
+			}
+		}
+	}
+}
+
+func TestNewToken_CopiesColors(t *testing.T) {
+	colors := []Color{Green, Blue}
+	token := NewToken("Fractal", 0, 0, []CardType{TypeCreature}, []string{"Fractal"}, colors)
+	colors[0] = Black
+	got := NewPermanent(token, uuid.New()).Colors()
+	if len(got) != 2 || got[0] != Green || got[1] != Blue {
+		t.Fatalf("colors = %v, want green and blue", got)
+	}
+}
+
 // TestNewToken_HasAttr_IsCreature verifies token creatures have creature attrs.
 func TestNewToken_HasAttr_IsCreature(t *testing.T) {
-	card := NewToken("Bird", 1, 1, []CardType{TypeCreature}, []string{"Bird"}, Flying)
+	card := NewToken("Bird", 1, 1, []CardType{TypeCreature}, []string{"Bird"}, nil, Flying)
 	perm := NewPermanent(card, uuid.New())
 	if !perm.HasAttr(AttrIsCreature) {
 		t.Error("expected HasAttr(AttrIsCreature) true for token creature")
@@ -98,8 +124,7 @@ func TestNewToken_HasAttr_IsCreature(t *testing.T) {
 	}
 }
 
-// TestWithKeyword_Flying_ReflectedInHasAttr verifies that WithKeyword populates
-// the attrSeeds so NewPermanent reflects it in baseAttrs.
+// TestWithKeyword_Flying_ReflectedInHasAttr checks the attribute from the ability.
 func TestWithKeyword_Flying_ReflectedInHasAttr(t *testing.T) {
 	card := NewCreature("Angel", "{4}{W}{W}", 4, 4, WithKeyword(Flying))
 	perm := NewPermanent(card, uuid.New())
@@ -165,7 +190,7 @@ func TestHasType_Land_DelegatesToAttrIsLand(t *testing.T) {
 	}
 }
 
-// TestHasType_CardLevel_StillUsesTypesSlice verifies that BaseCard.HasType
+// TestHasType_CardLevel_StillUsesTypesSlice verifies that Card.HasType
 // still works via the types slice (not affected by Permanent.HasType).
 func TestHasType_CardLevel_StillUsesTypesSlice(t *testing.T) {
 	card := NewCreature("Test", "{1}", 1, 1)

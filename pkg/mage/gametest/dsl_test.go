@@ -13,7 +13,7 @@ func TestGenericTriggered(t *testing.T) {
 	t.Run("ETB trigger via GenericTriggered", func(t *testing.T) {
 		name := "DSL ETB Creature"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{2}{G}", 3, 3,
 					mage.WithSubTypes("Beast"),
 					mage.WithAbility(mage.EntersBattlefieldTrigger(mage.GainLife(3), false)),
@@ -34,7 +34,7 @@ func TestGenericTriggered(t *testing.T) {
 	t.Run("upkeep trigger via GenericTriggered", func(t *testing.T) {
 		name := "DSL Upkeep Damager"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewArtifact(name, "{2}",
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtUpkeep,
@@ -59,9 +59,9 @@ func TestGenericTriggered(t *testing.T) {
 		boltName := "DSL Test Bolt"
 		for _, reg := range []struct {
 			n string
-			f func() mage.Card
+			f func() *mage.Card
 		}{
-			{name, func() mage.Card {
+			{name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{B}", 1, 1,
 					mage.WithSubTypes("Zombie"),
 					mage.WithAbility(mage.DiesCreatureTrigger(
@@ -70,10 +70,10 @@ func TestGenericTriggered(t *testing.T) {
 					)),
 				)
 			}},
-			{victimName, func() mage.Card {
+			{victimName, func() *mage.Card {
 				return mage.NewCreature(victimName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			}},
-			{boltName, func() mage.Card {
+			{boltName, func() *mage.Card {
 				return mage.NewInstant(boltName, "{R}",
 					mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))),
 				)
@@ -98,7 +98,7 @@ func TestGenericTriggered(t *testing.T) {
 	t.Run("attacks trigger via GenericTriggered", func(t *testing.T) {
 		name := "DSL Attack Pumper"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{R}", 2, 2,
 					mage.WithSubTypes("Warrior"),
 					mage.WithAbility(mage.NewTriggered(
@@ -124,7 +124,7 @@ func TestDestroyAllCollapse(t *testing.T) {
 	t.Run("DestroyAllCreatures still works", func(t *testing.T) {
 		name := "DSL Wrath"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewSorcery(name, "{2}{W}{W}",
 					mage.NewSpellAbility(mage.DestroyAllCreatures()),
 				)
@@ -132,7 +132,7 @@ func TestDestroyAllCollapse(t *testing.T) {
 		}
 		creatureName := "DSL Bear"
 		if !mage.CardRegistered(creatureName) {
-			mage.Register(creatureName, func() mage.Card {
+			mage.Register(creatureName, func() *mage.Card {
 				return mage.NewCreature(creatureName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
@@ -154,7 +154,7 @@ func TestXVariantCollapse(t *testing.T) {
 	t.Run("DealXDamage still works", func(t *testing.T) {
 		name := "DSL X Damage"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewSorcery(name, "{X}{R}",
 					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 				)
@@ -173,7 +173,7 @@ func TestXVariantCollapse(t *testing.T) {
 	t.Run("DrawXCards still works", func(t *testing.T) {
 		name := "DSL X Draw"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewSorcery(name, "{X}{U}",
 					mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.XValue())),
 				)
@@ -199,7 +199,7 @@ func TestFuncEffect(t *testing.T) {
 	t.Run("inline effect via FuncEffect", func(t *testing.T) {
 		name := "DSL Func Spell"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewSorcery(name, "{R}",
 					mage.NewSpellAbility(mage.FuncEffect(
 						"deal 3 damage to each player",
@@ -230,7 +230,7 @@ func TestSourceTargetUnification(t *testing.T) {
 	t.Run("BoostSourceUntilEndOfTurn pumps source", func(t *testing.T) {
 		name := "DSL Boost Source"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewCreature(name, "{1}{R}", 2, 2,
 					mage.WithSubTypes("Warrior"),
 					mage.WithAbility(mage.NewTriggered(
@@ -256,19 +256,19 @@ func TestConditionalTargetContinuousEffects(t *testing.T) {
 	registerCh07bTestCards()
 	for _, reg := range []struct {
 		n string
-		f func() mage.Card
+		f func() *mage.Card
 	}{
-		{"DSL Shatter", func() mage.Card {
+		{"DSL Shatter", func() *mage.Card {
 			return mage.NewInstant("DSL Shatter", "{1}{R}",
 				mage.NewTargetedSpell(mage.TargetArtifact(), mage.DestroyTargetArtifact()),
 			)
 		}},
-		{"DSL Terror", func() mage.Card {
+		{"DSL Terror", func() *mage.Card {
 			return mage.NewInstant("DSL Terror", "{1}{B}",
 				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTargetNoRegen()),
 			)
 		}},
-		{"Mountain", func() mage.Card {
+		{"Mountain", func() *mage.Card {
 			return mage.NewLand("Mountain",
 				mage.WithManaAbility(core.Red),
 				mage.WithSubTypes("Mountain"),
@@ -283,7 +283,7 @@ func TestConditionalTargetContinuousEffects(t *testing.T) {
 	t.Run("target boost applies only while source is tapped", func(t *testing.T) {
 		name := "DSL Tapped Source Weapon"
 		if !mage.CardRegistered(name) {
-			mage.Register(name, func() mage.Card {
+			mage.Register(name, func() *mage.Card {
 				return mage.NewArtifact(name, "{2}",
 					mage.WithKeyword(core.AttrMayNotUntap),
 					mage.WithActivatedAbility(
@@ -375,9 +375,9 @@ func TestConditionalTargetContinuousEffects(t *testing.T) {
 		walkerName := "DSL Double Landwalker"
 		for _, reg := range []struct {
 			n string
-			f func() mage.Card
+			f func() *mage.Card
 		}{
-			{name, func() mage.Card {
+			{name, func() *mage.Card {
 				return mage.NewLand(name,
 					mage.WithActivatedAbility(
 						mage.RevokeLandwalk().Targeting(mage.ToTarget()).Until(core.EndOfTurn),
@@ -386,7 +386,7 @@ func TestConditionalTargetContinuousEffects(t *testing.T) {
 					),
 				)
 			}},
-			{walkerName, func() mage.Card {
+			{walkerName, func() *mage.Card {
 				return mage.NewCreature(walkerName, "{3}{B}", 3, 3,
 					mage.WithKeyword(core.Swampwalk),
 					mage.WithKeyword(core.Mountainwalk),

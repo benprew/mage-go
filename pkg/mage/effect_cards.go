@@ -671,7 +671,7 @@ func (*searchLibraryEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	// Remove the chosen card from library
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != card.ID() {
 			newLib = append(newLib, c)
@@ -697,7 +697,7 @@ func (*searchLibraryToTopEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	// Remove the chosen card from library
-	newLib := make([]Card, 0, len(lib))
+	newLib := make([]*Card, 0, len(lib))
 	newLib = append(newLib, card)
 	for _, c := range lib {
 		if c.ID() != card.ID() {
@@ -711,7 +711,7 @@ func (*searchLibraryToTopEffect) Apply(ctx *EffectContext) error {
 func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Apply(ctx *EffectContext) error {
 	for _, p := range ctx.Game.AllPlayers() {
 		// Move hand into library (copy slice since RemoveFromHand modifies it)
-		hand := append([]Card(nil), p.Hand()...)
+		hand := append([]*Card(nil), p.Hand()...)
 		for _, c := range hand {
 			p.RemoveFromHand(c.ID())
 			p.AddToLibrary(c)
@@ -745,7 +745,7 @@ func (e *putFromHandOntoBattlefieldEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	hand := p.Hand()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range hand {
 		if e.filter.Match(c) {
 			candidates = append(candidates, c)
@@ -770,7 +770,7 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	lib := p.Library()
-	var candidates []Card
+	var candidates []*Card
 	for _, c := range lib {
 		if e.filter.Match(c) {
 			candidates = append(candidates, c)
@@ -786,7 +786,7 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	// Remove from library
-	newLib := make([]Card, 0, len(lib)-1)
+	newLib := make([]*Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != card.ID() {
 			newLib = append(newLib, c)

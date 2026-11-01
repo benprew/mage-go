@@ -78,7 +78,6 @@ func (EventBlocksOrBecomesBlocked) CheckTriggerCond(evt *GameEvent, g GameReader
 	return evt.SourceID == sourceID || evt.TargetID == sourceID
 }
 
-
 // EventPlayerIsController checks evt.PlayerID == controllerID.
 type EventPlayerIsController struct{}
 

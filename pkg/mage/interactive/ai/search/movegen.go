@@ -194,7 +194,7 @@ func abilityQualityFromInfo(p mage.Player, g *mage.Game, info mage.ActivatableIn
 	return eval.AbilityQuality(aa, p, g)
 }
 
-func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
+func expandSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	mc := card.ManaCost()
 
 	// Modal spells: generate one move per mode
@@ -209,7 +209,7 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 }
 
 // expandModalSpellMoves generates one set of moves per mode for modal spells.
-func expandModalSpellMoves(p mage.Player, g *mage.Game, card mage.Card, modes []string) []Move {
+func expandModalSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, modes []string) []Move {
 	var allMoves []Move
 	maxModes := min(len(modes), 3)
 	for modeIdx := range maxModes {
@@ -222,7 +222,7 @@ func expandModalSpellMoves(p mage.Player, g *mage.Game, card mage.Card, modes []
 // expandXSpellMoves generates moves for X-cost spells with target-aware values.
 // In addition to 1, max/2, and max, it tries X values that are lethal to
 // opponent creatures or the opponent's life total.
-func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
+func expandXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	playerID := p.PlayerID()
 	mc := card.ManaCost()
 	maxX := g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
@@ -242,7 +242,7 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	// Target-aware X values: add toughness values of opponent creatures
 	// and opponent life total if the spell deals damage.
 	isDamageSpell := false
-	for _, a := range card.Abilities() {
+	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
@@ -293,7 +293,7 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 }
 
 // expandNonXSpellMoves generates targeting variants for a spell with an optional X value and mode index.
-func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, modeIndex int) []Move {
+func expandNonXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, xValue, modeIndex int) []Move {
 	playerID := p.PlayerID()
 	sv := eval.SpellValue(card, p, g)
 	// Bonus for higher X values
