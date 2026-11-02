@@ -756,7 +756,7 @@ func NewPermanent(card *Card, controller uuid.UUID) *Permanent {
 		incarnationID:      uuid.New(),
 		computedController: controller,
 		baseController:     controller,
-		RuntimeAbilities:   slices.Clone(card.abilities),
+		RuntimeAbilities:   freshPermanentAbilities(card.abilities),
 	}
 	// Populate baseAttrs from card types.
 	for _, t := range card.Types() {

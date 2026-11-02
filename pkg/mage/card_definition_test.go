@@ -250,7 +250,7 @@ func TestCardDefinitionActivationCloneState(t *testing.T) {
 	clone := g.Clone()
 	clonedPermanent := clone.FindPermanent(card.ID())
 	clonedAction := clonedPermanent.RuntimeAbilities[0].(*ActionDefinition)
-	if clonedAction != clonedPermanent.Card.Abilities()[0] || clonedAction == action || !clonedAction.activatedThisTurn {
+	if clonedAction == clonedPermanent.Card.Abilities()[0] || clonedAction == action || !clonedAction.activatedThisTurn {
 		t.Fatal("clone lost ability state or reference identity")
 	}
 	clonedAction.ResetActivation()

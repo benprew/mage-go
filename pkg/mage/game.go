@@ -592,7 +592,7 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 	perm.FaceDown = false
 	perm.BasePTOverride = nil
 	// Restore original abilities from the card
-	perm.RuntimeAbilities = slices.Clone(perm.Card.abilities)
+	perm.RuntimeAbilities = freshPermanentAbilities(perm.Card.abilities)
 	g.syncAbilityContext(perm)
 	// Register continuous effects from static abilities
 	for _, a := range perm.RuntimeAbilities {

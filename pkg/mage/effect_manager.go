@@ -45,7 +45,19 @@ func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
 	if source != nil && source.printedAbilitiesSuppressed {
 		return false
 	}
-	return e.ContinuousEffect.IsActive(g)
+	if source == nil {
+		return false
+	}
+	for _, ability := range source.RuntimeAbilities {
+		if static, ok := UnwrapAbility(ability).(*StaticAbilityHolder); ok {
+			for _, effect := range static.Effects {
+				if effect == e.ContinuousEffect {
+					return effect.IsActive(g)
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (e *printedAbilityContinuousEffect) cloneEffect() ContinuousEffect {
@@ -518,7 +530,14 @@ func (em *EffectManager) Apply(g *Game) {
 			restored := make([]Ability, 0, len(p.Card.abilities)+len(p.RuntimeAbilities))
 			for _, a := range p.Card.abilities {
 				if !existing[a.AbilityID()] {
-					restored = append(restored, a)
+					ability := cloneInstanceAbility(a)
+					restored = append(restored, ability)
+					if static, ok := ability.(*StaticAbilityHolder); ok {
+						for _, effect := range static.Effects {
+							effect.SetSourceID(p.ID())
+							em.Add(&printedAbilityContinuousEffect{ContinuousEffect: effect})
+						}
+					}
 				}
 			}
 			p.RuntimeAbilities = append(restored, p.RuntimeAbilities...)

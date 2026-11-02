@@ -141,10 +141,8 @@ func (ctx *gameCloneContext) basePlayer(bp *BasePlayer) *BasePlayer {
 	return clone
 }
 
-// clonePermanentInto deep-copies src into dst (which may be a freshly-allocated
-// struct or a slot inside a slab). Card refs, Ability interface refs, and
-// BasePTOverride/ColorOverride pointer contents are deep-copied; slices are
-// copied only when non-empty.
+// clonePermanentInto copies permanent state and shares card and ability references.
+// A game clone or LKI snapshot must copy those references with its clone context.
 func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
 		Card:                       src.Card, // shared
@@ -182,11 +180,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		dst.Attachments = make([]uuid.UUID, len(src.Attachments))
 		copy(dst.Attachments, src.Attachments)
 	}
-	// RuntimeAbilities: copy-on-write. Share the backing array with src but
-	// force cap == len via the three-index slice form, so any subsequent
-	// append on either side allocates a new array. All current mutation
-	// sites are either `= nil`, `= append(...)`, or `= freshSlice` — never
-	// an index assignment — so this sharing is safe.
+	// A full slice expression prevents append from changing the source slice.
 	if n := len(src.RuntimeAbilities); n > 0 {
 		dst.RuntimeAbilities = src.RuntimeAbilities[:n:n]
 	}

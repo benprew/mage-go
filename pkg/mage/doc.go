@@ -69,7 +69,9 @@
 // context. Legacy and definition-backed cards both get private mutable state.
 // References to the same object remain consistent within the branch.
 // Payment validation and simultaneous zone changes use the same operation.
-// Definitions are shared. Battlefield state stays on [Permanent]. Targets,
+// Definitions are shared. Each permanent has private runtime abilities.
+// Last-known information has private card and ability state. Battlefield state
+// stays on [Permanent]. Targets,
 // selected modes, X, payments, and distributions stay on [StackObject] or in
 // local announcement state. Target requirements do not store announcement choices.
 //

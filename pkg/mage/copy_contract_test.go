@@ -169,8 +169,8 @@ func TestGameClonePreservesPermanentAbilityAliases(t *testing.T) {
 	permanent := g.PutOnBattlefield(card, owner)
 	branch := g.Clone()
 	cloned := branch.FindPermanent(permanent.ID())
-	if cloned.Card == card || cloned.RuntimeAbilities[0] != cloned.Card.Abilities()[0] {
-		t.Fatal("payment clone lost the card ability alias")
+	if cloned.Card == card || cloned.RuntimeAbilities[0] == cloned.Card.Abilities()[0] {
+		t.Fatal("payment clone shares runtime and card abilities")
 	}
 	cloned.RuntimeAbilities[0].(*ActionDefinition).activatedThisTurn = true
 	if permanent.RuntimeAbilities[0].(*ActionDefinition).activatedThisTurn {
@@ -203,7 +203,7 @@ func TestGameCloneStaticEffectAlias(t *testing.T) {
 	card := NewCreature("Static Source", "{0}", 1, 1, WithAbility(StaticAbility(effect)))
 	permanent := g.PutOnBattlefield(card, g.players[0].PlayerID())
 	branch := g.Clone()
-	cloned := branch.FindPermanent(permanent.ID()).Card.Abilities()[0].(*StaticAbilityHolder).Effects[0]
+	cloned := branch.FindPermanent(permanent.ID()).RuntimeAbilities[0].(*StaticAbilityHolder).Effects[0]
 	if cloned == effect {
 		t.Fatal("static ability effect is shared with the original")
 	}
@@ -217,7 +217,7 @@ func TestGameCloneStaticEffectAlias(t *testing.T) {
 		t.Fatal("active effect lost its static ability alias")
 	}
 	cloned.SetSourceID(uuid.New())
-	if effect.SourceID() != permanent.ID() {
+	if permanent.RuntimeAbilities[0].(*StaticAbilityHolder).Effects[0].SourceID() != permanent.ID() {
 		t.Fatal("cloned effect changed the original source")
 	}
 }

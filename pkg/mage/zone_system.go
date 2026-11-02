@@ -512,8 +512,7 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 	if owner == uuid.Nil {
 		owner = p.ControllerID()
 	}
-	snap := &Permanent{}
-	clonePermanentInto(snap, p)
+	snap := newGameCloneContext().permanent(p)
 	zs.lki[p.ID()] = &PermanentLKI{
 		ID:        p.ID(),
 		Name:      p.Name(),
