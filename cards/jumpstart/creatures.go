@@ -863,44 +863,22 @@ func registerCreatures() {
 	// • Put a +1/+1 counter on this creature.
 	// • Return target artifact or enchantment card from your graveyard to your hand.
 	Register("Trusty Retriever", func() *Card {
-		artifactOrEnchantmentCard := NewCardFilter("artifact or enchantment card", func(c *Card) bool {
-			return c.HasType(TypeArtifact) || c.HasType(TypeEnchantment)
+		artifactOrEnchantmentCard := NewCardFilter("artifact or enchantment card", func(card *Card) bool {
+			return card.HasType(TypeArtifact) || card.HasType(TypeEnchantment)
 		})
 		return NewCreature("Trusty Retriever", "{3}{W}", 2, 3,
 			WithSubTypes("Dog"),
-			WithAbility(EntersBattlefieldTrigger(
-				ModalTriggerEffect("Trusty Retriever ETB", []ModalTriggerMode{
-					{
-						Label: "Put a +1/+1 counter on this creature",
-						Resolve: func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							if perm := g.MutablePermanent(sourceID); perm != nil {
-								perm.AddCounter(P1P1, 1)
-								g.ApplyContinuousEffects()
-							}
-							return nil
-						},
-					},
-					{
-						Label: "Return target artifact or enchantment card from your graveyard to your hand",
-						Resolve: func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 || targets[0] == uuid.Nil {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p == nil {
-								return nil
-							}
-							picked, ok := p.RemoveFromGraveyard(targets[0])
-							if !ok {
-								return nil
-							}
-							p.AddToHand(picked)
-							return nil
-						},
-					},
-				}),
-				false,
-			).AddTarget(TargetCardInYourGraveyard(artifactOrEnchantmentCard))),
+			WithAbility(EntersBattlefieldTrigger(nil, false).WithModes(
+				Mode{
+					Label:   "Put a +1/+1 counter on this creature",
+					Effects: []Effect{AddCounters(P1P1, Fixed(1)).Targeting(ToSource())},
+				},
+				Mode{
+					Label:   "Return target artifact or enchantment card from your graveyard to your hand",
+					Targets: []Target{TargetCardInYourGraveyard(artifactOrEnchantmentCard)},
+					Effects: []Effect{ReturnFromGraveyardToHandTarget()},
+				},
+			)),
 		)
 	})
 
