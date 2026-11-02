@@ -324,8 +324,8 @@
 // [PlayerSelector] to support single-player or all-player effects.
 //
 // [ChangeOwner] changes the owner of a card without moving the card or
-// changing its controller. It operates in all card zones. It replaces the card
-// copy-on-write to keep cloned search states isolated. [OwnedBy] and
+// changing its controller. It operates in all card zones. It updates the card in place.
+// Each cloned game has private card state. [OwnedBy] and
 // [NotOwnedBy] filter permanents by ownership rather than control. When a game
 // concludes with one winner, [AnteResult] gives the ante cards to that winner.
 // It returns all ownership changes.

@@ -255,67 +255,8 @@ func (g *Game) ChangeOwner(cardID, newOwnerID uuid.UUID) error {
 	if _, ok := g.originalOwners[cardID]; !ok {
 		g.originalOwners[cardID] = card.Owner()
 	}
-	replacement := card.CloneInstance()
-	replacement.SetOwner(newOwnerID)
-	if !g.replaceCardReference(cardID, replacement) {
-		return fmt.Errorf("card not found: %s", cardID)
-	}
+	card.SetOwner(newOwnerID)
 	return nil
-}
-
-func replaceCardInSlice(cards []*Card, cardID uuid.UUID, replacement *Card) ([]*Card, bool) {
-	for i, c := range cards {
-		if c.ID() == cardID {
-			out := append([]*Card(nil), cards...)
-			out[i] = replacement
-			return out, true
-		}
-	}
-	return cards, false
-}
-
-func (g *Game) replaceCardReference(cardID uuid.UUID, replacement *Card) bool {
-	if perm := g.FindPermanentIncludingPhased(cardID); perm != nil {
-		mutable := g.MutablePermanent(cardID)
-		mutable.Card = replacement
-		return true
-	}
-	if ep := g.zones.EnteringPermanent(); ep != nil && ep.ID() == cardID {
-		ep.Card = replacement
-		return true
-	}
-	for _, obj := range g.stack.objects {
-		if obj.Card != nil && obj.Card.ID() == cardID {
-			obj.Card = replacement
-			return true
-		}
-	}
-	if rc := g.resolution.ResolvingCard(); rc != nil && rc.ID() == cardID {
-		g.resolution.SetResolvingCard(replacement)
-		return true
-	}
-	if g.zones.ReplaceExiledCard(cardID, replacement) {
-		return true
-	}
-	for _, player := range g.players {
-		if cards, ok := replaceCardInSlice(player.Library(), cardID, replacement); ok {
-			player.SetLibrary(cards)
-			return true
-		}
-		if cards, ok := replaceCardInSlice(player.Hand(), cardID, replacement); ok {
-			player.SetHand(cards)
-			return true
-		}
-		if cards, ok := replaceCardInSlice(player.Graveyard(), cardID, replacement); ok {
-			player.SetGraveyard(cards)
-			return true
-		}
-		if cards, ok := replaceCardInSlice(player.Ante(), cardID, replacement); ok {
-			player.SetAnte(cards)
-			return true
-		}
-	}
-	return false
 }
 
 // AnteResult settles the ante to the sole winner and returns all net ownership
