@@ -243,7 +243,9 @@ func (c *Card) SetModes(modes []string) {
 }
 func (c *Card) AddType(t CardType) {
 	data := c.mutableCharacteristics()
-	data.types = append(data.types, t)
+	if !slices.Contains(data.types, t) {
+		data.types = append(data.types, t)
+	}
 }
 func (c *Card) AddSubType(t string) {
 	data := c.mutableCharacteristics()
