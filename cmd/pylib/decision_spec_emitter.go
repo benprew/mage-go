@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // DecisionType / AnchorKind enums mirror the Python definitions in
@@ -188,7 +188,7 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 		attackerIndex := map[uuid.UUID]int32{}
 		for _, opt := range options {
 			for _, t := range opt.ValidTargets {
-				if t.IDUUID == uuid.Nil {
+				if t.IDUUID == uuid.Nil() {
 					continue
 				}
 				if _, exists := attackerIndex[t.IDUUID]; !exists {
@@ -222,7 +222,7 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 		}
 		for blkIdx, opt := range options {
 			for _, t := range opt.ValidTargets {
-				if t.IDUUID == uuid.Nil {
+				if t.IDUUID == uuid.Nil() {
 					continue
 				}
 				if atkIdx, ok := attackerIndex[t.IDUUID]; ok {

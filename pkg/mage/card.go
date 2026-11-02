@@ -4,8 +4,7 @@ import (
 	"iter"
 	"slices"
 	"strings"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -1030,7 +1029,7 @@ func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
 
 // IsAttached returns true if this permanent is attached to something.
 func (p *Permanent) IsAttached() bool {
-	return p.AttachedTo != uuid.Nil
+	return p.AttachedTo != uuid.Nil()
 }
 
 // CanDeclareAsAttacker returns true if this permanent may be declared as an attacker.

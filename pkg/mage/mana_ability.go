@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -83,7 +83,7 @@ func (ma *ManaAbility) PrimaryColor() Color {
 // as a tap-for-mana source. It recognizes both ManaAbility and activated
 // abilities whose only cost is tapping and whose effects only add mana.
 func ManaProductionsForAbility(a Ability) []ManaProduction {
-	productions := abilityManaProductions(UnwrapAbility(a), nil, uuid.Nil)
+	productions := abilityManaProductions(UnwrapAbility(a), nil, uuid.Nil())
 	if productions == nil {
 		return nil
 	}

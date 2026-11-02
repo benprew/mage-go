@@ -3,8 +3,7 @@ package mage
 import (
 	"slices"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )

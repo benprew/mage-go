@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/catalog"
 	. "github.com/benprew/mage-go/pkg/mage/core"

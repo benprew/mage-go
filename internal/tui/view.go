@@ -5,9 +5,9 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"uuid"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/interactive"
 )

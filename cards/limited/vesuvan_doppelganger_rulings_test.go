@@ -3,8 +3,7 @@ package limited
 import (
 	"slices"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -73,7 +72,7 @@ func doppelgangerRulingsCopy(t *testing.T, g *mage.Game, player *doppelgangerRul
 	t.Helper()
 	player.permanentChoice = model.ID()
 	source := g.PutOnBattlefield(doppelgangerRulingsCard(t, player.PlayerID()), player.PlayerID())
-	player.permanentChoice = uuid.Nil
+	player.permanentChoice = uuid.Nil()
 	expectedName := model.Name()
 	if model.FaceDown {
 		expectedName = ""

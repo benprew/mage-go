@@ -2,8 +2,7 @@ package jumpstart
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage"
@@ -18,7 +17,7 @@ func findCardInGraveyard(g *gametest.TestGame, ref gametest.PlayerRef, name stri
 			return c.ID()
 		}
 	}
-	return uuid.Nil
+	return uuid.Nil()
 }
 
 func TestScourgeOfNelToth_NormalCastFromHand(t *testing.T) {
@@ -47,7 +46,7 @@ func TestScourgeOfNelToth_AlternateCostFromGraveyard(t *testing.T) {
 	pA.ManaPool().Add(core.Black, 2)
 
 	scourgeID := findCardInGraveyard(g, gametest.PlayerA, "Scourge of Nel Toth")
-	if scourgeID == uuid.Nil {
+	if scourgeID == uuid.Nil() {
 		t.Fatalf("Scourge not in graveyard")
 	}
 
@@ -74,7 +73,7 @@ func TestScourgeOfNelToth_AlternateCostInsufficientMana(t *testing.T) {
 	pA.ManaPool().Add(core.Black, 1)
 
 	scourgeID := findCardInGraveyard(g, gametest.PlayerA, "Scourge of Nel Toth")
-	if scourgeID == uuid.Nil {
+	if scourgeID == uuid.Nil() {
 		t.Fatalf("Scourge not in graveyard")
 	}
 
@@ -98,7 +97,7 @@ func TestScourgeOfNelToth_AlternateCostInsufficientCreatures(t *testing.T) {
 	pA.ManaPool().Add(core.Black, 2)
 
 	scourgeID := findCardInGraveyard(g, gametest.PlayerA, "Scourge of Nel Toth")
-	if scourgeID == uuid.Nil {
+	if scourgeID == uuid.Nil() {
 		t.Fatalf("Scourge not in graveyard")
 	}
 

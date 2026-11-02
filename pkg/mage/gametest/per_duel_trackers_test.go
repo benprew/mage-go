@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -119,7 +118,7 @@ func TestDuelNonCombatDamage(t *testing.T) {
 	a := tg.GetPlayer(PlayerA).PlayerID()
 	b := tg.GetPlayer(PlayerB).PlayerID()
 
-	tg.DealDamageToPlayer(tg.GetPlayer(PlayerB), 5, uuid.Nil)
+	tg.DealDamageToPlayer(tg.GetPlayer(PlayerB), 5, uuid.Nil())
 
 	if got := tg.DuelObjectivesFor(a).NonCombatDamageDealt; got != 5 {
 		t.Errorf("PlayerA NonCombatDamageDealt = %d, want 5", got)

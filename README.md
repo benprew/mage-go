@@ -72,7 +72,7 @@ go build ./...   # build check
 go vet ./...     # vet
 ```
 
-The only external dependency is `github.com/google/uuid`.
+The rules engine uses only the Go standard library.
 
 ## Credits
 

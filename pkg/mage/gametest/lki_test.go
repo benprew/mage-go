@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -86,7 +85,7 @@ func TestLKI_DirectAccessor(t *testing.T) {
 	if !captured {
 		t.Fatalf("expected LKI to be populated for died creature")
 	}
-	if capturedController == uuid.Nil {
+	if capturedController == uuid.Nil() {
 		t.Fatalf("expected LKI controller to be set")
 	}
 }

@@ -3,11 +3,10 @@ package gametest
 import (
 	"sync"
 	"testing"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 var eventSourceIDOnce sync.Once
@@ -58,14 +57,14 @@ func TestEventSourceID_OnDamageTrigger(t *testing.T) {
 	bearID := tg.AddCard(core.ZoneBattlefield, PlayerA, "Test Vengeful Bear")
 	tg.AddCard(core.ZoneHand, PlayerB, "Test ESID Bolt")
 
-	capturedDamageSource = uuid.Nil
+	capturedDamageSource = uuid.Nil()
 
 	// PlayerB casts Test ESID Bolt at the bear, dealing 2 damage.
 	tg.CastSpell(2, core.PrecombatMain, PlayerB, "Test ESID Bolt", "Test Vengeful Bear")
 	tg.StopAt(2, core.EndStep)
 	tg.Execute()
 
-	if capturedDamageSource == uuid.Nil {
+	if capturedDamageSource == uuid.Nil() {
 		t.Fatal("trigger did not fire (or EventSourceID was nil)")
 	}
 	if capturedDamageSource == bearID {

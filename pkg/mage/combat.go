@@ -2,8 +2,7 @@ package mage
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -45,8 +44,8 @@ func (c *Combat) Reset() {
 	c.Attackers = make(map[uuid.UUID]bool)
 	c.FirstStruck = make(map[uuid.UUID]bool)
 	c.Bands = make(map[uuid.UUID][]uuid.UUID)
-	c.AttackedAlone = uuid.Nil
-	c.BlockedAlone = uuid.Nil
+	c.AttackedAlone = uuid.Nil()
+	c.BlockedAlone = uuid.Nil()
 }
 
 func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
@@ -91,7 +90,7 @@ func (c *Combat) SnapshotAttackedAlone() {
 			c.AttackedAlone = id
 		}
 	} else {
-		c.AttackedAlone = uuid.Nil
+		c.AttackedAlone = uuid.Nil()
 	}
 }
 
@@ -107,7 +106,7 @@ func (c *Combat) SnapshotBlockedAlone() {
 			only = bid
 			count++
 			if count > 1 {
-				c.BlockedAlone = uuid.Nil
+				c.BlockedAlone = uuid.Nil()
 				return
 			}
 		}
@@ -115,7 +114,7 @@ func (c *Combat) SnapshotBlockedAlone() {
 	if count == 1 {
 		c.BlockedAlone = only
 	} else {
-		c.BlockedAlone = uuid.Nil
+		c.BlockedAlone = uuid.Nil()
 	}
 }
 
@@ -123,7 +122,7 @@ func (c *Combat) SnapshotBlockedAlone() {
 // attacker during the most recent declare-attackers step (CR 506.5,
 // snapshot semantics — used by Exalted, etc.).
 func (c *Combat) AttacksAlone(id uuid.UUID) bool {
-	return id != uuid.Nil && c.AttackedAlone == id
+	return id != uuid.Nil() && c.AttackedAlone == id
 }
 
 // IsAttackingAlone returns true if id is currently the only attacker
@@ -136,7 +135,7 @@ func (c *Combat) IsAttackingAlone(id uuid.UUID) bool {
 // blocker during the most recent declare-blockers step (CR 506.5,
 // snapshot semantics).
 func (c *Combat) BlocksAlone(id uuid.UUID) bool {
-	return id != uuid.Nil && c.BlockedAlone == id
+	return id != uuid.Nil() && c.BlockedAlone == id
 }
 
 // IsBlockingAlone returns true if id is currently the only blocker
@@ -189,7 +188,7 @@ func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 	delete(c.Attackers, id)
 	for _, g := range c.Groups {
 		if g.AttackerID == id {
-			g.AttackerID = uuid.Nil
+			g.AttackerID = uuid.Nil()
 		}
 		filtered := g.BlockerIDs[:0]
 		for _, bid := range g.BlockerIDs {

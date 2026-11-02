@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -25,7 +24,7 @@ func (e *changeOwnerGatheredEffect) Properties() EffectProperties {
 }
 func (e *changeOwnerGatheredEffect) Apply(ctx *EffectContext) error {
 	cardID := ctx.TryGetUUID(e.varName)
-	if cardID == uuid.Nil {
+	if cardID == uuid.Nil() {
 		return nil
 	}
 	if variable, ok := e.newOwner.(*VarPlayerSelector); ok {
@@ -58,7 +57,7 @@ func (e *moveExiledGatheredToGraveyardEffect) Properties() EffectProperties {
 }
 func (e *moveExiledGatheredToGraveyardEffect) Apply(ctx *EffectContext) error {
 	cardID := ctx.TryGetUUID(e.varName)
-	if cardID == uuid.Nil {
+	if cardID == uuid.Nil() {
 		return nil
 	}
 	exiled := ctx.Game.FindExiledCard(cardID)

@@ -2,8 +2,7 @@ package legends
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"

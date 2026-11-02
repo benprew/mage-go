@@ -3,8 +3,7 @@ package secretsofstrixhaven
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -460,7 +459,7 @@ func registerCreatures() {
 			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 				// targets[0] = the targeted object (this creature, auto-bound by EvtBecomesTarget)
 				// targets[1] = the spell/ability source
-				if len(targets) < 2 || targets[1] == uuid.Nil {
+				if len(targets) < 2 || targets[1] == uuid.Nil() {
 					return nil
 				}
 				// The controller of the targeting spell/ability is the opponent.
@@ -475,7 +474,7 @@ func registerCreatures() {
 						opponentID = perm.ControllerID()
 					}
 				}
-				if opponentID == uuid.Nil {
+				if opponentID == uuid.Nil() {
 					return nil
 				}
 				opponent := g.GetPlayer(opponentID)
@@ -1415,7 +1414,7 @@ func registerCreatures() {
 							}
 							card := perm.Card
 							owner := card.Owner()
-							if owner == uuid.Nil {
+							if owner == uuid.Nil() {
 								owner = perm.ControllerID()
 							}
 							g.ExilePermanent(perm)
@@ -2622,7 +2621,7 @@ func registerCreatures() {
 								break
 							}
 						}
-						if spellSourceID == uuid.Nil {
+						if spellSourceID == uuid.Nil() {
 							return nil
 						}
 						// XXX: Oracle says "you may choose new targets for the copy" (optional retarget).
@@ -3327,7 +3326,7 @@ func registerCreatures() {
 			"counter that spell or ability unless its controller pays {1}",
 			EffectProperties{Outcome: OutcomeBenefit},
 			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-				if len(targets) < 2 || targets[1] == uuid.Nil {
+				if len(targets) < 2 || targets[1] == uuid.Nil() {
 					return nil
 				}
 				obj := g.FindStackObject(targets[1])
@@ -3340,7 +3339,7 @@ func registerCreatures() {
 						opponentID = perm.ControllerID()
 					}
 				}
-				if opponentID == uuid.Nil {
+				if opponentID == uuid.Nil() {
 					return nil
 				}
 				opponent := g.GetPlayer(opponentID)
@@ -3663,7 +3662,7 @@ func registerCreatures() {
 								break
 							}
 						}
-						if spellSourceID == uuid.Nil {
+						if spellSourceID == uuid.Nil() {
 							return nil
 						}
 						// XXX: Oracle says "you may choose new targets for the copy" (optional reprompt),
@@ -4760,7 +4759,7 @@ func registerCreatures() {
 						if totalCounters == 0 {
 							return nil
 						}
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						dest := g.FindPermanent(targets[0])
@@ -5377,7 +5376,7 @@ func registerCreatures() {
 				FuncEffect("exile target nonland permanent an opponent controls with MV <= colors spent",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						src := g.MutablePermanent(sourceID)
@@ -5408,7 +5407,7 @@ func registerCreatures() {
 				FuncEffect("put target card from a graveyard on the bottom of its owner's library",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						cardID := targets[0]

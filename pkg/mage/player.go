@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"math/rand"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -338,7 +337,7 @@ func (p *BasePlayer) DrawCard() (*Card, bool) {
 func (p *BasePlayer) LastDrawnCardID() uuid.UUID { return p.lastDrawnCardID }
 
 // ClearLastDrawnCard resets the last drawn card tracking (called at turn start).
-func (p *BasePlayer) ClearLastDrawnCard() { p.lastDrawnCardID = uuid.Nil }
+func (p *BasePlayer) ClearLastDrawnCard() { p.lastDrawnCardID = uuid.Nil() }
 
 // PoisonCounters returns the number of poison counters this player has.
 func (p *BasePlayer) PoisonCounters() int { return p.poisonCounters }
@@ -463,7 +462,7 @@ func (p *BasePlayer) ChooseSurveilPlacement(top []*Card, reason string, g GameRe
 
 func (p *BasePlayer) assertOwner(c *Card) {
 	owner := c.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		c.SetOwner(p.id)
 	} else if owner != p.id {
 		panic(fmt.Sprintf("card %s (ID %s) has owner %s, expected %s (%s)",

@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // cloneInstanceAbility copies ability context. Compiled effects and costs are immutable.
@@ -18,8 +17,8 @@ func freshPermanentAbilities(abilities []Ability) []Ability {
 	ctx := newGameCloneContext()
 	cloned := ctx.abilityList(abilities)
 	for _, ability := range ctx.abilities {
-		ability.SetSource(uuid.Nil)
-		ability.SetController(uuid.Nil)
+		ability.SetSource(uuid.Nil())
+		ability.SetController(uuid.Nil())
 		if action, ok := ability.(interface{ ResetActivation() }); ok {
 			action.ResetActivation()
 		}

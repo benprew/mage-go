@@ -3,8 +3,7 @@ package arabian
 import (
 	"slices"
 	"strings"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -159,7 +158,7 @@ func registerEnchantments() {
 					}
 					chosenColor := perm.ChosenColor
 					chosenPlayer := perm.ChosenPlayer
-					if chosenColor == 0 || chosenPlayer == uuid.Nil {
+					if chosenColor == 0 || chosenPlayer == uuid.Nil() {
 						return nil
 					}
 					// Check if chosen player controls a nontoken permanent of chosen color
@@ -199,7 +198,7 @@ func registerEnchantments() {
 					}
 					chosenColor := perm.ChosenColor
 					chosenPlayer := perm.ChosenPlayer
-					if chosenColor == 0 || chosenPlayer == uuid.Nil {
+					if chosenColor == 0 || chosenPlayer == uuid.Nil() {
 						return false
 					}
 					for _, p := range g.FilterBattlefield(AnyPermanent) {

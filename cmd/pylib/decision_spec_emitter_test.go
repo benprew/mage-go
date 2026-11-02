@@ -2,8 +2,7 @@ package main
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // testSpecIDs returns a token-id assignment used across the decision-spec

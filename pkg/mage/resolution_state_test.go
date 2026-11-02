@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -56,7 +55,7 @@ func TestResolutionState_BeginAndClear(t *testing.T) {
 	if s.EventAmount() != 0 {
 		t.Errorf("expected EventAmount reset to 0, got %d", s.EventAmount())
 	}
-	if s.EventSourceID() != uuid.Nil {
+	if s.EventSourceID() != uuid.Nil() {
 		t.Errorf("expected EventSourceID reset to nil, got %v", s.EventSourceID())
 	}
 	if s.ResolvingCastZone() != ZoneAny {
@@ -81,7 +80,7 @@ func TestResolutionState_ColorOverrideScoped(t *testing.T) {
 	}
 
 	cleanup()
-	if s.ColorSourceID() != uuid.Nil {
+	if s.ColorSourceID() != uuid.Nil() {
 		t.Errorf("expected ColorSourceID restored to Nil, got %v", s.ColorSourceID())
 	}
 	if s.ColorOverride() != nil {

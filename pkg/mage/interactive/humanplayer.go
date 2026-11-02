@@ -3,8 +3,7 @@ package interactive
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -229,7 +228,7 @@ func (p *HumanPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, 
 			choices = append(choices, ChoiceOption{Label: "Done"})
 		}
 		resp := p.requestChoice(ChoiceRequest{Type: ChoicePermanent, Reason: "Choose target", Options: choices})
-		if len(resp.SelectedIDs) == 0 || resp.SelectedIDs[0] == uuid.Nil {
+		if len(resp.SelectedIDs) == 0 || resp.SelectedIDs[0] == uuid.Nil() {
 			if len(selected) >= minimum {
 				return selected
 			}

@@ -1,9 +1,9 @@
 package mage
 
 import (
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	"uuid"
 
-	"github.com/google/uuid"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // SpellAbility is kept as a compatibility name for spell actions.

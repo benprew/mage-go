@@ -13,8 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/internal/scenario"
 	"github.com/benprew/mage-go/internal/tui"

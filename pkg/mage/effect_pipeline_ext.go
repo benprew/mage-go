@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -62,7 +61,7 @@ func (e *TapGatheredData) Properties() EffectProperties {
 
 func (e *TapGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	perm := ctx.Game.FindPermanent(id)
@@ -84,7 +83,7 @@ func (e *UntapGatheredData) Properties() EffectProperties {
 
 func (e *UntapGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	perm := ctx.Game.FindPermanent(id)
@@ -111,7 +110,7 @@ func (e *DealDamageToGatheredData) Properties() EffectProperties {
 
 func (e *DealDamageToGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
@@ -137,7 +136,7 @@ func (e *RegenerateGatheredData) Properties() EffectProperties {
 
 func (e *RegenerateGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	ctx.Game.AddRegenerationShield(id)
@@ -161,7 +160,7 @@ func (e *PreventDamageToGatheredData) Properties() EffectProperties {
 
 func (e *PreventDamageToGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
@@ -184,7 +183,7 @@ func (e *GrantAttrToGatheredData) Properties() EffectProperties { return EffectP
 
 func (e *GrantAttrToGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	perm := ctx.Game.MutablePermanent(id)
@@ -229,7 +228,7 @@ func (e *RegisterDelayedTriggerData) Apply(ctx *EffectContext) error {
 		}
 	} else if e.TargetVar != "" {
 		id := ctx.TryGetUUID(e.TargetVar)
-		if id != uuid.Nil {
+		if id != uuid.Nil() {
 			targetID = id
 		}
 	}
@@ -456,7 +455,7 @@ func (e *RemoveFromCombatGatheredData) Properties() EffectProperties { return Ef
 
 func (e *RemoveFromCombatGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	ctx.Game.RemoveFromCombat(id)
@@ -479,7 +478,7 @@ func (e *DestroyAttachedData) Properties() EffectProperties {
 
 func (*DestroyAttachedData) Apply(ctx *EffectContext) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
-	if src == nil || src.AttachedTo == uuid.Nil {
+	if src == nil || src.AttachedTo == uuid.Nil() {
 		return nil
 	}
 	target := ctx.Game.FindPermanent(src.AttachedTo)
@@ -505,7 +504,7 @@ func (e *GrantAttrToAttachedData) Properties() EffectProperties {
 
 func (e *GrantAttrToAttachedData) Apply(ctx *EffectContext) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
-	if src == nil || src.AttachedTo == uuid.Nil {
+	if src == nil || src.AttachedTo == uuid.Nil() {
 		return nil
 	}
 	target := ctx.Game.FindPermanent(src.AttachedTo)

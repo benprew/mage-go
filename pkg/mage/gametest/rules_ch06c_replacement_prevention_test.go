@@ -4,8 +4,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -329,7 +328,7 @@ func (r *ch06DoubleDamageReplacement) Replace(a mage.Action, _ *mage.Game) mage.
 	return act.WithAmount(act.Amount() * 2)
 }
 
-func (r *ch06DoubleDamageReplacement) SourceID() uuid.UUID             { return uuid.Nil }
+func (r *ch06DoubleDamageReplacement) SourceID() uuid.UUID             { return uuid.Nil() }
 func (r *ch06DoubleDamageReplacement) IsActive(_ mage.GameReader) bool { return true }
 func (r *ch06DoubleDamageReplacement) GetDuration() core.Duration      { return core.EndOfTurn }
 func (r *ch06DoubleDamageReplacement) Clone() mage.ReplacementEffect {

@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -40,7 +40,7 @@ func (g *Game) EffectiveColors(objectID uuid.UUID) []Color {
 // next changes zones.
 func (g *Game) ChangeObjectColor(objectID uuid.UUID, color Color) bool {
 	if permanent := g.FindPermanent(objectID); permanent != nil {
-		g.changePermanentColors(permanent, []Color{color}, uuid.Nil)
+		g.changePermanentColors(permanent, []Color{color}, uuid.Nil())
 		return true
 	}
 	object := g.stack.FindByID(objectID)

@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -150,7 +149,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 func (g *Game) FindGraveyardActivatableCard(playerID uuid.UUID, name string) (uuid.UUID, int, bool) {
 	pl := g.GetPlayer(playerID)
 	if pl == nil {
-		return uuid.Nil, -1, false
+		return uuid.Nil(), -1, false
 	}
 	for _, c := range pl.Graveyard() {
 		if name != "" && c.Name() != name {
@@ -168,5 +167,5 @@ func (g *Game) FindGraveyardActivatableCard(playerID uuid.UUID, name string) (uu
 			}
 		}
 	}
-	return uuid.Nil, -1, false
+	return uuid.Nil(), -1, false
 }

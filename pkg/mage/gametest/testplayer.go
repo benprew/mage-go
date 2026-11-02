@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -474,7 +473,7 @@ func (tp *TestPlayer) ChooseScryPlacement(top []*mage.Card, reason string, g mag
 				return c.ID(), true
 			}
 		}
-		return uuid.Nil, false
+		return uuid.Nil(), false
 	}
 
 	for _, name := range dec.bottom {
@@ -525,7 +524,7 @@ func (tp *TestPlayer) ChooseSurveilPlacement(top []*mage.Card, reason string, g 
 				return c.ID(), true
 			}
 		}
-		return uuid.Nil, false
+		return uuid.Nil(), false
 	}
 
 	for _, name := range dec.graveyard {

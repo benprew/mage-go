@@ -2,8 +2,7 @@ package secretsofstrixhaven
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -429,7 +428,7 @@ func registerSpells() {
 						// deal damage equal to power to opponent creature (up to one)
 						// re-query power after any boost was registered
 						g.ApplyContinuousEffects()
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							oppCreature := g.FindPermanent(targets[1])
 							if oppCreature != nil {
 								power := yourCreature.CurrentPower(g)
@@ -479,7 +478,7 @@ func registerSpells() {
 						}
 						g.AddContinuousEffect(TemporaryBoost(yourCreature.ID(), 0, 10))
 						g.ApplyContinuousEffects()
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							fightBetween(g, targets[0], targets[1])
 						}
 						return nil
@@ -533,7 +532,7 @@ func registerSpells() {
 							g.PlayerDrawCard(targetPlayer)
 							targetPlayer.LoseLife(2)
 						}
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							perm := g.FindPermanent(targets[1])
 							if perm != nil {
 								g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
@@ -567,7 +566,7 @@ func registerSpells() {
 						}
 						card := perm.Card
 						owner := card.Owner()
-						if owner == uuid.Nil {
+						if owner == uuid.Nil() {
 							owner = perm.ControllerID()
 						}
 						g.ExilePermanent(perm)
@@ -716,13 +715,13 @@ func registerSpells() {
 						if p != nil {
 							g.PlayerGainLife(p, 1)
 						}
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							perm := g.FindPermanent(targets[1])
 							if perm != nil {
 								g.AddContinuousEffect(TemporaryBoost(perm.ID(), 1, 1))
 							}
 						}
-						if len(targets) >= 3 && targets[2] != uuid.Nil {
+						if len(targets) >= 3 && targets[2] != uuid.Nil() {
 							perm := g.FindPermanent(targets[2])
 							if perm != nil {
 								g.AddContinuousEffect(TemporaryBoost(perm.ID(), -1, -1))
@@ -756,7 +755,7 @@ func registerSpells() {
 						}
 						count := 0
 						for _, tid := range targets {
-							if tid == uuid.Nil {
+							if tid == uuid.Nil() {
 								continue
 							}
 							if count >= x {
@@ -1561,7 +1560,7 @@ func registerSpells() {
 						if len(targets) == 0 {
 							return nil
 						}
-						if pid := targets[0]; pid != uuid.Nil {
+						if pid := targets[0]; pid != uuid.Nil() {
 							p := g.GetPlayer(pid)
 							if p != nil {
 								g.PlayerDrawCard(p)
@@ -1569,7 +1568,7 @@ func registerSpells() {
 							}
 						}
 						for _, tid := range targets[1:] {
-							if tid == uuid.Nil {
+							if tid == uuid.Nil() {
 								continue
 							}
 							perm := g.FindPermanent(tid)
@@ -1600,7 +1599,7 @@ func registerSpells() {
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						// XXX: global damage prevention suppression not implemented
 						for _, tid := range targets {
-							if tid == uuid.Nil {
+							if tid == uuid.Nil() {
 								continue
 							}
 							perm := g.FindPermanent(tid)
@@ -2303,7 +2302,7 @@ func registerSpells() {
 							return nil
 						}
 						// Put +1/+1 counter on each creature the target player controls.
-						if targets[0] != uuid.Nil {
+						if targets[0] != uuid.Nil() {
 							targetPlayer := g.GetPlayer(targets[0])
 							if targetPlayer != nil {
 								for _, perm := range g.FilterBattlefield(And(ControlledBy(targetPlayer.PlayerID()), IsCreature)) {
@@ -2312,7 +2311,7 @@ func registerSpells() {
 							}
 						}
 						// Target creature gains double strike or lifelink based on mode choice.
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							perm := g.FindPermanent(targets[1])
 							if perm != nil {
 								kw := DoubleStrike
@@ -2366,7 +2365,7 @@ func registerSpells() {
 						EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							for _, tid := range targets {
-								if tid == uuid.Nil {
+								if tid == uuid.Nil() {
 									continue
 								}
 								perm := g.FindPermanent(tid)
@@ -2405,7 +2404,7 @@ func registerSpells() {
 					"put twice X stun counters on target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						perm := g.FindPermanent(targets[0])
@@ -2433,7 +2432,7 @@ func registerSpells() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						for _, tid := range targets {
-							if tid == uuid.Nil {
+							if tid == uuid.Nil() {
 								continue
 							}
 							perm := g.FindPermanent(tid)
@@ -2562,7 +2561,7 @@ func registerSpells() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						for _, tid := range targets {
-							if tid == uuid.Nil {
+							if tid == uuid.Nil() {
 								continue
 							}
 							perm := g.FindPermanent(tid)
@@ -2630,7 +2629,7 @@ func registerSpells() {
 				FuncEffect("if it's your turn, put a stun counter on target creature; draw a card",
 					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
 					func(g *Game, _, controller uuid.UUID, targets []uuid.UUID) error {
-						if g.ActivePlayerObj() != nil && g.ActivePlayerObj().PlayerID() == controller && len(targets) > 0 && targets[0] != uuid.Nil {
+						if g.ActivePlayerObj() != nil && g.ActivePlayerObj().PlayerID() == controller && len(targets) > 0 && targets[0] != uuid.Nil() {
 							if perm := g.FindPermanent(targets[0]); perm != nil {
 								perm.AddCounter(Stun, 1)
 							}
@@ -2711,7 +2710,7 @@ func registerSpells() {
 								g.PlayerDiscard(opp, chosen.ID())
 							}
 						}
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							perm := g.FindPermanent(targets[1])
 							if perm != nil {
 								g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
@@ -2741,7 +2740,7 @@ func registerSpells() {
 					"return target nonland permanent card from your graveyard to the battlefield; exile this spell (Paradigm)",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 && targets[0] != uuid.Nil {
+						if len(targets) > 0 && targets[0] != uuid.Nil() {
 							p := g.GetPlayer(controller)
 							if p != nil {
 								if card, ok := p.RemoveFromGraveyard(targets[0]); ok {
@@ -2824,7 +2823,7 @@ func registerSpells() {
 						}
 						card := perm.Card
 						ownerID := perm.Card.Owner()
-						if ownerID == uuid.Nil {
+						if ownerID == uuid.Nil() {
 							ownerID = perm.ControllerID()
 						}
 						ownerPlayer := g.GetPlayer(ownerID)
@@ -3269,7 +3268,7 @@ func registerSpells() {
 					"deal 5 damage to up to one target creature; look at top 2, keep one, put other on bottom",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 && targets[0] != uuid.Nil {
+						if len(targets) > 0 && targets[0] != uuid.Nil() {
 							perm := g.FindPermanent(targets[0])
 							if perm != nil {
 								g.DealDamageToPermanent(perm, 5, sourceID)
@@ -3374,7 +3373,7 @@ func registerSpells() {
 								}
 							}
 						}
-						if len(targets) > 1 && targets[1] != uuid.Nil && x > 0 {
+						if len(targets) > 1 && targets[1] != uuid.Nil() && x > 0 {
 							perm := g.FindPermanent(targets[1])
 							if perm != nil {
 								g.DealDamageToPermanent(perm, x, sourceID)
@@ -3468,7 +3467,7 @@ func registerSpells() {
 					"deal 3 damage to any target; tap up to one target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 && targets[0] != uuid.Nil {
+						if len(targets) > 0 && targets[0] != uuid.Nil() {
 							perm := g.FindPermanent(targets[0])
 							if perm != nil {
 								g.DealDamageToPermanent(perm, 3, sourceID)
@@ -3479,7 +3478,7 @@ func registerSpells() {
 								}
 							}
 						}
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							perm := g.FindPermanent(targets[1])
 							if perm != nil {
 								g.TapPermanent(perm)

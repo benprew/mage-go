@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -179,7 +178,7 @@ func TestChangeOwnerReplacesCardsInEveryModeledZone(t *testing.T) {
 	a.SetHand([]*Card{hand})
 	a.SetGraveyard([]*Card{graveyard})
 	a.SetAnte([]*Card{ante})
-	g.ExileCard(exile, uuid.Nil)
+	g.ExileCard(exile, uuid.Nil())
 	perm := g.PutOnBattlefield(battlefield, b.PlayerID())
 	g.stack.Push(&StackObject{ID: uuid.New(), Card: stack, Controller: a.PlayerID()})
 

@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -438,7 +437,7 @@ func TestConditionalTargetContinuousEffects(t *testing.T) {
 func TestValueSource(t *testing.T) {
 	t.Run("Fixed returns constant", func(t *testing.T) {
 		v := mage.Fixed(7)
-		got := v.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+		got := v.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
 		if got != 7 {
 			t.Errorf("Fixed(7).Resolve() = %d, want 7", got)
 		}
@@ -448,7 +447,7 @@ func TestValueSource(t *testing.T) {
 		tg := NewTestGame(t)
 		tg.SetXValue(5)
 		v := mage.XValue()
-		got := v.Resolve(tg.Game, uuid.Nil, uuid.Nil, nil)
+		got := v.Resolve(tg.Game, uuid.Nil(), uuid.Nil(), nil)
 		if got != 5 {
 			t.Errorf("XValue().Resolve() with CurrentX=5 = %d, want 5", got)
 		}

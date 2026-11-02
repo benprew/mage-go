@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -63,14 +62,14 @@ func TestCardAbilitiesDefinitionAndCopies(t *testing.T) {
 			t.Fatal("copy lost or duplicated abilities")
 		}
 		copy.Abilities()[0].SetController(uuid.New())
-		if original.Abilities()[0].Controller() != uuid.Nil {
+		if original.Abilities()[0].Controller() != uuid.Nil() {
 			t.Fatal("copies share ability state")
 		}
 	}
 	legacy := NewCreature("Legacy Bird", "{U}", 1, 1, WithKeyword(Flying))
 	legacyCopy := legacy.Copy()
 	legacyCopy.Abilities()[0].SetController(uuid.New())
-	if legacy.Abilities()[0].Controller() != uuid.Nil {
+	if legacy.Abilities()[0].Controller() != uuid.Nil() {
 		t.Fatal("legacy copies share attribute ability state")
 	}
 	for _, target := range []*Card{def.NewInstance(uuid.New()), NewCreature("Copy", "", 1, 1)} {
@@ -174,7 +173,7 @@ func TestLegacyCopyOwnsWardState(t *testing.T) {
 	}
 	b.SetController(uuid.New())
 	b.SetSource(uuid.New())
-	if a.Controller() != uuid.Nil || a.Source() != uuid.Nil {
+	if a.Controller() != uuid.Nil() || a.Source() != uuid.Nil() {
 		t.Fatal("Copy changed the original ability context")
 	}
 }
@@ -195,7 +194,7 @@ func TestLegacyCloneFromDefinitionOwnsState(t *testing.T) {
 	}
 	cloned.abilities[0].SetController(uuid.New())
 	cloned.abilities[0].SetSource(uuid.New())
-	if original.abilities[0].Controller() != uuid.Nil || original.abilities[0].Source() != uuid.Nil {
+	if original.abilities[0].Controller() != uuid.Nil() || original.abilities[0].Source() != uuid.Nil() {
 		t.Fatal("CloneFrom changed the original ability context")
 	}
 }

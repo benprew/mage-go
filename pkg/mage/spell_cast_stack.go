@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -32,7 +32,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 
 	effects, targets, modalTargets, modeChoice := g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets, opts.ModePrompt)
 	sourceID := opts.SourceID
-	if sourceID == uuid.Nil {
+	if sourceID == uuid.Nil() {
 		sourceID = card.ID()
 	}
 

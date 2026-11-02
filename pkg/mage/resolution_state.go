@@ -2,8 +2,7 @@ package mage
 
 import (
 	"maps"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -104,10 +103,10 @@ func (s *ResolutionState) Clear() {
 	s.currentX = 0
 	s.currentMode = 0
 	s.currentEventAmount = 0
-	s.currentEventSourceID = uuid.Nil
+	s.currentEventSourceID = uuid.Nil()
 	s.resolvingCard = nil
-	s.resolvingSourceID = uuid.Nil
-	s.resolvingSourceIncarnation = uuid.Nil
+	s.resolvingSourceID = uuid.Nil()
+	s.resolvingSourceIncarnation = uuid.Nil()
 	s.resolvingTargets = nil
 	s.resolvingDamageDistribution = nil
 	s.resolvingCounterDistribution = nil

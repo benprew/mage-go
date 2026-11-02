@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // DestroyPermanentAction represents a permanent about to be destroyed.
 type DestroyPermanentAction struct {

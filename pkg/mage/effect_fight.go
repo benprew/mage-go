@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -128,7 +128,7 @@ func (e *onPermanentDiesEffect) Properties() EffectProperties { return EffectPro
 
 func (e *onPermanentDiesEffect) Apply(ctx *EffectContext) error {
 	id := e.permID
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		if len(ctx.Targets) == 0 {
 			return nil
 		}

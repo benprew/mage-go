@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -48,7 +48,7 @@ func (g *Game) DestroyPermanents(permanents []*Permanent) {
 				continue
 			}
 			seen[p.ID()] = true
-			if !current.HasKeyword(Indestructible) && g.effects.ApplyReplacements(NewDestroyPermanentAction(uuid.Nil, p.ID()), g) != nil {
+			if !current.HasKeyword(Indestructible) && g.effects.ApplyReplacements(NewDestroyPermanentAction(uuid.Nil(), p.ID()), g) != nil {
 				destroy = append(destroy, current)
 			}
 		}

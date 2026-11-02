@@ -3,8 +3,7 @@ package mage
 import (
 	"slices"
 	"strings"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -166,7 +165,7 @@ func (pa *ProtectionAbility) Blocks(card *Card) bool {
 }
 
 func (pa *ProtectionAbility) exempts(card *Card) bool {
-	return card != nil && pa.ExemptCardID != uuid.Nil && card.ID() == pa.ExemptCardID
+	return card != nil && pa.ExemptCardID != uuid.Nil() && card.ID() == pa.ExemptCardID
 }
 
 // BlocksInGame evaluates color protection against the source object's current

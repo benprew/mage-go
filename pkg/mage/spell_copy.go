@@ -2,8 +2,7 @@ package mage
 
 import (
 	"maps"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // CR 706 — Copying spells. A copy of a spell is created on the stack as a
@@ -153,7 +152,7 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard *Card, targ
 		if random, ok := t.(*randomTarget); ok {
 			chosen := g.chooseRandomTargets(controller, sourceCard, random, g.resolution.X())
 			if len(chosen) == 0 && t.Min() > 0 {
-				out = append(out, uuid.Nil)
+				out = append(out, uuid.Nil())
 			} else {
 				out = append(out, chosen...)
 			}
@@ -163,7 +162,7 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard *Card, targ
 		possible := t.Possible(controller, sourceCard, g)
 		if len(possible) == 0 {
 			if t.Min() > 0 {
-				out = append(out, uuid.Nil)
+				out = append(out, uuid.Nil())
 			}
 			continue
 		}

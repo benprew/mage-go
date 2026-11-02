@@ -3,10 +3,9 @@ package mage
 import (
 	"maps"
 	"slices"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 // StackObject represents something on the stack (spell or ability).

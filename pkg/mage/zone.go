@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // Functions related to zones in the game
 

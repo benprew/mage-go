@@ -2,8 +2,7 @@ package main
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // TestDecisionSpecFFI_BatchStateRoundtrip exercises the in-process

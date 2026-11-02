@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -114,7 +113,7 @@ func (e *ExileGatheredData) Properties() EffectProperties {
 
 func (e *ExileGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	perm := ctx.Game.FindPermanent(id)
@@ -145,7 +144,7 @@ func (e *DestroyGatheredData) Properties() EffectProperties {
 
 func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	perm := ctx.Game.FindPermanent(id)
@@ -174,7 +173,7 @@ func (e *BounceGatheredData) Properties() EffectProperties {
 
 func (e *BounceGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	perm := ctx.Game.FindPermanent(id)
@@ -184,7 +183,7 @@ func (e *BounceGatheredData) Apply(ctx *EffectContext) error {
 	isToken := perm.IsToken
 	card := perm.Card
 	owner := card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		owner = perm.ControllerID()
 	}
 	ctx.Game.RemoveFromBattlefield(perm)
@@ -233,7 +232,7 @@ func (s *VarPlayerSelector) Select(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) 
 		return nil
 	}
 	id := s.context.TryGetUUID(s.Name)
-	if id == uuid.Nil {
+	if id == uuid.Nil() {
 		return nil
 	}
 	return []uuid.UUID{id}
@@ -268,7 +267,7 @@ func (e *GainLifeVarData) Apply(ctx *EffectContext) error {
 	} else {
 		playerID = ctx.TryGetUUID(e.PlayerVar)
 	}
-	if playerID == uuid.Nil {
+	if playerID == uuid.Nil() {
 		return nil
 	}
 	amount := ctx.GetInt(e.AmountVar)
@@ -397,7 +396,7 @@ func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 	}
 	ids := make([]uuid.UUID, 0, len(perms))
 	for _, p := range perms {
-		if controllerFilter != uuid.Nil && p.ControllerID() != controllerFilter {
+		if controllerFilter != uuid.Nil() && p.ControllerID() != controllerFilter {
 			continue
 		}
 		ids = append(ids, p.ID())

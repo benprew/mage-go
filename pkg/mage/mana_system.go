@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -119,7 +118,7 @@ func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sou
 // heuristic. Higher = prefer to keep untapped (tap last). See AutoTapHint.
 func (ms *ManaSystem) PreservationScore(g *Game, src manaSourceInfo, hint AutoTapHint, handDemand [AnyColor + 1]int) int {
 	score := 0
-	if hint.ActivationSource != uuid.Nil && src.PermanentID == hint.ActivationSource {
+	if hint.ActivationSource != uuid.Nil() && src.PermanentID == hint.ActivationSource {
 		score += 1000
 	}
 	score += 10 * ms.UtilityAbilityCount(g, src.PermanentID)
@@ -312,7 +311,7 @@ func (ms *ManaSystem) PlanManaForCost(g *Game, playerID uuid.UUID, mc ManaCost, 
 	}
 	sources := ms.GetUntappedManaSources(g, playerID)
 
-	if len(hint.ReservedSources) > 0 || hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil {
+	if len(hint.ReservedSources) > 0 || hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil() {
 		filtered := sources[:0]
 		for _, src := range sources {
 			reserved := hint.ActivationTapsSource && src.PermanentID == hint.ActivationSource

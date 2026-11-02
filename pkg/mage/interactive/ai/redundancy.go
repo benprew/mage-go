@@ -2,8 +2,7 @@ package ai
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -100,10 +99,10 @@ func keywordGrantRecipients(g *mage.Game, controllerID, sourceID uuid.UUID, sele
 	case mage.KindAllTargets:
 		return targets, len(targets) > 0
 	case mage.KindSource:
-		return []uuid.UUID{sourceID}, sourceID != uuid.Nil
+		return []uuid.UUID{sourceID}, sourceID != uuid.Nil()
 	case mage.KindAttached:
 		source := g.FindPermanent(sourceID)
-		if source == nil || source.AttachedTo == uuid.Nil {
+		if source == nil || source.AttachedTo == uuid.Nil() {
 			return nil, false
 		}
 		return []uuid.UUID{source.AttachedTo}, true

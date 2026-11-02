@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // CR 706 — Copying spells.

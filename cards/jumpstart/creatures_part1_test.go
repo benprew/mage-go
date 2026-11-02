@@ -2,8 +2,7 @@ package jumpstart
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/antiquities"
 	_ "github.com/benprew/mage-go/cards/limited"
@@ -146,7 +145,7 @@ func TestAngelOfTheDireHour_NotCastFromHand_NoExile(t *testing.T) {
 			cardID = c.ID()
 		}
 	}
-	if cardID == uuid.Nil {
+	if cardID == uuid.Nil() {
 		t.Fatal("Angel not in graveyard")
 	}
 	if err := g.CastCardFromZoneWithoutPaying(pA, cardID, core.ZoneGraveyard, nil, 0); err != nil {

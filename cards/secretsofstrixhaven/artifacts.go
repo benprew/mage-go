@@ -1,10 +1,10 @@
 package secretsofstrixhaven
 
 import (
+	"uuid"
+
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 func init() {

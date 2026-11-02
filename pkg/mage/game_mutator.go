@@ -2,10 +2,9 @@ package mage
 
 import (
 	"maps"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 // PlayerReader provides read-only access to players.
@@ -136,7 +135,7 @@ func (g *Game) EventAmount() int { return g.resolution.EventAmount() }
 
 // EventSourceID returns the SourceID of the event that triggered the
 // currently-resolving triggered ability. For an EvtDamageDealt trigger,
-// this is the damager's permanent ID. Returns uuid.Nil when there is no
+// this is the damager's permanent ID. Returns uuid.Nil() when there is no
 // trigger context (e.g. spell resolution).
 func (g *Game) EventSourceID() uuid.UUID { return g.resolution.EventSourceID() }
 
@@ -325,13 +324,13 @@ func (g *Game) ApplyContinuousEffects() {
 
 // SetPreventCombatDamage flags that all combat damage is prevented this turn.
 func (g *Game) SetPreventCombatDamage() {
-	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn}})
+	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil(), duration: EndOfTurn}})
 }
 
 // PreventCombatDamageToAndBy adds a replacement effect preventing all combat damage dealt to and dealt by creatureID this turn.
 func (g *Game) PreventCombatDamageToAndBy(creatureID uuid.UUID) {
 	g.effects.AddReplacement(&creatureCombatDamagePreventionReplacement{
-		replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn},
+		replacementBase: replacementBase{sourceID: uuid.Nil(), duration: EndOfTurn},
 		creatureID:      creatureID,
 	})
 }
@@ -339,7 +338,7 @@ func (g *Game) PreventCombatDamageToAndBy(creatureID uuid.UUID) {
 // PreventDamageToPlayerByCreaturesWithFlying adds a replacement effect preventing all damage dealt to playerID by creatures with flying this turn.
 func (g *Game) PreventDamageToPlayerByCreaturesWithFlying(playerID uuid.UUID) {
 	g.effects.AddReplacement(&playerDamageFromFlyingCreaturesPreventionReplacement{
-		replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn},
+		replacementBase: replacementBase{sourceID: uuid.Nil(), duration: EndOfTurn},
 		playerID:        playerID,
 	})
 }
@@ -424,12 +423,12 @@ func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
 func (g *Game) ChooseDamageSource(playerID uuid.UUID) uuid.UUID {
 	player := g.GetPlayer(playerID)
 	if player == nil {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	seen := make(map[uuid.UUID]bool)
 	var possible []uuid.UUID
 	add := func(id uuid.UUID) {
-		if id == uuid.Nil || seen[id] || g.FindCardAnywhere(id) == nil {
+		if id == uuid.Nil() || seen[id] || g.FindCardAnywhere(id) == nil {
 			return
 		}
 		seen[id] = true
@@ -447,7 +446,7 @@ func (g *Game) ChooseDamageSource(playerID uuid.UUID) uuid.UUID {
 	}
 	chosen := player.ChooseTargets(possible, 1, 1, g)
 	if len(chosen) == 0 || !seen[chosen[0]] {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	return chosen[0]
 }
@@ -456,7 +455,7 @@ func (g *Game) ChooseDamageSource(playerID uuid.UUID) uuid.UUID {
 // Prepended so it is checked before any prevention shields (which would
 // otherwise absorb the damage before the reverse replacement sees it).
 func (g *Game) AddReverseDamageShield(playerID, sourceID uuid.UUID) {
-	if sourceID == uuid.Nil {
+	if sourceID == uuid.Nil() {
 		return
 	}
 	g.effects.PrependReplacement(&reverseDamageReplacement{
@@ -1040,7 +1039,7 @@ func (g *Game) ResolvingSourcePermanent(sourceID uuid.UUID) *Permanent {
 	if permanent == nil {
 		return nil
 	}
-	if g.resolution.resolvingSourceID == sourceID && g.resolution.resolvingSourceIncarnation != uuid.Nil && permanent.incarnationID != g.resolution.resolvingSourceIncarnation {
+	if g.resolution.resolvingSourceID == sourceID && g.resolution.resolvingSourceIncarnation != uuid.Nil() && permanent.incarnationID != g.resolution.resolvingSourceIncarnation {
 		return nil
 	}
 	return permanent

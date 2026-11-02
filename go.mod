@@ -7,7 +7,6 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/ssh v0.0.0-20250128164007-98fd5ae11894
 	github.com/charmbracelet/wish v1.4.7
-	github.com/google/uuid v1.6.0
 )
 
 require (

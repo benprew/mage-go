@@ -2,8 +2,7 @@ package mage
 
 import (
 	"math/rand"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // Reveal-and-pick primitives. These power cards that look at the top N cards

@@ -2,8 +2,7 @@ package combatsolver
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -66,7 +65,7 @@ func applyCombatTricks(g *mage.Game, playerID uuid.UUID, pairings []trickPairing
 	abilityPumps := gatherAbilityPumps(g, playerID)
 
 	for _, pr := range pairings {
-		if pr.enemyID == uuid.Nil {
+		if pr.enemyID == uuid.Nil() {
 			continue
 		}
 		ours := g.FindPermanent(pr.oursID)

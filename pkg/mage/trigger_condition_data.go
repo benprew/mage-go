@@ -1,8 +1,9 @@
 package mage
 
 import (
+	"uuid"
+
 	. "github.com/benprew/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // TriggerConditionData is a composable, data-driven predicate for trigger
@@ -55,7 +56,7 @@ func (EventBlocksOrBlockedByDamagedCreature) CheckTriggerCond(evt *GameEvent, g 
 	} else {
 		return false
 	}
-	if otherID == uuid.Nil {
+	if otherID == uuid.Nil() {
 		return false
 	}
 	other := g.FindPermanent(otherID)
@@ -751,7 +752,7 @@ type AttachedToDealsDamageToController struct{}
 
 func (AttachedToDealsDamageToController) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 	src := g.FindPermanent(sourceID)
-	if src == nil || src.AttachedTo == uuid.Nil {
+	if src == nil || src.AttachedTo == uuid.Nil() {
 		return false
 	}
 	return evt.SourceID == src.AttachedTo && evt.TargetID == controllerID

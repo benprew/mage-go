@@ -1,7 +1,7 @@
 package fallen_empires
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -1003,7 +1003,7 @@ func registerCreatures() {
 							return nil
 						}
 						effect := BecomesBasicLandTargetEffect(targets[0], Indefinite, "Forest")
-						effect.SetSourceID(uuid.Nil)
+						effect.SetSourceID(uuid.Nil())
 						g.AddContinuousEffect(effect)
 						return nil
 					},

@@ -2,10 +2,9 @@ package mage
 
 import (
 	"fmt"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 // gainLifeEffect gains life for the controller.
@@ -62,7 +61,7 @@ func (e *gainLifeTargetEffect) Text() string {
 	case eventAmountValue:
 		return "target player gains that much life"
 	}
-	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *gainLifeTargetEffect) Properties() EffectProperties {
 	lg := 0
@@ -70,7 +69,7 @@ func (e *gainLifeTargetEffect) Properties() EffectProperties {
 	case xValue, eventAmountValue:
 		// dynamic; report 0 for static heuristics
 	default:
-		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+		lg = e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
 	}
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
 }
@@ -173,7 +172,7 @@ func (e *dealDamageEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to target"
 	}
-	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *dealDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
@@ -234,7 +233,7 @@ func (e *dealDamageToAllCreaturesEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to each creature"
 	}
-	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *dealDamageToAllCreaturesEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount, Mass: true}
@@ -382,7 +381,7 @@ func (e *PreventDamageEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "Prevent the next X damage to " + object
 	}
-	return fmt.Sprintf("Prevent the next %d damage to %s", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil), object)
+	return fmt.Sprintf("Prevent the next %d damage to %s", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil), object)
 }
 func (e *PreventDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}

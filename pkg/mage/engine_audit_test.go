@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -72,7 +71,7 @@ func TestAuditSacrificeSourceController(t *testing.T) {
 		t.Run(effect.Text(), func(t *testing.T) {
 			g, a, p := auditStateGame()
 			b := g.players[1]
-			if err := ApplyEffect(g, GainControl().Targeting(ToTarget()).Until(EndOfTurn), uuid.Nil, b.PlayerID(), []uuid.UUID{p.ID()}); err != nil {
+			if err := ApplyEffect(g, GainControl().Targeting(ToTarget()).Until(EndOfTurn), uuid.Nil(), b.PlayerID(), []uuid.UUID{p.ID()}); err != nil {
 				t.Fatal(err)
 			}
 			if err := ApplyEffect(g, effect, p.ID(), a.PlayerID(), nil); err != nil {
@@ -160,7 +159,7 @@ func TestAuditSimultaneousDeathTriggers(t *testing.T) {
 			g.PutOnBattlefield(other, b.PlayerID())
 			switch mode {
 			case "wipe":
-				if err := ApplyEffect(g, DestroyAllCreatures(), uuid.Nil, a.PlayerID(), nil); err != nil {
+				if err := ApplyEffect(g, DestroyAllCreatures(), uuid.Nil(), a.PlayerID(), nil); err != nil {
 					t.Fatal(err)
 				}
 			case "lethal":

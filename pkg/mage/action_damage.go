@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // DamageToPlayerAction represents damage about to be dealt to a player.
 type DamageToPlayerAction struct {

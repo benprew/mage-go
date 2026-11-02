@@ -2,8 +2,7 @@ package secretsofstrixhaven
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -172,7 +171,7 @@ func TestLivingHistory(t *testing.T) {
 		if !ok {
 			t.Fatalf("MoveFromGraveyard failed")
 		}
-		g.ExileCard(removed, uuid.Nil)
+		g.ExileCard(removed, uuid.Nil())
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.ChoosePermanent(gametest.PlayerA, "Hill Giant")
 		g.StopAt(1, core.EndCombat)

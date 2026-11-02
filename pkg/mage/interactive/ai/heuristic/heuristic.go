@@ -6,8 +6,7 @@ import (
 	"maps"
 	"slices"
 	"sort"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -756,7 +755,7 @@ func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card *mage.Card, possible 
 
 	onlyIfLethal := profile.ToughnessBoost < 0 && profile.PowerBoost > 0
 
-	bestID := uuid.Nil
+	bestID := uuid.Nil()
 	bestScore := -10000
 	for _, id := range possible {
 		perm := g.FindPermanent(id)
@@ -772,7 +771,7 @@ func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card *mage.Card, possible 
 			bestID = id
 		}
 	}
-	if bestID == uuid.Nil {
+	if bestID == uuid.Nil() {
 		return nil
 	}
 	return []uuid.UUID{bestID}
@@ -870,12 +869,12 @@ func bestNTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uui
 
 func bestTargetsForRequirementWithPreference(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool, preference mage.AITargetPreference) []uuid.UUID {
 	if preference == mage.PreferSmallestOwnCreature {
-		if target := smallestOwnCreatureTarget(g, playerID, possible); target != uuid.Nil {
+		if target := smallestOwnCreatureTarget(g, playerID, possible); target != uuid.Nil() {
 			return []uuid.UUID{target}
 		}
 	}
 
-	bestID := uuid.Nil
+	bestID := uuid.Nil()
 	bestScore := -10000
 	for _, id := range possible {
 		perm := g.FindPermanent(id)
@@ -895,14 +894,14 @@ func bestTargetsForRequirementWithPreference(g *mage.Game, playerID uuid.UUID, p
 			bestID = id
 		}
 	}
-	if bestID == uuid.Nil || bestScore < 1 {
+	if bestID == uuid.Nil() || bestScore < 1 {
 		return nil
 	}
 	return []uuid.UUID{bestID}
 }
 
 func smallestOwnCreatureTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID) uuid.UUID {
-	bestID := uuid.Nil
+	bestID := uuid.Nil()
 	bestScore := 1 << 30
 	for _, id := range possible {
 		perm := g.FindPermanent(id)

@@ -3,8 +3,7 @@ package ai
 import (
 	"sort"
 	"strings"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -224,7 +223,7 @@ func (ai *AIPlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, re
 		value  int
 	}
 	var creatures []creatureTarget
-	oppPlayer := uuid.Nil
+	oppPlayer := uuid.Nil()
 	for _, id := range possible {
 		if perm := g.FindPermanent(id); perm != nil {
 			if perm.ControllerID() == myID {
@@ -259,7 +258,7 @@ func (ai *AIPlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, re
 
 	if remaining > 0 {
 		switch {
-		case oppPlayer != uuid.Nil:
+		case oppPlayer != uuid.Nil():
 			out[oppPlayer] += remaining
 		case len(out) > 0:
 			for _, id := range possible {

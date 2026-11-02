@@ -1,7 +1,7 @@
 package arabian
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/catalog"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -16,7 +16,7 @@ func (c *discardLastDrawnCost) CanPay(sourceID, controller uuid.UUID, g *Game) b
 		return false
 	}
 	lastID := p.LastDrawnCardID()
-	if lastID == uuid.Nil {
+	if lastID == uuid.Nil() {
 		return false
 	}
 	for _, card := range p.Hand() {

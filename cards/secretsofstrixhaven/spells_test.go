@@ -2,8 +2,7 @@ package secretsofstrixhaven
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -2392,7 +2391,7 @@ func TestWiltInTheHeat(t *testing.T) {
 		if !ok {
 			t.Fatalf("MoveFromGraveyard failed")
 		}
-		g.ExileCard(removed, uuid.Nil)
+		g.ExileCard(removed, uuid.Nil())
 
 		if got := g.ConditionalSpellCostReduction(pid, wilt); got != 2 {
 			t.Errorf("cost reduction after graveyard move = %d, want 2", got)

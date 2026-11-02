@@ -2,8 +2,7 @@ package limited
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/arabian"
 	"github.com/benprew/mage-go/pkg/mage"

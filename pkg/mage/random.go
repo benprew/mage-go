@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -49,7 +49,7 @@ func (g *Game) RandomPermanent(filter PermanentFilter) *Permanent {
 
 // RandomDamageTarget returns one creature or player chosen uniformly at random
 // from all legal object kinds represented by "any target" in this engine. It
-// returns uuid.Nil without consuming randomness when there are no candidates.
+// returns uuid.Nil() without consuming randomness when there are no candidates.
 func (g *Game) RandomDamageTarget() uuid.UUID {
 	var candidates []uuid.UUID
 	for _, permanent := range g.AllBattlefield() {
@@ -61,7 +61,7 @@ func (g *Game) RandomDamageTarget() uuid.UUID {
 		candidates = append(candidates, player.PlayerID())
 	}
 	if len(candidates) == 0 {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	return candidates[g.RandIntn(len(candidates))]
 }
@@ -74,7 +74,7 @@ func (g *Game) RandomColor() Color {
 
 // RandomSpellOrPermanent returns the source ID of one spell on the stack or
 // the ID of one battlefield permanent, chosen uniformly from the combined
-// candidates. Abilities on the stack are excluded. It returns uuid.Nil without
+// candidates. Abilities on the stack are excluded. It returns uuid.Nil() without
 // consuming randomness when there are no candidates.
 func (g *Game) RandomSpellOrPermanent() uuid.UUID {
 	var candidates []uuid.UUID
@@ -87,7 +87,7 @@ func (g *Game) RandomSpellOrPermanent() uuid.UUID {
 		}
 	}
 	if len(candidates) == 0 {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	return candidates[g.RandIntn(len(candidates))]
 }
@@ -113,7 +113,7 @@ func (g *Game) DiscardAtRandom(p Player, n int) []*Card {
 		}
 		idx := g.RandIntn(len(hand))
 		card := hand[idx]
-		if c, ok := g.PlayerDiscardByEffect(p, card.ID(), uuid.Nil); ok {
+		if c, ok := g.PlayerDiscardByEffect(p, card.ID(), uuid.Nil()); ok {
 			discarded = append(discarded, c)
 		} else {
 			break

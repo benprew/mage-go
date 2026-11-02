@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -37,7 +36,7 @@ import (
 //   - g: the live game (so a predicate may inspect game state)
 //   - controller: the player casting the spell
 //   - card: the card being cast
-//   - sourceID: the permanent ID that registered the reducer (uuid.Nil for
+//   - sourceID: the permanent ID that registered the reducer (uuid.Nil() for
 //     self-reducers — the reduction is intrinsic to the casting card)
 type SpellPredicate func(g *Game, controller uuid.UUID, card *Card, sourceID uuid.UUID) bool
 
@@ -71,7 +70,7 @@ type SpellCostReducer struct {
 // cast. The cast's sourceID is the *card being cast*; the reducer's own
 // SourceID is the permanent that registered it.
 func (r *SpellCostReducer) applies(g *Game, casterID uuid.UUID, card *Card) bool {
-	if r.Controller != uuid.Nil && r.Controller != casterID {
+	if r.Controller != uuid.Nil() && r.Controller != casterID {
 		return false
 	}
 	if r.Filter != nil && !r.Filter(g, casterID, card, r.SourceID) {

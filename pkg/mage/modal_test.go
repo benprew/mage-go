@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -184,7 +183,7 @@ func TestModalTriggerEffect_Dispatch(t *testing.T) {
 	})
 
 	a.modes = []int{1}
-	if err := ApplyEffect(g, eff, uuid.Nil, a.PlayerID(), nil); err != nil {
+	if err := ApplyEffect(g, eff, uuid.Nil(), a.PlayerID(), nil); err != nil {
 		t.Fatalf("Apply: %v", err)
 	}
 	if chose != 1 {

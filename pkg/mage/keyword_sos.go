@@ -29,8 +29,7 @@ package mage
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -210,7 +209,7 @@ func (spellCastByControllerTargetsCreature) CheckTriggerCond(evt *GameEvent, g G
 		return false
 	}
 	for _, tid := range collectAllTargets(obj) {
-		if tid == uuid.Nil {
+		if tid == uuid.Nil() {
 			continue
 		}
 		if perm := g.FindPermanent(tid); perm != nil && perm.HasAttr(AttrIsCreature) {
@@ -221,7 +220,7 @@ func (spellCastByControllerTargetsCreature) CheckTriggerCond(evt *GameEvent, g G
 }
 
 // collectAllTargets returns every UUID referenced by the StackObject's
-// targets, including modal targets, in declaration order. uuid.Nil entries
+// targets, including modal targets, in declaration order. uuid.Nil() entries
 // (representing "no target chosen for an optional 0+ slot") are skipped.
 func collectAllTargets(obj *StackObject) []uuid.UUID {
 	var out []uuid.UUID
@@ -524,7 +523,7 @@ func (g *Game) RegisterParadigmExiledCopy(playerID uuid.UUID, name string, cardI
 func (g *Game) ParadigmExiledCopy(playerID uuid.UUID, name string) (uuid.UUID, bool) {
 	st := paradigmStateOf(g)
 	if st.ExiledIDs[playerID] == nil {
-		return uuid.Nil, false
+		return uuid.Nil(), false
 	}
 	id, ok := st.ExiledIDs[playerID][name]
 	return id, ok
@@ -547,7 +546,7 @@ func (g *Game) RegisterParadigmRecurringCast(playerID uuid.UUID, name string) {
 // EvtMainPhase because Paradigm sources live in exile rather than on the
 // battlefield or in the graveyard.
 func (g *Game) queueParadigmRecurringTriggers(evt *GameEvent) {
-	if evt == nil || evt.Type != EvtMainPhase || !evt.Flag || evt.PlayerID == uuid.Nil {
+	if evt == nil || evt.Type != EvtMainPhase || !evt.Flag || evt.PlayerID == uuid.Nil() {
 		return
 	}
 	st := paradigmStateOf(g)

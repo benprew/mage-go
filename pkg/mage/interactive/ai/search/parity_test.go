@@ -12,8 +12,7 @@ import (
 	"math"
 	"strings"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards"
 	"github.com/benprew/mage-go/pkg/mage"

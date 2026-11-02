@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -26,7 +26,7 @@ func (g *Game) recordPerDuelEvent(evt *GameEvent) {
 		if opp := g.GetOpponent(id); opp != nil {
 			return opp.PlayerID()
 		}
-		return uuid.Nil
+		return uuid.Nil()
 	})
 }
 
@@ -37,7 +37,7 @@ func (g *Game) recordCreatureDeath(controllerID uuid.UUID) {
 
 // DuelObjectivesFor returns the per-duel objective tally from playerID's perspective.
 func (g *Game) DuelObjectivesFor(playerID uuid.UUID) DuelObjectives {
-	oppID := uuid.Nil
+	oppID := uuid.Nil()
 	if opp := g.GetOpponent(playerID); opp != nil {
 		oppID = opp.PlayerID()
 	}

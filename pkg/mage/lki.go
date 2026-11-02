@@ -2,8 +2,7 @@ package mage
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -99,7 +98,7 @@ func (v livePermanentView) ViewName() string          { return v.p.Name() }
 func (v livePermanentView) ViewController() uuid.UUID { return v.p.ControllerID() }
 func (v livePermanentView) ViewAttachedTo() uuid.UUID { return v.p.AttachedTo }
 func (v livePermanentView) ViewOwner() uuid.UUID {
-	if o := v.p.Card.Owner(); o != uuid.Nil {
+	if o := v.p.Card.Owner(); o != uuid.Nil() {
 		return o
 	}
 	return v.p.ControllerID()
@@ -169,13 +168,13 @@ func (l *PermanentLKI) ViewID() uuid.UUID { return l.ID }
 func (l *PermanentLKI) ViewName() string  { return l.Name }
 func (l *PermanentLKI) ViewController() uuid.UUID {
 	if l.Snapshot == nil {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	return l.Snapshot.ControllerID()
 }
 func (l *PermanentLKI) ViewAttachedTo() uuid.UUID {
 	if l.Snapshot == nil {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	return l.Snapshot.AttachedTo
 }

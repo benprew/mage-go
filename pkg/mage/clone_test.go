@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -313,7 +312,7 @@ func TestCloneMutablePermanentFieldIsolation(t *testing.T) {
 	if host.Tapped || host.Damage != 0 || host.Counters[P1P1] != 0 {
 		t.Fatalf("basic clone field mutation leaked to original: tapped=%v damage=%d counters=%d", host.Tapped, host.Damage, host.Counters[P1P1])
 	}
-	if len(host.Attachments) != 0 || aura.AttachedTo != uuid.Nil {
+	if len(host.Attachments) != 0 || aura.AttachedTo != uuid.Nil() {
 		t.Fatalf("attachment mutation leaked to original: host attachments=%d aura attachedTo=%s", len(host.Attachments), aura.AttachedTo)
 	}
 	if host.ControllerID() != pA.PlayerID() {

@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -215,7 +214,7 @@ func (*exchangeControlTargetsEffect) Properties() EffectProperties {
 }
 
 func (e *exchangeControlTargetsEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) < 2 || ctx.Targets[0] == uuid.Nil || ctx.Targets[1] == uuid.Nil {
+	if len(ctx.Targets) < 2 || ctx.Targets[0] == uuid.Nil() || ctx.Targets[1] == uuid.Nil() {
 		return nil
 	}
 	first := ctx.Game.FindPermanent(ctx.Targets[0])
@@ -309,7 +308,7 @@ func ControlAttached() ContinuousEffect {
 func ControlSourceByChosenPlayer() ContinuousEffect {
 	return FuncContinuousEffect(LayerControl, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		source := g.MutablePermanent(sourceID)
-		if source != nil && source.ChosenPlayer != uuid.Nil {
+		if source != nil && source.ChosenPlayer != uuid.Nil() {
 			source.computedController = source.ChosenPlayer
 		}
 		return nil

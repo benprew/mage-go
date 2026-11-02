@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -93,7 +92,7 @@ func (*exchangeTargetAnteCardWithLibraryTopEffect) Properties() EffectProperties
 }
 
 func (*exchangeTargetAnteCardWithLibraryTopEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 || ctx.Targets[0] == uuid.Nil {
+	if len(ctx.Targets) == 0 || ctx.Targets[0] == uuid.Nil() {
 		return nil
 	}
 	player := ctx.Game.GetPlayer(ctx.Controller)

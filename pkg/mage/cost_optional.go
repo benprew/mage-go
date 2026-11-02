@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // optionalCost wraps an inner cost in a "may pay" gate. CanPay is always

@@ -3,8 +3,7 @@ package mage
 import (
 	"slices"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 func TestRemoveFromLibrary(t *testing.T) {

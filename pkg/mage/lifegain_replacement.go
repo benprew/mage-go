@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // LifeGainModifierFn rewrites the proposed life-gain amount for a given
 // gaining player. Multiple modifiers compose in registration order.

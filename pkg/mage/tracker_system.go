@@ -2,8 +2,7 @@ package mage
 
 import (
 	"maps"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -60,7 +59,7 @@ func NewTurnTrackers() TurnTrackers {
 func (t *TurnTrackers) RecordEvent(evt *GameEvent) {
 	switch evt.Type {
 	case EvtZoneChange:
-		if evt.ToZone != ZoneExile || evt.SourceID == uuid.Nil {
+		if evt.ToZone != ZoneExile || evt.SourceID == uuid.Nil() {
 			return
 		}
 		t.cardsPutIntoExile++
@@ -80,7 +79,7 @@ func (t *TurnTrackers) RecordEvent(evt *GameEvent) {
 		amt := max(evt.Amount, 0)
 		t.lifeGained[evt.PlayerID] += amt
 	case EvtDamageDealt:
-		if evt.TargetID == uuid.Nil {
+		if evt.TargetID == uuid.Nil() {
 			return
 		}
 		if t.permDamageReceived == nil {
@@ -139,7 +138,7 @@ func (t *TurnTrackers) RecordCardPutIntoExile(card *Card) {
 }
 
 func (t *TurnTrackers) consumePendingExileZoneChange(cardID uuid.UUID) bool {
-	if cardID == uuid.Nil || t.exileZoneChangesPending == nil {
+	if cardID == uuid.Nil() || t.exileZoneChangesPending == nil {
 		return false
 	}
 	n := t.exileZoneChangesPending[cardID]
@@ -503,7 +502,7 @@ func (d *DuelTrackers) RecordEvent(evt *GameEvent, cardLookup func(uuid.UUID) *C
 			return
 		}
 		dealerID := getOpponent(evt.TargetID)
-		if dealerID == uuid.Nil {
+		if dealerID == uuid.Nil() {
 			return
 		}
 		if d.nonCombatDamage == nil {
@@ -536,7 +535,7 @@ func (d *DuelTrackers) ObjectivesFor(playerID, opponentID uuid.UUID) DuelObjecti
 	if d.spellsCastByType != nil {
 		maps.Copy(obj.SpellsByType, d.spellsCastByType[playerID])
 	}
-	if opponentID != uuid.Nil && d.creatureDeaths != nil {
+	if opponentID != uuid.Nil() && d.creatureDeaths != nil {
 		obj.OpponentCreaturesDestroyed = d.creatureDeaths[opponentID]
 	}
 	return obj

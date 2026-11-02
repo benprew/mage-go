@@ -1,7 +1,7 @@
 package limited
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -684,7 +684,7 @@ func registerEnchantments() {
 					}
 					attachedID := attached.ID()
 					attachedController := attached.ControllerID()
-					kudzu.AttachedTo = uuid.Nil
+					kudzu.AttachedTo = uuid.Nil()
 					filtered := attached.Attachments[:0]
 					for _, id := range attached.Attachments {
 						if id != sourceID {

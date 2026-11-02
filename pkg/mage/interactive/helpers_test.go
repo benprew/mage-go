@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -615,7 +614,7 @@ func TestSnapshotGameState_ExileFaceUpVisibleToBoth(t *testing.T) {
 	g, pa, _ := makeGame()
 	card := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 	card.SetOwner(pa.PlayerID())
-	g.ExileCard(card, uuid.Nil)
+	g.ExileCard(card, uuid.Nil())
 
 	for _, idx := range []int{0, 1} {
 		snap := SnapshotGameState(g, idx)
@@ -640,7 +639,7 @@ func TestSnapshotGameState_ExileFaceDownOwnerSeesIdentity(t *testing.T) {
 	card := mage.NewCreature("Secret", "{1}{B}", 3, 3)
 	card.SetOwner(pa.PlayerID())
 	// Exiled face down by pb (Gonti-style); only pb may inspect identity.
-	g.ExileCardFaceDown(card, uuid.Nil, pb.PlayerID())
+	g.ExileCardFaceDown(card, uuid.Nil(), pb.PlayerID())
 
 	// From pa's perspective (the owner): pa is NOT in RevealedTo, so
 	// pa cannot see the card identity even though pa owns the card.
@@ -654,7 +653,7 @@ func TestSnapshotGameState_ExileFaceDownOwnerSeesIdentity(t *testing.T) {
 	if !snapA.You.Exile[0].FaceDown {
 		t.Errorf("owner snapshot did not mark FaceDown")
 	}
-	if snapA.You.Exile[0].ID == uuid.Nil {
+	if snapA.You.Exile[0].ID == uuid.Nil() {
 		t.Errorf("owner snapshot dropped tracking ID")
 	}
 
@@ -678,8 +677,8 @@ func TestSnapshotGameState_ExileGroupedByOwner(t *testing.T) {
 	cardA.SetOwner(pa.PlayerID())
 	cardB := mage.NewCreature("Elf", "{G}", 1, 1)
 	cardB.SetOwner(pb.PlayerID())
-	g.ExileCard(cardA, uuid.Nil)
-	g.ExileCard(cardB, uuid.Nil)
+	g.ExileCard(cardA, uuid.Nil())
+	g.ExileCard(cardB, uuid.Nil())
 
 	snap := SnapshotGameState(g, 0)
 	if len(snap.You.Exile) != 1 || snap.You.Exile[0].Name != "Bear" {

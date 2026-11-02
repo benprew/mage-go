@@ -4,8 +4,7 @@ import (
 	"slices"
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -41,7 +40,7 @@ func TestSolveAttack_NoCreatures(t *testing.T) {
 }
 
 func TestSolveAttack_NilGame(t *testing.T) {
-	r := SolveAttack(nil, uuid.Nil, defaultOpts())
+	r := SolveAttack(nil, uuid.Nil(), defaultOpts())
 	if len(r.Attackers) != 0 || r.Score != 0 {
 		t.Errorf("want zero result for nil game, got %+v", r)
 	}

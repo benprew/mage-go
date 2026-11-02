@@ -11,8 +11,7 @@ import (
 	"sync"
 	"time"
 	"unsafe"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
@@ -1083,7 +1082,7 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim] = clipNorm(float64(tgtIdx), maxTargetScalar)
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim+1] = 1
 
-			if target.IDUUID != uuid.Nil && (target.IDUUID == selfID || target.IDUUID == oppID) {
+			if target.IDUUID != uuid.Nil() && (target.IDUUID == selfID || target.IDUUID == oppID) {
 				targetTypeIDs[targetBase+tgtIdx] = 0
 				targetRefIsPlayer[targetBase+tgtIdx] = 1
 				if target.IDUUID == selfID {

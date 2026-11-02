@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 	"slices"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 // Sentinel errors for common failure conditions.
@@ -340,15 +339,15 @@ func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card *Card, controller uuid.UUID) *Permanent {
-	return g.putOnBattlefield(card, controller, nil, uuid.Nil, false)
+	return g.putOnBattlefield(card, controller, nil, uuid.Nil(), false)
 }
 
 // PutTokenOnBattlefield puts a token onto the battlefield under the given controller.
 func (g *Game) PutTokenOnBattlefield(card *Card, controller uuid.UUID) *Permanent {
-	if card.Owner() == uuid.Nil {
+	if card.Owner() == uuid.Nil() {
 		card.SetOwner(controller)
 	}
-	return g.putOnBattlefield(card, controller, nil, uuid.Nil, true)
+	return g.putOnBattlefield(card, controller, nil, uuid.Nil(), true)
 }
 
 func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, isToken bool) *Permanent {
@@ -464,7 +463,7 @@ func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Colo
 			if !asEnter.OnEnter(g, perm) {
 				if !perm.IsToken {
 					owner := perm.Card.Owner()
-					if owner == uuid.Nil {
+					if owner == uuid.Nil() {
 						owner = perm.ControllerID()
 					}
 					p := g.GetPlayer(owner)
@@ -539,11 +538,11 @@ func (g *Game) PutTokenOnBattlefieldAttacking(card *Card, controller, defenderID
 }
 
 func (g *Game) putOnBattlefieldAttacking(card *Card, controller, defenderID uuid.UUID, isToken bool) *Permanent {
-	if card.Owner() == uuid.Nil {
+	if card.Owner() == uuid.Nil() {
 		card.SetOwner(controller)
 	}
-	perm := g.putOnBattlefield(card, controller, nil, uuid.Nil, isToken)
-	if perm == nil || defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
+	perm := g.putOnBattlefield(card, controller, nil, uuid.Nil(), isToken)
+	if perm == nil || defenderID == uuid.Nil() || !g.isValidDefender(defenderID) {
 		return perm
 	}
 	g.combat.AddAttacker(perm.ID(), defenderID)
@@ -566,11 +565,11 @@ func (g *Game) PutTokenOnBattlefieldBlocking(card *Card, controller, attackerID 
 }
 
 func (g *Game) putOnBattlefieldBlocking(card *Card, controller, attackerID uuid.UUID, isToken bool) *Permanent {
-	if card.Owner() == uuid.Nil {
+	if card.Owner() == uuid.Nil() {
 		card.SetOwner(controller)
 	}
-	perm := g.putOnBattlefield(card, controller, nil, uuid.Nil, isToken)
-	if perm == nil || attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
+	perm := g.putOnBattlefield(card, controller, nil, uuid.Nil(), isToken)
+	if perm == nil || attackerID == uuid.Nil() || !g.combat.IsAttacking(attackerID) {
 		return perm
 	}
 	g.combat.AddBlocker(perm.ID(), attackerID)
@@ -683,7 +682,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 			continue
 		}
 		if !att.HasSubType("Aura") {
-			att.AttachedTo = uuid.Nil
+			att.AttachedTo = uuid.Nil()
 		}
 	}
 }
@@ -694,14 +693,14 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		return
 	}
 	// Run through the replacement pipeline (regeneration is now a replacement)
-	action := NewDestroyPermanentAction(uuid.Nil, perm.ID())
+	action := NewDestroyPermanentAction(uuid.Nil(), perm.ID())
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return // regenerated or otherwise replaced
 	}
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		panic("DestroyPermanent: Pemanent has no owner")
 	}
 
@@ -806,7 +805,7 @@ func (g *Game) syncAbilityContext(perm *Permanent) {
 func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		owner = controller
 	}
 
@@ -882,7 +881,7 @@ func (g *Game) MoveFromAnyGraveyard(cardID uuid.UUID, to Zone) (*Card, uuid.UUID
 			return card, player.PlayerID(), true
 		}
 	}
-	return nil, uuid.Nil, false
+	return nil, uuid.Nil(), false
 }
 
 // MoveCardsFromGraveyard removes the listed cards from playerID's graveyard,
@@ -999,7 +998,7 @@ func (g *Game) PlayerGainLife(p Player, amount int) {
 	if amount <= 0 {
 		return
 	}
-	action := NewLifeGainAction(uuid.Nil, p.PlayerID(), amount)
+	action := NewLifeGainAction(uuid.Nil(), p.PlayerID(), amount)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return // Lich or other replacement consumed it
@@ -1023,7 +1022,7 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	card := perm.Card
 	isToken := perm.IsToken
 	owner := card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		owner = controller
 	}
 	g.RemoveFromBattlefield(perm)
@@ -1056,7 +1055,7 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 	card := perm.Card
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
-	g.zones.ExileCard(card, uuid.Nil)
+	g.zones.ExileCard(card, uuid.Nil())
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
@@ -1155,7 +1154,7 @@ func (g *Game) PlayerDrawCard(p Player) (*Card, bool) {
 	if p == nil {
 		return nil, false
 	}
-	action := NewDrawCardAction(uuid.Nil, p.PlayerID(), false)
+	action := NewDrawCardAction(uuid.Nil(), p.PlayerID(), false)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return nil, false
@@ -1432,7 +1431,7 @@ func (g *Game) fireBecomesTargetEvents(obj *StackObject, isAbility bool) {
 	}
 	seen := make(map[uuid.UUID]bool)
 	for _, tid := range obj.Targets {
-		if tid == uuid.Nil || seen[tid] {
+		if tid == uuid.Nil() || seen[tid] {
 			continue
 		}
 		seen[tid] = true
@@ -1581,15 +1580,15 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	var remaining []*DelayedTrigger
 	for _, dt := range g.triggers.Delayed() {
 		if dt.EventType == evt.Type {
-			if dt.MatchEventID != uuid.Nil && evt.SourceID != dt.MatchEventID {
+			if dt.MatchEventID != uuid.Nil() && evt.SourceID != dt.MatchEventID {
 				remaining = append(remaining, dt)
 				continue
 			}
-			if dt.MatchPlayerID != uuid.Nil && evt.PlayerID != dt.MatchPlayerID {
+			if dt.MatchPlayerID != uuid.Nil() && evt.PlayerID != dt.MatchPlayerID {
 				remaining = append(remaining, dt)
 				continue
 			}
-			if dt.MatchTargetID != uuid.Nil && evt.TargetID != dt.MatchTargetID {
+			if dt.MatchTargetID != uuid.Nil() && evt.TargetID != dt.MatchTargetID {
 				remaining = append(remaining, dt)
 				continue
 			}
@@ -1754,7 +1753,7 @@ func (g *Game) PutTriggersOnStack() {
 				obj.TargetSpecs = expandTargetSpecs(chosen.Targets, obj.Targets, obj.XValue)
 				obj.TargetSource = targetSource
 			}
-			if slices.Contains(obj.Targets, uuid.Nil) {
+			if slices.Contains(obj.Targets, uuid.Nil()) {
 				continue
 			}
 			g.pushStack(obj)
@@ -1784,7 +1783,7 @@ func (g *Game) PutTriggersOnStack() {
 			}
 			obj.TargetSpecs = expandTargetSpecs(declared, obj.Targets, obj.XValue)
 			obj.TargetSource = targetSource
-			if slices.Contains(obj.Targets, uuid.Nil) {
+			if slices.Contains(obj.Targets, uuid.Nil()) {
 				continue
 			}
 			g.pushStack(obj)
@@ -1803,7 +1802,7 @@ func (g *Game) PutTriggersOnStack() {
 					case pt.event.ToZone == ZoneBattlefield:
 						// ETB: pass the entering permanent's ID so effects can
 						// tap/modify it; preserve X for X-cost ETB triggers.
-						if pt.event.SourceID != uuid.Nil {
+						if pt.event.SourceID != uuid.Nil() {
 							obj.Targets = []uuid.UUID{pt.event.SourceID}
 						}
 						obj.XValue = pt.event.Amount
@@ -1815,40 +1814,40 @@ func (g *Game) PutTriggersOnStack() {
 						// finding it in the graveyard) and the controller's
 						// ID second (Dingus Egg "deal damage to its
 						// controller", post-LKI lookups).
-						if pt.event.SourceID != uuid.Nil {
+						if pt.event.SourceID != uuid.Nil() {
 							obj.Targets = []uuid.UUID{pt.event.SourceID}
-							if pt.event.PlayerID != uuid.Nil {
+							if pt.event.PlayerID != uuid.Nil() {
 								obj.Targets = append(obj.Targets, pt.event.PlayerID)
 							}
 						}
 					}
 				case EvtDrawStep, EvtCardDrawn:
-					if pt.event.PlayerID != uuid.Nil {
+					if pt.event.PlayerID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				case EvtSpellCast:
 					// Pass the spell's ID and caster's player ID
-					if pt.event.SourceID != uuid.Nil {
+					if pt.event.SourceID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
-						if pt.event.PlayerID != uuid.Nil {
+						if pt.event.PlayerID != uuid.Nil() {
 							obj.Targets = append(obj.Targets, pt.event.PlayerID)
 						}
 					}
 				case EvtDamageDealt:
-					if pt.event.TargetID != uuid.Nil {
+					if pt.event.TargetID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
 					}
 					obj.EventAmount = pt.event.Amount
 					obj.EventSourceID = pt.event.SourceID
 				case EvtTappedForMana:
-					if pt.event.PlayerID != uuid.Nil {
+					if pt.event.PlayerID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 					obj.EventAmount = pt.event.Amount
 					obj.EventSourceID = pt.event.SourceID
 				case EvtTapped, EvtAbilityActivated:
 					// Pass the permanent's ID so effects can identify it
-					if pt.event.SourceID != uuid.Nil {
+					if pt.event.SourceID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
 				case EvtDeclaredAttacker:
@@ -1856,7 +1855,7 @@ func (g *Game) PutTriggersOnStack() {
 					// creature attacked (Hellrider's "deal 1 damage to the player
 					// or planeswalker it's attacking").
 					obj.EventSourceID = pt.event.SourceID
-					if pt.event.SourceID != uuid.Nil {
+					if pt.event.SourceID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
 				case EvtCombatDamageDealt:
@@ -1877,17 +1876,17 @@ func (g *Game) PutTriggersOnStack() {
 					// spell/ability that did the targeting (e.g. Kira
 					// countering it). Targets[0] is the targeted object;
 					// Targets[1] is the offending spell/ability source.
-					if pt.event.TargetID != uuid.Nil {
+					if pt.event.TargetID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
-						if pt.event.SourceID != uuid.Nil {
+						if pt.event.SourceID != uuid.Nil() {
 							obj.Targets = append(obj.Targets, pt.event.SourceID)
 						}
 					}
 				case EvtDeclaredBlocker:
 					// Pass the blocker's ID and attacker's ID
-					if pt.event.SourceID != uuid.Nil {
+					if pt.event.SourceID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
-						if pt.event.TargetID != uuid.Nil {
+						if pt.event.TargetID != uuid.Nil() {
 							obj.Targets = append(obj.Targets, pt.event.TargetID)
 						}
 					}
@@ -1906,13 +1905,13 @@ func (g *Game) PutTriggersOnStack() {
 				case EvtDiscard:
 					// Pass the discarding player's ID so effects like
 					// "that player loses 2 life" target the discarder.
-					if pt.event.PlayerID != uuid.Nil {
+					if pt.event.PlayerID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				case EvtSacrifice:
 					// Pass the sacrificing player's ID for "you sacrifice"
 					// effects that need to identify the controller.
-					if pt.event.PlayerID != uuid.Nil {
+					if pt.event.PlayerID != uuid.Nil() {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				}
@@ -1933,7 +1932,7 @@ func (g *Game) PutTriggersOnStack() {
 // each declared Target on the triggered ability. Returns the flat list of
 // chosen UUIDs that becomes the StackObject's Targets.
 //
-// A required target without a legal candidate produces a uuid.Nil placeholder.
+// A required target without a legal candidate produces a uuid.Nil() placeholder.
 // PutTriggersOnStack rejects that choice before it puts the ability on the stack.
 func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uuid.UUID {
 	controller := g.GetPlayer(pt.controller)
@@ -1947,7 +1946,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 		if random, ok := t.(*randomTarget); ok {
 			chosen := g.chooseRandomTargets(pt.controller, sourceCard, random, 0)
 			if len(chosen) == 0 && t.Min() > 0 {
-				out = append(out, uuid.Nil)
+				out = append(out, uuid.Nil())
 			} else {
 				out = append(out, chosen...)
 			}
@@ -1957,7 +1956,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 		possible := t.Possible(pt.controller, sourceCard, g)
 		if len(possible) == 0 {
 			if t.Min() > 0 {
-				out = append(out, uuid.Nil)
+				out = append(out, uuid.Nil())
 			}
 			continue
 		}
@@ -2006,7 +2005,7 @@ func (g *Game) ResolveStack() {
 // zoneOfTarget reports the zone the given target id currently occupies, or
 // ZoneAny if the id is a player or can't be located in any zone.
 func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
-	if id == uuid.Nil || g.GetPlayer(id) != nil {
+	if id == uuid.Nil() || g.GetPlayer(id) != nil {
 		return ZoneAny
 	}
 	if g.FindPermanent(id) != nil {
@@ -2049,7 +2048,7 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
 	// Track target zone when targeted, needed for CR 608.2b
-	if obj.IsAbility && obj.SourceIncarnation == uuid.Nil {
+	if obj.IsAbility && obj.SourceIncarnation == uuid.Nil() {
 		if source := g.FindPermanent(obj.SourceID); source != nil {
 			obj.SourceIncarnation = source.incarnationID
 		}
@@ -2108,7 +2107,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	defer g.resolution.SetColorOverride(obj.SourceID, obj.ColorOverride)()
 
 	// CR 608.2b: a spell/ability with target(s) fails to resolve only if ALL of
-	// them are illegal at resolution. uuid.Nil entries are positional
+	// them are illegal at resolution. uuid.Nil() entries are positional
 	// placeholders for target slots that had no legal candidate — not real
 	// targets — so they never count as "has a target", and every slot is kept
 	// in place (illegal ones nulled) so effects that read targets by index
@@ -2117,7 +2116,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	hasRealTarget := false
 	anyLegal := false
 	for i, t := range obj.Targets {
-		if t != uuid.Nil {
+		if t != uuid.Nil() {
 			hasRealTarget = true
 			if incarnation, exists := obj.TargetIncarnations[t]; exists {
 				permanent := g.FindPermanent(t)
@@ -2139,7 +2138,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 				continue
 			}
 		}
-		resolvedTargets[i] = uuid.Nil
+		resolvedTargets[i] = uuid.Nil()
 	}
 
 	if hasRealTarget && !anyLegal {
@@ -2192,7 +2191,7 @@ func (g *Game) cleanupSpell(obj *StackObject) {
 	}
 
 	owner := obj.Card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		owner = obj.Controller
 	}
 	if obj.ExileOnLeaveStack || g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
@@ -2218,7 +2217,7 @@ func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total
 	}
 	allowed := make(map[uuid.UUID]struct{}, len(targets))
 	for _, t := range targets {
-		if t == uuid.Nil {
+		if t == uuid.Nil() {
 			continue
 		}
 		allowed[t] = struct{}{}
@@ -2243,7 +2242,7 @@ func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total
 	if !valid || sum != total || len(out) == 0 {
 		out = map[uuid.UUID]int{}
 		for _, t := range targets {
-			if t != uuid.Nil {
+			if t != uuid.Nil() {
 				out[t] = total
 				return out
 			}
@@ -2604,7 +2603,7 @@ func (g *Game) CheckStateBasedActions() {
 					if p == nil {
 						continue
 					}
-					p.AttachedTo = uuid.Nil
+					p.AttachedTo = uuid.Nil()
 					actions = true
 				}
 			}
@@ -2894,7 +2893,7 @@ func (g *Game) doDrawNormalDraw() {
 	active := g.ActivePlayerObj()
 
 	// Run through replacement pipeline (skip draw, Aladdin's Lamp, etc.)
-	action := NewDrawCardAction(uuid.Nil, active.PlayerID(), true)
+	action := NewDrawCardAction(uuid.Nil(), active.PlayerID(), true)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return // draw was replaced (skip draw, Aladdin's Lamp, etc.)
@@ -3076,7 +3075,7 @@ func (g *Game) doDeclareBlockers() {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attackerID := ba.AttackerID
 		// If there's a Lure creature, redirect all blocks to it
-		if luredAttackerID != uuid.Nil {
+		if luredAttackerID != uuid.Nil() {
 			attackerID = luredAttackerID
 		}
 		attacker := g.FindPermanent(attackerID)

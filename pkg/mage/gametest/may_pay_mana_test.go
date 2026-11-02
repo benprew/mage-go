@@ -3,8 +3,7 @@ package gametest
 import (
 	"sync"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -32,7 +31,7 @@ func registerMayPayManaTestCards() {
 // given source/controller/targets so each test can exercise pay/decline paths.
 func applyMayPay(t *testing.T, g *TestGame, e mage.Effect, controller uuid.UUID) {
 	t.Helper()
-	if err := mage.ApplyEffect(g.Game, e, uuid.Nil, controller, nil); err != nil {
+	if err := mage.ApplyEffect(g.Game, e, uuid.Nil(), controller, nil); err != nil {
 		t.Fatalf("MayPayMana apply: %v", err)
 	}
 }

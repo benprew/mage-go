@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -87,7 +86,7 @@ func TestMultiTargetDistinctControllers(t *testing.T) {
 								}
 								card := perm.Card
 								owner := card.Owner()
-								if owner == uuid.Nil {
+								if owner == uuid.Nil() {
 									owner = perm.ControllerID()
 								}
 								g.RemoveFromBattlefield(perm)

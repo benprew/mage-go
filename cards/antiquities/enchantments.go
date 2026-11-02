@@ -1,7 +1,7 @@
 package antiquities
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -294,7 +294,7 @@ type artifactDamageToCreaturePreventionReplacement struct {
 	creatureID uuid.UUID
 }
 
-func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID { return uuid.Nil }
+func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID { return uuid.Nil() }
 func (r *artifactDamageToCreaturePreventionReplacement) GetDuration() Duration {
 	return WhileOnBattlefield
 }

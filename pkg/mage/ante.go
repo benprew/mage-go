@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -161,7 +160,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (*Card, uuid.UUID,
 	case ZoneBattlefield:
 		perm := g.FindPermanent(cardID)
 		if perm == nil || perm.IsToken {
-			return nil, uuid.Nil, nil, ErrPermanentNotFound
+			return nil, uuid.Nil(), nil, ErrPermanentNotFound
 		}
 		controller := perm.ControllerID()
 		card := perm.Card
@@ -170,7 +169,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (*Card, uuid.UUID,
 	case ZoneExile:
 		card, ok := g.RemoveFromExile(cardID)
 		if !ok {
-			return nil, uuid.Nil, nil, errors.New("card not found in exile")
+			return nil, uuid.Nil(), nil, errors.New("card not found in exile")
 		}
 		owner := card.Owner()
 		return card, owner, nil, nil
@@ -200,7 +199,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (*Card, uuid.UUID,
 			}
 		}
 	}
-	return nil, uuid.Nil, nil, errors.New("card not found in expected zone")
+	return nil, uuid.Nil(), nil, errors.New("card not found in expected zone")
 }
 
 // RemoveFromAnte removes cardID from the shared ante zone. If a destination

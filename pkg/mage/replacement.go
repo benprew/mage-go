@@ -2,8 +2,7 @@ package mage
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -239,7 +238,7 @@ func (r *playerDamageFromFlyingCreaturesPreventionReplacement) Matches(a Action,
 		return false
 	}
 	srcID := act.ActionSource()
-	if srcID == uuid.Nil {
+	if srcID == uuid.Nil() {
 		return false
 	}
 	perm := g.FindPermanent(srcID)
@@ -931,7 +930,7 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		// Player-targeted rules: a rule with toPlayerID set protects that
 		// player; otherwise (legacy) the rule must have a "from" filter and
 		// no "to" filter (source-only prevention like Lady Evangela).
-		if r.toPlayerID != uuid.Nil {
+		if r.toPlayerID != uuid.Nil() {
 			if act.PlayerID() != r.toPlayerID {
 				return false
 			}

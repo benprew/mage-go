@@ -2,8 +2,7 @@ package interactive_test
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -24,11 +23,11 @@ func TestSnapshotGameState_PlayerIDs(t *testing.T) {
 	g, pa, pb := newTestGame()
 	snap := interactive.SnapshotGameState(g, 0)
 
-	if snap.You.ID == uuid.Nil {
-		t.Error("You.ID should not be uuid.Nil")
+	if snap.You.ID == uuid.Nil() {
+		t.Error("You.ID should not be uuid.Nil()")
 	}
-	if snap.Opponent.ID == uuid.Nil {
-		t.Error("Opponent.ID should not be uuid.Nil")
+	if snap.Opponent.ID == uuid.Nil() {
+		t.Error("Opponent.ID should not be uuid.Nil()")
 	}
 	if snap.You.ID != pa.PlayerID() {
 		t.Errorf("You.ID = %v, want %v", snap.You.ID, pa.PlayerID())
@@ -390,7 +389,7 @@ func TestHumanPlayer_ChooseCardsFromLibrary(t *testing.T) {
 		if len(req.Options) != 3 {
 			t.Fatalf("expected Plains, Island and Done, got %d options", len(req.Options))
 		}
-		if last := req.Options[2]; last.ID != uuid.Nil || last.Label != "Done" {
+		if last := req.Options[2]; last.ID != uuid.Nil() || last.Label != "Done" {
 			t.Errorf("last option = %+v, want Done with a zero ID", last)
 		}
 	}, interactive.ChoiceResponse{SelectedIDs: []uuid.UUID{p1.ID()}})
@@ -399,7 +398,7 @@ func TestHumanPlayer_ChooseCardsFromLibrary(t *testing.T) {
 		if len(req.Options) != 3 {
 			t.Errorf("expected the second Plains to stay offered, got %d options", len(req.Options))
 		}
-	}, interactive.ChoiceResponse{SelectedIDs: []uuid.UUID{uuid.Nil}})
+	}, interactive.ChoiceResponse{SelectedIDs: []uuid.UUID{uuid.Nil()}})
 
 	got := <-result
 	if len(got) != 1 || got[0].ID() != p1.ID() {

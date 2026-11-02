@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -93,7 +93,7 @@ func (ts *TurnSystem) GrantExtraTurn(playerID uuid.UUID) {
 // PopExtraTurn dequeues the next extra turn recipient, if any.
 func (ts *TurnSystem) PopExtraTurn() (uuid.UUID, bool) {
 	if len(ts.extraTurns) == 0 {
-		return uuid.Nil, false
+		return uuid.Nil(), false
 	}
 	next := ts.extraTurns[0]
 	ts.extraTurns = ts.extraTurns[1:]

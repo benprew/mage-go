@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // DrawCardAction represents a player about to draw a card.
 type DrawCardAction struct {

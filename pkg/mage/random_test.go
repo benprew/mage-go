@@ -4,8 +4,7 @@ import (
 	"math/rand"
 	"slices"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -121,7 +120,7 @@ func TestRandomDamageTargetChoosesUniformlyFromCreaturesAndPlayers(t *testing.T)
 }
 
 func TestRandomDamageTargetReturnsNilWithoutCandidates(t *testing.T) {
-	if got := (&Game{}).RandomDamageTarget(); got != uuid.Nil {
+	if got := (&Game{}).RandomDamageTarget(); got != uuid.Nil() {
 		t.Fatalf("random damage target in empty game = %v, want nil UUID", got)
 	}
 }

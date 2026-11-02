@@ -6,11 +6,10 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 // replay walks one recording end-to-end, driving a mage-go game whose hooks

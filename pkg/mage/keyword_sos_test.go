@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -588,7 +587,7 @@ func TestParadigm_CastCopyFromExileKeepsOriginalExiled(t *testing.T) {
 		NewSpellAbility(DrawCards(Fixed(1))),
 	)
 	card.SetOwner(a.PlayerID())
-	g.ExileCard(card, uuid.Nil)
+	g.ExileCard(card, uuid.Nil())
 	g.RecordParadigmResolution(a.PlayerID(), card.Name())
 	g.RegisterParadigmExiledCopy(a.PlayerID(), card.Name(), card.ID())
 

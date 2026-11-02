@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -49,7 +48,7 @@ func (e *addCountersEffect) Text() string {
 		}
 		return fmt.Sprintf("put X %s counters on it", e.ct)
 	}
-	n := e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+	n := e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
 	switch e.selector.Kind {
 	case KindSource:
 		return fmt.Sprintf("put %d %s counter(s) on it", n, e.ct)

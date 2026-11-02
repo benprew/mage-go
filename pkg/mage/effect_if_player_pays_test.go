@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -95,7 +94,7 @@ func TestPipelineOwnershipEffects(t *testing.T) {
 		t.Fatal(err)
 	}
 	card := ownedTestCard(a.PlayerID(), "exiled")
-	g.ExileCard(card, uuid.Nil)
+	g.ExileCard(card, uuid.Nil())
 	ctx := &EffectContext{Game: g, Controller: b.PlayerID(), Vars: map[string]any{"card": card.ID(), "newOwner": b.PlayerID()}}
 	if err := ChangeOwnerGathered("card", VarPlayer("newOwner")).Apply(ctx); err != nil {
 		t.Fatal(err)

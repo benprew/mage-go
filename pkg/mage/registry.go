@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // CardFactory creates a new instance of a card.
@@ -55,7 +54,7 @@ func (r *Registry) CreateCard(name string) (*Card, error) {
 	factory := r.factories[canonical]
 	r.mu.RUnlock()
 	if definition != nil {
-		return definition.NewInstance(uuid.Nil), nil
+		return definition.NewInstance(uuid.Nil()), nil
 	}
 	if factory == nil {
 		return nil, fmt.Errorf("unknown card: %s", name)

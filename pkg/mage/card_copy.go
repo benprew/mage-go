@@ -3,8 +3,7 @@ package mage
 import (
 	"maps"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -98,8 +97,8 @@ func (c *Card) NewCopy() *Card {
 
 func (ctx *gameCloneContext) resetCopiedRules() {
 	for _, ability := range ctx.abilities {
-		ability.SetSource(uuid.Nil)
-		ability.SetController(uuid.Nil)
+		ability.SetSource(uuid.Nil())
+		ability.SetController(uuid.Nil())
 		if setter, ok := ability.(interface{ setAbilityID(uuid.UUID) }); ok {
 			setter.setAbilityID(uuid.New())
 		}
@@ -108,7 +107,7 @@ func (ctx *gameCloneContext) resetCopiedRules() {
 		}
 		if static, ok := ability.(*StaticAbilityHolder); ok {
 			for _, effect := range static.Effects {
-				effect.SetSourceID(uuid.Nil)
+				effect.SetSourceID(uuid.Nil())
 			}
 		}
 	}

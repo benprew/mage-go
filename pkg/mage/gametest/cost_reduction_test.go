@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -318,7 +317,7 @@ func TestCostReductionIfCardLeftYourGraveyardThisTurn(t *testing.T) {
 	if !ok {
 		t.Fatalf("MoveFromGraveyard failed")
 	}
-	tg2.ExileCard(removed, uuid.Nil)
+	tg2.ExileCard(removed, uuid.Nil())
 
 	if got := tg2.ConditionalSpellCostReduction(pid2, findHandCard(tg2, PlayerA, spell)); got != 2 {
 		t.Errorf("reduction after graveyard move: got %d, want 2", got)

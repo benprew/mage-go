@@ -2,8 +2,7 @@ package jumpstart
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -22,7 +21,7 @@ func permIDByName(g *gametest.TestGame, p gametest.PlayerRef, name string) uuid.
 	if perm := g.FindPermanentByName(name, pid); perm != nil {
 		return perm.ID()
 	}
-	return uuid.Nil
+	return uuid.Nil()
 }
 
 // TestSavageStomp_DinosaurTargetReducesCostByTwo confirms that, when the
@@ -40,7 +39,7 @@ func TestSavageStomp_DinosaurTargetReducesCostByTwo(t *testing.T) {
 	pid := g.GetPlayer(gametest.PlayerA).PlayerID()
 	dino := permIDByName(g, gametest.PlayerA, "Orazca Frillback")
 	bears := permIDByName(g, gametest.PlayerB, "Grizzly Bears")
-	if dino == uuid.Nil || bears == uuid.Nil {
+	if dino == uuid.Nil() || bears == uuid.Nil() {
 		t.Fatal("setup: missing battlefield permanents")
 	}
 	stomp := handCard(g, gametest.PlayerA, "Savage Stomp")
@@ -77,7 +76,7 @@ func TestSavageStomp_NonDinosaurTargetNoReduction(t *testing.T) {
 	myBears := permIDByName(g, gametest.PlayerA, "Grizzly Bears")
 	giant := permIDByName(g, gametest.PlayerB, "Hill Giant")
 	stomp := handCard(g, gametest.PlayerA, "Savage Stomp")
-	if myBears == uuid.Nil || giant == uuid.Nil || stomp == nil {
+	if myBears == uuid.Nil() || giant == uuid.Nil() || stomp == nil {
 		t.Fatal("setup")
 	}
 	got := g.ConditionalSpellCostReductionWithTargets(pid, stomp, []uuid.UUID{myBears, giant})
@@ -103,7 +102,7 @@ func TestSavageStomp_OpponentDinosaurDoesNotReduce(t *testing.T) {
 	myBears := permIDByName(g, gametest.PlayerA, "Grizzly Bears")
 	oppDino := permIDByName(g, gametest.PlayerB, "Orazca Frillback")
 	stomp := handCard(g, gametest.PlayerA, "Savage Stomp")
-	if myBears == uuid.Nil || oppDino == uuid.Nil || stomp == nil {
+	if myBears == uuid.Nil() || oppDino == uuid.Nil() || stomp == nil {
 		t.Fatal("setup")
 	}
 	got := g.ConditionalSpellCostReductionWithTargets(pid, stomp, []uuid.UUID{myBears, oppDino})

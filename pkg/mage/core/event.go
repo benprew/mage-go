@@ -1,6 +1,6 @@
 package core
 
-import "github.com/google/uuid"
+import "uuid"
 
 //go:generate enumer -type=EventType -trimprefix=Evt -output=event_enumer.go
 

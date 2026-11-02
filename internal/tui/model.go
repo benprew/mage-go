@@ -3,9 +3,9 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"uuid"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/interactive"

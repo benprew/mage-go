@@ -28,8 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe" //nolint:gocritic // Required for C buffer views; this is not a duplicate C import.
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -370,7 +369,7 @@ func makeOutputViewsC(n int64, cfg encodeConfig, out *C.MageEncodeOutputs) (outp
 
 func parseUUID(s string) (uuid.UUID, error) {
 	if s == "" {
-		return uuid.Nil, nil
+		return uuid.Nil(), nil
 	}
 	return uuid.Parse(s)
 }
@@ -448,11 +447,11 @@ func convertPriorityOptions(opts []interactive.ActionOption) []apiOption {
 			ManaCost:     o.ManaCost,
 			ValidTargets: targetsFromActionOption(o),
 		}
-		if o.CardID != uuid.Nil {
+		if o.CardID != uuid.Nil() {
 			ao.CardID = o.CardID.String()
 			ao.CardUUID = o.CardID
 		}
-		if o.PermanentID != uuid.Nil {
+		if o.PermanentID != uuid.Nil() {
 			ao.PermanentID = o.PermanentID.String()
 			ao.PermanentUUID = o.PermanentID
 		}
@@ -497,7 +496,7 @@ func convertChoiceOptions(choiceType interactive.ChoiceType, opts []interactive.
 	out := make([]apiOption, 0, len(opts))
 	for _, o := range opts {
 		ao := apiOption{Kind: "choice", Label: o.Label}
-		if o.ID != uuid.Nil {
+		if o.ID != uuid.Nil() {
 			ao.ID = o.ID.String()
 			ao.IDUUID = o.ID
 		}
@@ -513,7 +512,7 @@ func buildAttackerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 	out := make([]apiOption, 0, len(msg.Options))
 	for _, o := range msg.Options {
 		ao := apiOption{Kind: "attacker", Label: o.Label}
-		if o.PermanentID != uuid.Nil {
+		if o.PermanentID != uuid.Nil() {
 			ao.PermanentID = o.PermanentID.String()
 			ao.PermanentUUID = o.PermanentID
 		}
@@ -525,7 +524,7 @@ func buildAttackerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 func buildBlockerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 	out := make([]apiOption, 0, len(msg.Options))
 	for _, o := range msg.Options {
-		if o.Type == interactive.ActionPass || o.PermanentID == uuid.Nil {
+		if o.Type == interactive.ActionPass || o.PermanentID == uuid.Nil() {
 			continue
 		}
 		ao := apiOption{Kind: "blocker", Label: o.Label}

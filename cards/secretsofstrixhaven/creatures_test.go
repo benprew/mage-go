@@ -3,8 +3,7 @@ package secretsofstrixhaven
 import (
 	"sync"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -331,7 +330,7 @@ func TestEnnisDebateModerator_EndStepCounter(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ennis, Debate Moderator")
 	exiled := mage.NewLand("Test Exiled Land")
 	exiled.SetOwner(g.GetPlayer(gametest.PlayerA).PlayerID())
-	g.ExileCard(exiled, uuid.Nil)
+	g.ExileCard(exiled, uuid.Nil())
 	g.StopAt(1, core.Cleanup)
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Ennis, Debate Moderator", core.P1P1, 1)

@@ -3,8 +3,7 @@ package mage
 import (
 	"maps"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // ZoneSystem manages the battlefield, exile zone, Last-Known Information (LKI),
@@ -445,7 +444,7 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 	}
 	isToken := p.IsToken
 	owner := p.Card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		owner = p.ControllerID()
 	}
 	snap := newGameCloneContext().permanent(p)

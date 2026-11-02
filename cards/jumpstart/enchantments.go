@@ -1,7 +1,7 @@
 package jumpstart
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -40,7 +40,7 @@ func registerEnchantments() {
 					"target creature with defender can attack this turn as though it didn't have defender",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
@@ -186,7 +186,7 @@ func registerEnchantments() {
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
-							if src == nil || src.AttachedTo == uuid.Nil {
+							if src == nil || src.AttachedTo == uuid.Nil() {
 								return nil
 							}
 							host := g.FindPermanent(src.AttachedTo)
@@ -582,7 +582,7 @@ func registerEnchantments() {
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
-							if src == nil || src.AttachedTo == uuid.Nil {
+							if src == nil || src.AttachedTo == uuid.Nil() {
 								return nil
 							}
 							target := g.FindPermanent(src.AttachedTo)
@@ -593,7 +593,7 @@ func registerEnchantments() {
 						}),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
-					if src == nil || src.AttachedTo == uuid.Nil {
+					if src == nil || src.AttachedTo == uuid.Nil() {
 						return false
 					}
 					target := g.FindPermanent(src.AttachedTo)
@@ -651,7 +651,7 @@ func registerEnchantments() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
+						if src == nil || src.AttachedTo == uuid.Nil() {
 							return nil
 						}
 						host := g.FindPermanent(src.AttachedTo)
@@ -867,11 +867,11 @@ func registerEnchantments() {
 					FuncEffect("return enchanted land to its owner's hand",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							evtSource := uuid.Nil
+							evtSource := uuid.Nil()
 							if len(targets) > 0 {
 								evtSource = targets[0]
 							}
-							if evtSource == uuid.Nil {
+							if evtSource == uuid.Nil() {
 								return nil
 							}
 							for _, pl := range g.AllPlayers() {

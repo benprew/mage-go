@@ -3,14 +3,13 @@ package jumpstart
 import (
 	"math/rand"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-var _ = uuid.Nil
+var _ = uuid.Nil()
 
 func init() {
 	registerCreatures()
@@ -965,7 +964,7 @@ func registerCreatures() {
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						damagerID := g.EventSourceID()
 						amount := g.EventAmount()
-						if damagerID == uuid.Nil || amount <= 0 {
+						if damagerID == uuid.Nil() || amount <= 0 {
 							return nil
 						}
 						var damagerController uuid.UUID
@@ -976,7 +975,7 @@ func registerCreatures() {
 						} else if c := g.FindCardAnywhere(damagerID); c != nil {
 							damagerController = c.Owner()
 						}
-						if damagerController == uuid.Nil {
+						if damagerController == uuid.Nil() {
 							return nil
 						}
 						p := g.GetPlayer(damagerController)
@@ -1287,7 +1286,7 @@ func registerCreatures() {
 			"counter that spell or ability",
 			EffectProperties{Outcome: OutcomeBenefit},
 			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-				if len(targets) < 2 || targets[1] == uuid.Nil {
+				if len(targets) < 2 || targets[1] == uuid.Nil() {
 					return nil
 				}
 				g.CounterSpellOnStack(targets[1])
@@ -3048,7 +3047,7 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						recipID := g.EventSourceID()
-						if recipID == uuid.Nil {
+						if recipID == uuid.Nil() {
 							return nil
 						}
 						recip := g.GetPlayer(recipID)
@@ -3880,7 +3879,7 @@ func registerCreatures() {
 					"copy target instant or sorcery spell; you may choose new targets",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						g.CopySpellOnStack(targets[0], controller, true)
@@ -4143,7 +4142,7 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
 						atkID := g.EventSourceID()
-						if atkID == uuid.Nil {
+						if atkID == uuid.Nil() {
 							return nil
 						}
 						for _, group := range g.CombatGroups() {
@@ -4848,7 +4847,7 @@ func registerCreatures() {
 					if !attacker.HasSubType("Devil") {
 						continue
 					}
-					if group.DefenderID == uuid.Nil || seen[group.DefenderID] {
+					if group.DefenderID == uuid.Nil() || seen[group.DefenderID] {
 						continue
 					}
 					if pl := g.GetPlayer(group.DefenderID); pl != nil {
@@ -6239,7 +6238,7 @@ func registerCreatures() {
 					}
 					card := perm.Card
 					ownerID := card.Owner()
-					if ownerID == uuid.Nil {
+					if ownerID == uuid.Nil() {
 						ownerID = perm.ControllerID()
 					}
 					g.RemoveFromBattlefield(perm)
@@ -6385,7 +6384,7 @@ func registerCreatures() {
 					}
 					card := chosen.Card
 					ownerID := card.Owner()
-					if ownerID == uuid.Nil {
+					if ownerID == uuid.Nil() {
 						ownerID = chosen.ControllerID()
 					}
 					g.RemoveFromBattlefield(chosen)

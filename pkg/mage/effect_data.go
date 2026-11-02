@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // EffectContext carries runtime state through a pipeline of effects. It is
@@ -64,15 +63,15 @@ func (ctx *EffectContext) GetUUID(name string) uuid.UUID {
 	return id
 }
 
-// TryGetUUID retrieves a UUID variable, returning uuid.Nil if missing.
+// TryGetUUID retrieves a UUID variable, returning uuid.Nil() if missing.
 func (ctx *EffectContext) TryGetUUID(name string) uuid.UUID {
 	v, ok := ctx.Vars[name]
 	if !ok {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	id, ok := v.(uuid.UUID)
 	if !ok {
-		return uuid.Nil
+		return uuid.Nil()
 	}
 	return id
 }

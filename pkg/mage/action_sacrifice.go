@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -21,14 +20,14 @@ func (g *Game) CaptureSacrificed(p *Permanent) {
 // LastSacrificed returns generic last-known information for the permanent most
 // recently sacrificed as a cost.
 func (g *Game) LastSacrificed() *PermanentLKI {
-	if g.resolution.LastSacrificedID() == uuid.Nil {
+	if g.resolution.LastSacrificedID() == uuid.Nil() {
 		return nil
 	}
 	return g.LKI(g.resolution.LastSacrificedID())
 }
 
 // ClearSacrificed forgets which permanent was most recently sacrificed as a cost.
-func (g *Game) ClearSacrificed() { g.resolution.SetLastSacrificedID(uuid.Nil) }
+func (g *Game) ClearSacrificed() { g.resolution.SetLastSacrificedID(uuid.Nil()) }
 
 // Sacrifice sacrifices a permanent (like destroy but doesn't check
 // indestructible). Self-referential triggers fire from the LKI snapshot's
@@ -37,7 +36,7 @@ func (g *Game) ClearSacrificed() { g.resolution.SetLastSacrificedID(uuid.Nil) }
 func (g *Game) DoSacrifice(perm *Permanent) {
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
-	if owner == uuid.Nil {
+	if owner == uuid.Nil() {
 		owner = controller
 	}
 
@@ -240,7 +239,7 @@ func SacrificeGathered(varName string) Effect               { return &SacrificeG
 func (*SacrificeGatheredData) Text() string                 { return "sacrifice" }
 func (*SacrificeGatheredData) Properties() EffectProperties { return EffectProperties{} }
 func (e *SacrificeGatheredData) Apply(ctx *EffectContext) error {
-	if id := ctx.TryGetUUID(e.VarName); id != uuid.Nil {
+	if id := ctx.TryGetUUID(e.VarName); id != uuid.Nil() {
 		if perm := ctx.Game.FindPermanent(id); perm != nil {
 			ctx.Game.DoSacrifice(perm)
 		}

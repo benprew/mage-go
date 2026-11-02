@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -34,7 +34,7 @@ func CastAsThoughHadFlashGlobal(filter CardFilter) ContinuousEffect {
 		if g.FindPermanent(sourceID) == nil {
 			return nil
 		}
-		g.effects.Rules.AddFlashGrant(sourceID, uuid.Nil, filter)
+		g.effects.Rules.AddFlashGrant(sourceID, uuid.Nil(), filter)
 		return nil
 	})
 }

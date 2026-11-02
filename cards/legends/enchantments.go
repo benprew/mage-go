@@ -3,8 +3,7 @@ package legends
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -135,7 +134,7 @@ func registerEnchantments() {
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.MutablePermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
+						if src == nil || src.AttachedTo == uuid.Nil() {
 							return nil
 						}
 						target := g.FindPermanent(src.AttachedTo)
@@ -264,7 +263,7 @@ func registerEnchantments() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
+						if src == nil || src.AttachedTo == uuid.Nil() {
 							return nil
 						}
 						target := g.FindPermanent(src.AttachedTo)
@@ -387,7 +386,7 @@ func registerEnchantments() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						chosen := g.ChooseDamageSource(controller)
-						if chosen == uuid.Nil {
+						if chosen == uuid.Nil() {
 							return nil
 						}
 						colors := g.EffectiveColors(chosen)
@@ -491,7 +490,7 @@ func registerEnchantments() {
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
-							if src == nil || src.AttachedTo == uuid.Nil {
+							if src == nil || src.AttachedTo == uuid.Nil() {
 								return nil
 							}
 							enchantedID := src.AttachedTo
@@ -584,7 +583,7 @@ func registerEnchantments() {
 					// TODO: convert to data condition
 					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
+						if src == nil || src.AttachedTo == uuid.Nil() {
 							return false
 						}
 						enchantedID := src.AttachedTo
@@ -1154,7 +1153,7 @@ func registerEnchantments() {
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
+						if src == nil || src.AttachedTo == uuid.Nil() {
 							return nil
 						}
 						target := g.MutablePermanent(src.AttachedTo)
@@ -1181,7 +1180,7 @@ func registerEnchantments() {
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
+						if src == nil || src.AttachedTo == uuid.Nil() {
 							return nil
 						}
 						target := g.MutablePermanent(src.AttachedTo)

@@ -3,8 +3,7 @@ package legends
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -1771,7 +1770,7 @@ func registerCreatures() {
 								break
 							}
 						}
-						if defenderID == uuid.Nil {
+						if defenderID == uuid.Nil() {
 							return nil
 						}
 						// Find an artifact the defending player controls

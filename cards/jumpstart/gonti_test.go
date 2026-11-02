@@ -2,8 +2,7 @@ package jumpstart
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage"
@@ -23,7 +22,7 @@ func findGontiExiledCard(t *testing.T, g *gametest.TestGame, playerID uuid.UUID)
 		}
 	}
 	t.Fatalf("no exiled card with Gonti permission for player %s", playerID)
-	return nil, uuid.Nil
+	return nil, uuid.Nil()
 }
 
 func TestGontiLordOfLuxury_LooksAtTopFourAndExilesOneFaceDown(t *testing.T) {

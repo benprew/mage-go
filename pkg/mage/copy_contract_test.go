@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -114,7 +113,7 @@ func TestCopiableValuesSnapshot(t *testing.T) {
 	action.activatedThisTurn = true
 	action.SetController(uuid.New())
 	target := action.Targets()[0]
-	if err := target.Choose(uuid.Nil, source, nil, []uuid.UUID{uuid.New()}); err != nil {
+	if err := target.Choose(uuid.Nil(), source, nil, []uuid.UUID{uuid.New()}); err != nil {
 		t.Fatal(err)
 	}
 	values := source.CopiableValues()
@@ -124,7 +123,7 @@ func TestCopiableValuesSnapshot(t *testing.T) {
 	second.ApplyCopiableValues(values)
 	for _, copied := range []*Card{first, second, first.NewCopy(), first.Copy()} {
 		ability := copied.Abilities()[0].(*ActionDefinition)
-		if copied.Power() != 2 || ability.activatedThisTurn || ability.Controller() != uuid.Nil || ability.Targets()[0].IsChosen() {
+		if copied.Power() != 2 || ability.activatedThisTurn || ability.Controller() != uuid.Nil() || ability.Targets()[0].IsChosen() {
 			t.Fatal("copy retained source state or read changed source characteristics")
 		}
 	}

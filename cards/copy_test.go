@@ -2,8 +2,7 @@ package cards_test
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards"
 	_ "github.com/benprew/mage-go/cards/jumpstart"
@@ -56,7 +55,7 @@ func TestStoneGiantCopyOwnsTargets(t *testing.T) {
 	}
 	target := card.Abilities()[0].(mage.ActivatedAbility).Targets()[0]
 	chosen := uuid.New()
-	if err := target.Choose(uuid.Nil, card, nil, []uuid.UUID{chosen}); err != nil {
+	if err := target.Choose(uuid.Nil(), card, nil, []uuid.UUID{chosen}); err != nil {
 		t.Fatal(err)
 	}
 	copyTarget := card.NewCopy().Abilities()[0].(mage.ActivatedAbility).Targets()[0]

@@ -2,8 +2,7 @@ package mage
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -138,7 +137,7 @@ func uniqueTargetCandidates(ids []uuid.UUID) []uuid.UUID {
 	unique := make([]uuid.UUID, 0, len(ids))
 	seen := make(map[uuid.UUID]bool, len(ids))
 	for _, id := range ids {
-		if id == uuid.Nil || seen[id] {
+		if id == uuid.Nil() || seen[id] {
 			continue
 		}
 		seen[id] = true
@@ -394,7 +393,7 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Ca
 			}
 		}
 		if len(chosen) == 0 && spec.Min() > 0 {
-			chosen = append(chosen, uuid.Nil)
+			chosen = append(chosen, uuid.Nil())
 		}
 
 		out = append(out, chosen...)

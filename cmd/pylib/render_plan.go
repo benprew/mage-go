@@ -4,8 +4,7 @@ import (
 	"math"
 	"slices"
 	"sync"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -388,7 +387,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 		slot := zoneOwnerSlot(key.zone, key.owner)
 		cards := index.cardsByZone[slot]
 		for idx := range cards {
-			if cards[idx].cardID != uuid.Nil {
+			if cards[idx].cardID != uuid.Nil() {
 				if existing, ok := index.byCardID[cards[idx].cardID]; ok {
 					cards[idx].uuidIdx = existing.uuidIdx
 				} else {
@@ -543,7 +542,7 @@ func appendRenderCardsForZone(
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + item.Name}
 			}
-			id := uuid.Nil
+			id := uuid.Nil()
 			if item.ID != "" {
 				if parsed, err := uuid.Parse(item.ID); err == nil {
 					id = parsed
@@ -665,7 +664,7 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 						w.write(opCounter, int32(ct), int32(count))
 					}
 				}
-				if card.perm.AttachedTo != uuid.Nil {
+				if card.perm.AttachedTo != uuid.Nil() {
 					targetUUIDIdx := int32(-1)
 					if entry, ok := index.byCardID[card.perm.AttachedTo]; ok {
 						targetUUIDIdx = entry.uuidIdx
@@ -756,7 +755,7 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 	if perm.Attacking {
 		bits |= statusAttacking
 	}
-	if perm.Blocking != uuid.Nil {
+	if perm.Blocking != uuid.Nil() {
 		bits |= statusBlocking
 	}
 	if perm.FaceDown {
@@ -774,7 +773,7 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 	if perm.IsArtifact {
 		bits |= statusIsArtifact
 	}
-	if perm.AttachedTo != uuid.Nil {
+	if perm.AttachedTo != uuid.Nil() {
 		bits |= statusIsAttached
 	}
 	return bits
@@ -792,22 +791,22 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (row, uuidIndex
 	default:
 		first = option.PermanentUUID
 	}
-	if first != uuid.Nil {
+	if first != uuid.Nil() {
 		if entry, ok := index.byCardID[first]; ok {
 			return entry.row, entry.uuidIdx
 		}
 	}
-	if option.CardUUID != uuid.Nil && option.CardUUID != first {
+	if option.CardUUID != uuid.Nil() && option.CardUUID != first {
 		if entry, ok := index.byCardID[option.CardUUID]; ok {
 			return entry.row, entry.uuidIdx
 		}
 	}
-	if option.PermanentUUID != uuid.Nil && option.PermanentUUID != first {
+	if option.PermanentUUID != uuid.Nil() && option.PermanentUUID != first {
 		if entry, ok := index.byCardID[option.PermanentUUID]; ok {
 			return entry.row, entry.uuidIdx
 		}
 	}
-	if option.IDUUID != uuid.Nil {
+	if option.IDUUID != uuid.Nil() {
 		if entry, ok := index.byCardID[option.IDUUID]; ok {
 			return entry.row, entry.uuidIdx
 		}
@@ -822,7 +821,7 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (row, uuidIndex
 }
 
 func renderTarget(target apiTarget, selfID, oppID uuid.UUID, index renderPlanIndex) (row, uuidIndex, targetType int32) {
-	if target.IDUUID == uuid.Nil {
+	if target.IDUUID == uuid.Nil() {
 		return -1, -1, renderTargetUnknown
 	}
 	// For player targets the assembler doesn't need a row / uuid index — it

@@ -2,8 +2,7 @@ package mage
 
 import (
 	"maps"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -247,7 +246,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 	sourceCard := g.findCardForDamageSource(sourceID)
 	isArtifact := sourceCard != nil && sourceCard.HasType(TypeArtifact)
 	g.trackers.Turn.RecordDamageTaken(p.PlayerID(), amount, isArtifact)
-	if sourceID != uuid.Nil {
+	if sourceID != uuid.Nil() {
 		if ds.damageDealtToPlayersByPermanent == nil {
 			ds.damageDealtToPlayersByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
 		}
@@ -302,12 +301,12 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 		g.turnFaceUp(src)
 	}
 	if reflectEntry, ok := ds.GetDamageReflection(p.PlayerID()); ok {
-		if reflectEntry.chosenSource == uuid.Nil || reflectEntry.chosenSource == sourceID {
+		if reflectEntry.chosenSource == uuid.Nil() || reflectEntry.chosenSource == sourceID {
 			ds.ClearDamageReflection(p.PlayerID())
 			reflectSourceCard := g.findCardForDamageSource(sourceID)
 			if reflectSourceCard != nil {
 				sourceOwner := reflectSourceCard.Owner()
-				if sourceOwner != uuid.Nil {
+				if sourceOwner != uuid.Nil() {
 					ownerPlayer := g.GetPlayer(sourceOwner)
 					if ownerPlayer != nil {
 						ds.DealDamageToPlayer(g, ownerPlayer, amount, reflectEntry.eyeSourceID)
@@ -349,7 +348,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		ds.damageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
 	}
 	ds.damageDealtBy[perm.ID()][sourceID] = true
-	if sourceID != uuid.Nil {
+	if sourceID != uuid.Nil() {
 		if ds.damageDealtToPermanentsByPermanent == nil {
 			ds.damageDealtToPermanentsByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
 		}

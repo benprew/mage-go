@@ -2,8 +2,7 @@ package limited
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -480,7 +479,7 @@ func TestAnimateDead(t *testing.T) {
 			t.Fatal("animated creature not found")
 		}
 		playerB := g.AllPlayers()[1].PlayerID()
-		if err := mage.ApplyEffect(g.Game, mage.GainControl().Until(core.EndOfTurn), uuid.Nil, playerB, []uuid.UUID{creature.ID()}); err != nil {
+		if err := mage.ApplyEffect(g.Game, mage.GainControl().Until(core.EndOfTurn), uuid.Nil(), playerB, []uuid.UUID{creature.ID()}); err != nil {
 			t.Fatal(err)
 		}
 		g.AssertPermanentCount(gametest.PlayerB, "Serra Angel", 1)

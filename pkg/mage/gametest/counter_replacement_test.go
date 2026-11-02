@@ -3,8 +3,7 @@ package gametest
 import (
 	"sync"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -83,11 +82,11 @@ func TestCounterDoublerOnAddCounters(t *testing.T) {
 	g.AddCounterDoubler(bear.ID(), core.P1P1, mage.ControlledBy(playerA.PlayerID()))
 
 	// Place 1 counter — should become 2.
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, false)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), false)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 2)
 
 	// A subsequent placement of 3 — should become 6.
-	g.AddCountersWithReplacement(bear, core.P1P1, 3, uuid.Nil, false)
+	g.AddCountersWithReplacement(bear, core.P1P1, 3, uuid.Nil(), false)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 8)
 }
 
@@ -107,8 +106,8 @@ func TestCounterDoublerFilterScope(t *testing.T) {
 	wizard := findPermanentByName(g, "Counter Wizard")
 	g.AddCounterDoubler(bear.ID(), core.P1P1, mage.ControlledBy(playerA.PlayerID()))
 
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, false)
-	g.AddCountersWithReplacement(wizard, core.P1P1, 1, uuid.Nil, false)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), false)
+	g.AddCountersWithReplacement(wizard, core.P1P1, 1, uuid.Nil(), false)
 
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 2)   // doubled
 	g.AssertCounterCount(PlayerB, "Counter Wizard", core.P1P1, 1) // not doubled
@@ -127,7 +126,7 @@ func TestCounterDoublerCounterTypeScope(t *testing.T) {
 	bear := findPermanentByName(g, "Counter Bear")
 	g.AddCounterDoubler(bear.ID(), core.P1P1, mage.PermanentFilter{})
 
-	g.AddCountersWithReplacement(bear, core.M1M1, 2, uuid.Nil, false)
+	g.AddCountersWithReplacement(bear, core.M1M1, 2, uuid.Nil(), false)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.M1M1, 2)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 0)
 }
@@ -178,11 +177,11 @@ func TestETBAdditionalCounters(t *testing.T) {
 		mage.And(mage.IsCreature, mage.ControlledBy(playerA.PlayerID())), false)
 
 	// On entry: 1 -> 2.
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, true)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), true)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 2)
 
 	// Outside ETB: no boost.
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, false)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), false)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 3)
 }
 
@@ -202,7 +201,7 @@ func TestETBAdditionalCountersExcludeSelf(t *testing.T) {
 	g.AddETBAdditionalCounters(bear.ID(), core.P1P1, 1, mage.PermanentFilter{}, true)
 
 	// Self ETB placement with extra=1 and excludeSelf=true: NO bonus.
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, true)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), true)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 1)
 }
 
@@ -220,7 +219,7 @@ func TestETBAdditionalCountersOnlyOnEntry(t *testing.T) {
 	g.AddETBAdditionalCounters(bear.ID(), core.P1P1, 2, mage.PermanentFilter{}, false)
 
 	// Non-entry placement: NO extra counters.
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, false)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), false)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 1)
 }
 
@@ -241,6 +240,6 @@ func TestDoublerStacksWithETBAdditional(t *testing.T) {
 	g.AddETBAdditionalCounters(bear.ID(), core.P1P1, 1, mage.PermanentFilter{}, false)
 	g.AddCounterDoubler(bear.ID(), core.P1P1, mage.PermanentFilter{})
 
-	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil, true)
+	g.AddCountersWithReplacement(bear, core.P1P1, 1, uuid.Nil(), true)
 	g.AssertCounterCount(PlayerA, "Counter Bear", core.P1P1, 4)
 }

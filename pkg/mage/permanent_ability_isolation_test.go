@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type wrappedClonePlayer struct{ Player }
@@ -60,7 +59,7 @@ func TestNewPermanentResetsCardActivationState(t *testing.T) {
 	ability := card.abilities[0].(*ActionDefinition)
 	ability.activatedThisTurn = true
 	ability.activationsThisTurn = 1
-	if err := ability.Targets()[0].Choose(uuid.Nil, card, nil, []uuid.UUID{uuid.New()}); err != nil {
+	if err := ability.Targets()[0].Choose(uuid.Nil(), card, nil, []uuid.UUID{uuid.New()}); err != nil {
 		t.Fatal(err)
 	}
 	p := NewPermanent(card, uuid.New())

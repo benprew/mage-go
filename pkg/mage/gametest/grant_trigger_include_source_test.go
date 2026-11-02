@@ -2,8 +2,7 @@ package gametest
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -21,7 +20,7 @@ func TestGrantTriggeredAbilityToAllIncludingSource(t *testing.T) {
 				"counter that spell or ability",
 				mage.EffectProperties{Outcome: mage.OutcomeBenefit},
 				func(g *mage.Game, _, _ uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) < 2 || targets[1] == uuid.Nil {
+					if len(targets) < 2 || targets[1] == uuid.Nil() {
 						return nil
 					}
 					g.CounterSpellOnStack(targets[1])

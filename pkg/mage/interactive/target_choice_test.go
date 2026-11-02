@@ -3,8 +3,7 @@ package interactive_test
 import (
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/dsl"
@@ -81,7 +80,7 @@ func TestHumanPlayer_ModalPreventionTarget(t *testing.T) {
 		t.Fatal("cast did not complete")
 	}
 	game.ResolveStack()
-	game.DealDamageToPlayer(opponent, 5, uuid.Nil)
+	game.DealDamageToPlayer(opponent, 5, uuid.Nil())
 	if opponent.Life() != 18 || human.Life() != 20 {
 		t.Fatalf("life after damage: opponent=%d human=%d", opponent.Life(), human.Life())
 	}

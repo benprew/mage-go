@@ -3,10 +3,9 @@ package mage
 import (
 	"fmt"
 	"slices"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 // Effect represents a one-shot effect that resolves. Each concrete type
@@ -655,7 +654,7 @@ type selectDefendingPlayer struct{}
 // triggers on attacking creatures (Mindstab Thrull, Necrite, etc.).
 func SelectDefendingPlayer() PlayerSelector { return selectDefendingPlayer{} }
 func (s selectDefendingPlayer) Select(g GameReader, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
-	if group := g.CombatGroupFor(sourceID); group != nil && group.DefenderID != uuid.Nil {
+	if group := g.CombatGroupFor(sourceID); group != nil && group.DefenderID != uuid.Nil() {
 		if p := g.GetPlayer(group.DefenderID); p != nil {
 			return []uuid.UUID{p.PlayerID()}
 		}

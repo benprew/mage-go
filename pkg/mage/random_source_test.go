@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 func TestRandomSource_ScriptedResults(t *testing.T) {

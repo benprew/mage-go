@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -37,8 +36,8 @@ func TestCardDefinitionPublication(t *testing.T) {
 	def.Types()[0] = TypeLand
 	def.SubTypes()[0] = "Goblin"
 	def.ManaCost().Hybrid[0].A = Green
-	def.NewInstance(uuid.Nil).Abilities()[0].SetController(uuid.New())
-	if def.Types()[0] != TypeCreature || def.SubTypes()[0] != "Bear" || def.ManaCost().Hybrid[0].A != White || countCardAbility(def.NewInstance(uuid.Nil), Flying) != 1 {
+	def.NewInstance(uuid.Nil()).Abilities()[0].SetController(uuid.New())
+	if def.Types()[0] != TypeCreature || def.SubTypes()[0] != "Bear" || def.ManaCost().Hybrid[0].A != White || countCardAbility(def.NewInstance(uuid.Nil()), Flying) != 1 {
 		t.Fatal("definition has writable aliases")
 	}
 }
@@ -53,7 +52,7 @@ func TestCardDefinitionCompiledKeywords(t *testing.T) {
 		t.Fatal(err)
 	}
 	abilities[0] = keywordRule(Haste)
-	def.NewInstance(uuid.Nil).Abilities()[1].SetController(uuid.New())
+	def.NewInstance(uuid.Nil()).Abilities()[1].SetController(uuid.New())
 	a, b := def.NewInstance(uuid.New()), def.NewInstance(uuid.New())
 	WithKeyword(Haste)(a)
 	for _, kw := range []Attr{Flying, FirstStrike} {
@@ -61,11 +60,11 @@ func TestCardDefinitionCompiledKeywords(t *testing.T) {
 		if kw == Flying {
 			want = 2
 		}
-		if countCardAbility(def.NewInstance(uuid.Nil), kw) != want || countCardAbility(b, kw) != want || !NewPermanent(b, b.Owner()).HasKeyword(kw) {
+		if countCardAbility(def.NewInstance(uuid.Nil()), kw) != want || countCardAbility(b, kw) != want || !NewPermanent(b, b.Owner()).HasKeyword(kw) {
 			t.Fatalf("compiled keyword %s did not reach the instance", kw)
 		}
 	}
-	if countCardAbility(def.NewInstance(uuid.Nil), Flying) != 2 || countCardAbility(def.NewInstance(uuid.Nil), FirstStrike) != 1 || countCardAbility(b, Haste) != 0 {
+	if countCardAbility(def.NewInstance(uuid.Nil()), Flying) != 2 || countCardAbility(def.NewInstance(uuid.Nil()), FirstStrike) != 1 || countCardAbility(b, Haste) != 0 {
 		t.Fatal("compiled abilities share writable state")
 	}
 }
@@ -79,7 +78,7 @@ func TestCardDefinitionInstances(t *testing.T) {
 	aa := a.Abilities()[0].(*ActionDefinition)
 	bb := b.Abilities()[0].(*ActionDefinition)
 	aa.SetController(a.Owner())
-	if aa == bb || bb.Controller() != uuid.Nil {
+	if aa == bb || bb.Controller() != uuid.Nil() {
 		t.Fatal("ability context is shared")
 	}
 	cloned := a.Copy()
@@ -356,7 +355,7 @@ func TestNewCardSupportsCardOptions(t *testing.T) {
 	if !card.HasSuperType(SuperLegendary) || !card.HasSubType("Spirit") || countCardAbility(card, Flying) != 1 || countCardAbility(card, Ward) != 1 {
 		t.Fatal("card options did not change private characteristics")
 	}
-	if len(def.SuperTypes()) != 0 || len(def.SubTypes()) != 0 || len(def.NewInstance(uuid.Nil).Abilities()) != 0 {
+	if len(def.SuperTypes()) != 0 || len(def.SubTypes()) != 0 || len(def.NewInstance(uuid.Nil()).Abilities()) != 0 {
 		t.Fatal("card options changed the shared definition")
 	}
 	if len(card.AdditionalCosts()) != 1 || len(card.AlternateCosts()) != 1 || !card.IsUncounterable() || len(card.CastTargets()) != 1 {

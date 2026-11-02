@@ -3,8 +3,7 @@ package limited
 import (
 	"fmt"
 	"math/rand"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )

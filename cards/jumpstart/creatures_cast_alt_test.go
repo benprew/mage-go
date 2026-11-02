@@ -2,8 +2,7 @@ package jumpstart
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -55,7 +54,7 @@ func TestGontiLordOfLuxury_ExilesOpponentTopCardAndAllowsCast(t *testing.T) {
 			foundID = ec.Card.ID()
 		}
 	}
-	if foundID == uuid.Nil {
+	if foundID == uuid.Nil() {
 		t.Fatalf("no exiled Lightning Bolt found")
 	}
 	if g.CastFromExilePermissionFor(pA.PlayerID(), foundID) == nil {

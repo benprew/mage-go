@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -51,7 +50,7 @@ func ToGathered(varName string) TargetSelector {
 
 // ToAllTargets selects every chosen target on a multi-target spell or ability.
 // Effects using this selector are applied once per UUID in ctx.Targets, skipping
-// uuid.Nil placeholders and any UUIDs that no longer resolve to a battlefield
+// uuid.Nil() placeholders and any UUIDs that no longer resolve to a battlefield
 // permanent (so a multi-target spell whose first target leaves still affects
 // the surviving targets, per CR 608.2b).
 func ToAllTargets() TargetSelector { return TargetSelector{Kind: KindAllTargets} }
@@ -89,7 +88,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		}
 	case KindAttached:
 		src := ctx.Game.FindPermanent(ctx.SourceID)
-		if src != nil && src.AttachedTo != uuid.Nil {
+		if src != nil && src.AttachedTo != uuid.Nil() {
 			if p := ctx.Game.FindPermanent(src.AttachedTo); p != nil {
 				return []*Permanent{p}
 			}
@@ -108,7 +107,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		return out
 	case KindGathered:
 		id := ctx.TryGetUUID(sel.VarName)
-		if id == uuid.Nil {
+		if id == uuid.Nil() {
 			return nil
 		}
 		if p := ctx.Game.FindPermanent(id); p != nil {
@@ -117,7 +116,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 	case KindAllTargets:
 		var out []*Permanent
 		for _, id := range ctx.Targets {
-			if id == uuid.Nil {
+			if id == uuid.Nil() {
 				continue
 			}
 			if p := ctx.Game.FindPermanent(id); p != nil {
@@ -205,8 +204,8 @@ func (e *boostEffect) Text() string {
 	if pIsX || tIsX {
 		return "gets +X/+0 until end of turn"
 	}
-	p := e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
-	t := e.toughness.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+	p := e.power.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
+	t := e.toughness.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
 	switch e.selector.Kind {
 	case KindSource:
 		return fmt.Sprintf("this creature gets %+d/%+d until end of turn", p, t)
@@ -220,10 +219,10 @@ func (e *boostEffect) Text() string {
 func (e *boostEffect) Properties() EffectProperties {
 	var pb, tb int
 	if _, ok := e.power.(xValue); !ok {
-		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+		pb = e.power.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
 	}
 	if _, ok := e.toughness.(xValue); !ok {
-		tb = e.toughness.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+		tb = e.toughness.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
 	}
 	mass := e.selector.Kind == KindMatching || e.selector.Kind == KindAllMatching
 	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: mass}

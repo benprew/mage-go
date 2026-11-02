@@ -1,7 +1,7 @@
 package mage
 
 import (
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/catalog"
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -43,7 +43,7 @@ type GameRules struct {
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the
-// player whose spells are affected; if Player == uuid.Nil the grant applies
+// player whose spells are affected; if Player == uuid.Nil() the grant applies
 // to every player. Filter restricts which cards in that player's hand are
 // granted flash; a nil filter grants flash to every nonland card.
 type flashGrantEntry struct {
@@ -182,7 +182,7 @@ func (r *GameRules) PlayerCantCastSpells(playerID uuid.UUID) bool {
 }
 
 // AddFlashGrant registers a continuous "may cast as though it had flash"
-// permission for this Apply() cycle. If player == uuid.Nil the grant
+// permission for this Apply() cycle. If player == uuid.Nil() the grant
 // applies globally; if filter == nil it applies to every nonland card. The
 // grant is keyed by sourceID so it is dropped automatically when the source
 // permanent leaves the battlefield (continuous-effect framework drops the
@@ -198,7 +198,7 @@ func (r *GameRules) AddFlashGrant(sourceID, player uuid.UUID, filter CardFilter)
 // flash" when no card-type restriction is named).
 func (r *GameRules) HasFlashGrant(player uuid.UUID, card *Card) bool {
 	for _, g := range r.FlashGrants {
-		if g.Player != uuid.Nil && g.Player != player {
+		if g.Player != uuid.Nil() && g.Player != player {
 			continue
 		}
 		if g.Filter.Match(card) {

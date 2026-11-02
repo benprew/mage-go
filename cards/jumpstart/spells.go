@@ -2,8 +2,7 @@ package jumpstart
 
 import (
 	"slices"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -953,12 +952,12 @@ func registerSpells() {
 					"3 damage to target creature, 2 damage to target player or planeswalker",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) >= 1 && targets[0] != uuid.Nil {
+						if len(targets) >= 1 && targets[0] != uuid.Nil() {
 							if perm := g.FindPermanent(targets[0]); perm != nil {
 								g.DealDamageToPermanent(perm, 3, sourceID)
 							}
 						}
-						if len(targets) >= 2 && targets[1] != uuid.Nil {
+						if len(targets) >= 2 && targets[1] != uuid.Nil() {
 							if perm := g.FindPermanent(targets[1]); perm != nil {
 								g.DealDamageToPermanent(perm, 2, sourceID)
 							} else {
@@ -1346,7 +1345,7 @@ func registerSpells() {
 					"target you-control deals damage equal to its power to target opponent's creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) < 2 || targets[0] == uuid.Nil || targets[1] == uuid.Nil {
+						if len(targets) < 2 || targets[0] == uuid.Nil() || targets[1] == uuid.Nil() {
 							return nil
 						}
 						mine := g.FindPermanent(targets[0])
@@ -1383,7 +1382,7 @@ func registerSpells() {
 				FuncEffect("exile target creature; its controller may search their library for a basic land",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
+						if len(targets) == 0 || targets[0] == uuid.Nil() {
 							return nil
 						}
 						perm := g.FindPermanent(targets[0])
@@ -1437,7 +1436,7 @@ func registerSpells() {
 					EffectProperties{Outcome: OutcomeUnknown, IsBounce: true},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						for _, tid := range targets {
-							if tid == uuid.Nil {
+							if tid == uuid.Nil() {
 								continue
 							}
 							perm := g.FindPermanent(tid)
@@ -1446,7 +1445,7 @@ func registerSpells() {
 							}
 							card := perm.Card
 							owner := card.Owner()
-							if owner == uuid.Nil {
+							if owner == uuid.Nil() {
 								owner = perm.ControllerID()
 							}
 							g.RemoveFromBattlefield(perm)
@@ -1768,7 +1767,7 @@ func registerSpells() {
 					}
 					card := perm.Card
 					owner := card.Owner()
-					if owner == uuid.Nil {
+					if owner == uuid.Nil() {
 						owner = perm.ControllerID()
 					}
 					ownerPlayer := g.GetPlayer(owner)
@@ -2006,7 +2005,7 @@ func registerSpells() {
 					for _, perm := range toBounce {
 						card := perm.Card
 						ownerID := card.Owner()
-						if ownerID == uuid.Nil {
+						if ownerID == uuid.Nil() {
 							ownerID = perm.ControllerID()
 						}
 						g.RemoveFromBattlefield(perm)

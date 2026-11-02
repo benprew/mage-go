@@ -5,8 +5,7 @@ import (
 	"maps"
 	"slices"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -850,7 +849,7 @@ func (tg *TestGame) buildPriorityActionForCast(idx int) (mage.PriorityAction, bo
 			}
 		}
 	}
-	if cardID == uuid.Nil {
+	if cardID == uuid.Nil() {
 		tg.t.Logf("CastSpell %s: card not in %v hand", ca.spell, ca.player)
 		return mage.PriorityAction{}, false
 	}
@@ -1022,7 +1021,7 @@ func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx i
 			}
 		}
 	}
-	if cardID == uuid.Nil {
+	if cardID == uuid.Nil() {
 		tg.t.Logf("CastInResponseTo %s: card not in hand", r.spell)
 		return mage.PriorityAction{Type: mage.PriorityPass}
 	}

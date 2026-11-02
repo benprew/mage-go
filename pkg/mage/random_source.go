@@ -2,8 +2,7 @@ package mage
 
 import (
 	"math/rand"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // RandomSource encapsulates the generation and deterministic scripting of random

@@ -2,8 +2,7 @@ package mage
 
 import (
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -71,7 +70,7 @@ func TestTapThenFightPipeline_OneIllegalTapsLegalTargetWithoutFight(t *testing.T
 	first.SetOwner(a.PlayerID())
 	firstPerm := g.PutOnBattlefield(first, a.PlayerID())
 
-	err := ApplyEffect(g, tapThenFightPipeline(), uuid.New(), a.PlayerID(), []uuid.UUID{firstPerm.ID(), uuid.Nil})
+	err := ApplyEffect(g, tapThenFightPipeline(), uuid.New(), a.PlayerID(), []uuid.UUID{firstPerm.ID(), uuid.Nil()})
 	if err != nil {
 		t.Fatalf("ApplyEffect: %v", err)
 	}

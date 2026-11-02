@@ -3,8 +3,7 @@ package gametest
 import (
 	"sync"
 	"testing"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -144,7 +143,7 @@ func TestPlayerCardsLeftGraveyardThisTurn(t *testing.T) {
 	if !ok {
 		t.Fatalf("MoveFromGraveyard failed")
 	}
-	tg.ExileCard(card, uuid.Nil)
+	tg.ExileCard(card, uuid.Nil())
 
 	if got := tg.PlayerCardsLeftGraveyardThisTurn(pid); got != 1 {
 		t.Errorf("PlayerCardsLeftGraveyardThisTurn = %d, want 1", got)
@@ -164,7 +163,7 @@ func TestCardsPutIntoExileThisTurn(t *testing.T) {
 	if got := tg.CardsPutIntoExileThisTurn(); got != 0 {
 		t.Fatalf("initial exile count = %d, want 0", got)
 	}
-	tg.ExileCard(card, uuid.Nil)
+	tg.ExileCard(card, uuid.Nil())
 	if got := tg.CardsPutIntoExileThisTurn(); got != 1 {
 		t.Errorf("CardsPutIntoExileThisTurn after ExileCard = %d, want 1", got)
 	}

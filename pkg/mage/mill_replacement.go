@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // MillModifierFn rewrites the mill amount for a given milled player.
 // It receives the milling player and the proposed amount, and returns the

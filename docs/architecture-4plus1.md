@@ -388,7 +388,7 @@ mage-go/
 
 ### Dependencies
 
-- The rules engine's direct third-party runtime dependency is `github.com/google/uuid`.
+- The rules engine uses only the Go standard library.
 - Terminal and SSH applications use Bubble Tea, Lip Gloss, Wish and Charmbracelet SSH.
 - Enum generation uses `github.com/dmarkham/enumer` through Go's tool dependency mechanism.
 - The optional Python package uses `cffi` and `orjson` and builds the Go C shared library during packaging.

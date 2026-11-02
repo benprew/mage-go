@@ -2,8 +2,7 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type applyToRandomPermanentEffect struct {
@@ -50,7 +49,7 @@ func (e *applyToRandomSpellOrPermanentEffect) Properties() EffectProperties {
 }
 func (e *applyToRandomSpellOrPermanentEffect) Apply(ctx *EffectContext) error {
 	targetID := ctx.Game.RandomSpellOrPermanent()
-	if targetID == uuid.Nil {
+	if targetID == uuid.Nil() {
 		return nil
 	}
 	return ApplyEffect(ctx.Game, e.effect, ctx.SourceID, ctx.Controller, []uuid.UUID{targetID})
@@ -98,7 +97,7 @@ func (e *applyToRandomDamageTargetEffect) Properties() EffectProperties {
 }
 func (e *applyToRandomDamageTargetEffect) Apply(ctx *EffectContext) error {
 	targetID := ctx.Game.RandomDamageTarget()
-	if targetID == uuid.Nil {
+	if targetID == uuid.Nil() {
 		return nil
 	}
 	return ApplyEffect(ctx.Game, e.effect, ctx.SourceID, ctx.Controller, []uuid.UUID{targetID})

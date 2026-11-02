@@ -2,10 +2,9 @@ package mage
 
 import (
 	"fmt"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
-	"github.com/google/uuid"
 )
 
 type randomCounterDistributionEffect struct {

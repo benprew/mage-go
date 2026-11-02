@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"math/rand"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -41,7 +40,7 @@ func (e *drawCardsTargetEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player draws X cards"
 	}
-	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *drawCardsTargetEffect) Properties() EffectProperties { return e.props }
 
@@ -94,7 +93,7 @@ func (e *discardCardsEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player discards X cards"
 	}
-	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *discardCardsEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
@@ -263,7 +262,7 @@ func (e *scryEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "scry X"
 	}
-	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *scryEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
@@ -285,7 +284,7 @@ func (e *surveilEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "surveil X"
 	}
-	return fmt.Sprintf("surveil %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return fmt.Sprintf("surveil %d", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
 }
 func (e *surveilEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}

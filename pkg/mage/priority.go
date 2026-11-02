@@ -3,8 +3,7 @@ package mage
 import (
 	"fmt"
 	"time"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // Functions related to running a priority round (aka the stack)
@@ -158,7 +157,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 					case PriorityActivateAbility:
 						actionName = "ActivateAbility"
 					}
-					if action.CardID != uuid.Nil {
+					if action.CardID != uuid.Nil() {
 						for _, c := range g.players[playerIdx].Hand() {
 							if c.ID() == action.CardID {
 								cardName = c.Name()
@@ -166,7 +165,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 							}
 						}
 					}
-					if action.PermanentID != uuid.Nil {
+					if action.PermanentID != uuid.Nil() {
 						if perm := g.FindPermanent(action.PermanentID); perm != nil {
 							cardName = perm.Name()
 						}

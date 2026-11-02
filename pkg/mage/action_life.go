@@ -1,6 +1,6 @@
 package mage
 
-import "github.com/google/uuid"
+import "uuid"
 
 // LifeGainAction represents a player about to gain life.
 type LifeGainAction struct {
