@@ -38,13 +38,11 @@ func searchBasicLandToBattlefieldTapped(g *Game, controller uuid.UUID) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]*Card, 0, len(lib)-1)
-	for _, c := range lib {
-		if c.ID() != chosen.ID() {
-			newLib = append(newLib, c)
-		}
+	chosen, ok := p.RemoveFromLibrary(chosen.ID())
+	if !ok {
+		p.ShuffleLibrary()
+		return
 	}
-	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
 	perm := g.PutOnBattlefield(chosen, controller)
 	if perm != nil {
@@ -74,13 +72,11 @@ func searchLandToBattlefieldTapped(g *Game, controller uuid.UUID, tapped bool) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]*Card, 0, len(lib)-1)
-	for _, c := range lib {
-		if c.ID() != chosen.ID() {
-			newLib = append(newLib, c)
-		}
+	chosen, ok := p.RemoveFromLibrary(chosen.ID())
+	if !ok {
+		p.ShuffleLibrary()
+		return
 	}
-	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
 	perm := g.PutOnBattlefield(chosen, controller)
 	if perm != nil && tapped {
@@ -110,13 +106,11 @@ func searchBasicLandToHand(g *Game, controller uuid.UUID) {
 		p.ShuffleLibrary()
 		return
 	}
-	newLib := make([]*Card, 0, len(lib)-1)
-	for _, c := range lib {
-		if c.ID() != chosen.ID() {
-			newLib = append(newLib, c)
-		}
+	chosen, ok := p.RemoveFromLibrary(chosen.ID())
+	if !ok {
+		p.ShuffleLibrary()
+		return
 	}
-	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
 	p.AddToHand(chosen)
 }

@@ -65,6 +65,7 @@ type Player interface {
 	RemoveFromGraveyard(uuid.UUID) (*Card, bool)
 	Library() []*Card
 	SetLibrary([]*Card)
+	RemoveFromLibrary(uuid.UUID) (*Card, bool)
 	DrawCard() (*Card, bool)
 	ManaPool() *ManaPool
 
@@ -211,8 +212,7 @@ func (p *BasePlayer) LoseLife(n int) {
 }
 
 // removeAt returns a fresh slice with the element at index i removed.
-// Used by RemoveFromHand/Graveyard/Ante to avoid mutating a backing array
-// that may be shared with a parent game state (see cloneCardSlice).
+// Zone removal uses a new slice to keep shared storage unchanged.
 func removeAt(s []*Card, i int) []*Card {
 	out := make([]*Card, len(s)-1)
 	copy(out, s[:i])
@@ -271,6 +271,18 @@ func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (*Card, bool) {
 
 func (p *BasePlayer) Library() []*Card     { return p.library }
 func (p *BasePlayer) SetLibrary(l []*Card) { p.library = l }
+
+// RemoveFromLibrary removes the card with the given ID and preserves library order.
+// It returns nil and false if the card is absent.
+func (p *BasePlayer) RemoveFromLibrary(id uuid.UUID) (*Card, bool) {
+	for i, c := range p.library {
+		if c.ID() == id {
+			p.library = removeAt(p.library, i)
+			return c, true
+		}
+	}
+	return nil, false
+}
 
 func (p *BasePlayer) AddToLibrary(c *Card) {
 	p.assertOwner(c)

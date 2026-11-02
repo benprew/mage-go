@@ -93,15 +93,8 @@ func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) *Card {
 		}
 		return c
 	case ZoneLibrary:
-		lib := p.Library()
-		for i, c := range lib {
-			if c.ID() == cardID {
-				newLib := append([]*Card{}, lib[:i]...)
-				newLib = append(newLib, lib[i+1:]...)
-				p.SetLibrary(newLib)
-				return c
-			}
-		}
+		c, _ := p.RemoveFromLibrary(cardID)
+		return c
 	case ZoneExile:
 		c, ok := g.RemoveFromExile(cardID)
 		if !ok {

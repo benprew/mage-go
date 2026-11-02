@@ -257,9 +257,6 @@ func TestCloneOwnsPermanentsBeforeMutation(t *testing.T) {
 	g := setupTestGame()
 	c := g.Clone()
 
-	if c.zones.battlefieldShared {
-		t.Fatal("clone must own its permanent state")
-	}
 	if g.zones.battlefield[1] == c.zones.battlefield[1] {
 		t.Fatal("clone must have private permanent pointers")
 	}
@@ -267,9 +264,6 @@ func TestCloneOwnsPermanentsBeforeMutation(t *testing.T) {
 	clonePerm := c.MutablePermanent(g.zones.battlefield[1].ID())
 	if clonePerm == nil {
 		t.Fatal("expected mutable clone permanent")
-	}
-	if g.zones.battlefield[1] == c.zones.battlefield[1] {
-		t.Fatal("first clone mutation should detach that permanent pointer")
 	}
 	clonePerm.Tapped = false
 	clonePerm.Damage = 0

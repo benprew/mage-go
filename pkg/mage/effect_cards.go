@@ -670,14 +670,11 @@ func (*searchLibraryEffect) Apply(ctx *EffectContext) error {
 	if card == nil {
 		return nil
 	}
-	// Remove the chosen card from library
-	newLib := make([]*Card, 0, len(lib)-1)
-	for _, c := range lib {
-		if c.ID() != card.ID() {
-			newLib = append(newLib, c)
-		}
+	card, ok := p.RemoveFromLibrary(card.ID())
+	if !ok {
+		p.ShuffleLibrary()
+		return nil
 	}
-	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
 	p.AddToHand(card)
 	return nil
@@ -696,15 +693,11 @@ func (*searchLibraryToTopEffect) Apply(ctx *EffectContext) error {
 	if card == nil {
 		return nil
 	}
-	// Remove the chosen card from library
-	newLib := make([]*Card, 0, len(lib))
-	newLib = append(newLib, card)
-	for _, c := range lib {
-		if c.ID() != card.ID() {
-			newLib = append(newLib, c)
-		}
+	card, ok := p.RemoveFromLibrary(card.ID())
+	if !ok {
+		return nil
 	}
-	p.SetLibrary(newLib)
+	p.SetLibrary(append([]*Card{card}, p.Library()...))
 	return nil
 }
 
@@ -785,14 +778,11 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		p.ShuffleLibrary()
 		return nil
 	}
-	// Remove from library
-	newLib := make([]*Card, 0, len(lib)-1)
-	for _, c := range lib {
-		if c.ID() != card.ID() {
-			newLib = append(newLib, c)
-		}
+	card, ok := p.RemoveFromLibrary(card.ID())
+	if !ok {
+		p.ShuffleLibrary()
+		return nil
 	}
-	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
 	ctx.Game.PutOnBattlefield(card, ctx.Controller)
 	return nil

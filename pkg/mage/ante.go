@@ -189,12 +189,8 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (*Card, uuid.UUID,
 					return c, player.PlayerID(), nil, nil
 				}
 			case ZoneLibrary:
-				for i, c := range player.Library() {
-					if c.ID() == cardID {
-						lib := append([]*Card(nil), player.Library()...)
-						player.SetLibrary(append(lib[:i], lib[i+1:]...))
-						return c, player.PlayerID(), nil, nil
-					}
+				if c, ok := player.RemoveFromLibrary(cardID); ok {
+					return c, player.PlayerID(), nil, nil
 				}
 			case ZoneGraveyard:
 				if c, ok := player.RemoveFromGraveyard(cardID); ok {

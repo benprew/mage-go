@@ -231,14 +231,11 @@ func registerSpells() {
 						p.ShuffleLibrary()
 						return nil
 					}
-					// Remove from library
-					newLib := make([]*Card, 0, len(lib)-1)
-					for _, c := range lib {
-						if c.ID() != chosen.ID() {
-							newLib = append(newLib, c)
-						}
+					chosen, ok := p.RemoveFromLibrary(chosen.ID())
+					if !ok {
+						p.ShuffleLibrary()
+						return nil
 					}
-					p.SetLibrary(newLib)
 					p.ShuffleLibrary()
 					chosenCMC := chosen.ManaCost().CMC()
 					if chosenCMC <= sacrificedCMC {

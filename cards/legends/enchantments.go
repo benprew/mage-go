@@ -727,15 +727,12 @@ func registerEnchantments() {
 								}
 							}
 							for _, card := range p.ChooseCardsFromLibrary(candidates, 3, "search for up to three basic land cards", g) {
-								lib := p.Library()
-								newLib := make([]*Card, 0, len(lib)-1)
-								for _, c := range lib {
-									if c.ID() != card.ID() {
-										newLib = append(newLib, c)
-									}
+								if card == nil {
+									continue
 								}
-								p.SetLibrary(newLib)
-								p.AddToHand(card)
+								if removed, ok := p.RemoveFromLibrary(card.ID()); ok {
+									p.AddToHand(removed)
+								}
 							}
 							p.ShuffleLibrary()
 							return nil

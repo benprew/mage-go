@@ -213,10 +213,8 @@ func (g *Game) FindPermanentIncludingPhased(id uuid.UUID) *Permanent {
 	return g.zones.FindPermanentIncludingPhased(id)
 }
 
-// MutablePermanent returns an owned battlefield permanent pointer suitable for
-// mutation. Search clones initially share permanent pointers; the first write
-// to a shared permanent clones that permanent and replaces the battlefield
-// entry in this Game only. Phased-out permanents are invisible.
+// MutablePermanent returns a permanent that can be changed.
+// Phased-out permanents are not visible.
 func (g *Game) MutablePermanent(id uuid.UUID) *Permanent {
 	return g.zones.MutablePermanent(id)
 }
@@ -228,8 +226,7 @@ func (g *Game) mutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
 }
 
 // MutablePermanentIncludingPhased is the exported mutable counterpart to
-// FindPermanentIncludingPhased. Returns an owned battlefield permanent
-// pointer suitable for mutation (triggers copy-on-write under search).
+// FindPermanentIncludingPhased. The returned permanent can be changed.
 func (g *Game) MutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
 	return g.zones.MutablePermanentIncludingPhased(id)
 }
@@ -364,7 +361,6 @@ func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Colo
 		override := append([]Color(nil), (*colors)...)
 		perm.ColorOverride = &override
 	}
-	g.zones.addOwnedPermanent(perm)
 	perm.turnControlGained = g.turns.Turn()
 
 	g.syncAbilityContext(perm)

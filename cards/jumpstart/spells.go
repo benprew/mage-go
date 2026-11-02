@@ -1409,16 +1409,11 @@ func registerSpells() {
 						if len(basics) > 0 {
 							chosen := p.ChooseCardFromLibrary(basics, "basic land", g)
 							if chosen != nil {
-								newLib := make([]*Card, 0, len(p.Library())-1)
-								for _, c := range p.Library() {
-									if c.ID() != chosen.ID() {
-										newLib = append(newLib, c)
+								if removed, ok := p.RemoveFromLibrary(chosen.ID()); ok {
+									newPerm := g.PutOnBattlefield(removed, creatureCtrl)
+									if newPerm != nil {
+										newPerm.Tapped = true
 									}
-								}
-								p.SetLibrary(newLib)
-								newPerm := g.PutOnBattlefield(chosen, creatureCtrl)
-								if newPerm != nil {
-									newPerm.Tapped = true
 								}
 							}
 						}

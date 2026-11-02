@@ -170,6 +170,13 @@
 // [SkipNextUntapTarget] is the resolving effect. [StunCreature] is an alias
 // for backward compatibility.
 //
+// # Library Removal
+//
+// [Player.RemoveFromLibrary] removes one card by ID. It returns the stored card
+// and true on success, or nil and false if the card is absent. The remaining
+// cards keep their order. Removal keeps shared slice storage unchanged.
+// Callers must check success before they move the card to another zone.
+//
 // # Graveyard Reanimation
 //
 // [MoveFromAnyGraveyard] returns the player who owned the graveyard that

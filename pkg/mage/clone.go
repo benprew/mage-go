@@ -404,7 +404,7 @@ func cloneGameRules(gr *GameRules) *GameRules {
 // cloneCardSlice shares the backing array with the source but forces cap == len
 // so any subsequent append on either side allocates a new backing array.
 // Mutation paths that would otherwise touch shared memory (middle-element
-// removal in RemoveFromHand/Graveyard/Ante, ShuffleLibrary) are required to
+// removal in RemoveFromHand/Graveyard/Library/Ante, ShuffleLibrary) are required to
 // allocate fresh slices — see player.go.
 func cloneCardSlice(src []*Card) []*Card {
 	if len(src) == 0 {

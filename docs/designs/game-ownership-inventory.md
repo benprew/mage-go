@@ -65,9 +65,6 @@ This document represents the Phase 0 deliverable of the Game Subsystem Refactor 
 | `resolvingCombatDamage` | `bool` | `DamageSystem` | Combat damage execution flag |
 | `onDamageDealt` | `func(...)` | `DamageSystem` | Damage callback |
 | `battlefield` | `[]*Permanent` | `ZoneSystem` | Battlefield permanents |
-| `battlefieldShared` | `bool` | `ZoneSystem` | Copy-on-write clone flag |
-| `battlefieldSliceShared` | `bool` | `ZoneSystem` | Copy-on-write slice header flag |
-| `ownedPermanents` | `map[uuid.UUID]struct{}` | `ZoneSystem` | Copy-on-write private permanents |
 | `exile` | `[]ExiledCard` | `ZoneSystem` | Exile zone storage & visibility |
 | `enteringPermanent` | `*Permanent` | `ZoneSystem` | Permanent entering battlefield (ETB) |
 | `lki` | `map[uuid.UUID]*PermanentLKI` | `ZoneSystem` | Last-Known-Information map |

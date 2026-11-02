@@ -174,13 +174,11 @@ func registerLands() {
 							p.ShuffleLibrary()
 							return nil
 						}
-						newLib := make([]*Card, 0, len(lib)-1)
-						for _, c := range lib {
-							if c.ID() != chosen.ID() {
-								newLib = append(newLib, c)
-							}
+						chosen, ok := p.RemoveFromLibrary(chosen.ID())
+						if !ok {
+							p.ShuffleLibrary()
+							return nil
 						}
-						p.SetLibrary(newLib)
 						p.ShuffleLibrary()
 						perm := g.PutOnBattlefield(chosen, controller)
 						if perm != nil {

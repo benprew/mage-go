@@ -2085,16 +2085,11 @@ func registerCreatures() {
 						chosen := p.ChooseCardFromLibrary(candidates,
 							"choose Festering Newt or Bubbling Cauldron", g)
 						if chosen != nil {
-							newLib := make([]*Card, 0, len(lib)-1)
-							for _, c := range lib {
-								if c.ID() != chosen.ID() {
-									newLib = append(newLib, c)
+							if removed, ok := p.RemoveFromLibrary(chosen.ID()); ok {
+								perm := g.PutOnBattlefield(removed, controller)
+								if perm != nil {
+									g.TapPermanent(perm)
 								}
-							}
-							p.SetLibrary(newLib)
-							perm := g.PutOnBattlefield(chosen, controller)
-							if perm != nil {
-								g.TapPermanent(perm)
 							}
 						}
 						p.ShuffleLibrary()

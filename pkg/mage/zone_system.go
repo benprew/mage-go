@@ -8,12 +8,9 @@ import (
 )
 
 // ZoneSystem manages the battlefield, exile zone, Last-Known Information (LKI),
-// copy-on-write battlefield sharing, and zone transition bookkeeping.
+// and zone transition bookkeeping.
 type ZoneSystem struct {
 	battlefield              []*Permanent
-	battlefieldShared        bool
-	battlefieldSliceShared   bool
-	ownedPermanents          map[uuid.UUID]struct{}
 	exile                    []ExiledCard
 	enteringPermanent        *Permanent
 	lki                      map[uuid.UUID]*PermanentLKI
@@ -184,17 +181,15 @@ func (zs *ZoneSystem) AllBattlefield() []*Permanent {
 	return zs.battlefield
 }
 
-// MutablePermanent returns an owned battlefield permanent pointer suitable for
-// mutation. Search clones initially share permanent pointers; the first write
-// to a shared permanent clones that permanent and replaces the battlefield
-// entry in this ZoneSystem only. Phased-out permanents are invisible.
+// MutablePermanent returns a permanent that can be changed.
+// Phased-out permanents are not visible.
 func (zs *ZoneSystem) MutablePermanent(id uuid.UUID) *Permanent {
-	for i, p := range zs.battlefield {
+	for _, p := range zs.battlefield {
 		if p.PhasedOut {
 			continue
 		}
 		if p.ID() == id {
-			return zs.mutablePermanentAt(i)
+			return p
 		}
 	}
 	if zs.enteringPermanent != nil && zs.enteringPermanent.ID() == id {
@@ -206,74 +201,21 @@ func (zs *ZoneSystem) MutablePermanent(id uuid.UUID) *Permanent {
 // MutablePermanentIncludingPhased is the mutable counterpart to
 // FindPermanentIncludingPhased.
 func (zs *ZoneSystem) MutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
-	for i, p := range zs.battlefield {
+	for _, p := range zs.battlefield {
 		if p.ID() == id {
-			return zs.mutablePermanentAt(i)
+			return p
 		}
 	}
 	return nil
 }
 
-func (zs *ZoneSystem) mutablePermanentAt(i int) *Permanent {
-	p := zs.battlefield[i]
-	if !zs.battlefieldShared {
-		return p
-	}
-	if zs.ownedPermanents != nil {
-		if _, ok := zs.ownedPermanents[p.ID()]; ok {
-			return p
-		}
-	}
-	zs.ensureBattlefieldSliceOwned()
-	cp := new(Permanent)
-	clonePermanentInto(cp, p)
-	zs.battlefield[i] = cp
-	zs.addOwnedPermanent(cp)
-	return cp
-}
-
-func (zs *ZoneSystem) ensureBattlefieldSliceOwned() {
-	if !zs.battlefieldSliceShared {
-		return
-	}
-	if len(zs.battlefield) == 0 {
-		zs.battlefield = nil
-		zs.battlefieldSliceShared = false
-		return
-	}
-	cp := make([]*Permanent, len(zs.battlefield))
-	copy(cp, zs.battlefield)
-	zs.battlefield = cp
-	zs.battlefieldSliceShared = false
-}
-
-func (zs *ZoneSystem) addOwnedPermanent(p *Permanent) {
-	if p == nil || !zs.battlefieldShared {
-		return
-	}
-	if zs.ownedPermanents == nil {
-		zs.ownedPermanents = make(map[uuid.UUID]struct{})
-	}
-	zs.ownedPermanents[p.ID()] = struct{}{}
-}
-
 // AddToBattlefield appends permanents directly to the battlefield without ETB processing.
 func (zs *ZoneSystem) AddToBattlefield(perms ...*Permanent) {
-	zs.ensureBattlefieldSliceOwned()
-	for _, p := range perms {
-		zs.addOwnedPermanent(p)
-		zs.battlefield = append(zs.battlefield, p)
-	}
+	zs.battlefield = append(zs.battlefield, perms...)
 }
 
 // TruncateBattlefield truncates the battlefield to the given length (for undo snapshots).
 func (zs *ZoneSystem) TruncateBattlefield(n int) {
-	zs.ensureBattlefieldSliceOwned()
-	if zs.ownedPermanents != nil {
-		for i := n; i < len(zs.battlefield); i++ {
-			delete(zs.ownedPermanents, zs.battlefield[i].ID())
-		}
-	}
 	if n < len(zs.battlefield) {
 		zs.battlefield = zs.battlefield[:n]
 	}
@@ -281,20 +223,14 @@ func (zs *ZoneSystem) TruncateBattlefield(n int) {
 
 // AddPermanent adds a permanent to the battlefield during ETB resolution.
 func (zs *ZoneSystem) AddPermanent(perm *Permanent) {
-	zs.ensureBattlefieldSliceOwned()
-	zs.addOwnedPermanent(perm)
 	zs.battlefield = append(zs.battlefield, perm)
 }
 
 // RemovePermanent removes a permanent from the battlefield by ID.
 func (zs *ZoneSystem) RemovePermanent(id uuid.UUID) (*Permanent, bool) {
-	zs.ensureBattlefieldSliceOwned()
 	for i, p := range zs.battlefield {
 		if p.ID() == id {
 			zs.battlefield = append(zs.battlefield[:i], zs.battlefield[i+1:]...)
-			if zs.ownedPermanents != nil {
-				delete(zs.ownedPermanents, id)
-			}
 			return p, true
 		}
 	}

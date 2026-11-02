@@ -669,13 +669,11 @@ func registerSpells() {
 							p.ShuffleLibrary()
 							return nil
 						}
-						newLib := make([]*Card, 0, len(lib)-1)
-						for _, c := range lib {
-							if c.ID() != chosen.ID() {
-								newLib = append(newLib, c)
-							}
+						chosen, ok := p.RemoveFromLibrary(chosen.ID())
+						if !ok {
+							p.ShuffleLibrary()
+							return nil
 						}
-						p.SetLibrary(newLib)
 						p.ShuffleLibrary()
 						mode := p.ChooseMode([]string{"put in hand", "put in graveyard"}, "put into hand or graveyard?")
 						if mode == 0 {
