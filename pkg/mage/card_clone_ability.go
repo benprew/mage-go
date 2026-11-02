@@ -318,6 +318,14 @@ func (ctx *gameCloneContext) copyContinuous(effect ContinuousEffect) ContinuousE
 	case *funcContinuousEffect:
 		cloned := *e
 		return &cloned
+	case *attachedActivatedAbilityEffect:
+		cloned := *e
+		cloned.template = ctx.ability(e.template).(*SimpleActivatedAbility)
+		cloned.abilities = make(map[uuid.UUID]*SimpleActivatedAbility, len(e.abilities))
+		for id, ability := range e.abilities {
+			cloned.abilities[id] = ctx.ability(ability).(*SimpleActivatedAbility)
+		}
+		return &cloned
 	case *attachedEffect:
 		cloned := *e
 		return &cloned
@@ -355,6 +363,8 @@ func (ctx *gameCloneContext) activeEffect(effect ContinuousEffect) ContinuousEff
 	switch e := effect.(type) {
 	case *printedAbilityContinuousEffect:
 		cloned = &printedAbilityContinuousEffect{ContinuousEffect: ctx.activeEffect(e.ContinuousEffect)}
+	case *attachedActivatedAbilityEffect:
+		cloned = ctx.continuous(e)
 	case deepCloneableEffect:
 		cloned = e.cloneEffect()
 	}

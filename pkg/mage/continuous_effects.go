@@ -237,18 +237,44 @@ func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond Tr
 // The ability instance is persisted across continuous-effect reapplications so that
 // per-turn activation tracking (OncePerTurn, MaxActivationsPerTurn) survives.
 func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, opts ...AbilityOption) ContinuousEffect {
-	abByTarget := map[uuid.UUID]*SimpleActivatedAbility{}
-	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		ab, ok := abByTarget[target.ID()]
-		if !ok {
-			ab = NewActivatedAbility(effect, cost, opts...)
-			abByTarget[target.ID()] = ab
-		}
-		ab.source = target.ID()
-		ab.controller = target.ControllerID()
-		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{Ability: ab})
+	return &attachedActivatedAbilityEffect{
+		attachedEffect: attachedEffect{layer: LayerAbility},
+		template:       NewActivatedAbility(effect, cost, opts...),
+	}
+}
+
+type attachedActivatedAbilityEffect struct {
+	attachedEffect
+	template  *SimpleActivatedAbility
+	abilities map[uuid.UUID]*SimpleActivatedAbility
+}
+
+func (e *attachedActivatedAbilityEffect) Apply(ctx *EffectContext) error {
+	source := ctx.Game.FindPermanent(e.sourceID)
+	if source == nil || !source.IsAttached() {
 		return nil
-	})
+	}
+	target := ctx.Game.MutablePermanent(source.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	if e.abilities == nil {
+		e.abilities = make(map[uuid.UUID]*SimpleActivatedAbility)
+	}
+	ability := e.abilities[target.incarnationID]
+	if ability == nil {
+		ability = cloneInstanceAbility(e.template).(*SimpleActivatedAbility)
+		ability.setAbilityID(uuid.New())
+		e.abilities[target.incarnationID] = ability
+	}
+	ability.SetSource(target.ID())
+	ability.SetController(target.ControllerID())
+	target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ability))
+	return nil
+}
+
+func (e *attachedActivatedAbilityEffect) cloneEffect() ContinuousEffect {
+	return newGameCloneContext().continuous(e)
 }
 
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
