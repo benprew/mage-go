@@ -16,11 +16,12 @@ type StackObject struct {
 	Card     *Card // non-nil for spells
 	// ColorOverride is a layer-5 color-changing effect applied to this spell.
 	// It is carried to the permanent the spell becomes, but is not copiable.
-	ColorOverride *[]Color
-	Controller    uuid.UUID
-	SourceID      uuid.UUID // source permanent (for abilities)
-	Effects       []Effect
-	Targets       []uuid.UUID
+	ColorOverride     *[]Color
+	Controller        uuid.UUID
+	SourceID          uuid.UUID // source permanent (for abilities)
+	SourceIncarnation uuid.UUID
+	Effects           []Effect
+	Targets           []uuid.UUID
 	// TargetSpecs is aligned with Targets and preserves each target's
 	// restrictions for the resolution-time legality check (CR 608.2b).
 	TargetSpecs []Target
@@ -79,7 +80,8 @@ type StackObject struct {
 	// TargetZones records, per target ID, the zone that target was in at the
 	// moment it was chosen (CR 608.2b: "A target that's no longer in the zone
 	// it was in when it was targeted is illegal.").
-	TargetZones map[uuid.UUID]Zone
+	TargetZones        map[uuid.UUID]Zone
+	TargetIncarnations map[uuid.UUID]uuid.UUID
 
 	// CastContext snapshots cast-time state used by effects whose Oracle
 	// text references "as you cast this spell" (CR 608.2g). Populated when

@@ -711,9 +711,10 @@ func (g *Game) CopyEffectCurrentName(permID uuid.UUID) string {
 	return g.effects.CopyEffectCurrentName(permID)
 }
 
-// UpdateCopyEffect updates the Doppelganger copy effect to copy a new target.
-func (g *Game) UpdateCopyEffect(permID uuid.UUID, target *Permanent) {
-	g.effects.UpdateCopyEffect(permID, target)
+// UpdateCopyEffect copies the target with optional exceptions and applies layers.
+func (g *Game) UpdateCopyEffect(permID uuid.UUID, target *Permanent, options ...CopyOptions) {
+	g.effects.UpdateCopyEffect(permID, target, options...)
+	g.effects.Apply(g)
 }
 
 // --- New Phase 1 proxy methods ---
@@ -1030,4 +1031,17 @@ func (g *Game) PutOnBattlefieldForSetup(card *Card, controller uuid.UUID) *Perma
 	g.triggers.stateChecksPaused = true
 	defer func() { g.triggers.stateChecksPaused = paused }()
 	return g.PutOnBattlefield(card, controller)
+}
+
+// ResolvingSourcePermanent returns the source only if its incarnation still matches.
+// Effects applied without a stack object use the current permanent.
+func (g *Game) ResolvingSourcePermanent(sourceID uuid.UUID) *Permanent {
+	permanent := g.FindPermanent(sourceID)
+	if permanent == nil {
+		return nil
+	}
+	if g.resolution.resolvingSourceID == sourceID && g.resolution.resolvingSourceIncarnation != uuid.Nil && permanent.incarnationID != g.resolution.resolvingSourceIncarnation {
+		return nil
+	}
+	return permanent
 }

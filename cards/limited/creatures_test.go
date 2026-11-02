@@ -123,13 +123,16 @@ func TestVesuvanDoppelganger(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel") // 4/4 flying, vigilance
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Vesuvan Doppelganger")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vesuvan Doppelganger", "Serra Angel")
+		copiedID := g.GetPlayer(gametest.PlayerA).Hand()[0].ID()
+		g.ChoosePermanent(gametest.PlayerA, "Serra Angel")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vesuvan Doppelganger")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Doppelganger should enter as a copy of Serra Angel: 4/4 with flying.
-		g.AssertPermanentCount(gametest.PlayerA, "Vesuvan Doppelganger", 1)
-		g.AssertPowerToughness(gametest.PlayerA, "Vesuvan Doppelganger", 4, 4)
-		g.AssertHasAbility(gametest.PlayerA, "Vesuvan Doppelganger", core.Flying, true)
+		copied := g.FindPermanent(copiedID)
+		if copied == nil || copied.Name() != "Serra Angel" || copied.CurrentPower(g.Game) != 4 || copied.CurrentToughness(g.Game) != 4 || !copied.HasKeyword(core.Flying) {
+			t.Fatal("Doppelganger did not copy Serra Angel")
+		}
 	})
 
 	t.Run("can_change_copy_at_upkeep", func(t *testing.T) {
@@ -139,13 +142,18 @@ func TestVesuvanDoppelganger(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")   // 4/4 flying
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Shivan Dragon") // 5/5 flying
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Vesuvan Doppelganger")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vesuvan Doppelganger", "Serra Angel")
+		copiedID := g.GetPlayer(gametest.PlayerA).Hand()[0].ID()
+		g.ChoosePermanent(gametest.PlayerA, "Serra Angel")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vesuvan Doppelganger")
+		g.ChooseTarget(gametest.PlayerA, "Shivan Dragon")
 		// Turn 3 is PlayerA's next turn. At upkeep, Doppelganger can change to Shivan Dragon.
 		g.StopAt(3, core.PrecombatMain)
 		g.Execute()
 		// After upkeep trigger, Doppelganger should now be a copy of Shivan Dragon: 5/5.
-		g.AssertPermanentCount(gametest.PlayerA, "Vesuvan Doppelganger", 1)
-		g.AssertPowerToughness(gametest.PlayerA, "Vesuvan Doppelganger", 5, 5)
+		copied := g.FindPermanent(copiedID)
+		if copied == nil || copied.Name() != "Shivan Dragon" || copied.CurrentPower(g.Game) != 5 || copied.CurrentToughness(g.Game) != 5 {
+			t.Fatal("Doppelganger did not change its copy at upkeep")
+		}
 	})
 }
 

@@ -155,6 +155,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		AttachedTo:                 src.AttachedTo,
 		IsToken:                    src.IsToken,
 		FaceDown:                   src.FaceDown,
+		Flipped:                    src.Flipped,
 		ChosenColor:                src.ChosenColor,
 		ChosenPlayer:               src.ChosenPlayer,
 		ChosenSubtype:              src.ChosenSubtype,
@@ -234,6 +235,7 @@ func (ctx *gameCloneContext) stackObject(obj *StackObject) *StackObject {
 		Card:              ctx.card(obj.Card),
 		Controller:        obj.Controller,
 		SourceID:          obj.SourceID,
+		SourceIncarnation: obj.SourceIncarnation,
 		TargetSource:      ctx.card(obj.TargetSource),
 		IsAbility:         obj.IsAbility,
 		XValue:            obj.XValue,
@@ -279,6 +281,7 @@ func (ctx *gameCloneContext) stackObject(obj *StackObject) *StackObject {
 		clone.CounterDistribution = make(map[uuid.UUID]int, len(obj.CounterDistribution))
 		maps.Copy(clone.CounterDistribution, obj.CounterDistribution)
 	}
+	clone.TargetIncarnations = maps.Clone(obj.TargetIncarnations)
 	if len(obj.TargetZones) > 0 {
 		clone.TargetZones = make(map[uuid.UUID]Zone, len(obj.TargetZones))
 		maps.Copy(clone.TargetZones, obj.TargetZones)

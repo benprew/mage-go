@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // recordingPlayer wraps BasePlayer to record/script ChooseTargets calls.
@@ -227,4 +229,24 @@ func TestTriggerWithDeclaredTarget_NoLegalTargets_DoesNotPrompt(t *testing.T) {
 	// Effect should still resolve (with nil/placeholder target); fizzling is
 	// covered by isTargetStillLegal at resolution-time for normal cases.
 	_ = called
+}
+
+func TestTargetEventsDoNotRepeatStateTriggersDuringStackPlacement(t *testing.T) {
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	condition := func(_ *GameEvent, g GameReader, source, _ uuid.UUID) bool {
+		permanent := g.FindPermanent(source)
+		return permanent != nil && permanent.StoredValue == 1
+	}
+	card := NewCreature("State source", "{0}", 1, 1,
+		WithAbility(NewStateTriggered(false, GainLife(1)).SetCondition(condition)),
+		WithAbility(NewStateTriggered(false, GainLife(1)).SetCondition(condition).AddTarget(TargetCreature())))
+	card.SetOwner(owner)
+	source := g.PutOnBattlefield(card, owner)
+	source.StoredValue = 1
+	g.CheckStateTriggers()
+	g.PutTriggersOnStack()
+	if size := g.Stack().Size(); size != 2 {
+		t.Fatalf("stack has %d state triggers, want exactly 2", size)
+	}
 }

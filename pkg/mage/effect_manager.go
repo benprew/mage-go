@@ -583,7 +583,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.applyControlLayer(g)
 
 	// Apply the remaining layers in order. Layers 1 and 2 were applied above.
-	for _, layer := range []Layer{LayerCopy, LayerControl, LayerType, LayerColor, LayerAbility, LayerPT, layerPostPT} {
+	for _, layer := range []Layer{LayerCopy, LayerControl, LayerText, LayerType, LayerColor, LayerAbility, LayerPT, layerPostPT} {
 		if layer == LayerCopy || layer == LayerControl {
 			continue
 		}

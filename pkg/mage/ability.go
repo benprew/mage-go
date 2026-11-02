@@ -319,21 +319,26 @@ func EntersWithComputedCounters(ct CounterType, compute func(g *Game, perm *Perm
 	}
 }
 
-// CopyCreatureOnETBAbility is a replacement effect that copies a target creature
-// when this permanent enters the battlefield (e.g., Vesuvan Doppelganger).
-type CopyCreatureOnETBAbility struct {
-	BaseAbility
+// CopyOptions defines exceptions that become part of a copy's copiable values.
+// AdditionalAbility must return a new ability and capture only immutable data.
+type CopyOptions struct {
+	KeepColor         bool
+	AdditionalAbility func() Ability
 }
 
-// CopyCreatureOnETB creates a replacement effect that copies a target creature
-// when this permanent enters the battlefield (e.g. Vesuvan Doppelganger, Clone).
-func CopyCreatureOnETB() *CopyCreatureOnETBAbility {
-	return &CopyCreatureOnETBAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+// CopyCreatureOnETBAbility permits an optional creature choice before entry.
+type CopyCreatureOnETBAbility struct {
+	BaseAbility
+	Options CopyOptions
+}
+
+// CopyCreatureOnETB copies a creature chosen without targeting as this enters.
+func CopyCreatureOnETB(options ...CopyOptions) *CopyCreatureOnETBAbility {
+	ability := &CopyCreatureOnETBAbility{BaseAbility: BaseAbility{id: uuid.New(), abilityType: AbilityStatic}}
+	if len(options) > 0 {
+		ability.Options = options[0]
 	}
+	return ability
 }
 
 // ETBWithTargetsAbility runs an effect inline during PutOnBattlefield,

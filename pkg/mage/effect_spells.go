@@ -503,7 +503,7 @@ func (e *cloneTargetEffect) Apply(ctx *EffectContext) error {
 	if target == nil {
 		return nil
 	}
-	ctx.Game.GetResolvingCard().ApplyCopiableValues(target.Card.CopiableValues())
+	ctx.Game.GetResolvingCard().ApplyCopiableValues(target.CopiableValues())
 	for _, t := range e.additionalTypes {
 		ctx.Game.GetResolvingCard().AddType(t)
 	}

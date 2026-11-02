@@ -26,11 +26,12 @@ type DelayedTrigger struct {
 }
 
 type pendingTrigger struct {
-	stateKey   stateTriggerKey
-	ability    TriggeredAbility
-	event      *GameEvent
-	sourceID   uuid.UUID
-	controller uuid.UUID
+	stateKey          stateTriggerKey
+	ability           TriggeredAbility
+	event             *GameEvent
+	sourceID          uuid.UUID
+	sourceIncarnation uuid.UUID
+	controller        uuid.UUID
 }
 
 type stateTriggerKey struct {

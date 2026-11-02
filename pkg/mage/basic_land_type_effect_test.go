@@ -224,6 +224,7 @@ func TestBecomesBasicLandTargetEffectPreservesGrantedKeywords(t *testing.T) {
 func TestBecomesBasicLandTargetEffectSuppressesCopiedKeywords(t *testing.T) {
 	g, player, source, land, _ := basicLandTypeTestGame(t)
 	copyCard := NewCreature("Flying Copy Source", "{1}{U}", 1, 1, WithKeyword(Flying))
+	copyCard.AddType(TypeLand)
 	copyCard.SetOwner(player.PlayerID())
 	copySource := g.PutOnBattlefield(copyCard, player.PlayerID())
 	g.effects.AddCopyEffect(land.ID(), copySource)

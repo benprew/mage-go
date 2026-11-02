@@ -369,17 +369,44 @@ func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Colo
 
 	g.syncAbilityContext(perm)
 
-	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
-	if perm.HasKeyword(EntersTapped) || g.effects.Rules.ShouldEnterTapped(perm) {
-		perm.Tapped = true
-		perm.RevokeBaseAttr(EntersTapped)
-	}
-
 	// Expose the entering permanent to FindPermanent for the duration of ETB
 	// resolution so counter-placement replacements (ETB additional counters,
 	// doublers) can match it before it joins g.battlefield.
 	g.zones.SetEnteringPermanent(perm)
 	defer g.zones.ClearEnteringPermanent()
+
+	for _, ability := range perm.RuntimeAbilities {
+		copyEntry, ok := ability.(*CopyCreatureOnETBAbility)
+		if !ok {
+			continue
+		}
+		player := g.GetPlayer(controller)
+		candidates := g.FilterBattlefield(IsCreature)
+		if player == nil || len(candidates) == 0 {
+			continue
+		}
+		if !player.ChooseMayAbility("have " + perm.Name() + " enter as a copy of a creature") {
+			continue
+		}
+		selected := player.ChoosePermanent(candidates, "choose a creature to copy", g)
+		if selected == nil {
+			continue
+		}
+		valid := slices.Contains(candidates, selected)
+		if !valid {
+			continue
+		}
+		g.effects.AddCopyEffect(perm.ID(), selected, copyEntry.Options)
+		effect := g.effects.effects[len(g.effects.effects)-1]
+		_ = effect.Apply(&EffectContext{Game: g})
+		break
+	}
+
+	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
+	if perm.HasKeyword(EntersTapped) || g.effects.Rules.ShouldEnterTapped(perm) {
+		perm.Tapped = true
+		perm.RevokeBaseAttr(EntersTapped)
+	}
 
 	// Add X counters if configured (replacement effect, not a trigger).
 	// Routed through AddCountersWithReplacement so ETB-additional counter
@@ -433,17 +460,6 @@ func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Colo
 		result := g.effects.ApplyReplacements(action, g)
 		if aca, ok := result.(*AddCountersAction); ok && aca.Amount() > 0 {
 			perm.AddCounter(aca.CounterType(), aca.Amount())
-		}
-	}
-
-	// Copy creature on ETB (Vesuvan Doppelganger): copy target creature's P/T and keywords
-	for _, a := range perm.RuntimeAbilities {
-		if _, ok := a.(*CopyCreatureOnETBAbility); ok && len(g.resolution.ResolvingTargets()) > 0 {
-			target := g.FindPermanent(g.resolution.ResolvingTargets()[0])
-			if target != nil {
-				g.effects.AddCopyEffect(perm.ID(), target)
-			}
-			break
 		}
 	}
 
@@ -619,6 +635,15 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Snapshot LKI before any state mutation so death/leave-triggers can
 	// read the dying permanent's controller, types, and P/T after the move.
 	g.captureLKI(perm)
+	if perm.Card.unflippedValues != nil {
+		perm.Card.ApplyCopiableValues(*perm.Card.unflippedValues)
+	}
+	for _, effect := range g.effects.effects {
+		if copyEffect, ok := effect.(*doppelgangerCopyEffect); ok && copyEffect.doppelgangerID == perm.ID() && copyEffect.initialized {
+			perm.Card.ApplyCopiableValues(copyEffect.originalValues)
+			break
+		}
+	}
 
 	// Remove continuous effects sourced from this permanent
 	g.effects.Remove(perm.ID())
@@ -738,6 +763,10 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 	if g.triggers.zoneBatch != nil && isBattlefieldLeaveEvent(evt) {
 		return
 	}
+	var incarnation uuid.UUID
+	if lki := g.zones.LKI(sourceID); lki != nil && lki.Snapshot != nil {
+		incarnation = lki.Snapshot.incarnationID
+	}
 	for _, a := range abilities {
 		ta, ok := UnwrapAbility(a).(TriggeredAbility)
 		if !ok {
@@ -753,10 +782,11 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 		}
 		if ta.CheckTrigger(evt, g) {
 			g.triggers.AddPending(&pendingTrigger{
-				ability:    ta,
-				event:      evt,
-				sourceID:   sourceID,
-				controller: controller,
+				ability:           ta,
+				event:             evt,
+				sourceID:          sourceID,
+				sourceIncarnation: incarnation,
+				controller:        controller,
 			})
 		}
 	}
@@ -1479,10 +1509,11 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 			}
 			if ta.CheckTrigger(&evt, observer) {
 				g.triggers.AddPending(&pendingTrigger{
-					ability:    ta,
-					event:      &evt,
-					sourceID:   perm.ID(),
-					controller: perm.ControllerID(),
+					ability:           ta,
+					event:             &evt,
+					sourceID:          perm.ID(),
+					sourceIncarnation: perm.incarnationID,
+					controller:        perm.ControllerID(),
 				})
 			}
 		}
@@ -1638,10 +1669,11 @@ func (g *Game) CheckStateTriggers() {
 			}
 			g.triggers.ArmStateTrigger(key)
 			g.triggers.AddPending(&pendingTrigger{
-				stateKey:   key,
-				ability:    ta,
-				sourceID:   perm.ID(),
-				controller: perm.ControllerID(),
+				stateKey:          key,
+				ability:           ta,
+				sourceID:          perm.ID(),
+				sourceIncarnation: perm.incarnationID,
+				controller:        perm.ControllerID(),
 			})
 		}
 	}
@@ -1668,6 +1700,7 @@ func (g *Game) CheckStateTriggers() {
 // The engine uses the XMage order to maintain deterministic test results.
 func (g *Game) PutTriggersOnStack() {
 	pending := g.triggers.Pending()
+	g.triggers.ClearPending()
 	if len(pending) > 1 {
 		activeID := g.ActivePlayerObj().PlayerID()
 		active := make([]*pendingTrigger, 0, len(pending))
@@ -1682,16 +1715,18 @@ func (g *Game) PutTriggersOnStack() {
 		reverseTriggers(active)
 		reverseTriggers(nonActive)
 		active = append(active, nonActive...)
-		g.triggers.SetPending(active)
+		pending = active
 	}
-	for _, pt := range g.triggers.Pending() {
+	var targetedObjects []*StackObject
+	for _, pt := range pending {
 		targetSource := g.FindCardAnywhere(pt.sourceID)
 		obj := &StackObject{
-			stateKey:   pt.stateKey,
-			ID:         uuid.New(),
-			Controller: pt.controller,
-			SourceID:   pt.sourceID,
-			IsAbility:  true,
+			stateKey:          pt.stateKey,
+			ID:                uuid.New(),
+			Controller:        pt.controller,
+			SourceID:          pt.sourceID,
+			SourceIncarnation: pt.sourceIncarnation,
+			IsAbility:         true,
 		}
 		// CR 603.1f / 603.3d: a modal triggered ability picks its mode as it
 		// goes on the stack, then gathers targets only for that mode. Push the
@@ -1723,7 +1758,11 @@ func (g *Game) PutTriggersOnStack() {
 				obj.TargetSpecs = expandTargetSpecs(chosen.Targets, obj.Targets, obj.XValue)
 				obj.TargetSource = targetSource
 			}
+			if slices.Contains(obj.Targets, uuid.Nil) {
+				continue
+			}
 			g.pushStack(obj)
+			targetedObjects = append(targetedObjects, obj)
 			continue
 		}
 		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
@@ -1749,7 +1788,11 @@ func (g *Game) PutTriggersOnStack() {
 			}
 			obj.TargetSpecs = expandTargetSpecs(declared, obj.Targets, obj.XValue)
 			obj.TargetSource = targetSource
+			if slices.Contains(obj.Targets, uuid.Nil) {
+				continue
+			}
 			g.pushStack(obj)
+			targetedObjects = append(targetedObjects, obj)
 			continue
 		}
 		// Bind event context needed by resolving triggered effects. Some events
@@ -1881,17 +1924,21 @@ func (g *Game) PutTriggersOnStack() {
 		}
 		g.pushStack(obj)
 	}
-	g.triggers.ClearPending()
+	// Keep each state trigger active before target events check its condition.
+	for _, object := range targetedObjects {
+		g.fireBecomesTargetEvents(object, true)
+	}
+	if len(g.triggers.Pending()) > 0 {
+		g.PutTriggersOnStack()
+	}
 }
 
 // chooseTriggerTargets prompts the trigger's controller to choose targets for
 // each declared Target on the triggered ability. Returns the flat list of
 // chosen UUIDs that becomes the StackObject's Targets.
 //
-// If a Target has no legal candidates, it is skipped (a placeholder uuid.Nil
-// is appended for required targets so positional indexing in effects survives,
-// matching the convention used elsewhere). The trigger may still resolve and
-// later fizzle via the normal isTargetStillLegal check at resolution time.
+// A required target without a legal candidate produces a uuid.Nil placeholder.
+// PutTriggersOnStack rejects that choice before it puts the ability on the stack.
 func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uuid.UUID {
 	controller := g.GetPlayer(pt.controller)
 	sourceCard := g.FindCardAnywhere(pt.sourceID)
@@ -2006,9 +2053,21 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
 	// Track target zone when targeted, needed for CR 608.2b
+	if obj.IsAbility && obj.SourceIncarnation == uuid.Nil {
+		if source := g.FindPermanent(obj.SourceID); source != nil {
+			obj.SourceIncarnation = source.incarnationID
+		}
+	}
 	obj.TargetZones = make(map[uuid.UUID]Zone, len(obj.Targets))
+	obj.TargetIncarnations = nil
 	for _, t := range obj.Targets {
 		obj.TargetZones[t] = g.zoneOfTarget(t)
+		if permanent := g.FindPermanent(t); permanent != nil {
+			if obj.TargetIncarnations == nil {
+				obj.TargetIncarnations = make(map[uuid.UUID]uuid.UUID)
+			}
+			obj.TargetIncarnations[t] = permanent.incarnationID
+		}
 	}
 
 	g.stack.Push(obj)
@@ -2064,6 +2123,12 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	for i, t := range obj.Targets {
 		if t != uuid.Nil {
 			hasRealTarget = true
+			if incarnation, exists := obj.TargetIncarnations[t]; exists {
+				permanent := g.FindPermanent(t)
+				if permanent == nil || permanent.incarnationID != incarnation {
+					continue
+				}
+			}
 			var spec Target
 			if i < len(obj.TargetSpecs) {
 				spec = obj.TargetSpecs[i]

@@ -892,43 +892,11 @@ func registerCreatures() {
 		)
 	})
 
-	// XXX: should preserve original color when copying (Oracle: "except it doesn't copy that creature's color")
+	// You may have this creature enter as a copy of any creature on the battlefield, except it doesn't copy that creature's color and it has "At the beginning of your upkeep, you may have this creature become a copy of target creature, except it doesn't copy that creature's color and it has this ability."
 	Register("Vesuvan Doppelganger", func() *Card {
 		return NewCreature("Vesuvan Doppelganger", "{3}{U}{U}", 0, 0,
 			WithSubTypes("Shapeshifter"),
-			// As Vesuvan Doppelganger enters, copy target creature's P/T and keywords
-			WithAbility(CopyCreatureOnETB()),
-			// At the beginning of your upkeep, you may have this become a copy of another creature
-			// TODO: convert to pipeline — needs CopyEffectCurrentName/UpdateCopyEffect primitives
-			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
-				"become a copy of target creature",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
-					if perm == nil {
-						return nil
-					}
-					currentName := g.CopyEffectCurrentName(perm.ID())
-					var best *Permanent
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.ID() == perm.ID() {
-							continue
-						}
-						if !p.HasType(TypeCreature) {
-							continue
-						}
-						if p.Name() == currentName {
-							continue
-						}
-						best = p
-						break
-					}
-					if best != nil {
-						g.UpdateCopyEffect(perm.ID(), best)
-					}
-					return nil
-				},
-			), true)),
+			WithAbility(CopyCreatureOnETB(vesuvanDoppelgangerCopyOptions())),
 		)
 	})
 
@@ -993,4 +961,27 @@ func registerCreatures() {
 			),
 		)
 	})
+}
+
+func vesuvanDoppelgangerCopyOptions() CopyOptions {
+	return CopyOptions{KeepColor: true, AdditionalAbility: vesuvanDoppelgangerUpkeep}
+}
+
+func vesuvanDoppelgangerUpkeep() Ability {
+	return BeginningOfUpkeepTrigger(FuncEffect("you may become a copy of target creature", EffectProperties{},
+		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+			if len(targets) == 0 {
+				return nil
+			}
+			source := g.ResolvingSourcePermanent(sourceID)
+			target := g.FindPermanent(targets[0])
+			player := g.GetPlayer(controller)
+			if source == nil || target == nil || player == nil {
+				return nil
+			}
+			if player.ChooseMayAbility("become a copy of " + target.Name()) {
+				g.UpdateCopyEffect(sourceID, target, vesuvanDoppelgangerCopyOptions())
+			}
+			return nil
+		}), false).AddTarget(TargetCreature())
 }

@@ -483,7 +483,7 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 	if cloneLand.BasePTOverride == nil || cloneLand.BasePTOverride[0] != 1 || cloneLand.BasePTOverride[1] != 1 || !cloneLand.HasType(TypeCreature) {
 		t.Fatal("clone land animation not applied")
 	}
-	if cloneDoppel.BasePTOverride == nil || cloneDoppel.BasePTOverride[0] != 4 || cloneDoppel.BasePTOverride[1] != 4 {
+	if cloneDoppel.CurrentPower(c) != 4 || cloneDoppel.CurrentToughness(c) != 4 {
 		t.Fatal("clone copy effect not applied")
 	}
 

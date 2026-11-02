@@ -44,6 +44,8 @@ import (
 // is done these should point at pkg/mage/domain instead.
 
 type (
+	Ability                                   = mage.Ability
+	CopyOptions                               = mage.CopyOptions
 	AuraAIProfile                             = mage.AuraAIProfile
 	Card                                      = mage.Card
 	Game                                      = mage.Game
@@ -161,6 +163,8 @@ var Register = mage.Register
 // =============================================================================
 
 var (
+	WithFlipFace                 = mage.WithFlipFace
+	FlipSource                   = mage.FlipSource
 	NewCreature                  = mage.NewCreature
 	NewArtifact                  = mage.NewArtifact
 	NewEnchantment               = mage.NewEnchantment

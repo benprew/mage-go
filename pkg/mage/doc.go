@@ -83,6 +83,24 @@
 // effects stay on Permanent. [Card.CloneFrom] and [Card.Copy] remain as
 // compatibility names for ApplyCopiableValues and NewCopy.
 // Spell copies use [CopySpellOnStack] to copy stack choices separately.
+// [Permanent.CopiableValues] also accounts for face-down characteristics.
+// [EffectManager.AddCopyEffect] and [EffectManager.UpdateCopyEffect] capture
+// these values. Reapplication preserves activation state. A new selection
+// creates fresh abilities. [CopyOptions] can keep the source color and add a
+// fresh ability to the copied values. [CopyCreatureOnETB] makes an optional,
+// untargeted choice before other entry replacements. Its copy options become
+// part of the values that later copies acquire.
+//
+// [WithFlipFace] supplies a flip card's alternative characteristics. Both faces
+// retain the normal mana cost and color. Copies acquire both faces, and the
+// receiving permanent's flipped status selects the active face. [FlipSource]
+// and [Game.FlipPermanent] change this status without a zone change. Copies
+// preserve this status; a new battlefield object starts unflipped.
+//
+// Stack targets record permanent incarnations. A target that leaves and returns
+// is a new object even if its card ID is unchanged. Resolving effects that
+// change their source must use [Game.ResolvingSourcePermanent] to check its
+// incarnation. Pending triggers retain the source incarnation from the event.
 //
 // [Registry.RegisterDefinition] and [Registry.RegisterDefinitions] publish
 // definitions. Batch registration rejects conflicts before it changes the registry.

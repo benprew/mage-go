@@ -334,7 +334,10 @@ func TemporaryKeyword(targetID uuid.UUID, kw Keyword) ContinuousEffect {
 // KeywordReplacement replaces one keyword with another on a target permanently
 // (e.g. swampwalk -> forestwalk via Sleight of Mind / Magical Hack).
 func KeywordReplacement(targetID uuid.UUID, from, to Keyword) ContinuousEffect {
-	return TargetEffect(LayerAbility, Indefinite, targetID, func(g *Game, target *Permanent) error {
+	return TargetEffect(LayerText, Indefinite, targetID, func(g *Game, target *Permanent) error {
+		if !target.HasKeyword(from) {
+			return nil
+		}
 		g.effects.RevokeAttr(target.ID(), from)
 		g.effects.GrantAttr(target.ID(), to)
 		return nil
@@ -1592,79 +1595,79 @@ func (e *preventNoncombatDamageToControllerContinuous) Apply(ctx *EffectContext)
 // Doppelganger copy effect (mutable state, not convertible to primitives)
 // ---------------------------------------------------------------------------
 
-// doppelgangerCopyEffect copies another creature's P/T and keyword abilities
-// onto the Doppelganger. Operates at LayerCopy (layer 1).
+// doppelgangerCopyEffect stores the values selected by a copy effect.
 type doppelgangerCopyEffect struct {
 	effectSource
 	doppelgangerID uuid.UUID
-	copiedName     string // name of the creature being copied
-	power          int
-	toughness      int
-	keywords       []Keyword
+	copiedName     string
+	values         CopiableValues
+	originalValues CopiableValues
+	applied        bool
+	initialized    bool
+	options        CopyOptions
 }
 
 func (e *doppelgangerCopyEffect) cloneEffect() ContinuousEffect {
 	cloned := *e
-	cloned.keywords = slices.Clone(e.keywords)
 	return &cloned
 }
 
-func (e *doppelgangerCopyEffect) Properties() EffectProperties {
-	return EffectProperties{}
-}
-func (e *doppelgangerCopyEffect) Text() string {
-	return "copy creature's P/T and keyword abilities"
-}
-func (e *doppelgangerCopyEffect) GetLayer() Layer       { return LayerCopy }
-func (e *doppelgangerCopyEffect) GetDuration() Duration { return Indefinite }
-
+func (e *doppelgangerCopyEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *doppelgangerCopyEffect) Text() string                 { return "copy creature characteristics" }
+func (e *doppelgangerCopyEffect) GetLayer() Layer              { return LayerCopy }
+func (e *doppelgangerCopyEffect) GetDuration() Duration        { return Indefinite }
 func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.doppelgangerID) != nil
 }
 
 func (e *doppelgangerCopyEffect) Apply(ctx *EffectContext) error {
+	if e.applied {
+		return nil
+	}
 	g := ctx.Game
 	perm := g.MutablePermanent(e.doppelgangerID)
 	if perm == nil {
 		return nil
 	}
-	perm.BasePTOverride = &[2]int{e.power, e.toughness}
-	for _, kw := range e.keywords {
-		g.effects.GrantAttr(perm.ID(), kw)
+	if !e.initialized {
+		e.originalValues = perm.Card.CopiableValues()
+		e.initialized = true
 	}
+	values := copyValuesWithOptions(e.values, perm.Card.Colors(), e.options)
+	g.applyPermanentCopy(perm, values)
+	e.copiedName = perm.Name()
+	e.applied = true
 	return nil
 }
 
-// AddCopyEffect creates a doppelganger copy effect from the target creature.
-func (em *EffectManager) AddCopyEffect(doppelgangerID uuid.UUID, target *Permanent) {
-	keywords := extractKeywords(target)
-	ce := &doppelgangerCopyEffect{
-		doppelgangerID: doppelgangerID,
-		copiedName:     target.Name(),
-		power:          target.Card.Power(),
-		toughness:      target.Card.Toughness(),
-		keywords:       keywords,
+// AddCopyEffect captures the target's copiable characteristics.
+func (em *EffectManager) AddCopyEffect(permanentID uuid.UUID, target *Permanent, options ...CopyOptions) {
+	values := target.CopiableValues()
+	ce := &doppelgangerCopyEffect{doppelgangerID: permanentID, copiedName: values.characteristics.name, values: values}
+	if len(options) > 0 {
+		ce.options = options[0]
 	}
-	ce.sourceID = doppelgangerID
+	ce.sourceID = permanentID
 	em.effects = append(em.effects, ce)
 }
 
-// UpdateCopyEffect updates the copy effect for a doppelganger to copy a new target.
-func (em *EffectManager) UpdateCopyEffect(doppelgangerID uuid.UUID, target *Permanent) {
-	keywords := extractKeywords(target)
-	for _, e := range em.effects {
-		ce, ok := e.(*doppelgangerCopyEffect)
-		if !ok || ce.doppelgangerID != doppelgangerID {
+// UpdateCopyEffect selects new copiable values and optional copy exceptions.
+// If options are absent, the existing copy exceptions remain in effect.
+func (em *EffectManager) UpdateCopyEffect(permanentID uuid.UUID, target *Permanent, options ...CopyOptions) {
+	for _, effect := range em.effects {
+		ce, ok := effect.(*doppelgangerCopyEffect)
+		if !ok || ce.doppelgangerID != permanentID {
 			continue
 		}
-		ce.copiedName = target.Name()
-		ce.power = target.Card.Power()
-		ce.toughness = target.Card.Toughness()
-		ce.keywords = keywords
+		ce.values = target.CopiableValues()
+		ce.copiedName = ce.values.characteristics.name
+		if len(options) > 0 {
+			ce.options = options[0]
+		}
+		ce.applied = false
 		return
 	}
-	// No existing effect found, create a new one
-	em.AddCopyEffect(doppelgangerID, target)
+	em.AddCopyEffect(permanentID, target, options...)
 }
 
 // CopyEffectCurrentName returns the name of the creature currently being copied
@@ -1676,19 +1679,6 @@ func (em *EffectManager) CopyEffectCurrentName(doppelgangerID uuid.UUID) string 
 		}
 	}
 	return ""
-}
-
-// extractKeywords returns the keyword attrs currently active on a permanent,
-// reading from both baseAttrs and grantedAttrs so that effect-granted keywords
-// (e.g. Flying from an equipment) are included in the Doppelganger copy snapshot.
-func extractKeywords(p *Permanent) []Keyword {
-	var keywords []Keyword
-	for a := Attr(1); a < NumAttrs; a++ {
-		if IsKeywordAttr(a) && p.HasAttr(a) {
-			keywords = append(keywords, a)
-		}
-	}
-	return keywords
 }
 
 // ---------------------------------------------------------------------------

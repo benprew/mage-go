@@ -17,7 +17,6 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 ### Creatures
 
 - **Personal Incarnation** — controller-only activation is used instead of owner-only activation, a whole damage event is redirected instead of the next 1 damage, and the death trigger uses the controller rather than the owner when control differs.
-- **Vesuvan Doppelganger** — the enters choice is modeled as a spell target, copied color is not excluded, and the upkeep ability auto-selects a creature instead of making the optional targeted choice Oracle requires.
 
 ### Enchantments
 

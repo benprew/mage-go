@@ -16,6 +16,8 @@ type Card struct {
 	cardCharacteristics
 	definition      *CardDefinition
 	characteristics *cardCharacteristics
+	flipFace        *CopiableValues
+	unflippedValues *CopiableValues
 	id              uuid.UUID
 	capabilityAttrs map[Attr]int
 	abilities       []Ability
@@ -192,13 +194,13 @@ func (c *Card) HasSubType(t string) bool {
 }
 func (c *Card) Colors() []Color {
 	if c.definition == nil {
-		if len(c.colorOverride) > 0 {
+		if c.colorOverride != nil {
 			return slices.Clone(c.colorOverride)
 		}
 		return c.manaCost.Colors()
 	}
 	if c.characteristics != nil {
-		if len(c.characteristics.colorOverride) > 0 {
+		if c.characteristics.colorOverride != nil {
 			return slices.Clone(c.characteristics.colorOverride)
 		}
 		return c.characteristics.manaCost.Colors()
@@ -229,7 +231,7 @@ func (c *Card) mutableCharacteristics() *cardCharacteristics {
 	if c.characteristics == nil {
 		c.characteristics = &cardCharacteristics{
 			name: c.Name(), manaCost: c.ManaCost(), types: c.Types(), superTypes: c.SuperTypes(), subTypes: c.SubTypes(),
-			power: c.Power(), toughness: c.Toughness(), modes: c.Modes(), colorOverride: c.definition.Colors(),
+			power: c.Power(), toughness: c.Toughness(), modes: c.Modes(), colorOverride: c.Colors(),
 		}
 	}
 	return c.characteristics
@@ -710,8 +712,9 @@ type Permanent struct {
 	subtypeFamilyAdditions     [subtypeFamilyCount][]string
 	BasePTOverride             *[2]int  // if set, overrides base P/T (for animate effects)
 	ColorOverride              *[]Color // if set, replaces card's colors (from lace effects)
-	FaceDown                   bool     // true when face-down (e.g. Illusionary Mask)
-	IsToken                    bool     // true for token permanents (cease to exist outside battlefield)
+	Flipped                    bool
+	FaceDown                   bool // true when face-down (e.g. Illusionary Mask)
+	IsToken                    bool // true for token permanents (cease to exist outside battlefield)
 
 	// Attr system: additive/subtractive attribute counts.
 	// baseAttrs holds intrinsic attrs (set at creation/ETB; persists until explicitly revoked).

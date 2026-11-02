@@ -44,7 +44,7 @@ func (c *Card) copyCharacteristics() *cardCharacteristics {
 	data := cardCharacteristics{
 		name: printed.Name, manaCost: printed.ManaCost,
 		types: printed.TypeLine.CardTypes, superTypes: printed.TypeLine.SuperTypes, subTypes: printed.TypeLine.SubTypes,
-		power: printed.Power, toughness: printed.Toughness, modes: printed.Modes, colorOverride: printed.Colors,
+		power: printed.Power, toughness: printed.Toughness, modes: printed.Modes, colorOverride: c.Colors(),
 	}
 	return data.clone()
 }
