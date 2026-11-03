@@ -29,8 +29,7 @@ func registerSpells() {
 					targetID := targets[0]
 					if g.IsAttackingInCombat(targetID) {
 						effect := TemporaryKeyword(targetID, UnblockableKW)
-						effect.SetSourceID(sourceID)
-						g.AddContinuousEffect(effect)
+						g.AddContinuousEffect(effect, sourceID)
 					}
 					if !g.IsBlockingInCombat(targetID) {
 						return nil
@@ -53,8 +52,7 @@ func registerSpells() {
 							)
 							return nil
 						})
-						effect.SetSourceID(sourceID)
-						g.AddContinuousEffect(effect)
+						g.AddContinuousEffect(effect, sourceID)
 					}
 					return nil
 				},

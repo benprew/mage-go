@@ -117,10 +117,8 @@ func ChosenColorManaProductions(g GameReader, sourceID uuid.UUID) []ManaProducti
 // NewManaAbility creates a tap-for-mana ability that produces one mana of the given color.
 func NewManaAbility(c Color, afterProduction ...Effect) *ManaAbility {
 	return &ManaAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityMana,
-		},
+		id:             uuid.New(),
+		abilityType:    AbilityMana,
 		Productions:    []ManaProduction{{Color: c, Amount: 1}},
 		postProduction: append([]Effect(nil), afterProduction...),
 	}
@@ -133,10 +131,8 @@ func NewManaAbility(c Color, afterProduction ...Effect) *ManaAbility {
 //	NewMultiManaAbility(ManaProduction{Color: Green, Amount: 1}, ManaProduction{Color: White, Amount: 1})
 func NewMultiManaAbility(productions ...ManaProduction) *ManaAbility {
 	return &ManaAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityMana,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityMana,
 		Productions: productions,
 	}
 }
@@ -147,10 +143,8 @@ func NewMultiManaAbility(productions ...ManaProduction) *ManaAbility {
 // stack.
 func NewDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Effect) *ManaAbility {
 	return &ManaAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityMana,
-		},
+		id:                 uuid.New(),
+		abilityType:        AbilityMana,
 		dynamicProductions: productions,
 		postProduction:     append([]Effect(nil), afterProduction...),
 	}
@@ -185,12 +179,10 @@ type ManaBonusAbility struct {
 // matching the filter is tapped for mana (e.g. Gauntlet of Might for Mountains).
 func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
 	return &ManaBonusAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Filter:    filter,
-		BonusMana: bonusMana,
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		Filter:      filter,
+		BonusMana:   bonusMana,
 	}
 }
 
@@ -198,10 +190,8 @@ func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbil
 // permanent this aura is attached to is tapped for mana (e.g. Wild Growth).
 func NewAttachedManaBonusAbility(bonusMana Color) *ManaBonusAbility {
 	return &ManaBonusAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:           uuid.New(),
+		abilityType:  AbilityStatic,
 		BonusMana:    bonusMana,
 		AttachedOnly: true,
 	}
@@ -211,10 +201,8 @@ func NewAttachedManaBonusAbility(bonusMana Color) *ManaBonusAbility {
 // produced when a matching land is tapped (e.g. Mana Flare).
 func NewManaFlareAbility(filter PermanentFilter) *ManaBonusAbility {
 	return &ManaBonusAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:            uuid.New(),
+		abilityType:   AbilityStatic,
 		Filter:        filter,
 		MatchProduced: true,
 	}

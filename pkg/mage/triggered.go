@@ -11,7 +11,7 @@ import (
 type TriggeredAbility interface {
 	Ability
 	CheckEventType(EventType) bool
-	CheckTrigger(*GameEvent, GameReader) bool
+	CheckTrigger(*GameEvent, AbilityContext, GameReader) bool
 	IsOptional() bool
 	Effects() []Effect
 	Targets() []Target
@@ -66,14 +66,12 @@ func (t *GenericTriggered) Attribute() Attr { return t.attribute }
 // Use SetCondition to add a predicate that filters which events actually trigger it.
 func NewTriggered(eventType EventType, optional bool, effects ...Effect) *GenericTriggered {
 	return &GenericTriggered{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		eventType:  eventType,
-		sourceZone: ZoneBattlefield,
-		Optional:   optional,
-		effects:    effects,
+		id:          uuid.New(),
+		abilityType: AbilityTriggered,
+		eventType:   eventType,
+		sourceZone:  ZoneBattlefield,
+		Optional:    optional,
+		effects:     effects,
 	}
 }
 
@@ -179,12 +177,12 @@ func (t *GenericTriggered) WithModes(modes ...Mode) *GenericTriggered {
 	if len(modes) < 2 {
 		panic("WithModes: a modal trigger needs at least two modes (CR 700.2)")
 	}
-	t.modes = modes
+	t.modes = cloneModes(modes)
 	return t
 }
 
 // Modes returns the configured modes for a modal trigger (empty for non-modal).
-func (t *GenericTriggered) Modes() []Mode { return t.modes }
+func (t *GenericTriggered) Modes() []Mode { return cloneModes(t.modes) }
 
 // IsModal reports whether the trigger has been declared modal via WithModes.
 func (t *GenericTriggered) IsModal() bool { return len(t.modes) > 0 }
@@ -193,16 +191,16 @@ func (t *GenericTriggered) CheckEventType(et EventType) bool {
 	return et == t.eventType
 }
 
-func (t *GenericTriggered) CheckTrigger(evt *GameEvent, g GameReader) bool {
+func (t *GenericTriggered) CheckTrigger(evt *GameEvent, ctx AbilityContext, g GameReader) bool {
 	if t.Condition == nil {
 		return true
 	}
-	return t.Condition(evt, g, t.source, t.controller)
+	return t.Condition(evt, g, ctx.SourceID, ctx.Controller)
 }
 
 func (t *GenericTriggered) IsOptional() bool     { return t.Optional }
-func (t *GenericTriggered) Effects() []Effect    { return t.effects }
-func (t *GenericTriggered) Targets() []Target    { return t.targets }
+func (t *GenericTriggered) Effects() []Effect    { return slices.Clone(t.effects) }
+func (t *GenericTriggered) Targets() []Target    { return slices.Clone(t.targets) }
 func (t *GenericTriggered) IsStateTrigger() bool { return t.isStateTrigger }
 
 // AsStateTrigger marks this as a state-triggered ability (CR 603.8). State

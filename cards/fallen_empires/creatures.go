@@ -880,8 +880,7 @@ func registerCreatures() {
 						}, func(g *Game, _ uuid.UUID) bool {
 							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(targetID) != nil
 						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					}),
 				ManaCostOf("{1}{G}"),
@@ -1003,8 +1002,7 @@ func registerCreatures() {
 							return nil
 						}
 						effect := BecomesBasicLandTargetEffect(targets[0], Indefinite, "Forest")
-						effect.SetSourceID(uuid.Nil())
-						g.AddContinuousEffect(effect)
+						g.AddContinuousEffect(effect, uuid.Nil())
 						return nil
 					},
 				),

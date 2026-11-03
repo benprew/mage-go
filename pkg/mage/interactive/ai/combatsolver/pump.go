@@ -35,8 +35,7 @@ func applyCombatSelfPump(g *mage.Game, playerID uuid.UUID, blocks []mage.BlockAs
 			continue
 		}
 		eff := mage.TemporaryBoost(blocker.ID(), info.power*uses, info.toughness*uses)
-		eff.SetSourceID(blocker.ID())
-		g.AddContinuousEffect(eff)
+		g.AddContinuousEffect(eff, blocker.ID())
 		g.ApplyContinuousEffects()
 		manaBudget -= uses * info.cost
 	}

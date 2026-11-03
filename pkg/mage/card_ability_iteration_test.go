@@ -10,7 +10,7 @@ import (
 func TestAllAbilities(t *testing.T) {
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Iterator Bird", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-		Rules: []RuleDefinition{NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) }), keywordRule(Flying), keywordRule(FirstStrike), keywordRule(Flying)},
+		Abilities: []Ability{WardTrigger(ManaCostOf("{2}")), keywordRule(Flying), keywordRule(FirstStrike), keywordRule(Flying)},
 	})
 	if err != nil {
 		t.Fatal(err)

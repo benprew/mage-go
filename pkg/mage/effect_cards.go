@@ -2,14 +2,13 @@ package mage
 
 import (
 	"fmt"
-	"math/rand"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // drawCardsTargetEffect draws cards for a player. By default the player is read
-// from ctx.Targets[0] (with controller as fallback). Use Targeting to override
+// from ctx.legacyTargets()[0] (with controller as fallback). Use Targeting to override
 // with a PlayerSelector.
 type drawCardsTargetEffect struct {
 	props  EffectProperties
@@ -30,7 +29,7 @@ func DrawCards(amount ValueSource) *drawCardsTargetEffect {
 	}
 }
 
-// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+// Targeting overrides the default target (ctx.legacyTargets()[0]) with a PlayerSelector.
 func (e *drawCardsTargetEffect) Targeting(sel PlayerSelector) *drawCardsTargetEffect {
 	e.sel = sel
 	return e
@@ -40,50 +39,33 @@ func (e *drawCardsTargetEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player draws X cards"
 	}
-	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
+	return fmt.Sprintf("target player draws %s card(s)", e.amount.Text())
 }
 func (e *drawCardsTargetEffect) Properties() EffectProperties { return e.props }
 
-// drawCardsActivePlayerEffect draws cards for the active player (e.g. Howling Mine).
-type drawCardsActivePlayerEffect struct {
-	props  EffectProperties
-	amount ValueSource
-}
-
-// DrawCardsActivePlayer creates an effect that draws cards for the active player.
+// DrawCardsActivePlayer draws cards for the active player.
 func DrawCardsActivePlayer(amount ValueSource) Effect {
-	drawCount := 0
-	if fv, ok := amount.(fixedValue); ok {
-		drawCount = fv.n
-	}
-	return &drawCardsActivePlayerEffect{
-		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
-		amount: amount,
-	}
+	return DrawForPlayers(SelectActivePlayer(), amount)
 }
-
-func (e *drawCardsActivePlayerEffect) Text() string {
-	return "that player draws an additional card"
-}
-func (e *drawCardsActivePlayerEffect) Properties() EffectProperties { return e.props }
 
 // discardCardsEffect forces a player to discard cards. By default the player
-// is read from ctx.Targets[0] (the spell's chosen target). Use Targeting to
+// is read from ctx.legacyTargets()[0] (the spell's chosen target). Use Targeting to
 // override with a PlayerSelector — for example, SelectEachOpponent() for
 // "defending player discards" triggers.
 type discardCardsEffect struct {
+	random bool
 	amount ValueSource
 	sel    PlayerSelector
 }
 
 // DiscardCards creates an effect that forces a player to discard cards.
-// Without Targeting, it acts on ctx.Targets[0]; chain .Targeting(sel) to pick
+// Without Targeting, it acts on ctx.legacyTargets()[0]; chain .Targeting(sel) to pick
 // the player(s) via a PlayerSelector instead.
 func DiscardCards(amount ValueSource) *discardCardsEffect {
 	return &discardCardsEffect{amount: amount}
 }
 
-// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+// Targeting overrides the default target (ctx.legacyTargets()[0]) with a PlayerSelector.
 func (e *discardCardsEffect) Targeting(sel PlayerSelector) *discardCardsEffect {
 	e.sel = sel
 	return e
@@ -93,33 +75,17 @@ func (e *discardCardsEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player discards X cards"
 	}
-	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
+	return fmt.Sprintf("target player discards %s card(s)", e.amount.Text())
 }
 func (e *discardCardsEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-// discardRandomEffect forces an opponent to discard a card at random.
-type discardRandomEffect struct {
-	amount int
-	sel    PlayerSelector
-}
-
-// DiscardRandom creates an effect that forces a target player (or opponent) to discard cards at random.
-func DiscardRandom(amount int) *discardRandomEffect {
-	return &discardRandomEffect{amount: amount}
-}
-
-func (e *discardRandomEffect) Text() string {
-	return fmt.Sprintf("discard %d card(s) at random", e.amount)
-}
-func (e *discardRandomEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *discardRandomEffect) Targeting(sel PlayerSelector) *discardRandomEffect {
-	e.sel = sel
-	return e
+// DiscardRandom makes selected players discard at random.
+func DiscardRandom(amount int) *discardCardsEffect {
+	effect := DiscardCards(Fixed(amount))
+	effect.random = true
+	return effect
 }
 
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
@@ -220,7 +186,7 @@ func (e *exileSourceFromGraveyardEffect) Text() string                 { return 
 func (e *exileSourceFromGraveyardEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // millTargetPlayerEffect mills N cards from a player's library. By default the
-// player is read from ctx.Targets[0]. Use Targeting to override with a
+// player is read from ctx.legacyTargets()[0]. Use Targeting to override with a
 // PlayerSelector.
 type millTargetPlayerEffect struct {
 	amount ValueSource
@@ -233,7 +199,7 @@ func MillTargetPlayer(amount ValueSource) *millTargetPlayerEffect {
 	return &millTargetPlayerEffect{amount: amount}
 }
 
-// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+// Targeting overrides the default target (ctx.legacyTargets()[0]) with a PlayerSelector.
 func (e *millTargetPlayerEffect) Targeting(sel PlayerSelector) *millTargetPlayerEffect {
 	e.sel = sel
 	return e
@@ -262,7 +228,7 @@ func (e *scryEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "scry X"
 	}
-	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
+	return fmt.Sprintf("scry %s", e.amount.Text())
 }
 func (e *scryEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
@@ -284,25 +250,15 @@ func (e *surveilEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "surveil X"
 	}
-	return fmt.Sprintf("surveil %d", e.amount.Resolve(nil, uuid.Nil(), uuid.Nil(), nil))
+	return fmt.Sprintf("surveil %s", e.amount.Text())
 }
 func (e *surveilEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// returnToHandTargetEffect bounces a target permanent to its owner's hand.
-type returnToHandTargetEffect struct{}
-
 // ReturnToHandTarget creates an effect that bounces a target permanent to its owner's hand.
 func ReturnToHandTarget() Effect {
-	return &returnToHandTargetEffect{}
-}
-
-func (e *returnToHandTargetEffect) Text() string {
-	return "return target permanent to its owner's hand"
-}
-func (e *returnToHandTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true}
+	return MoveObjects(legacyFirstReference{}, ZoneHand)
 }
 
 // returnFromGraveyardToHandTargetEffect returns a target card from graveyard to hand.
@@ -437,11 +393,11 @@ func (e *chooseColorEffect) Properties() EffectProperties { return EffectPropert
 // --- Executor functions ---
 
 func (e *drawCardsTargetEffect) Apply(ctx *EffectContext) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.amount.Resolve(ctx)
 
 	var players []Player
 	if e.sel != nil {
-		for _, pid := range e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets) {
+		for _, pid := range e.sel.Select(ctx) {
 			if p := ctx.Game.GetPlayer(pid); p != nil {
 				players = append(players, p)
 			}
@@ -450,8 +406,8 @@ func (e *drawCardsTargetEffect) Apply(ctx *EffectContext) error {
 		// Default: targets[0] if it resolves to a player; otherwise controller.
 		// Triggers often pass a permanent/spell ID in Targets, so we fall back.
 		var p Player
-		if len(ctx.Targets) > 0 {
-			p = ctx.Game.GetPlayer(ctx.Targets[0])
+		if len(ctx.legacyTargets()) > 0 {
+			p = ctx.Game.GetPlayer(ctx.legacyTargets()[0])
 		}
 		if p == nil {
 			p = ctx.Game.GetPlayer(ctx.Controller)
@@ -470,27 +426,15 @@ func (e *drawCardsTargetEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (e *drawCardsActivePlayerEffect) Apply(ctx *EffectContext) error {
-	active := ctx.Game.ActivePlayerObj()
-	if active == nil {
-		return ErrPlayerNotFound
-	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, active.PlayerID(), ctx.Targets)
-	for range amount {
-		ctx.Game.PlayerDrawCard(active)
-	}
-	return nil
-}
-
 func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.amount.Resolve(ctx)
 
 	var playerIDs []uuid.UUID
 	switch {
 	case e.sel != nil:
-		playerIDs = e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	case len(ctx.Targets) > 0:
-		playerIDs = []uuid.UUID{ctx.Targets[0]}
+		playerIDs = e.sel.Select(ctx)
+	case len(ctx.legacyTargets()) > 0:
+		playerIDs = []uuid.UUID{ctx.legacyTargets()[0]}
 	default:
 		if opp := ctx.Game.GetOpponent(ctx.Controller); opp != nil {
 			playerIDs = []uuid.UUID{opp.PlayerID()}
@@ -502,6 +446,10 @@ func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 		if p == nil {
 			continue
 		}
+		if e.random {
+			ctx.Game.DiscardAtRandom(p, amount, ctx.SourceID)
+			continue
+		}
 		chosen := p.ChooseCardsFromHand(amount, "discard", ctx.Game)
 		for _, card := range chosen {
 			ctx.Game.PlayerDiscardByEffect(p, card.ID(), ctx.SourceID)
@@ -510,33 +458,11 @@ func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (e *discardRandomEffect) Apply(ctx *EffectContext) error {
-	var targetPlayer Player
-	if len(ctx.Targets) > 0 {
-		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = ctx.Game.GetOpponent(ctx.Controller)
-	}
-	if targetPlayer == nil {
-		return nil
-	}
-	for i := 0; i < e.amount; i++ {
-		hand := targetPlayer.Hand()
-		if len(hand) == 0 {
-			break
-		}
-		idx := rand.Intn(len(hand))
-		ctx.Game.PlayerDiscardByEffect(targetPlayer, hand[idx].ID(), ctx.SourceID)
-	}
-	return nil
-}
-
 func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
-	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.Targets[0], ZoneBattlefield)
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.legacyTargets()[0], ZoneBattlefield)
 	if !ok {
 		return nil // target gone
 	}
@@ -545,10 +471,10 @@ func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*returnFromAnyGraveyardEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
-	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.Targets[0], ZoneBattlefield)
+	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.legacyTargets()[0], ZoneBattlefield)
 	if !ok {
 		return nil
 	}
@@ -557,10 +483,10 @@ func (*returnFromAnyGraveyardEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*exileTargetCardFromGraveyardEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.Targets[0], ZoneExile)
+	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.legacyTargets()[0], ZoneExile)
 	if ok {
 		ctx.Game.ExileCard(card, ctx.SourceID)
 	}
@@ -568,31 +494,11 @@ func (*exileTargetCardFromGraveyardEffect) Apply(ctx *EffectContext) error {
 }
 
 func (e *millTargetPlayerEffect) Apply(ctx *EffectContext) error {
-	baseAmount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-
-	var playerIDs []uuid.UUID
-	switch {
-	case e.sel != nil:
-		playerIDs = e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	case len(ctx.Targets) > 0:
-		playerIDs = []uuid.UUID{ctx.Targets[0]}
+	player := e.sel
+	if player == nil {
+		player = SelectTargetPlayer()
 	}
-
-	for _, pid := range playerIDs {
-		p := ctx.Game.GetPlayer(pid)
-		if p == nil {
-			continue
-		}
-		amount := ctx.Game.ApplyMillModifiers(p.PlayerID(), baseAmount)
-		lib := p.Library()
-		for i := 0; i < amount && len(lib) > 0; i++ {
-			card := lib[len(lib)-1]
-			lib = lib[:len(lib)-1]
-			p.AddToGraveyard(card)
-		}
-		p.SetLibrary(lib)
-	}
-	return nil
+	return MoveObjects(libraryTopReference{player: player, amount: e.amount, mill: true}, ZoneGraveyard).Apply(ctx)
 }
 
 func (*exileSourceFromGraveyardEffect) Apply(ctx *EffectContext) error {
@@ -629,27 +535,15 @@ func (*returnSourceToHandEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (*returnToHandTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for bounce")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil // target gone, fizzle
-	}
-	ctx.Game.BouncePermanentToHand(perm)
-	return nil
-}
-
 func (*returnFromGraveyardToHandTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for raise dead")
 	}
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	cards := ctx.Game.MoveCardsFromGraveyard(ctx.Controller, ctx.Targets, ZoneHand)
+	cards := ctx.Game.MoveCardsFromGraveyard(ctx.Controller, ctx.legacyTargets(), ZoneHand)
 	for _, card := range cards {
 		p.AddToHand(card)
 	}
@@ -792,7 +686,7 @@ func (e *scryEffect) Apply(ctx *EffectContext) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	n := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	n := e.amount.Resolve(ctx)
 	if n <= 0 {
 		return nil
 	}
@@ -805,7 +699,7 @@ func (e *surveilEffect) Apply(ctx *EffectContext) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	n := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	n := e.amount.Resolve(ctx)
 	if n <= 0 {
 		return nil
 	}

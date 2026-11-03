@@ -1,7 +1,6 @@
 package mage
 
 import (
-	"fmt"
 	"math/rand"
 	"uuid"
 
@@ -9,44 +8,30 @@ import (
 )
 
 // destroyTargetEffect destroys the target permanent.
-type destroyTargetEffect struct{}
 
 // DestroyTarget creates an effect that destroys the first target permanent.
 func DestroyTarget() Effect {
-	return &destroyTargetEffect{}
+	return Destroy(legacyFirstReference{})
 }
 
 // DestroyTargetStep returns the Effect for use as a pipeline/ForEach inner step.
-func DestroyTargetStep() Effect { return &destroyTargetEffect{} }
-
-func (e *destroyTargetEffect) Text() string { return "destroy target" }
-func (e *destroyTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
-}
+func DestroyTargetStep() Effect { return Destroy(legacyFirstReference{}) }
 
 // destroyTargetPermanentEffect destroys a target permanent matching a filter.
-type destroyTargetPermanentEffect struct {
-	text string
-}
 
 // DestroyTargetPermanent creates an effect that destroys a target permanent.
 func DestroyTargetPermanent() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target permanent"}
+	return Destroy(legacyFirstReference{})
 }
 
 // DestroyTargetLand creates an effect that destroys a target land (e.g. Stone Rain, Sinkhole).
 func DestroyTargetLand() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target land"}
+	return Destroy(legacyFirstReference{})
 }
 
 // DestroyTargetArtifact creates an effect that destroys a target artifact (e.g. Shatter).
 func DestroyTargetArtifact() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target artifact"}
-}
-
-func (e *destroyTargetPermanentEffect) Text() string { return e.text }
-func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
+	return Destroy(legacyFirstReference{})
 }
 
 // DestroyAllLands destroys all lands (Armageddon).
@@ -60,19 +45,10 @@ func DestroyAllEnchantments() Effect {
 }
 
 // destroyAllMatchingEffect destroys all permanents matching a filter.
-type destroyAllMatchingEffect struct {
-	filter PermanentFilter
-	text   string
-}
 
 // DestroyAllMatching creates an effect that destroys all permanents matching the filter.
 func DestroyAllMatching(filter PermanentFilter, text string) Effect {
-	return &destroyAllMatchingEffect{filter: filter, text: text}
-}
-
-func (e *destroyAllMatchingEffect) Text() string { return e.text }
-func (e *destroyAllMatchingEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Mass: true, Destroys: true}
+	return Destroy(BattlefieldObjects(filter))
 }
 
 // DestroyAllCreatures destroys all creatures (board wipe).
@@ -81,61 +57,36 @@ func DestroyAllCreatures() Effect {
 }
 
 // destroyAllMatchingNoRegenEffect destroys all matching permanents with "can't be regenerated".
-type destroyAllMatchingNoRegenEffect struct {
-	filter PermanentFilter
-	text   string
-}
 
 // DestroyAllMatchingNoRegen creates an effect that destroys all permanents matching the filter.
 // The destroyed permanents can't be regenerated (e.g. Shatterstorm).
 func DestroyAllMatchingNoRegen(filter PermanentFilter, text string) Effect {
-	return &destroyAllMatchingNoRegenEffect{filter: filter, text: text}
-}
-
-func (e *destroyAllMatchingNoRegenEffect) Text() string { return e.text }
-func (e *destroyAllMatchingNoRegenEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+	return Destroy(BattlefieldObjects(filter), WithoutRegeneration())
 }
 
 // destroyTargetNoRegenEffect destroys a target permanent, preventing regeneration.
-type destroyTargetNoRegenEffect struct{}
 
 // DestroyTargetNoRegen creates an effect that destroys the first target permanent.
 // The destroyed permanent can't be regenerated (e.g. Terror, Tunnel).
 func DestroyTargetNoRegen() Effect {
-	return &destroyTargetNoRegenEffect{}
+	return Destroy(legacyFirstReference{}, WithoutRegeneration())
 }
 
 // DestroyTargetNoRegenStep returns the Effect for use in pipelines/ForEach.
-func DestroyTargetNoRegenStep() Effect { return &destroyTargetNoRegenEffect{} }
+func DestroyTargetNoRegenStep() Effect { return Destroy(legacyFirstReference{}, WithoutRegeneration()) }
 
 // DestroyAllCreaturesNoRegen destroys all creatures; they can't be regenerated (e.g. Wrath of God).
 func DestroyAllCreaturesNoRegen() Effect {
 	return DestroyAllMatchingNoRegen(IsCreature, "destroy all creatures (can't be regenerated)")
 }
 
-func (e *destroyTargetNoRegenEffect) Text() string {
-	return "destroy target (can't be regenerated)"
-}
-func (e *destroyTargetNoRegenEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-// exileTargetEffect exiles a target permanent (removes from game).
-type exileTargetEffect struct{}
-
 // ExileTarget creates an effect that exiles a target permanent.
 func ExileTarget() Effect {
-	return &exileTargetEffect{}
+	return MoveObjects(legacyFirstReference{}, ZoneExile)
 }
 
 // ExileTargetStep returns the Effect for use as a pipeline/ForEach inner step.
-func ExileTargetStep() Effect { return &exileTargetEffect{} }
-
-func (e *exileTargetEffect) Text() string { return "exile target permanent" }
-func (e *exileTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
+func ExileTargetStep() Effect { return MoveObjects(legacyFirstReference{}, ZoneExile) }
 
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
@@ -165,71 +116,6 @@ func (e *chaosOrbEffect) Properties() EffectProperties {
 }
 
 // --- Executor functions (called from executor.go) ---
-
-func (*destroyTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for destroy")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	ctx.Game.DestroyPermanent(perm)
-	return nil
-}
-
-func (*destroyTargetPermanentEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for destroy")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	ctx.Game.DestroyPermanent(perm)
-	return nil
-}
-
-func (e *destroyAllMatchingEffect) Apply(ctx *EffectContext) error {
-	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	ctx.Game.DestroyPermanents(toDestroy)
-	return nil
-}
-
-func (e *destroyAllMatchingNoRegenEffect) Apply(ctx *EffectContext) error {
-	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	for _, p := range toDestroy {
-		p = ctx.Game.MutablePermanent(p.ID())
-		if p == nil {
-			continue
-		}
-		p.GrantBaseAttr(CantRegenerate)
-	}
-	ctx.Game.DestroyPermanents(toDestroy)
-	return nil
-}
-
-func (*destroyTargetNoRegenEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for destroy")
-	}
-	perm := ctx.Game.MutablePermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	perm.GrantBaseAttr(CantRegenerate)
-	ctx.Game.DestroyPermanent(perm)
-	return nil
-}
 
 // ReturnedPermanentModifier mutates a permanent that has just re-entered the
 // battlefield from exile (e.g. via ExileTargetReturnAtEndStep). Implementations
@@ -300,18 +186,6 @@ func ReturnWithCounter(counter CounterType, amount int) ReturnedPermanentModifie
 		perm.AddCounter(counter, amount)
 		g.ApplyContinuousEffects()
 	}
-}
-
-func (*exileTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for exile")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.ExilePermanent(perm)
-	return nil
 }
 
 func (*balanceEffect) Apply(ctx *EffectContext) error {

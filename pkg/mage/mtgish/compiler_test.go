@@ -12,9 +12,9 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
-func sourceCard(t *testing.T, rules string) mage.MtgishCard {
+func sourceCard(t *testing.T, rules string) MtgishCard {
 	t.Helper()
-	card, err := mage.ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Keyword Creature","Typeline":{"Cardtypes":["Creature"]},"CardPT":{"Power":2,"Toughness":2},"Rules":` + rules + `}`))
+	card, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Keyword Creature","Typeline":{"Cardtypes":["Creature"]},"CardPT":{"Power":2,"Toughness":2},"Rules":` + rules + `}`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func TestCompileRejectsLightningBolt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	card, err := mage.ParseMtgishJSON(data)
+	card, err := ParseMtgishJSON(data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestCompileLandIntrinsicMana(t *testing.T) {
 		{"Mountain", `["Mountain"]`, []core.Color{core.Red}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			card, err := mage.ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"` + tt.name + `","Typeline":{"Cardtypes":["Land"],"Subtypes":` + tt.subtypes + `}}`))
+			card, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"` + tt.name + `","Typeline":{"Cardtypes":["Land"],"Subtypes":` + tt.subtypes + `}}`))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -182,7 +182,7 @@ func TestCompileLandIntrinsicMana(t *testing.T) {
 }
 
 func TestCompileRejectsUnknownManaFields(t *testing.T) {
-	card, err := mage.ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Creature"]},"ManaCost":[{"_ManaSymbol":"ManaCostG","Restriction":true}]}`))
+	card, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Creature"]},"ManaCost":[{"_ManaSymbol":"ManaCostG","Restriction":true}]}`))
 	if err == nil {
 		def, compileErr := Compile(card)
 		if def != nil || compileErr == nil {

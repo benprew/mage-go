@@ -1,7 +1,6 @@
 package mage
 
 import (
-	"fmt"
 	"slices"
 	"uuid"
 
@@ -15,7 +14,7 @@ type cardYouOwnInAnteTarget struct {
 // TargetCardYouOwnInAnte targets one card in the shared ante zone that the
 // ability controller currently owns.
 func TargetCardYouOwnInAnte() Target {
-	return &cardYouOwnInAnteTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
+	return &cardYouOwnInAnteTarget{min: 1, max: 1}
 }
 
 func (t *cardYouOwnInAnteTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
@@ -28,14 +27,6 @@ func (t *cardYouOwnInAnteTarget) Possible(controller uuid.UUID, _ *Card, g *Game
 		possible = append(possible, card.ID())
 	}
 	return possible
-}
-
-func (t *cardYouOwnInAnteTarget) Choose(controller uuid.UUID, source *Card, g *Game, chosen []uuid.UUID) error {
-	if len(chosen) != 1 || !slices.Contains(t.Possible(controller, source, g), chosen[0]) {
-		return fmt.Errorf("must target a card you own in the ante")
-	}
-	t.chosen = append([]uuid.UUID(nil), chosen...)
-	return nil
 }
 
 // AnteLibraryTopEffect antes the top card of selected players' libraries.
@@ -64,7 +55,7 @@ func (e *AnteLibraryTopEffect) Apply(ctx *EffectContext) error {
 	if selector == nil {
 		selector = SelectController()
 	}
-	for _, playerID := range selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets) {
+	for _, playerID := range selector.Select(ctx) {
 		player := ctx.Game.GetPlayer(playerID)
 		if player == nil || len(player.Library()) == 0 {
 			continue
@@ -92,14 +83,14 @@ func (*exchangeTargetAnteCardWithLibraryTopEffect) Properties() EffectProperties
 }
 
 func (*exchangeTargetAnteCardWithLibraryTopEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 || ctx.Targets[0] == uuid.Nil() {
+	if len(ctx.legacyTargets()) == 0 || ctx.legacyTargets()[0] == uuid.Nil() {
 		return nil
 	}
 	player := ctx.Game.GetPlayer(ctx.Controller)
 	if player == nil || len(player.Library()) == 0 {
 		return nil
 	}
-	anteCard := ctx.Game.FindCardAnywhere(ctx.Targets[0])
+	anteCard := ctx.Game.FindCardAnywhere(ctx.legacyTargets()[0])
 	top := player.Library()[0]
 	ownedAnte, err := ctx.Game.AnteCardsOwnedBy(ctx.Controller)
 	if err != nil {

@@ -27,7 +27,7 @@ import (
 // regardless of the card's color or type — it applies to the spell once
 // it is on the stack.
 func WithUncounterable() CardOption {
-	return func(c *Card) { c.uncounterable = true }
+	return func(c *Card) { c.mutableDefinition().uncounterable = true }
 }
 
 // IsUncounterable reports whether the card itself was registered as

@@ -438,14 +438,12 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 		g.effects.Add(eff)
 	}
 	landEffect := AnimateLands(landOnly, 1, 1)
-	landEffect.SetSourceID(source.ID())
-	g.effects.Add(landEffect)
+	g.effects.Add(landEffect, source.ID())
 	for _, eff := range []ContinuousEffect{
 		BoostAttached(1, 1, AttachAura),
 		GrantProtectionToAttached(Red, AttachAura),
 	} {
-		eff.SetSourceID(aura.ID())
-		g.effects.Add(eff)
+		g.effects.Add(eff, aura.ID())
 	}
 	g.effects.AddCopyEffect(doppel.ID(), copyTarget)
 
@@ -523,8 +521,7 @@ func TestCloneWhileConditionedEffectDoesNotLeakExpiry(t *testing.T) {
 		p.toughBonus++
 		return nil
 	}, SourceTapped)
-	eff.SetSourceID(source.ID())
-	g.effects.Add(eff)
+	g.effects.Add(eff, source.ID())
 
 	g.effects.Apply(g)
 	if p := g.FindPermanent(targetID); p.powerBonus != 1 {
@@ -569,8 +566,7 @@ func TestCloneWithContinuousEffects(t *testing.T) {
 		}
 		return nil
 	})
-	eff.SetSourceID(perm.ID())
-	g.effects.Add(eff)
+	g.effects.Add(eff, perm.ID())
 	g.effects.Apply(g)
 
 	// Verify effect applied.
@@ -1004,8 +1000,7 @@ func BenchmarkClone(b *testing.B) {
 	eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(game *Game, srcID uuid.UUID) error {
 		return nil
 	})
-	eff.SetSourceID(g.zones.battlefield[0].ID())
-	g.effects.Add(eff)
+	g.effects.Add(eff, g.zones.battlefield[0].ID())
 
 	// Stack object.
 	obj := &StackObject{
@@ -1123,8 +1118,7 @@ func setupRogueBoardCloneBenchmarkGame() *Game {
 	for i := range 8 {
 		target := g.zones.battlefield[3+i].ID()
 		eff := TemporaryBoost(target, i%3, i%2)
-		eff.SetSourceID(g.zones.battlefield[0].ID())
-		g.effects.Add(eff)
+		g.effects.Add(eff, g.zones.battlefield[0].ID())
 	}
 	for i := range 6 {
 		obj := &StackObject{

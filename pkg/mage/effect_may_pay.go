@@ -60,5 +60,5 @@ func (e *mayPayManaEffect) Apply(ctx *EffectContext) error {
 	if !ctx.Game.TryPayMana(ctx.Controller, e.cost) {
 		return nil
 	}
-	return ApplyEffect(ctx.Game, e.inner, ctx.SourceID, ctx.Controller, ctx.Targets)
+	return ApplyEffect(ctx.Game, e.inner, ctx.SourceID, ctx.Controller, ctx.legacyTargets())
 }

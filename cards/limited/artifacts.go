@@ -298,8 +298,7 @@ func registerArtifacts() {
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						eff := TemporaryAnimateUntilEndOfCombat(sourceID, 3, 6)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					}),

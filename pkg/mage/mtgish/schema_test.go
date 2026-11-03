@@ -1,4 +1,4 @@
-package mage
+package mtgish
 
 import (
 	"encoding/json"
@@ -6,11 +6,13 @@ import (
 	"reflect"
 	"testing"
 
+	. "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 func TestParseMtgishJSON(t *testing.T) {
-	data, err := os.ReadFile("testdata/mtgish/lightning_bolt.json")
+	data, err := os.ReadFile("../testdata/mtgish/lightning_bolt.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +91,7 @@ func TestMtgishCardToCardDefinitionSpec(t *testing.T) {
 }
 
 func TestMtgishCardToCardDefinitionSpecPreservesRulesForCompiler(t *testing.T) {
-	data, err := os.ReadFile("testdata/mtgish/lightning_bolt.json")
+	data, err := os.ReadFile("../testdata/mtgish/lightning_bolt.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +104,7 @@ func TestMtgishCardToCardDefinitionSpecPreservesRulesForCompiler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if spec.Name != "Lightning Bolt" || !reflect.DeepEqual(spec.ManaCost, core.ManaCost{Red: 1}) || len(spec.Rules) != 0 {
+	if spec.Name != "Lightning Bolt" || !reflect.DeepEqual(spec.ManaCost, core.ManaCost{Red: 1}) || len(spec.Abilities) != 0 {
 		t.Fatalf("unexpected metadata spec: %+v", spec)
 	}
 	if len(source.Rules) != 1 || !reflect.DeepEqual([]byte(source.Rules[0]), rules) {

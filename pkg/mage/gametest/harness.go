@@ -1070,7 +1070,7 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 		if !ok {
 			continue
 		}
-		if !aa.CanActivate(playerID, tg.Game) {
+		if !aa.CanActivate(mage.AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: i}, tg.Game) {
 			continue
 		}
 		if saa, isSAA := inner.(*mage.SimpleActivatedAbility); isSAA && saa.IsOpponentOnlyAbility() {

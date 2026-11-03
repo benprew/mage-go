@@ -34,6 +34,8 @@ type pendingTrigger struct {
 }
 
 type stateTriggerKey struct {
+	grantID       uuid.UUID
+	occurrence    int
 	sourceID      uuid.UUID
 	abilityID     uuid.UUID
 	incarnationID uuid.UUID
@@ -152,7 +154,7 @@ func (ts *TriggerSystem) clone(ctx *gameCloneContext) TriggerSystem {
 		for i, pt := range ts.pending {
 			clone := *pt
 			if pt.ability != nil {
-				clone.ability = ctx.ability(pt.ability).(TriggeredAbility)
+				clone.ability = pt.ability
 			}
 			clone.event = ctx.event(pt.event)
 			clonedPending[i] = &clone

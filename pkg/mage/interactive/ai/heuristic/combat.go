@@ -694,7 +694,7 @@ func (s *Strategy) considerRegenerationAgainstRemoval(p mage.Player, g *mage.Gam
 					addDoomed(g.FindPermanent(tid))
 				}
 			case props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment:
-				dmg := props.DamageValue.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
+				dmg := props.DamageValue.Resolve(mage.NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets))
 				for _, tid := range obj.Targets {
 					perm := g.FindPermanent(tid)
 					if perm == nil || perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
@@ -816,7 +816,7 @@ func (s *Strategy) considerPumpAgainstRemoval(p mage.Player, g *mage.Game) *inte
 			if props.DamageValue == nil || props.Outcome != mage.OutcomeDetriment {
 				continue
 			}
-			dmg := props.DamageValue.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
+			dmg := props.DamageValue.Resolve(mage.NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets))
 			for _, tid := range obj.Targets {
 				perm := g.FindPermanent(tid)
 				if perm == nil || perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {

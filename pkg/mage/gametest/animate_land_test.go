@@ -63,8 +63,7 @@ func registerAnimateLandTestCards() {
 									SubTypes:  []string{"Treefolk"},
 									Colors:    []core.Color{core.Green},
 								})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 							return nil
 						}),
 					false,
@@ -93,8 +92,7 @@ func registerAnimateLandTestCards() {
 									Keywords:  []core.Attr{core.Trample},
 								},
 								core.EndOfTurn)
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 							return nil
 						})),
 			)

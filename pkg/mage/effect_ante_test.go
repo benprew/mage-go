@@ -33,9 +33,6 @@ func TestTargetCardYouOwnInAnteUsesSharedZoneAndCurrentOwner(t *testing.T) {
 	if !slices.Contains(possible, owned.ID()) || slices.Contains(possible, notOwned.ID()) {
 		t.Fatalf("possible targets = %v, want only currently owned card", possible)
 	}
-	if err := target.Choose(a.PlayerID(), nil, g, []uuid.UUID{notOwned.ID()}); err == nil {
-		t.Fatal("target accepted an ante card the controller does not own")
-	}
 }
 
 func TestAnteLibraryTopTargetsControllerOrEachPlayer(t *testing.T) {

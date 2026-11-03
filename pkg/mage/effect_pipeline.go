@@ -77,11 +77,11 @@ func (e *SnapshotPermanentData) Apply(ctx *EffectContext) error {
 	if e.Selector == SelectSource {
 		perm = ctx.Game.FindPermanent(ctx.SourceID)
 	} else {
-		if e.TargetIndex < 0 || e.TargetIndex >= len(ctx.Targets) {
+		if e.TargetIndex < 0 || e.TargetIndex >= len(ctx.legacyTargets()) {
 			ctx.SetBool(e.StoreAs+".missing", true)
 			return nil
 		}
-		perm = ctx.Game.FindPermanent(ctx.Targets[e.TargetIndex])
+		perm = ctx.Game.FindPermanent(ctx.legacyTargets()[e.TargetIndex])
 	}
 	if perm == nil {
 		ctx.SetBool(e.StoreAs+".missing", true)
@@ -101,137 +101,50 @@ func (e *SnapshotPermanentData) Apply(ctx *EffectContext) error {
 // Gathered-permanent operations: act on a variable-bound permanent
 // ---------------------------------------------------------------------------
 
-// ExileGatheredData exiles the permanent stored in a context variable.
-type ExileGatheredData struct{ VarName string }
+func ExileGathered(varName string) Effect { return MoveObjects(VarObject(varName), ZoneExile) }
 
-func ExileGathered(varName string) Effect { return &ExileGatheredData{VarName: varName} }
-
-func (e *ExileGatheredData) Text() string { return "exile" }
-func (e *ExileGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *ExileGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil() {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.ExilePermanent(perm)
-	return nil
-}
-
-// DestroyGatheredData destroys the permanent stored in a context variable.
-type DestroyGatheredData struct {
-	VarName string
-	NoRegen bool
-}
-
-func DestroyGathered(varName string) Effect {
-	return &DestroyGatheredData{VarName: varName}
-}
+func DestroyGathered(varName string) Effect { return Destroy(VarObject(varName)) }
 func DestroyGatheredNoRegen(varName string) Effect {
-	return &DestroyGatheredData{VarName: varName, NoRegen: true}
+	return Destroy(VarObject(varName), WithoutRegeneration())
 }
 
-func (e *DestroyGatheredData) Text() string { return "destroy" }
-func (e *DestroyGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil() {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	if e.NoRegen {
-		perm.GrantBaseAttr(CantRegenerate)
-	}
-	ctx.Game.DestroyPermanent(perm)
-	return nil
-}
-
-// BounceGatheredData returns the permanent stored in a context variable to its owner's hand.
-type BounceGatheredData struct{ VarName string }
-
-func BounceGathered(varName string) Effect { return &BounceGatheredData{VarName: varName} }
-
-func (e *BounceGatheredData) Text() string { return "return to hand" }
-func (e *BounceGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true}
-}
-
-func (e *BounceGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil() {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	isToken := perm.IsToken
-	card := perm.Card
-	owner := card.Owner()
-	if owner == uuid.Nil() {
-		owner = perm.ControllerID()
-	}
-	ctx.Game.RemoveFromBattlefield(perm)
-	if !isToken {
-		p := ctx.Game.GetPlayer(owner)
-		if p != nil {
-			p.AddToHand(card)
-		}
-	}
-	return nil
-}
+func BounceGathered(varName string) Effect { return MoveObjects(VarObject(varName), ZoneHand) }
 
 // ---------------------------------------------------------------------------
 // Variable-based ValueSource and PlayerSelector
 // ---------------------------------------------------------------------------
 
 // VarValue is a ValueSource that reads an int from EffectContext.Vars.
-// It can only be used inside a Pipeline (where an EffectContext exists).
-// For standalone use it returns 0.
+// The supplied context owns all execution variables.
 type VarValue struct {
-	Name    string
-	context *EffectContext // set by the executor before resolving
+	Name string
 }
 
 func VarInt(name string) *VarValue { return &VarValue{Name: name} }
 
-func (v *VarValue) Resolve(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
-	if v.context == nil {
+func (v *VarValue) Resolve(ctx *EffectContext) int {
+
+	if ctx == nil {
 		return 0
 	}
-	return v.context.GetInt(v.Name)
+	return ctx.GetInt(v.Name)
 }
 
 func (v *VarValue) Text() string { return v.Name }
 
 // VarPlayerSelector is a PlayerSelector that reads a UUID from EffectContext.Vars.
 type VarPlayerSelector struct {
-	Name    string
-	context *EffectContext
+	Name string
 }
 
 func VarPlayer(name string) *VarPlayerSelector { return &VarPlayerSelector{Name: name} }
 
-func (s *VarPlayerSelector) Select(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
-	if s.context == nil {
+func (s *VarPlayerSelector) Select(ctx *EffectContext) []uuid.UUID {
+
+	if ctx == nil {
 		return nil
 	}
-	id := s.context.TryGetUUID(s.Name)
+	id := ctx.TryGetUUID(s.Name)
 	if id == uuid.Nil() {
 		return nil
 	}
@@ -240,85 +153,14 @@ func (s *VarPlayerSelector) Select(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) 
 
 func (s *VarPlayerSelector) Text() string { return s.Name }
 
-// GainLifeVarData gains life for a player identified by a context variable.
-type GainLifeVarData struct {
-	PlayerVar string
-	AmountVar string
-}
-
 func GainLifeFromVar(playerVar, amountVar string) Effect {
-	return &GainLifeVarData{PlayerVar: playerVar, AmountVar: amountVar}
+	return GainLife(VarPlayer(playerVar), VarInt(amountVar))
 }
-
-// GainLifeControllerFromVar gains life for the controller from a context variable amount.
 func GainLifeControllerFromVar(amountVar string) Effect {
-	return &GainLifeVarData{AmountVar: amountVar}
+	return GainLife(SelectController(), VarInt(amountVar))
 }
-
-func (e *GainLifeVarData) Text() string { return "gain life" }
-func (e *GainLifeVarData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
-func (e *GainLifeVarData) Apply(ctx *EffectContext) error {
-	var playerID uuid.UUID
-	if e.PlayerVar == "" {
-		playerID = ctx.Controller
-	} else {
-		playerID = ctx.TryGetUUID(e.PlayerVar)
-	}
-	if playerID == uuid.Nil() {
-		return nil
-	}
-	amount := ctx.GetInt(e.AmountVar)
-	if amount <= 0 {
-		return nil
-	}
-	p := ctx.Game.GetPlayer(playerID)
-	if p == nil {
-		return nil
-	}
-	ctx.Game.PlayerGainLife(p, amount)
-	if !ctx.Game.IsLichActive(playerID) {
-		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: playerID, Amount: amount})
-	}
-	return nil
-}
-
-// DealDamageVarData deals damage read from a context variable to a target.
-type DealDamageVarData struct {
-	AmountVar string
-}
-
 func DealDamageFromVar(amountVar string) Effect {
-	return &DealDamageVarData{AmountVar: amountVar}
-}
-
-func (e *DealDamageVarData) Text() string { return "deal damage" }
-func (e *DealDamageVarData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *DealDamageVarData) Apply(ctx *EffectContext) error {
-	amount := ctx.GetInt(e.AmountVar)
-	if amount <= 0 {
-		return nil
-	}
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	targetID := ctx.Targets[0]
-	for _, pl := range ctx.Game.AllPlayers() {
-		if pl.PlayerID() == targetID {
-			ctx.Game.DealDamageToPlayer(pl, amount, ctx.SourceID)
-			return nil
-		}
-	}
-	perm := ctx.Game.FindPermanent(targetID)
-	if perm != nil {
-		ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
-	}
-	return nil
+	return DealDamage(SourceObject(), legacyFirstReference{}, VarInt(amountVar))
 }
 
 // DealDamageToPlayersVarData deals damage from a context variable to selected players.
@@ -341,10 +183,7 @@ func (e *DealDamageToPlayersVarData) Apply(ctx *EffectContext) error {
 	if amount <= 0 {
 		return nil
 	}
-	if vps, ok := e.Selector.(*VarPlayerSelector); ok {
-		vps.context = ctx
-	}
-	playerIDs := e.Selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	playerIDs := e.Selector.Select(ctx)
 	for _, pid := range playerIDs {
 		p := ctx.Game.GetPlayer(pid)
 		if p != nil {
@@ -389,7 +228,7 @@ func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 	perms := ctx.Game.FilterBattlefield(e.Filter)
 	var controllerFilter uuid.UUID
 	if e.Who != nil {
-		selected := e.Who.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+		selected := e.Who.Select(ctx)
 		if len(selected) > 0 {
 			controllerFilter = selected[0]
 		}
@@ -401,7 +240,7 @@ func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 		}
 		ids = append(ids, p.ID())
 	}
-	savedTargets := ctx.Targets
+	savedTargets := ctx.legacyTargets()
 	for _, id := range ids {
 		ctx.Targets = []uuid.UUID{id}
 		if err := e.Inner.Apply(ctx); err != nil {
@@ -535,7 +374,7 @@ func (e *ChoosePermanentData) Text() string                 { return "" }
 func (e *ChoosePermanentData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *ChoosePermanentData) Apply(ctx *EffectContext) error {
-	playerIDs := e.Player.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	playerIDs := e.Player.Select(ctx)
 	if len(playerIDs) == 0 {
 		return nil
 	}

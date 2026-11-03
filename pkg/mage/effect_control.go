@@ -66,9 +66,7 @@ type controlContinuousEffect struct {
 	controllerID  uuid.UUID
 	duration      Duration
 	conditions    []ControlConditionData
-	expired       bool
 	tapMaintained bool
-	effectSource
 }
 
 func (e *controlContinuousEffect) Properties() EffectProperties {
@@ -78,26 +76,28 @@ func (e *controlContinuousEffect) Text() string          { return "" }
 func (e *controlContinuousEffect) GetLayer() Layer       { return LayerControl }
 func (e *controlContinuousEffect) GetDuration() Duration { return e.duration }
 
-func (e *controlContinuousEffect) IsActive(g *Game) bool {
-	return e.isActive(g, true)
+func (e *controlContinuousEffect) Active(ctx *EffectContext) bool {
+	return e.isActive(ctx)
 }
 
-func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
-	if e.expired {
+func (e *controlContinuousEffect) isActive(ctx *EffectContext) bool {
+	g := ctx.Game
+	latchExpiration := ctx.latchExpiration
+	if ctx.continuous.expired {
 		return false
 	}
 	target := g.FindPermanent(e.targetID)
 	if target == nil {
 		if latchExpiration {
-			e.expired = true
+			ctx.continuous.expired = true
 		}
 		return false
 	}
-	source := g.FindPermanent(e.SourceID())
+	source := g.FindPermanent(ctx.SourceID)
 	for _, condition := range e.conditions {
 		if !condition.controlCondition(g, source, target, e.controllerID) {
 			if latchExpiration {
-				e.expired = true
+				ctx.continuous.expired = true
 			}
 			return false
 		}
@@ -105,19 +105,20 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 	return true
 }
 
-type attachedControlEffect struct{ effectSource }
+type attachedControlEffect struct{}
 
 func (e *attachedControlEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *attachedControlEffect) Text() string                 { return "" }
 func (e *attachedControlEffect) GetLayer() Layer              { return LayerControl }
 func (e *attachedControlEffect) GetDuration() Duration        { return WhileOnBattlefield }
-func (e *attachedControlEffect) IsActive(g *Game) bool {
-	source := g.FindPermanent(e.SourceID())
+func (e *attachedControlEffect) Active(ctx *EffectContext) bool {
+	g := ctx.Game
+	source := g.FindPermanent(ctx.SourceID)
 	return source != nil && source.IsAttached() && g.FindPermanent(source.AttachedTo) != nil
 }
 func (e *attachedControlEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
-	source := g.FindPermanent(e.SourceID())
+	source := g.FindPermanent(ctx.SourceID)
 	if source == nil {
 		return nil
 	}
@@ -142,16 +143,10 @@ func (e *controlContinuousEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (e *controlContinuousEffect) cloneEffect() ContinuousEffect {
-	clone := *e
-	clone.conditions = append([]ControlConditionData(nil), e.conditions...)
-	return &clone
-}
-
 // AddControlEffect registers and immediately reconciles a Layer 2 control effect.
 func (g *Game) AddControlEffect(spec ControlEffectSpec) {
 	e := newControlContinuousEffect(spec)
-	g.effects.Add(e)
+	g.effects.Add(e, spec.SourceID)
 	g.effects.Apply(g)
 }
 
@@ -163,7 +158,6 @@ func newControlContinuousEffect(spec ControlEffectSpec) *controlContinuousEffect
 		conditions:    append([]ControlConditionData(nil), spec.Conditions...),
 		tapMaintained: spec.TapMaintained,
 	}
-	e.SetSourceID(spec.SourceID)
 	return e
 }
 
@@ -182,10 +176,10 @@ func (g *Game) ExchangeControl(firstID, secondID, sourceID uuid.UUID) bool {
 	}
 	g.effects.Add(newControlContinuousEffect(ControlEffectSpec{
 		SourceID: sourceID, TargetID: firstID, ControllerID: secondController, Duration: Indefinite,
-	}))
+	}), sourceID)
 	g.effects.Add(newControlContinuousEffect(ControlEffectSpec{
 		SourceID: sourceID, TargetID: secondID, ControllerID: firstController, Duration: Indefinite,
-	}))
+	}), sourceID)
 	g.effects.Apply(g)
 	return true
 }
@@ -214,11 +208,11 @@ func (*exchangeControlTargetsEffect) Properties() EffectProperties {
 }
 
 func (e *exchangeControlTargetsEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) < 2 || ctx.Targets[0] == uuid.Nil() || ctx.Targets[1] == uuid.Nil() {
+	if len(ctx.legacyTargets()) < 2 || ctx.legacyTargets()[0] == uuid.Nil() || ctx.legacyTargets()[1] == uuid.Nil() {
 		return nil
 	}
-	first := ctx.Game.FindPermanent(ctx.Targets[0])
-	second := ctx.Game.FindPermanent(ctx.Targets[1])
+	first := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
+	second := ctx.Game.FindPermanent(ctx.legacyTargets()[1])
 	if first == nil || second == nil {
 		return nil
 	}

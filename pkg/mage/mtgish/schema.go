@@ -1,10 +1,11 @@
-package mage
+package mtgish
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -84,22 +85,22 @@ type MtgishCardPT struct {
 // ToCardDefinitionSpec copies supported printed characteristics into a spec.
 // Rules and starting counters require a rules compiler and are not copied.
 // The compiler must complete and validate the spec before publication.
-func (c MtgishCard) ToCardDefinitionSpec() (CardDefinitionSpec, error) {
+func (c MtgishCard) ToCardDefinitionSpec() (mage.CardDefinitionSpec, error) {
 	if c.Kind != "Card" {
-		return CardDefinitionSpec{}, fmt.Errorf("mtgish card kind %q cannot be converted to CardDefinitionSpec", c.Kind)
+		return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish card kind %q cannot be converted to mage.CardDefinitionSpec", c.Kind)
 	}
 	if c.Name == "" || len(c.Typeline.Cardtypes) == 0 {
-		return CardDefinitionSpec{}, fmt.Errorf("mtgish Card requires a name and card types")
+		return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish Card requires a name and card types")
 	}
 	cost, err := mtgishBaseManaCost(c.ManaCost)
 	if err != nil {
-		return CardDefinitionSpec{}, fmt.Errorf("mtgish card %q: %w", c.Name, err)
+		return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish card %q: %w", c.Name, err)
 	}
-	spec := CardDefinitionSpec{Name: c.Name, ManaCost: cost}
+	spec := mage.CardDefinitionSpec{Name: c.Name, ManaCost: cost}
 	for _, name := range c.Typeline.Cardtypes {
 		kind, err := core.CardTypeString(name)
 		if err != nil {
-			return CardDefinitionSpec{}, fmt.Errorf("mtgish card type %q: %w", name, err)
+			return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish card type %q: %w", name, err)
 		}
 		spec.TypeLine.CardTypes = append(spec.TypeLine.CardTypes, kind)
 	}
@@ -115,7 +116,7 @@ func (c MtgishCard) ToCardDefinitionSpec() (CardDefinitionSpec, error) {
 		case "World":
 			kind = core.SuperWorld
 		default:
-			return CardDefinitionSpec{}, fmt.Errorf("unsupported mtgish supertype %q", name)
+			return mage.CardDefinitionSpec{}, fmt.Errorf("unsupported mtgish supertype %q", name)
 		}
 		spec.TypeLine.SuperTypes = append(spec.TypeLine.SuperTypes, kind)
 	}
@@ -126,7 +127,7 @@ func (c MtgishCard) ToCardDefinitionSpec() (CardDefinitionSpec, error) {
 	for _, name := range c.ColorIndicator {
 		color, err := core.ColorString(name)
 		if err != nil || color == core.Colorless || color == core.AnyColor {
-			return CardDefinitionSpec{}, fmt.Errorf("unsupported mtgish color indicator %q", name)
+			return mage.CardDefinitionSpec{}, fmt.Errorf("unsupported mtgish color indicator %q", name)
 		}
 		spec.Colors = append(spec.Colors, color)
 	}

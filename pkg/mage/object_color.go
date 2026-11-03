@@ -56,21 +56,21 @@ func (g *Game) ChangeObjectColor(objectID uuid.UUID, color Color) bool {
 }
 
 func (g *Game) changePermanentColors(permanent *Permanent, colors []Color, sourceID uuid.UUID) {
-	g.AddContinuousEffect(permanentColorEffect(permanent, colors, sourceID))
+	g.AddContinuousEffect(permanentColorEffect(permanent, colors), sourceID)
 }
 
 type objectColorEffect struct {
 	targetID      uuid.UUID
 	incarnationID uuid.UUID
 	colors        []Color
-	effectSource
 }
 
 func (e *objectColorEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *objectColorEffect) Text() string                 { return "" }
 func (e *objectColorEffect) GetLayer() Layer              { return LayerColor }
 func (e *objectColorEffect) GetDuration() Duration        { return Indefinite }
-func (e *objectColorEffect) IsActive(g *Game) bool {
+func (e *objectColorEffect) Active(ctx *EffectContext) bool {
+	g := ctx.Game
 	target := g.FindPermanentIncludingPhased(e.targetID)
 	return target != nil && target.incarnationID == e.incarnationID
 }
@@ -85,12 +85,11 @@ func (e *objectColorEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func permanentColorEffect(permanent *Permanent, colors []Color, sourceID uuid.UUID) ContinuousEffect {
+func permanentColorEffect(permanent *Permanent, colors []Color) ContinuousEffect {
 	effect := &objectColorEffect{
 		targetID:      permanent.ID(),
 		incarnationID: permanent.incarnationID,
 		colors:        append([]Color(nil), colors...),
 	}
-	effect.SetSourceID(sourceID)
 	return effect
 }

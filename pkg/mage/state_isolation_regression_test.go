@@ -28,9 +28,9 @@ func TestCopyEffectUsesCopiableCharacteristics(t *testing.T) {
 		}
 	}
 	action := first.RuntimeAbilities[0].(*ActionDefinition)
-	action.activatedThisTurn = true
+	g.markAbilityActivated(first.ID(), action.AbilityID())
 	g.ApplyContinuousEffects()
-	if !first.RuntimeAbilities[0].(*ActionDefinition).activatedThisTurn {
+	if g.activationCount(first.ID(), first.RuntimeAbilities[0].AbilityID()) != 1 {
 		t.Fatal("copy reapplication reset activation state")
 	}
 }

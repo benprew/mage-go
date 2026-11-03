@@ -316,8 +316,8 @@ func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
 func (r *exileInsteadOfGraveyardReplacement) IsActive(_ GameReader) bool { return true }
 func (r *exileInsteadOfGraveyardReplacement) Clone() ReplacementEffect {
 	return &exileInsteadOfGraveyardReplacement{
-		replacementBase: replacementBase{sourceID: r.sourceID, duration: r.duration},
-		cardID:          r.cardID,
+		sourceID: r.sourceID, duration: r.duration,
+		cardID: r.cardID,
 	}
 }
 
@@ -331,8 +331,8 @@ func (r *exileInsteadOfGraveyardReplacement) Clone() ReplacementEffect {
 // directly by the resolver (see ResolveStackObject).
 func (g *Game) AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&exileInsteadOfGraveyardReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: EndOfTurn},
-		cardID:          cardID,
+		sourceID: sourceID, duration: EndOfTurn,
+		cardID: cardID,
 	})
 	g.zones.AddExileInstead(cardID, sourceID)
 }

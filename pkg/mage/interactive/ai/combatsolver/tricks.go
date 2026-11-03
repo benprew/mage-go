@@ -166,8 +166,7 @@ func applyPumpToFlip(g *mage.Game, playerID uuid.UUID, ours, enemy *mage.Permane
 	}
 
 	eff := mage.TemporaryBoost(ours.ID(), bestAddP, bestAddT)
-	eff.SetSourceID(ours.ID())
-	g.AddContinuousEffect(eff)
+	g.AddContinuousEffect(eff, ours.ID())
 	g.ApplyContinuousEffects()
 
 	if bestSpell >= 0 {

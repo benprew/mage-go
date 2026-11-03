@@ -47,11 +47,9 @@ func NewTargetedSpell(target Target, effects ...Effect) *SpellAbility {
 // should select with ToAllTargets().
 func NewMultiTargetSpell(targets []Target, effects ...Effect) *SpellAbility {
 	return &SpellAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilitySpell,
-		},
-		effects: effects,
-		targets: targets,
+		id:          uuid.New(),
+		abilityType: AbilitySpell,
+		effects:     effects,
+		targets:     targets,
 	}
 }

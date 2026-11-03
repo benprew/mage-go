@@ -32,7 +32,7 @@ func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card *mage.Card, x i
 		purpose = eval.TargetPurposeForEffects(sa.Effects())
 		for _, e := range sa.Effects() {
 			if dv := e.Properties().DamageValue; dv != nil {
-				damage = dv.Resolve(g, card.ID(), playerID, nil)
+				damage = dv.Resolve(mage.NewEffectContext(g, card.ID(), playerID, nil))
 				if x > 0 {
 					damage = x
 				}
@@ -161,7 +161,7 @@ func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects
 	damage := 0
 	for _, e := range effects {
 		if dv := e.Properties().DamageValue; dv != nil {
-			damage = dv.Resolve(g, sourceID, playerID, targets)
+			damage = dv.Resolve(mage.NewEffectContext(g, sourceID, playerID, targets))
 		}
 	}
 	return damage

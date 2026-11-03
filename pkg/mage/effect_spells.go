@@ -261,8 +261,8 @@ func (e *createTokenBlockingEffect) Apply(ctx *EffectContext) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, nil, e.keywords...)
 	token.SetOwner(ctx.Controller)
 	var attackerID uuid.UUID
-	if len(ctx.Targets) > 0 {
-		attackerID = ctx.Targets[0]
+	if len(ctx.legacyTargets()) > 0 {
+		attackerID = ctx.legacyTargets()[0]
 	}
 	ctx.Game.PutTokenOnBattlefieldBlocking(token, ctx.Controller, attackerID)
 	return nil
@@ -388,25 +388,25 @@ func (e *forcefieldEffect) Properties() EffectProperties {
 // --- exec functions ---
 
 func (*counterSpellEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target spell to counter")
 	}
-	ctx.Game.CounterSpellOnStack(ctx.Targets[0])
+	ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 	return nil
 }
 
 func (e *counterSpellIfColorEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
 	// Find the spell on the stack
-	obj := ctx.Game.FindStackObject(ctx.Targets[0])
+	obj := ctx.Game.FindStackObject(ctx.legacyTargets()[0])
 	if obj == nil || obj.Card == nil {
 		return nil
 	}
 	// Check if the spell has the required color
 	if slices.Contains(obj.Card.ManaCost().Colors(), e.color) {
-		ctx.Game.CounterSpellOnStack(ctx.Targets[0])
+		ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 		return nil
 	}
 	// Color doesn't match, spell is NOT countered
@@ -414,25 +414,25 @@ func (e *counterSpellIfColorEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*counterSpellIfXMeetsOrExceedsCMCEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	obj := ctx.Game.FindStackObject(ctx.Targets[0])
+	obj := ctx.Game.FindStackObject(ctx.legacyTargets()[0])
 	if obj == nil || obj.Card == nil {
 		return nil
 	}
 	cmc := obj.Card.ManaCost().CMC()
 	if ctx.Game.XValue() >= cmc {
-		ctx.Game.CounterSpellOnStack(ctx.Targets[0])
+		ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 	}
 	return nil
 }
 
 func (*powerSinkEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	obj := ctx.Game.FindStackObject(ctx.Targets[0])
+	obj := ctx.Game.FindStackObject(ctx.legacyTargets()[0])
 	if obj == nil {
 		return nil
 	}
@@ -455,7 +455,7 @@ func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	spellController.ManaPool().Clear()
-	ctx.Game.CounterSpellOnStack(ctx.Targets[0])
+	ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 	return nil
 }
 
@@ -495,10 +495,10 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 }
 
 func (e *cloneTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 || ctx.Game.GetResolvingCard() == nil {
+	if len(ctx.legacyTargets()) == 0 || ctx.Game.GetResolvingCard() == nil {
 		return nil
 	}
-	target := ctx.Game.FindPermanent(ctx.Targets[0])
+	target := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if target == nil {
 		return nil
 	}
@@ -510,11 +510,11 @@ func (e *cloneTargetEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*copySpellOnStackEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
 	// Find the target spell on the stack
-	original := ctx.Game.FindStackObject(ctx.Targets[0])
+	original := ctx.Game.FindStackObject(ctx.legacyTargets()[0])
 	if original == nil {
 		return nil
 	}
@@ -536,10 +536,10 @@ func (*copySpellOnStackEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*attachToTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for attach")
 	}
-	ctx.Game.Attach(ctx.SourceID, ctx.Targets[0])
+	ctx.Game.Attach(ctx.SourceID, ctx.legacyTargets()[0])
 	return nil
 }
 
@@ -549,18 +549,18 @@ func (*extraTurnEffect) Apply(ctx *EffectContext) error {
 }
 
 func (e *changeColorEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	ctx.Game.ChangeObjectColor(ctx.Targets[0], e.color)
+	ctx.Game.ChangeObjectColor(ctx.legacyTargets()[0], e.color)
 	return nil
 }
 
 func (e *counterUnlessPayEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	obj := ctx.Game.FindStackObject(ctx.Targets[0])
+	obj := ctx.Game.FindStackObject(ctx.legacyTargets()[0])
 	if obj == nil {
 		return nil
 	}
@@ -571,14 +571,14 @@ func (e *counterUnlessPayEffect) Apply(ctx *EffectContext) error {
 	if ctx.Game.TryPayMana(obj.Controller, e.cost) {
 		return nil // paid, spell resolves
 	}
-	ctx.Game.CounterSpellOnStack(ctx.Targets[0])
+	ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 	return nil
 }
 
 func (*forcefieldEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	ctx.Game.AddForcefieldShield(ctx.Controller, ctx.Targets[0])
+	ctx.Game.AddForcefieldShield(ctx.Controller, ctx.legacyTargets()[0])
 	return nil
 }

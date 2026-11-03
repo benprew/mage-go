@@ -180,13 +180,11 @@ func TestBlockers_GangBlockIntegration(t *testing.T) {
 		Aggression:     0.0,
 		BlockThreshold: 0.8,
 		HoldInstants:   0.0,
-		Weights: eval.Weights{
-			Life:  2.0,
-			Board: 2.0,
-			Card:  2.0,
-			Mana:  1.0,
-			Tempo: 1.0,
-		},
+		Life:           2.0,
+		Board:          2.0,
+		Card:           2.0,
+		Mana:           1.0,
+		Tempo:          1.0,
 	})
 	blocks := start.Blockers(pb, g)
 

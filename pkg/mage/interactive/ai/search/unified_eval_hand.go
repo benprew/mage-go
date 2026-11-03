@@ -78,7 +78,7 @@ func spellEffectValue(g *mage.Game, p mage.Player, c *mage.Card) (float64, bool)
 			// g.XValue() which is 0 outside a spell context — fine, since X
 			// spells like Disintegrate use FuncEffect (no DamageValue) and
 			// fall to the name-based path anyway.
-			amount := e.Properties().DamageValue.Resolve(g, uuid.Nil(), uuid.Nil(), nil)
+			amount := e.Properties().DamageValue.Resolve(mage.NewEffectContext(g, uuid.Nil(), uuid.Nil(), nil))
 			return burnAnyValue(g, p, amount), true
 		}
 	}

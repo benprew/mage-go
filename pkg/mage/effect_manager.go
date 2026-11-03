@@ -21,59 +21,8 @@ type ContinuousEffect interface {
 	Apply(*EffectContext) error
 	GetLayer() Layer
 	GetDuration() Duration
-	IsActive(g *Game) bool
-	SourceID() uuid.UUID
-	SetSourceID(uuid.UUID)
+	Active(*EffectContext) bool
 }
-
-// deepCloneableEffect is implemented by continuous effects that carry mutable
-// per-game state. Game.Clone() shares effect interface values by default (they
-// are otherwise stateless), so a stateful effect must deep-copy itself here —
-// otherwise a throwaway AI search clone would corrupt the real effect through
-// the shared pointer.
-type deepCloneableEffect interface {
-	cloneEffect() ContinuousEffect
-}
-
-type printedAbilityContinuousEffect struct {
-	ContinuousEffect
-}
-
-func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
-	source := g.FindPermanent(e.SourceID())
-	if source != nil && source.printedAbilitiesSuppressed {
-		return false
-	}
-	if source == nil {
-		return false
-	}
-	for _, ability := range source.RuntimeAbilities {
-		if static, ok := UnwrapAbility(ability).(*StaticAbilityHolder); ok {
-			for _, effect := range static.Effects {
-				if effect == e.ContinuousEffect {
-					return effect.IsActive(g)
-				}
-			}
-		}
-	}
-	return false
-}
-
-func (e *printedAbilityContinuousEffect) cloneEffect() ContinuousEffect {
-	inner := e.ContinuousEffect
-	if cloneable, ok := inner.(deepCloneableEffect); ok {
-		inner = cloneable.cloneEffect()
-	}
-	return &printedAbilityContinuousEffect{ContinuousEffect: inner}
-}
-
-// effectSource provides SourceID/SetSourceID to all continuous effects.
-type effectSource struct {
-	sourceID uuid.UUID
-}
-
-func (s *effectSource) SourceID() uuid.UUID      { return s.sourceID }
-func (s *effectSource) SetSourceID(id uuid.UUID) { s.sourceID = id }
 
 // ---------------------------------------------------------------------------
 // Compositional continuous effect primitives
@@ -120,7 +69,6 @@ type funcContinuousEffect struct {
 	duration Duration
 	apply    ContinuousApplyFunc
 	active   ActiveCondition // nil means SourceOnBattlefield
-	effectSource
 }
 
 // FuncContinuousEffect creates a ContinuousEffect from a layer, duration, and apply function.
@@ -144,20 +92,21 @@ func (e *funcContinuousEffect) Text() string                 { return "" }
 func (e *funcContinuousEffect) GetLayer() Layer              { return e.layer }
 func (e *funcContinuousEffect) GetDuration() Duration        { return e.duration }
 
-func (e *funcContinuousEffect) IsActive(g *Game) bool {
+func (e *funcContinuousEffect) Active(ctx *EffectContext) bool {
+	g := ctx.Game
 	if e.active != nil {
-		return e.active(g, e.sourceID)
+		return e.active(g, ctx.SourceID)
 	}
 	// EndOfTurn/EndOfCombat effects are time-limited and don't require their source
 	// on the battlefield (e.g. effects from resolved instants/sorceries).
 	if e.duration == EndOfTurn || e.duration == EndOfCombat {
 		return true
 	}
-	return g.FindPermanent(e.sourceID) != nil
+	return g.FindPermanent(ctx.SourceID) != nil
 }
 
 func (e *funcContinuousEffect) Apply(ctx *EffectContext) error {
-	return e.apply(ctx.Game, e.sourceID)
+	return e.apply(ctx.Game, ctx.SourceID)
 }
 
 // AttachedApplyFunc receives both the source and the attached target.
@@ -167,7 +116,6 @@ type AttachedApplyFunc func(g *Game, source, target *Permanent) error
 type attachedEffect struct {
 	layer Layer
 	apply AttachedApplyFunc
-	effectSource
 }
 
 // AttachedEffect creates a ContinuousEffect that applies while the source is
@@ -184,14 +132,15 @@ func (e *attachedEffect) Text() string                 { return "" }
 func (e *attachedEffect) GetLayer() Layer              { return e.layer }
 func (e *attachedEffect) GetDuration() Duration        { return WhileOnBattlefield }
 
-func (e *attachedEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
+func (e *attachedEffect) Active(ctx *EffectContext) bool {
+	g := ctx.Game
+	src := g.FindPermanent(ctx.SourceID)
 	return src != nil && src.IsAttached()
 }
 
 func (e *attachedEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
-	src := g.FindPermanent(e.sourceID)
+	src := g.FindPermanent(ctx.SourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
 	}
@@ -212,9 +161,7 @@ type targetEffect struct {
 	targetID      uuid.UUID
 	apply         TargetApplyFunc
 	active        ActiveCondition
-	expired       bool
 	tapMaintained bool
-	effectSource
 }
 
 // TargetEffect creates a ContinuousEffect that applies to a specific permanent by ID.
@@ -257,27 +204,21 @@ func (e *targetEffect) Text() string                 { return "" }
 func (e *targetEffect) GetLayer() Layer              { return e.layer }
 func (e *targetEffect) GetDuration() Duration        { return e.duration }
 
-// cloneEffect deep-copies the effect so its mutable expired latch is isolated
-// from the original when the game is cloned for AI search.
-func (e *targetEffect) cloneEffect() ContinuousEffect {
-	clone := *e
-	return &clone
-}
-
-func (e *targetEffect) IsActive(g *Game) bool {
+func (e *targetEffect) Active(ctx *EffectContext) bool {
+	g := ctx.Game
 	if g.FindPermanent(e.targetID) == nil {
 		if g.FindPermanentIncludingPhased(e.targetID) != nil {
 			return false
 		}
-		e.expired = true
+		ctx.continuous.expired = true
 		return false
 	}
-	if e.expired {
+	if ctx.continuous.expired {
 		return false
 	}
 	if e.active != nil {
-		if !e.active(g, e.sourceID) {
-			e.expired = true
+		if !e.active(g, ctx.SourceID) {
+			ctx.continuous.expired = true
 			return false
 		}
 	}
@@ -295,7 +236,7 @@ func (e *targetEffect) Apply(ctx *EffectContext) error {
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
-	effects                    []ContinuousEffect
+	effects                    []*activeContinuousEffect
 	attrDeltas                 map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions      map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
 	cantBeBlockedExceptByRules map[uuid.UUID][]PermanentFilter  // attacker -> conjunction of filters blockers must match
@@ -364,8 +305,12 @@ func (em *EffectManager) IsBlockPrevented(blockerID, attackerID uuid.UUID) bool 
 	return em.blockPairRestrictions[attackerID][blockerID]
 }
 
-func (em *EffectManager) Add(e ContinuousEffect) {
-	em.effects = append(em.effects, e)
+func (em *EffectManager) Add(effect ContinuousEffect, source ...uuid.UUID) {
+	var id uuid.UUID
+	if len(source) > 0 {
+		id = source[0]
+	}
+	em.effects = append(em.effects, &activeContinuousEffect{ContinuousEffect: effect, sourceID: id, grantID: uuid.New()})
 }
 
 // SourceTapMaintainedStatus inspects the tap-maintained continuous effects the
@@ -377,9 +322,9 @@ func (em *EffectManager) Add(e ContinuousEffect) {
 // normal "may choose not to untap" prompt.
 func (em *EffectManager) SourceTapMaintainedStatus(g *Game, sourceID uuid.UUID) (hasEffect, targetLives bool) {
 	for _, e := range em.effects {
-		switch te := e.(type) {
+		switch te := e.ContinuousEffect.(type) {
 		case *targetEffect:
-			if !te.tapMaintained || te.SourceID() != sourceID {
+			if !te.tapMaintained || e.SourceID() != sourceID {
 				continue
 			}
 			hasEffect = true
@@ -387,7 +332,7 @@ func (em *EffectManager) SourceTapMaintainedStatus(g *Game, sourceID uuid.UUID) 
 				targetLives = true
 			}
 		case *controlContinuousEffect:
-			if !te.tapMaintained || te.SourceID() != sourceID {
+			if !te.tapMaintained || e.SourceID() != sourceID {
 				continue
 			}
 			hasEffect = true
@@ -527,14 +472,13 @@ func (em *EffectManager) Apply(g *Game) {
 				existing[a.AbilityID()] = true
 			}
 			restored := make([]Ability, 0, len(p.Card.abilities)+len(p.RuntimeAbilities))
-			for _, a := range p.Card.abilities {
+			for abilityIndex, a := range p.Card.abilities {
 				if !existing[a.AbilityID()] {
-					ability := cloneInstanceAbility(a)
+					ability := a
 					restored = append(restored, ability)
 					if static, ok := ability.(*StaticAbilityHolder); ok {
-						for _, effect := range static.Effects {
-							effect.SetSourceID(p.ID())
-							em.Add(&printedAbilityContinuousEffect{ContinuousEffect: effect})
+						for effectIndex, effect := range static.Effects {
+							em.addPrinted(effect, p.ID(), abilityIndex, effectIndex)
 						}
 					}
 				}
@@ -626,9 +570,6 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 	}
 
-	for _, p := range g.zones.battlefield {
-		g.syncAbilityContext(p)
-	}
 }
 
 // syncAttrDeltas exposes the latest attribute result after each continuous
@@ -717,11 +658,8 @@ func (em *EffectManager) hasControlLayerEffects() bool {
 	return false
 }
 
-func controlEffectActive(effect ContinuousEffect, g *Game, latchExpiration bool) bool {
-	if control, ok := effect.(*controlContinuousEffect); ok {
-		return control.isActive(g, latchExpiration)
-	}
-	return effect.IsActive(g)
+func controlEffectActive(effect *activeContinuousEffect, g *Game, latchExpiration bool) bool {
+	return effect.active(g, latchExpiration)
 }
 
 // HasKeywordIgnoringSource reports whether the permanent with the given ID would
@@ -736,7 +674,7 @@ func controlEffectActive(effect ContinuousEffect, g *Game, latchExpiration bool)
 // strips it — i.e. ignoring Earthbind's own effect.
 func (g *Game) HasKeywordIgnoringSource(permID uuid.UUID, kw Keyword, ignoreSourceID uuid.UUID) bool {
 	saved := g.effects.effects
-	filtered := make([]ContinuousEffect, 0, len(saved))
+	filtered := make([]*activeContinuousEffect, 0, len(saved))
 	for _, e := range saved {
 		if e.SourceID() != ignoreSourceID {
 			filtered = append(filtered, e)
@@ -861,6 +799,7 @@ func (em *EffectManager) ClearReplacementsEndOfTurn() {
 type grantedByEffect struct {
 	Ability
 	intrinsicBasicLandMana bool
+	grantID                uuid.UUID
 }
 
 // WrapGrantedAbility wraps an ability as granted-by-effect so it is cleaned up
@@ -887,4 +826,13 @@ func replacementAffectedPlayer(action Action, g *Game) Player {
 		}
 	}
 	return nil
+}
+
+func (em *EffectManager) addPrinted(definition ContinuousEffect, source uuid.UUID, abilityIndex, effectIndex int) {
+	for _, active := range em.effects {
+		if active.printed && active.sourceID == source && active.ContinuousEffect == definition && active.abilityIndex == abilityIndex && active.effectIndex == effectIndex {
+			return
+		}
+	}
+	em.effects = append(em.effects, &activeContinuousEffect{ContinuousEffect: definition, sourceID: source, grantID: uuid.New(), printed: true, abilityIndex: abilityIndex, effectIndex: effectIndex})
 }

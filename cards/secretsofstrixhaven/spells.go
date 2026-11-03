@@ -80,7 +80,7 @@ func registerSpells() {
 						if len(targets) == 0 {
 							return nil
 						}
-						x := 1 + xVal.Resolve(g, sourceID, controller, targets)
+						x := 1 + xVal.Resolve(NewEffectContext(g, sourceID, controller, targets))
 						perm := g.FindPermanent(targets[0])
 						if perm == nil {
 							return nil
@@ -1666,15 +1666,12 @@ func registerSpells() {
 									continue
 								}
 								for _, t := range sa.Targets() {
-									t.Reset()
+
 									possible := t.Possible(controller, ec.Card, g)
 									if len(possible) == 0 {
 										continue
 									}
 									selected := p.ChooseTargets(possible, t.Min(), t.Max(), g)
-									if err := t.Choose(controller, ec.Card, g, selected); err != nil {
-										continue
-									}
 									castTargets = append(castTargets, selected...)
 								}
 								break

@@ -55,12 +55,7 @@ func (e *ifPlayerPaysEffect) Properties() EffectProperties {
 
 func (e *ifPlayerPaysEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
-	if variable, ok := e.payer.(*VarPlayerSelector); ok {
-		previous := variable.context
-		variable.context = ctx
-		defer func() { variable.context = previous }()
-	}
-	payerIDs := e.payer.Select(g, ctx.SourceID, ctx.Controller, ctx.Targets)
+	payerIDs := e.payer.Select(ctx)
 	if len(payerIDs) != 1 {
 		return fmt.Errorf("expected exactly one payer, got %d", len(payerIDs))
 	}

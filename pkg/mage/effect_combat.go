@@ -108,16 +108,15 @@ func PreventAttackingTargetUntilEndOfTurn() Effect {
 }
 
 func (*preventAttackingUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
 	eff := PreventAttackingUntilEndOfTurn(perm.ID())
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
@@ -292,10 +291,10 @@ func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
 // --- Combat effect executors ---
 
 func (*tap) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for tap")
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
@@ -304,10 +303,10 @@ func (*tap) Apply(ctx *EffectContext) error {
 }
 
 func (*untapTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for untap")
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
@@ -336,10 +335,10 @@ func (*tapAttachedCreatureEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*tapOrUntapTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
@@ -357,10 +356,10 @@ func (*tapOrUntapTargetEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*tapAllLandsEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	playerID := ctx.Targets[0]
+	playerID := ctx.legacyTargets()[0]
 	for _, p := range ctx.Game.FilterBattlefield(And(ControlledBy(playerID), IsLand)) {
 		ctx.Game.TapPermanent(p)
 	}
@@ -368,10 +367,10 @@ func (*tapAllLandsEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
@@ -380,47 +379,44 @@ func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*makeUnblockableUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
 	eff := TemporaryKeyword(perm.ID(), UnblockableKW)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
 
 func (*doubleSourcePowerEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
 	currentPower := perm.CurrentPower(ctx.Game)
 	eff := TemporaryBoost(perm.ID(), currentPower, 0)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
 
 func (e *replaceKeywordEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
 	eff := KeywordReplacement(perm.ID(), e.from, e.to)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
@@ -435,10 +431,10 @@ func (*regenerateSourceEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*regenerateTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
@@ -476,10 +472,10 @@ func (e *stunEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*destroyTargetAtEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
@@ -494,31 +490,29 @@ func (*destroyTargetAtEndOfTurnEffect) Apply(ctx *EffectContext) error {
 }
 
 func (e *setBasePTUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for set P/T")
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
 	eff := SetBasePT(perm.ID(), e.power, e.toughness)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
 
 func (e *setBasePowerUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return fmt.Errorf("no target for set power")
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if perm == nil {
 		return nil
 	}
 	eff := SetBasePower(perm.ID(), e.power)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	ctx.Game.ApplyContinuousEffects()
 	return nil
 }

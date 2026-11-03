@@ -316,8 +316,7 @@ func registerSpells() {
 							})))
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 					}
 					return nil
 				},
@@ -408,8 +407,7 @@ func registerSpells() {
 								}
 								return nil
 							})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 							// Grant "at beginning of your upkeep, remove a glyph counter"
 							trigger := BeginningOfUpkeepTrigger(
 								FuncEffect("remove a glyph counter",
@@ -422,8 +420,7 @@ func registerSpells() {
 										return nil
 									}), false,
 							)
-							trigger.SetSource(creature.ID())
-							trigger.SetController(creature.ControllerID())
+
 							creature.RuntimeAbilities = append(creature.RuntimeAbilities, trigger)
 						}
 					}
@@ -453,8 +450,7 @@ func registerSpells() {
 						target.BoostPT(10, 0)
 						return nil
 					})
-					eff.SetSourceID(sourceID)
-					g.AddContinuousEffect(eff)
+					g.AddContinuousEffect(eff, sourceID)
 					// Prevent all damage to it this turn
 					prevEff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
 						g.AddDamagePreventionRule(WithTo(NewPermanentFilter("target Wall", func(p *Permanent, _ *Game) bool {
@@ -462,8 +458,7 @@ func registerSpells() {
 						})))
 						return nil
 					})
-					prevEff.SetSourceID(sourceID)
-					g.AddContinuousEffect(prevEff)
+					g.AddContinuousEffect(prevEff, sourceID)
 					// Destroy at beginning of next end step
 					g.RegisterDelayedTrigger(&DelayedTrigger{
 						EventType:  EvtEndStep,
@@ -612,8 +607,7 @@ func registerSpells() {
 					cmc := perm.Card.ManaCost().CMC()
 					if cmc > 0 {
 						ce := TemporaryBoost(perm.ID(), 0, cmc)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 					}
 					return nil
 				},
@@ -1096,13 +1090,11 @@ func registerSpells() {
 						})))
 						return nil
 					})
-					eff.SetSourceID(sourceID)
-					g.AddContinuousEffect(eff)
+					g.AddContinuousEffect(eff, sourceID)
 					// +0/+X where X is its mana value
 					if cmc > 0 {
 						ce := TemporaryBoost(targetID, 0, cmc)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 					}
 					return nil
 				},
@@ -1179,8 +1171,7 @@ func registerSpells() {
 					}, func(g *Game, _ uuid.UUID) bool {
 						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(targetID) != nil
 					})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
+					g.AddContinuousEffect(ce, sourceID)
 					return nil
 				},
 			)),
@@ -1227,8 +1218,7 @@ func registerSpells() {
 					toughness := perm.CurrentToughness(g)
 					// Set base P/T to swapped values until end of turn
 					ce := SetBasePT(perm.ID(), toughness, power)
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
+					g.AddContinuousEffect(ce, sourceID)
 					return nil
 				},
 			)),

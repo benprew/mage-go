@@ -197,65 +197,21 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 
 func (c *sacrificeMatchingCost) Text() string { return c.text }
 
-type sacrificeSourceEffect struct{}
+// SacrificeSource sacrifices the source if its resolving controller controls it.
+func SacrificeSource() Effect { return MoveObjects(SourceObject(), ZoneGraveyard, AsSacrifice()) }
 
-// SacrificeSource creates an effect that sacrifices the source permanent.
-func SacrificeSource() Effect { return &sacrificeSourceEffect{} }
-
-func (*sacrificeSourceEffect) Text() string { return "sacrifice this permanent" }
-func (*sacrificeSourceEffect) Properties() EffectProperties {
-	return EffectProperties{SacrificesSource: true}
-}
-func (*sacrificeSourceEffect) Apply(ctx *EffectContext) error {
-	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil && perm.ControllerID() == ctx.Controller {
-		ctx.Game.DoSacrifice(perm)
-	}
-	return nil
+// SacrificeTarget makes the selected permanent's controller sacrifice it.
+func SacrificeTarget() Effect {
+	return MoveObjects(legacyFirstReference{}, ZoneGraveyard, AsSacrificeBy(ObjectController(legacyFirstReference{})))
 }
 
-type sacrificeTargetEffect struct{}
+// SacrificeTargetStep provides the same effect for a pipeline.
+func SacrificeTargetStep() Effect { return SacrificeTarget() }
 
-// SacrificeTarget creates an effect that sacrifices the first target permanent.
-func SacrificeTarget() Effect { return &sacrificeTargetEffect{} }
-
-// SacrificeTargetStep returns the target-sacrifice effect for a pipeline.
-func SacrificeTargetStep() Effect { return &sacrificeTargetEffect{} }
-
-func (*sacrificeTargetEffect) Text() string                 { return "sacrifice target permanent" }
-func (*sacrificeTargetEffect) Properties() EffectProperties { return EffectProperties{} }
-func (*sacrificeTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) > 0 {
-		if perm := ctx.Game.FindPermanent(ctx.Targets[0]); perm != nil {
-			ctx.Game.DoSacrifice(perm)
-		}
-	}
-	return nil
+// SacrificeGathered makes the stored permanent's controller sacrifice it.
+func SacrificeGathered(name string) Effect {
+	return MoveObjects(VarObject(name), ZoneGraveyard, AsSacrificeBy(ObjectController(VarObject(name))))
 }
 
-// SacrificeGatheredData sacrifices the permanent stored in a context variable.
-type SacrificeGatheredData struct{ VarName string }
-
-func SacrificeGathered(varName string) Effect               { return &SacrificeGatheredData{VarName: varName} }
-func (*SacrificeGatheredData) Text() string                 { return "sacrifice" }
-func (*SacrificeGatheredData) Properties() EffectProperties { return EffectProperties{} }
-func (e *SacrificeGatheredData) Apply(ctx *EffectContext) error {
-	if id := ctx.TryGetUUID(e.VarName); id != uuid.Nil() {
-		if perm := ctx.Game.FindPermanent(id); perm != nil {
-			ctx.Game.DoSacrifice(perm)
-		}
-	}
-	return nil
-}
-
-// SacrificeSourceData sacrifices the source permanent in a pipeline.
-type SacrificeSourceData struct{}
-
-func SacrificeSourceStep() Effect                         { return &SacrificeSourceData{} }
-func (*SacrificeSourceData) Text() string                 { return "sacrifice" }
-func (*SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
-func (*SacrificeSourceData) Apply(ctx *EffectContext) error {
-	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil && perm.ControllerID() == ctx.Controller {
-		ctx.Game.DoSacrifice(perm)
-	}
-	return nil
-}
+// SacrificeSourceStep provides the source sacrifice effect for a pipeline.
+func SacrificeSourceStep() Effect { return SacrificeSource() }

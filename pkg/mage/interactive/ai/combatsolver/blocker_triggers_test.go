@@ -20,12 +20,6 @@ func realPerm(t *testing.T, name string, owner uuid.UUID) *mage.Permanent {
 	card.SetOwner(owner)
 	perm := mage.NewPermanent(card, owner)
 	perm.RevokeBaseAttr(core.AttrSummonSick)
-	// Mirror PutOnBattlefield: real permanents enter the battlefield with their
-	// ability sources/controllers set, which trigger conditions depend on.
-	for _, a := range perm.RuntimeAbilities {
-		a.SetSource(perm.ID())
-		a.SetController(owner)
-	}
 	return perm
 }
 

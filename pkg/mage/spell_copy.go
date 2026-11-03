@@ -2,6 +2,7 @@ package mage
 
 import (
 	"maps"
+	"slices"
 	"uuid"
 )
 
@@ -75,7 +76,14 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp.Targets = append([]uuid.UUID(nil), original.Targets...)
-	cp.TargetSpecs = cloneInstanceTargets(original.TargetSpecs)
+	cp.TargetGroups = cloneTargetGroups(original.TargetGroups)
+	cp.TriggerEvent = newGameCloneContext().event(original.TriggerEvent)
+	cp.RememberedObjects = slices.Clone(original.RememberedObjects)
+	cp.rememberedZones = maps.Clone(original.rememberedZones)
+	cp.rememberedIncarnations = maps.Clone(original.rememberedIncarnations)
+	cp.TargetSpecs = slices.Clone(original.TargetSpecs)
+	cp.TargetZones = maps.Clone(original.TargetZones)
+	cp.TargetIncarnations = maps.Clone(original.TargetIncarnations)
 
 	if len(original.ModalTargets) > 0 {
 		cp.ModalTargets = make([][]uuid.UUID, len(original.ModalTargets))
@@ -117,12 +125,17 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 			return
 		}
 		mode := ms.Modes()[modeIdx]
-		newTargets := g.promptTargetsForList(controller.PlayerID(), card, mode.Targets)
+		groups := g.promptTargetGroups(controller.PlayerID(), card, mode.Targets)
+		newTargets := flattenTargetGroups(groups)
+		copyObj.TargetGroups = groups
+		copyObj.TargetSpecs = expandedTargetGroups(mode.Targets, groups)
 		if copyObj.ModalTargets == nil {
 			copyObj.ModalTargets = make([][]uuid.UUID, len(ms.Modes()))
 		}
 		copyObj.ModalTargets[modeIdx] = newTargets
 		copyObj.Targets = newTargets
+		copyObj.TargetZones = nil
+		copyObj.TargetIncarnations = nil
 		return
 	}
 
@@ -134,8 +147,13 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 		if len(sa.Targets()) == 0 {
 			continue
 		}
-		newTargets := g.promptTargetsForList(controller.PlayerID(), card, sa.Targets())
+		groups := g.promptTargetGroups(controller.PlayerID(), card, sa.Targets())
+		newTargets := flattenTargetGroups(groups)
+		copyObj.TargetGroups = groups
+		copyObj.TargetSpecs = expandedTargetGroups(sa.Targets(), groups)
 		copyObj.Targets = newTargets
+		copyObj.TargetZones = nil
+		copyObj.TargetIncarnations = nil
 		return
 	}
 }

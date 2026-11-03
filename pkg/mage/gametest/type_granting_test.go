@@ -56,8 +56,7 @@ func registerTypeGrantingTestCards() {
 						mage.EffectProperties{},
 						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							eff := mage.BecomesSubType(sourceID, "Human", core.EndOfTurn)
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 							return nil
 						}),
 					mage.ManaCostOf("{U}"),
@@ -86,8 +85,7 @@ func registerTypeGrantingTestCards() {
 								return nil
 							}
 							eff := mage.BecomesColor(targets[0], core.Blue, core.EndOfTurn)
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 							return nil
 						}),
 					mage.Tap(),

@@ -111,8 +111,7 @@ func TestGingerbrute_CantBeBlockedExceptByHaste(t *testing.T) {
 		g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 
 		eff := mage.TargetCantBeBlockedExceptBy(gingerID, mage.HasKeywordFilter(Haste), EndOfTurn)
-		eff.SetSourceID(gingerID)
-		g.AddContinuousEffect(eff)
+		g.AddContinuousEffect(eff, gingerID)
 		g.ApplyContinuousEffects()
 
 		g.Attack(1, gametest.PlayerA, "Gingerbrute")

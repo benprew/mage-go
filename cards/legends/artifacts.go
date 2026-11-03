@@ -69,8 +69,7 @@ func registerArtifacts() {
 							)
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -99,8 +98,7 @@ func registerArtifacts() {
 						}
 						color := p.ChooseManaColor("choose a color")
 						ce := ColorOverride(targets[0], color)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					},
 				),
@@ -189,8 +187,7 @@ func registerArtifacts() {
 							})))
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -236,12 +233,10 @@ func registerArtifacts() {
 							})))
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						// Target creature gets +0/+X where X is mana value
 						boost := TemporaryBoost(targets[0], 0, cmc)
-						boost.SetSourceID(sourceID)
-						g.AddContinuousEffect(boost)
+						g.AddContinuousEffect(boost, sourceID)
 						return nil
 					},
 				),
@@ -298,8 +293,7 @@ func registerArtifacts() {
 						}
 						target.AddCounter(Matrix, 1)
 						ability := NewActivatedAbility(RegenerateSource(), RemoveCountersCost(Matrix, 1))
-						ability.SetSource(target.ID())
-						ability.SetController(target.ControllerID())
+
 						target.RuntimeAbilities = append(target.RuntimeAbilities, ability)
 						return nil
 					},

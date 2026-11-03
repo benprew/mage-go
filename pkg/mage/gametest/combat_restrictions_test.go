@@ -193,8 +193,7 @@ func TestPowerLessOrEqualFilter(t *testing.T) {
 
 		// Install the restriction directly via the engine API.
 		eff := mage.TargetCantBeBlockedExceptBy(atkID, mage.PowerGreaterThan(2), core.EndOfTurn)
-		eff.SetSourceID(atkID)
-		tg.AddContinuousEffect(eff)
+		tg.AddContinuousEffect(eff, atkID)
 		tg.ApplyContinuousEffects()
 
 		tg.Attack(1, PlayerA, atkName)
@@ -210,8 +209,7 @@ func TestPowerLessOrEqualFilter(t *testing.T) {
 		tg.AddCard(core.ZoneBattlefield, PlayerB, largeBlk)
 
 		eff := mage.TargetCantBeBlockedExceptBy(atkID, mage.PowerGreaterThan(2), core.EndOfTurn)
-		eff.SetSourceID(atkID)
-		tg.AddContinuousEffect(eff)
+		tg.AddContinuousEffect(eff, atkID)
 		tg.ApplyContinuousEffects()
 
 		tg.Attack(1, PlayerA, atkName)
@@ -242,8 +240,7 @@ func TestMustBeBlockedIfAble(t *testing.T) {
 		tg.AddCard(core.ZoneBattlefield, PlayerB, blkName)
 
 		eff := mage.TargetMustBeBlockedIfAble(atkID, core.EndOfTurn)
-		eff.SetSourceID(atkID)
-		tg.AddContinuousEffect(eff)
+		tg.AddContinuousEffect(eff, atkID)
 		tg.ApplyContinuousEffects()
 
 		tg.Attack(1, PlayerA, atkName)
@@ -261,8 +258,7 @@ func TestMustBeBlockedIfAble(t *testing.T) {
 		// No blockers in play.
 
 		eff := mage.TargetMustBeBlockedIfAble(atkID, core.EndOfTurn)
-		eff.SetSourceID(atkID)
-		tg.AddContinuousEffect(eff)
+		tg.AddContinuousEffect(eff, atkID)
 		tg.ApplyContinuousEffects()
 
 		tg.Attack(1, PlayerA, atkName)

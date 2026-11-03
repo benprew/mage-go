@@ -2,8 +2,6 @@ package mage
 
 import (
 	"uuid"
-
-	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // CR 700.2 — Modal spells and abilities.
@@ -14,7 +12,7 @@ import (
 //
 // Engine design:
 //   - A Mode struct contains a label, target requirements, and effects for that mode.
-//   - A *ModalSpellAbility contains a list of available modes.
+//   - A *ActionDefinition contains a list of available modes.
 //     Function NewModalSpell prompts the player to choose a mode at cast time.
 //     The function collects targets only for the chosen mode and executes only that mode's effects.
 //   - The StackObject stores the index of the chosen mode in ModeChoice.
@@ -42,18 +40,7 @@ type EffectModeChooser interface {
 	ChooseModeWithEffects(modes []Mode, reason string, g *Game) int
 }
 
-// ModalSpellAbility extends SpellAbility with a list of modes. At cast time
-// the engine prompts ChooseMode, gathers targets for the chosen mode only,
-// and resolves only that mode's effects.
-type ModalSpellAbility struct {
-	SpellAbility
-	modes []Mode
-}
-
-// Modes returns the configured modes.
-func (m *ModalSpellAbility) Modes() []Mode { return m.modes }
-
-// NewModalSpell builds a ModalSpellAbility for a spell with two or more
+// NewModalSpell builds an ActionDefinition for a spell with two or more
 // modes ("Choose one — …"). Each Mode carries its own targets and effects.
 //
 // Example (Crushing Canopy: "Choose one — Destroy target creature with
@@ -74,29 +61,31 @@ func (m *ModalSpellAbility) Modes() []Mode { return m.modes }
 //
 // At least two modes are required; passing fewer panics — modal spells
 // have at least two options by definition (CR 700.2).
-func NewModalSpell(modes []Mode) *ModalSpellAbility {
+func NewModalSpell(modes []Mode) *ActionDefinition {
 	if len(modes) < 2 {
 		panic("NewModalSpell: a modal spell needs at least two modes (CR 700.2)")
 	}
-	ms := &ModalSpellAbility{
-		SpellAbility: SpellAbility{
-			BaseAbility: BaseAbility{
-				id:          uuid.New(),
-				abilityType: AbilitySpell,
-			},
-		},
-		modes: modes,
-	}
-	return ms
+	action := NewAction(ActionSpell)
+	action.modes = cloneModes(modes)
+	return action
 }
 
-// getModalSpellAbility returns the *ModalSpellAbility on a card, if any.
-func getModalSpellAbility(card *Card) (*ModalSpellAbility, bool) {
+func cloneModes(modes []Mode) []Mode {
+	result := append([]Mode(nil), modes...)
+	for i := range result {
+		result[i].Targets = append([]Target(nil), result[i].Targets...)
+		result[i].Effects = append([]Effect(nil), result[i].Effects...)
+	}
+	return result
+}
+
+// getModalSpellAbility returns the *ActionDefinition on a card, if any.
+func getModalSpellAbility(card *Card) (*ActionDefinition, bool) {
 	if card == nil {
 		return nil, false
 	}
 	for _, a := range card.abilities {
-		if ms, ok := a.(*ModalSpellAbility); ok {
+		if ms, ok := a.(*ActionDefinition); ok && ms.kind == ActionSpell && len(ms.modes) > 0 {
 			return ms, true
 		}
 	}
@@ -104,7 +93,7 @@ func getModalSpellAbility(card *Card) (*ModalSpellAbility, bool) {
 }
 
 // modalLabels extracts the human-readable mode labels from a modal spell.
-func modalLabels(ms *ModalSpellAbility) []string {
+func modalLabels(ms *ActionDefinition) []string {
 	out := make([]string, len(ms.modes))
 	for i, m := range ms.modes {
 		out[i] = m.Label

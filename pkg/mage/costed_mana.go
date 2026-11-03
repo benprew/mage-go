@@ -14,58 +14,43 @@ type manaSourceAbility struct {
 }
 
 func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex int, g *Game) (manaSourceAbility, bool) {
-	inner := UnwrapAbility(a)
-	if manaAbility, ok := inner.(*ManaAbility); ok {
-		productions := manaAbility.currentProductions(g, sourceID)
-		if len(productions) == 0 {
-			return manaSourceAbility{}, false
-		}
-		return manaSourceAbility{
-			AbilityIndex:    abilityIndex,
-			Productions:     append([]ManaProduction(nil), productions...),
-			Interchangeable: manaAbility.dynamicProductions == nil && len(manaAbility.postProduction) == 0,
-		}, true
-	}
-
-	activated, ok := inner.(*SimpleActivatedAbility)
-	if !ok || len(activated.targets) != 0 || len(activated.effects) == 0 {
-		return manaSourceAbility{}, false
-	}
-	if !manaSourceActivationAllowed(activated, sourceID, g) {
-		return manaSourceAbility{}, false
-	}
-	productions, ok := activatedManaEffects(activated.effects)
+	producer, ok := UnwrapAbility(a).(ManaProducer)
 	if !ok {
 		return manaSourceAbility{}, false
 	}
-
-	var manaCost ManaCost
-	hasTapCost := false
-	for _, cost := range activated.costs {
-		switch payment := cost.(type) {
-		case *ManaCostPayment:
-			addActionManaCost(&manaCost, payment.reducedCost(sourceID, g))
-		case *tap:
-			if hasTapCost {
-				return manaSourceAbility{}, false
-			}
-			hasTapCost = true
-		default:
+	profile := producer.ManaProfile(g, sourceID)
+	if len(profile.Productions) == 0 {
+		return manaSourceAbility{}, false
+	}
+	if permission, ok := producer.(interface {
+		manaActivationAllowed(AbilityContext, *Game) bool
+	}); ok {
+		permanent := g.FindPermanent(sourceID)
+		if permanent == nil || !permission.manaActivationAllowed(AbilityContext{SourceID: sourceID, Controller: permanent.ControllerID(), AbilityIndex: abilityIndex}, g) {
 			return manaSourceAbility{}, false
 		}
 	}
-	if !hasTapCost {
+	var mana ManaCost
+	hasTap := false
+	for _, cost := range profile.Costs {
+		metadata, ok := cost.(manaPlanningCost)
+		if !ok {
+			return manaSourceAbility{}, false
+		}
+		component, tap := metadata.manaPlanCost(sourceID, g)
+		if tap && hasTap {
+			return manaSourceAbility{}, false
+		}
+		hasTap = hasTap || tap
+		addActionManaCost(&mana, component)
+	}
+	if !hasTap {
 		return manaSourceAbility{}, false
 	}
-	return manaSourceAbility{
-		AbilityIndex:    abilityIndex,
-		Productions:     productions,
-		ManaCost:        manaCost,
-		Interchangeable: true,
-	}, true
+	return manaSourceAbility{AbilityIndex: abilityIndex, Productions: profile.Productions, ManaCost: mana, Interchangeable: profile.Interchangeable}, true
 }
 
-func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.UUID, g *Game) bool {
+func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.UUID, abilityIndex int, g *Game) bool {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return false
@@ -80,10 +65,10 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 	if ability.timing == TimingStepOnly && ability.stepOnly != 0 && g.turns.Step() != ability.stepOnly {
 		return false
 	}
-	if ability.limits.MaxActivationsPerTurn > 0 && ability.activationsThisTurn >= ability.limits.MaxActivationsPerTurn {
+	if ability.limits.MaxActivationsPerTurn > 0 && g.activationCount(sourceID, ability.AbilityID(), abilityIndex) >= ability.limits.MaxActivationsPerTurn {
 		return false
 	}
-	if ability.limits.OncePerTurn && ability.activatedThisTurn {
+	if ability.limits.OncePerTurn && (g.activationCount(sourceID, ability.AbilityID(), abilityIndex) > 0) {
 		return false
 	}
 	if ability.limits.ControlledSinceTurnStart && !perm.ControlledSinceTurnStart(g) {
@@ -101,16 +86,13 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 }
 
 func activatedManaEffects(effects []Effect) ([]ManaProduction, bool) {
-	productions := make([]ManaProduction, 0, len(effects))
+	var productions []ManaProduction
 	for _, effect := range effects {
-		switch add := effect.(type) {
-		case *addManaEffect:
-			productions = append(productions, ManaProduction{Color: add.color, Amount: add.amount})
-		case *addAnyManaEffect:
-			productions = append(productions, ManaProduction{Color: AnyColor, Amount: add.amount})
-		default:
+		producer, ok := effect.(ManaProductionEffect)
+		if !ok {
 			return nil, false
 		}
+		productions = append(productions, producer.ManaProductions()...)
 	}
 	return productions, len(productions) > 0
 }

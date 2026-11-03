@@ -30,11 +30,11 @@ func (e *fightTargetEffect) Properties() EffectProperties {
 }
 
 func (*fightTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
 	src := ctx.Game.FindPermanent(ctx.SourceID)
-	tgt := ctx.Game.FindPermanent(ctx.Targets[0])
+	tgt := ctx.Game.FindPermanent(ctx.legacyTargets()[0])
 	if src == nil || tgt == nil {
 		return nil
 	}
@@ -114,7 +114,7 @@ func OnPermanentDiesThisTurn(permID uuid.UUID, effects ...Effect) Effect {
 }
 
 // OnTargetDiesThisTurn is the target-resolving variant: at resolution time
-// it pulls the permanent ID from ctx.Targets[0] and registers the delayed
+// it pulls the permanent ID from ctx.legacyTargets()[0] and registers the delayed
 // trigger against that ID. Suitable for spells like "Target creature
 // fights another. When that creature dies this turn, ___."
 func OnTargetDiesThisTurn(effects ...Effect) Effect {
@@ -129,10 +129,10 @@ func (e *onPermanentDiesEffect) Properties() EffectProperties { return EffectPro
 func (e *onPermanentDiesEffect) Apply(ctx *EffectContext) error {
 	id := e.permID
 	if id == uuid.Nil() {
-		if len(ctx.Targets) == 0 {
+		if len(ctx.legacyTargets()) == 0 {
 			return nil
 		}
-		id = ctx.Targets[0]
+		id = ctx.legacyTargets()[0]
 	}
 	dt := &DelayedTrigger{
 		EventType:     EvtZoneChange,

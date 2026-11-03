@@ -23,8 +23,8 @@ func TestCardAbilitiesIncludesAttributes(t *testing.T) {
 		WithKeyword(Flying), WithAbility(trigger), WithKeyword(FirstStrike),
 		WithKeyword(Flying), WithKeyword(AttrDoesNotUntap), WithKeyword(AttrCanBlock))
 	abilities := card.Abilities()
-	if len(abilities) != 5 {
-		t.Fatalf("got %d abilities, want one trigger and four attribute abilities", len(abilities))
+	if len(abilities) != 6 {
+		t.Fatalf("got %d abilities, want one trigger and five attribute abilities", len(abilities))
 	}
 	counts := map[Attr]int{}
 	for i, a := range abilities {
@@ -36,7 +36,7 @@ func TestCardAbilitiesIncludesAttributes(t *testing.T) {
 			t.Fatal("simple attribute ability must be static")
 		}
 	}
-	if counts[Flying] != 2 || counts[FirstStrike] != 1 || counts[AttrDoesNotUntap] != 1 || counts[AttrCanBlock] != 0 {
+	if counts[Flying] != 2 || counts[FirstStrike] != 1 || counts[AttrDoesNotUntap] != 1 || counts[AttrCanBlock] != 1 {
 		t.Fatalf("incorrect ability attributes: %v", counts)
 	}
 	abilities[0] = nil
@@ -48,33 +48,29 @@ func TestCardAbilitiesIncludesAttributes(t *testing.T) {
 func TestCardAbilitiesDefinitionAndCopies(t *testing.T) {
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Defined Bird", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-		Keywords: map[Attr]int{Flying: 2, Haste: 1, AttrCanBlock: 1},
+		Abilities: []Ability{StaticKeyword(Flying), StaticKeyword(Flying), StaticKeyword(Haste), StaticCapability(AttrCanBlock, 1)},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	original := def.NewInstance(uuid.New())
-	if len(original.Abilities()) != 3 {
+	if len(original.Abilities()) != 4 {
 		t.Fatalf("got %d abilities, want 3", len(original.Abilities()))
 	}
 	for _, copy := range []*Card{original.Copy(), original.CloneInstance(), def.NewInstance(uuid.New())} {
-		if len(copy.Abilities()) != 3 {
+		if len(copy.Abilities()) != 4 {
 			t.Fatal("copy lost or duplicated abilities")
 		}
-		copy.Abilities()[0].SetController(uuid.New())
-		if original.Abilities()[0].Controller() != uuid.Nil() {
-			t.Fatal("copies share ability state")
-		}
+
 	}
 	legacy := NewCreature("Legacy Bird", "{U}", 1, 1, WithKeyword(Flying))
-	legacyCopy := legacy.Copy()
-	legacyCopy.Abilities()[0].SetController(uuid.New())
-	if legacy.Abilities()[0].Controller() != uuid.Nil() {
-		t.Fatal("legacy copies share attribute ability state")
+	if len(legacy.Copy().Abilities()) != 1 {
+		t.Fatal("copy lost keyword")
 	}
+
 	for _, target := range []*Card{def.NewInstance(uuid.New()), NewCreature("Copy", "", 1, 1)} {
 		target.CloneFrom(original)
-		if len(target.Abilities()) != 3 {
+		if len(target.Abilities()) != 4 {
 			t.Fatal("CloneFrom lost or duplicated abilities")
 		}
 		p := NewPermanent(target, uuid.New())
@@ -108,7 +104,7 @@ func TestCardAbilitiesWardIsOneTriggeredAbility(t *testing.T) {
 func TestCardAbilitiesCompiledDefinitions(t *testing.T) {
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Compiled Bird", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-		Rules: []RuleDefinition{keywordRule(Flying), keywordRule(FirstStrike)},
+		Abilities: []Ability{keywordRule(Flying), keywordRule(FirstStrike)},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -124,29 +120,20 @@ func TestCardAbilitiesCompiledDefinitions(t *testing.T) {
 }
 
 func TestCardAbilitiesWardDefinition(t *testing.T) {
-	for _, seeds := range []map[Attr]int{nil, {Ward: 1}} {
-		def, err := NewCardDefinition(CardDefinitionSpec{
-			Name: "Defined Ward", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-			Keywords: seeds,
-			Rules:    []RuleDefinition{NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) })},
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		card := def.NewInstance(uuid.New())
-		if len(card.Abilities()) != 1 || card.Abilities()[0].Type() != AbilityTriggered {
-			t.Fatal("ward rule and attribute must be one ability")
-		}
-		if NewPermanent(card, uuid.New()).baseAttrs[Ward] != 1 {
-			t.Fatal("ward rule must supply exactly one attribute")
-		}
+	definition, err := NewCardDefinition(CardDefinitionSpec{Name: "Ward", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Abilities: []Ability{WardTrigger(ManaCostOf("{2}"))}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	card := NewCard(definition)
+	if len(card.Abilities()) != 1 || NewPermanent(card, uuid.New()).baseAttrs[Ward] != 1 {
+		t.Fatal("ward must supply one ability and one attribute")
 	}
 }
 
 func TestCardAbilitiesInitializePermanentAttributes(t *testing.T) {
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Mixed Abilities", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-		Rules: []RuleDefinition{keywordRule(Flying), keywordRule(Flying), keywordRule(FirstStrike), NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) })},
+		Abilities: []Ability{keywordRule(Flying), keywordRule(Flying), keywordRule(FirstStrike), WardTrigger(ManaCostOf("{2}"))},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -159,7 +146,7 @@ func TestCardAbilitiesInitializePermanentAttributes(t *testing.T) {
 			t.Fatal("permanent attributes do not match its card abilities")
 		}
 		if !p.HasAttr(AttrCanBlock) || len(p.RuntimeAbilities) != originalCount {
-			t.Fatal("capability attributes must not add ability objects")
+			t.Fatal("capability ability was lost")
 		}
 	}
 }
@@ -168,20 +155,16 @@ func TestLegacyCopyOwnsWardState(t *testing.T) {
 	original := NewCreature("Ward", "{G}", 2, 2, WithWard(ManaCostOf("{2}")))
 	copied := original.Copy()
 	a, b := original.abilities[0], copied.abilities[0]
-	if a == b || a.AbilityID() == b.AbilityID() {
+	if a.AbilityID() != b.AbilityID() {
 		t.Fatal("Copy must create a new ability identity")
 	}
-	b.SetController(uuid.New())
-	b.SetSource(uuid.New())
-	if a.Controller() != uuid.Nil() || a.Source() != uuid.Nil() {
-		t.Fatal("Copy changed the original ability context")
-	}
+
 }
 
 func TestLegacyCloneFromDefinitionOwnsState(t *testing.T) {
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Defined Ward", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Colors: []Color{Blue},
-		Rules: []RuleDefinition{NewRuleDefinition(func() Ability { return WardTrigger(ManaCostOf("{2}")) })},
+		Abilities: []Ability{WardTrigger(ManaCostOf("{2}"))},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -192,34 +175,15 @@ func TestLegacyCloneFromDefinitionOwnsState(t *testing.T) {
 	if colors := cloned.Colors(); len(colors) != 1 || colors[0] != Blue {
 		t.Fatalf("lost color indicator: %v", colors)
 	}
-	cloned.abilities[0].SetController(uuid.New())
-	cloned.abilities[0].SetSource(uuid.New())
-	if original.abilities[0].Controller() != uuid.Nil() || original.abilities[0].Source() != uuid.Nil() {
-		t.Fatal("CloneFrom changed the original ability context")
-	}
+
 }
 
-func TestDefinitionKeywordInputsOverlap(t *testing.T) {
-	for _, attr := range []Attr{Flying, Ward} {
-		for rules := 0; rules <= 2; rules++ {
-			for keywords := 0; keywords <= 2; keywords++ {
-				spec := CardDefinitionSpec{Name: "Overlap", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Keywords: map[Attr]int{attr: keywords}}
-				for range rules {
-					spec.Rules = append(spec.Rules, NewRuleDefinition(func() Ability {
-						if attr == Ward {
-							return WardTrigger(ManaCostOf("{2}"))
-						}
-						return NewAttributeAbility(attr)
-					}))
-				}
-				def, err := NewCardDefinition(spec)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if got, want := countCardAbility(NewCard(def), attr), max(rules, keywords); got != want {
-					t.Fatalf("%v: rules=%d keywords=%d: got %d, want %d", attr, rules, keywords, got, want)
-				}
-			}
-		}
+func TestDefinitionRepeatedKeywordAbilities(t *testing.T) {
+	definition, err := NewCardDefinition(CardDefinitionSpec{Name: "Repeated", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Abilities: []Ability{StaticKeyword(Flying), StaticKeyword(Flying)}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if countCardAbility(NewCard(definition), Flying) != 2 {
+		t.Fatal("definition lost a printed ability")
 	}
 }

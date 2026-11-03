@@ -9,23 +9,14 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// Card owns card identity, ownership, and private execution state.
+// Card owns card identity and ownership.
 // A definition supplies its printed characteristics and rules.
 type Card struct {
-	cardCharacteristics
+	*CardDefinition
 	definition      *CardDefinition
-	characteristics *cardCharacteristics
-	flipFace        *CopiableValues
 	unflippedValues *CopiableValues
 	id              uuid.UUID
-	capabilityAttrs map[Attr]int
-	abilities       []Ability
 	owner           uuid.UUID
-	additionalCosts []Cost          // additional costs paid when casting (sacrifice, discard, etc.)
-	alternateCosts  []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
-	castTargets     []Target        // targeting requirements when casting (auras, targeted ETBs)
-	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
-	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
 }
 
 // AuraAIProfile tells the AI how an aura affects the creature it enchants so
@@ -53,15 +44,7 @@ func NewCard(definition *CardDefinition, opts ...CardOption) *Card {
 	if definition == nil {
 		panic("mage: nil card definition")
 	}
-	c := &Card{definition: definition, id: uuid.New()}
-	for _, rule := range definition.printed.Rules {
-		ability := rule.instantiate()
-		if ability == nil {
-			panic("mage: rule returned a nil ability")
-		}
-		c.abilities = append(c.abilities, ability)
-	}
-	c.addDefinitionAbilities()
+	c := &Card{CardDefinition: definition, definition: definition, id: uuid.New()}
 	applyCardOpts(c, opts)
 	return c
 }
@@ -71,78 +54,14 @@ func (c *Card) ID() uuid.UUID               { return c.id }
 func (c *Card) Owner() uuid.UUID            { return c.owner }
 func (c *Card) SetID(id uuid.UUID)          { c.id = id }
 func (c *Card) SetOwner(owner uuid.UUID)    { c.owner = owner }
-func (c *Card) Name() string {
-	if c.definition == nil {
-		return c.name
-	}
-	if c.characteristics != nil {
-		return c.characteristics.name
-	}
-	return c.definition.Name()
-}
-func (c *Card) ManaCost() ManaCost {
-	if c.definition == nil {
-		return c.manaCost
-	}
-	if c.characteristics != nil {
-		return copyPrintedManaCost(c.characteristics.manaCost)
-	}
-	return c.definition.ManaCost()
-}
-func (c *Card) Types() []CardType {
-	if c.definition == nil {
-		return c.types
-	}
-	if c.characteristics != nil {
-		return slices.Clone(c.characteristics.types)
-	}
-	return c.definition.Types()
-}
-func (c *Card) SuperTypes() []SuperType {
-	if c.definition == nil {
-		return c.superTypes
-	}
-	if c.characteristics != nil {
-		return slices.Clone(c.characteristics.superTypes)
-	}
-	return c.definition.SuperTypes()
-}
-func (c *Card) SubTypes() []string {
-	if c.definition == nil {
-		return c.subTypes
-	}
-	if c.characteristics != nil {
-		return slices.Clone(c.characteristics.subTypes)
-	}
-	return c.definition.SubTypes()
-}
-func (c *Card) Power() int {
-	if c.definition == nil {
-		return c.power
-	}
-	if c.characteristics != nil {
-		return c.characteristics.power
-	}
-	return c.definition.Power()
-}
-func (c *Card) Toughness() int {
-	if c.definition == nil {
-		return c.toughness
-	}
-	if c.characteristics != nil {
-		return c.characteristics.toughness
-	}
-	return c.definition.Toughness()
-}
-func (c *Card) Modes() []string {
-	if c.definition == nil {
-		return c.modes
-	}
-	if c.characteristics != nil {
-		return slices.Clone(c.characteristics.modes)
-	}
-	return c.definition.Modes()
-}
+func (c *Card) Name() string                { return c.CardDefinition.Name() }
+func (c *Card) ManaCost() ManaCost          { return c.CardDefinition.ManaCost() }
+func (c *Card) Types() []CardType           { return c.CardDefinition.Types() }
+func (c *Card) SuperTypes() []SuperType     { return c.CardDefinition.SuperTypes() }
+func (c *Card) SubTypes() []string          { return c.CardDefinition.SubTypes() }
+func (c *Card) Power() int                  { return c.CardDefinition.Power() }
+func (c *Card) Toughness() int              { return c.CardDefinition.Toughness() }
+func (c *Card) Modes() []string             { return c.CardDefinition.Modes() }
 
 // Abilities returns a private slice of all card abilities, including keywords.
 // Use AllAbilities to inspect abilities without a slice copy.
@@ -164,50 +83,14 @@ func (c *Card) AllAbilities() iter.Seq2[int, Ability] {
 		}
 	}
 }
-func (c *Card) HasType(t CardType) bool {
-	if c.definition == nil {
-		return slices.Contains(c.types, t)
-	}
-	if c.characteristics != nil {
-		return slices.Contains(c.characteristics.types, t)
-	}
-	return slices.Contains(c.definition.printed.TypeLine.CardTypes, t)
-}
-func (c *Card) HasSuperType(t SuperType) bool {
-	if c.definition == nil {
-		return slices.Contains(c.superTypes, t)
-	}
-	if c.characteristics != nil {
-		return slices.Contains(c.characteristics.superTypes, t)
-	}
-	return slices.Contains(c.definition.printed.TypeLine.SuperTypes, t)
-}
-func (c *Card) HasSubType(t string) bool {
-	if c.definition == nil {
-		return slices.Contains(c.subTypes, t)
-	}
-	if c.characteristics != nil {
-		return slices.Contains(c.characteristics.subTypes, t)
-	}
-	return slices.Contains(c.definition.printed.TypeLine.SubTypes, t)
-}
+func (c *Card) HasType(t CardType) bool       { return slices.Contains(c.types, t) }
+func (c *Card) HasSuperType(t SuperType) bool { return slices.Contains(c.superTypes, t) }
+func (c *Card) HasSubType(t string) bool      { return slices.Contains(c.subTypes, t) }
 func (c *Card) Colors() []Color {
-	if c.definition == nil {
-		if c.colorOverride != nil {
-			return slices.Clone(c.colorOverride)
-		}
-		return c.manaCost.Colors()
+	if c.colorOverride != nil {
+		return slices.Clone(c.colorOverride)
 	}
-	if c.characteristics != nil {
-		if c.characteristics.colorOverride != nil {
-			return slices.Clone(c.characteristics.colorOverride)
-		}
-		return c.characteristics.manaCost.Colors()
-	}
-	if len(c.definition.printed.Colors) > 0 {
-		return c.definition.Colors()
-	}
-	return c.ManaCost().Colors()
+	return c.manaCost.Colors()
 }
 func (c *Card) CastTargets() []Target {
 	if len(c.castTargets) > 0 {
@@ -223,24 +106,43 @@ func (c *Card) CastTargets() []Target {
 
 // mutableCharacteristics supports legacy copy and construction methods.
 // These methods cannot change the printed definition.
+func (c *Card) mutableDefinition() *CardDefinition {
+	c.CardDefinition = c.cloneDefinition()
+	return c.CardDefinition
+}
+
 func (c *Card) mutableCharacteristics() *cardCharacteristics {
-	if c.definition == nil {
-		return &c.cardCharacteristics
-	}
-	if c.characteristics == nil {
-		c.characteristics = &cardCharacteristics{
-			name: c.Name(), manaCost: c.ManaCost(), types: c.Types(), superTypes: c.SuperTypes(), subTypes: c.SubTypes(),
-			power: c.Power(), toughness: c.Toughness(), modes: c.Modes(), colorOverride: c.Colors(),
-		}
-	}
-	return c.characteristics
+	return &c.mutableDefinition().cardCharacteristics
 }
 func (c *Card) SetBasePT(p, t int) {
 	data := c.mutableCharacteristics()
 	data.power, data.toughness = p, t
 }
-func (c *Card) SetModes(modes []string) {
-	c.mutableCharacteristics().modes = slices.Clone(modes)
+func (c *Card) SetModes(labels []string) {
+	c.mutableDefinition()
+	found := false
+	for i, ability := range c.abilities {
+		action, ok := ability.(*ActionDefinition)
+		if !ok {
+			continue
+		}
+		updated := *action
+		updated.legacyModes = true
+		updated.modes = make([]Mode, len(labels))
+		for index, label := range labels {
+			updated.modes[index] = Mode{Label: label, Targets: slices.Clone(action.targets), Effects: slices.Clone(action.effects)}
+		}
+		c.abilities[i] = &updated
+		found = true
+	}
+	if !found && len(labels) > 0 {
+		action := NewAction(ActionSpell)
+		action.legacyModes = true
+		for _, label := range labels {
+			action.modes = append(action.modes, Mode{Label: label})
+		}
+		c.AddAbility(action)
+	}
 }
 func (c *Card) AddType(t CardType) {
 	data := c.mutableCharacteristics()
@@ -255,6 +157,7 @@ func (c *Card) AddSubType(t string) {
 
 // AddAbility adds an ability to the card.
 func (c *Card) AddAbility(a Ability) {
+	c.mutableDefinition()
 	if _, simple := a.(*AttributeAbility); simple {
 		c.abilities = append(c.abilities, a)
 	} else {
@@ -270,34 +173,7 @@ func (c *Card) AddAbility(a Ability) {
 	}
 }
 
-// addDefinitionAbilities converts definition inputs into the complete ability list.
-// A rule can already supply an ability, as with Ward and its trigger.
-func (c *Card) addDefinitionAbilities() {
-	covered := make(map[Attr]int)
-	for _, ability := range c.abilities {
-		if attr := AbilityAttribute(ability); attr != 0 {
-			covered[attr]++
-		}
-	}
-
-	for attr := Attr(1); int(attr) < NumAttrs; attr++ {
-		count := c.definition.printed.Keywords[attr]
-		if IsAbilityAttr(attr) {
-			for range count - covered[attr] {
-				c.AddAbility(NewAttributeAbility(attr))
-			}
-		} else if count != 0 {
-			c.addCapability(attr, count)
-		}
-	}
-}
-
-func (c *Card) addCapability(attr Attr, count int) {
-	if c.capabilityAttrs == nil {
-		c.capabilityAttrs = make(map[Attr]int)
-	}
-	c.capabilityAttrs[attr] += count
-}
+func (c *Card) addCapability(attr Attr, count int) { c.AddAbility(StaticCapability(attr, count)) }
 
 // CloneFrom applies the source's copiable values to this card.
 // Use ApplyCopiableValues for new code.
@@ -306,12 +182,12 @@ func (c *Card) CloneFrom(other *Card) {
 }
 
 // Copy creates a new object from this card's copiable values.
-// Use NewCopy for new code and CloneInstance to preserve execution state.
+// Use NewCopy for a new identity and CloneInstance to preserve identity.
 func (c *Card) Copy() *Card {
 	return c.NewCopy()
 }
 
-// CloneInstance preserves identity and copies current execution state.
+// CloneInstance preserves identity in a private card instance.
 func (c *Card) CloneInstance() *Card {
 	return newGameCloneContext().card(c)
 }
@@ -322,7 +198,7 @@ type CardOption func(*Card)
 // WithCastTarget sets the targeting requirement for casting this card.
 // Used for auras that enchant non-creature permanents (e.g. "enchant land").
 func WithCastTarget(t Target) CardOption {
-	return func(c *Card) { c.castTargets = []Target{t} }
+	return func(c *Card) { c.mutableDefinition().castTargets = []Target{t} }
 }
 
 // WithAuraAIProfile records how an aura affects its enchanted creature so the
@@ -331,18 +207,18 @@ func WithCastTarget(t Target) CardOption {
 func WithAuraAIProfile(profile AuraAIProfile) CardOption {
 	return func(c *Card) {
 		p := profile
-		c.auraAIProfile = &p
+		c.mutableDefinition().auraAIProfile = &p
 	}
 }
 
 // WithAdditionalCost adds an additional cost that must be paid when casting this spell
 // (e.g. sacrifice a creature, discard a card, pay life).
 func WithAdditionalCost(cost Cost) CardOption {
-	return func(c *Card) { c.additionalCosts = append(c.additionalCosts, cost) }
+	return func(c *Card) { c.mutableDefinition().additionalCosts = append(slices.Clone(c.additionalCosts), cost) }
 }
 
 // AdditionalCosts returns the additional costs for this card.
-func (c *Card) AdditionalCosts() []Cost { return c.additionalCosts }
+func (c *Card) AdditionalCosts() []Cost { return c.CardDefinition.AdditionalCosts() }
 
 // WithSuperTypes adds supertypes (Legendary, Basic, Snow, World) to a card.
 func WithSuperTypes(sts ...SuperType) CardOption {
@@ -479,6 +355,9 @@ func applyCardOpts(c *Card, opts []CardOption) {
 	for _, opt := range opts {
 		opt(c)
 	}
+	if c.definition == nil {
+		c.definition = c.CardDefinition
+	}
 }
 
 func splitSpellConstructorParts(parts ...any) (*SpellAbility, []CardOption) {
@@ -520,13 +399,12 @@ func splitSpellConstructorParts(parts ...any) (*SpellAbility, []CardOption) {
 func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:      name,
 			manaCost:  ParseManaCost(cost),
 			types:     []CardType{TypeCreature},
 			power:     power,
-			toughness: toughness,
-		},
+			toughness: toughness},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -536,18 +414,18 @@ func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *C
 func NewToken(name string, power, toughness int, types []CardType, subTypes []string, colors []Color, keywords ...Keyword) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:          name,
-			types:         types,
-			subTypes:      subTypes,
+			types:         slices.Clone(types),
+			subTypes:      slices.Clone(subTypes),
 			power:         power,
 			toughness:     toughness,
-			colorOverride: append([]Color(nil), colors...),
-		},
+			colorOverride: append([]Color(nil), colors...)},
 	}
 	for _, kw := range keywords {
 		WithKeyword(kw)(c)
 	}
+	c.definition = c.CardDefinition
 	return c
 }
 
@@ -557,11 +435,10 @@ func NewInstant(name, cost string, parts ...any) *Card {
 	spell, opts := splitSpellConstructorParts(parts...)
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
-			types:    []CardType{TypeInstant},
-		},
+			types:    []CardType{TypeInstant}},
 	}
 	if spell != nil {
 		c.AddAbility(spell)
@@ -576,11 +453,10 @@ func NewSorcery(name, cost string, parts ...any) *Card {
 	spell, opts := splitSpellConstructorParts(parts...)
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
-			types:    []CardType{TypeSorcery},
-		},
+			types:    []CardType{TypeSorcery}},
 	}
 	if spell != nil {
 		c.AddAbility(spell)
@@ -593,10 +469,9 @@ func NewSorcery(name, cost string, parts ...any) *Card {
 func NewLand(name string, opts ...CardOption) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:  name,
-			types: []CardType{TypeLand},
-		},
+			types: []CardType{TypeLand}},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -606,11 +481,10 @@ func NewLand(name string, opts ...CardOption) *Card {
 func NewArtifact(name, cost string, opts ...CardOption) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
-			types:    []CardType{TypeArtifact},
-		},
+			types:    []CardType{TypeArtifact}},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -620,34 +494,24 @@ func NewArtifact(name, cost string, opts ...CardOption) *Card {
 func NewEnchantment(name, cost string, opts ...CardOption) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
-			types:    []CardType{TypeEnchantment},
-		},
+			types:    []CardType{TypeEnchantment}},
 	}
 	applyCardOpts(c, opts)
 	return c
 }
 
-// NewPlaneswalker creates a new planeswalker card. The permanent enters with
-// startingLoyalty loyalty counters via an EntersWithNCounters(Loyalty, …)
-// replacement (CR 614.1c / 306.5b). This is the minimal planeswalker primitive:
-// loyalty-activated abilities, attacking planeswalkers (CR 506.4 / 508.1), and
-// the planeswalker damage-redirection rules (CR 117.6, removed in 2018) are NOT
-// implemented. The 0-loyalty state-based action (CR 704.5i) IS implemented in
-// CheckStateBasedActions.
+// NewPlaneswalker creates a card with printed starting loyalty.
+// Entry places loyalty counters through the replacement system.
 func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
-			types:    []CardType{TypePlaneswalker},
-		},
-	}
-	if startingLoyalty > 0 {
-		c.AddAbility(EntersWithNCounters(Loyalty, startingLoyalty))
+			types:    []CardType{TypePlaneswalker}, baseLoyalty: startingLoyalty},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -657,14 +521,12 @@ func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption)
 // targeting. Use WithCastTarget() to override (e.g. enchant land, enchant artifact).
 func NewAura(name, cost string, opts ...CardOption) *Card {
 	c := &Card{
-		id:          uuid.New(),
-		castTargets: []Target{TargetCreature()},
-		cardCharacteristics: cardCharacteristics{
+		id: uuid.New(),
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
 			types:    []CardType{TypeEnchantment},
-			subTypes: []string{"Aura"},
-		},
+			subTypes: []string{"Aura"}, castTargets: []Target{TargetCreature()}},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -674,12 +536,11 @@ func NewAura(name, cost string, opts ...CardOption) *Card {
 func NewEquipment(name, cost string, opts ...CardOption) *Card {
 	c := &Card{
 		id: uuid.New(),
-		cardCharacteristics: cardCharacteristics{
+		CardDefinition: &CardDefinition{
 			name:     name,
 			manaCost: ParseManaCost(cost),
 			types:    []CardType{TypeArtifact},
-			subTypes: []string{"Equipment"},
-		},
+			subTypes: []string{"Equipment"}},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -760,7 +621,7 @@ func NewPermanent(card *Card, controller uuid.UUID) *Permanent {
 		incarnationID:      uuid.New(),
 		computedController: controller,
 		baseController:     controller,
-		RuntimeAbilities:   freshPermanentAbilities(card.abilities),
+		RuntimeAbilities:   slices.Clone(card.abilities),
 	}
 	// Populate baseAttrs from card types.
 	for _, t := range card.Types() {
@@ -783,13 +644,16 @@ func NewPermanent(card *Card, controller uuid.UUID) *Permanent {
 	// Living Lands turning Forests into creatures) honors the "continuously
 	// controlled since most recent turn began" check. Cleared at untap.
 	p.baseAttrs[AttrSummonSick]++
-	for attr, count := range card.capabilityAttrs {
-		p.baseAttrs[attr] += int8(count)
-	}
 	for _, ability := range p.RuntimeAbilities {
-		if attr := AbilityAttribute(ability); attr != 0 && IsAbilityAttr(attr) {
-			p.baseAttrs[attr]++
-			p.printedAbilityAttrs[attr]++
+		if attr := AbilityAttribute(ability); attr != 0 {
+			amount := 1
+			if specification, ok := ability.(*AttributeAbility); ok {
+				amount = specification.amount
+			}
+			p.baseAttrs[attr] += int8(amount)
+			if IsAbilityAttr(attr) {
+				p.printedAbilityAttrs[attr] += int8(amount)
+			}
 		}
 	}
 	return p

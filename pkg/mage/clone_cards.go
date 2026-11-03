@@ -1,7 +1,6 @@
 package mage
 
 import (
-	"maps"
 	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -12,12 +11,9 @@ import (
 type gameCloneContext struct {
 	games            map[*Game]*Game
 	cards            map[*Card]*Card
-	abilities        map[Ability]Ability
-	targets          map[Target]Target
 	permanents       map[*Permanent]*Permanent
 	castContexts     map[*CastContext]*CastContext
 	events           map[*GameEvent]*GameEvent
-	effects          map[ContinuousEffect]ContinuousEffect
 	cardStorage      []Card
 	permanentStorage []Permanent
 }
@@ -62,17 +58,6 @@ func (ctx *gameCloneContext) card(card *Card) *Card {
 		ctx.cards = make(map[*Card]*Card)
 	}
 	ctx.cards[card] = cloned
-	cloned.capabilityAttrs = maps.Clone(card.capabilityAttrs)
-	cloned.castTargets = ctx.targetList(card.castTargets)
-	cloned.additionalCosts = slices.Clone(card.additionalCosts)
-	cloned.alternateCosts = cloneAlternateCosts(card.alternateCosts)
-	cloned.abilities = ctx.abilityList(card.abilities)
-	cloned.cardCharacteristics = *card.clone()
-	cloned.characteristics = card.characteristics.clone()
-	if card.auraAIProfile != nil {
-		profile := *card.auraAIProfile
-		cloned.auraAIProfile = &profile
-	}
 	return cloned
 }
 
@@ -88,15 +73,16 @@ func (ctx *gameCloneContext) cardList(cards []*Card) []*Card {
 }
 
 func (ctx *gameCloneContext) abilityList(abilities []Ability) []Ability {
-	if abilities == nil {
-		return nil
+	result := slices.Clone(abilities)
+	for index, ability := range result {
+		if granted, ok := ability.(*grantedByEffect); ok {
+			cloned := *granted
+			result[index] = &cloned
+		}
 	}
-	cloned := make([]Ability, len(abilities))
-	for i, ability := range abilities {
-		cloned[i] = ctx.ability(ability)
-	}
-	return cloned
+	return result
 }
+func (ctx *gameCloneContext) targetList(targets []Target) []Target { return slices.Clone(targets) }
 
 func (ctx *gameCloneContext) permanent(permanent *Permanent) *Permanent {
 	if permanent == nil {

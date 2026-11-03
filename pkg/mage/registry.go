@@ -59,7 +59,12 @@ func (r *Registry) CreateCard(name string) (*Card, error) {
 	if factory == nil {
 		return nil, fmt.Errorf("unknown card: %s", name)
 	}
-	return factory(), nil
+	card := factory()
+	if card == nil {
+		return nil, fmt.Errorf("factory returned nil card: %s", name)
+	}
+	card.definition = card.CardDefinition
+	return card, nil
 }
 
 // RegisterDefinition publishes a definition without caching a mutable card prototype.
@@ -79,7 +84,7 @@ func (r *Registry) RegisterDefinitions(definitions ...*CardDefinition) error {
 		names[FoldDiacritics(name)] = name
 	}
 	for _, definition := range definitions {
-		if definition == nil || definition.Name() == "" || len(definition.printed.TypeLine.CardTypes) == 0 {
+		if definition == nil || definition.Name() == "" || len(definition.types) == 0 {
 			return fmt.Errorf("invalid card definition")
 		}
 		name := definition.Name()

@@ -166,8 +166,7 @@ func BloodLustEffect() Effect {
 			toughnessChange = -(toughness - 1)
 		}
 		boost := TemporaryBoost(permanent.ID(), 4, toughnessChange)
-		boost.SetSourceID(sourceID)
-		g.AddContinuousEffect(boost)
+		g.AddContinuousEffect(boost, sourceID)
 		g.ApplyContinuousEffects()
 		return nil
 	})

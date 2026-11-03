@@ -13,7 +13,7 @@ import (
 
 // Compile validates all card rules before it returns a shared definition.
 // Unsupported rules and fields cause an error with the card name and source path.
-func Compile(card mage.MtgishCard) (*mage.CardDefinition, error) {
+func Compile(card MtgishCard) (*mage.CardDefinition, error) {
 	if err := validateFields(card); err != nil {
 		return nil, err
 	}
@@ -26,14 +26,14 @@ func Compile(card mage.MtgishCard) (*mage.CardDefinition, error) {
 		if err != nil {
 			return nil, fmt.Errorf("mtgish card %q: Rules[%d]: %w", card.Name, i, err)
 		}
-		spec.Rules = append(spec.Rules, ability)
+		spec.Abilities = append(spec.Abilities, ability)
 	}
 	if slices.Contains(spec.TypeLine.CardTypes, core.TypeLand) {
 		seen := make(map[core.Color]bool)
 		for _, subtype := range spec.TypeLine.SubTypes {
 			color, ok := basicLandColors[subtype]
 			if ok && !seen[color] {
-				spec.Rules = append(spec.Rules, mage.NewRuleDefinition(func() mage.Ability { return mage.NewManaAbility(color) }))
+				spec.Abilities = append(spec.Abilities, mage.NewManaAbility(color))
 				seen[color] = true
 			}
 		}
@@ -41,23 +41,23 @@ func Compile(card mage.MtgishCard) (*mage.CardDefinition, error) {
 	return mage.NewCardDefinition(spec)
 }
 
-func compileAbility(raw json.RawMessage) (mage.RuleDefinition, error) {
+func compileAbility(raw json.RawMessage) (mage.Ability, error) {
 	var fields map[string]json.RawMessage
 	if err := json.Unmarshal(raw, &fields); err != nil {
-		return mage.RuleDefinition{}, fmt.Errorf("expected a rule object: %w", err)
+		return nil, fmt.Errorf("expected a rule object: %w", err)
 	}
 	var tag string
 	if err := json.Unmarshal(fields["_Rule"], &tag); err != nil || tag == "" {
-		return mage.RuleDefinition{}, fmt.Errorf("rule requires a string _Rule tag")
+		return nil, fmt.Errorf("rule requires a string _Rule tag")
 	}
 	keyword, ok := keywords[tag]
 	if !ok {
-		return mage.RuleDefinition{}, fmt.Errorf("unsupported rule %q", tag)
+		return nil, fmt.Errorf("unsupported rule %q", tag)
 	}
 	if len(fields) != 1 {
-		return mage.RuleDefinition{}, fmt.Errorf("rule %q does not accept arguments or other fields", tag)
+		return nil, fmt.Errorf("rule %q does not accept arguments or other fields", tag)
 	}
-	return mage.NewRuleDefinition(func() mage.Ability { return mage.NewAttributeAbility(keyword) }), nil
+	return mage.NewAttributeAbility(keyword), nil
 }
 
 var keywords = map[string]core.Attr{
@@ -69,13 +69,13 @@ var keywords = map[string]core.Attr{
 	"Banding": core.Banding, "Fear": core.Fear,
 }
 
-func validateFields(card mage.MtgishCard) error {
+func validateFields(card MtgishCard) error {
 	if len(card.Raw) == 0 {
 		return nil
 	}
 	decoder := json.NewDecoder(bytes.NewReader(card.Raw))
 	decoder.DisallowUnknownFields()
-	var source mage.MtgishCard
+	var source MtgishCard
 	if err := decoder.Decode(&source); err != nil {
 		return fmt.Errorf("mtgish card %q: invalid source record: %w", card.Name, err)
 	}

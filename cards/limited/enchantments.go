@@ -501,8 +501,7 @@ func registerEnchantments() {
 					}
 					for _, p := range nonFlyers {
 						eff := PreventBlockingUntilEndOfCombat(p.ID())
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 					}
 					g.ApplyContinuousEffects()
 					return nil

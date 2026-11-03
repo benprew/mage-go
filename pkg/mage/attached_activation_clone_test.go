@@ -13,19 +13,18 @@ func TestAttachedActivationCloneIsolation(t *testing.T) {
 	aura := g.PutOnBattlefield(NewEnchantment("Aura", "{0}"), owner)
 	aura.AttachedTo = host.ID()
 	effect := GrantActivatedAbilityToAttached(GainLife(1), ManaCostOf("{0}"), AttachAura, WithOncePerTurn())
-	effect.SetSourceID(aura.ID())
-	g.effects.Add(effect)
+	g.effects.Add(effect, aura.ID())
 	g.ApplyContinuousEffects()
 	original := UnwrapAbility(host.RuntimeAbilities[0]).(*ActionDefinition)
 	branch := g.Clone()
 	branch.ApplyContinuousEffects()
 	cloned := UnwrapAbility(branch.FindPermanent(host.ID()).RuntimeAbilities[0]).(*ActionDefinition)
-	cloned.activatedThisTurn = true
-	if original.activatedThisTurn {
+	branch.markAbilityActivated(host.ID(), cloned.AbilityID())
+	if g.activationCount(host.ID(), original.AbilityID()) > 0 {
 		t.Fatal("branch changed live granted ability")
 	}
 	branch.ApplyContinuousEffects()
-	if !UnwrapAbility(branch.FindPermanent(host.ID()).RuntimeAbilities[0]).(*ActionDefinition).activatedThisTurn {
+	if branch.activationCount(host.ID(), UnwrapAbility(branch.FindPermanent(host.ID()).RuntimeAbilities[0]).AbilityID()) != 1 {
 		t.Fatal("reapplication reset activation limit")
 	}
 }

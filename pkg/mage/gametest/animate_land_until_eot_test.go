@@ -39,11 +39,9 @@ func TestAnimateLandUntilEndOfTurn_WithMustBeBlocked(t *testing.T) {
 								Colors:    []core.Color{core.Green},
 								Keywords:  []core.Attr{core.Haste},
 							}, core.EndOfTurn)
-							anim.SetSourceID(sourceID)
-							g.AddContinuousEffect(anim)
+							g.AddContinuousEffect(anim, sourceID)
 							mb := mage.TargetMustBeBlockedIfAble(land.ID(), core.EndOfTurn)
-							mb.SetSourceID(sourceID)
-							g.AddContinuousEffect(mb)
+							g.AddContinuousEffect(mb, sourceID)
 							return nil
 						},
 					),

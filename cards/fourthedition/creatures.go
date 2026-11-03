@@ -353,8 +353,7 @@ func registerCreatures() {
 							return nil
 						}
 						kw := TemporaryKeyword(targets[0], Flying)
-						kw.SetSourceID(sourceID)
-						g.AddContinuousEffect(kw)
+						g.AddContinuousEffect(kw, sourceID)
 						g.ApplyContinuousEffects()
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:  EvtEndStep,
@@ -419,8 +418,7 @@ func registerCreatures() {
 							return nil
 						}
 						ce := BecomesBasicLandTargetUntilSourceLeaves(targets[0], "Forest")
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					},
 				),

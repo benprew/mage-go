@@ -10,6 +10,13 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
+	RememberedObjects      []uuid.UUID
+	rememberedZones        map[uuid.UUID]Zone
+	rememberedIncarnations map[uuid.UUID]uuid.UUID
+	TargetGroups           [][]uuid.UUID
+	TriggerEvent           *GameEvent
+	declaredTargets        bool
+
 	stateKey stateTriggerKey
 	ID       uuid.UUID
 	Card     *Card // non-nil for spells

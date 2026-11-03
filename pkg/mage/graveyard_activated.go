@@ -95,7 +95,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 	if !ok {
 		return fmt.Errorf("ability %d is not a graveyard-zone activated ability", abilityIdx)
 	}
-	if !gaa.CanActivate(playerID, g) {
+	if !gaa.CanActivate(AbilityContext{SourceID: card.ID(), Controller: playerID, AbilityIndex: abilityIdx}, g) {
 		return fmt.Errorf("cannot activate graveyard ability")
 	}
 
@@ -127,7 +127,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		return err
 	}
 
-	gaa.MarkActivated()
+	g.markAbilityActivated(cardID, gaa.AbilityID(), abilityIdx)
 
 	obj := &StackObject{
 		ID:         uuid.New(),
@@ -160,9 +160,8 @@ func (g *Game) FindGraveyardActivatableCard(playerID uuid.UUID, name string) (uu
 			if !ok {
 				continue
 			}
-			gaa.source = c.ID()
-			gaa.controller = playerID
-			if gaa.CanActivate(playerID, g) {
+
+			if gaa.CanActivate(AbilityContext{SourceID: c.ID(), Controller: playerID, AbilityIndex: i}, g) {
 				return c.ID(), i, true
 			}
 		}

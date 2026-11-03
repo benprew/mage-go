@@ -26,7 +26,7 @@ func (e *DiscardHandEffect) Apply(ctx *EffectContext) error {
 	if selector == nil {
 		selector = SelectController()
 	}
-	for _, playerID := range selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets) {
+	for _, playerID := range selector.Select(ctx) {
 		player := ctx.Game.GetPlayer(playerID)
 		if player == nil {
 			continue

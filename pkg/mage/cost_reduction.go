@@ -348,9 +348,9 @@ type SelfCostReductionAbility struct {
 // condition gates the reduction (returns false ⇒ no reduction).
 func SelfCostReduction(amount SpellAmount, condition SpellCondition) *SelfCostReductionAbility {
 	return &SelfCostReductionAbility{
-		BaseAbility: BaseAbility{id: uuid.New(), abilityType: AbilityStatic},
-		Amount:      amount,
-		Condition:   condition,
+		id: uuid.New(), abilityType: AbilityStatic,
+		Amount:    amount,
+		Condition: condition,
 	}
 }
 

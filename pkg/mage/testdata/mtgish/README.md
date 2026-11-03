@@ -1,7 +1,7 @@
 # mtgish JSON input
 
 Use `data/mtgish.lines.json` from the mtgish checkout directly. This file has
-one tagged JSON card per line. Pass each record to `mage.ParseMtgishJSON`.
+one tagged JSON card per line. Pass each record to `mtgish.ParseMtgishJSON`.
 Mage-go does not need a converter or Rust to read this data.
 
 `MtgishCard.Raw` keeps the full record, including card faces and optional
@@ -17,7 +17,7 @@ Pass the parsed card to `mtgish.Compile` from `pkg/mage/mtgish` to compile its
 rules into an immutable `mage.CardDefinition`. The compiler currently supports
 Flying, FirstStrike, DoubleStrike, Deathtouch, Defender, Flash, Haste, Hexproof,
 Indestructible, Lifelink, Menace, Reach, Shroud, Trample, Vigilance, Banding, and
-Fear. Keywords use the same `RuleDefinition` factories as executable rules.
+Fear. Keywords use the same immutable ability specifications as executable rules.
 Instances expose them through `card.Abilities()` and the normal engine keyword
 attributes. Land subtypes supply their intrinsic mana abilities. `definition.NewInstance(owner)` creates
 a playable instance. Rules with arguments, other rules, and unknown card
@@ -52,7 +52,7 @@ input to mage-go instead.
 Run the importer tests with:
 
 ```sh
-go test ./pkg/mage -run TestParseMtgishJSON
+go test ./pkg/mage/mtgish -run TestParseMtgishJSON
 ```
 
 Validated against mtgish revision `153451e44d88baabfeb9902092032c328f4d5416`.

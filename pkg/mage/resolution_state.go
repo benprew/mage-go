@@ -25,6 +25,7 @@ type ResolutionState struct {
 	// Card currently being resolved from the stack
 	resolvingCard              *Card
 	resolvingSourceID          uuid.UUID
+	resolvingController        uuid.UUID
 	resolvingSourceIncarnation uuid.UUID
 
 	// Color state installed before target legality check during resolution
@@ -74,6 +75,7 @@ func (s *ResolutionState) Begin(obj *StackObject) func() {
 	s.currentEventSourceID = obj.EventSourceID
 	s.resolvingCard = obj.Card
 	s.resolvingSourceID = obj.SourceID
+	s.resolvingController = obj.Controller
 	s.resolvingSourceIncarnation = obj.SourceIncarnation
 	s.resolvingTargets = obj.Targets
 	s.resolvingDamageDistribution = obj.DamageDistribution
@@ -106,6 +108,7 @@ func (s *ResolutionState) Clear() {
 	s.currentEventSourceID = uuid.Nil()
 	s.resolvingCard = nil
 	s.resolvingSourceID = uuid.Nil()
+	s.resolvingController = uuid.Nil()
 	s.resolvingSourceIncarnation = uuid.Nil()
 	s.resolvingTargets = nil
 	s.resolvingDamageDistribution = nil
@@ -166,17 +169,20 @@ func (s *ResolutionState) Clone() ResolutionState {
 
 func (s *ResolutionState) clone(ctx *gameCloneContext) ResolutionState {
 	c := ResolutionState{
-		currentX:               s.currentX,
-		currentMode:            s.currentMode,
-		currentEventAmount:     s.currentEventAmount,
-		currentEventSourceID:   s.currentEventSourceID,
-		resolvingCard:          ctx.card(s.resolvingCard),
-		resolvingColorSourceID: s.resolvingColorSourceID,
-		resolvingCastZone:      s.resolvingCastZone,
-		resolvingCastContext:   ctx.castContext(s.resolvingCastContext),
-		lastSacrificedID:       s.lastSacrificedID,
-		lastCostReveal:         ctx.card(s.lastCostReveal),
-		lastExiledCard:         ctx.card(s.lastExiledCard),
+		currentX:                   s.currentX,
+		resolvingController:        s.resolvingController,
+		resolvingSourceID:          s.resolvingSourceID,
+		resolvingSourceIncarnation: s.resolvingSourceIncarnation,
+		currentMode:                s.currentMode,
+		currentEventAmount:         s.currentEventAmount,
+		currentEventSourceID:       s.currentEventSourceID,
+		resolvingCard:              ctx.card(s.resolvingCard),
+		resolvingColorSourceID:     s.resolvingColorSourceID,
+		resolvingCastZone:          s.resolvingCastZone,
+		resolvingCastContext:       ctx.castContext(s.resolvingCastContext),
+		lastSacrificedID:           s.lastSacrificedID,
+		lastCostReveal:             ctx.card(s.lastCostReveal),
+		lastExiledCard:             ctx.card(s.lastExiledCard),
 	}
 	if s.resolvingColorOverride != nil {
 		colors := append([]Color(nil), (*s.resolvingColorOverride)...)

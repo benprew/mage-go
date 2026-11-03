@@ -34,86 +34,94 @@
 //
 // # Card Definitions and Instances
 //
-// [Card.Abilities] returns a private slice of all card abilities, including keywords.
-// Use [Card.AllAbilities] to inspect the same list without a slice copy.
-// [AbilityAttribute] identifies abilities that use an attribute. [AttributeAbility]
-// supplies simple static abilities. Ward uses its triggered ability directly.
-// Capability and type attributes do not appear in the ability list.
+// [CardDefinition] owns one complete printed face. Its data includes the name,
+// type line, mana cost, colors, power, toughness, loyalty, Oracle text, abilities,
+// casting costs, cast targets, Aura metadata, and optional flip face.
+// [CardDefinitionSpec] is the input to [NewCardDefinition]. The constructor
+// copies input containers. Read methods return private container copies.
+// Abilities, effects, costs, targets, filters, and callbacks are specifications.
+// Finish their construction before publication. Do not change them after that.
+// Callbacks must capture only immutable data.
 //
-// Runtime APIs use *Card to preserve the identity of each mutable card object.
-// Use [Card.NewCopy] for a distinct object with fresh ability state.
-// Use [Card.CloneInstance] to preserve identity and current execution state.
-// Both operations retain the shared definition.
-//
-// [CardDefinition] stores printed name, type line, mana cost, power, toughness,
-// colors, keywords, mode descriptions, and compiled [RuleDefinition] values.
-// [NewCardDefinition] copies its input containers. Read methods return private
-// copies. Source parsers must compile and validate syntax before this boundary.
-// Keywords and executable rules use the same [RuleDefinition] factories.
-// [NewCard] combines these rules with legacy keyword inputs in [Card.Abilities].
-// Permanent ability attributes come from that complete list.
-// The pkg/mage/mtgish compiler validates mtgish JSON rules before publication.
-//
-// Each rule uses a function to create private ability context and target data.
-// The function and its callbacks must capture only immutable data. Effects and
-// costs must keep execution state on the game or source object. Definition
-// construction checks that rules create distinct abilities with clone support.
-// It cannot prove that a Go callback has no mutable captured data.
-//
-// [NewCard] creates private state from a shared definition. Card options
-// apply to that card. [CardDefinition.NewInstance] also assigns an owner.
-// It creates a [Card] with a new identity and
-// an owner. [Card.NewCopy] creates another identity. For simulation branches,
-// [Card.CloneInstance] preserves identity and copies ability state.
-// [Game.Clone] uses one clone context for cards, abilities, targets, and cast
-// context. Legacy and definition-backed cards both get private mutable state.
-// References to the same object remain consistent within the branch.
-// Payment validation and simultaneous zone changes use the same operation.
-// Definitions are shared. Each permanent has private runtime abilities.
-// Last-known information has private card and ability state. Battlefield state
-// stays on [Permanent]. Targets,
-// selected modes, X, payments, and distributions stay on [StackObject] or in
-// local announcement state. Target requirements do not store announcement choices.
-//
-// [Card.CopiableValues] captures a private snapshot of card characteristics.
-// [Card.ApplyCopiableValues] applies it without changing the receiver's ID,
-// owner, or original printed definition. Copied abilities get new identities,
-// no selected targets, and unused activation limits. Source execution state
-// is not part of this snapshot. Battlefield counters, status, and temporary
-// effects stay on Permanent. [Card.CloneFrom] and [Card.Copy] remain as
-// compatibility names for ApplyCopiableValues and NewCopy.
-// Spell copies use [CopySpellOnStack] to copy stack choices separately.
-// [Permanent.CopiableValues] also accounts for face-down characteristics.
-// [EffectManager.AddCopyEffect] and [EffectManager.UpdateCopyEffect] capture
-// these values. Reapplication preserves activation state. A new selection
-// creates fresh abilities. [CopyOptions] can keep the source color and add a
-// fresh ability to the copied values. [CopyCreatureOnETB] makes an optional,
-// untargeted choice before other entry replacements. Its copy options become
-// part of the values that later copies acquire.
-//
-// [WithFlipFace] supplies a flip card's alternative characteristics. Both faces
-// retain the normal mana cost and color. Copies acquire both faces, and the
-// receiving permanent's flipped status selects the active face. [FlipSource]
-// and [Game.FlipPermanent] change this status without a zone change. Copies
-// preserve this status; a new battlefield object starts unflipped.
-//
-// Stack targets record permanent incarnations. A target that leaves and returns
-// is a new object even if its card ID is unchanged. Resolving effects that
-// change their source must use [Game.ResolvingSourcePermanent] to check its
-// incarnation. Pending triggers retain the source incarnation from the event.
-//
+// Every [Card] uses this representation. [Card.Definition] retains the original
+// printed face. The embedded [CardDefinition] supplies the current copiable face.
+// Construction options and characteristic setters create a private definition.
+// They do not change another card or a published definition. Factory registration
+// finalizes the printed face after the factory completes.
+// [NewCard], [NewCardFromDefinition], and [CardDefinition.NewInstance] create
+// identities from shared definitions. The last two also assign an owner.
 // [Registry.RegisterDefinition] and [Registry.RegisterDefinitions] publish
-// definitions. Batch registration rejects conflicts before it changes the registry.
-// [Registry.CreateInstance] assigns an owner. [Registry.CreateCard] also accepts
-// definition entries and creates an instance with no assigned owner.
+// definitions. Batch registration checks all conflicts before publication.
+// The pkg/mage/mtgish package owns its JSON schema, parser, and compiler.
 //
-// Existing [Card] constructors and factory registrations remain supported.
-// Factory-built cards retain their construction data until their definitions
-// are migrated. Definition-backed cards use private characteristic snapshots
-// for the legacy Card mutation API. These snapshots contain characteristic
-// values only. Identity and execution state stay on Card. New battlefield
-// effects must change Permanent state or use continuous effects. These adapters
-// can be removed after legacy construction and characteristic changes migrate.
+// [Card.Abilities] returns a private slice. [Card.AllAbilities] permits iteration
+// without a slice copy. Both include keyword and capability specifications.
+// Use [StaticKeyword] and [StaticCapability] to declare these attributes.
+// Ward supplies its attribute through its triggered ability.
+//
+// [AbilityContext] supplies source, controller, and ability index for evaluation.
+// Definitions do not store these bindings. [Game] owns activation counts. Counts
+// distinguish source incarnations, repeated abilities, and separate grants.
+// Cleanup clears turn limits. A source that leaves and returns gets a new count.
+// Each active continuous effect owns its source binding and execution state.
+// Static definitions can be shared by cards, permanents, and simulation branches.
+// Layer application keeps registration order within each layer.
+//
+// [Card.NewCopy] creates a new identity and retains the copiable definition.
+// [Card.CloneInstance] retains identity for a simulation branch. [Game.Clone]
+// copies runtime state and preserves object references within the branch.
+// Definitions are shared. Battlefield counters, status, and granted-ability
+// lists remain on [Permanent]. Activation counts and active effect state remain
+// on [Game]. Last-known information has a private card instance.
+//
+// [Card.CopiableValues] captures the current definition. [Card.ApplyCopiableValues]
+// applies that definition without changing identity, owner, or printed face.
+// Execution state is not copied. [Card.CloneFrom] and [Card.Copy] retain their
+// compatibility behavior. [CopySpellOnStack] copies announcement choices as a
+// separate operation. [Permanent.CopiableValues] accounts for face-down values.
+// [EffectManager.AddCopyEffect] and [EffectManager.UpdateCopyEffect] retain
+// snapshots. Reapplication preserves activation state. [CopyOptions] can keep
+// source colors or add an ability to the copied values. [CopyCreatureOnETB]
+// permits an optional choice before entry replacements.
+//
+// [WithFlipFace] supplies the alternative definition. Both faces retain the
+// normal mana cost and color. Copies acquire both faces. [FlipSource] and
+// [Game.FlipPermanent] change flipped status without a zone change.
+//
+// # Effect References and Announcements
+//
+// [EffectContext] carries source snapshots, controller, X, chosen modes, target
+// groups, the triggering event, and execution variables. [ValueSource.Resolve],
+// [PlayerSelector.Select], and [ObjectSelector.Select] read this context.
+// [VarInt], [VarPlayer], and [VarObject] read variables without retaining context.
+// [TargetGroup] and [FirstTarget] read declared targets. [EventSource],
+// [EventPlayer], [EventTarget], and [EventAmount] read the triggering event.
+// [SourceObject] identifies the resolving source.
+//
+// [StackObject.Targets] contains only declared targets. [StackObject.TriggerEvent]
+// retains a separate snapshot. [StackObject.TargetGroups] retains group boundaries,
+// including empty optional groups. Illegal targets become nil identifiers at
+// resolution without changing those boundaries. Target specifications store no
+// announcement choices. Stack targets also retain permanent incarnations.
+//
+// [Game.CastSpellWithChoices] and [Game.ActivateAbilityWithTargetGroups] accept
+// explicit groups. Use these APIs when more than one group has a variable count.
+// Existing flat-target APIs retain their count-allocation convention. Prompts
+// and spell copies retain the groups chosen for each declaration.
+//
+// Existing effect helpers and [FuncEffect] retain event-reference adapters for
+// old card code. These adapters do not add event objects to stack targets.
+// New effects must use explicit selectors. Use [DealDamage], [Destroy],
+// [GainLife], [LoseLife], [DrawForPlayers], [Discard], [MoveObjects],
+// [AddCounters], and [RemoveCounters] for the common operations. Scalar forms
+// of existing constructors remain available. DrawForPlayers avoids a name
+// conflict with the Draw step constant. [ObjectFilter] evaluates shared card
+// and permanent characteristics. Its adapters support existing zone queries.
+// [ManaProducer] and [ManaProductionEffect] supply common mana output metadata.
+//
+// Effects that change their source must retain its incarnation. Use
+// [Game.ResolvingSourcePermanent] for legacy callbacks. Explicit object effects
+// check the source snapshot before they change a permanent.
 //
 // # Controllers and Layer 2
 //
@@ -251,12 +259,10 @@
 //
 // # Player Selectors
 //
-// [SelectTargetPlayer] reads the first target of a resolving effect. It
-// returns the target only if the target is a player. Helper functions for
-// draw, discard, and sacrifice triggers set that target to the event player.
-// Zone-change triggers set that target to the moved object. Use
-// [SelectTargetPermanentController] when an effect requires the controller
-// of that object.
+// [SelectTargetPlayer] selects a declared player target. Existing card helpers
+// can also read their event player through the compatibility adapter. New
+// triggers must use [EventPlayer]. [SelectTargetPermanentController] reads
+// the controller of a selected permanent, including last-known information.
 //
 // # Combat Damage Assignment
 //

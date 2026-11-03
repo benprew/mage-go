@@ -16,7 +16,6 @@ type cardCharacteristics struct {
 	power         int
 	toughness     int
 	colorOverride []Color
-	modes         []string
 }
 
 func (c *cardCharacteristics) clone() *cardCharacteristics {
@@ -29,22 +28,5 @@ func (c *cardCharacteristics) clone() *cardCharacteristics {
 	cloned.superTypes = slices.Clone(c.superTypes)
 	cloned.subTypes = slices.Clone(c.subTypes)
 	cloned.colorOverride = slices.Clone(c.colorOverride)
-	cloned.modes = slices.Clone(c.modes)
 	return &cloned
-}
-
-func (c *Card) copyCharacteristics() *cardCharacteristics {
-	if c.definition == nil {
-		return c.clone()
-	}
-	if c.characteristics != nil {
-		return c.characteristics.clone()
-	}
-	printed := &c.definition.printed
-	data := cardCharacteristics{
-		name: printed.Name, manaCost: printed.ManaCost,
-		types: printed.TypeLine.CardTypes, superTypes: printed.TypeLine.SuperTypes, subTypes: printed.TypeLine.SubTypes,
-		power: printed.Power, toughness: printed.Toughness, modes: printed.Modes, colorOverride: c.Colors(),
-	}
-	return data.clone()
 }

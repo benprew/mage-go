@@ -29,7 +29,7 @@ func (*randomCounterDistributionEffect) Properties() EffectProperties {
 }
 
 func (e *randomCounterDistributionEffect) Apply(ctx *EffectContext) error {
-	for _, targetID := range ctx.Targets {
+	for _, targetID := range ctx.legacyTargets() {
 		amount := ctx.CounterDistribution[targetID]
 		if amount <= 0 {
 			continue
@@ -54,7 +54,7 @@ func (g *Game) chooseRandomCounterDistribution(obj *StackObject) {
 		}
 		previousX := g.resolution.X()
 		g.resolution.SetX(obj.XValue)
-		total := distribution.total.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
+		total := distribution.total.Resolve(NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets))
 		g.resolution.SetX(previousX)
 		if total < len(obj.Targets) {
 			return

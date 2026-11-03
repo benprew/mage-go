@@ -612,8 +612,7 @@ func registerCreatures() {
 								g.GrantAttr(target.ID(), Forestwalk)
 								return nil
 							})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					}), false,

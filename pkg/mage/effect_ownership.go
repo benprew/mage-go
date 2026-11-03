@@ -27,12 +27,7 @@ func (e *changeOwnerGatheredEffect) Apply(ctx *EffectContext) error {
 	if cardID == uuid.Nil() {
 		return nil
 	}
-	if variable, ok := e.newOwner.(*VarPlayerSelector); ok {
-		previous := variable.context
-		variable.context = ctx
-		defer func() { variable.context = previous }()
-	}
-	owners := e.newOwner.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	owners := e.newOwner.Select(ctx)
 	if len(owners) != 1 {
 		return fmt.Errorf("expected exactly one new owner, got %d", len(owners))
 	}

@@ -39,6 +39,7 @@ type AlternateCost struct {
 // are paid in addition to the alt mana cost.
 func WithAlternateCost(zone Zone, mana ManaCost, additional ...Cost) CardOption {
 	return func(c *Card) {
+		c.mutableDefinition()
 		c.alternateCosts = append(c.alternateCosts, AlternateCost{
 			Zone:       zone,
 			Mana:       mana,
@@ -53,6 +54,7 @@ func WithAlternateCost(zone Zone, mana ManaCost, additional ...Cost) CardOption 
 // being put into the graveyard.
 func WithFlashback(mana ManaCost, additional ...Cost) CardOption {
 	return func(c *Card) {
+		c.mutableDefinition()
 		c.alternateCosts = append(c.alternateCosts, AlternateCost{
 			Zone:       ZoneGraveyard,
 			Mana:       mana,
@@ -64,7 +66,7 @@ func WithFlashback(mana ManaCost, additional ...Cost) CardOption {
 
 // AlternateCosts returns the alternate-cost options registered on this card.
 // Returns nil when the card has no alternate costs.
-func (c *Card) AlternateCosts() []AlternateCost { return c.alternateCosts }
+func (c *Card) AlternateCosts() []AlternateCost { return c.CardDefinition.AlternateCosts() }
 
 // CastCardWithAlternateCost casts the named card via the altIdx'th alternate
 // cost on the card. The card must currently be in the alt's source zone.

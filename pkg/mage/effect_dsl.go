@@ -19,7 +19,7 @@ const (
 	KindAllMatching                                 // all creatures on battlefield matching a filter
 	KindOtherMatching                               // all creatures on battlefield matching a filter, except source
 	KindGathered                                    // permanent ID from a pipeline context variable
-	KindAllTargets                                  // every UUID in ctx.Targets (multi-target spells/abilities)
+	KindAllTargets                                  // every UUID in ctx.legacyTargets() (multi-target spells/abilities)
 	KindBlockingOrBlockedBySource                   // creatures blocking or blocked by the source permanent
 )
 
@@ -49,7 +49,7 @@ func ToGathered(varName string) TargetSelector {
 }
 
 // ToAllTargets selects every chosen target on a multi-target spell or ability.
-// Effects using this selector are applied once per UUID in ctx.Targets, skipping
+// Effects using this selector are applied once per UUID in ctx.legacyTargets(), skipping
 // uuid.Nil() placeholders and any UUIDs that no longer resolve to a battlefield
 // permanent (so a multi-target spell whose first target leaves still affects
 // the surviving targets, per CR 608.2b).
@@ -76,10 +76,10 @@ func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, filter PermanentF
 func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 	switch sel.Kind {
 	case KindTarget:
-		if len(ctx.Targets) == 0 {
+		if len(ctx.legacyTargets()) == 0 {
 			return nil
 		}
-		if p := ctx.Game.FindPermanent(ctx.Targets[0]); p != nil {
+		if p := ctx.Game.FindPermanent(ctx.legacyTargets()[0]); p != nil {
 			return []*Permanent{p}
 		}
 	case KindSource:
@@ -115,7 +115,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		}
 	case KindAllTargets:
 		var out []*Permanent
-		for _, id := range ctx.Targets {
+		for _, id := range ctx.legacyTargets() {
 			if id == uuid.Nil() {
 				continue
 			}
@@ -204,8 +204,8 @@ func (e *boostEffect) Text() string {
 	if pIsX || tIsX {
 		return "gets +X/+0 until end of turn"
 	}
-	p := e.power.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
-	t := e.toughness.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
+	p := e.power.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
+	t := e.toughness.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
 	switch e.selector.Kind {
 	case KindSource:
 		return fmt.Sprintf("this creature gets %+d/%+d until end of turn", p, t)
@@ -219,10 +219,10 @@ func (e *boostEffect) Text() string {
 func (e *boostEffect) Properties() EffectProperties {
 	var pb, tb int
 	if _, ok := e.power.(xValue); !ok {
-		pb = e.power.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
+		pb = e.power.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
 	}
 	if _, ok := e.toughness.(xValue); !ok {
-		tb = e.toughness.Resolve(nil, uuid.Nil(), uuid.Nil(), nil)
+		tb = e.toughness.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
 	}
 	mass := e.selector.Kind == KindMatching || e.selector.Kind == KindAllMatching
 	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: mass}
@@ -234,8 +234,8 @@ func (e *boostEffect) Apply(ctx *EffectContext) error {
 	}
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
-		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+		p := e.power.Resolve(ctx)
+		t := e.toughness.Resolve(ctx)
 		applyBoost := func(g *Game, target *Permanent) error {
 			target.powerBonus += p
 			target.toughBonus += t
@@ -247,8 +247,7 @@ func (e *boostEffect) Apply(ctx *EffectContext) error {
 		} else {
 			eff = TargetEffectWhen(LayerPT, e.dur, perm.ID(), applyBoost, e.active)
 		}
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
+		ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	}
 	if len(perms) > 0 {
 		ctx.Game.ApplyContinuousEffects()
@@ -337,8 +336,7 @@ func (e *grantKeywordEffect) Apply(ctx *EffectContext) error {
 			g.GrantAttr(target.ID(), e.keyword)
 			return nil
 		}, e.active)
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
+		ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	}
 	if len(perms) > 0 {
 		ctx.Game.ApplyContinuousEffects()
@@ -434,8 +432,7 @@ func (e *RevokeKeywordEffect) Apply(ctx *EffectContext) error {
 			}
 			return nil
 		}, e.active)
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
+		ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	}
 	if len(perms) > 0 {
 		ctx.Game.ApplyContinuousEffects()
@@ -503,13 +500,11 @@ func (e *grantAbilityEffect) Apply(ctx *EffectContext) error {
 			if p == nil {
 				return nil
 			}
-			ability.SetSource(targetID)
-			ability.SetController(p.ControllerID())
+
 			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ability))
 			return nil
 		})
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
+		ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	}
 	if len(perms) > 0 {
 		ctx.Game.ApplyContinuousEffects()
@@ -585,8 +580,7 @@ func (e *grantTypeEffect) Apply(ctx *EffectContext) error {
 			g.GrantAttr(target.ID(), attr)
 			return nil
 		})
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
+		ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	}
 	if len(perms) > 0 {
 		ctx.Game.ApplyContinuousEffects()

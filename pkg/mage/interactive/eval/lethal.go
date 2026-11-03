@@ -79,12 +79,12 @@ func controllerCanGrantEvasionTo(perm *mage.Permanent, g *mage.Game) core.Attr {
 		if src.ControllerID() != controller {
 			continue
 		}
-		for _, ab := range src.RuntimeAbilities {
+		for index, ab := range src.RuntimeAbilities {
 			act, ok := mage.UnwrapAbility(ab).(mage.ActivatedAbility)
 			if !ok {
 				continue
 			}
-			if !act.CanActivate(controller, g) {
+			if !act.CanActivate(mage.AbilityContext{SourceID: src.ID(), Controller: controller, AbilityIndex: index}, g) {
 				continue
 			}
 			for _, e := range act.Effects() {
@@ -371,7 +371,7 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 // strike before damage), not just its current power.
 func maxAffordablePumpBoost(perm *mage.Permanent, g *mage.Game) int {
 	total := 0
-	for _, ab := range perm.RuntimeAbilities {
+	for index, ab := range perm.RuntimeAbilities {
 		act, ok := mage.UnwrapAbility(ab).(mage.ActivatedAbility)
 		if !ok || len(act.Targets()) != 0 {
 			continue
@@ -380,7 +380,7 @@ func maxAffordablePumpBoost(perm *mage.Permanent, g *mage.Game) int {
 		for _, e := range act.Effects() {
 			boost += e.Properties().PowerBoost
 		}
-		if boost <= 0 || !act.CanActivate(perm.ControllerID(), g) {
+		if boost <= 0 || !act.CanActivate(mage.AbilityContext{SourceID: perm.ID(), Controller: perm.ControllerID(), AbilityIndex: index}, g) {
 			continue
 		}
 		total += boost * maxRepeatablePumpActivations(act, g, perm.ControllerID())

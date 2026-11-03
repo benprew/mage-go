@@ -312,8 +312,8 @@ func (g *Game) PushStack(obj *StackObject) {
 }
 
 // AddContinuousEffect registers a continuous effect with the effect manager.
-func (g *Game) AddContinuousEffect(e ContinuousEffect) {
-	g.effects.Add(e)
+func (g *Game) AddContinuousEffect(e ContinuousEffect, source ...uuid.UUID) {
+	g.effects.Add(e, source...)
 	g.effects.Apply(g)
 }
 
@@ -324,22 +324,22 @@ func (g *Game) ApplyContinuousEffects() {
 
 // SetPreventCombatDamage flags that all combat damage is prevented this turn.
 func (g *Game) SetPreventCombatDamage() {
-	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil(), duration: EndOfTurn}})
+	g.effects.AddReplacement(&fogReplacement{sourceID: uuid.Nil(), duration: EndOfTurn})
 }
 
 // PreventCombatDamageToAndBy adds a replacement effect preventing all combat damage dealt to and dealt by creatureID this turn.
 func (g *Game) PreventCombatDamageToAndBy(creatureID uuid.UUID) {
 	g.effects.AddReplacement(&creatureCombatDamagePreventionReplacement{
-		replacementBase: replacementBase{sourceID: uuid.Nil(), duration: EndOfTurn},
-		creatureID:      creatureID,
+		sourceID: uuid.Nil(), duration: EndOfTurn,
+		creatureID: creatureID,
 	})
 }
 
 // PreventDamageToPlayerByCreaturesWithFlying adds a replacement effect preventing all damage dealt to playerID by creatures with flying this turn.
 func (g *Game) PreventDamageToPlayerByCreaturesWithFlying(playerID uuid.UUID) {
 	g.effects.AddReplacement(&playerDamageFromFlyingCreaturesPreventionReplacement{
-		replacementBase: replacementBase{sourceID: uuid.Nil(), duration: EndOfTurn},
-		playerID:        playerID,
+		sourceID: uuid.Nil(), duration: EndOfTurn,
+		playerID: playerID,
 	})
 }
 
@@ -352,7 +352,7 @@ func (g *Game) AddRegenerationShield(id uuid.UUID) {
 			return
 		}
 	}
-	g.effects.AddReplacement(&regenerationReplacement{replacementBase: replacementBase{duration: EndOfTurn}, permanentID: id, shields: 1})
+	g.effects.AddReplacement(&regenerationReplacement{duration: EndOfTurn, permanentID: id, shields: 1})
 }
 
 // HasRegenerationShield reports whether the specified permanent currently has at
@@ -375,7 +375,7 @@ func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
 			return
 		}
 	}
-	g.effects.AddReplacement(&preventionShieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, targetID: id, remaining: amount})
+	g.effects.AddReplacement(&preventionShieldReplacement{duration: EndOfTurn, targetID: id, remaining: amount})
 }
 
 // AddForcefieldShield adds a Forcefield shield for the specified player against
@@ -383,9 +383,9 @@ func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
 // to playerID down to 1, then deactivates (CR 614 — "the next time").
 func (g *Game) AddForcefieldShield(playerID, attackerID uuid.UUID) {
 	g.effects.AddReplacement(&forcefieldReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		playerID:        playerID,
-		attackerID:      attackerID,
+		duration:   EndOfTurn,
+		playerID:   playerID,
+		attackerID: attackerID,
 	})
 }
 
@@ -399,8 +399,8 @@ func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
 	g.effects.Rules.SetLichActive(playerID, sourceID)
 	// Register the life-gain replacement (Lich: draw cards instead of gaining life)
 	g.effects.AddReplacement(&lichLifeGainReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		playerID:        playerID,
+		sourceID: sourceID, duration: WhileOnBattlefield,
+		playerID: playerID,
 	})
 }
 
@@ -415,7 +415,7 @@ func (g *Game) ClearLich(playerID uuid.UUID) {
 
 // AddColorPrevention adds a color-based damage prevention rule for the player.
 func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
-	g.effects.AddReplacement(&colorPreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, color: color})
+	g.effects.AddReplacement(&colorPreventionReplacement{duration: EndOfTurn, playerID: playerID, color: color})
 }
 
 // ChooseDamageSource asks playerID to choose a permanent or spell on the stack
@@ -459,9 +459,9 @@ func (g *Game) AddReverseDamageShield(playerID, sourceID uuid.UUID) {
 		return
 	}
 	g.effects.PrependReplacement(&reverseDamageReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		playerID:        playerID,
-		dmgSource:       sourceID,
+		duration:  EndOfTurn,
+		playerID:  playerID,
+		dmgSource: sourceID,
 	})
 }
 
@@ -488,9 +488,9 @@ func (g *Game) PlayerCantCastSpells(playerID uuid.UUID) bool {
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 	g.effects.AddReplacement(&creatureDamageRedirectReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		creatureID:      creatureID,
-		targetPlayerID:  playerID,
+		duration:       EndOfTurn,
+		creatureID:     creatureID,
+		targetPlayerID: playerID,
 	})
 }
 
@@ -498,15 +498,15 @@ func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 // to a player is dealt to the absorber permanent instead (Shimian Night Stalker).
 func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
 	g.effects.AddReplacement(&attackerDamageRedirectReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		attackerID:      attackerID,
-		absorberPermID:  absorberID,
+		duration:       EndOfTurn,
+		attackerID:     attackerID,
+		absorberPermID: absorberID,
 	})
 }
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.
 func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
-	g.effects.AddReplacement(&skipDrawReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID})
+	g.effects.AddReplacement(&skipDrawReplacement{duration: EndOfTurn, playerID: playerID})
 }
 
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
@@ -519,8 +519,8 @@ func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 // their normal draw during their draw step to activate sanctuary protection.
 func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&islandSanctuaryReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		playerID:        playerID,
+		sourceID: sourceID, duration: WhileOnBattlefield,
+		playerID: playerID,
 	})
 }
 
@@ -528,8 +528,8 @@ func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
 // on the battlefield, the controller may skip their draw step to gain 2 life.
 func (g *Game) AddFastingReplacement(playerID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&fastingReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		playerID:        playerID,
+		sourceID: sourceID, duration: WhileOnBattlefield,
+		playerID: playerID,
 	})
 }
 
@@ -546,7 +546,7 @@ func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 // AddSourcePrevention adds a one-shot damage prevention for the next damage
 // from a specific source to the specified player (Circle of Protection: Artifacts).
 func (g *Game) AddSourcePrevention(playerID, sourceID uuid.UUID) {
-	g.effects.AddReplacement(&sourcePreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, dmgSource: sourceID})
+	g.effects.AddReplacement(&sourcePreventionReplacement{duration: EndOfTurn, playerID: playerID, dmgSource: sourceID})
 }
 
 // AddSourcePreventionShield prevents up to amount damage from sourceID to the
@@ -556,10 +556,10 @@ func (g *Game) AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount in
 		return
 	}
 	g.effects.AddReplacement(&sourcePreventionShieldReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		playerID:        playerID,
-		dmgSource:       sourceID,
-		remaining:       amount,
+		duration:  EndOfTurn,
+		playerID:  playerID,
+		dmgSource: sourceID,
+		remaining: amount,
 	})
 }
 
@@ -567,21 +567,21 @@ func (g *Game) AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount in
 // from sourceID to playerID the next time sourceID would deal damage to playerID this turn.
 func (g *Game) AddHalfDamageFromSourcePreventionShield(playerID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&halfDamagePreventionShieldReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		playerID:        playerID,
-		dmgSource:       sourceID,
+		duration:  EndOfTurn,
+		playerID:  playerID,
+		dmgSource: sourceID,
 	})
 }
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
-	g.effects.AddReplacement(&typePreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, cardType: ct})
+	g.effects.AddReplacement(&typePreventionReplacement{duration: EndOfTurn, playerID: playerID, cardType: ct})
 }
 
 // PreventAllDamageFrom prevents all damage from the specified source until end of turn.
 func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
 	g.effects.AddReplacement(&damagePreventionRuleReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
+		duration: EndOfTurn,
 		from: NewPermanentFilter("specific source", func(p *Permanent, _ *Game) bool {
 			return p.ID() == sourceID
 		}),
@@ -604,7 +604,7 @@ func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UU
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
-	g.effects.AddReplacement(&drawReplacementEffect{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, count: count})
+	g.effects.AddReplacement(&drawReplacementEffect{duration: EndOfTurn, playerID: playerID, count: count})
 }
 
 // AddEmptyLibraryDrawReplacement registers a replacement effect that fires
@@ -617,9 +617,9 @@ func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
 // instead put five +1/+1 counters on Ormos."
 func (g *Game) AddEmptyLibraryDrawReplacement(sourceID, playerID uuid.UUID, callback func(g *Game, sourceID uuid.UUID)) {
 	g.effects.AddReplacement(&emptyLibraryDrawReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		playerID:        playerID,
-		callback:        callback,
+		sourceID: sourceID, duration: WhileOnBattlefield,
+		playerID: playerID,
+		callback: callback,
 	})
 }
 
@@ -678,9 +678,9 @@ func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int
 // Season-style for a specific counter type).
 func (g *Game) AddCounterDoubler(sourceID uuid.UUID, ct CounterType, filter PermanentFilter) {
 	g.effects.AddReplacement(&counterDoublerReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		counterType:     ct,
-		filter:          filter,
+		sourceID: sourceID, duration: WhileOnBattlefield,
+		counterType: ct,
+		filter:      filter,
 	})
 }
 
@@ -691,11 +691,11 @@ func (g *Game) AddCounterDoubler(sourceID uuid.UUID, ct CounterType, filter Perm
 // +1/+1 counter on it").
 func (g *Game) AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType, extra int, filter PermanentFilter, excludeSelf bool) {
 	g.effects.AddReplacement(&etbAdditionalCountersReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		counterType:     ct,
-		extra:           extra,
-		filter:          filter,
-		excludeSelf:     excludeSelf,
+		sourceID: sourceID, duration: WhileOnBattlefield,
+		counterType: ct,
+		extra:       extra,
+		filter:      filter,
+		excludeSelf: excludeSelf,
 	})
 }
 

@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"slices"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -42,7 +43,7 @@ type ActivationPermission struct {
 // ActivatedAbility is the interface for activated abilities.
 type ActivatedAbility interface {
 	Ability
-	CanActivate(controller uuid.UUID, g *Game) bool
+	CanActivate(ctx AbilityContext, g *Game) bool
 	Effects() []Effect
 	Costs() []Cost
 	Targets() []Target
@@ -185,19 +186,18 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 // non-mana activated abilities.
 type ActionDefinition struct {
 	BaseAbility
-	kind                ActionKind
-	effects             []Effect
-	costs               []Cost
-	targets             []Target
-	timing              TimingRule
-	stepOnly            PhaseStep
-	limits              ActivationLimits
-	permission          ActivationPermission
-	activatedThisTurn   bool // Tracks whether this ability has been activated this turn
-	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
-	activationConds     []ActivationCondition
-	aiHints             []AIHint
-	modes               []Mode
+	kind            ActionKind
+	effects         []Effect
+	costs           []Cost
+	targets         []Target
+	timing          TimingRule
+	stepOnly        PhaseStep
+	limits          ActivationLimits
+	permission      ActivationPermission
+	activationConds []ActivationCondition
+	aiHints         []AIHint
+	modes           []Mode
+	legacyModes     bool
 }
 
 // SimpleActivatedAbility is kept as a compatibility name for activated actions.
@@ -210,12 +210,10 @@ func NewAction(kind ActionKind, opts ...ActionOption) *ActionDefinition {
 		abilityType = AbilityActivated
 	}
 	a := &ActionDefinition{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: abilityType,
-		},
-		kind:   kind,
-		timing: TimingInstant,
+		id:          uuid.New(),
+		abilityType: abilityType,
+		kind:        kind,
+		timing:      TimingInstant,
 	}
 	for _, opt := range opts {
 		opt(a)
@@ -238,7 +236,7 @@ func NewModalActivated(cost Cost, modes []Mode, parts ...any) *ActionDefinition 
 		panic("NewModalActivated: a modal ability needs at least two modes (CR 700.2)")
 	}
 	action := NewActivated(cost, parts...)
-	action.modes = append([]Mode(nil), modes...)
+	action.modes = cloneModes(modes)
 	return action
 }
 
@@ -274,11 +272,12 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 // Kind returns whether this action is a spell or activated ability.
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
-func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
+func (a *ActionDefinition) CanActivate(ctx AbilityContext, g *Game) bool {
+	controller := ctx.Controller
 	if a.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
 		return false
 	}
-	if perm := g.FindPermanent(a.source); perm != nil {
+	if perm := g.FindPermanent(ctx.SourceID); perm != nil {
 		if perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities) {
 			return false
 		}
@@ -295,20 +294,20 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.timing == TimingStepOnly && a.stepOnly != 0 && g.turns.Step() != a.stepOnly {
 		return false
 	}
-	if a.limits.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.limits.MaxActivationsPerTurn {
+	if a.limits.MaxActivationsPerTurn > 0 && g.activationCount(ctx.SourceID, a.AbilityID(), ctx.AbilityIndex) >= a.limits.MaxActivationsPerTurn {
 		return false
 	}
-	if a.limits.OncePerTurn && a.activatedThisTurn {
+	if a.limits.OncePerTurn && (g.activationCount(ctx.SourceID, a.AbilityID(), ctx.AbilityIndex) > 0) {
 		return false
 	}
 	if a.limits.ControlledSinceTurnStart {
-		perm := g.FindPermanent(a.source)
+		perm := g.FindPermanent(ctx.SourceID)
 		if perm == nil || !perm.ControlledSinceTurnStart(g) {
 			return false
 		}
 	}
 	if len(a.activationConds) > 0 {
-		src := g.FindPermanent(a.source)
+		src := g.FindPermanent(ctx.SourceID)
 		for _, cond := range a.activationConds {
 			if !cond(g, src, controller) {
 				return false
@@ -316,7 +315,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		}
 	}
 	for _, c := range a.costs {
-		if !c.CanPay(a.source, controller, g) {
+		if !c.CanPay(ctx.SourceID, controller, g) {
 			return false
 		}
 	}
@@ -339,22 +338,6 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	return true
 }
 
-// MarkActivated sets the once-per-turn flag. Called after the ability is paid for.
-func (a *ActionDefinition) MarkActivated() {
-	if a.limits.OncePerTurn {
-		a.activatedThisTurn = true
-	}
-	if a.limits.MaxActivationsPerTurn > 0 {
-		a.activationsThisTurn++
-	}
-}
-
-// ResetActivation clears the once-per-turn flag. Called at the beginning of each turn.
-func (a *ActionDefinition) ResetActivation() {
-	a.activatedThisTurn = false
-	a.activationsThisTurn = 0
-}
-
 // IsAnyPlayerAbility returns true if any player may activate this ability.
 func (a *ActionDefinition) IsAnyPlayerAbility() bool {
 	return a.permission.AnyPlayerMayUse
@@ -366,12 +349,18 @@ func (a *ActionDefinition) IsOpponentOnlyAbility() bool {
 	return a.permission.OpponentOnlyMayUse
 }
 
-func (a *ActionDefinition) Effects() []Effect  { return a.effects }
-func (a *ActionDefinition) Costs() []Cost      { return a.costs }
-func (a *ActionDefinition) Targets() []Target  { return a.targets }
+func (a *ActionDefinition) Effects() []Effect  { return slices.Clone(a.effects) }
+func (a *ActionDefinition) Costs() []Cost      { return slices.Clone(a.costs) }
+func (a *ActionDefinition) Targets() []Target  { return slices.Clone(a.targets) }
 func (a *ActionDefinition) SorcerySpeed() bool { return a.timing == TimingSorcery }
-func (a *ActionDefinition) AIHints() []AIHint  { return a.aiHints }
-func (a *ActionDefinition) Modes() []Mode      { return a.modes }
+func (a *ActionDefinition) AIHints() []AIHint {
+	hints := slices.Clone(a.aiHints)
+	for i := range hints {
+		hints[i].Roles = slices.Clone(hints[i].Roles)
+	}
+	return hints
+}
+func (a *ActionDefinition) Modes() []Mode { return cloneModes(a.modes) }
 
 // EquipAbility is an activated ability for equipment (sorcery speed, targets creature you control).
 type EquipAbility struct {

@@ -113,7 +113,7 @@ func (e *DealDamageToGatheredData) Apply(ctx *EffectContext) error {
 	if id == uuid.Nil() {
 		return nil
 	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.Amount.Resolve(ctx)
 	if amount <= 0 {
 		return nil
 	}
@@ -163,7 +163,7 @@ func (e *PreventDamageToGatheredData) Apply(ctx *EffectContext) error {
 	if id == uuid.Nil() {
 		return nil
 	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.Amount.Resolve(ctx)
 	ctx.Game.AddPreventionShield(id, amount)
 	return nil
 }
@@ -223,8 +223,8 @@ func (e *RegisterDelayedTriggerData) Properties() EffectProperties { return Effe
 func (e *RegisterDelayedTriggerData) Apply(ctx *EffectContext) error {
 	targetID := ctx.SourceID
 	if e.TargetVar == "_target" {
-		if len(ctx.Targets) > 0 {
-			targetID = ctx.Targets[0]
+		if len(ctx.legacyTargets()) > 0 {
+			targetID = ctx.legacyTargets()[0]
 		}
 	} else if e.TargetVar != "" {
 		id := ctx.TryGetUUID(e.TargetVar)
@@ -395,7 +395,7 @@ func (e *SetVarFromHandSizeData) Text() string                 { return "" }
 func (e *SetVarFromHandSizeData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *SetVarFromHandSizeData) Apply(ctx *EffectContext) error {
-	playerIDs := e.Player.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	playerIDs := e.Player.Select(ctx)
 	if len(playerIDs) == 0 {
 		ctx.SetInt(e.StoreAs, 0)
 		return nil
@@ -537,7 +537,7 @@ func (e *DealDamageToSourceData) Apply(ctx *EffectContext) error {
 	if self == nil {
 		return nil
 	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.Amount.Resolve(ctx)
 	if amount > 0 {
 		ctx.Game.DealDamageToPermanent(self, amount, ctx.SourceID)
 	}
@@ -584,7 +584,7 @@ func (e *ForEachBlockerOfSourceData) Apply(ctx *EffectContext) error {
 			}
 		}
 	}
-	savedTargets := ctx.Targets
+	savedTargets := ctx.legacyTargets()
 	for _, bid := range blockerIDs {
 		ctx.Targets = []uuid.UUID{bid}
 		if err := e.Inner.Apply(ctx); err != nil {
@@ -616,7 +616,7 @@ func (e *ForEachAttackerBlockedBySourceData) Apply(ctx *EffectContext) error {
 			attackerIDs = append(attackerIDs, group.AttackerID)
 		}
 	}
-	savedTargets := ctx.Targets
+	savedTargets := ctx.legacyTargets()
 	for _, aid := range attackerIDs {
 		ctx.Targets = []uuid.UUID{aid}
 		if err := e.Inner.Apply(ctx); err != nil {
@@ -654,7 +654,7 @@ func (e *ForEachCombatOpponentData) Apply(ctx *EffectContext) error {
 			}
 		}
 	}
-	savedTargets := ctx.Targets
+	savedTargets := ctx.legacyTargets()
 	for _, id := range opponentIDs {
 		ctx.Targets = []uuid.UUID{id}
 		if err := e.Inner.Apply(ctx); err != nil {
@@ -681,17 +681,17 @@ func (e *ForEachBlockerOfTargetData) Text() string                 { return e.Tx
 func (e *ForEachBlockerOfTargetData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *ForEachBlockerOfTargetData) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	attackerID := ctx.Targets[0]
+	attackerID := ctx.legacyTargets()[0]
 	group := ctx.Game.CombatGroupFor(attackerID)
 	if group == nil {
 		return nil
 	}
 	blockerIDs := make([]uuid.UUID, len(group.BlockerIDs))
 	copy(blockerIDs, group.BlockerIDs)
-	savedTargets := ctx.Targets
+	savedTargets := ctx.legacyTargets()
 	for _, bid := range blockerIDs {
 		ctx.Targets = []uuid.UUID{bid}
 		if err := e.Inner.Apply(ctx); err != nil {
@@ -718,17 +718,17 @@ func (e *ForEachAttackerBlockedByTargetData) Text() string                 { ret
 func (e *ForEachAttackerBlockedByTargetData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *ForEachAttackerBlockedByTargetData) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	blockerID := ctx.Targets[0]
+	blockerID := ctx.legacyTargets()[0]
 	var attackerIDs []uuid.UUID
 	for _, group := range ctx.Game.CombatGroups() {
 		if slices.Contains(group.BlockerIDs, blockerID) {
 			attackerIDs = append(attackerIDs, group.AttackerID)
 		}
 	}
-	savedTargets := ctx.Targets
+	savedTargets := ctx.legacyTargets()
 	for _, aid := range attackerIDs {
 		ctx.Targets = []uuid.UUID{aid}
 		if err := e.Inner.Apply(ctx); err != nil {
@@ -783,8 +783,7 @@ func (e *RampageEffectData) Apply(ctx *EffectContext) error {
 	}
 	bonus := e.N * (len(group.BlockerIDs) - 1)
 	ce := TemporaryBoost(ctx.SourceID, bonus, bonus)
-	ce.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(ce)
+	ctx.Game.AddContinuousEffect(ce, ctx.SourceID)
 	return nil
 }
 
@@ -792,7 +791,7 @@ func (e *RampageEffectData) Apply(ctx *EffectContext) error {
 // target already has a Rampage triggered ability (used by Rapid Fire's "If it
 // doesn't have rampage" clause). It reads GetResolvingTargets(), which is the
 // stack object's chosen targets — note that inside a ForEach pipeline stage
-// the per-iteration rebinding of ctx.Targets is NOT visible here.
+// the per-iteration rebinding of ctx.legacyTargets() is NOT visible here.
 type TargetHasRampageCond struct{}
 
 func (c TargetHasRampageCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
@@ -839,8 +838,7 @@ func (e *AddContinuousEffectsData) Properties() EffectProperties { return Effect
 
 func (e *AddContinuousEffectsData) Apply(ctx *EffectContext) error {
 	for _, eff := range e.Factory() {
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
+		ctx.Game.AddContinuousEffect(eff, ctx.SourceID)
 	}
 	return nil
 }

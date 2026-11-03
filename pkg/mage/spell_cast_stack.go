@@ -7,6 +7,8 @@ import (
 )
 
 type castStackObjectOptions struct {
+	TargetGroups      [][]uuid.UUID
+	Mode              *int
 	Card              *Card
 	Controller        uuid.UUID
 	Targets           []uuid.UUID
@@ -30,7 +32,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		return nil, ErrPlayerNotFound
 	}
 
-	effects, targets, modalTargets, modeChoice := g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets, opts.ModePrompt)
+	effects, targets, modalTargets, modeChoice := g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets, opts.ModePrompt, opts.Mode, opts.TargetGroups)
 	sourceID := opts.SourceID
 	if sourceID == uuid.Nil() {
 		sourceID = card.ID()
@@ -52,12 +54,19 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		CastZone:          opts.CastZone,
 		ExileOnLeaveStack: opts.ExileOnLeaveStack,
 	}
+	specs := card.CastTargets()
+	if action, ok := getModalSpellAbility(card); ok {
+		specs = action.modes[modeChoice].Targets
+		obj.TargetSpecs = expandTargetSpecs(specs, targets, opts.XValue)
+	}
+	obj.TargetGroups = groupTargets(specs, targets, opts.XValue)
+	if opts.TargetGroups != nil {
+		obj.TargetGroups = cloneTargetGroups(opts.TargetGroups)
+	}
+	obj.TargetSpecs = expandedTargetGroups(specs, obj.TargetGroups)
+	obj.declaredTargets = len(specs) > 0
 	if opts.SnapshotCast {
 		obj.CastContext = g.snapshotCastContext(opts.Controller)
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = controller.ChooseMode(modes, card.Name())
 	}
 
 	g.chooseDividedDamageForSpell(obj, card, controller)
@@ -72,12 +81,14 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	return obj, nil
 }
 
-func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uuid.UUID, promptTargets bool, modePrompt string) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
+func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uuid.UUID, promptTargets bool, modePrompt string, modeOverride *int, suppliedGroups [][]uuid.UUID) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
 	if ms, ok := getModalSpellAbility(card); ok {
 		if modePrompt == "" {
 			modePrompt = card.Name()
 		}
-		if chooser, ok := caster.(EffectModeChooser); ok {
+		if modeOverride != nil {
+			modeChoice = *modeOverride
+		} else if chooser, ok := caster.(EffectModeChooser); ok {
 			modeChoice = chooser.ChooseModeWithEffects(ms.modes, modePrompt, g)
 		} else {
 			modeChoice = caster.ChooseMode(modalLabels(ms), modePrompt)
@@ -87,7 +98,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uui
 		}
 		mode := ms.modes[modeChoice]
 		effects = append(effects, mode.Effects...)
-		if len(targets) == 0 {
+		if len(targets) == 0 && suppliedGroups == nil {
 			targets = g.promptTargetsForList(caster.PlayerID(), card, mode.Targets)
 		}
 		modalTargets = make([][]uuid.UUID, len(ms.modes))
@@ -123,7 +134,7 @@ func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card *Card, control
 		if !IsDividedDamageEffect(eff) {
 			continue
 		}
-		total := DividedDamageTotal(eff).Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
+		total := DividedDamageTotal(eff).Resolve(NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets))
 		if total > 0 && len(obj.Targets) > 0 {
 			dist := controller.ChooseDamageDistribution(obj.Targets, total, card.Name(), g)
 			obj.DamageDistribution = sanitizeDamageDistribution(dist, obj.Targets, total)

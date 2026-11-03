@@ -22,15 +22,12 @@ func init() {
 func gatherCastTargetsFromZone(g *Game, p Player, card *Card) []uuid.UUID {
 	var out []uuid.UUID
 	for _, t := range card.CastTargets() {
-		t.Reset()
+
 		possible := t.Possible(p.PlayerID(), card, g)
 		if len(possible) == 0 {
 			continue
 		}
 		chosen := p.ChooseTargets(possible, t.Min(), t.Max(), g)
-		if err := t.Choose(p.PlayerID(), card, g, chosen); err != nil {
-			continue
-		}
 		out = append(out, chosen...)
 	}
 	return out
@@ -587,8 +584,7 @@ func registerCreatures() {
 								g.GrantAttr(target.ID(), Indestructible)
 								return nil
 							})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 						}
 						g.ApplyContinuousEffects()
 						return nil
@@ -1124,8 +1120,7 @@ func registerCreatures() {
 							return nil
 						}
 						eff := TargetCantBeBlockedExceptBy(targets[0], HasSubType("Spirit"), EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -1885,11 +1880,9 @@ func registerCreatures() {
 							g.RevokeAttr(target.ID(), Defender)
 							return nil
 						})
-						revoke.SetSourceID(sourceID)
-						g.AddContinuousEffect(revoke)
+						g.AddContinuousEffect(revoke, sourceID)
 						sub := BecomesSubType(sourceID, "Human", EndOfTurn)
-						sub.SetSourceID(sourceID)
-						g.AddContinuousEffect(sub)
+						g.AddContinuousEffect(sub, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},
@@ -2490,8 +2483,7 @@ func registerCreatures() {
 							amount = 4
 						}
 						ce := TemporaryBoost(target.ID(), -amount, -amount)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					}),
 				false,
@@ -3245,8 +3237,7 @@ func registerCreatures() {
 							return nil
 						}
 						ce := TemporaryBoost(target.ID(), -1, -1)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					}),
 				false,
@@ -4595,14 +4586,11 @@ func registerCreatures() {
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller), HasSubType("Minotaur"))) {
 							b := TemporaryBoost(p.ID(), 1, 0)
-							b.SetSourceID(sourceID)
-							g.AddContinuousEffect(b)
+							g.AddContinuousEffect(b, sourceID)
 							km := TemporaryKeyword(p.ID(), Menace)
-							km.SetSourceID(sourceID)
-							g.AddContinuousEffect(km)
+							g.AddContinuousEffect(km, sourceID)
 							kh := TemporaryKeyword(p.ID(), Haste)
-							kh.SetSourceID(sourceID)
-							g.AddContinuousEffect(kh)
+							g.AddContinuousEffect(kh, sourceID)
 						}
 						g.ApplyContinuousEffects()
 						return nil
@@ -5008,11 +4996,9 @@ func registerCreatures() {
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller), HasSubType("Elf"))) {
 							pt := SetBasePT(perm.ID(), 5, 5)
-							pt.SetSourceID(sourceID)
-							g.AddContinuousEffect(pt)
+							g.AddContinuousEffect(pt, sourceID)
 							sub := GrantSubTypeToTarget(perm.ID(), "Dinosaur", EndOfTurn)
-							sub.SetSourceID(sourceID)
-							g.AddContinuousEffect(sub)
+							g.AddContinuousEffect(sub, sourceID)
 						}
 						g.ApplyContinuousEffects()
 						return nil
@@ -5092,8 +5078,7 @@ func registerCreatures() {
 								SubTypes:  []string{"Treefolk"},
 								Colors:    []Color{Green},
 							})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					}),
 				false,
@@ -5187,11 +5172,9 @@ func registerCreatures() {
 					x := g.CountBattlefield(And(IsCreature, ControlledBy(controller)))
 					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
 						b := TemporaryBoost(p.ID(), x, x)
-						b.SetSourceID(sourceID)
-						g.AddContinuousEffect(b)
+						g.AddContinuousEffect(b, sourceID)
 						k := TemporaryKeyword(p.ID(), Trample)
-						k.SetSourceID(sourceID)
-						g.AddContinuousEffect(k)
+						g.AddContinuousEffect(k, sourceID)
 					}
 					g.ApplyContinuousEffects()
 					return nil
@@ -5410,8 +5393,7 @@ func registerCreatures() {
 							return nil
 						}
 						eff := TargetCantBeBlockedExceptBy(targets[0], PowerGreaterThan(2), EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -5586,8 +5568,7 @@ func registerCreatures() {
 					return nil
 				}
 				eff := TargetMustBeBlockedIfAble(targets[0], EndOfCombat)
-				eff.SetSourceID(sourceID)
-				g.AddContinuousEffect(eff)
+				g.AddContinuousEffect(eff, sourceID)
 				g.ApplyContinuousEffects()
 				return nil
 			},
@@ -5783,8 +5764,7 @@ func registerCreatures() {
 							continue
 						}
 						ab := NewActivatedAbility(AddMana(Green, 1), Tap())
-						ab.SetSource(p.ID())
-						ab.SetController(p.ControllerID())
+
 						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
 					}
 					return nil
@@ -6087,8 +6067,7 @@ func registerCreatures() {
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, p := range g.FilterBattlefield(IsCreature) {
 							k := TemporaryKeyword(p.ID(), Trample)
-							k.SetSourceID(sourceID)
-							g.AddContinuousEffect(k)
+							g.AddContinuousEffect(k, sourceID)
 						}
 						g.ApplyContinuousEffects()
 						return nil
@@ -6469,8 +6448,7 @@ func registerCreatures() {
 							g.GrantAttr(target.ID(), Flying)
 							return nil
 						})
-						revoke.SetSourceID(sourceID)
-						g.AddContinuousEffect(revoke)
+						g.AddContinuousEffect(revoke, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},
@@ -6503,8 +6481,7 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						eff := TargetCantBeBlockedExceptBy(sourceID, HasKeywordFilter(Haste), EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -6603,17 +6580,14 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						b := TemporaryBoost(sourceID, 2, 0)
-						b.SetSourceID(sourceID)
-						g.AddContinuousEffect(b)
+						g.AddContinuousEffect(b, sourceID)
 						k := TemporaryKeyword(sourceID, Trample)
-						k.SetSourceID(sourceID)
-						g.AddContinuousEffect(k)
+						g.AddContinuousEffect(k, sourceID)
 						canAttack := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
 							g.RevokeAttr(target.ID(), Defender)
 							return nil
 						})
-						canAttack.SetSourceID(sourceID)
-						g.AddContinuousEffect(canAttack)
+						g.AddContinuousEffect(canAttack, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},
@@ -6706,8 +6680,7 @@ func registerCreatures() {
 							}
 						}
 						eff := BecomesColors(targets[0], chosen, EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},

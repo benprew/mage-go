@@ -222,8 +222,7 @@ func ColorToBasicLandType(c Color) string {
 func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond TriggerConditionData, effects ...Effect) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 		trig := NewTriggered(eventType, optional, effects...)
-		trig.source = target.ID()
-		trig.controller = target.ControllerID()
+
 		if cond != nil {
 			trig.SetConditionData(cond)
 		}
@@ -233,23 +232,21 @@ func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond Tr
 }
 
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
-// The ability instance is persisted across continuous-effect reapplications so that
-// per-turn activation tracking (OncePerTurn, MaxActivationsPerTurn) survives.
+// The shared specification keeps the same identity across layer applications.
 func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, opts ...AbilityOption) ContinuousEffect {
 	return &attachedActivatedAbilityEffect{
-		attachedEffect: attachedEffect{layer: LayerAbility},
-		template:       NewActivatedAbility(effect, cost, opts...),
+		layer:    LayerAbility,
+		template: NewActivatedAbility(effect, cost, opts...),
 	}
 }
 
 type attachedActivatedAbilityEffect struct {
 	attachedEffect
-	template  *SimpleActivatedAbility
-	abilities map[uuid.UUID]*SimpleActivatedAbility
+	template *SimpleActivatedAbility
 }
 
 func (e *attachedActivatedAbilityEffect) Apply(ctx *EffectContext) error {
-	source := ctx.Game.FindPermanent(e.sourceID)
+	source := ctx.Game.FindPermanent(ctx.SourceID)
 	if source == nil || !source.IsAttached() {
 		return nil
 	}
@@ -257,23 +254,9 @@ func (e *attachedActivatedAbilityEffect) Apply(ctx *EffectContext) error {
 	if target == nil {
 		return nil
 	}
-	if e.abilities == nil {
-		e.abilities = make(map[uuid.UUID]*SimpleActivatedAbility)
-	}
-	ability := e.abilities[target.incarnationID]
-	if ability == nil {
-		ability = cloneInstanceAbility(e.template).(*SimpleActivatedAbility)
-		ability.setAbilityID(uuid.New())
-		e.abilities[target.incarnationID] = ability
-	}
-	ability.SetSource(target.ID())
-	ability.SetController(target.ControllerID())
+	ability := e.template
 	target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ability))
 	return nil
-}
-
-func (e *attachedActivatedAbilityEffect) cloneEffect() ContinuousEffect {
-	return newGameCloneContext().continuous(e)
 }
 
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
@@ -454,8 +437,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 				continue
 			}
 			ab := NewActivatedAbility(effect, cost)
-			ab.source = p.ID()
-			ab.controller = p.ControllerID()
+
 			p = g.MutablePermanent(p.ID())
 			if p == nil {
 				continue
@@ -495,8 +477,7 @@ func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond Trigger
 				continue
 			}
 			trig := NewTriggered(eventType, optional, effects...)
-			trig.source = p.ID()
-			trig.controller = p.ControllerID()
+
 			if cond != nil {
 				trig.SetConditionData(cond)
 			}
@@ -943,8 +924,7 @@ func refreshIntrinsicBasicLandManaAbilities(target *Permanent) {
 			continue
 		}
 		ability := NewManaAbility(color)
-		ability.SetSource(target.ID())
-		ability.SetController(target.ControllerID())
+
 		target.RuntimeAbilities = append(target.RuntimeAbilities, wrapIntrinsicBasicLandManaAbility(ability))
 	}
 }
@@ -1156,7 +1136,7 @@ func AnimateTargetLand(targetID uuid.UUID, opts AnimateLandOptions, duration Dur
 // Treefolk creature for as long as Awakener Druid remains on the battlefield."
 //
 // The source ID is supplied by the effect manager when the effect is
-// registered (via SetSourceID); the target ID is the captured land ID at
+// registered; the target ID is the captured land ID at
 // the time the ETB effect resolves.
 func AnimateLandWhileSourceOnBattlefield(targetID uuid.UUID, opts AnimateLandOptions) ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
@@ -1189,8 +1169,7 @@ func AnimateAttachedLand(opts AnimateLandOptions) ContinuousEffect {
 func GrantManaAbilityToAttached(productions ...ManaProduction) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 		ma := NewMultiManaAbility(productions...)
-		ma.SetSource(target.ID())
-		ma.SetController(target.ControllerID())
+
 		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ma))
 		return nil
 	})
@@ -1228,8 +1207,7 @@ func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
 				continue
 			}
 			ability := NewManaAbility(color)
-			ability.SetSource(source.ID())
-			ability.SetController(source.ControllerID())
+
 			source.RuntimeAbilities = append(source.RuntimeAbilities, WrapGrantedAbility(ability))
 		}
 		return nil
@@ -1400,7 +1378,7 @@ func BodyguardContinuous() ContinuousEffect {
 			return nil
 		}
 		g.effects.AddCycleReplacement(&bodyguardReplacement{
-			replacementBase: replacementBase{sourceID: sourceID},
+			sourceID:        sourceID,
 			controllerID:    src.ControllerID(),
 			bodyguardPermID: src.ID(),
 		})
@@ -1418,9 +1396,9 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 			return nil
 		}
 		g.effects.AddCycleReplacement(&playerDamageRedirectReplacement{
-			replacementBase: replacementBase{sourceID: sourceID},
-			controllerID:    src.ControllerID(),
-			redirectPermID:  src.ID(),
+			sourceID:       sourceID,
+			controllerID:   src.ControllerID(),
+			redirectPermID: src.ID(),
 		})
 		return nil
 	})
@@ -1477,7 +1455,6 @@ type preventDamageRuleContinuous struct {
 	from      PermanentFilter
 	toFactory func(sourceID uuid.UUID) PermanentFilter
 	condition SourceCondition // optional; nil means always active while on battlefield
-	effectSource
 }
 
 // PreventDamageFromTo creates a continuous effect that prevents all damage
@@ -1504,8 +1481,9 @@ func (e *preventDamageRuleContinuous) Text() string          { return "prevent d
 func (e *preventDamageRuleContinuous) GetLayer() Layer       { return LayerAbility }
 func (e *preventDamageRuleContinuous) GetDuration() Duration { return WhileOnBattlefield }
 
-func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
+func (e *preventDamageRuleContinuous) Active(ctx *EffectContext) bool {
+	g := ctx.Game
+	src := g.FindPermanent(ctx.SourceID)
 	if src == nil {
 		return false
 	}
@@ -1517,11 +1495,11 @@ func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
 
 func (e *preventDamageRuleContinuous) Apply(ctx *EffectContext) error {
 	g := ctx.Game
-	toFilter := e.toFactory(e.sourceID)
+	toFilter := e.toFactory(ctx.SourceID)
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
-		replacementBase: replacementBase{sourceID: e.sourceID},
-		from:            e.from,
-		to:              toFilter,
+		sourceID: ctx.SourceID,
+		from:     e.from,
+		to:       toFilter,
 	})
 	return nil
 }
@@ -1531,8 +1509,8 @@ func (e *preventDamageRuleContinuous) Apply(ctx *EffectContext) error {
 func PreventDamageToSourceByRemovingCounters(counterType CounterType) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		g.effects.AddCycleReplacement(&counterDamagePreventionReplacement{
-			replacementBase: replacementBase{sourceID: sourceID},
-			counterType:     counterType,
+			sourceID:    sourceID,
+			counterType: counterType,
 		})
 		return nil
 	})
@@ -1542,7 +1520,6 @@ func PreventDamageToSourceByRemovingCounters(counterType CounterType) Continuous
 // dealt to the source's controller and to creatures the controller controls.
 // Used by Blessed Sanctuary.
 type preventNoncombatDamageToControllerContinuous struct {
-	effectSource
 }
 
 // PreventNoncombatDamageToControllerAndCreatures creates a continuous effect
@@ -1566,61 +1543,54 @@ func (e *preventNoncombatDamageToControllerContinuous) GetDuration() Duration {
 	return WhileOnBattlefield
 }
 
-func (e *preventNoncombatDamageToControllerContinuous) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
+func (e *preventNoncombatDamageToControllerContinuous) Active(ctx *EffectContext) bool {
+	g := ctx.Game
+	return g.FindPermanent(ctx.SourceID) != nil
 }
 
 func (e *preventNoncombatDamageToControllerContinuous) Apply(ctx *EffectContext) error {
 	g := ctx.Game
-	src := g.FindPermanent(e.sourceID)
+	src := g.FindPermanent(ctx.SourceID)
 	if src == nil {
 		return nil
 	}
 	controller := src.ControllerID()
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
-		replacementBase: replacementBase{sourceID: e.sourceID},
-		to:              And(IsCreature, ControlledBy(controller)),
-		noncombatOnly:   true,
+		sourceID:      ctx.SourceID,
+		to:            And(IsCreature, ControlledBy(controller)),
+		noncombatOnly: true,
 	})
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
-		replacementBase: replacementBase{sourceID: e.sourceID},
-		toPlayerID:      controller,
-		noncombatOnly:   true,
+		sourceID:      ctx.SourceID,
+		toPlayerID:    controller,
+		noncombatOnly: true,
 	})
 	return nil
 }
 
 // ---------------------------------------------------------------------------
-// Doppelganger copy effect (mutable state, not convertible to primitives)
+// Doppelganger copy effect
 // ---------------------------------------------------------------------------
 
 // doppelgangerCopyEffect stores the values selected by a copy effect.
 type doppelgangerCopyEffect struct {
-	effectSource
 	doppelgangerID uuid.UUID
 	copiedName     string
 	values         CopiableValues
-	originalValues CopiableValues
-	applied        bool
-	initialized    bool
 	options        CopyOptions
-}
-
-func (e *doppelgangerCopyEffect) cloneEffect() ContinuousEffect {
-	cloned := *e
-	return &cloned
 }
 
 func (e *doppelgangerCopyEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *doppelgangerCopyEffect) Text() string                 { return "copy creature characteristics" }
 func (e *doppelgangerCopyEffect) GetLayer() Layer              { return LayerCopy }
 func (e *doppelgangerCopyEffect) GetDuration() Duration        { return Indefinite }
-func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
+func (e *doppelgangerCopyEffect) Active(ctx *EffectContext) bool {
+	g := ctx.Game
 	return g.FindPermanent(e.doppelgangerID) != nil
 }
 
 func (e *doppelgangerCopyEffect) Apply(ctx *EffectContext) error {
-	if e.applied {
+	if ctx.continuous.applied {
 		return nil
 	}
 	g := ctx.Game
@@ -1628,42 +1598,43 @@ func (e *doppelgangerCopyEffect) Apply(ctx *EffectContext) error {
 	if perm == nil {
 		return nil
 	}
-	if !e.initialized {
-		e.originalValues = perm.Card.CopiableValues()
-		e.initialized = true
+	if !ctx.continuous.initialized {
+		ctx.continuous.originalValues = perm.Card.CopiableValues()
+		ctx.continuous.initialized = true
 	}
 	values := copyValuesWithOptions(e.values, perm.Card.Colors(), e.options)
 	g.applyPermanentCopy(perm, values)
-	e.copiedName = perm.Name()
-	e.applied = true
+	ctx.continuous.applied = true
 	return nil
 }
 
 // AddCopyEffect captures the target's copiable characteristics.
 func (em *EffectManager) AddCopyEffect(permanentID uuid.UUID, target *Permanent, options ...CopyOptions) {
 	values := target.CopiableValues()
-	ce := &doppelgangerCopyEffect{doppelgangerID: permanentID, copiedName: values.characteristics.name, values: values}
+	ce := &doppelgangerCopyEffect{doppelgangerID: permanentID, copiedName: values.Name(), values: values}
 	if len(options) > 0 {
 		ce.options = options[0]
 	}
-	ce.sourceID = permanentID
-	em.effects = append(em.effects, ce)
+	em.Add(ce, permanentID)
 }
 
 // UpdateCopyEffect selects new copiable values and optional copy exceptions.
 // If options are absent, the existing copy exceptions remain in effect.
 func (em *EffectManager) UpdateCopyEffect(permanentID uuid.UUID, target *Permanent, options ...CopyOptions) {
 	for _, effect := range em.effects {
-		ce, ok := effect.(*doppelgangerCopyEffect)
+		ce, ok := effect.ContinuousEffect.(*doppelgangerCopyEffect)
 		if !ok || ce.doppelgangerID != permanentID {
 			continue
 		}
+		updated := *ce
+		ce = &updated
+		effect.ContinuousEffect = ce
 		ce.values = target.CopiableValues()
-		ce.copiedName = ce.values.characteristics.name
+		ce.copiedName = ce.values.Name()
 		if len(options) > 0 {
 			ce.options = options[0]
 		}
-		ce.applied = false
+		effect.applied = false
 		return
 	}
 	em.AddCopyEffect(permanentID, target, options...)
@@ -1673,7 +1644,7 @@ func (em *EffectManager) UpdateCopyEffect(permanentID uuid.UUID, target *Permane
 // by the doppelganger, or "" if no copy effect exists.
 func (em *EffectManager) CopyEffectCurrentName(doppelgangerID uuid.UUID) string {
 	for _, e := range em.effects {
-		if ce, ok := e.(*doppelgangerCopyEffect); ok && ce.doppelgangerID == doppelgangerID {
+		if ce, ok := e.ContinuousEffect.(*doppelgangerCopyEffect); ok && ce.doppelgangerID == doppelgangerID {
 			return ce.copiedName
 		}
 	}

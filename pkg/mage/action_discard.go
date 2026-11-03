@@ -56,8 +56,8 @@ func (r *discardToLibraryReplacement) IsActive(g GameReader) bool {
 
 func (r *discardToLibraryReplacement) Clone() ReplacementEffect {
 	return &discardToLibraryReplacement{
-		replacementBase: replacementBase{sourceID: r.sourceID, duration: r.duration},
-		playerID:        r.playerID,
+		sourceID: r.sourceID, duration: r.duration,
+		playerID: r.playerID,
 	}
 }
 
@@ -70,8 +70,8 @@ func DiscardToLibraryReplacement() ContinuousEffect {
 			return nil
 		}
 		g.effects.AddCycleReplacement(&discardToLibraryReplacement{
-			replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-			playerID:        source.ControllerID(),
+			sourceID: sourceID, duration: WhileOnBattlefield,
+			playerID: source.ControllerID(),
 		})
 		return nil
 	})

@@ -62,5 +62,5 @@ func (e *payManaUnlessEffect) Apply(ctx *EffectContext) error {
 	if p != nil && p.ChooseMayAbility(prompt) && g.TryPayMana(ctx.Controller, e.cost) {
 		return nil
 	}
-	return ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets)
+	return ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.legacyTargets())
 }

@@ -242,8 +242,7 @@ func TestTurnPhasesAdditional(t *testing.T) {
 		// Attach source so the effect is not pruned by Apply's "source no
 		// longer on battlefield" sweep (UntilYourNextTurn is not in the
 		// duration-allowlist).
-		eff.SetSourceID(permID)
-		tg.Effects.Add(eff)
+		tg.Effects.Add(eff, permID)
 		tg.Effects.Apply(tg.Game)
 
 		// Confirm the pump is active right now.

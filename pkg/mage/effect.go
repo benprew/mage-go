@@ -36,7 +36,7 @@ func FuncEffect(text string, props EffectProperties, fn func(g *Game, sourceID, 
 func (e *funcEffect) Text() string                 { return e.text }
 func (e *funcEffect) Properties() EffectProperties { return e.props }
 func (e *funcEffect) Apply(ctx *EffectContext) error {
-	return e.fn(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	return e.fn(ctx.Game, ctx.SourceID, ctx.Controller, ctx.legacyTargets())
 }
 
 // compositeEffect applies multiple effects in sequence.
@@ -132,15 +132,11 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 	if e == nil {
 		return nil
 	}
-	ctx := &EffectContext{
-		Game:                g,
-		SourceID:            sourceID,
-		Controller:          controller,
-		Targets:             targets,
-		Vars:                make(map[string]any),
-		DamageDistribution:  g.resolution.DamageDistribution(),
-		CounterDistribution: g.resolution.CounterDistribution(),
-	}
+	ctx := NewEffectContext(g, sourceID, controller, targets)
+	ctx.Vars = make(map[string]any)
+	ctx.DamageDistribution = g.resolution.DamageDistribution()
+	ctx.CounterDistribution = g.resolution.CounterDistribution()
+
 	err := e.Apply(ctx)
 	g.CheckStateTriggers()
 	if err != nil {
@@ -294,14 +290,14 @@ func SpellOutcome(effects []Effect) Outcome {
 // It receives a *Game (read-only view) since value resolution never mutates state.
 // targets contains the resolved target IDs from the spell/ability context.
 type ValueSource interface {
-	Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int
+	Resolve(ctx *EffectContext) int
 	Text() string
 }
 
 // PlayerSelector picks one or more players for an effect.
 // It receives a *Game (read-only view) since player selection never mutates state.
 type PlayerSelector interface {
-	Select(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) []uuid.UUID
+	Select(ctx *EffectContext) []uuid.UUID
 	Text() string
 }
 
@@ -317,25 +313,28 @@ const (
 type fixedValue struct{ n int }
 
 // Fixed creates a ValueSource that always returns the constant n.
-func Fixed(n int) ValueSource                                                { return fixedValue{n: n} }
-func (v fixedValue) Resolve(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return v.n }
-func (v fixedValue) Text() string                                            { return fmt.Sprintf("%d", v.n) }
+func Fixed(n int) ValueSource { return fixedValue{n: n} }
+func (v fixedValue) Resolve(ctx *EffectContext) int {
+
+	return v.n
+}
+func (v fixedValue) Text() string { return fmt.Sprintf("%d", v.n) }
 
 // xValue is a ValueSource that reads g.CurrentX.
 type xValue struct{}
 
 // XValue creates a ValueSource that reads the X value from the current spell/ability (g.CurrentX).
-func XValue() ValueSource                                                { return xValue{} }
-func (v xValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.XValue() }
-func (v xValue) Text() string                                            { return "X" }
+func XValue() ValueSource                       { return xValue{} }
+func (v xValue) Resolve(ctx *EffectContext) int { return ctx.XValue }
+func (v xValue) Text() string                   { return "X" }
 
 // halfXRoundedDown is a ValueSource that returns floor(X/2).
 type halfXRoundedDown struct{}
 
 // HalfXRoundedDown creates a ValueSource that returns floor(X/2).
 func HalfXRoundedDown() ValueSource { return halfXRoundedDown{} }
-func (v halfXRoundedDown) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
-	return g.XValue() / 2
+func (v halfXRoundedDown) Resolve(ctx *EffectContext) int {
+	return ctx.XValue / 2
 }
 func (v halfXRoundedDown) Text() string { return "half X rounded down" }
 
@@ -344,8 +343,9 @@ type halfXRoundedUp struct{}
 
 // HalfXRoundedUp creates a ValueSource that returns ceil(X/2).
 func HalfXRoundedUp() ValueSource { return halfXRoundedUp{} }
-func (v halfXRoundedUp) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
-	return (g.XValue() + 1) / 2
+func (v halfXRoundedUp) Resolve(ctx *EffectContext) int {
+
+	return (ctx.XValue + 1) / 2
 }
 func (v halfXRoundedUp) Text() string { return "half X rounded up" }
 
@@ -356,8 +356,9 @@ type mulValue struct {
 
 // Mul creates a ValueSource that returns a.Resolve() * b.Resolve().
 func Mul(a, b ValueSource) ValueSource { return mulValue{a: a, b: b} }
-func (v mulValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
-	return v.a.Resolve(g, sourceID, controller, targets) * v.b.Resolve(g, sourceID, controller, targets)
+func (v mulValue) Resolve(ctx *EffectContext) int {
+
+	return v.a.Resolve(ctx) * v.b.Resolve(ctx)
 }
 func (v mulValue) Text() string { return v.a.Text() + " * " + v.b.Text() }
 
@@ -368,8 +369,9 @@ type addValue struct {
 
 // Add creates a ValueSource that returns a.Resolve() + b.Resolve().
 func Add(a, b ValueSource) ValueSource { return addValue{a: a, b: b} }
-func (v addValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
-	return v.a.Resolve(g, sourceID, controller, targets) + v.b.Resolve(g, sourceID, controller, targets)
+func (v addValue) Resolve(ctx *EffectContext) int {
+
+	return v.a.Resolve(ctx) + v.b.Resolve(ctx)
 }
 func (v addValue) Text() string { return v.a.Text() + " + " + v.b.Text() }
 
@@ -379,7 +381,15 @@ type eventAmountValue struct{}
 
 // EventAmountValue creates a ValueSource that reads g.EventAmount().
 func EventAmountValue() ValueSource { return eventAmountValue{} }
-func (v eventAmountValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
+func (v eventAmountValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+
+	if ctx.TriggerEvent != nil {
+		return ctx.TriggerEvent.Amount
+	}
+	if ctx.Game == nil {
+		return 0
+	}
 	return g.EventAmount()
 }
 func (v eventAmountValue) Text() string { return "that much" }
@@ -389,7 +399,10 @@ type playerLifeValue struct{}
 
 // PlayerLifeValue creates a ValueSource returning the controller's life total.
 func PlayerLifeValue() ValueSource { return playerLifeValue{} }
-func (v playerLifeValue) Resolve(g GameReader, _, controller uuid.UUID, _ []uuid.UUID) int {
+func (v playerLifeValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+	controller := ctx.Controller
+
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return 0
@@ -405,8 +418,9 @@ type halfRoundUpValue struct {
 
 // HalfRoundUp creates a ValueSource returning ceil(inner / 2).
 func HalfRoundUp(inner ValueSource) ValueSource { return halfRoundUpValue{inner: inner} }
-func (v halfRoundUpValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
-	n := v.inner.Resolve(g, sourceID, controller, targets)
+func (v halfRoundUpValue) Resolve(ctx *EffectContext) int {
+
+	n := v.inner.Resolve(ctx)
 	return (n + 1) / 2
 }
 func (v halfRoundUpValue) Text() string { return "half " + v.inner.Text() + " rounded up" }
@@ -424,12 +438,14 @@ type countBattlefieldValue struct {
 func CountBattlefield(who PlayerSelector, f PermanentFilter) ValueSource {
 	return countBattlefieldValue{who: who, filter: f}
 }
-func (v countBattlefieldValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+func (v countBattlefieldValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+
 	if v.who == nil {
 		return g.CountBattlefield(v.filter)
 	}
 	total := 0
-	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
+	for _, pid := range v.who.Select(ctx) {
 		total += g.CountBattlefield(And(v.filter, ControlledBy(pid)))
 	}
 	return total
@@ -459,9 +475,11 @@ func UntappedLandsAtTurnStart(who PlayerSelector) ValueSource {
 	return untappedLandsAtTurnStartValue{who: who}
 }
 
-func (v untappedLandsAtTurnStartValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+func (v untappedLandsAtTurnStartValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+
 	total := 0
-	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
+	for _, pid := range v.who.Select(ctx) {
 		total += g.UntappedLandsAtTurnStart(pid)
 	}
 	return total
@@ -482,9 +500,11 @@ type countZoneValue struct {
 func CountZone(zone Zone, who PlayerSelector, f CardFilter) ValueSource {
 	return countZoneValue{zone: zone, who: who, filter: f}
 }
-func (v countZoneValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+func (v countZoneValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+
 	total := 0
-	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
+	for _, pid := range v.who.Select(ctx) {
 		p := g.GetPlayer(pid)
 		if p == nil {
 			continue
@@ -538,8 +558,10 @@ type topOfLibraryManaValue struct {
 func TopOfLibraryManaValue(who PlayerSelector) ValueSource {
 	return topOfLibraryManaValue{who: who}
 }
-func (v topOfLibraryManaValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
-	ids := v.who.Select(g, sourceID, controller, targets)
+func (v topOfLibraryManaValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+
+	ids := v.who.Select(ctx)
 	if len(ids) == 0 {
 		return 0
 	}
@@ -562,7 +584,9 @@ type selectController struct{}
 
 // SelectController creates a PlayerSelector that returns the effect's controller.
 func SelectController() PlayerSelector { return selectController{} }
-func (s selectController) Select(_ GameReader, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectController) Select(ctx *EffectContext) []uuid.UUID {
+	controller := ctx.Controller
+
 	return []uuid.UUID{controller}
 }
 func (s selectController) Text() string { return "controller" }
@@ -572,7 +596,9 @@ type selectActivePlayer struct{}
 
 // SelectActivePlayer creates a PlayerSelector that returns the active player (whose turn it is).
 func SelectActivePlayer() PlayerSelector { return selectActivePlayer{} }
-func (s selectActivePlayer) Select(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectActivePlayer) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+
 	return []uuid.UUID{g.ActivePlayerObj().PlayerID()}
 }
 func (s selectActivePlayer) Text() string { return "active player" }
@@ -582,7 +608,9 @@ type selectEachPlayer struct{}
 
 // SelectEachPlayer creates a PlayerSelector that returns all players in the game.
 func SelectEachPlayer() PlayerSelector { return selectEachPlayer{} }
-func (s selectEachPlayer) Select(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectEachPlayer) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+
 	players := g.AllPlayers()
 	ids := make([]uuid.UUID, len(players))
 	for i, p := range players {
@@ -597,7 +625,10 @@ type selectEachOpponent struct{}
 
 // SelectEachOpponent creates a PlayerSelector that returns all opponents of the controller.
 func SelectEachOpponent() PlayerSelector { return selectEachOpponent{} }
-func (s selectEachOpponent) Select(g GameReader, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectEachOpponent) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+	controller := ctx.Controller
+
 	var ids []uuid.UUID
 	for _, p := range g.AllPlayers() {
 		if p.PlayerID() != controller {
@@ -613,7 +644,10 @@ type selectOpponent struct{}
 
 // SelectOpponent creates a PlayerSelector that returns an opponent of the controller.
 func SelectOpponent() PlayerSelector { return selectOpponent{} }
-func (s selectOpponent) Select(g GameReader, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectOpponent) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+	controller := ctx.Controller
+
 	for _, p := range g.AllPlayers() {
 		if p.PlayerID() != controller {
 			return []uuid.UUID{p.PlayerID()}
@@ -629,7 +663,10 @@ type selectAttachedController struct{}
 // SelectAttachedController creates a PlayerSelector that returns the controller of the permanent
 // the source is attached to (for aura-based effects like Psychic Venom).
 func SelectAttachedController() PlayerSelector { return selectAttachedController{} }
-func (s selectAttachedController) Select(g GameReader, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectAttachedController) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+	sourceID := ctx.SourceID
+
 	src := g.FindPermanent(sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
@@ -653,7 +690,10 @@ type selectDefendingPlayer struct{}
 // player of the source's combat group. Use this for "defending player ..."
 // triggers on attacking creatures (Mindstab Thrull, Necrite, etc.).
 func SelectDefendingPlayer() PlayerSelector { return selectDefendingPlayer{} }
-func (s selectDefendingPlayer) Select(g GameReader, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectDefendingPlayer) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+	sourceID := ctx.SourceID
+
 	if group := g.CombatGroupFor(sourceID); group != nil && group.DefenderID != uuid.Nil() {
 		if p := g.GetPlayer(group.DefenderID); p != nil {
 			return []uuid.UUID{p.PlayerID()}
@@ -675,7 +715,10 @@ type selectTargetPlayer struct{}
 // SelectTargetPlayer creates a PlayerSelector that reads targets[0] as a player ID.
 // Use for targeted spells and triggers whose event player is bound to targets[0].
 func SelectTargetPlayer() PlayerSelector { return selectTargetPlayer{} }
-func (s selectTargetPlayer) Select(g GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+func (s selectTargetPlayer) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+	targets := ctx.legacyTargets()
+
 	if len(targets) == 0 {
 		return nil
 	}
@@ -692,7 +735,10 @@ func (s selectTargetPlayer) Text() string { return "that player" }
 type selectTargetPermanentController struct{}
 
 func SelectTargetPermanentController() PlayerSelector { return selectTargetPermanentController{} }
-func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+func (s selectTargetPermanentController) Select(ctx *EffectContext) []uuid.UUID {
+	g := GameReader(ctx.Game)
+	targets := ctx.legacyTargets()
+
 	if len(targets) == 0 {
 		return nil
 	}
@@ -713,7 +759,9 @@ type exiledCardManaValue struct{}
 // ExiledCardManaValue returns a ValueSource equal to the mana value of the most recently exiled card.
 func ExiledCardManaValue() ValueSource { return exiledCardManaValue{} }
 
-func (v exiledCardManaValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
+func (v exiledCardManaValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+
 	if c := g.LastExiledCard(); c != nil {
 		return c.ManaCost().CMC()
 	}
@@ -727,7 +775,10 @@ type targetPermanentManaValue struct{}
 // TargetPermanentManaValue returns a ValueSource equal to the mana value of targets[0].
 func TargetPermanentManaValue() ValueSource { return targetPermanentManaValue{} }
 
-func (v targetPermanentManaValue) Resolve(g GameReader, _, _ uuid.UUID, targets []uuid.UUID) int {
+func (v targetPermanentManaValue) Resolve(ctx *EffectContext) int {
+	g := GameReader(ctx.Game)
+	targets := ctx.legacyTargets()
+
 	if len(targets) == 0 {
 		return 0
 	}

@@ -136,8 +136,7 @@ func registerArtifacts() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						eff := TemporaryAnimate(sourceID, 2, 2)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					}),

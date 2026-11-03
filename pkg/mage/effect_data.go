@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 	"uuid"
 )
 
@@ -10,6 +11,17 @@ import (
 // dispatch so intermediate values (snapshotted permanent properties, chosen
 // IDs, etc.) can flow between steps without closures.
 type EffectContext struct {
+	RememberedObjects []uuid.UUID
+	continuous        *activeContinuousEffect
+	latchExpiration   bool
+	SourceCard        *Card
+	SourcePerm        *Permanent
+	ModesChosen       []int
+	TargetGroups      [][]uuid.UUID
+	TriggerEvent      *GameEvent
+	declaredTargets   bool
+
+	XValue     int
 	Game       *Game
 	SourceID   uuid.UUID
 	Controller uuid.UUID
@@ -27,6 +39,9 @@ type EffectContext struct {
 
 // SetInt stores an integer variable in the context.
 func (ctx *EffectContext) SetInt(name string, val int) {
+	if ctx.Vars == nil {
+		ctx.Vars = make(map[string]any)
+	}
 	ctx.Vars[name] = val
 }
 
@@ -47,6 +62,9 @@ func (ctx *EffectContext) GetInt(name string) int {
 
 // SetUUID stores a UUID variable in the context.
 func (ctx *EffectContext) SetUUID(name string, val uuid.UUID) {
+	if ctx.Vars == nil {
+		ctx.Vars = make(map[string]any)
+	}
 	ctx.Vars[name] = val
 }
 
@@ -78,6 +96,9 @@ func (ctx *EffectContext) TryGetUUID(name string) uuid.UUID {
 
 // SetBool stores a boolean variable in the context.
 func (ctx *EffectContext) SetBool(name string, val bool) {
+	if ctx.Vars == nil {
+		ctx.Vars = make(map[string]any)
+	}
 	ctx.Vars[name] = val
 }
 
@@ -92,4 +113,29 @@ func (ctx *EffectContext) GetBool(name string) bool {
 		return false
 	}
 	return b
+}
+
+// NewEffectContext captures the execution values for an effect query.
+func NewEffectContext(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) *EffectContext {
+	ctx := &EffectContext{Game: g, SourceID: sourceID, Controller: controller, Targets: targets}
+	if g != nil {
+		ctx.XValue = g.XValue()
+		ctx.SourceCard = g.FindCardAnywhere(sourceID)
+		ctx.SourcePerm = g.FindPermanent(sourceID)
+		if g.resolution.resolvingSourceID == sourceID {
+			ctx.SourcePerm = g.ResolvingSourcePermanent(sourceID)
+			if ctx.SourcePerm == nil && g.resolution.resolvingSourceIncarnation != uuid.Nil() {
+				if lki := g.zones.LKI(sourceID); lki != nil {
+					ctx.SourcePerm = lki.Snapshot
+				}
+			}
+		}
+		if ctx.SourcePerm != nil {
+			ctx.SourceCard = ctx.SourcePerm.Card
+		}
+		if ctx.SourceCard != nil {
+			ctx.SourceCard = ctx.SourceCard.CloneInstance()
+		}
+	}
+	return ctx
 }

@@ -2,7 +2,6 @@ package cards_test
 
 import (
 	"testing"
-	"uuid"
 
 	_ "github.com/benprew/mage-go/cards"
 	_ "github.com/benprew/mage-go/cards/jumpstart"
@@ -34,13 +33,8 @@ func TestRegisteredCardsCopyOwnsAbilityState(t *testing.T) {
 					t.Fatal("copy lost abilities")
 				}
 				for i, ability := range card.Abilities() {
-					if card == copied && ability.AbilityID() == abilities[i].AbilityID() {
-						t.Fatal("copy retained the original ability identity")
-					}
-					source := abilities[i].Source()
-					ability.SetSource(uuid.New())
-					if abilities[i].Source() != source {
-						t.Fatal("copy changed the original ability context")
+					if card == copied && ability.AbilityID() != abilities[i].AbilityID() {
+						t.Fatal("copy changed definition identity")
 					}
 				}
 			}
@@ -54,18 +48,9 @@ func TestStoneGiantCopyOwnsTargets(t *testing.T) {
 		t.Fatal(err)
 	}
 	target := card.Abilities()[0].(mage.ActivatedAbility).Targets()[0]
-	chosen := uuid.New()
-	if err := target.Choose(uuid.Nil(), card, nil, []uuid.UUID{chosen}); err != nil {
-		t.Fatal(err)
-	}
 	copyTarget := card.NewCopy().Abilities()[0].(mage.ActivatedAbility).Targets()[0]
-	if copyTarget.IsChosen() {
-		t.Fatal("rules copy retained the original targets")
-	}
 	cloneTarget := card.CloneInstance().Abilities()[0].(mage.ActivatedAbility).Targets()[0]
-	cloneTarget.Chosen()[0] = uuid.New()
-	cloneTarget.Reset()
-	if !target.IsChosen() || target.Chosen()[0] != chosen {
-		t.Fatal("copy changed the original targets")
+	if copyTarget != target || cloneTarget != target {
+		t.Fatal("copy changed immutable target specification")
 	}
 }

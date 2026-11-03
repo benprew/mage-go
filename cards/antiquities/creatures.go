@@ -150,8 +150,7 @@ func registerCreatures() {
 								g.GrantAttr(target.ID(), AttrDoesNotUntap)
 								return nil
 							}, SourceTapped)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					}),
@@ -208,8 +207,7 @@ func registerCreatures() {
 							return nil
 						}
 						for _, eff := range AnimateArtifact(ForTarget(perm.ID(), UntilYourNextTurn)) {
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 						}
 						g.ApplyContinuousEffects()
 						return nil
@@ -841,8 +839,7 @@ func registerCreatures() {
 						}
 						// Apply -1/-1 until end of turn
 						debuff := TemporaryBoost(perm.ID(), -1, -1)
-						debuff.SetSourceID(sourceID)
-						g.AddContinuousEffect(debuff)
+						g.AddContinuousEffect(debuff, sourceID)
 						// Choose keyword
 						p := g.GetPlayer(controller)
 						if p == nil {
@@ -865,8 +862,7 @@ func registerCreatures() {
 							g.GrantAttr(target.ID(), attr)
 							return nil
 						})
-						kwEff.SetSourceID(sourceID)
-						g.AddContinuousEffect(kwEff)
+						g.AddContinuousEffect(kwEff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					}),

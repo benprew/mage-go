@@ -101,7 +101,11 @@ func (g *Game) RandomSpellOrPermanent() uuid.UUID {
 // Unlike the existing DiscardRandom Effect (which targets an opponent),
 // this primitive operates on a specific player and is suitable for self-
 // discard ("you discard ... at random", as on Goblin Lore).
-func (g *Game) DiscardAtRandom(p Player, n int) []*Card {
+func (g *Game) DiscardAtRandom(p Player, n int, sources ...uuid.UUID) []*Card {
+	var source uuid.UUID
+	if len(sources) > 0 {
+		source = sources[0]
+	}
 	if p == nil || n <= 0 {
 		return nil
 	}
@@ -113,7 +117,7 @@ func (g *Game) DiscardAtRandom(p Player, n int) []*Card {
 		}
 		idx := g.RandIntn(len(hand))
 		card := hand[idx]
-		if c, ok := g.PlayerDiscardByEffect(p, card.ID(), uuid.Nil()); ok {
+		if c, ok := g.PlayerDiscardByEffect(p, card.ID(), source); ok {
 			discarded = append(discarded, c)
 		} else {
 			break

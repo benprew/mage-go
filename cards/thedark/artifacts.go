@@ -162,8 +162,7 @@ func registerArtifacts() {
 						}
 						// +2/+0 until end of turn
 						boost := TemporaryBoost(targetID, 2, 0)
-						boost.SetSourceID(sourceID)
-						g.AddContinuousEffect(boost)
+						g.AddContinuousEffect(boost, sourceID)
 
 						// When that creature leaves the battlefield this turn, sacrifice this artifact
 						g.RegisterDelayedTrigger(&DelayedTrigger{

@@ -154,7 +154,7 @@ func (ms *ManaSystem) ManaSourceDrawbackScore(g *Game, permID uuid.UUID) int {
 			}
 			severity := 1
 			if props.DamageValue != nil {
-				severity = max(props.DamageValue.Resolve(g, perm.ID(), perm.ControllerID(), nil), 1)
+				severity = max(props.DamageValue.Resolve(NewEffectContext(g, perm.ID(), perm.ControllerID(), nil)), 1)
 			}
 			score += 25 * severity
 		}
@@ -410,7 +410,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 			return err
 		}
 	case *SimpleActivatedAbility:
-		activated.MarkActivated()
+		g.markAbilityActivated(perm.ID(), activated.AbilityID(), action.AbilityIndex)
 		g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), PlayerID: playerID})
 	}
 	ms.FireTappedForMana(g, perm.ID(), playerID, productionsTotalAmount(action.Productions))

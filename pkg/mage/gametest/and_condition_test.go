@@ -68,7 +68,7 @@ func TestSetConditionData_StillReplaces(t *testing.T) {
 	// Replace.
 	trig.SetConditionData(mage.EventSourceIsSelf{})
 	// Original closure no longer invoked.
-	_ = trig.CheckTrigger(&core.GameEvent{}, nil)
+	_ = trig.CheckTrigger(&core.GameEvent{}, mage.AbilityContext{}, nil)
 	if called {
 		t.Fatalf("SetConditionData should replace, not compose")
 	}

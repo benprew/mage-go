@@ -612,8 +612,7 @@ func registerSpells() {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.ControllerID() != controller && p.HasType(TypeCreature) {
 							eff := PreventBlockingUntilEndOfCombat(p.ID())
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							g.AddContinuousEffect(eff, sourceID)
 						}
 					}
 					g.ApplyContinuousEffects()

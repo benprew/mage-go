@@ -11,8 +11,8 @@ import (
 type UUIDMap[V any] map[uuid.UUID]V
 
 // Clone creates an independent simulation branch with the same object IDs.
-// Card definitions and immutable effects are shared. Mutable card, ability,
-// and target state is private. Interactive callbacks are cleared, and players
+// Definitions are shared. Mutable card and game state is private.
+// Interactive callbacks are cleared, and players
 // use SearchPlayer to make choices without user input.
 func (g *Game) Clone() *Game {
 	return newGameCloneContextForGame(g).game(g)
@@ -34,6 +34,8 @@ func (ctx *gameCloneContext) game(g *Game) *Game {
 		ctx.games = make(map[*Game]*Game)
 	}
 	ctx.games[g] = c
+	c.abilityActivations = maps.Clone(g.abilityActivations)
+	c.abilityZoneIncarnations = maps.Clone(g.abilityZoneIncarnations)
 	c.turns = g.turns.Clone()
 	c.zones = g.zones.clone(ctx)
 	c.resolution = g.resolution.clone(ctx)
@@ -245,6 +247,12 @@ func (ctx *gameCloneContext) stackObject(obj *StackObject) *StackObject {
 		CastZone:          obj.CastZone,
 		CastContext:       ctx.castContext(obj.CastContext),
 	}
+	clone.TargetGroups = cloneTargetGroups(obj.TargetGroups)
+	clone.TriggerEvent = ctx.event(obj.TriggerEvent)
+	clone.RememberedObjects = append([]uuid.UUID(nil), obj.RememberedObjects...)
+	clone.rememberedZones = maps.Clone(obj.rememberedZones)
+	clone.rememberedIncarnations = maps.Clone(obj.rememberedIncarnations)
+	clone.declaredTargets = obj.declaredTargets
 	if obj.ColorOverride != nil {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)
 		clone.ColorOverride = &colors
@@ -335,14 +343,12 @@ func (ctx *gameCloneContext) effectManager(em *EffectManager) *EffectManager {
 		// attrDeltas and blockPairRestrictions are recomputed each Apply() cycle.
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 	}
-	// Copy continuous effects slice. Effects are shared interface values (they
-	// receive *Game as a parameter and are otherwise stateless), except those
-	// implementing deepCloneableEffect, which carry mutable per-game state and
-	// must be deep-copied so a search clone can't corrupt the original.
+	// Active effects retain private bindings and execution state.
 	if len(em.effects) > 0 {
-		clone.effects = make([]ContinuousEffect, len(em.effects))
+		clone.effects = make([]*activeContinuousEffect, len(em.effects))
 		for i, e := range em.effects {
-			clone.effects[i] = ctx.activeEffect(e)
+			copied := *e
+			clone.effects[i] = &copied
 		}
 	}
 	// Deep copy replacement effects (they hold mutable state).

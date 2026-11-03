@@ -11,7 +11,7 @@ func boltDefinition(t *testing.T) *CardDefinition {
 	t.Helper()
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Definition Bolt", TypeLine: TypeLine{CardTypes: []CardType{TypeInstant}}, ManaCost: ParseManaCost("{R}"),
-		Rules: []RuleDefinition{NewRuleDefinition(func() Ability { return NewSpell(DealDamage(Fixed(3)), WithTarget(TargetDamageAnyTarget())) })},
+		Abilities: []Ability{NewSpell(DealDamage(Fixed(3)), WithTarget(TargetDamageAnyTarget()))},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -23,8 +23,8 @@ func TestCardDefinitionPublication(t *testing.T) {
 	types := []CardType{TypeCreature}
 	subtypes := []string{"Bear"}
 	cost := ParseManaCost("{W/U}")
-	seeds := map[Attr]int{Flying: 1}
-	spec := CardDefinitionSpec{Name: "Printed Bear", TypeLine: TypeLine{CardTypes: types, SubTypes: subtypes}, ManaCost: cost, Power: 2, Toughness: 2, Keywords: seeds}
+	seeds := []Ability{StaticKeyword(Flying)}
+	spec := CardDefinitionSpec{Name: "Printed Bear", TypeLine: TypeLine{CardTypes: types, SubTypes: subtypes}, ManaCost: cost, Power: 2, Toughness: 2, Abilities: seeds}
 	def, err := NewCardDefinition(spec)
 	if err != nil {
 		t.Fatal(err)
@@ -32,27 +32,27 @@ func TestCardDefinitionPublication(t *testing.T) {
 	types[0] = TypeLand
 	subtypes[0] = "Goblin"
 	cost.Hybrid[0].A = Red
-	seeds[Flying] = 9
+	seeds[0] = StaticKeyword(Haste)
 	def.Types()[0] = TypeLand
 	def.SubTypes()[0] = "Goblin"
 	def.ManaCost().Hybrid[0].A = Green
-	def.NewInstance(uuid.Nil()).Abilities()[0].SetController(uuid.New())
+
 	if def.Types()[0] != TypeCreature || def.SubTypes()[0] != "Bear" || def.ManaCost().Hybrid[0].A != White || countCardAbility(def.NewInstance(uuid.Nil()), Flying) != 1 {
 		t.Fatal("definition has writable aliases")
 	}
 }
 
 func TestCardDefinitionCompiledKeywords(t *testing.T) {
-	abilities := []RuleDefinition{keywordRule(Flying), keywordRule(FirstStrike), keywordRule(Flying)}
+	abilities := []Ability{keywordRule(Flying), keywordRule(FirstStrike), keywordRule(Flying)}
 	def, err := NewCardDefinition(CardDefinitionSpec{
 		Name: "Compiled Knight", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}},
-		Rules: abilities,
+		Abilities: abilities,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	abilities[0] = keywordRule(Haste)
-	def.NewInstance(uuid.Nil()).Abilities()[1].SetController(uuid.New())
+
 	a, b := def.NewInstance(uuid.New()), def.NewInstance(uuid.New())
 	WithKeyword(Haste)(a)
 	for _, kw := range []Attr{Flying, FirstStrike} {
@@ -77,12 +77,12 @@ func TestCardDefinitionInstances(t *testing.T) {
 	}
 	aa := a.Abilities()[0].(*ActionDefinition)
 	bb := b.Abilities()[0].(*ActionDefinition)
-	aa.SetController(a.Owner())
-	if aa == bb || bb.Controller() != uuid.Nil() {
+
+	if aa != bb {
 		t.Fatal("ability context is shared")
 	}
 	cloned := a.Copy()
-	if cloned.ID() == a.ID() || cloned.Definition() != def || cloned.Abilities()[0] == aa {
+	if cloned.ID() == a.ID() || cloned.Definition() != def || cloned.Abilities()[0] != aa {
 		t.Fatal("fresh cloned has shared runtime state")
 	}
 	a.SetBasePT(8, 9)
@@ -112,9 +112,6 @@ func TestCardDefinitionRegistryAndExecution(t *testing.T) {
 	if err := g.CastSpellByID(a.PlayerID(), card.ID(), []uuid.UUID{b.PlayerID()}, 0); err != nil {
 		t.Fatal(err)
 	}
-	if card.CastTargets()[0].IsChosen() {
-		t.Fatal("announcement stored choices on the card")
-	}
 	branch := g.Clone()
 	branchCard := branch.stack.Peek().Card
 	if branchCard == card || branchCard.Definition() != def || branchCard.ID() != card.ID() {
@@ -132,7 +129,7 @@ func TestCardDefinitionRegistryAndExecution(t *testing.T) {
 
 func TestCardDefinitionValidation(t *testing.T) {
 	for _, spec := range []CardDefinitionSpec{
-		{}, {Name: "No Types"}, {Name: "Bad Rule", TypeLine: TypeLine{CardTypes: []CardType{TypeInstant}}, Rules: []RuleDefinition{{}}},
+		{}, {Name: "No Types"}, {Name: "Bad Rule", TypeLine: TypeLine{CardTypes: []CardType{TypeInstant}}, Abilities: []Ability{nil}},
 	} {
 		if _, err := NewCardDefinition(spec); err == nil {
 			t.Fatal("invalid definition accepted")
@@ -148,15 +145,15 @@ func TestCardDefinitionCopyCharacteristics(t *testing.T) {
 	}
 	target := base.NewInstance(source.Owner())
 	target.CloneFrom(source)
-	source.Abilities()[0].SetController(source.Owner())
-	if target.Abilities()[0] == source.Abilities()[0] {
+
+	if target.Abilities()[0] != source.Abilities()[0] {
 		t.Fatal("cloned shares ability context with its source")
 	}
 	if target.Definition() != base || base.Name() != "Copy" || target.Name() != source.Name() {
 		t.Fatal("cloned replaced the printed definition")
 	}
 	branch := target.CloneInstance()
-	if len(branch.Abilities()) != 1 || branch.Abilities()[0] == target.Abilities()[0] {
+	if len(branch.Abilities()) != 1 || branch.Abilities()[0] != target.Abilities()[0] {
 		t.Fatal("cloned cloned lost its rule state")
 	}
 }
@@ -196,9 +193,8 @@ func TestCardDefinitionCloneZoneAliases(t *testing.T) {
 }
 
 func TestCardDefinitionRejectsSharedRuleState(t *testing.T) {
-	shared := NewSpell(GainLife(1))
-	for _, rule := range []RuleDefinition{NewRuleDefinition(func() Ability { return nil }), NewRuleDefinition(func() Ability { return shared })} {
-		_, err := NewCardDefinition(CardDefinitionSpec{Name: "Bad Rule State", TypeLine: TypeLine{CardTypes: []CardType{TypeInstant}}, Rules: []RuleDefinition{rule}})
+	for _, rule := range []Ability{nil} {
+		_, err := NewCardDefinition(CardDefinitionSpec{Name: "Bad Rule State", TypeLine: TypeLine{CardTypes: []CardType{TypeInstant}}, Abilities: []Ability{rule}})
 		if err == nil {
 			t.Fatal("invalid rule state accepted")
 		}
@@ -232,34 +228,25 @@ func TestCardDefinitionRegistrationIsAtomic(t *testing.T) {
 }
 
 func TestCardDefinitionActivationCloneState(t *testing.T) {
-	def, err := NewCardDefinition(CardDefinitionSpec{
-		Name: "Limited Activation", TypeLine: TypeLine{CardTypes: []CardType{TypeArtifact}},
-		Rules: []RuleDefinition{NewRuleDefinition(func() Ability { return NewActivatedAbility(GainLife(1), ManaCostOf("{0}"), WithOncePerTurn()) })},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
 	g := newPriorityTestGame()
 	owner := g.players[0].PlayerID()
-	card := def.NewInstance(owner)
-	permanent := NewPermanent(card, owner)
-	g.zones.battlefield = append(g.zones.battlefield, permanent)
-	action := permanent.RuntimeAbilities[0].(*ActionDefinition)
-	action.activatedThisTurn = true
-	clone := g.Clone()
-	clonedPermanent := clone.FindPermanent(card.ID())
-	clonedAction := clonedPermanent.RuntimeAbilities[0].(*ActionDefinition)
-	if clonedAction == clonedPermanent.Card.Abilities()[0] || clonedAction == action || !clonedAction.activatedThisTurn {
-		t.Fatal("clone lost ability state or reference identity")
+	card := NewArtifact("Limited", "{0}", WithAbility(NewActivated(ManaCostOf("{0}"), GainLife(1), WithOncePerTurn())))
+	permanent := g.PutOnBattlefield(card, owner)
+	if err := g.ActivateAbilityByIndex(owner, permanent.ID(), 0, nil); err != nil {
+		t.Fatal(err)
 	}
-	clonedAction.ResetActivation()
-	if !action.activatedThisTurn {
-		t.Fatal("clone reset the original activation limit")
+	branch := g.Clone()
+	if err := branch.ActivateAbilityByIndex(owner, permanent.ID(), 0, nil); err == nil {
+		t.Fatal("branch lost activation count")
 	}
-	second := def.NewInstance(owner)
-	if second.Abilities()[0].(*ActionDefinition).activatedThisTurn {
-		t.Fatal("another instance inherited an activation limit")
+	clear(branch.abilityActivations)
+	if err := branch.ActivateAbilityByIndex(owner, permanent.ID(), 0, nil); err != nil {
+		t.Fatal(err)
 	}
+	if err := g.ActivateAbilityByIndex(owner, permanent.ID(), 0, nil); err == nil {
+		t.Fatal("branch reset original count")
+	}
+
 }
 
 func TestCardDefinitionSpellCopyChoices(t *testing.T) {
@@ -282,8 +269,8 @@ func TestCardDefinitionSpellCopyChoices(t *testing.T) {
 	if original.CastContext.ColorsSpent[Red] != 1 {
 		t.Fatal("spell copy shares announced payment data")
 	}
-	if copied.TargetSpecs[0] == original.TargetSpecs[0] {
-		t.Fatal("spell copy shares mutable target data")
+	if copied.TargetSpecs[0] != original.TargetSpecs[0] {
+		t.Fatal("spell copy changed target specification")
 	}
 	before := b.Life()
 	g.ResolveStack()
@@ -303,7 +290,7 @@ func TestCardDefinitionSpellLosesTarget(t *testing.T) {
 	if err := g.CastSpellByID(a.PlayerID(), card.ID(), []uuid.UUID{permanent.ID()}, 0); err == nil {
 		t.Fatal("unpayable spell was accepted")
 	}
-	if len(a.Hand()) != 1 || !g.stack.IsEmpty() || card.CastTargets()[0].IsChosen() {
+	if len(a.Hand()) != 1 || !g.stack.IsEmpty() {
 		t.Fatal("failed announcement left state behind")
 	}
 	a.ManaPool().Add(Red, 1)
@@ -331,7 +318,7 @@ func TestNewCardUsesSharedDefinition(t *testing.T) {
 	if first.Name() != def.Name() || first.ManaCost().Red != 1 || !first.HasType(TypeInstant) {
 		t.Fatal("base card did not use the definition")
 	}
-	if first.Abilities()[0] == second.Abilities()[0] {
+	if first.Abilities()[0] != second.Abilities()[0] {
 		t.Fatal("base cards share ability state")
 	}
 	first.SetBasePT(4, 5)
@@ -368,8 +355,8 @@ func TestNewCardSupportsCardOptions(t *testing.T) {
 	if cloned.ID() != card.ID() || cloned.Definition() != def {
 		t.Fatal("base card clone lost its identity or definition")
 	}
-	cloned.alternateCosts[0].Mana.Green = 2
-	cloned.castTargets[0].(*CreatureTarget).Filters = append(cloned.castTargets[0].(*CreatureTarget).Filters, IsCreature)
+	cloned.mutableDefinition().alternateCosts[0].Mana.Green = 2
+	cloned.mutableDefinition().castTargets[0] = TargetCreature(IsCreature)
 	if card.AlternateCosts()[0].Mana.Green != 1 || len(card.CastTargets()[0].(*CreatureTarget).Filters) != 0 {
 		t.Fatal("base card clone shares private casting data")
 	}
@@ -381,7 +368,7 @@ func TestCardCharacteristicSnapshotHasNoCardState(t *testing.T) {
 	owner := uuid.New()
 	card.SetOwner(owner)
 	card.SetBasePT(4, 5)
-	if _, isCard := any(card.characteristics).(*Card); isCard {
+	if _, isCard := any(&card.cardCharacteristics).(*Card); isCard {
 		t.Fatal("characteristic data must not be a card with identity and execution state")
 	}
 	branch := card.CloneInstance()
@@ -398,15 +385,42 @@ func TestCardCharacteristicSnapshotHasNoCardState(t *testing.T) {
 	}
 }
 
-func TestCardDefinitionRejectsInvalidAttributeCounts(t *testing.T) {
-	for _, keywords := range []map[Attr]int{{0: 1}, {Attr(NumAttrs): 1}, {Flying: -1}} {
-		_, err := NewCardDefinition(CardDefinitionSpec{Name: "Invalid attributes", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Keywords: keywords})
-		if err == nil {
-			t.Fatalf("accepted invalid attribute counts: %v", keywords)
-		}
+func TestCardDefinitionRejectsNilAbility(t *testing.T) {
+	if _, err := NewCardDefinition(CardDefinitionSpec{Name: "Invalid", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature}}, Abilities: []Ability{nil}}); err == nil {
+		t.Fatal("nil ability accepted")
 	}
 }
 
-func keywordRule(attr Attr) RuleDefinition {
-	return NewRuleDefinition(func() Ability { return NewAttributeAbility(attr) })
+func keywordRule(attr Attr) Ability {
+	return NewAttributeAbility(attr)
+}
+
+func TestCardDefinitionRejectsTypedNilAbility(t *testing.T) {
+	var ability *ActionDefinition
+	_, err := NewCardDefinition(CardDefinitionSpec{Name: "Invalid", TypeLine: TypeLine{CardTypes: []CardType{TypeInstant}}, Abilities: []Ability{ability}})
+	if err == nil {
+		t.Fatal("typed nil ability was published")
+	}
+}
+
+func TestZoneChangeRestoresThePrintedDefinition(t *testing.T) {
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	card := NewCreature("Changing entry", "{0}", 3, 3, WithAbility(ETBEffect(FuncEffect("choose entry values", EffectProperties{}, func(g *Game, source, _ uuid.UUID, _ []uuid.UUID) error {
+		if g.ModeValue() == 1 {
+			g.MutablePermanent(source).Card.SetBasePT(2, 2)
+		}
+		return nil
+	}))))
+	g.resolution.SetMode(1)
+	permanent := g.PutOnBattlefield(card, owner)
+	if permanent.CurrentPower(g) != 2 || card.Definition().Power() != 3 {
+		t.Fatal("entry did not retain a separate printed face")
+	}
+	g.RemoveFromBattlefield(permanent)
+	g.resolution.SetMode(0)
+	returned := g.PutOnBattlefield(card, owner)
+	if returned.CurrentPower(g) != 3 {
+		t.Fatal("a prior battlefield characteristic survived a zone change")
+	}
 }

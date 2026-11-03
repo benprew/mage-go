@@ -891,8 +891,7 @@ func registerCreatures() {
 							p, t = 2, 2
 						}
 						ce := TemporaryBoost(sourceID, p, t)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					},
 				),
@@ -1292,8 +1291,7 @@ func registerCreatures() {
 							return nil
 						}
 						ce := TemporaryKeyword(sourceID, UnblockableKW)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},
@@ -2413,8 +2411,7 @@ func registerCreatures() {
 					"this creature gets +1/+1 until end of turn; if 5+ mana spent, also gains double strike",
 					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
 						boost := TemporaryBoost(sourceID, 1, 1)
-						boost.SetSourceID(sourceID)
-						g.AddContinuousEffect(boost)
+						g.AddContinuousEffect(boost, sourceID)
 						if manaSpent >= 5 {
 							_ = ApplyEffect(g, GrantKeyword(DoubleStrike).Targeting(ToSource()).Until(EndOfTurn), sourceID, controller, nil)
 						}
@@ -2557,8 +2554,7 @@ func registerCreatures() {
 						for _, perm := range g.AllBattlefield() {
 							if perm.ControllerID() == controller && perm.HasAttr(AttrIsCreature) {
 								ce := TemporaryBoost(perm.ID(), numColors, 0)
-								ce.SetSourceID(sourceID)
-								g.AddContinuousEffect(ce)
+								g.AddContinuousEffect(ce, sourceID)
 							}
 						}
 						return nil
@@ -2907,8 +2903,7 @@ func registerCreatures() {
 							return nil
 						}
 						ce := TemporaryBoost(sourceID, manaSpent, 0)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					},
 				),
@@ -3796,8 +3791,7 @@ func registerCreatures() {
 						}
 						// +1/+1 until end of turn.
 						ce := TemporaryBoost(perm.ID(), 1, 1)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						// If five or more mana was spent, create a token copy.
 						if manaSpent >= 5 {
 							tokenCard := perm.Card.Copy()
@@ -3946,8 +3940,7 @@ func registerCreatures() {
 					"this creature gets +1/+0 until end of turn; if 5+ mana spent, exile top card — may play until end of next turn",
 					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
 						boost := TemporaryBoost(sourceID, 1, 0)
-						boost.SetSourceID(sourceID)
-						g.AddContinuousEffect(boost)
+						g.AddContinuousEffect(boost, sourceID)
 						if manaSpent >= 5 {
 							p := g.GetPlayer(controller)
 							if p == nil {
@@ -4813,8 +4806,7 @@ func registerCreatures() {
 							return nil
 						}
 						ce := TemporaryKeyword(sourceID, UnblockableKW)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},
@@ -4866,8 +4858,7 @@ func registerCreatures() {
 							g.ApplyContinuousEffects()
 						} else {
 							ce := TemporaryBoost(sourceID, 3, 0)
-							ce.SetSourceID(sourceID)
-							g.AddContinuousEffect(ce)
+							g.AddContinuousEffect(ce, sourceID)
 						}
 						return nil
 					},
@@ -5168,15 +5159,12 @@ func registerCreatures() {
 								continue
 							}
 							for _, t := range sa.Targets() {
-								t.Reset()
+
 								possible := t.Possible(controller, chosen, g)
 								if len(possible) == 0 {
 									continue
 								}
 								selected := p.ChooseTargets(possible, t.Min(), t.Max(), g)
-								if err := t.Choose(controller, chosen, g, selected); err != nil {
-									continue
-								}
 								castTargets = append(castTargets, selected...)
 							}
 							break

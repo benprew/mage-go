@@ -83,8 +83,7 @@ func TestSetSubtypesRestoresTheFamilyWhenEffectEnds(t *testing.T) {
 	sourceCard.SetOwner(player.PlayerID())
 	source := g.PutOnBattlefield(sourceCard, player.PlayerID())
 	effect := SetSubtypes(permanent.ID(), SubtypeCreature, WhileOnBattlefield, "Human")
-	effect.SetSourceID(source.ID())
-	g.AddContinuousEffect(effect)
+	g.AddContinuousEffect(effect, source.ID())
 
 	g.RemoveFromBattlefield(source)
 	if permanent.HasSubType("Human") || !permanent.HasSubType("Dryad") || !permanent.HasSubType("Forest") {
@@ -227,8 +226,7 @@ func TestRemoveAllAbilitiesRemovesAndRestoresPrintedAbilities(t *testing.T) {
 	sourceCard.SetOwner(player.PlayerID())
 	source := g.PutOnBattlefield(sourceCard, player.PlayerID())
 	effect := RemoveAllAbilities(target.ID(), WhileOnBattlefield)
-	effect.SetSourceID(source.ID())
-	g.AddContinuousEffect(effect)
+	g.AddContinuousEffect(effect, source.ID())
 
 	if target.HasKeyword(Indestructible) || target.HasAttr(DoesNotUntapKW) || hasRuntimeAbility(target, printed) {
 		t.Fatalf("abilities remain while removed: indestructible=%v doesNotUntap=%v activated=%v", target.HasKeyword(Indestructible), target.HasAttr(DoesNotUntapKW), hasRuntimeAbility(target, printed))
@@ -246,8 +244,7 @@ func TestRemoveAllAbilitiesRemovesAndRestoresPrintedAbilities(t *testing.T) {
 func TestRemoveAllAbilitiesUsesLayerSixTimestampOrder(t *testing.T) {
 	newGrantedAbility := func(target *Permanent) Ability {
 		ability := NewActivatedAbility(GainLife(2), ManaCostOf("{2}"))
-		ability.SetSource(target.ID())
-		ability.SetController(target.ControllerID())
+
 		return ability
 	}
 	grant := func(target *Permanent, ability Ability) ContinuousEffect {
@@ -290,8 +287,7 @@ func TestRemoveAllAbilitiesFromAllAffectsOnlyMatchingPermanents(t *testing.T) {
 	sourceCard.SetOwner(player.PlayerID())
 	source := g.PutOnBattlefield(sourceCard, player.PlayerID())
 	effect := RemoveAllAbilitiesFromAll(IsCreature)
-	effect.SetSourceID(source.ID())
-	g.AddContinuousEffect(effect)
+	g.AddContinuousEffect(effect, source.ID())
 
 	if creature.HasKeyword(Indestructible) {
 		t.Fatal("matching creature retained indestructible")
@@ -320,8 +316,7 @@ func TestRemoveAllAbilitiesFromAllSeesEarlierLayerTypeChanges(t *testing.T) {
 	sourceCard.SetOwner(player.PlayerID())
 	source := g.PutOnBattlefield(sourceCard, player.PlayerID())
 	effect := RemoveAllAbilitiesFromAll(IsCreature)
-	effect.SetSourceID(source.ID())
-	g.AddContinuousEffect(effect)
+	g.AddContinuousEffect(effect, source.ID())
 
 	if !land.HasType(TypeCreature) {
 		t.Fatal("precondition: land was not animated")
@@ -355,8 +350,7 @@ func TestRemoveAllAbilitiesSuppressesAndRestoresPrintedStaticAbilities(t *testin
 	removalSourceCard.SetOwner(player.PlayerID())
 	removalSource := g.PutOnBattlefield(removalSourceCard, player.PlayerID())
 	effect := RemoveAllAbilities(abilitySource.ID(), WhileOnBattlefield)
-	effect.SetSourceID(removalSource.ID())
-	g.AddContinuousEffect(effect)
+	g.AddContinuousEffect(effect, removalSource.ID())
 
 	if power, toughness := victim.CurrentPower(g), victim.CurrentToughness(g); power != 1 || toughness != 1 {
 		t.Fatalf("P/T while static ability removed = %d/%d, want 1/1", power, toughness)

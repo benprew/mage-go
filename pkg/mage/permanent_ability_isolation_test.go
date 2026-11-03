@@ -23,48 +23,33 @@ func TestFallbackPlayerCardIsolation(t *testing.T) {
 func TestPermanentAbilityLifetimeIsolation(t *testing.T) {
 	g := newPriorityTestGame()
 	owner := g.players[0].PlayerID()
-	card := NewCreature("Limited", "{0}", 1, 1, WithAbility(NewActivatedAbility(GainLife(1), ManaCostOf("{0}"), WithOncePerTurn())))
+	card := NewArtifact("Limited", "{0}", WithAbility(NewActivated(ManaCostOf("{0}"), GainLife(1), WithOncePerTurn())))
 	p := g.PutOnBattlefield(card, owner)
-	action := p.RuntimeAbilities[0].(*ActionDefinition)
-	action.activatedThisTurn = true
-	action.activationsThisTurn = 1
+	if err := g.ActivateAbilityByIndex(owner, p.ID(), 0, nil); err != nil {
+		t.Fatal(err)
+	}
 	g.zones.CaptureLKI(p, g)
 	snapshot := g.zones.LKI(p.ID()).Snapshot
-	snapshot.RuntimeAbilities[0].SetController(uuid.New())
-	if action.Controller() != owner {
-		t.Error("LKI changed live ability context")
-	}
 	snapshot.Card.SetBasePT(8, 8)
-	if card.Power() != 1 {
-		t.Error("LKI changed live card")
+	if card.Power() != 0 {
+		t.Fatal("LKI changed live card")
 	}
 	g.RemoveFromBattlefield(p)
 	returned := g.PutOnBattlefield(card, owner)
-	if returned.RuntimeAbilities[0].(*ActionDefinition).activatedThisTurn {
-		t.Error("returned permanent retained activation limit")
+	if err := g.ActivateAbilityByIndex(owner, returned.ID(), 0, nil); err != nil {
+		t.Fatal("new incarnation retained count:", err)
 	}
-	if card.Abilities()[0].(*ActionDefinition).activatedThisTurn {
-		t.Error("runtime changed card ability")
-	}
-	returned.printedAbilitiesSuppressed = true
-	returned.RuntimeAbilities = nil
-	g.ApplyContinuousEffects()
-	if returned.RuntimeAbilities[0] == card.Abilities()[0] {
-		t.Error("restored ability aliases card")
-	}
+
 }
 
 func TestNewPermanentResetsCardActivationState(t *testing.T) {
-	card := NewCreature("Limited", "{0}", 1, 1, WithAbility(NewActivatedAbility(GainLife(1), ManaCostOf("{0}"), WithOncePerTurn(), WithTarget(TargetCreature()))))
-	ability := card.abilities[0].(*ActionDefinition)
-	ability.activatedThisTurn = true
-	ability.activationsThisTurn = 1
-	if err := ability.Targets()[0].Choose(uuid.Nil(), card, nil, []uuid.UUID{uuid.New()}); err != nil {
-		t.Fatal(err)
+	card := NewArtifact("Limited", "{0}", WithAbility(NewActivated(ManaCostOf("{0}"), GainLife(1), WithOncePerTurn(), WithTarget(TargetCreature()))))
+	first, second := NewPermanent(card, uuid.New()), NewPermanent(card, uuid.New())
+	if first.incarnationID == second.incarnationID {
+		t.Fatal("permanents share an incarnation")
 	}
-	p := NewPermanent(card, uuid.New())
-	runtime := p.RuntimeAbilities[0].(*ActionDefinition)
-	if runtime.activatedThisTurn || runtime.activationsThisTurn != 0 || runtime.Targets()[0].IsChosen() {
-		t.Fatal("new permanent kept prior-zone ability state")
+	if first.RuntimeAbilities[0].AbilityID() != second.RuntimeAbilities[0].AbilityID() {
+		t.Fatal("definition identity changed")
 	}
+
 }

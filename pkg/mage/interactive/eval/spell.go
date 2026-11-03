@@ -128,7 +128,7 @@ func SpellValue(card *mage.Card, p mage.Player, g *mage.Game) int {
 			}
 
 			if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
-				dmg := props.DamageValue.Resolve(g, card.ID(), playerID, nil)
+				dmg := props.DamageValue.Resolve(mage.NewEffectContext(g, card.ID(), playerID, nil))
 				score += dmg
 				if opponent != nil {
 					// Bonus for being able to kill an opponent creature.
@@ -344,7 +344,7 @@ func aiRoleScore(role mage.AIRole, props mage.EffectProperties, card *mage.Card,
 		return 7
 	case mage.AIRoleBurn:
 		if props.DamageValue != nil {
-			return props.DamageValue.Resolve(g, card.ID(), p.PlayerID(), nil)
+			return props.DamageValue.Resolve(mage.NewEffectContext(g, card.ID(), p.PlayerID(), nil))
 		}
 		return 5
 	case mage.AIRolePump, mage.AIRoleCombatTrick:

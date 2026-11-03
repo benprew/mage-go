@@ -18,10 +18,10 @@ func (*chooseRandomCreatureSubtypeFromTargetLibraryEffect) Properties() EffectPr
 	return EffectProperties{}
 }
 func (*chooseRandomCreatureSubtypeFromTargetLibraryEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
+	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	player := ctx.Game.GetPlayer(ctx.Targets[0])
+	player := ctx.Game.GetPlayer(ctx.legacyTargets()[0])
 	source := ctx.Game.FindPermanent(ctx.SourceID)
 	if player == nil || source == nil {
 		return nil

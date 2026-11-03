@@ -422,8 +422,7 @@ func registerCreatures() {
 								}, func(g *Game, _ uuid.UUID) bool {
 									return g.FindPermanent(permID) != nil
 								})
-								ce.SetSourceID(sourceID)
-								g.AddContinuousEffect(ce)
+								g.AddContinuousEffect(ce, sourceID)
 							}
 						}
 						return nil
@@ -920,8 +919,7 @@ func registerCreatures() {
 						}
 						// -1/-0 until end of turn
 						ce := TemporaryBoost(sourceID, -1, 0)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return ApplyEffect(g, LesserWerewolfCounterEffect(), sourceID, controller, []uuid.UUID{targetID})
 					},
 				),
@@ -1189,8 +1187,7 @@ func registerCreatures() {
 							target.BasePTOverride = &[2]int{0, newToughness}
 							return nil
 						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					}), false,
 			)),
@@ -1564,8 +1561,7 @@ func registerCreatures() {
 							}, func(g *Game, _ uuid.UUID) bool {
 								return g.CurrentTurn() <= expiryTurn && g.FindPermanent(attackerID) != nil
 							})
-							ce.SetSourceID(sourceID)
-							g.AddContinuousEffect(ce)
+							g.AddContinuousEffect(ce, sourceID)
 							return nil
 						})).
 					SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
@@ -1632,16 +1628,14 @@ func registerCreatures() {
 									// Aisling is attacking — make all blockers green
 									for _, bid := range group.BlockerIDs {
 										ce := ColorOverride(bid, Green)
-										ce.SetSourceID(sourceID)
-										g.AddContinuousEffect(ce)
+										g.AddContinuousEffect(ce, sourceID)
 									}
 								}
 								for _, bid := range group.BlockerIDs {
 									if bid == sourceID {
 										// Aisling is blocking — make attacker green
 										ce := ColorOverride(group.AttackerID, Green)
-										ce.SetSourceID(sourceID)
-										g.AddContinuousEffect(ce)
+										g.AddContinuousEffect(ce, sourceID)
 									}
 								}
 							}
@@ -1795,8 +1789,7 @@ func registerCreatures() {
 							})))
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					})).
 					SetConditionData(SourceIsUnblockedAttacker{}),
@@ -1826,8 +1819,7 @@ func registerCreatures() {
 					}, func(g *Game, _ uuid.UUID) bool {
 						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 					})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
+					g.AddContinuousEffect(ce, sourceID)
 					return nil
 				}), false)),
 		)
@@ -2369,8 +2361,7 @@ func registerCreatures() {
 					}, func(g *Game, _ uuid.UUID) bool {
 						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 					})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
+					g.AddContinuousEffect(ce, sourceID)
 					return nil
 				}), true)),
 		)
@@ -2500,8 +2491,7 @@ func registerCreatures() {
 						}
 						return nil
 					})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
+					g.AddContinuousEffect(ce, sourceID)
 					// Grant vigilance to all your creatures while Johan is untapped
 					ce2 := FuncContinuousEffect(LayerAbility, EndOfCombat, func(g *Game, _ uuid.UUID) error {
 						johan := g.FindPermanent(sourceID)
@@ -2515,8 +2505,7 @@ func registerCreatures() {
 						}
 						return nil
 					})
-					ce2.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce2)
+					g.AddContinuousEffect(ce2, sourceID)
 					return nil
 				},
 			)).SetConditionData(EventPlayerIsController{})),
@@ -2588,8 +2577,7 @@ func registerCreatures() {
 							})))
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -3332,8 +3320,7 @@ func registerCreatures() {
 						}, func(g *Game, _ uuid.UUID) bool {
 							return g.FindPermanent(sentinelID) != nil
 						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						g.AddContinuousEffect(ce, sourceID)
 						return nil
 					},
 				),

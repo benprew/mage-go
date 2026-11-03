@@ -11,34 +11,29 @@ import (
 // Ability is the base interface for all abilities.
 type Ability interface {
 	AbilityID() uuid.UUID
-	Source() uuid.UUID
-	SetSource(uuid.UUID)
-	Controller() uuid.UUID
-	SetController(uuid.UUID)
 	Type() AbilityType
+}
+
+// AbilityContext supplies the source and controller for one evaluation.
+type AbilityContext struct {
+	SourceID, Controller uuid.UUID
+	AbilityIndex         int
 }
 
 // BaseAbility provides common ability fields.
 type BaseAbility struct {
 	id          uuid.UUID
-	source      uuid.UUID
-	controller  uuid.UUID
 	abilityType AbilityType
 }
 
-func (a *BaseAbility) setAbilityID(id uuid.UUID) { a.id = id }
-
-func (a *BaseAbility) AbilityID() uuid.UUID       { return a.id }
-func (a *BaseAbility) Source() uuid.UUID          { return a.source }
-func (a *BaseAbility) SetSource(id uuid.UUID)     { a.source = id }
-func (a *BaseAbility) Controller() uuid.UUID      { return a.controller }
-func (a *BaseAbility) SetController(id uuid.UUID) { a.controller = id }
-func (a *BaseAbility) Type() AbilityType          { return a.abilityType }
+func (a *BaseAbility) AbilityID() uuid.UUID { return a.id }
+func (a *BaseAbility) Type() AbilityType    { return a.abilityType }
 
 // AttributeAbility is a static ability whose behavior uses an attribute.
 type AttributeAbility struct {
 	BaseAbility
 	attribute Attr
+	amount    int
 }
 
 // NewAttributeAbility creates a static ability for an ability attribute.
@@ -47,8 +42,9 @@ func NewAttributeAbility(attribute Attr) *AttributeAbility {
 		panic("mage: attribute does not represent an ability")
 	}
 	return &AttributeAbility{
-		BaseAbility: BaseAbility{id: uuid.New(), abilityType: AbilityStatic},
-		attribute:   attribute,
+		id: uuid.New(), abilityType: AbilityStatic,
+		attribute: attribute,
+		amount:    1,
 	}
 }
 
@@ -76,11 +72,9 @@ type ProtectionAbility struct {
 // ProtectionFromColor creates a static ability granting protection from a single color.
 func ProtectionFromColor(c Color) *ProtectionAbility {
 	return &ProtectionAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		FromColors: []Color{c},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		FromColors:  []Color{c},
 		Filter: NewCardFilter(c.String(), func(card *Card) bool {
 			return slices.Contains(card.ManaCost().Colors(), c)
 		}),
@@ -98,11 +92,9 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 		labels[i] = c.String()
 	}
 	return &ProtectionAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		FromColors: cs,
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		FromColors:  cs,
 		Filter: NewCardFilter(strings.Join(labels, " and "), func(card *Card) bool {
 			for _, col := range card.ManaCost().Colors() {
 				if colorSet[col] {
@@ -118,10 +110,8 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 // (e.g. "protection from creatures", "protection from artifacts").
 func ProtectionFromCardType(ct CardType) *ProtectionAbility {
 	return &ProtectionAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		Filter: NewCardFilter(ct.String(), func(card *Card) bool {
 			return card.HasType(ct)
 		}),
@@ -132,10 +122,8 @@ func ProtectionFromCardType(ct CardType) *ProtectionAbility {
 // (e.g. "protection from Goblins", "protection from Zombies").
 func ProtectionFromSubType(subtype string) *ProtectionAbility {
 	return &ProtectionAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		Filter: NewCardFilter(subtype, func(card *Card) bool {
 			return slices.Contains(card.SubTypes(), subtype)
 		}),
@@ -146,10 +134,8 @@ func ProtectionFromSubType(subtype string) *ProtectionAbility {
 // (e.g. Progenitus). Matches all cards.
 func ProtectionFromAll() *ProtectionAbility {
 	return &ProtectionAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		Filter: NewCardFilter("everything", func(card *Card) bool {
 			return true
 		}),
@@ -194,11 +180,9 @@ type StaticAbilityHolder struct {
 // StaticAbility creates a static ability that applies continuous effects while the source is on the battlefield.
 func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 	return &StaticAbilityHolder{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Effects: effects,
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		Effects:     effects,
 	}
 }
 
@@ -221,10 +205,8 @@ type SacrificeUnlessLandAbility struct {
 // if the controller doesn't control a land of the given subtype (e.g. "Island" for Dandân).
 func SacrificeUnlessLand(subtype string) *SacrificeUnlessLandAbility {
 	return &SacrificeUnlessLandAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		LandSubtype: subtype,
 	}
 }
@@ -240,11 +222,9 @@ type SacrificeIfControlsAbility struct {
 // if the controller controls a permanent of the given subtype (e.g. "Dwarf" for Goblins of the Flarg).
 func SacrificeIfControls(subtype string) *SacrificeIfControlsAbility {
 	return &SacrificeIfControlsAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Subtype: subtype,
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		Subtype:     subtype,
 	}
 }
 
@@ -259,10 +239,8 @@ type EntersWithXCountersAbility struct {
 // type on the permanent as it enters the battlefield (e.g. Rock Hydra).
 func EntersWithXCounters(ct CounterType) *EntersWithXCountersAbility {
 	return &EntersWithXCountersAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		CounterType: ct,
 	}
 }
@@ -279,10 +257,8 @@ type EntersWithNCountersAbility struct {
 // type on the permanent as it enters the battlefield (e.g. Clockwork Avian).
 func EntersWithNCounters(ct CounterType, n int) *EntersWithNCountersAbility {
 	return &EntersWithNCountersAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		CounterType: ct,
 		Count:       n,
 	}
@@ -309,10 +285,8 @@ type EntersWithComputedCountersAbility struct {
 // entering permanent and returns the count.
 func EntersWithComputedCounters(ct CounterType, compute func(g *Game, perm *Permanent) int) *EntersWithComputedCountersAbility {
 	return &EntersWithComputedCountersAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 		CounterType: ct,
 		Compute:     compute,
 	}
@@ -333,7 +307,7 @@ type CopyCreatureOnETBAbility struct {
 
 // CopyCreatureOnETB copies a creature chosen without targeting as this enters.
 func CopyCreatureOnETB(options ...CopyOptions) *CopyCreatureOnETBAbility {
-	ability := &CopyCreatureOnETBAbility{BaseAbility: BaseAbility{id: uuid.New(), abilityType: AbilityStatic}}
+	ability := &CopyCreatureOnETBAbility{id: uuid.New(), abilityType: AbilityStatic}
 	if len(options) > 0 {
 		ability.Options = options[0]
 	}
@@ -352,11 +326,9 @@ type ETBWithTargetsAbility struct {
 // permanent enters the battlefield, passing the spell's resolving targets.
 func ETBWithTargets(effect Effect) *ETBWithTargetsAbility {
 	return &ETBWithTargetsAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Effect: effect,
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		Effect:      effect,
 	}
 }
 
@@ -371,11 +343,9 @@ type ETBEffectAbility struct {
 // this permanent enters the battlefield.
 func ETBEffect(effect Effect) *ETBEffectAbility {
 	return &ETBEffectAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Effect: effect,
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
+		Effect:      effect,
 	}
 }
 
@@ -394,10 +364,8 @@ type frankensteinsMonsterAbility struct {
 // FrankensteinsMonsterAbility creates the ETB replacement ability for Frankenstein's Monster.
 func FrankensteinsMonsterAbility() *frankensteinsMonsterAbility {
 	return &frankensteinsMonsterAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 	}
 }
 
@@ -442,10 +410,8 @@ type namelessRaceAbility struct {
 // NamelessRaceAbility creates the ETB life-payment ability for Nameless Race.
 func NamelessRaceAbility() *namelessRaceAbility {
 	return &namelessRaceAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
+		id:          uuid.New(),
+		abilityType: AbilityStatic,
 	}
 }
 
@@ -480,4 +446,15 @@ func (a *namelessRaceAbility) OnEnter(g *Game, perm *Permanent) bool {
 	})
 	perm.StoredValue = amount
 	return true
+}
+
+// StaticKeyword creates a printed keyword ability.
+func StaticKeyword(attribute Attr) Ability { return NewAttributeAbility(attribute) }
+
+// StaticCapability creates a printed capability with the supplied count.
+func StaticCapability(attribute Attr, amount int) Ability {
+	if attribute <= 0 || int(attribute) >= NumAttrs || IsAbilityAttr(attribute) || amount < 0 {
+		panic("mage: invalid capability")
+	}
+	return &AttributeAbility{id: uuid.New(), abilityType: AbilityStatic, attribute: attribute, amount: amount}
 }

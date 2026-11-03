@@ -12,15 +12,11 @@ func init() {
 }
 
 // spellCastCasterSelector picks the player who cast the spell that triggered
-// an EvtSpellCast trigger. The trigger machinery passes targets[0] as the
-// spell's stack ID and targets[1] as the caster's player ID.
+// an EvtSpellCast trigger. The event records the caster.
 type spellCastCasterSelector struct{}
 
-func (spellCastCasterSelector) Select(_ GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
-	if len(targets) < 2 {
-		return nil
-	}
-	return []uuid.UUID{targets[1]}
+func (spellCastCasterSelector) Select(ctx *EffectContext) []uuid.UUID {
+	return EventPlayer().Select(ctx)
 }
 
 func (spellCastCasterSelector) Text() string { return "that player" }
@@ -47,8 +43,7 @@ func registerEnchantments() {
 							g.RevokeAttr(target.ID(), Defender)
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					},
@@ -338,8 +333,7 @@ func registerEnchantments() {
 							return nil
 						}
 						eff := TemporaryKeyword(targets[0], DoubleStrike)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						g.ApplyContinuousEffects()
 						return nil
 					}),

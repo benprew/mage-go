@@ -116,8 +116,8 @@ func TestEffectManager_GrantedAttr_ClearedBetweenApplyCycles(t *testing.T) {
 		g.effects.GrantAttr(perm.ID(), Flying)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
-	ce.(*funcContinuousEffect).sourceID = sourceID
-	g.effects.Add(ce)
+
+	g.effects.Add(ce, sourceID)
 	g.effects.Apply(g)
 	if !perm.HasAttr(Flying) {
 		t.Fatal("should have Flying after first Apply")

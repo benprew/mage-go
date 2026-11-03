@@ -605,11 +605,9 @@ func registerSpells() {
 							Colors:    []Color{Green},
 							Keywords:  []Attr{Haste},
 						}, EndOfTurn)
-						anim.SetSourceID(sourceID)
-						g.AddContinuousEffect(anim)
+						g.AddContinuousEffect(anim, sourceID)
 						mb := TargetMustBeBlockedIfAble(land.ID(), EndOfTurn)
-						mb.SetSourceID(sourceID)
-						g.AddContinuousEffect(mb)
+						g.AddContinuousEffect(mb, sourceID)
 						return nil
 					},
 				),
@@ -634,8 +632,7 @@ func registerSpells() {
 							return nil
 						}
 						eff := TargetMustBeBlockedIfAble(targets[0], EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -1080,8 +1077,7 @@ func registerSpells() {
 							g2.GrantAttr(target.ID(), Indestructible)
 							return nil
 						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 					}
 					if len(matched) > 0 {
 						g.ApplyContinuousEffects()
@@ -1108,8 +1104,7 @@ func registerSpells() {
 							return nil
 						}
 						eff := TargetMustBeBlockedIfAble(targets[0], EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						g.AddContinuousEffect(eff, sourceID)
 						return nil
 					},
 				),
@@ -2101,8 +2096,7 @@ func cantBlockThisTurn() Effect {
 				g2.RevokeAttr(target.ID(), AttrCanBlock)
 				return nil
 			})
-			eff.SetSourceID(sourceID)
-			g.AddContinuousEffect(eff)
+			g.AddContinuousEffect(eff, sourceID)
 			g.ApplyContinuousEffects()
 			return nil
 		},

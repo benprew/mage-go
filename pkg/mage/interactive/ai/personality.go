@@ -91,41 +91,31 @@ type WeightedPersonality struct {
 var (
 	AggroWeighted = WeightedPersonality{
 		Name: "Aggro",
-		Weights: eval.Weights{
-			Life: 1.0, Board: 3.0, Card: 0.5, Mana: 0.5, Tempo: 0.5,
-		},
+		Life: 1.0, Board: 3.0, Card: 0.5, Mana: 0.5, Tempo: 0.5,
 		Aggression: 1.0, BlockThreshold: 0.7, HoldInstants: 0.0,
 		TargetFace: 0.3, CurvePreference: 0.0,
 	}
 	ControlWeighted = WeightedPersonality{
 		Name: "Control",
-		Weights: eval.Weights{
-			Life: 4.0, Board: 1.0, Card: 3.0, Mana: 1.0, Tempo: 2.0,
-		},
+		Life: 4.0, Board: 1.0, Card: 3.0, Mana: 1.0, Tempo: 2.0,
 		Aggression: 0.0, BlockThreshold: 0.0, HoldInstants: 1.0,
 		TargetFace: 0.0, CurvePreference: 1.0,
 	}
 	MidrangeWeighted = WeightedPersonality{
 		Name: "Midrange",
-		Weights: eval.Weights{
-			Life: 2.0, Board: 3.0, Card: 2.0, Mana: 1.0, Tempo: 1.0,
-		},
+		Life: 2.0, Board: 3.0, Card: 2.0, Mana: 1.0, Tempo: 1.0,
 		Aggression: 0.7, BlockThreshold: 0.3, HoldInstants: 0.0,
 		TargetFace: 0.0, CurvePreference: 1.0,
 	}
 	TempoWeighted = WeightedPersonality{
 		Name: "Tempo",
-		Weights: eval.Weights{
-			Life: 1.5, Board: 2.0, Card: 1.5, Mana: 2.0, Tempo: 3.0,
-		},
+		Life: 1.5, Board: 2.0, Card: 1.5, Mana: 2.0, Tempo: 3.0,
 		Aggression: 0.8, BlockThreshold: 0.3, HoldInstants: 0.7,
 		TargetFace: 0.0, CurvePreference: 0.0,
 	}
 	BurnWeighted = WeightedPersonality{
 		Name: "Burn",
-		Weights: eval.Weights{
-			Life: 0.5, Board: 1.0, Card: 0.5, Mana: 0.5, Tempo: 0.5,
-		},
+		Life: 0.5, Board: 1.0, Card: 0.5, Mana: 0.5, Tempo: 0.5,
 		Aggression: 1.0, BlockThreshold: 0.95, HoldInstants: 0.0,
 		TargetFace: 1.0, CurvePreference: 0.0,
 	}
