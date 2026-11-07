@@ -120,21 +120,21 @@ func NewEffectContext(g *Game, sourceID, controller uuid.UUID, targets []uuid.UU
 	ctx := &EffectContext{Game: g, SourceID: sourceID, Controller: controller, Targets: targets}
 	if g != nil {
 		ctx.XValue = g.XValue()
-		ctx.SourceCard = g.FindCardAnywhere(sourceID)
-		ctx.SourcePerm = g.FindPermanent(sourceID)
-		if g.resolution.resolvingSourceID == sourceID {
-			ctx.SourcePerm = g.ResolvingSourcePermanent(sourceID)
-			if ctx.SourcePerm == nil && g.resolution.resolvingSourceIncarnation != uuid.Nil() {
-				if lki := g.zones.LKI(sourceID); lki != nil {
-					ctx.SourcePerm = lki.Snapshot
+		if sourceID != uuid.Nil() {
+			ctx.SourcePerm = g.FindPermanent(sourceID)
+			if g.resolution.resolvingSourceID == sourceID {
+				ctx.SourcePerm = g.ResolvingSourcePermanent(sourceID)
+				if ctx.SourcePerm == nil && g.resolution.resolvingSourceIncarnation != uuid.Nil() {
+					if lki := g.zones.LKI(sourceID); lki != nil {
+						ctx.SourcePerm = lki.Snapshot
+					}
 				}
 			}
-		}
-		if ctx.SourcePerm != nil {
-			ctx.SourceCard = ctx.SourcePerm.Card
-		}
-		if ctx.SourceCard != nil {
-			ctx.SourceCard = ctx.SourceCard.CloneInstance()
+			if ctx.SourcePerm != nil {
+				ctx.SourceCard = ctx.SourcePerm.Card
+			} else {
+				ctx.SourceCard = g.FindCardAnywhere(sourceID)
+			}
 		}
 	}
 	return ctx

@@ -44,8 +44,14 @@ func NewCard(definition *CardDefinition, opts ...CardOption) *Card {
 	if definition == nil {
 		panic("mage: nil card definition")
 	}
-	c := &Card{CardDefinition: definition, definition: definition, id: uuid.New()}
-	applyCardOpts(c, opts)
+	c := &Card{CardDefinition: definition, id: uuid.New()}
+	if len(opts) > 0 {
+		c.CardDefinition = c.cloneDefinition()
+		for _, opt := range opts {
+			opt(c)
+		}
+	}
+	c.definition = definition
 	return c
 }
 
@@ -107,7 +113,9 @@ func (c *Card) CastTargets() []Target {
 // mutableCharacteristics supports legacy copy and construction methods.
 // These methods cannot change the printed definition.
 func (c *Card) mutableDefinition() *CardDefinition {
-	c.CardDefinition = c.cloneDefinition()
+	if c.CardDefinition == nil || c.definition != nil {
+		c.CardDefinition = c.cloneDefinition()
+	}
 	return c.CardDefinition
 }
 

@@ -237,6 +237,7 @@ func (e *targetEffect) Apply(ctx *EffectContext) error {
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
 	effects                    []*activeContinuousEffect
+	activeGrantID              uuid.UUID
 	attrDeltas                 map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions      map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
 	cantBeBlockedExceptByRules map[uuid.UUID][]PermanentFilter  // attacker -> conjunction of filters blockers must match
@@ -310,7 +311,17 @@ func (em *EffectManager) Add(effect ContinuousEffect, source ...uuid.UUID) {
 	if len(source) > 0 {
 		id = source[0]
 	}
-	em.effects = append(em.effects, &activeContinuousEffect{ContinuousEffect: effect, sourceID: id, grantID: uuid.New()})
+	em.AddWithController(effect, id, uuid.Nil())
+}
+
+// AddWithController registers a continuous effect with its source and controller bound at creation time.
+func (em *EffectManager) AddWithController(effect ContinuousEffect, sourceID, controllerID uuid.UUID) {
+	em.effects = append(em.effects, &activeContinuousEffect{
+		ContinuousEffect: effect,
+		sourceID:         sourceID,
+		controllerID:     controllerID,
+		grantID:          uuid.New(),
+	})
 }
 
 // SourceTapMaintainedStatus inspects the tap-maintained continuous effects the

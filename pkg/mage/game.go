@@ -2059,9 +2059,9 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		}
 	}
 	if obj.TargetSource != nil {
-		context.SourceCard = obj.TargetSource.CloneInstance()
+		context.SourceCard = obj.TargetSource
 	} else if obj.Card != nil {
-		context.SourceCard = obj.Card.CloneInstance()
+		context.SourceCard = obj.Card
 	}
 	context.SourcePerm = g.ResolvingSourcePermanent(obj.SourceID)
 	if context.SourcePerm == nil && obj.SourceIncarnation != uuid.Nil() {
@@ -2070,7 +2070,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		}
 	}
 	if context.SourcePerm != nil {
-		context.SourceCard = context.SourcePerm.Card.CloneInstance()
+		context.SourceCard = context.SourcePerm.Card
 	}
 	context.XValue = obj.XValue
 	if len(obj.ModalTargets) > 0 {

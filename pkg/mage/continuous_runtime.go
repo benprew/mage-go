@@ -1,14 +1,17 @@
 package mage
 
-import "uuid"
+import (
+	"uuid"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
+)
 
 type activeContinuousEffect struct {
 	ContinuousEffect
 	sourceID                  uuid.UUID
 	controllerID              uuid.UUID
-	controllerBound           bool
 	grantID                   uuid.UUID
-	printed                   bool
+	printed                   bool // registered via AddPrinted
 	abilityIndex, effectIndex int
 	expired                   bool
 	applied                   bool
@@ -18,25 +21,19 @@ type activeContinuousEffect struct {
 
 func (e *activeContinuousEffect) SourceID() uuid.UUID { return e.sourceID }
 func (e *activeContinuousEffect) context(g *Game, latch bool) *EffectContext {
-	ctx := NewEffectContext(g, e.sourceID, uuid.Nil(), nil)
-	ctx.continuous = e
-	ctx.latchExpiration = latch
+	controller := e.controllerID
 	if e.printed {
 		if permanent := g.FindPermanent(e.sourceID); permanent != nil {
-			ctx.Controller = permanent.ControllerID()
+			controller = permanent.ControllerID()
 		}
-	} else {
-		if !e.controllerBound {
-			if g.resolution.resolvingSourceID == e.sourceID {
-				e.controllerID = g.resolution.resolvingController
-			} else if permanent := g.FindPermanent(e.sourceID); permanent != nil {
-				e.controllerID = permanent.ControllerID()
-			}
-			e.controllerBound = e.controllerID != uuid.Nil()
-		}
-		ctx.Controller = e.controllerID
 	}
-	return ctx
+	return &EffectContext{
+		Game:            g,
+		SourceID:        e.sourceID,
+		Controller:      controller,
+		continuous:      e,
+		latchExpiration: latch,
+	}
 }
 func (e *activeContinuousEffect) active(g *Game, latch bool) bool {
 	if e.printed {
@@ -62,11 +59,17 @@ func (e *activeContinuousEffect) active(g *Game, latch bool) bool {
 }
 func (e *activeContinuousEffect) IsActive(g *Game) bool { return e.active(g, true) }
 func (e *activeContinuousEffect) Apply(ctx *EffectContext) error {
-	err := e.ContinuousEffect.Apply(e.context(ctx.Game, true))
-	for _, permanent := range ctx.Game.zones.battlefield {
-		for _, ability := range permanent.RuntimeAbilities {
-			if granted, ok := ability.(*grantedByEffect); ok && granted.grantID == uuid.Nil() {
-				granted.grantID = e.grantID
+	g := ctx.Game
+	prevGrantID := g.effects.activeGrantID
+	g.effects.activeGrantID = e.grantID
+	err := e.ContinuousEffect.Apply(e.context(g, true))
+	g.effects.activeGrantID = prevGrantID
+	if e.GetLayer() == LayerAbility {
+		for _, permanent := range g.zones.battlefield {
+			for _, ability := range permanent.RuntimeAbilities {
+				if granted, ok := ability.(*grantedByEffect); ok && granted.grantID == uuid.Nil() {
+					granted.grantID = e.grantID
+				}
 			}
 		}
 	}

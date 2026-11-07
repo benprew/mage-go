@@ -313,7 +313,19 @@ func (g *Game) PushStack(obj *StackObject) {
 
 // AddContinuousEffect registers a continuous effect with the effect manager.
 func (g *Game) AddContinuousEffect(e ContinuousEffect, source ...uuid.UUID) {
-	g.effects.Add(e, source...)
+	var id uuid.UUID
+	if len(source) > 0 {
+		id = source[0]
+	}
+	var controllerID uuid.UUID
+	if id != uuid.Nil() && g.resolution.resolvingSourceID == id && g.resolution.resolvingController != uuid.Nil() {
+		controllerID = g.resolution.resolvingController
+	} else if perm := g.FindPermanent(id); perm != nil {
+		controllerID = perm.ControllerID()
+	} else if g.resolution.resolvingController != uuid.Nil() {
+		controllerID = g.resolution.resolvingController
+	}
+	g.effects.AddWithController(e, id, controllerID)
 	g.effects.Apply(g)
 }
 

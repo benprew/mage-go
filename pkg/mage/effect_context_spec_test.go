@@ -199,3 +199,23 @@ func TestSpellCopyKeepsTheOriginalTargetIncarnation(t *testing.T) {
 		t.Fatal("spell copy acquired the returned permanent as a new target")
 	}
 }
+
+func TestContinuousEffectBindsResolvingControllerOnRegistration(t *testing.T) {
+	g := newPriorityTestGame()
+	player := g.players[0]
+	creature := g.PutOnBattlefield(NewCreature("Boosted", "{0}", 2, 2), player.PlayerID())
+	spell := NewInstant("Rally", "{0}", NewSpell(
+		Boost(Fixed(2), Fixed(2)).Targeting(ToMatching(IsCreature)).Until(EndOfTurn),
+	))
+	player.AddToHand(spell)
+	if err := g.CastSpellByID(player.PlayerID(), spell.ID(), nil, 0); err != nil {
+		t.Fatal(err)
+	}
+	g.ResolveStack()
+	if creature.CurrentPower(g) != 4 || creature.CurrentToughness(g) != 4 {
+		t.Fatalf("expected 4/4 from controller-bound continuous effect, got %d/%d", creature.CurrentPower(g), creature.CurrentToughness(g))
+	}
+	if len(g.effects.effects) == 0 || g.effects.effects[len(g.effects.effects)-1].controllerID != player.PlayerID() {
+		t.Fatal("expected continuous effect to bind resolving controller on registration")
+	}
+}
