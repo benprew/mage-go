@@ -2222,8 +2222,7 @@ func registerDoublecastDelayedTrigger(g *Game, sourceID, controller uuid.UUID) {
 				top := g2.Stack().Peek()
 				if top != nil && !top.IsAbility && top.Card != nil && top.Controller == ctrl &&
 					(top.Card.HasType(TypeInstant) || top.Card.HasType(TypeSorcery)) {
-					g2.CopySpellOnStack(top.SourceID, ctrl, true)
-					return nil
+					return ApplyEffect(g2, CopySpellAndMayChooseNewTargetsWithEffects(), src, ctrl, []uuid.UUID{top.SourceID})
 				}
 				registerDoublecastDelayedTrigger(g2, src, ctrl)
 				return nil

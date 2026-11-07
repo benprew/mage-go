@@ -149,8 +149,7 @@ func strikingPaletteRegisterDelayedTrigger(g *Game, sourceID, controller uuid.UU
 				top := g2.Stack().Peek()
 				if top != nil && !top.IsAbility && top.Card != nil && top.Controller == ctrl &&
 					(top.Card.HasType(TypeInstant) || top.Card.HasType(TypeSorcery)) {
-					g2.CopySpellOnStack(top.SourceID, ctrl, true)
-					return nil
+					return ApplyEffect(g2, CopySpellAndMayChooseNewTargetsWithEffects(), src, ctrl, []uuid.UUID{top.SourceID})
 				}
 				strikingPaletteRegisterDelayedTrigger(g2, src, ctrl)
 				return nil
@@ -2620,10 +2619,7 @@ func registerCreatures() {
 						if spellSourceID == uuid.Nil() {
 							return nil
 						}
-						// XXX: Oracle says "you may choose new targets for the copy" (optional retarget).
-						// CopySpellOnStack with false inherits targets, which is correct for the common case.
-						g.CopySpellOnStack(spellSourceID, controller, false)
-						return nil
+						return ApplyEffect(g, CopySpellAndMayChooseNewTargetsWithEffects(), sourceID, controller, []uuid.UUID{spellSourceID})
 					},
 				),
 				false,
@@ -3660,12 +3656,7 @@ func registerCreatures() {
 						if spellSourceID == uuid.Nil() {
 							return nil
 						}
-						// XXX: Oracle says "you may choose new targets for the copy" (optional reprompt),
-						// but the engine's CopySpellOnStack with true always reprompts, and ChooseTargets
-						// defaults to the first candidate rather than preserving original targets.
-						// Using false (inherit targets) is functionally correct for the common case.
-						g.CopySpellOnStack(spellSourceID, controller, false)
-						return nil
+						return ApplyEffect(g, CopySpellAndMayChooseNewTargetsWithEffects(), sourceID, controller, []uuid.UUID{spellSourceID})
 					},
 				),
 				false,

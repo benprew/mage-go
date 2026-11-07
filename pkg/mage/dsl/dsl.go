@@ -334,6 +334,8 @@ var (
 // 6. Effects
 // =============================================================================
 
+var CopySpellAndMayChooseNewTargetsWithEffects = mage.CopySpellAndMayChooseNewTargetsWithEffects
+
 var (
 	// Reusable classic card effects
 	AladdinsRingEffect                           = mage.AladdinsRingEffect

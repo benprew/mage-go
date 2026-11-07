@@ -222,10 +222,24 @@ func TestFork(t *testing.T) {
 		// Cast Lightning Bolt targeting PlayerB, then Fork targeting the Bolt.
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 		g.CastInResponseTo(gametest.PlayerA, "Fork")
+		g.ChooseTarget(gametest.PlayerA, "PlayerB")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Fork copies Lightning Bolt -> both resolve -> 3 + 3 = 6 damage.
 		g.AssertLife(gametest.PlayerB, 14)
+	})
+
+	t.Run("chooses_new_target", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fork")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.CastInResponseTo(gametest.PlayerA, "Fork")
+		g.ChooseTarget(gametest.PlayerA, "PlayerA")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertLife(gametest.PlayerB, 17)
 	})
 }
 

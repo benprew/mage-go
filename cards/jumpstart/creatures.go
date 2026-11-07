@@ -3866,17 +3866,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard"),
 			WithKeyword(Flash),
 			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect(
-					"copy target instant or sorcery spell; you may choose new targets",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil() {
-							return nil
-						}
-						g.CopySpellOnStack(targets[0], controller, true)
-						return nil
-					},
-				),
+				CopySpellAndMayChooseNewTargetsWithEffects(),
 				false,
 			).AddTarget(TargetSpellOnStack(instantOrSorcerySpellFilter))),
 		)

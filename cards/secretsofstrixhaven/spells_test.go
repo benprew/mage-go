@@ -599,12 +599,26 @@ func TestChelonianTackle(t *testing.T) {
 }
 
 func TestChoreographedSparks(t *testing.T) {
+	t.Run("chooses a new target for the copy", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Choreographed Sparks")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.CastInResponseTo(gametest.PlayerA, "Choreographed Sparks", "Lightning Bolt")
+		g.ChooseTarget(gametest.PlayerA, "PlayerA")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+
 	t.Run("copies target instant or sorcery spell you control", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Choreographed Sparks")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 		g.CastInResponseTo(gametest.PlayerA, "Choreographed Sparks", "Lightning Bolt")
+		g.ChooseTarget(gametest.PlayerA, "PlayerB")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		// The copy of Lightning Bolt resolves first (3 damage), then the original resolves (3 damage)

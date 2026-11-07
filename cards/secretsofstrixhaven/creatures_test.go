@@ -408,6 +408,7 @@ func TestAzizaMageTowerCaptain_CopySpellWhenTapThree(t *testing.T) {
 	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
 	g.ChoosePermanent(gametest.PlayerA, "Gray Ogre")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	// Original + copy = 6 total damage to PlayerB
@@ -766,6 +767,7 @@ func TestMicaReaderOfRuins_CopySpellOnArtifactSacrifice(t *testing.T) {
 	g.ChooseMode(gametest.PlayerA, 0) // "yes, sacrifice an artifact"
 	g.ChoosePermanent(gametest.PlayerA, "Mox Ruby")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	// Original + copy = 6 total damage to PlayerB
@@ -4270,4 +4272,30 @@ func TestOldGrowthEducator_InfusionNoCountersWithoutLifeGain(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Old-Growth Educator", core.P1P1, 0)
+}
+
+func TestSpellCopyAfterPayment_ChoosesNewTargets(t *testing.T) {
+	for _, name := range []string{"Mica, Reader of Ruins", "Aziza, Mage Tower Captain"} {
+		t.Run(name, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, name)
+			if name == "Mica, Reader of Ruins" {
+				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mox Ruby")
+				g.ChoosePermanent(gametest.PlayerA, "Mox Ruby")
+			} else {
+				for _, creature := range []string{"Llanowar Elves", "Grizzly Bears", "Gray Ogre"} {
+					g.AddCard(core.ZoneBattlefield, gametest.PlayerA, creature)
+					g.ChoosePermanent(gametest.PlayerA, creature)
+				}
+			}
+			g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+			g.ChooseMode(gametest.PlayerA, 0)
+			g.ChooseTarget(gametest.PlayerA, "PlayerA")
+			g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+			g.StopAt(1, core.EndStep)
+			g.Execute()
+			g.AssertLife(gametest.PlayerA, 17)
+			g.AssertLife(gametest.PlayerB, 17)
+		})
+	}
 }

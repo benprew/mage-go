@@ -504,7 +504,7 @@ func registerSpells() {
 		return NewInstant("Choreographed Sparks", "{R}{R}",
 			NewTargetedSpell(
 				TargetOwnSpellOnStack(instantOrSorcery),
-				CopySpellOnStack(),
+				CopySpellAndMayChooseNewTargetsWithEffects(),
 			),
 		)
 	})
@@ -1827,8 +1827,7 @@ func registerSpells() {
 				FuncEffect("copy this spell; you may choose new targets for the copy",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.CopySpellOnStack(sourceID, controller, true)
-						return nil
+						return ApplyEffect(g, CopySpellAndMayChooseNewTargetsWithEffects(), sourceID, controller, []uuid.UUID{sourceID})
 					},
 				),
 			).InZone(ZoneStack).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controller uuid.UUID) bool {

@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"slices"
+	"strings"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -306,6 +307,49 @@ func (e *copySpellOnStackEffect) Text() string {
 	return "copy target instant or sorcery spell"
 }
 func (e *copySpellOnStackEffect) Properties() EffectProperties { return EffectProperties{} }
+
+type copySpellAndMayChooseNewTargetsEffect struct {
+	effects []Effect
+}
+
+// CopySpellAndMayChooseNewTargetsWithEffects copies the target spell and lets
+// its controller choose new targets. The supplied effects then target the copy.
+func CopySpellAndMayChooseNewTargetsWithEffects(effects ...Effect) Effect {
+	return &copySpellAndMayChooseNewTargetsEffect{effects: append([]Effect(nil), effects...)}
+}
+
+func (e *copySpellAndMayChooseNewTargetsEffect) Text() string {
+	var text strings.Builder
+	text.WriteString("copy target instant or sorcery spell. You may choose new targets for the copy")
+	for _, effect := range e.effects {
+		text.WriteString("; " + effect.Text())
+	}
+	return text.String()
+}
+
+func (e *copySpellAndMayChooseNewTargetsEffect) Properties() EffectProperties {
+	return EffectProperties{}
+}
+
+func (e *copySpellAndMayChooseNewTargetsEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.legacyTargets()) == 0 {
+		return nil
+	}
+	cp := ctx.Game.CopySpellOnStack(ctx.legacyTargets()[0], ctx.Controller, true)
+	if cp == nil {
+		return nil
+	}
+	copyCtx := *ctx
+	copyCtx.Targets = []uuid.UUID{cp.SourceID}
+	copyCtx.TargetGroups = [][]uuid.UUID{copyCtx.Targets}
+	copyCtx.declaredTargets = true
+	for _, effect := range e.effects {
+		if err := effect.Apply(&copyCtx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // attachToTargetEffect attaches the source (aura/equipment) to the target.
 type attachToTargetEffect struct{}

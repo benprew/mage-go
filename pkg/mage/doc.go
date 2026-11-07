@@ -108,6 +108,8 @@
 // explicit groups. Use these APIs when more than one group has a variable count.
 // Existing flat-target APIs retain their count-allocation convention. Prompts
 // and spell copies retain the groups chosen for each declaration.
+// [CopySpellAndMayChooseNewTargetsWithEffects] lets the copy's controller
+// choose targets, then applies the supplied effects with the copy as target.
 //
 // Existing effect helpers and [FuncEffect] retain event-reference adapters for
 // old card code. These adapters do not add event objects to stack targets.
