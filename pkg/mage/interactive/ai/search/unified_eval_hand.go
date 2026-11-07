@@ -45,6 +45,8 @@ func cardHandValue(g *mage.Game, p mage.Player, c *mage.Card) float64 {
 		return burnAnyValue(g, p, x)
 	case "Crusade":
 		return globalPumpValue(g, p, 1, 1, isWhiteCreature)
+	case "Bad Moon":
+		return globalPumpValue(g, p, 1, 1, isBlackCreature)
 	case "Holy Strength":
 		return localAuraValue(g, p, 1, 2)
 	case "Unholy Strength":
@@ -332,4 +334,8 @@ func basicLandColor(c core.Color) string {
 
 func isWhiteCreature(perm *mage.Permanent) bool {
 	return slices.Contains(perm.Card.Colors(), core.White)
+}
+
+func isBlackCreature(perm *mage.Permanent) bool {
+	return slices.Contains(perm.Card.Colors(), core.Black)
 }
