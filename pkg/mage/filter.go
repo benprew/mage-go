@@ -305,7 +305,7 @@ var IsInstantOrSorceryCard = NewCardFilter("instant or sorcery card", func(c *Ca
 // HasColorCardFilter returns a CardFilter matching cards with the given color.
 func HasColorCardFilter(color Color) CardFilter {
 	return NewCardFilter(color.String()+" card", func(c *Card) bool {
-		return slices.Contains(c.ManaCost().Colors(), color)
+		return slices.Contains(c.Colors(), color)
 	})
 }
 

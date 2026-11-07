@@ -1094,7 +1094,7 @@ func applyAnimateLand(g *Game, target *Permanent, opts AnimateLandOptions) {
 		if target.ColorOverride != nil {
 			existing = *target.ColorOverride
 		} else {
-			existing = target.Card.ManaCost().Colors()
+			existing = target.Card.Colors()
 		}
 		merged := make([]Color, 0, len(existing)+len(opts.Colors))
 		seen := map[Color]bool{}

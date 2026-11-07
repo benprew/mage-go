@@ -12,10 +12,6 @@ func init() {
 	registerEnchantments()
 }
 
-func cardHasColor(c *Card, color Color) bool {
-	return slices.Contains(c.ManaCost().Colors(), color)
-}
-
 func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
@@ -203,7 +199,7 @@ func registerEnchantments() {
 					}
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.ControllerID() == chosenPlayer &&
-							cardHasColor(p.Card, chosenColor) &&
+							slices.Contains(p.Card.Colors(), chosenColor) &&
 							!p.IsToken {
 							return false
 						}

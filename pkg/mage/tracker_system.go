@@ -470,7 +470,7 @@ func (d *DuelTrackers) RecordEvent(evt *GameEvent, cardLookup func(uuid.UUID) *C
 			byColor = make(map[Color]int)
 			d.spellsCastByColor[evt.PlayerID] = byColor
 		}
-		for _, c := range card.ManaCost().Colors() {
+		for _, c := range card.Colors() {
 			byColor[c]++
 		}
 

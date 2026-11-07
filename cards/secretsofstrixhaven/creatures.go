@@ -5246,7 +5246,7 @@ func registerCreatures() {
 	// Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
 	Register("Mage Tower Referee", func() *Card {
 		isMulticoloredCard := NewCardFilter("multicolored", func(c *Card) bool {
-			return len(c.ManaCost().Colors()) >= 2
+			return len(c.Colors()) >= 2
 		})
 		return NewCreature("Mage Tower Referee", "{2}", 2, 1,
 			WithSubTypes("Construct"),

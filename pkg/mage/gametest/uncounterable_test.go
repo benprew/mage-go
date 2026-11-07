@@ -50,7 +50,7 @@ func registerUncounterableCards() {
 							if obj.Card == nil {
 								return false
 							}
-							isGreen := slices.Contains(obj.Card.ManaCost().Colors(), core.Green)
+							isGreen := slices.Contains(obj.Card.Colors(), core.Green)
 							return isGreen
 						},
 					)),

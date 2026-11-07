@@ -4979,7 +4979,7 @@ func registerCreatures() {
 				if obj.Card == nil {
 					return false
 				}
-				isGreen := slices.Contains(obj.Card.ManaCost().Colors(), Green)
+				isGreen := slices.Contains(obj.Card.Colors(), Green)
 				if !isGreen {
 					return false
 				}

@@ -331,5 +331,5 @@ func basicLandColor(c core.Color) string {
 }
 
 func isWhiteCreature(perm *mage.Permanent) bool {
-	return slices.Contains(perm.Card.ManaCost().Colors(), core.White)
+	return slices.Contains(perm.Card.Colors(), core.White)
 }

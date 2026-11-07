@@ -650,10 +650,10 @@ func registerEnchantments() {
 						}
 						// Check if spell doesn't share a color with a creature you control
 						myCreatures := g.FilterBattlefield(And(IsCreature, ControlledBy(controllerID)))
-						cardColors := card.ManaCost().Colors()
+						cardColors := card.Colors()
 						for _, color := range cardColors {
 							for _, c := range myCreatures {
-								if slices.Contains(c.Card.ManaCost().Colors(), color) {
+								if slices.Contains(c.Card.Colors(), color) {
 									return false // shares a color
 								}
 							}

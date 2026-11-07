@@ -76,7 +76,7 @@ func ProtectionFromColor(c Color) *ProtectionAbility {
 		abilityType: AbilityStatic,
 		FromColors:  []Color{c},
 		Filter: NewCardFilter(c.String(), func(card *Card) bool {
-			return slices.Contains(card.ManaCost().Colors(), c)
+			return slices.Contains(card.Colors(), c)
 		}),
 	}
 }
@@ -96,7 +96,7 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 		abilityType: AbilityStatic,
 		FromColors:  cs,
 		Filter: NewCardFilter(strings.Join(labels, " and "), func(card *Card) bool {
-			for _, col := range card.ManaCost().Colors() {
+			for _, col := range card.Colors() {
 				if colorSet[col] {
 					return true
 				}
@@ -431,7 +431,7 @@ func (a *namelessRaceAbility) OnEnter(g *Game, perm *Permanent) bool {
 			}
 		}
 		for _, c := range opp.Graveyard() {
-			if slices.Contains(c.ManaCost().Colors(), White) {
+			if slices.Contains(c.Colors(), White) {
 				maxPay++
 			}
 		}

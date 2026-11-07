@@ -324,7 +324,7 @@ func (r *colorPreventionReplacement) Matches(a Action, g GameReader) bool {
 		return false
 	}
 
-	if slices.Contains(sourceCard.ManaCost().Colors(), r.color) {
+	if slices.Contains(sourceCard.Colors(), r.color) {
 		return true
 	}
 	return false

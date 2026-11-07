@@ -405,7 +405,7 @@ func (e *counterSpellIfColorEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	// Check if the spell has the required color
-	if slices.Contains(obj.Card.ManaCost().Colors(), e.color) {
+	if slices.Contains(obj.Card.Colors(), e.color) {
 		ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 		return nil
 	}
