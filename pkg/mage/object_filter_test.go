@@ -23,6 +23,31 @@ func TestObjectFilterUsesCurrentCharacteristicsAcrossZones(t *testing.T) {
 	}
 }
 
+func TestObjectFilterSupportsSuperTypesKeywordsAndCombinators(t *testing.T) {
+	g := newPriorityTestGame()
+	card := NewCreature("Legend", "{W}", 2, 2, WithSuperTypes(SuperLegendary), WithKeyword(Flying))
+	permanent := g.PutOnBattlefield(card, g.players[0].PlayerID())
+	filter := ObjectAnd(
+		ObjectHasSuperType(SuperLegendary),
+		ObjectHasKeyword(Flying),
+		ObjectNot(ObjectHasColor(Black)),
+		ObjectOr(ObjectHasColor(White), ObjectHasColor(Blue)),
+	)
+	if !filter.Match(card, g) || !filter.Match(permanent, g) {
+		t.Fatal("expected filter to match legendary flying white creature in both card and permanent views")
+	}
+}
+
+func TestProtectionFromColorUsesCardColorsNotJustManaCost(t *testing.T) {
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	knight := g.PutOnBattlefield(NewCreature("White Knight", "{W}{W}", 2, 2, WithAbility(ProtectionFromColor(Black))), owner)
+	blackToken := NewToken("Zombie Token", 2, 2, []CardType{TypeCreature}, []string{"Zombie"}, []Color{Black})
+	if !knight.HasProtectionFrom(blackToken) {
+		t.Fatal("expected protection from black to apply against a black token with no mana cost")
+	}
+}
+
 func TestActivatedAbilitySupportsGraveyardActivationZoneDirectly(t *testing.T) {
 	g := newPriorityTestGame()
 	g.turns.SetStep(PrecombatMain)
