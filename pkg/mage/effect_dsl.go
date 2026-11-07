@@ -72,80 +72,142 @@ func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, filter PermanentF
 	return Boost(power, toughness).Targeting(ToMatching(filter)).Until(EndOfTurn)
 }
 
-// resolvePermanents resolves the permanent(s) identified by a TargetSelector.
-func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
+// resolvePermanents resolves the permanent(s) identified by an ObjectSelector.
+func resolvePermanents(ctx *EffectContext, sel ObjectSelector) []*Permanent {
+	if sel == nil || ctx == nil || ctx.Game == nil {
+		return nil
+	}
+	var out []*Permanent
+	for _, id := range currentObjectIDs(ctx, sel) {
+		if id == uuid.Nil() {
+			continue
+		}
+		if p := ctx.Game.FindPermanent(id); p != nil {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func (sel TargetSelector) Text() string {
+	switch sel.Kind {
+	case KindSource:
+		return "it"
+	case KindAttached:
+		return "enchanted permanent"
+	case KindMatching, KindAllMatching:
+		return "matching creatures"
+	case KindOtherMatching:
+		return "other matching creatures"
+	case KindBlockingOrBlockedBySource:
+		return "blocking or blocked creature"
+	default:
+		return "target"
+	}
+}
+
+func (sel TargetSelector) Select(ctx *EffectContext) []uuid.UUID {
+	if ctx == nil || ctx.Game == nil {
+		return nil
+	}
 	switch sel.Kind {
 	case KindTarget:
 		if len(ctx.legacyTargets()) == 0 {
 			return nil
 		}
-		if p := ctx.Game.FindPermanent(ctx.legacyTargets()[0]); p != nil {
-			return []*Permanent{p}
-		}
+		return []uuid.UUID{ctx.legacyTargets()[0]}
 	case KindSource:
-		if p := ctx.Game.FindPermanent(ctx.SourceID); p != nil {
-			return []*Permanent{p}
+		if ctx.SourceID == uuid.Nil() {
+			return nil
 		}
+		return []uuid.UUID{ctx.SourceID}
 	case KindAttached:
 		src := ctx.Game.FindPermanent(ctx.SourceID)
 		if src != nil && src.AttachedTo != uuid.Nil() {
-			if p := ctx.Game.FindPermanent(src.AttachedTo); p != nil {
-				return []*Permanent{p}
-			}
+			return []uuid.UUID{src.AttachedTo}
 		}
 	case KindMatching:
-		return ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, sel.Filter))
+		perms := ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, sel.Filter))
+		ids := make([]uuid.UUID, len(perms))
+		for i, p := range perms {
+			ids[i] = p.ID()
+		}
+		return ids
 	case KindAllMatching:
-		return ctx.Game.FilterBattlefield(And(IsCreature, sel.Filter))
+		perms := ctx.Game.FilterBattlefield(And(IsCreature, sel.Filter))
+		ids := make([]uuid.UUID, len(perms))
+		for i, p := range perms {
+			ids[i] = p.ID()
+		}
+		return ids
 	case KindOtherMatching:
-		var out []*Permanent
+		var ids []uuid.UUID
 		for _, p := range ctx.Game.zones.battlefield {
 			if p.ID() != ctx.SourceID && p.HasType(TypeCreature) && sel.Filter.Match(p, ctx.Game) {
-				out = append(out, p)
+				ids = append(ids, p.ID())
 			}
 		}
-		return out
+		return ids
 	case KindGathered:
 		id := ctx.TryGetUUID(sel.VarName)
-		if id == uuid.Nil() {
-			return nil
-		}
-		if p := ctx.Game.FindPermanent(id); p != nil {
-			return []*Permanent{p}
+		if id != uuid.Nil() {
+			return []uuid.UUID{id}
 		}
 	case KindAllTargets:
-		var out []*Permanent
+		var ids []uuid.UUID
 		for _, id := range ctx.legacyTargets() {
-			if id == uuid.Nil() {
-				continue
-			}
-			if p := ctx.Game.FindPermanent(id); p != nil {
-				out = append(out, p)
+			if id != uuid.Nil() {
+				ids = append(ids, id)
 			}
 		}
-		return out
+		return ids
 	case KindBlockingOrBlockedBySource:
-		var out []*Permanent
+		var ids []uuid.UUID
 		for _, cg := range ctx.Game.CombatGroups() {
 			if cg.AttackerID == ctx.SourceID {
 				for _, bid := range cg.BlockerIDs {
 					if p := ctx.Game.FindPermanent(bid); p != nil {
-						out = append(out, p)
+						ids = append(ids, p.ID())
 					}
 				}
 			} else {
 				for _, bid := range cg.BlockerIDs {
 					if bid == ctx.SourceID {
 						if p := ctx.Game.FindPermanent(cg.AttackerID); p != nil {
-							out = append(out, p)
+							ids = append(ids, p.ID())
 						}
 					}
 				}
 			}
 		}
-		return out
+		return ids
 	}
 	return nil
+}
+
+func isSourceSelector(sel ObjectSelector) bool {
+	if ts, ok := sel.(TargetSelector); ok {
+		return ts.Kind == KindSource
+	}
+	if ref, ok := sel.(objectReference); ok {
+		return ref.kind == "source"
+	}
+	return false
+}
+
+func isAttachedSelector(sel ObjectSelector) bool {
+	if ts, ok := sel.(TargetSelector); ok {
+		return ts.Kind == KindAttached
+	}
+	return false
+}
+
+func isMassSelector(sel ObjectSelector) bool {
+	if ts, ok := sel.(TargetSelector); ok {
+		return ts.Kind == KindMatching || ts.Kind == KindAllMatching || ts.Kind == KindOtherMatching
+	}
+	_, ok := sel.(battlefieldObjects)
+	return ok
 }
 
 // --- Boost DSL ---
@@ -155,7 +217,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 type boostEffect struct {
 	power         ValueSource
 	toughness     ValueSource
-	selector      TargetSelector
+	selector      ObjectSelector
 	dur           Duration
 	active        ActiveCondition
 	tapMaintained bool
@@ -167,12 +229,12 @@ func Boost(power, toughness ValueSource) *boostEffect {
 	return &boostEffect{
 		power:     power,
 		toughness: toughness,
-		selector:  TargetSelector{Kind: KindTarget},
+		selector:  ToTarget(),
 		dur:       EndOfTurn,
 	}
 }
 
-func (e *boostEffect) Targeting(sel TargetSelector) *boostEffect {
+func (e *boostEffect) Targeting(sel ObjectSelector) *boostEffect {
 	e.selector = sel
 	return e
 }
@@ -206,10 +268,10 @@ func (e *boostEffect) Text() string {
 	}
 	p := e.power.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
 	t := e.toughness.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
-	switch e.selector.Kind {
-	case KindSource:
+	switch {
+	case isSourceSelector(e.selector):
 		return fmt.Sprintf("this creature gets %+d/%+d until end of turn", p, t)
-	case KindMatching, KindAllMatching:
+	case isMassSelector(e.selector):
 		return fmt.Sprintf("matching creatures get %+d/%+d until end of turn", p, t)
 	default:
 		return fmt.Sprintf("target creature gets %+d/%+d until end of turn", p, t)
@@ -224,8 +286,7 @@ func (e *boostEffect) Properties() EffectProperties {
 	if _, ok := e.toughness.(xValue); !ok {
 		tb = e.toughness.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
 	}
-	mass := e.selector.Kind == KindMatching || e.selector.Kind == KindAllMatching
-	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: mass}
+	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: isMassSelector(e.selector)}
 }
 
 func (e *boostEffect) Apply(ctx *EffectContext) error {
@@ -261,7 +322,7 @@ func (e *boostEffect) Apply(ctx *EffectContext) error {
 // Use directly as an Effect.
 type grantKeywordEffect struct {
 	keyword  Keyword
-	selector TargetSelector
+	selector ObjectSelector
 	dur      Duration
 	unless   TriggerConditionData
 	active   ActiveCondition
@@ -272,12 +333,12 @@ type grantKeywordEffect struct {
 func GrantKeyword(kw Keyword) *grantKeywordEffect {
 	return &grantKeywordEffect{
 		keyword:  kw,
-		selector: TargetSelector{Kind: KindTarget},
+		selector: ToTarget(),
 		dur:      EndOfTurn,
 	}
 }
 
-func (e *grantKeywordEffect) Targeting(sel TargetSelector) *grantKeywordEffect {
+func (e *grantKeywordEffect) Targeting(sel ObjectSelector) *grantKeywordEffect {
 	e.selector = sel
 	return e
 }
@@ -295,7 +356,7 @@ func (e *grantKeywordEffect) While(cond ActiveCondition) *grantKeywordEffect {
 
 // KeywordGrantTarget exposes the recipient selector to AI policy without
 // exposing the concrete effect implementation.
-func (e *grantKeywordEffect) KeywordGrantTarget() TargetSelector {
+func (e *grantKeywordEffect) KeywordGrantTarget() ObjectSelector {
 	return e.selector
 }
 
@@ -307,12 +368,10 @@ func (e *grantKeywordEffect) Unless(cond TriggerConditionData) *grantKeywordEffe
 
 // Effect interface
 func (e *grantKeywordEffect) Text() string {
-	switch e.selector.Kind {
-	case KindSource:
+	if isSourceSelector(e.selector) {
 		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
-	default:
-		return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 	}
+	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 }
 
 func (e *grantKeywordEffect) Properties() EffectProperties {
@@ -350,7 +409,7 @@ func (e *grantKeywordEffect) Apply(ctx *EffectContext) error {
 // keyword from a permanent. Mirrors grantKeywordEffect.
 type RevokeKeywordEffect struct {
 	keywords []Keyword
-	selector TargetSelector
+	selector ObjectSelector
 	dur      Duration
 	active   ActiveCondition
 }
@@ -367,7 +426,7 @@ func RevokeKeyword(kw Keyword) *RevokeKeywordEffect {
 func RevokeKeywords(kws ...Keyword) *RevokeKeywordEffect {
 	return &RevokeKeywordEffect{
 		keywords: kws,
-		selector: TargetSelector{Kind: KindTarget},
+		selector: ToTarget(),
 		dur:      EndOfTurn,
 	}
 }
@@ -382,7 +441,7 @@ func RevokeLandwalk() *RevokeKeywordEffect {
 	return RevokeKeywords(keywords...)
 }
 
-func (e *RevokeKeywordEffect) Targeting(sel TargetSelector) *RevokeKeywordEffect {
+func (e *RevokeKeywordEffect) Targeting(sel ObjectSelector) *RevokeKeywordEffect {
 	e.selector = sel
 	return e
 }
@@ -400,19 +459,15 @@ func (e *RevokeKeywordEffect) While(cond ActiveCondition) *RevokeKeywordEffect {
 
 func (e *RevokeKeywordEffect) Text() string {
 	if len(e.keywords) != 1 {
-		switch e.selector.Kind {
-		case KindSource:
+		if isSourceSelector(e.selector) {
 			return "~ loses keywords until end of turn"
-		default:
-			return "target creature loses keywords until end of turn"
 		}
+		return "target creature loses keywords until end of turn"
 	}
-	switch e.selector.Kind {
-	case KindSource:
+	if isSourceSelector(e.selector) {
 		return fmt.Sprintf("~ loses %s until end of turn", e.keywords[0])
-	default:
-		return fmt.Sprintf("target creature loses %s until end of turn", e.keywords[0])
 	}
+	return fmt.Sprintf("target creature loses %s until end of turn", e.keywords[0])
 }
 
 func (e *RevokeKeywordEffect) Properties() EffectProperties {
@@ -452,7 +507,7 @@ func activeConditionStarted(ctx *EffectContext, condition ActiveCondition) bool 
 // that don't fit into the Keyword/Attr enum.
 type grantAbilityEffect struct {
 	ability  Ability
-	selector TargetSelector
+	selector ObjectSelector
 	dur      Duration
 	unless   TriggerConditionData
 }
@@ -462,12 +517,12 @@ type grantAbilityEffect struct {
 func GrantAbility(a Ability) *grantAbilityEffect {
 	return &grantAbilityEffect{
 		ability:  a,
-		selector: TargetSelector{Kind: KindTarget},
+		selector: ToTarget(),
 		dur:      EndOfTurn,
 	}
 }
 
-func (e *grantAbilityEffect) Targeting(sel TargetSelector) *grantAbilityEffect {
+func (e *grantAbilityEffect) Targeting(sel ObjectSelector) *grantAbilityEffect {
 	e.selector = sel
 	return e
 }
@@ -535,7 +590,7 @@ func CardTypeAttr(ct CardType) Attr {
 // Use directly as an Effect.
 type grantTypeEffect struct {
 	ct       CardType
-	selector TargetSelector
+	selector ObjectSelector
 	dur      Duration
 }
 
@@ -545,12 +600,12 @@ type grantTypeEffect struct {
 func GrantType(ct CardType) *grantTypeEffect {
 	return &grantTypeEffect{
 		ct:       ct,
-		selector: TargetSelector{Kind: KindTarget},
+		selector: ToTarget(),
 		dur:      Indefinite,
 	}
 }
 
-func (e *grantTypeEffect) Targeting(sel TargetSelector) *grantTypeEffect {
+func (e *grantTypeEffect) Targeting(sel ObjectSelector) *grantTypeEffect {
 	e.selector = sel
 	return e
 }

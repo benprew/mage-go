@@ -15,13 +15,13 @@ func TestCanonicalEffectsUseExplicitReferences(t *testing.T) {
 	ctx := NewEffectContext(g, source.ID(), a.PlayerID(), nil)
 	ctx.TriggerEvent = &GameEvent{PlayerID: b.PlayerID(), SourceID: victim.ID(), Amount: 3}
 	ctx.Vars = map[string]any{"amount": 3}
-	if err := GainLife(EventPlayer(), VarInt("amount")).Apply(ctx); err != nil {
+	if err := GainLifeForPlayers(EventPlayer(), VarInt("amount")).Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if b.Life() != 23 || a.Life() != 20 {
 		t.Fatal("life effect used the wrong player")
 	}
-	if err := DealDamage(SourceObject(), EventPlayer(), Fixed(2)).Apply(ctx); err != nil {
+	if err := DealDamageFrom(SourceObject(), EventPlayer(), Fixed(2)).Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if b.Life() != 21 {
@@ -41,13 +41,13 @@ func TestCanonicalCounterAndZoneEffects(t *testing.T) {
 	source := g.PutOnBattlefield(NewCreature("Source", "{0}", 2, 2), owner)
 	ctx := NewEffectContext(g, source.ID(), owner, nil)
 	ctx.Vars = map[string]any{"count": 2}
-	if err := AddCounters(SourceObject(), P1P1, VarInt("count")).Apply(ctx); err != nil {
+	if err := AddCountersTo(SourceObject(), P1P1, VarInt("count")).Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if source.Counters[P1P1] != 2 {
 		t.Fatal("counters were not added")
 	}
-	if err := RemoveCounters(SourceObject(), P1P1, Fixed(1)).Apply(ctx); err != nil {
+	if err := RemoveCountersFrom(SourceObject(), P1P1, Fixed(1)).Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if source.Counters[P1P1] != 1 {
@@ -63,17 +63,38 @@ func TestCanonicalCounterAndZoneEffects(t *testing.T) {
 
 func TestCanonicalDescriptionsDoNotNeedExecutionVariables(t *testing.T) {
 	for _, effect := range []Effect{
-		GainLife(SelectController(), VarInt("n")),
-		DealDamage(SourceObject(), FirstTarget(), VarInt("n")),
+		GainLifeForPlayers(SelectController(), VarInt("n")),
+		DealDamageFrom(SourceObject(), FirstTarget(), VarInt("n")),
 		DrawForPlayers(SelectController(), VarInt("n")),
 		Discard(SelectController(), VarInt("n")),
-		AddCounters(SourceObject(), P1P1, VarInt("n")),
-		RemoveCounters(SourceObject(), P1P1, VarInt("n")),
+		AddCountersTo(SourceObject(), P1P1, VarInt("n")),
+		RemoveCountersFrom(SourceObject(), P1P1, VarInt("n")),
 	} {
 		if effect.Text() == "" {
 			t.Fatal("missing effect description")
 		}
 		_ = effect.Properties()
+	}
+}
+
+func TestContinuousDSLEffectsAcceptAnyObjectSelector(t *testing.T) {
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	first := g.PutOnBattlefield(NewCreature("First", "{0}", 1, 1), owner)
+	second := g.PutOnBattlefield(NewCreature("Second", "{0}", 2, 2), owner)
+	ctx := NewEffectContext(g, first.ID(), owner, []uuid.UUID{first.ID(), second.ID()})
+	ctx.TargetGroups = [][]uuid.UUID{{first.ID()}, {second.ID()}}
+	if err := Boost(Fixed(3), Fixed(3)).Targeting(TargetGroup(1)).Apply(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := GrantKeyword(Flying).Targeting(TargetGroup(1)).Apply(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if second.CurrentPower(g) != 5 || second.CurrentToughness(g) != 5 || !second.HasKeyword(Flying) {
+		t.Fatalf("expected TargetGroup(1) creature to become 5/5 with flying, got %d/%d flying=%v", second.CurrentPower(g), second.CurrentToughness(g), second.HasKeyword(Flying))
+	}
+	if first.CurrentPower(g) != 1 || first.HasKeyword(Flying) {
+		t.Fatal("expected TargetGroup(0) creature to remain untouched")
 	}
 }
 

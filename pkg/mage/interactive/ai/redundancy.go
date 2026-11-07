@@ -9,7 +9,7 @@ import (
 )
 
 type keywordGrantEffect interface {
-	KeywordGrantTarget() mage.TargetSelector
+	KeywordGrantTarget() mage.ObjectSelector
 }
 
 // AbilityActivationIsRedundant reports whether an activation would only grant
@@ -89,37 +89,51 @@ func keywordAlreadyGranted(g *mage.Game, targetID uuid.UUID, keyword core.Attr) 
 	return false
 }
 
-func keywordGrantRecipients(g *mage.Game, controllerID, sourceID uuid.UUID, selector mage.TargetSelector, targets []uuid.UUID) ([]uuid.UUID, bool) {
-	switch selector.Kind {
-	case mage.KindTarget:
-		if len(targets) == 0 {
-			return nil, false
-		}
-		return targets[:1], true
-	case mage.KindAllTargets:
-		return targets, len(targets) > 0
-	case mage.KindSource:
-		return []uuid.UUID{sourceID}, sourceID != uuid.Nil()
-	case mage.KindAttached:
-		source := g.FindPermanent(sourceID)
-		if source == nil || source.AttachedTo == uuid.Nil() {
-			return nil, false
-		}
-		return []uuid.UUID{source.AttachedTo}, true
-	case mage.KindMatching, mage.KindAllMatching:
-		var recipients []uuid.UUID
-		for _, permanent := range g.AllBattlefield() {
-			if selector.Kind == mage.KindMatching && permanent.ControllerID() != controllerID {
-				continue
-			}
-			if permanent.HasType(core.TypeCreature) && selector.Filter.Match(permanent, g) {
-				recipients = append(recipients, permanent.ID())
-			}
-		}
-		return recipients, true
-	default:
+func keywordGrantRecipients(g *mage.Game, controllerID, sourceID uuid.UUID, selector mage.ObjectSelector, targets []uuid.UUID) ([]uuid.UUID, bool) {
+	if selector == nil {
 		return nil, false
 	}
+	if ts, ok := selector.(mage.TargetSelector); ok {
+		switch ts.Kind {
+		case mage.KindTarget:
+			if len(targets) == 0 {
+				return nil, false
+			}
+			return targets[:1], true
+		case mage.KindAllTargets:
+			return targets, len(targets) > 0
+		case mage.KindSource:
+			return []uuid.UUID{sourceID}, sourceID != uuid.Nil()
+		case mage.KindAttached:
+			source := g.FindPermanent(sourceID)
+			if source == nil || source.AttachedTo == uuid.Nil() {
+				return nil, false
+			}
+			return []uuid.UUID{source.AttachedTo}, true
+		case mage.KindMatching, mage.KindAllMatching:
+			var recipients []uuid.UUID
+			for _, permanent := range g.AllBattlefield() {
+				if ts.Kind == mage.KindMatching && permanent.ControllerID() != controllerID {
+					continue
+				}
+				if permanent.HasType(core.TypeCreature) && ts.Filter.Match(permanent, g) {
+					recipients = append(recipients, permanent.ID())
+				}
+			}
+			return recipients, true
+		default:
+			return nil, false
+		}
+	}
+	ctx := &mage.EffectContext{
+		Game:         g,
+		Controller:   controllerID,
+		SourceID:     sourceID,
+		Targets:      targets,
+		TargetGroups: [][]uuid.UUID{targets},
+	}
+	recipients := selector.Select(ctx)
+	return recipients, len(recipients) > 0
 }
 
 func containsID(ids []uuid.UUID, want uuid.UUID) bool {

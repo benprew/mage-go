@@ -16,16 +16,11 @@ type selectedLifeEffect struct {
 	lose   bool
 }
 
-func lifeEffectFromArguments(lose bool, playerOrAmount any, amounts ...ValueSource) Effect {
-	if amount, ok := playerOrAmount.(int); ok && len(amounts) == 0 {
-		return &selectedLifeEffect{player: SelectController(), amount: Fixed(amount), lose: lose}
-	}
-	player, ok := playerOrAmount.(PlayerSelector)
-	if !ok || len(amounts) != 1 || amounts[0] == nil {
-		panic("mage: life effect requires a player and amount")
-	}
-	return &selectedLifeEffect{player: player, amount: amounts[0], lose: lose}
+func (e *selectedLifeEffect) Targeting(player PlayerSelector) *selectedLifeEffect {
+	e.player = player
+	return e
 }
+
 func (e *selectedLifeEffect) Text() string {
 	if e.lose {
 		return "lose " + e.amount.Text() + " life"
@@ -129,7 +124,7 @@ func Destroy(target ObjectSelector, options ...DestroyOpt) Effect {
 func (*selectedDestroyEffect) Text() string { return "destroy" }
 func (e *selectedDestroyEffect) Properties() EffectProperties {
 	_, mass := e.target.(battlefieldObjects)
-	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true, Mass: mass}
+	return EffectProperties{Outcome: OutcomeDetriment, Destroys: !e.options.noRegeneration, Mass: mass}
 }
 func (e *selectedDestroyEffect) Apply(ctx *EffectContext) error {
 	var permanents []*Permanent

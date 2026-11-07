@@ -208,14 +208,14 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties 
 // stunEffect causes the selected permanent to skip its next untap attempt
 // during its then-controller's untap step. No counter is placed.
 type stunEffect struct {
-	selector TargetSelector
+	selector ObjectSelector
 }
 
 // StunCreature creates an effect that causes the targeted permanent to skip its
 // next untap step. Defaults to targeting the resolved target; chain
 // .Targeting(...) to apply to the source.
 func StunCreature() *stunEffect {
-	return &stunEffect{selector: TargetSelector{Kind: KindTarget}}
+	return &stunEffect{selector: ToTarget()}
 }
 
 // SkipNextUntapTarget creates the explicit one-shot untap-skipping effect.
@@ -225,7 +225,7 @@ func SkipNextUntapTarget() *stunEffect {
 }
 
 // Targeting sets which permanent the stun applies to.
-func (e *stunEffect) Targeting(sel TargetSelector) *stunEffect {
+func (e *stunEffect) Targeting(sel ObjectSelector) *stunEffect {
 	e.selector = sel
 	return e
 }

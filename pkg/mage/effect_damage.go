@@ -6,8 +6,13 @@ import (
 )
 
 // GainLife creates an effect that gains life for the controller.
-func GainLife(playerOrAmount any, amounts ...ValueSource) Effect {
-	return lifeEffectFromArguments(false, playerOrAmount, amounts...)
+func GainLife(amount int) *selectedLifeEffect {
+	return &selectedLifeEffect{player: SelectController(), amount: Fixed(amount)}
+}
+
+// GainLifeForPlayers creates an effect that gains life for each selected player.
+func GainLifeForPlayers(player PlayerSelector, amount ValueSource) *selectedLifeEffect {
+	return &selectedLifeEffect{player: player, amount: amount}
 }
 
 // GainLifeStep returns the Effect for use in pipelines/ForEach/Modal.
@@ -15,12 +20,12 @@ func GainLifeStep(amount int) Effect { return GainLife(amount) }
 
 // GainLifeAmount creates an effect that gains life for the controller equal to a dynamic value.
 func GainLifeAmount(amount ValueSource) Effect {
-	return GainLife(SelectController(), amount)
+	return GainLifeForPlayers(SelectController(), amount)
 }
 
 // GainLifeTarget creates an effect that gains life for a target player (or controller as fallback).
 func GainLifeTarget(amount ValueSource) Effect {
-	return GainLife(legacyPlayerReference{}, amount)
+	return GainLifeForPlayers(legacyPlayerReference{}, amount)
 }
 
 // poisonTargetPlayerEffect gives a player poison counters. By default the
@@ -52,21 +57,24 @@ func (e *poisonTargetPlayerEffect) Properties() EffectProperties {
 
 // LoseLifeAmount creates an effect that causes the controller to lose life equal to a dynamic value.
 func LoseLifeAmount(amount ValueSource) Effect {
-	return LoseLife(SelectController(), amount)
+	return LoseLifeForPlayers(SelectController(), amount)
 }
-
-// loseLifeTargetEffect causes a target player (or the controller if no target)
 
 // TargetPlayerLoseLife creates an effect that causes the target player (first
 // player target) to lose the given amount of life. Falls back to the controller
 // if no target is supplied.
 func TargetPlayerLoseLife(amount ValueSource) Effect {
-	return LoseLife(legacyPlayerReference{}, amount)
+	return LoseLifeForPlayers(legacyPlayerReference{}, amount)
 }
 
 // LoseLife creates an effect that causes the controller to lose life.
-func LoseLife(playerOrAmount any, amounts ...ValueSource) Effect {
-	return lifeEffectFromArguments(true, playerOrAmount, amounts...)
+func LoseLife(amount int) *selectedLifeEffect {
+	return &selectedLifeEffect{player: SelectController(), amount: Fixed(amount), lose: true}
+}
+
+// LoseLifeForPlayers creates an effect that causes each selected player to lose life.
+func LoseLifeForPlayers(player PlayerSelector, amount ValueSource) *selectedLifeEffect {
+	return &selectedLifeEffect{player: player, amount: amount, lose: true}
 }
 
 // dealDamageEffect deals damage to a target (creature, player, or planeswalker).
@@ -77,22 +85,26 @@ type dealDamageEffect struct {
 	amount    ValueSource
 }
 
-// DealDamage creates an effect that deals damage to a target.
-func DealDamage(sourceOrAmount any, arguments ...any) Effect {
-	if amount, ok := sourceOrAmount.(ValueSource); ok && len(arguments) == 0 {
-		return &dealDamageEffect{amount: amount, source: legacyDamageSourceReference{}, recipient: legacyFirstReference{}}
-	}
-	source, ok := sourceOrAmount.(ObjectSelector)
-	if !ok || len(arguments) != 2 {
-		panic("mage: damage requires a source, recipient, and amount")
-	}
-	recipient, ok := arguments[0].(DamageRecipientSelector)
-	amount, valid := arguments[1].(ValueSource)
-	if !ok || !valid {
-		panic("mage: invalid damage arguments")
-	}
+// DealDamage creates an effect that deals damage from the resolving source to the first target.
+func DealDamage(amount ValueSource) *dealDamageEffect {
+	return &dealDamageEffect{amount: amount, source: legacyDamageSourceReference{}, recipient: legacyFirstReference{}}
+}
+
+// DealDamageFrom creates an effect that deals damage from source to recipient.
+func DealDamageFrom(source ObjectSelector, recipient DamageRecipientSelector, amount ValueSource) *dealDamageEffect {
 	_, mass := recipient.(battlefieldObjects)
 	return &dealDamageEffect{source: source, recipient: recipient, amount: amount, mass: mass}
+}
+
+func (e *dealDamageEffect) From(source ObjectSelector) *dealDamageEffect {
+	e.source = source
+	return e
+}
+
+func (e *dealDamageEffect) Targeting(recipient DamageRecipientSelector) *dealDamageEffect {
+	e.recipient = recipient
+	_, e.mass = recipient.(battlefieldObjects)
+	return e
 }
 
 // DealDamageStep returns the Effect for use in pipelines/ForEach.
@@ -147,17 +159,17 @@ func DividedDamageTotal(e Effect) ValueSource {
 
 // DealDamageToAllCreatures creates an effect that deals damage to all matching creatures.
 func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect {
-	return DealDamage(legacyDamageSourceReference{}, BattlefieldObjects(And(IsCreature, filter)), amount)
+	return DealDamageFrom(legacyDamageSourceReference{}, BattlefieldObjects(And(IsCreature, filter)), amount)
 }
 
 // DealDamageToPlayers creates an effect that deals damage to players selected by the selector.
 func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
-	return DealDamage(legacyDamageSourceReference{}, selector, amount)
+	return DealDamageFrom(legacyDamageSourceReference{}, selector, amount)
 }
 
 // DealDamageToPlayersStep returns the Effect for use in pipelines/ForEach/Modal.
 func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) Effect {
-	return DealDamage(legacyDamageSourceReference{}, selector, amount)
+	return DealDamageFrom(legacyDamageSourceReference{}, selector, amount)
 }
 
 // handSizeDamageEffect deals damage to the active player based on hand size vs a threshold.
@@ -254,7 +266,7 @@ func (e *preventDamageToYouByCreaturesWithFlyingEffect) Apply(ctx *EffectContext
 // or the targeted player.
 type PreventDamageEffect struct {
 	amount   ValueSource
-	selector TargetSelector
+	selector ObjectSelector
 }
 
 // PreventDamageToTarget creates an effect that prevents damage to a target.
@@ -266,14 +278,14 @@ func PreventDamageToTarget(amount ValueSource) *PreventDamageEffect {
 	}
 }
 
-func (e *PreventDamageEffect) Targeting(selector TargetSelector) *PreventDamageEffect {
+func (e *PreventDamageEffect) Targeting(selector ObjectSelector) *PreventDamageEffect {
 	e.selector = selector
 	return e
 }
 
 func (e *PreventDamageEffect) Text() string {
 	object := "target"
-	if e.selector.Kind == KindSource {
+	if isSourceSelector(e.selector) {
 		object = "source"
 	}
 	if _, ok := e.amount.(xValue); ok {
@@ -287,12 +299,13 @@ func (e *PreventDamageEffect) Properties() EffectProperties {
 
 func (e *PreventDamageEffect) Apply(ctx *EffectContext) error {
 	amount := e.amount.Resolve(ctx)
-	for _, perm := range resolvePermanents(ctx, e.selector) {
-		ctx.Game.AddPreventionShield(perm.ID(), amount)
-	}
-	if e.selector.Kind == KindTarget && len(ctx.legacyTargets()) > 0 {
-		player := ctx.Game.GetPlayer(ctx.legacyTargets()[0])
-		if player != nil {
+	for _, id := range currentObjectIDs(ctx, e.selector) {
+		if id == uuid.Nil() {
+			continue
+		}
+		if perm := ctx.Game.FindPermanent(id); perm != nil {
+			ctx.Game.AddPreventionShield(perm.ID(), amount)
+		} else if player := ctx.Game.GetPlayer(id); player != nil {
 			ctx.Game.AddPreventionShield(player.PlayerID(), amount)
 		}
 	}

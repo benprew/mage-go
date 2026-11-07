@@ -237,7 +237,7 @@ func shareExchangePermanentType(first, second *Permanent) bool {
 
 // GainControlEffect creates continuous control effects when it resolves.
 type GainControlEffect struct {
-	selector      TargetSelector
+	selector      ObjectSelector
 	duration      Duration
 	conditions    []ControlConditionData
 	tapMaintained bool
@@ -248,7 +248,7 @@ func GainControl() *GainControlEffect {
 	return &GainControlEffect{selector: ToTarget(), duration: Indefinite}
 }
 
-func (e *GainControlEffect) Targeting(selector TargetSelector) *GainControlEffect {
+func (e *GainControlEffect) Targeting(selector ObjectSelector) *GainControlEffect {
 	e.selector = selector
 	return e
 }

@@ -10,24 +10,26 @@ import (
 // --- Add counters ---
 
 // addCountersEffect is a composable effect that adds counters to a permanent.
-// It implements both Effect (for pipelines) and Effect (for direct use).
 // Defaults to targeting targets[0]; use .Targeting() to override.
 type addCountersEffect struct {
-	objects  ObjectSelector
 	ct       CounterType
 	amount   ValueSource
-	selector TargetSelector
+	selector ObjectSelector
 	maxTotal int // 0 = no cap
 }
 
 // AddCounters creates an effect that adds counters to a permanent.
 // Defaults to targeting targets[0]. Use .Targeting() to override.
-func AddCounters(targetOrType any, arguments ...any) *addCountersEffect {
-	objects, kind, amount := counterArguments(targetOrType, arguments...)
-	return &addCountersEffect{objects: objects, ct: kind, amount: amount, selector: ToTarget()}
+func AddCounters(ct CounterType, amount ValueSource) *addCountersEffect {
+	return &addCountersEffect{ct: ct, amount: amount, selector: ToTarget()}
 }
 
-func (e *addCountersEffect) Targeting(sel TargetSelector) *addCountersEffect {
+// AddCountersTo creates an effect that adds counters to the selected object(s).
+func AddCountersTo(target ObjectSelector, ct CounterType, amount ValueSource) *addCountersEffect {
+	return &addCountersEffect{ct: ct, amount: amount, selector: target}
+}
+
+func (e *addCountersEffect) Targeting(sel ObjectSelector) *addCountersEffect {
 	e.selector = sel
 	return e
 }
@@ -47,10 +49,10 @@ func (e *addCountersEffect) Text() string {
 		return fmt.Sprintf("put X %s counters on it", e.ct)
 	}
 	n := e.amount.Text()
-	switch e.selector.Kind {
-	case KindSource:
+	switch {
+	case isSourceSelector(e.selector):
 		return fmt.Sprintf("put %s %s counter(s) on it", n, e.ct)
-	case KindAttached:
+	case isAttachedSelector(e.selector):
 		return "add counter to enchanted permanent"
 	default:
 		return fmt.Sprintf("put %s %s counter(s) on target", n, e.ct)
@@ -65,8 +67,11 @@ func (e *addCountersEffect) Properties() EffectProperties {
 }
 
 func (e *addCountersEffect) Apply(ctx *EffectContext) error {
-	perms := counterPermanents(ctx, e.objects, e.selector)
-	for _, perm := range perms {
+	for _, perm := range resolvePermanents(ctx, e.selector) {
+		perm = ctx.Game.MutablePermanent(perm.ID())
+		if perm == nil {
+			continue
+		}
 		amount := e.amount.Resolve(ctx)
 		if e.maxTotal > 0 {
 			current := int(perm.Counters[e.ct])
@@ -83,83 +88,40 @@ func (e *addCountersEffect) Apply(ctx *EffectContext) error {
 // --- Remove counters ---
 
 // removeCountersEffect is a composable effect that removes counters from a
-// permanent. It implements both Effect (for pipelines) and Effect (for
-// direct use). Defaults to targeting the source; use .Targeting() to override.
+// permanent. Defaults to targeting the source; use .Targeting() to override.
 type removeCountersEffect struct {
-	objects  ObjectSelector
 	ct       CounterType
 	amount   ValueSource
-	selector TargetSelector
+	selector ObjectSelector
 }
 
 // RemoveCounters creates an effect that removes counters from a permanent.
 // Defaults to targeting the source. Use .Targeting() to override.
-func RemoveCounters(targetOrType any, arguments ...any) *removeCountersEffect {
-	objects, kind, amount := counterArguments(targetOrType, arguments...)
-	return &removeCountersEffect{objects: objects, ct: kind, amount: amount, selector: ToSource()}
+func RemoveCounters(ct CounterType, amount int) *removeCountersEffect {
+	return &removeCountersEffect{ct: ct, amount: Fixed(amount), selector: ToSource()}
 }
 
-func counterArguments(targetOrType any, arguments ...any) (ObjectSelector, CounterType, ValueSource) {
-	var objects ObjectSelector
-	var kind CounterType
-	var amount any
-	if legacy, ok := targetOrType.(CounterType); ok && len(arguments) == 1 {
-		kind = legacy
-		amount = arguments[0]
-	} else {
-		var ok bool
-		objects, ok = targetOrType.(ObjectSelector)
-		if !ok || len(arguments) != 2 {
-			panic("mage: counters require objects, a type, and an amount")
-		}
-		kind, ok = arguments[0].(CounterType)
-		if !ok {
-			panic("mage: invalid counter type")
-		}
-		amount = arguments[1]
-	}
-	if fixed, ok := amount.(int); ok {
-		return objects, kind, Fixed(fixed)
-	}
-	value, ok := amount.(ValueSource)
-	if !ok {
-		panic("mage: invalid counter amount")
-	}
-	return objects, kind, value
+// RemoveCountersFrom creates an effect that removes counters from the selected object(s).
+func RemoveCountersFrom(target ObjectSelector, ct CounterType, amount ValueSource) *removeCountersEffect {
+	return &removeCountersEffect{ct: ct, amount: amount, selector: target}
 }
 
-func counterPermanents(ctx *EffectContext, objects ObjectSelector, legacy TargetSelector) []*Permanent {
-	if objects == nil {
-		return resolvePermanents(ctx, legacy)
-	}
-	var permanents []*Permanent
-	for _, id := range currentObjectIDs(ctx, objects) {
-		if permanent := ctx.Game.MutablePermanent(id); permanent != nil {
-			permanents = append(permanents, permanent)
-		}
-	}
-	return permanents
-}
-
-func (e *removeCountersEffect) Targeting(sel TargetSelector) *removeCountersEffect {
+func (e *removeCountersEffect) Targeting(sel ObjectSelector) *removeCountersEffect {
 	e.selector = sel
 	return e
 }
 
 // Effect interface
 func (e *removeCountersEffect) Text() string {
-	switch e.selector.Kind {
-	case KindSource:
+	if isSourceSelector(e.selector) {
 		return fmt.Sprintf("remove %s %s counter(s) from it", e.amount.Text(), e.ct)
-	default:
-		return fmt.Sprintf("remove %s %s counter(s) from target", e.amount.Text(), e.ct)
 	}
+	return fmt.Sprintf("remove %s %s counter(s) from target", e.amount.Text(), e.ct)
 }
 func (e *removeCountersEffect) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *removeCountersEffect) Apply(ctx *EffectContext) error {
-	perms := counterPermanents(ctx, e.objects, e.selector)
-	for _, p := range perms {
+	for _, p := range resolvePermanents(ctx, e.selector) {
 		p = ctx.Game.MutablePermanent(p.ID())
 		if p == nil {
 			continue

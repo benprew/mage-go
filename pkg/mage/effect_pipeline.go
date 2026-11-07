@@ -154,13 +154,13 @@ func (s *VarPlayerSelector) Select(ctx *EffectContext) []uuid.UUID {
 func (s *VarPlayerSelector) Text() string { return s.Name }
 
 func GainLifeFromVar(playerVar, amountVar string) Effect {
-	return GainLife(VarPlayer(playerVar), VarInt(amountVar))
+	return GainLifeForPlayers(VarPlayer(playerVar), VarInt(amountVar))
 }
 func GainLifeControllerFromVar(amountVar string) Effect {
-	return GainLife(SelectController(), VarInt(amountVar))
+	return GainLifeForPlayers(SelectController(), VarInt(amountVar))
 }
 func DealDamageFromVar(amountVar string) Effect {
-	return DealDamage(SourceObject(), legacyFirstReference{}, VarInt(amountVar))
+	return DealDamageFrom(SourceObject(), legacyFirstReference{}, VarInt(amountVar))
 }
 
 // DealDamageToPlayersVarData deals damage from a context variable to selected players.
