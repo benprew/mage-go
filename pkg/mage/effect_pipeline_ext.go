@@ -584,15 +584,7 @@ func (e *ForEachBlockerOfSourceData) Apply(ctx *EffectContext) error {
 			}
 		}
 	}
-	savedTargets := ctx.legacyTargets()
-	for _, bid := range blockerIDs {
-		ctx.Targets = []uuid.UUID{bid}
-		if err := e.Inner.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	ctx.Targets = savedTargets
-	return nil
+	return ctx.withIterationTargets(blockerIDs, e.Inner)
 }
 
 // ForEachAttackerBlockedBySourceData iterates all attackers that the source
@@ -616,15 +608,7 @@ func (e *ForEachAttackerBlockedBySourceData) Apply(ctx *EffectContext) error {
 			attackerIDs = append(attackerIDs, group.AttackerID)
 		}
 	}
-	savedTargets := ctx.legacyTargets()
-	for _, aid := range attackerIDs {
-		ctx.Targets = []uuid.UUID{aid}
-		if err := e.Inner.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	ctx.Targets = savedTargets
-	return nil
+	return ctx.withIterationTargets(attackerIDs, e.Inner)
 }
 
 // ForEachCombatOpponentData iterates all creatures in combat with the source
@@ -654,15 +638,7 @@ func (e *ForEachCombatOpponentData) Apply(ctx *EffectContext) error {
 			}
 		}
 	}
-	savedTargets := ctx.legacyTargets()
-	for _, id := range opponentIDs {
-		ctx.Targets = []uuid.UUID{id}
-		if err := e.Inner.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	ctx.Targets = savedTargets
-	return nil
+	return ctx.withIterationTargets(opponentIDs, e.Inner)
 }
 
 // ForEachBlockerOfTargetData iterates all creatures blocking a target attacker
@@ -691,15 +667,7 @@ func (e *ForEachBlockerOfTargetData) Apply(ctx *EffectContext) error {
 	}
 	blockerIDs := make([]uuid.UUID, len(group.BlockerIDs))
 	copy(blockerIDs, group.BlockerIDs)
-	savedTargets := ctx.legacyTargets()
-	for _, bid := range blockerIDs {
-		ctx.Targets = []uuid.UUID{bid}
-		if err := e.Inner.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	ctx.Targets = savedTargets
-	return nil
+	return ctx.withIterationTargets(blockerIDs, e.Inner)
 }
 
 // ForEachAttackerBlockedByTargetData iterates all attackers that a target
@@ -728,15 +696,7 @@ func (e *ForEachAttackerBlockedByTargetData) Apply(ctx *EffectContext) error {
 			attackerIDs = append(attackerIDs, group.AttackerID)
 		}
 	}
-	savedTargets := ctx.legacyTargets()
-	for _, aid := range attackerIDs {
-		ctx.Targets = []uuid.UUID{aid}
-		if err := e.Inner.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	ctx.Targets = savedTargets
-	return nil
+	return ctx.withIterationTargets(attackerIDs, e.Inner)
 }
 
 // BlockerCountVarData stores the number of blockers of the source attacker

@@ -224,6 +224,26 @@ func ForEachControlledPermanent(who PlayerSelector, filter PermanentFilter, inne
 func (e *ForEachPermanentData) Text() string                 { return e.Txt }
 func (e *ForEachPermanentData) Properties() EffectProperties { return EffectProperties{Mass: true} }
 
+func (ctx *EffectContext) withIterationTargets(ids []uuid.UUID, inner Effect) error {
+	savedTargets := ctx.Targets
+	savedGroups := ctx.TargetGroups
+	savedDeclared := ctx.declaredTargets
+	defer func() {
+		ctx.Targets = savedTargets
+		ctx.TargetGroups = savedGroups
+		ctx.declaredTargets = savedDeclared
+	}()
+	for _, id := range ids {
+		ctx.Targets = []uuid.UUID{id}
+		ctx.TargetGroups = [][]uuid.UUID{{id}}
+		ctx.declaredTargets = true
+		if err := inner.Apply(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 	perms := ctx.Game.FilterBattlefield(e.Filter)
 	var controllerFilter uuid.UUID
@@ -240,15 +260,7 @@ func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 		}
 		ids = append(ids, p.ID())
 	}
-	savedTargets := ctx.legacyTargets()
-	for _, id := range ids {
-		ctx.Targets = []uuid.UUID{id}
-		if err := e.Inner.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	ctx.Targets = savedTargets
-	return nil
+	return ctx.withIterationTargets(ids, e.Inner)
 }
 
 // ---------------------------------------------------------------------------

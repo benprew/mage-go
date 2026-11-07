@@ -422,7 +422,7 @@ func (*counterSpellIfXMeetsOrExceedsCMCEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	cmc := obj.Card.ManaCost().CMC()
-	if ctx.Game.XValue() >= cmc {
+	if ctx.XValue >= cmc {
 		ctx.Game.CounterSpellOnStack(ctx.legacyTargets()[0])
 	}
 	return nil
@@ -443,7 +443,7 @@ func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 	}
 	// Paying goes through the regular payment path so the controller may tap
 	// untapped mana sources, not only spend mana already floating in the pool.
-	if ctx.Game.TryPayMana(obj.Controller, fmt.Sprintf("{%d}", ctx.Game.XValue())) {
+	if ctx.Game.TryPayMana(obj.Controller, fmt.Sprintf("{%d}", ctx.XValue)) {
 		return nil
 	}
 	for _, land := range ctx.Game.FilterBattlefield(And(ControlledBy(obj.Controller), IsLand)) {

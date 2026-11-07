@@ -219,3 +219,21 @@ func TestContinuousEffectBindsResolvingControllerOnRegistration(t *testing.T) {
 		t.Fatal("expected continuous effect to bind resolving controller on registration")
 	}
 }
+
+func TestForEachPermanentDoesNotCorruptTargetsWithTriggerEvent(t *testing.T) {
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	bear := g.PutOnBattlefield(NewCreature("Bear", "{0}", 2, 2), owner)
+	ctx := NewEffectContext(g, bear.ID(), owner, nil)
+	ctx.TriggerEvent = &GameEvent{Type: EvtSpellCast, SourceID: uuid.New(), PlayerID: owner}
+	step := ForEachPermanent(IsCreature, Boost(Fixed(1), Fixed(1)).Targeting(FirstTarget()), "boost each creature")
+	if err := step.Apply(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(ctx.Targets) != 0 || len(ctx.TargetGroups) != 0 || ctx.declaredTargets {
+		t.Fatalf("ForEachPermanent corrupted ctx.Targets: targets=%v groups=%v declared=%v", ctx.Targets, ctx.TargetGroups, ctx.declaredTargets)
+	}
+	if bear.CurrentPower(g) != 3 || bear.CurrentToughness(g) != 3 {
+		t.Fatalf("expected 3/3 after ForEachPermanent, got %d/%d", bear.CurrentPower(g), bear.CurrentToughness(g))
+	}
+}
