@@ -25,10 +25,20 @@ type GraveyardActivatedAbility struct {
 // includes [ExileSelfFromGraveyardCost] to prevent infinite reuse.
 func WithGraveyardActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardOption {
 	return func(c *Card) {
-		opts = append(opts, WithSorcerySpeed())
+		opts = append(opts, WithSorcerySpeed(), WithActivationZone(ZoneGraveyard))
 		base := NewActivatedAbility(effect, cost, opts...)
 		c.AddAbility(&GraveyardActivatedAbility{SimpleActivatedAbility: base})
 	}
+}
+
+func graveyardActivatedAction(a Ability) (*ActionDefinition, bool) {
+	if gaa, ok := UnwrapAbility(a).(*GraveyardActivatedAbility); ok {
+		return gaa.SimpleActivatedAbility, true
+	}
+	if action, ok := UnwrapAbility(a).(*ActionDefinition); ok && action.Kind() == ActionActivated && action.ActivationZone() == ZoneGraveyard {
+		return action, true
+	}
+	return nil, false
 }
 
 // ExileSelfFromGraveyardCost exiles the source card from its owner's
@@ -91,7 +101,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 	if abilityIdx < 0 || abilityIdx >= len(abilities) {
 		return fmt.Errorf("invalid ability index %d", abilityIdx)
 	}
-	gaa, ok := abilities[abilityIdx].(*GraveyardActivatedAbility)
+	gaa, ok := graveyardActivatedAction(abilities[abilityIdx])
 	if !ok {
 		return fmt.Errorf("ability %d is not a graveyard-zone activated ability", abilityIdx)
 	}
@@ -156,7 +166,7 @@ func (g *Game) FindGraveyardActivatableCard(playerID uuid.UUID, name string) (uu
 			continue
 		}
 		for i, a := range c.abilities {
-			gaa, ok := a.(*GraveyardActivatedAbility)
+			gaa, ok := graveyardActivatedAction(a)
 			if !ok {
 				continue
 			}

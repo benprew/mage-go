@@ -43,7 +43,7 @@ func (a *ActionDefinition) ManaProfile(_ GameReader, _ uuid.UUID) ManaProfile {
 	return ManaProfile{Productions: productions, Costs: a.Costs(), Interchangeable: true}
 }
 func (a *ActionDefinition) manaActivationAllowed(ctx AbilityContext, g *Game) bool {
-	return manaSourceActivationAllowed(a, ctx.SourceID, ctx.AbilityIndex, g)
+	return a.canActivateWithoutPayingCosts(ctx, g, true)
 }
 
 type manaPlanningCost interface {

@@ -50,41 +50,6 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 	return manaSourceAbility{AbilityIndex: abilityIndex, Productions: profile.Productions, ManaCost: mana, Interchangeable: profile.Interchangeable}, true
 }
 
-func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.UUID, abilityIndex int, g *Game) bool {
-	perm := g.FindPermanent(sourceID)
-	if perm == nil {
-		return false
-	}
-	controller := perm.ControllerID()
-	if ability.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
-		return false
-	}
-	if ability.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
-		return false
-	}
-	if ability.timing == TimingStepOnly && ability.stepOnly != 0 && g.turns.Step() != ability.stepOnly {
-		return false
-	}
-	if ability.limits.MaxActivationsPerTurn > 0 && g.activationCount(sourceID, ability.AbilityID(), abilityIndex) >= ability.limits.MaxActivationsPerTurn {
-		return false
-	}
-	if ability.limits.OncePerTurn && (g.activationCount(sourceID, ability.AbilityID(), abilityIndex) > 0) {
-		return false
-	}
-	if ability.limits.ControlledSinceTurnStart && !perm.ControlledSinceTurnStart(g) {
-		return false
-	}
-	for _, condition := range ability.activationConds {
-		if !condition(g, perm, controller) {
-			return false
-		}
-	}
-	if ability.SorcerySpeed() && (!g.turns.Step().IsMainPhase() || g.ActivePlayerObj().PlayerID() != controller || !g.stack.IsEmpty()) {
-		return false
-	}
-	return true
-}
-
 func activatedManaEffects(effects []Effect) ([]ManaProduction, bool) {
 	var productions []ManaProduction
 	for _, effect := range effects {

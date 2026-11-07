@@ -182,11 +182,17 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 	return func(a *ActionDefinition) { a.permission = permission }
 }
 
+// WithActivationZone restricts the zone from which an activated ability may be activated.
+func WithActivationZone(zone Zone) ActionOption {
+	return func(a *ActionDefinition) { a.zone = zone }
+}
+
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
 	BaseAbility
 	kind            ActionKind
+	zone            Zone
 	effects         []Effect
 	costs           []Cost
 	targets         []Target
@@ -198,6 +204,14 @@ type ActionDefinition struct {
 	aiHints         []AIHint
 	modes           []Mode
 	legacyModes     bool
+}
+
+// ActivationZone returns the zone from which this ability can be activated.
+func (a *ActionDefinition) ActivationZone() Zone {
+	if a.zone == 0 {
+		return ZoneBattlefield
+	}
+	return a.zone
 }
 
 // SimpleActivatedAbility is kept as a compatibility name for activated actions.
@@ -273,12 +287,27 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
 func (a *ActionDefinition) CanActivate(ctx AbilityContext, g *Game) bool {
+	if !a.canActivateWithoutPayingCosts(ctx, g, false) {
+		return false
+	}
+	for _, c := range a.costs {
+		if !c.CanPay(ctx.SourceID, ctx.Controller, g) {
+			return false
+		}
+	}
+	return true
+}
+
+func (a *ActionDefinition) canActivateWithoutPayingCosts(ctx AbilityContext, g *Game, isManaAbility bool) bool {
 	controller := ctx.Controller
 	if a.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
 		return false
 	}
 	if perm := g.FindPermanent(ctx.SourceID); perm != nil {
-		if perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities) {
+		if a.ActivationZone() != ZoneBattlefield {
+			return false
+		}
+		if !isManaAbility && (perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities)) {
 			return false
 		}
 		if perm.ControllerID() != controller && !a.permission.AnyPlayerMayUse {
@@ -287,6 +316,8 @@ func (a *ActionDefinition) CanActivate(ctx AbilityContext, g *Game) bool {
 		if perm.ControllerID() == controller && a.permission.OpponentOnlyMayUse {
 			return false
 		}
+	} else if isManaAbility {
+		return false
 	}
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
@@ -312,11 +343,6 @@ func (a *ActionDefinition) CanActivate(ctx AbilityContext, g *Game) bool {
 			if !cond(g, src, controller) {
 				return false
 			}
-		}
-	}
-	for _, c := range a.costs {
-		if !c.CanPay(ctx.SourceID, controller, g) {
-			return false
 		}
 	}
 
