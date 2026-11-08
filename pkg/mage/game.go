@@ -2001,6 +2001,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	defer g.ClearSacrificed()
 	defer g.resolution.SetColorOverride(obj.SourceID, obj.ColorOverride)()
+	defer g.resolution.Begin(obj)()
 
 	// CR 608.2b: a spell/ability with target(s) fails to resolve only if ALL of
 	// them are illegal at resolution. uuid.Nil() entries are positional
@@ -2042,7 +2043,6 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		return
 	}
 
-	defer g.resolution.Begin(obj)()
 	context := NewEffectContext(g, obj.SourceID, obj.Controller, resolvedTargets)
 	context.TriggerEvent = obj.TriggerEvent
 	context.RememberedObjects = slices.Clone(obj.RememberedObjects)
@@ -2350,6 +2350,10 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 	if xValue < 0 {
 		return fmt.Errorf("x cannot be negative")
 	}
+	restoreCastX := func() {}
+	if card.ManaCost().HasX || len(xValues) > 0 {
+		restoreCastX = g.resolution.WithX(xValue)
+	}
 	specs := card.CastTargets()
 	if action, ok := getModalSpellAbility(card); ok {
 		if mode == nil {
@@ -2357,6 +2361,7 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 			mode = &choice
 		}
 		if *mode < 0 || *mode >= len(action.modes) {
+			restoreCastX()
 			return fmt.Errorf("invalid modal choice")
 		}
 		specs = action.modes[*mode].Targets
@@ -2364,6 +2369,7 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 	if groups != nil {
 		groups = g.acquireTargetGroups(playerID, card, specs, groups, xValue)
 		if err := g.validateTargetGroups(playerID, card, specs, groups, xValue); err != nil {
+			restoreCastX()
 			return err
 		}
 		targets = flattenTargetGroups(groups)
@@ -2378,12 +2384,15 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 			groups = groupTargets(specs, targets, xValue)
 		}
 		if err := g.validateTargetGroups(playerID, card, specs, groups, xValue); err != nil {
+			restoreCastX()
 			return err
 		}
 	}
 	if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
+		restoreCastX()
 		return err
 	}
+	restoreCastX()
 
 	mc := card.ManaCost()
 

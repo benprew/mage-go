@@ -863,17 +863,24 @@ func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, 
 // battlefield whose mana value equals the current X value (g.currentX). Used by
 // spells like Detonate where the targeting restriction depends on X.
 func TargetArtifactWithManaValueX() Target {
-	return &artifactWithManaValueXTarget{
+	return &ArtifactWithManaValueXTarget{
 		min: 1, max: 1,
 	}
 }
 
-type artifactWithManaValueXTarget struct {
+// ArtifactWithManaValueXTarget targets an artifact on the battlefield whose mana
+// value equals X.
+type ArtifactWithManaValueXTarget struct {
 	BaseTarget
 }
 
-func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+func (t *ArtifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	hasX := g.resolution.HasX()
 	x := g.resolution.X()
+	maxX := 0
+	if !hasX && sourceCard != nil {
+		maxX = g.MaxXValue(controller, sourceCard.ManaCost(), SpellContextForCard(sourceCard))
+	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
 		if !p.HasType(TypeArtifact) {
@@ -882,7 +889,12 @@ func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
 			continue
 		}
-		if p.Card.ManaCost().CMC() != x {
+		cmc := p.Card.ManaCost().CMC()
+		if hasX {
+			if cmc != x {
+				continue
+			}
+		} else if cmc > maxX {
 			continue
 		}
 		result = append(result, p.ID())

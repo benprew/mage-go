@@ -1,11 +1,14 @@
 package antiquities
 
 import (
+	"slices"
 	"testing"
+	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 // ===== INSTANTS =====
@@ -124,6 +127,77 @@ func TestDetonate(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerB, "Jalum Tome", 0)
 		g.AssertLife(gametest.PlayerB, 17) // 3 damage
+	})
+
+	t.Run("snapshot offers Detonate for affordable non-zero CMC artifact", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		for range 5 {
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		}
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Detonate")
+		tome := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")
+		colossus := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Colossus of Sardia")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+
+		playerAID := g.AllPlayers()[0].PlayerID()
+		var tomePermID, colossusPermID uuid.UUID
+		for _, perm := range g.AllBattlefield() {
+			switch perm.Card.ID() {
+			case tome:
+				tomePermID = perm.ID()
+			case colossus:
+				colossusPermID = perm.ID()
+			}
+		}
+
+		actions := interactive.GetAvailableActions(g.Game, playerAID)
+		var detonateOpt *interactive.ActionOption
+		for i := range actions {
+			if actions[i].CardName == "Detonate" {
+				detonateOpt = &actions[i]
+				break
+			}
+		}
+		if detonateOpt == nil {
+			t.Fatal("expected Detonate to be offered in GetAvailableActions when CMC 4 artifact is affordable")
+		}
+		if !slices.Contains(detonateOpt.ValidTargets, tomePermID) {
+			t.Errorf("expected ValidTargets %v to contain Jayemdae Tome (%v)", detonateOpt.ValidTargets, tomePermID)
+		}
+		if slices.Contains(detonateOpt.ValidTargets, colossusPermID) {
+			t.Errorf("expected ValidTargets %v not to contain unaffordable Colossus of Sardia (%v, CMC 9)", detonateOpt.ValidTargets, colossusPermID)
+		}
+	})
+
+	t.Run("CastSpellByName validates target CMC against announced X and resolves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		for range 5 {
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		}
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Detonate")
+		tome := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+
+		playerAID := g.AllPlayers()[0].PlayerID()
+		var tomePermID uuid.UUID
+		for _, perm := range g.AllBattlefield() {
+			if perm.Card.ID() == tome {
+				tomePermID = perm.ID()
+				break
+			}
+		}
+
+		if err := g.CastSpellByName(playerAID, "Detonate", []uuid.UUID{tomePermID}, 2); err == nil {
+			t.Fatal("expected CastSpellByName with X=2 to reject CMC 4 Jayemdae Tome")
+		}
+		if err := g.CastSpellByName(playerAID, "Detonate", []uuid.UUID{tomePermID}, 4); err != nil {
+			t.Fatalf("CastSpellByName with X=4 failed: %v", err)
+		}
+		g.ResolveStack()
+		g.AssertPermanentCount(gametest.PlayerB, "Jayemdae Tome", 0)
+		g.AssertLife(gametest.PlayerB, 16)
 	})
 }
 

@@ -12,6 +12,7 @@ import (
 type ResolutionState struct {
 	// X value for the currently resolving spell or activation
 	currentX int
+	hasX     bool
 
 	// Chosen mode for the currently resolving modal spell (0-indexed)
 	currentMode int
@@ -70,6 +71,7 @@ func (s *ResolutionState) Begin(obj *StackObject) func() {
 		return func() {}
 	}
 	s.currentX = obj.XValue
+	s.hasX = true
 	s.currentMode = obj.ModeChoice
 	s.currentEventAmount = obj.EventAmount
 	s.currentEventSourceID = obj.EventSourceID
@@ -103,6 +105,7 @@ func (s *ResolutionState) SetColorOverride(sourceID uuid.UUID, override *[]Color
 // Clear resets all resolving state fields to zero values.
 func (s *ResolutionState) Clear() {
 	s.currentX = 0
+	s.hasX = false
 	s.currentMode = 0
 	s.currentEventAmount = 0
 	s.currentEventSourceID = uuid.Nil()
@@ -125,8 +128,18 @@ func (s *ResolutionState) ClearDistributions() {
 
 // Getters and Setters
 
-func (s *ResolutionState) X() int                                 { return s.currentX }
-func (s *ResolutionState) SetX(x int)                             { s.currentX = x }
+func (s *ResolutionState) X() int      { return s.currentX }
+func (s *ResolutionState) HasX() bool  { return s.hasX }
+func (s *ResolutionState) SetX(x int)  { s.currentX = x; s.hasX = true }
+func (s *ResolutionState) WithX(x int) func() {
+	prevX, prevHasX := s.currentX, s.hasX
+	s.currentX = x
+	s.hasX = true
+	return func() {
+		s.currentX = prevX
+		s.hasX = prevHasX
+	}
+}
 func (s *ResolutionState) Mode() int                              { return s.currentMode }
 func (s *ResolutionState) SetMode(m int)                          { s.currentMode = m }
 func (s *ResolutionState) EventAmount() int                       { return s.currentEventAmount }
@@ -170,6 +183,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 func (s *ResolutionState) clone(ctx *gameCloneContext) ResolutionState {
 	c := ResolutionState{
 		currentX:                   s.currentX,
+		hasX:                       s.hasX,
 		resolvingController:        s.resolvingController,
 		resolvingSourceID:          s.resolvingSourceID,
 		resolvingSourceIncarnation: s.resolvingSourceIncarnation,

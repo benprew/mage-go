@@ -750,6 +750,9 @@ func (g *Game) ActivePlayerIndex() int { return g.turns.ActivePlayerIndex() }
 // SetXValue sets the X value for the currently resolving spell.
 func (g *Game) SetXValue(x int) { g.resolution.SetX(x) }
 
+// WithXValue temporarily sets the X value for target/cost evaluation and returns a restore func.
+func (g *Game) WithXValue(x int) func() { return g.resolution.WithX(x) }
+
 // GrantAttr grants an attribute to a permanent via the effect manager.
 func (g *Game) GrantAttr(permID uuid.UUID, a Attr) { g.effects.GrantAttr(permID, a) }
 

@@ -830,8 +830,12 @@ func (tg *TestGame) buildPriorityActionForCast(idx int) (mage.PriorityAction, bo
 
 	card, _ := mage.CreateCard(ca.spell)
 	if card != nil {
-		tg.SetXValue(ca.xValue)
+		restoreX := func() {}
+		if card.ManaCost().HasX || ca.xValue != 0 {
+			restoreX = tg.WithXValue(ca.xValue)
+		}
 		validTargets := tg.validateTargets(card, targets, playerID)
+		restoreX()
 		if len(validTargets) == 0 && len(targets) > 0 {
 			return mage.PriorityAction{}, false
 		}
