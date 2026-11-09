@@ -15,7 +15,6 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Disintegrate**
 - **Drain Life**
 - **Drain Power**
-- **Fireball**
 - **Gloom**
 - **Personal Incarnation**
 - **Pyrotechnics**

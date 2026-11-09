@@ -62,6 +62,30 @@ func (c *manaCostPerTarget) resolveActionCost(ctx actionCostContext) Cost {
 	return &ManaCostPayment{MC: multiplyManaCost(c.perTarget, len(ctx.Targets))}
 }
 
+type manaCostPerTargetBeyondFirst struct {
+	perTarget ManaCost
+}
+
+// ManaCostPerTargetBeyondFirst creates a contextual mana cost multiplied by
+// the number of targets beyond the first (max(0, len(targets) - 1)).
+func ManaCostPerTargetBeyondFirst(cost string) Cost {
+	return &manaCostPerTargetBeyondFirst{perTarget: ParseManaCost(cost)}
+}
+
+func (c *manaCostPerTargetBeyondFirst) CanPay(uuid.UUID, uuid.UUID, *Game) bool { return true }
+func (c *manaCostPerTargetBeyondFirst) Pay(uuid.UUID, uuid.UUID, *Game) error {
+	return fmt.Errorf("per-target mana cost requires action context")
+}
+func (c *manaCostPerTargetBeyondFirst) Text() string {
+	return c.perTarget.String() + " for each target beyond the first"
+}
+func (c *manaCostPerTargetBeyondFirst) resolveActionCost(ctx actionCostContext) Cost {
+	if len(ctx.Targets) <= 1 {
+		return &ManaCostPayment{}
+	}
+	return &ManaCostPayment{MC: multiplyManaCost(c.perTarget, len(ctx.Targets)-1)}
+}
+
 func multiplyManaCost(mc ManaCost, n int) ManaCost {
 	if n <= 0 {
 		return ManaCost{}
