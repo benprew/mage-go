@@ -238,22 +238,39 @@ func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 // If a scripted target name is queued (via TestGame.ChooseTarget), it is
 // resolved against the possible IDs by matching player name or permanent name.
 func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *mage.Game) []uuid.UUID {
-	if len(tp.chooseTarget) > 0 {
+	var selected []uuid.UUID
+	for len(tp.chooseTarget) > 0 && len(selected) < maximum {
 		name := tp.chooseTarget[0]
+		found := false
 		for _, id := range possible {
+			if slices.Contains(selected, id) {
+				continue
+			}
 			if pl := g.GetPlayer(id); pl != nil && pl.Name() == name {
+				selected = append(selected, id)
 				tp.chooseTarget = tp.chooseTarget[1:]
-				return []uuid.UUID{id}
+				found = true
+				break
 			}
 			if perm := g.FindPermanent(id); perm != nil && perm.Name() == name {
+				selected = append(selected, id)
 				tp.chooseTarget = tp.chooseTarget[1:]
-				return []uuid.UUID{id}
+				found = true
+				break
 			}
 			if card := g.FindCardAnywhere(id); card != nil && card.Name() == name {
+				selected = append(selected, id)
 				tp.chooseTarget = tp.chooseTarget[1:]
-				return []uuid.UUID{id}
+				found = true
+				break
 			}
 		}
+		if !found {
+			break
+		}
+	}
+	if len(selected) >= minimum {
+		return selected
 	}
 	if len(possible) >= minimum {
 		n := min(minimum, len(possible))

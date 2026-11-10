@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ActionTypeName = "PassPlayLandCastSpellActivateAbilitySelectAttackersSelectBlockersUndoAssignCombatDamage"
+const _ActionTypeName = "PassPlayLandCastSpellActivateAbilitySelectAttackersSelectBlockersUndoAssignCombatDamageAssignDamage"
 
-var _ActionTypeIndex = [...]uint8{0, 4, 12, 21, 36, 51, 65, 69, 87}
+var _ActionTypeIndex = [...]uint8{0, 4, 12, 21, 36, 51, 65, 69, 87, 99}
 
-const _ActionTypeLowerName = "passplaylandcastspellactivateabilityselectattackersselectblockersundoassigncombatdamage"
+const _ActionTypeLowerName = "passplaylandcastspellactivateabilityselectattackersselectblockersundoassigncombatdamageassigndamage"
 
 func (i ActionType) String() string {
 	if i < 0 || i >= ActionType(len(_ActionTypeIndex)-1) {
@@ -30,9 +30,10 @@ func _ActionTypeNoOp() {
 	_ = x[ActionSelectBlockers-(5)]
 	_ = x[ActionUndo-(6)]
 	_ = x[ActionAssignCombatDamage-(7)]
+	_ = x[ActionAssignDamage-(8)]
 }
 
-var _ActionTypeValues = []ActionType{ActionPass, ActionPlayLand, ActionCastSpell, ActionActivateAbility, ActionSelectAttackers, ActionSelectBlockers, ActionUndo, ActionAssignCombatDamage}
+var _ActionTypeValues = []ActionType{ActionPass, ActionPlayLand, ActionCastSpell, ActionActivateAbility, ActionSelectAttackers, ActionSelectBlockers, ActionUndo, ActionAssignCombatDamage, ActionAssignDamage}
 
 var _ActionTypeNameToValueMap = map[string]ActionType{
 	_ActionTypeName[0:4]:        ActionPass,
@@ -51,6 +52,8 @@ var _ActionTypeNameToValueMap = map[string]ActionType{
 	_ActionTypeLowerName[65:69]: ActionUndo,
 	_ActionTypeName[69:87]:      ActionAssignCombatDamage,
 	_ActionTypeLowerName[69:87]: ActionAssignCombatDamage,
+	_ActionTypeName[87:99]:      ActionAssignDamage,
+	_ActionTypeLowerName[87:99]: ActionAssignDamage,
 }
 
 var _ActionTypeNames = []string{
@@ -62,6 +65,7 @@ var _ActionTypeNames = []string{
 	_ActionTypeName[51:65],
 	_ActionTypeName[65:69],
 	_ActionTypeName[69:87],
+	_ActionTypeName[87:99],
 }
 
 // ActionTypeString retrieves an enum value from the enum constants string name.

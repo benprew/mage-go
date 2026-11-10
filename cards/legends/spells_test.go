@@ -4,6 +4,7 @@ import (
 	"slices"
 	"testing"
 
+	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -191,18 +192,85 @@ func TestWinterBlast(t *testing.T) {
 }
 
 func TestPyrotechnics(t *testing.T) {
-	g := gametest.NewTestGame(t)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pyrotechnics")
-	g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
-		"PlayerB":       3,
-		"Grizzly Bears": 1,
+	t.Run("single_target_deals_4_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Pyrotechnics")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pyrotechnics", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 16)
 	})
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pyrotechnics", "PlayerB", "Grizzly Bears")
-	g.StopAt(1, core.BeginCombat)
-	g.Execute()
-	g.AssertLife(gametest.PlayerB, 17)
-	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+
+	t.Run("two_targets_split_3_and_1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Pyrotechnics")
+		g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
+			"PlayerB":       3,
+			"Grizzly Bears": 1,
+		})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pyrotechnics", "PlayerB", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 17)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("four_targets_deals_1_each", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scryb Sprites")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Pyrotechnics")
+		g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
+			"PlayerB":       1,
+			"Grizzly Bears": 1,
+			"Hill Giant":    1,
+			"Scryb Sprites": 1,
+		})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pyrotechnics", "PlayerB", "Grizzly Bears", "Hill Giant", "Scryb Sprites")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19)
+		// Scryb Sprites (1/1) dies from 1 damage
+		g.AssertPermanentCount(gametest.PlayerA, "Scryb Sprites", 0)
+	})
+
+	t.Run("target_bounds_min_1_max_4", func(t *testing.T) {
+		card, err := mage.CreateCard("Pyrotechnics")
+		if err != nil {
+			t.Fatal(err)
+		}
+		targets := card.CastTargets()
+		if len(targets) != 1 {
+			t.Fatalf("expected 1 target descriptor, got %d", len(targets))
+		}
+		if targets[0].Min() != 1 || targets[0].Max() != 4 {
+			t.Fatalf("expected min 1 max 4, got min %d max %d", targets[0].Min(), targets[0].Max())
+		}
+	})
+
+	t.Run("fork_copies_pyrotechnics_and_remaps_distribution", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Pyrotechnics")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Fork")
+		g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
+			"PlayerB":       3,
+			"Grizzly Bears": 1,
+		})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pyrotechnics", "PlayerB", "Grizzly Bears")
+		g.CastInResponseTo(gametest.PlayerB, "Fork")
+		g.ChooseTarget(gametest.PlayerB, "PlayerA")
+		g.ChooseTarget(gametest.PlayerB, "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertLife(gametest.PlayerB, 17)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	})
 }
 
 func TestVisions(t *testing.T) {

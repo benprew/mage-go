@@ -427,3 +427,53 @@ func TestHumanPlayer_ChoiceRequests_ClosedOnGameOver(t *testing.T) {
 		t.Error("ChoiceRequests() should return the same channel on every call")
 	}
 }
+
+func TestHumanPlayer_ChooseDamageDistribution(t *testing.T) {
+	t.Run("single_target_auto_assigns_total", func(t *testing.T) {
+		hp := interactive.NewHumanPlayer("Human")
+		targetID := uuid.New()
+		dist := hp.ChooseDamageDistribution([]uuid.UUID{targetID}, 4, "Pyrotechnics", nil)
+		if len(dist) != 1 || dist[targetID] != 4 {
+			t.Fatalf("expected dist[%v]=4, got %v", targetID, dist)
+		}
+	})
+
+	t.Run("targets_equal_total_auto_assigns_one_each", func(t *testing.T) {
+		hp := interactive.NewHumanPlayer("Human")
+		t1, t2, t3, t4 := uuid.New(), uuid.New(), uuid.New(), uuid.New()
+		dist := hp.ChooseDamageDistribution([]uuid.UUID{t1, t2, t3, t4}, 4, "Pyrotechnics", nil)
+		if len(dist) != 4 || dist[t1] != 1 || dist[t2] != 1 || dist[t3] != 1 || dist[t4] != 1 {
+			t.Fatalf("expected 1 each, got %v", dist)
+		}
+	})
+
+	t.Run("multiple_targets_prompts_and_receives_damage", func(t *testing.T) {
+		fromTUI := make(chan interactive.PriorityAction, 1)
+		toTUI := make(chan interactive.GameMsg, 1)
+		hp := interactive.NewHumanPlayerWithChannels("Human", toTUI, fromTUI, nil, nil)
+
+		t1, t2 := uuid.New(), uuid.New()
+		resChan := make(chan map[uuid.UUID]int, 1)
+		go func() {
+			resChan <- hp.ChooseDamageDistribution([]uuid.UUID{t1, t2}, 4, "Pyrotechnics", nil)
+		}()
+
+		msg := <-toTUI
+		if msg.Prompt != interactive.PromptAssignDamage {
+			t.Fatalf("expected PromptAssignDamage, got %v", msg.Prompt)
+		}
+		if len(msg.Options) != 1 || msg.Options[0].MaxXValue != 4 {
+			t.Fatalf("unexpected options: %+v", msg.Options)
+		}
+
+		fromTUI <- interactive.PriorityAction{
+			Type:   interactive.ActionAssignDamage,
+			Damage: map[uuid.UUID]int{t1: 3, t2: 1},
+		}
+
+		dist := <-resChan
+		if dist[t1] != 3 || dist[t2] != 1 {
+			t.Fatalf("expected 3 and 1, got %v", dist)
+		}
+	})
+}

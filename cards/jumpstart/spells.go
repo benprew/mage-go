@@ -734,8 +734,8 @@ func registerSpells() {
 	// Flames of the Firebrand deals 3 damage divided as you choose among one, two, or three targets.
 	Register("Flames of the Firebrand", func() *Card {
 		return NewSorcery("Flames of the Firebrand", "{2}{R}",
-			NewMultiTargetSpell(
-				[]Target{TargetUpToNCreaturesOrPlayers(3)},
+			NewTargetedSpell(
+				TargetDamageDivided(3),
 				DealDividedDamage(Fixed(3)),
 			),
 		)
