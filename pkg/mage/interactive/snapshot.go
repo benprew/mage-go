@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"uuid"
+	"weak"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -63,6 +64,63 @@ func joinStrings(ss []string) string {
 	return result.String()
 }
 
+type cardMetadata struct {
+	manaCost  string
+	rulesText string
+	types     string
+	subTypes  string
+}
+
+type cardMetadataCache map[*mage.CardDefinition]cardMetadata
+
+type snapshotMetadataCache struct {
+	game  weak.Pointer[mage.Game]
+	cards cardMetadataCache
+}
+
+func (cache *snapshotMetadataCache) forGame(g *mage.Game) cardMetadataCache {
+	// A weak game reference lets completed game state be collected.
+	if cache.game.Value() != g || cache.cards == nil {
+		cache.game = weak.Make(g)
+		cache.cards = make(cardMetadataCache)
+	}
+	return cache.cards
+}
+
+func (cache cardMetadataCache) metadata(c *mage.Card) cardMetadata {
+	if metadata, ok := cache[c.CardDefinition]; ok {
+		return metadata
+	}
+	types := c.Types()
+	names := make([]string, len(types))
+	for i, t := range types {
+		names[i] = t.String()
+	}
+	metadata := cardMetadata{
+		manaCost:  c.ManaCost().String(),
+		rulesText: buildRulesText(c),
+		types:     strings.Join(names, " "),
+		subTypes:  strings.Join(c.SubTypes(), " "),
+	}
+	cache[c.CardDefinition] = metadata
+	return metadata
+}
+
+func snapshotCard(c *mage.Card, cache cardMetadataCache) CardState {
+	metadata := cache.metadata(c)
+	return CardState{
+		ID:        c.ID(),
+		Name:      c.Name(),
+		ManaCost:  metadata.manaCost,
+		IsLand:    c.HasType(core.TypeLand),
+		Power:     c.Power(),
+		Toughness: c.Toughness(),
+		Types:     metadata.types,
+		SubTypes:  metadata.subTypes,
+		RulesText: metadata.rulesText,
+	}
+}
+
 // RevealOpponentHand, when true, includes the opponent's hand cards in the
 // snapshot instead of redacting them. It is a debug aid for the test harnesses
 // (e.g. cmd/duel_test, cmd/dungeon_test) and defaults to false so normal play
@@ -75,13 +133,19 @@ func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 	aiIndex := (humanIndex + 1) % 2
 	ai := g.PlayerAt(aiIndex)
 
+	var cache cardMetadataCache
+	if player, ok := human.(*HumanPlayer); ok {
+		cache = player.snapshotCache.forGame(g)
+	} else {
+		cache = make(cardMetadataCache)
+	}
 	viewerID := human.PlayerID()
 	return &GameState{
 		Turn:         g.CurrentTurn(),
 		Step:         g.GetStep().String(),
 		ActivePlayer: g.ActivePlayerObj().Name(),
-		You:          snapshotPlayer(g, human, viewerID, true),
-		Opponent:     snapshotPlayer(g, ai, viewerID, RevealOpponentHand),
+		You:          snapshotPlayer(g, human, viewerID, true, cache),
+		Opponent:     snapshotPlayer(g, ai, viewerID, RevealOpponentHand, cache),
 		StackItems:   snapshotStack(g),
 	}
 }
@@ -90,7 +154,7 @@ func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 // information that viewerID is not permitted to see (most importantly,
 // face-down exiled cards owned by p that viewerID is not in the
 // RevealedTo set for, per CR 707.2).
-func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bool) PlayerState {
+func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bool, cache cardMetadataCache) PlayerState {
 	ps := PlayerState{
 		ID:             p.PlayerID(),
 		Name:           p.Name(),
@@ -101,59 +165,29 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 		ManaPool:       snapshotManaPool(p.ManaPool()),
 	}
 
-	if showHand {
-		for _, c := range p.Hand() {
-			cs := CardState{
-				ID:        c.ID(),
-				Name:      c.Name(),
-				ManaCost:  c.ManaCost().String(),
-				IsLand:    c.HasType(core.TypeLand),
-				Power:     c.Power(),
-				Toughness: c.Toughness(),
-				RulesText: buildRulesText(c),
-			}
-			for _, t := range c.Types() {
-				if cs.Types != "" {
-					cs.Types += " "
-				}
-				cs.Types += t.String()
-			}
-			for _, st := range c.SubTypes() {
-				if cs.SubTypes != "" {
-					cs.SubTypes += " "
-				}
-				cs.SubTypes += st
-			}
-			ps.Hand = append(ps.Hand, cs)
+	if showHand && len(p.Hand()) > 0 {
+		ps.Hand = make([]CardState, len(p.Hand()))
+		for i, c := range p.Hand() {
+			ps.Hand[i] = snapshotCard(c, cache)
 		}
 	}
-
-	for _, c := range p.Graveyard() {
-		cs := CardState{
-			ID:        c.ID(),
-			Name:      c.Name(),
-			ManaCost:  c.ManaCost().String(),
-			IsLand:    c.HasType(core.TypeLand),
-			Power:     c.Power(),
-			Toughness: c.Toughness(),
-			RulesText: buildRulesText(c),
+	if len(p.Graveyard()) > 0 {
+		ps.Graveyard = make([]CardState, len(p.Graveyard()))
+		for i, c := range p.Graveyard() {
+			ps.Graveyard[i] = snapshotCard(c, cache)
 		}
-		for _, t := range c.Types() {
-			if cs.Types != "" {
-				cs.Types += " "
-			}
-			cs.Types += t.String()
-		}
-		for _, st := range c.SubTypes() {
-			if cs.SubTypes != "" {
-				cs.SubTypes += " "
-			}
-			cs.SubTypes += st
-		}
-		ps.Graveyard = append(ps.Graveyard, cs)
 	}
 
 	exile := g.GetExile()
+	exileCount := 0
+	for _, ec := range exile {
+		if ec.Card.Owner() == p.PlayerID() {
+			exileCount++
+		}
+	}
+	if exileCount > 0 {
+		ps.Exile = make([]CardState, 0, exileCount)
+	}
 	for i := range exile {
 		ec := &exile[i]
 		if ec.Card.Owner() != p.PlayerID() {
@@ -164,33 +198,27 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 			FaceDown: ec.FaceDown,
 		}
 		if ec.VisibleTo(viewerID) {
-			c := ec.Card
-			cs.Name = c.Name()
-			cs.ManaCost = c.ManaCost().String()
-			cs.IsLand = c.HasType(core.TypeLand)
-			cs.Power = c.Power()
-			cs.Toughness = c.Toughness()
-			cs.RulesText = buildRulesText(c)
-			for _, t := range c.Types() {
-				if cs.Types != "" {
-					cs.Types += " "
-				}
-				cs.Types += t.String()
-			}
-			for _, st := range c.SubTypes() {
-				if cs.SubTypes != "" {
-					cs.SubTypes += " "
-				}
-				cs.SubTypes += st
-			}
+			cs = snapshotCard(ec.Card, cache)
+			cs.FaceDown = ec.FaceDown
 		}
 		ps.Exile = append(ps.Exile, cs)
 	}
 
-	for _, perm := range g.AllBattlefield() {
+	battlefield := g.AllBattlefield()
+	permanentCount := 0
+	for _, perm := range battlefield {
+		if perm.ControllerID() == p.PlayerID() {
+			permanentCount++
+		}
+	}
+	if permanentCount > 0 {
+		ps.Battlefield = make([]PermanentState, 0, permanentCount)
+	}
+	for _, perm := range battlefield {
 		if perm.ControllerID() != p.PlayerID() {
 			continue
 		}
+		metadata := cache.metadata(perm.Card)
 		permState := PermanentState{
 			ID:         perm.ID(),
 			Name:       perm.Name(),
@@ -205,21 +233,11 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 			IsLand:     perm.HasType(core.TypeLand),
 			IsArtifact: perm.HasType(core.TypeArtifact),
 			Attacking:  g.GetCombat().IsAttacking(perm.ID()),
-			ManaCost:   perm.Card.ManaCost().String(),
-			RulesText:  buildRulesText(perm.Card),
-		}
-		for _, t := range perm.Card.Types() {
-			if permState.Types != "" {
-				permState.Types += " "
-			}
-			permState.Types += t.String()
-		}
-		for _, st := range perm.SubTypes() {
-			if permState.SubTypes != "" {
-				permState.SubTypes += " "
-			}
-			permState.SubTypes += st
-		}
+			ManaCost:   metadata.manaCost,
+			RulesText:  metadata.rulesText,
+
+			Types:    metadata.types,
+			SubTypes: strings.Join(perm.SubTypes(), " ")}
 		for ct := range core.NumCounters {
 			n := perm.Counters[ct]
 			if n == 0 {
@@ -274,9 +292,13 @@ func snapshotStack(g *mage.Game) []StackItemState {
 		}
 		var targetNames []string
 		var targetIDs []uuid.UUID
-		for _, tid := range obj.Targets {
-			targetNames = append(targetNames, resolveTargetName(g, tid))
-			targetIDs = append(targetIDs, tid)
+		if len(obj.Targets) > 0 {
+			targetNames = make([]string, len(obj.Targets))
+			targetIDs = make([]uuid.UUID, len(obj.Targets))
+			copy(targetIDs, obj.Targets)
+			for i, tid := range obj.Targets {
+				targetNames[i] = resolveTargetName(g, tid)
+			}
 		}
 		items = append(items, StackItemState{
 			ID:          obj.SourceID.String(),

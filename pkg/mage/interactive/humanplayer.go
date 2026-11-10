@@ -12,7 +12,8 @@ import (
 // HumanPlayer wraps BasePlayer for interactive TUI play. It channels all
 // player decisions through the TUI rather than using silent defaults.
 type HumanPlayer struct {
-	phaseStops phaseStopSettings
+	phaseStops    phaseStopSettings
+	snapshotCache snapshotMetadataCache
 	*mage.BasePlayer
 	toTUI       chan GameMsg
 	fromTUI     chan PriorityAction
