@@ -2,6 +2,7 @@ package heuristic
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"runtime"
@@ -11,6 +12,7 @@ import (
 	"testing"
 
 	_ "github.com/benprew/mage-go/cards"
+	"github.com/benprew/mage-go/internal/scenario"
 	"github.com/benprew/mage-go/internal/tui"
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -41,51 +43,77 @@ func convertActionToPriority(action interactive.PriorityAction) mage.PriorityAct
 	}
 }
 
-// playSingleGame plays one complete game between stratA and stratB.
-// Returns 1 if player A wins, 2 if player B wins, 0 if draw.
-func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []tui.DeckEntry, maxTurns int) int {
+const simulationReferenceTurns = 50
+const defaultSimulationMaxTurns = 200
+const defaultSimulationGames = 30000
+
+type simulationGameResult struct {
+	winner                int
+	turnLimited           bool
+	unresolvedAtReference bool
+}
+
+func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed int64) {
+	rng := rand.New(rand.NewSource(seed))
+	var cards []*mage.Card
+	for _, entry := range entries {
+		for range entry.Count {
+			card, err := mage.CreateCard(entry.Name)
+			if err != nil {
+				panic(err)
+			}
+			card.SetOwner(player.PlayerID())
+			cards = append(cards, card)
+		}
+	}
+	rng.Shuffle(len(cards), func(i, j int) { cards[i], cards[j] = cards[j], cards[i] })
+	player.SetLibrary(cards)
+	tui.DrawOpeningHand(player)
+	for len(player.Hand()) > 5 && player.ShouldMulligan(len(player.Hand())) {
+		handSize := len(player.Hand())
+		cards = append(append([]*mage.Card(nil), player.Library()...), player.Hand()...)
+		player.SetHand(nil)
+		rng.Shuffle(len(cards), func(i, j int) { cards[i], cards[j] = cards[j], cards[i] })
+		player.SetLibrary(cards)
+		for range handSize - 1 {
+			player.DrawCard()
+		}
+	}
+}
+
+// playSingleGame keeps the same deck order when a pair swaps AI seats.
+func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []tui.DeckEntry, maxTurns int, seedA, seedB int64) simulationGameResult {
 	playerA := ai.NewAIPlayer("PlayerA", stratA)
 	playerB := ai.NewAIPlayer("PlayerB", stratB)
-
-	cardsA := tui.BuildDeck(deckAEntries, playerA.PlayerID())
-	cardsB := tui.BuildDeck(deckBEntries, playerB.PlayerID())
-	for _, c := range cardsA {
-		playerA.AddToLibrary(c)
-	}
-	for _, c := range cardsB {
-		playerB.AddToLibrary(c)
-	}
-
 	g := mage.NewGame(playerA, playerB)
-	tui.DrawOpeningHand(playerA)
-	tui.DrawOpeningHand(playerB)
-	ai.MulliganAI(playerA)
-	ai.MulliganAI(playerB)
-
+	prepareSimulationPlayer(playerA, deckAEntries, seedA)
+	prepareSimulationPlayer(playerB, deckBEntries, seedB)
 	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		p := g.PlayerAt(playerIdx)
 		aiPlayer, ok := p.(interactive.AutoPlayer)
 		if !ok {
 			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
-		isActive := playerIdx == g.ActivePlayerIndex()
-		effectiveMainPhase := mainPhase && isActive
-		action := aiPlayer.GetPriorityAction(g, g.GetLandsPlayedThisTurn(), effectiveMainPhase)
+		action := aiPlayer.GetPriorityAction(g, g.GetLandsPlayedThisTurn(), mainPhase && playerIdx == g.ActivePlayerIndex())
 		return convertActionToPriority(action)
 	})
-
+	unresolvedAtReference := false
 	for g.CurrentTurn() <= maxTurns {
 		for _, step := range core.AllSteps() {
 			g.RunStepWithPriority(step)
 			if g.IsGameOver() {
-				winner := g.Winner()
-				if winner == playerA.Name() {
-					return 1
-				} else if winner == playerB.Name() {
-					return 2
+				result := simulationGameResult{unresolvedAtReference: unresolvedAtReference}
+				switch g.Winner() {
+				case playerA.Name():
+					result.winner = 1
+				case playerB.Name():
+					result.winner = 2
 				}
-				return 0
+				return result
 			}
+		}
+		if g.CurrentTurn() == simulationReferenceTurns {
+			unresolvedAtReference = true
 		}
 		if g.HasExtraTurns() {
 			extraPlayerID, _ := g.PopExtraTurn()
@@ -100,7 +128,7 @@ func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []t
 		}
 		g.SetTurn(g.CurrentTurn() + 1)
 	}
-	return 0
+	return simulationGameResult{turnLimited: true, unresolvedAtReference: unresolvedAtReference}
 }
 
 func getSimulationGameCount() int {
@@ -109,125 +137,207 @@ func getSimulationGameCount() int {
 			return n
 		}
 	}
-	return 2
+	return defaultSimulationGames
 }
 
-// run1kGames runs simulation games pitting newFactory against baselineFactory.
-// Decks are mirrored/paired evenly across archetype combinations.
-// By default, it runs 2 games (1 where New is PlayerA, 1 where New is PlayerB) to verify
-// functionality quickly. Set SIM_GAMES=1000 to run full statistical benchmarks.
-func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp ai.WeightedPersonality) ai.AIStrategy) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
-	totalGames := getSimulationGameCount()
-	const maxTurns = 50
+func getSimulationTurnLimit() int {
+	if n, err := strconv.Atoi(os.Getenv("SIM_MAX_TURNS")); err == nil && n > 0 {
+		return n
+	}
+	return defaultSimulationMaxTurns
+}
 
-	archetypes := tui.Archetypes
-	numArchetypes := len(archetypes)
-	if numArchetypes == 0 {
+func getSimulationSeed() int64 {
+	if n, err := strconv.ParseInt(os.Getenv("SIM_SEED"), 10, 64); err == nil {
+		return n
+	}
+	return 42
+}
+
+func simulationArchetypes(t *testing.T) []tui.DeckArchetype {
+	t.Helper()
+	var decks []tui.DeckArchetype
+	for _, deck := range tui.Archetypes {
+		if deck.Name == "Priestess (W walls)" && os.Getenv("SIM_INCLUDE_PRIESTESS") != "1" {
+			continue
+		}
+		decks = append(decks, deck)
+	}
+	rogue, err := scenario.ParseDCKDeck("../../../../../rogue_dck/merfolk_shaman.dck")
+	if err != nil {
+		t.Fatalf("load Merfolk Shaman benchmark deck: %v", err)
+	}
+	merfolk := tui.DeckArchetype{Name: rogue.Name}
+	for _, entry := range rogue.MainCards {
+		merfolk.Entries = append(merfolk.Entries, tui.DeckEntry{Name: entry.Name, Count: entry.Count})
+	}
+	return append(decks, merfolk)
+}
+
+type simulationTally struct {
+	newWins, baselineWins, draws, turnLimited, unresolvedAtReference int64
+	pairs                                                            [3][3]int64
+}
+
+func simulationPairedInterval(newWins, oldWins int64, pairs [3][3]int64) (float64, float64, bool) {
+	decided := float64(newWins + oldWins)
+	if decided == 0 {
+		return 0, 0, false
+	}
+	p := float64(newWins) / decided
+	var count, residualSquares float64
+	for wins := range 3 {
+		for losses := range 3 {
+			n := float64(pairs[wins][losses])
+			count += n
+			residual := float64(wins) - p*float64(wins+losses)
+			residualSquares += n * residual * residual
+		}
+	}
+	if count < 30 || residualSquares == 0 {
+		return 0, 0, false
+	}
+	// Keep the two games in each pair together when estimating variance.
+	se := math.Sqrt(count * residualSquares / ((count - 1) * decided * decided))
+	half := 1.959963984540054 * se
+	return 100 * max(0, p-half), 100 * min(1, p+half), true
+}
+
+func (s *simulationTally) record(result simulationGameResult, newIsPlayerA bool) {
+	if result.unresolvedAtReference {
+		s.unresolvedAtReference++
+	}
+	switch {
+	case result.turnLimited:
+		s.turnLimited++
+	case result.winner == 0:
+		s.draws++
+	case (result.winner == 1) == newIsPlayerA:
+		s.newWins++
+	default:
+		s.baselineWins++
+	}
+}
+
+// run1kGames repeats each mirror setup with the AI strategies in opposite seats.
+// SIM_GAMES controls the count. SIM_MAX_TURNS and SIM_SEED control the setup.
+// SIM_INCLUDE_PRIESTESS=1 adds the slow wall deck.
+func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.WeightedPersonality) ai.AIStrategy) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
+	totalGames := getSimulationGameCount()
+	if totalGames%2 != 0 {
+		t.Fatal("SIM_GAMES must be even for paired mirror matches")
+	}
+	maxTurns := getSimulationTurnLimit()
+	baseSeed := getSimulationSeed()
+	archetypes := simulationArchetypes(t)
+	if len(archetypes) == 0 {
 		t.Fatal("no archetypes available")
 	}
-
-	var newWins int64
-	var baselineWins int64
-	var draws int64
-
-	workers := max(min(max(runtime.NumCPU(), 1), totalGames), 1)
-
+	pairs := totalGames / 2
+	workers := max(min(runtime.NumCPU(), pairs), 1)
+	tallies := make([]simulationTally, len(archetypes))
+	var mu sync.Mutex
 	var wg sync.WaitGroup
-	gamesPerWorker := totalGames / workers
-
-	var newWinsByDeck [5]int64
-	var baselineWinsByDeck [5]int64
-
-	for w := range workers {
-		workerIdx := w
-		start := workerIdx * gamesPerWorker
-		end := start + gamesPerWorker
-		if workerIdx == workers-1 {
-			end = totalGames
-		}
-
+	var completed atomic.Int64
+	for worker := range workers {
 		wg.Add(1)
-		go func(startIdx, endIdx int) {
+		go func(worker int) {
 			defer wg.Done()
-			for i := startIdx; i < endIdx; i++ {
-				pairIdx := i / 2
-				rng := rand.New(rand.NewSource(int64(pairIdx*7919 + 42)))
-				deckIdxA := rng.Intn(numArchetypes)
-				deckIdxB := rng.Intn(numArchetypes)
-				deckA := archetypes[deckIdxA].Entries
-				deckB := archetypes[deckIdxB].Entries
-
-				wpA := ai.InferPersonalityFromDeck(aiDeckEntries(deckA))
-				wpB := ai.InferPersonalityFromDeck(aiDeckEntries(deckB))
-
-				// Half the games New is PlayerA, half the games New is PlayerB.
-				if i%2 == 0 {
-					stratA := newFactory(wpA)
-					stratB := baselineFactory(wpB)
-					res := playSingleGame(stratA, stratB, deckA, deckB, maxTurns)
-					switch res {
-					case 1:
-						atomic.AddInt64(&newWins, 1)
-						atomic.AddInt64(&newWinsByDeck[deckIdxA], 1)
-					case 2:
-						atomic.AddInt64(&baselineWins, 1)
-						atomic.AddInt64(&baselineWinsByDeck[deckIdxB], 1)
-					default:
-						atomic.AddInt64(&draws, 1)
+			local := make([]simulationTally, len(archetypes))
+			for pair := worker; pair < pairs; pair += workers {
+				deckIndex := pair % len(archetypes)
+				deck := archetypes[deckIndex].Entries
+				weights := ai.InferPersonalityFromDeck(aiDeckEntries(deck))
+				seedA := baseSeed + int64(pair)*7919
+				seedB := seedA + 1
+				beforeWins, beforeLosses := local[deckIndex].newWins, local[deckIndex].baselineWins
+				for seat := range 2 {
+					var stratA, stratB ai.AIStrategy
+					if seat == 0 {
+						stratA, stratB = newFactory(weights), baselineFactory(weights)
+					} else {
+						stratA, stratB = baselineFactory(weights), newFactory(weights)
 					}
-				} else {
-					stratA := baselineFactory(wpA)
-					stratB := newFactory(wpB)
-					res := playSingleGame(stratA, stratB, deckA, deckB, maxTurns)
-					switch res {
-					case 1:
-						atomic.AddInt64(&baselineWins, 1)
-						atomic.AddInt64(&baselineWinsByDeck[deckIdxA], 1)
-					case 2:
-						atomic.AddInt64(&newWins, 1)
-						atomic.AddInt64(&newWinsByDeck[deckIdxB], 1)
-					default:
-						atomic.AddInt64(&draws, 1)
+					result := playSingleGame(stratA, stratB, deck, deck, maxTurns, seedA, seedB)
+					local[deckIndex].record(result, seat == 0)
+				}
+				pairWins := local[deckIndex].newWins - beforeWins
+				pairLosses := local[deckIndex].baselineWins - beforeLosses
+				local[deckIndex].pairs[pairWins][pairLosses]++
+				if n := completed.Add(2); totalGames >= 1000 && n%1000 == 0 {
+					fmt.Printf("Completed %d/%d mirror games\n", n, totalGames)
+				}
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			for i, s := range local {
+				tallies[i].newWins += s.newWins
+				tallies[i].baselineWins += s.baselineWins
+				tallies[i].draws += s.draws
+				tallies[i].turnLimited += s.turnLimited
+				tallies[i].unresolvedAtReference += s.unresolvedAtReference
+				for wins := range 3 {
+					for losses := range 3 {
+						tallies[i].pairs[wins][losses] += s.pairs[wins][losses]
 					}
 				}
 			}
-		}(start, end)
+		}(worker)
 	}
-
 	wg.Wait()
-
-	totalCompleted := newWins + baselineWins + draws
-	if totalCompleted != int64(totalGames) {
-		t.Fatalf("expected %d games to complete, got %d", totalGames, totalCompleted)
+	var actualDraws, turnLimited, unresolvedAtReference int64
+	var pairCounts [3][3]int64
+	for _, s := range tallies {
+		newWinsCount += s.newWins
+		baselineWinsCount += s.baselineWins
+		actualDraws += s.draws
+		turnLimited += s.turnLimited
+		unresolvedAtReference += s.unresolvedAtReference
+		for wins := range 3 {
+			for losses := range 3 {
+				pairCounts[wins][losses] += s.pairs[wins][losses]
+			}
+		}
 	}
-
-	decidedGames := newWins + baselineWins
-	winRate = 0.0
-	if decidedGames > 0 {
-		winRate = float64(newWins) / float64(decidedGames) * 100.0
+	drawsCount = actualDraws + turnLimited
+	if got := newWinsCount + baselineWinsCount + drawsCount; got != int64(totalGames) {
+		t.Fatalf("expected %d games, got %d", totalGames, got)
 	}
-
+	baselineWinRate := 0.0
+	if decided := newWinsCount + baselineWinsCount; decided > 0 {
+		winRate = 100 * float64(newWinsCount) / float64(decided)
+		baselineWinRate = 100 * float64(baselineWinsCount) / float64(decided)
+	}
 	if totalGames >= 10 {
 		fmt.Printf("\n=======================================================\n")
 		fmt.Printf("Simulation Results (%d games): %s\n", totalGames, label)
-		fmt.Printf("New AI Wins:      %d (%.1f%% of decided)\n", newWins, winRate)
-		fmt.Printf("Baseline AI Wins: %d (%.1f%% of decided)\n", baselineWins, 100.0-winRate)
-		for d := range numArchetypes {
-			nw := atomic.LoadInt64(&newWinsByDeck[d])
-			bw := atomic.LoadInt64(&baselineWinsByDeck[d])
-			tot := nw + bw
-			wr := 0.0
-			if tot > 0 {
-				wr = float64(nw) / float64(tot) * 100.0
-			}
-			fmt.Printf("  %-25s: New %3d vs Base %3d (%.1f%%)\n", archetypes[d].Name, nw, bw, wr)
+		fmt.Printf("Matchups: paired mirrors; maximum %d individual turns; seed %d\n", maxTurns, baseSeed)
+		fmt.Printf("New AI Wins:      %d (%.1f%% of decided)\n", newWinsCount, winRate)
+		fmt.Printf("Baseline AI Wins: %d (%.1f%% of decided)\n", baselineWinsCount, baselineWinRate)
+		if lower, upper, ok := simulationPairedInterval(newWinsCount, baselineWinsCount, pairCounts); ok {
+			fmt.Printf("95%% paired confidence interval: %.4f%% to %.4f%%\n", lower, upper)
 		}
-		fmt.Printf("Draws:            %d\n", draws)
+		for wins := range 3 {
+			for losses := range 3 {
+				if n := pairCounts[wins][losses]; n > 0 {
+					fmt.Printf("Pair outcome: New wins %d; Base wins %d; Pairs %d\n", wins, losses, n)
+				}
+			}
+		}
+		for i, s := range tallies {
+			rate := 0.0
+			if decided := s.newWins + s.baselineWins; decided > 0 {
+				rate = 100 * float64(s.newWins) / float64(decided)
+			}
+			games := s.newWins + s.baselineWins + s.draws + s.turnLimited
+			fmt.Printf("  %-25s: New %d vs Base %d (%.1f%%); Draws %d; Turn limit %d; Unfinished at %d %d; Games %d\n", archetypes[i].Name, s.newWins, s.baselineWins, rate, s.draws, s.turnLimited, simulationReferenceTurns, s.unresolvedAtReference, games)
+		}
+		fmt.Printf("Draws:            %d (%.2f%%; actual %d; turn limit %d)\n", drawsCount, 100*float64(drawsCount)/float64(totalGames), actualDraws, turnLimited)
+		fmt.Printf("Unfinished at %d turns: %d (%.2f%%)\n", simulationReferenceTurns, unresolvedAtReference, 100*float64(unresolvedAtReference)/float64(totalGames))
 		fmt.Printf("Total Games:      %d\n", totalGames)
 		fmt.Printf("=======================================================\n\n")
 	}
-
-	return newWins, baselineWins, draws, winRate
+	return
 }
 
 func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
@@ -240,7 +350,7 @@ func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
 
 func TestSimulation_BaselineVsBaseline(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping 1k simulation in short mode")
+		t.Skip("skipping full AI comparison in short mode")
 	}
 	run1kGames(t, "Baseline vs Baseline (Control)", func(wp ai.WeightedPersonality) ai.AIStrategy {
 		return newBaselineStrategy(wp)
@@ -251,7 +361,7 @@ func TestSimulation_BaselineVsBaseline(t *testing.T) {
 
 func TestSimulation_CombatTricksAndTiming(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping 1k simulation in short mode")
+		t.Skip("skipping full AI comparison in short mode")
 	}
 	run1kGames(t, "Combat Pump & Phase Timing vs Baseline", func(wp ai.WeightedPersonality) ai.AIStrategy {
 		return New(wp)

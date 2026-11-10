@@ -1,7 +1,13 @@
-.PHONY: test build vet lint wasm cardart clean
+.PHONY: test test-short test-ai build vet lint wasm cardart clean
 
 test:
-	go test ./...
+	go test -timeout=30m ./...
+
+test-short:
+	go test -short ./...
+
+test-ai:
+	go test ./pkg/mage/interactive/ai/heuristic -run '^TestSimulation_(BaselineVsBaseline|CombatTricksAndTiming)$$' -count=1 -timeout=30m -v
 
 build:
 	go build ./...

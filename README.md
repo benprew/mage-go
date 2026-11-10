@@ -67,10 +67,23 @@ The project includes a pipeline for implementing entire card sets:
 ## Build & Test
 
 ```bash
-go test ./...    # all tests
-go build ./...   # build check
-go vet ./...     # vet
+make test        # All tests, including full AI comparisons.
+make test-short  # Tests without the long AI comparisons.
+make test-ai     # AI comparisons only.
+go build ./...   # Build check.
+go vet ./...     # Vet.
 ```
+
+AI comparisons run 30,000 paired mirror games by default. Each pair uses the
+same opening deck orders and swaps the AI strategies between seats. The limit
+is 200 individual turns. Reports separate actual draws from turn-limit games
+and use game pairs to calculate confidence intervals.
+
+The primary suite uses WG Aggro, RB Burn, Aga Galneer, Guardian of the Tusk,
+and the existing Merfolk Shaman rogue deck. `SIM_INCLUDE_PRIESTESS=1` adds
+Priestess for slow-game stress tests. `SIM_GAMES`, `SIM_MAX_TURNS`, and
+`SIM_SEED` override the game count, turn limit, and opening shuffle seed.
+For example, `SIM_GAMES=10 make test-ai` runs a quick comparison check.
 
 The rules engine uses only the Go standard library.
 
