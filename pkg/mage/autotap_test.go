@@ -494,6 +494,126 @@ func TestAutoTapForCost_PrefersLandsWithoutTapDrawback(t *testing.T) {
 	}
 }
 
+func TestAutoTapForCost_PrefersLandsOverCreatures(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// Put Llanowar Elves first so it appears earlier in battlefield slice
+	elves := NewCreature("Llanowar Elves", "{G}", 1, 1, WithManaAbility(Green))
+	elves.SetOwner(pid)
+	elvesPerm := g.PutOnBattlefield(elves, pid)
+	elvesPerm.RevokeBaseAttr(AttrSummonSick)
+
+	forest := NewLand("Forest", WithSubTypes("Forest"), WithManaAbility(Green))
+	forest.SetOwner(pid)
+	forestPerm := g.PutOnBattlefield(forest, pid)
+
+	if err := g.AutoTapForCost(pid, ManaCost{Green: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({G}) failed: %v", err)
+	}
+	if elvesPerm.Tapped {
+		t.Fatal("solver tapped Llanowar Elves instead of preserving it over Forest")
+	}
+	if !forestPerm.Tapped {
+		t.Fatal("solver did not tap Forest")
+	}
+}
+
+func TestAutoTapForCost_TapsCreatureWhenLandsInsufficient(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	elves := NewCreature("Llanowar Elves", "{G}", 1, 1, WithManaAbility(Green))
+	elves.SetOwner(pid)
+	elvesPerm := g.PutOnBattlefield(elves, pid)
+	elvesPerm.RevokeBaseAttr(AttrSummonSick)
+
+	forest := NewLand("Forest", WithSubTypes("Forest"), WithManaAbility(Green))
+	forest.SetOwner(pid)
+	forestPerm := g.PutOnBattlefield(forest, pid)
+
+	if err := g.AutoTapForCost(pid, ManaCost{Green: 2}); err != nil {
+		t.Fatalf("AutoTapForCost({G}{G}) failed: %v", err)
+	}
+	if !elvesPerm.Tapped || !forestPerm.Tapped {
+		t.Fatalf("expected both Forest and Elves to be tapped, got elves.Tapped=%v, forest.Tapped=%v", elvesPerm.Tapped, forestPerm.Tapped)
+	}
+}
+
+func TestAutoTapForCost_PrefersLandsWithoutNegativeAura(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	oppID := g.players[1].PlayerID()
+
+	// Put cursed Forest first so it appears earlier in battlefield slice
+	cursedForest := NewLand("Cursed Forest", WithSubTypes("Forest"), WithManaAbility(Green))
+	cursedForest.SetOwner(pid)
+	cursedForestPerm := g.PutOnBattlefield(cursedForest, pid)
+
+	cleanForest := NewLand("Clean Forest", WithSubTypes("Forest"), WithManaAbility(Green))
+	cleanForest.SetOwner(pid)
+	cleanForestPerm := g.PutOnBattlefield(cleanForest, pid)
+
+	// Opponent attaches Psychic Venom to cursedForest
+	venom := NewAura("Psychic Venom", "{1}{U}",
+		WithCastTarget(TargetLand()),
+		WithAbility(WhenAttachedBecomesTappedTrigger(
+			DealDamageToPlayers(Fixed(2), SelectAttachedController()), false,
+		)),
+	)
+	venom.SetOwner(oppID)
+	venomPerm := g.PutOnBattlefield(venom, oppID)
+	venomPerm.AttachedTo = cursedForestPerm.ID()
+	cursedForestPerm.Attachments = append(cursedForestPerm.Attachments, venomPerm.ID())
+
+	if err := g.AutoTapForCost(pid, ManaCost{Green: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({G}) failed: %v", err)
+	}
+	if cursedForestPerm.Tapped {
+		t.Fatal("solver tapped land with Psychic Venom aura instead of clean land")
+	}
+	if !cleanForestPerm.Tapped {
+		t.Fatal("solver did not tap clean Forest")
+	}
+}
+
+func TestAutoTapForCost_PrefersCreatureOverLandWithNegativeAura(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	oppID := g.players[1].PlayerID()
+
+	// Put cursed Forest first so it appears earlier in battlefield slice
+	cursedForest := NewLand("Cursed Forest", WithSubTypes("Forest"), WithManaAbility(Green))
+	cursedForest.SetOwner(pid)
+	cursedForestPerm := g.PutOnBattlefield(cursedForest, pid)
+
+	elves := NewCreature("Llanowar Elves", "{G}", 1, 1, WithManaAbility(Green))
+	elves.SetOwner(pid)
+	elvesPerm := g.PutOnBattlefield(elves, pid)
+	elvesPerm.RevokeBaseAttr(AttrSummonSick)
+
+	venom := NewAura("Psychic Venom", "{1}{U}",
+		WithCastTarget(TargetLand()),
+		WithAbility(WhenAttachedBecomesTappedTrigger(
+			DealDamageToPlayers(Fixed(2), SelectAttachedController()), false,
+		)),
+	)
+	venom.SetOwner(oppID)
+	venomPerm := g.PutOnBattlefield(venom, oppID)
+	venomPerm.AttachedTo = cursedForestPerm.ID()
+	cursedForestPerm.Attachments = append(cursedForestPerm.Attachments, venomPerm.ID())
+
+	if err := g.AutoTapForCost(pid, ManaCost{Green: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({G}) failed: %v", err)
+	}
+	if cursedForestPerm.Tapped {
+		t.Fatal("solver tapped land with Psychic Venom instead of Llanowar Elves")
+	}
+	if !elvesPerm.Tapped {
+		t.Fatal("solver did not tap Llanowar Elves")
+	}
+}
+
 func TestMaxXValue_BasicLands(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
