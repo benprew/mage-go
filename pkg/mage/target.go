@@ -660,6 +660,22 @@ func TargetDamageAnyTarget() Target {
 	}
 }
 
+// TargetDamageAnyNumberOfTargets creates a target that selects any number (1 or more)
+// of creatures, planeswalkers, or players ("any number of targets").
+func TargetDamageAnyNumberOfTargets() Target {
+	return &DamageAnyTarget{
+		min: 1, max: 100,
+	}
+}
+
+// TargetDamageDivided creates a target that selects from 1 up to maxTargets
+// creatures, planeswalkers, or players for divided-damage spells (CR 601.2d).
+func TargetDamageDivided(maxTargets int) Target {
+	return &DamageAnyTarget{
+		min: 1, max: maxTargets,
+	}
+}
+
 func (t *DamageAnyTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {

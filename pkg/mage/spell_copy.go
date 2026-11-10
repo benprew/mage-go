@@ -119,6 +119,8 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 		return
 	}
 
+	oldTargets := append([]uuid.UUID(nil), copyObj.Targets...)
+
 	if ms, ok := getModalSpellAbility(card); ok {
 		modeIdx := copyObj.ModeChoice
 		if modeIdx < 0 || modeIdx >= len(ms.Modes()) {
@@ -136,6 +138,7 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 		copyObj.Targets = newTargets
 		copyObj.TargetZones = nil
 		copyObj.TargetIncarnations = nil
+		g.remapDividedDistributions(copyObj, oldTargets, newTargets)
 		return
 	}
 
@@ -147,14 +150,48 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 		if len(sa.Targets()) == 0 {
 			continue
 		}
-		groups := g.promptTargetGroups(controller.PlayerID(), card, sa.Targets())
+		specs := sa.Targets()
+		if (len(copyObj.DamageDistribution) > 0 || len(copyObj.CounterDistribution) > 0) && len(oldTargets) > 0 && len(specs) == 1 {
+			specs = []Target{exactCountTarget{Target: specs[0], count: len(oldTargets)}}
+		}
+		groups := g.promptTargetGroups(controller.PlayerID(), card, specs)
 		newTargets := flattenTargetGroups(groups)
 		copyObj.TargetGroups = groups
-		copyObj.TargetSpecs = expandedTargetGroups(sa.Targets(), groups)
+		copyObj.TargetSpecs = expandedTargetGroups(specs, groups)
 		copyObj.Targets = newTargets
 		copyObj.TargetZones = nil
 		copyObj.TargetIncarnations = nil
+		g.remapDividedDistributions(copyObj, oldTargets, newTargets)
 		return
+	}
+}
+
+type exactCountTarget struct {
+	Target
+	count int
+}
+
+func (t exactCountTarget) Min() int { return t.count }
+func (t exactCountTarget) Max() int { return t.count }
+
+func (g *Game) remapDividedDistributions(copyObj *StackObject, oldTargets, newTargets []uuid.UUID) {
+	if len(copyObj.DamageDistribution) > 0 && len(oldTargets) > 0 {
+		newDist := make(map[uuid.UUID]int, len(copyObj.DamageDistribution))
+		for i, oldT := range oldTargets {
+			if i < len(newTargets) {
+				newDist[newTargets[i]] += copyObj.DamageDistribution[oldT]
+			}
+		}
+		copyObj.DamageDistribution = newDist
+	}
+	if len(copyObj.CounterDistribution) > 0 && len(oldTargets) > 0 {
+		newDist := make(map[uuid.UUID]int, len(copyObj.CounterDistribution))
+		for i, oldT := range oldTargets {
+			if i < len(newTargets) {
+				newDist[newTargets[i]] += copyObj.CounterDistribution[oldT]
+			}
+		}
+		copyObj.CounterDistribution = newDist
 	}
 }
 

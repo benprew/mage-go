@@ -243,6 +243,95 @@ func TestFork(t *testing.T) {
 	})
 }
 
+func TestFireball(t *testing.T) {
+	t.Run("single_target_deals_X_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+
+	t.Run("two_targets_divided_evenly_with_extra_cost", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 6)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+		// X=4, 2 targets -> 4 / 2 = 2 damage to each.
+		// Costs {4}{R} + {1} (extra target) = 6 mana.
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "Grizzly Bears", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears takes 2 damage and dies
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		// Player B takes 2 damage (20 -> 18)
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("three_targets_divided_evenly_rounded_down", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 8)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")    // 3/3
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+		// X=5, 3 targets -> 5 / 3 = 1 damage to each (remainder 2 lost).
+		// Costs {5}{R} + {2} (2 extra targets) = 8 mana.
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 5, "Grizzly Bears", "Hill Giant", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears takes 1 damage (survives)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		// Hill Giant takes 1 damage (survives)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+		// Player B takes 1 damage (20 -> 19)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("illegal_target_recalculation_on_resolution", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 10)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+
+		// Player A casts Fireball with X=6 targeting Grizzly Bears, Hill Giant, Player B
+		// Costs {6}{R} + {2} = 9 mana.
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 6, "Grizzly Bears", "Hill Giant", "PlayerB")
+		// In response to Fireball, Lightning Bolt kills Grizzly Bears before Fireball resolves
+		g.CastInResponseTo(gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		// Bolt killed Grizzly Bears
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+
+		// Fireball resolves with 2 remaining legal targets -> 6 / 2 = 3 damage each!
+		// Hill Giant (3/3) takes 3 damage and dies
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+		// Player B takes 3 damage (20 -> 17)
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+
+	t.Run("zero_damage_when_X_less_than_target_count", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+
+		// X=1, 2 targets -> 1 / 2 = 0 damage each.
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 1, "Grizzly Bears", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		// 0 damage dealt: Grizzly Bears survives, Player B stays at 20 life.
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
 func TestShock(t *testing.T) {
 	t.Run("deals_2_to_creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
