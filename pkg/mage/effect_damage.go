@@ -157,6 +157,71 @@ func DividedDamageTotal(e Effect) ValueSource {
 	return nil
 }
 
+// dealDamageDividedEvenlyEffect deals N damage divided evenly, rounded down, among
+// all remaining legal targets as the spell or ability resolves (CR 107.1c, Fireball).
+type dealDamageDividedEvenlyEffect struct {
+	total ValueSource
+}
+
+// DealDamageDividedEvenly creates an effect that divides total damage evenly, rounded down,
+// among all legal targets on resolution.
+func DealDamageDividedEvenly(total ValueSource) Effect {
+	return &dealDamageDividedEvenlyEffect{total: total}
+}
+
+func (e *dealDamageDividedEvenlyEffect) Text() string {
+	return fmt.Sprintf("deals %s damage divided evenly, rounded down, among any number of targets", e.total.Text())
+}
+
+func (e *dealDamageDividedEvenlyEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.total}
+}
+
+func (e *dealDamageDividedEvenlyEffect) Apply(ctx *EffectContext) error {
+	totalDamage := e.total.Resolve(ctx)
+	if totalDamage <= 0 {
+		return nil
+	}
+
+	targets := ctx.legacyTargets()
+	if len(targets) == 0 {
+		return nil
+	}
+
+	var legalTargets []uuid.UUID
+	sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
+	for _, tid := range targets {
+		if pl := ctx.Game.GetPlayer(tid); pl != nil {
+			legalTargets = append(legalTargets, tid)
+			continue
+		}
+		if perm := ctx.Game.FindPermanent(tid); perm != nil {
+			if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, ctx.Game) {
+				continue
+			}
+			legalTargets = append(legalTargets, tid)
+		}
+	}
+
+	if len(legalTargets) == 0 {
+		return nil
+	}
+
+	damagePerTarget := totalDamage / len(legalTargets)
+	if damagePerTarget <= 0 {
+		return nil
+	}
+
+	for _, tid := range legalTargets {
+		if pl := ctx.Game.GetPlayer(tid); pl != nil {
+			ctx.Game.DealDamageToPlayer(pl, damagePerTarget, ctx.SourceID)
+		} else if perm := ctx.Game.FindPermanent(tid); perm != nil {
+			ctx.Game.DealDamageToPermanent(perm, damagePerTarget, ctx.SourceID)
+		}
+	}
+	return nil
+}
+
 // DealDamageToAllCreatures creates an effect that deals damage to all matching creatures.
 func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect {
 	return DealDamageFrom(legacyDamageSourceReference{}, BattlefieldObjects(And(IsCreature, filter)), amount)

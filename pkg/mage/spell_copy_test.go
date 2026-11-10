@@ -240,3 +240,69 @@ func TestCopySpellOnStack_FizzledCopyCeases(t *testing.T) {
 		t.Errorf("original fizzled spell should be in graveyard")
 	}
 }
+
+// TestCopySpellOnStack_DividedDamageNewTargets: CR 707.10c states that when copying
+// a spell with divided damage among targets, the division cannot be changed, although
+// the targets themselves can be. The copy's DamageDistribution must be remapped
+// to the new targets.
+func TestCopySpellOnStack_DividedDamageNewTargets(t *testing.T) {
+	g, a, b := newSpellCopyGame()
+
+	pyro := NewSorcery("Pyrotechnics", "{4}{R}",
+		NewTargetedSpell(TargetDamageDivided(4), DealDividedDamage(Fixed(4))),
+	)
+	pyro.SetOwner(a.PlayerID())
+	a.AddToHand(pyro)
+
+	c1 := g.PutOnBattlefield(NewCreature("Bear 1", "{1}{G}", 2, 2), b.PlayerID())
+	c2 := g.PutOnBattlefield(NewCreature("Bear 2", "{1}{G}", 2, 2), b.PlayerID())
+
+	orig := &StackObject{
+		ID:         uuid.New(),
+		Card:       pyro,
+		Controller: a.PlayerID(),
+		SourceID:   pyro.ID(),
+		Effects:    []Effect{DealDividedDamage(Fixed(4))},
+		Targets:    []uuid.UUID{b.PlayerID(), c1.ID()},
+		DamageDistribution: map[uuid.UUID]int{
+			b.PlayerID(): 3,
+			c1.ID():       1,
+		},
+	}
+	a.RemoveFromHand(pyro.ID())
+	g.pushStack(orig)
+
+	// B copies the spell and redirects targets:
+	// 1st target (previously b.PlayerID() receiving 3) becomes a.PlayerID().
+	// 2nd target (previously c1.ID() receiving 1) becomes c2.ID().
+	b.chooseQueue = [][]uuid.UUID{{a.PlayerID(), c2.ID()}}
+
+	cp := g.CopySpellOnStack(pyro.ID(), b.PlayerID(), true)
+	if cp == nil {
+		t.Fatalf("CopySpellOnStack returned nil")
+	}
+
+	if cp.DamageDistribution[a.PlayerID()] != 3 {
+		t.Errorf("copy damage to PlayerA: got %d, want 3", cp.DamageDistribution[a.PlayerID()])
+	}
+	if cp.DamageDistribution[c2.ID()] != 1 {
+		t.Errorf("copy damage to Bear 2: got %d, want 1", cp.DamageDistribution[c2.ID()])
+	}
+
+	g.ResolveStack()
+
+	// Copy resolves: A takes 3, Bear 2 takes 1.
+	// Original resolves: B takes 3, Bear 1 takes 1.
+	if a.Life() != 17 {
+		t.Errorf("PlayerA life: got %d, want 17", a.Life())
+	}
+	if b.Life() != 17 {
+		t.Errorf("PlayerB life: got %d, want 17", b.Life())
+	}
+	if c2.Damage != 1 {
+		t.Errorf("Bear 2 damage: got %d, want 1", c2.Damage)
+	}
+	if c1.Damage != 1 {
+		t.Errorf("Bear 1 damage: got %d, want 1", c1.Damage)
+	}
+}
