@@ -493,6 +493,7 @@ var (
 	DealDamageStep            = mage.DealDamageStep
 	DealDamageToSourceStep    = mage.DealDamageToSourceStep
 	DealDamageDividedEvenly   = mage.DealDamageDividedEvenly
+	DealDividedDamage         = mage.DealDividedDamage
 	GainLifeStep              = mage.GainLifeStep
 	DealDamageToAllCreatures  = mage.DealDamageToAllCreatures
 	SacrificeCreatureOrDamage = mage.SacrificeCreatureOrDamage
@@ -641,6 +642,7 @@ var (
 	TargetArtifact                          = mage.TargetArtifact
 	TargetDamageAnyTarget                   = mage.TargetDamageAnyTarget
 	TargetDamageAnyNumberOfTargets          = mage.TargetDamageAnyNumberOfTargets
+	TargetDamageDivided                     = mage.TargetDamageDivided
 	TargetDamageSource                      = mage.TargetDamageSource
 	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
 	TargetCreatureYouControl                = mage.TargetCreatureYouControl

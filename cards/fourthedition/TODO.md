@@ -17,7 +17,6 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Drain Power**
 - **Gloom**
 - **Personal Incarnation**
-- **Pyrotechnics**
 - **Red Elemental Blast**
 - **Relic Bind**
 - **Siren's Call**
