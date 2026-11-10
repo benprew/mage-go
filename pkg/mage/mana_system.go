@@ -123,6 +123,12 @@ func (ms *ManaSystem) PreservationScore(g *Game, src manaSourceInfo, hint AutoTa
 	}
 	score += 10 * ms.UtilityAbilityCount(g, src.PermanentID)
 	score += ms.ManaSourceDrawbackScore(g, src.PermanentID)
+
+	perm := g.FindPermanent(src.PermanentID)
+	if perm != nil && perm.HasType(TypeCreature) {
+		score += 50
+	}
+
 	for _, c := range src.Colors {
 		if c == Colorless {
 			continue
@@ -144,7 +150,12 @@ func (ms *ManaSystem) ManaSourceDrawbackScore(g *Game, permID uuid.UUID) int {
 	score := 0
 	for _, ability := range perm.RuntimeAbilities {
 		triggered, ok := UnwrapAbility(ability).(TriggeredAbility)
-		if !ok || !triggered.CheckEventType(EvtTapped) {
+		if !ok || (!triggered.CheckEventType(EvtTapped) && !triggered.CheckEventType(EvtTappedForMana)) {
+			continue
+		}
+		actx := AbilityContext{SourceID: perm.ID(), Controller: perm.ControllerID()}
+		evt := &GameEvent{Type: EvtTapped, SourceID: perm.ID(), PlayerID: perm.ControllerID()}
+		if !triggered.CheckTrigger(evt, actx, g) {
 			continue
 		}
 		for _, effect := range triggered.Effects() {
@@ -157,6 +168,36 @@ func (ms *ManaSystem) ManaSourceDrawbackScore(g *Game, permID uuid.UUID) int {
 				severity = max(props.DamageValue.Resolve(NewEffectContext(g, perm.ID(), perm.ControllerID(), nil)), 1)
 			}
 			score += 25 * severity
+		}
+	}
+
+	for _, attID := range perm.Attachments {
+		att := g.FindPermanent(attID)
+		if att == nil {
+			continue
+		}
+		for _, ability := range att.RuntimeAbilities {
+			triggered, ok := UnwrapAbility(ability).(TriggeredAbility)
+			if !ok || (!triggered.CheckEventType(EvtTapped) && !triggered.CheckEventType(EvtTappedForMana)) {
+				continue
+			}
+			actx := AbilityContext{SourceID: att.ID(), Controller: att.ControllerID()}
+			evt := &GameEvent{Type: EvtTapped, SourceID: perm.ID(), PlayerID: perm.ControllerID()}
+			if !triggered.CheckTrigger(evt, actx, g) {
+				continue
+			}
+			for _, effect := range triggered.Effects() {
+				props := effect.Properties()
+				isOpponentAura := att.ControllerID() != perm.ControllerID()
+				if props.Outcome != OutcomeDetriment && !isOpponentAura {
+					continue
+				}
+				severity := 1
+				if props.DamageValue != nil {
+					severity = max(props.DamageValue.Resolve(NewEffectContext(g, att.ID(), att.ControllerID(), nil)), 1)
+				}
+				score += 100 * severity
+			}
 		}
 	}
 	return score

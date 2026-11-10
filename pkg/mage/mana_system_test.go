@@ -177,3 +177,60 @@ func TestManaSystem_PreservationScoreAndDrawback(t *testing.T) {
 		t.Errorf("expected city of brass preservation score (%d) to be greater than mountain (%d)", cScore, mScore)
 	}
 }
+
+func TestManaSystem_PreservationScoreCreatureAndNegativeAura(t *testing.T) {
+	g := newPriorityTestGame()
+	p1ID := g.players[0].PlayerID()
+	p2ID := g.players[1].PlayerID()
+
+	forest := NewLand("Forest", WithManaAbility(Green))
+	forest.SetOwner(p1ID)
+	fPerm := g.PutOnBattlefield(forest, p1ID)
+	fPerm.RevokeBaseAttr(AttrSummonSick)
+
+	elves := NewCreature("Llanowar Elves", "{G}", 1, 1, WithManaAbility(Green))
+	elves.SetOwner(p1ID)
+	ePerm := g.PutOnBattlefield(elves, p1ID)
+	ePerm.RevokeBaseAttr(AttrSummonSick)
+
+	cursedForest := NewLand("Cursed Forest", WithManaAbility(Green))
+	cursedForest.SetOwner(p1ID)
+	cfPerm := g.PutOnBattlefield(cursedForest, p1ID)
+	cfPerm.RevokeBaseAttr(AttrSummonSick)
+
+	venom := NewAura("Psychic Venom", "{1}{U}",
+		WithCastTarget(TargetLand()),
+		WithAbility(WhenAttachedBecomesTappedTrigger(
+			DealDamageToPlayers(Fixed(2), SelectAttachedController()), false,
+		)),
+	)
+	venom.SetOwner(p2ID)
+	vPerm := g.PutOnBattlefield(venom, p2ID)
+	vPerm.AttachedTo = cfPerm.ID()
+	cfPerm.Attachments = append(cfPerm.Attachments, vPerm.ID())
+
+	sources := g.mana.GetUntappedManaSources(g, p1ID)
+	if len(sources) != 3 {
+		t.Fatalf("expected 3 sources, got %d", len(sources))
+	}
+
+	var fScore, eScore, cfScore int
+	for _, src := range sources {
+		score := g.mana.PreservationScore(g, src, AutoTapHint{}, [AnyColor + 1]int{})
+		switch src.PermanentID {
+		case fPerm.ID():
+			fScore = score
+		case ePerm.ID():
+			eScore = score
+		case cfPerm.ID():
+			cfScore = score
+		}
+	}
+
+	if eScore <= fScore {
+		t.Errorf("expected creature preservation score (%d) to be greater than basic land (%d)", eScore, fScore)
+	}
+	if cfScore <= eScore {
+		t.Errorf("expected negative aura land preservation score (%d) to be greater than creature (%d)", cfScore, eScore)
+	}
+}
