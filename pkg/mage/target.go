@@ -401,21 +401,16 @@ func expandTargetSpecs(specs []Target, chosen []uuid.UUID, x int) []Target {
 }
 
 // CreatureTarget targets a creature on the battlefield.
-type CreatureTarget struct {
-	BaseTarget
-	Filters        []PermanentFilter
-	excludeSource  bool
-	controllerOnly bool
-	opponentOnly   bool
-}
+type CreatureTarget struct{ *PermanentTarget }
 
 // TargetCreature creates a target that selects a creature on the battlefield,
 // optionally narrowed by PermanentFilter predicates.
 func TargetCreature(filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 1, max: 1,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          1, max: 1,
 		Filters: filters,
-	}
+	}}
 }
 
 // TargetNCreatures requires exactly n distinct target creatures.
@@ -444,21 +439,23 @@ func TargetOneToXCreatures(filters ...PermanentFilter) Target {
 // TargetOtherCreature creates a target that selects a creature other than the
 // source permanent, optionally narrowed by PermanentFilter predicates.
 func TargetOtherCreature(filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 1, max: 1,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          1, max: 1,
 		Filters:       filters,
 		excludeSource: true,
-	}
+	}}
 }
 
 // TargetCreatureYouControl creates a target that selects a creature you control,
 // optionally narrowed by PermanentFilter predicates.
 func TargetCreatureYouControl(filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 1, max: 1,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          1, max: 1,
 		Filters:        filters,
 		controllerOnly: true,
-	}
+	}}
 }
 
 // TargetAnotherCreatureYouControl creates a target that selects a creature
@@ -466,12 +463,13 @@ func TargetCreatureYouControl(filters ...PermanentFilter) Target {
 // PermanentFilter predicates. Used by Kira-style abilities that target
 // "another creature you control".
 func TargetAnotherCreatureYouControl(filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 1, max: 1,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          1, max: 1,
 		Filters:        filters,
 		controllerOnly: true,
 		excludeSource:  true,
-	}
+	}}
 }
 
 // TargetCreatureOpponentControls creates a target that selects a creature an
@@ -479,11 +477,12 @@ func TargetAnotherCreatureYouControl(filters ...PermanentFilter) Target {
 // pairs with TargetCreatureYouControl in a multi-target spell whose targets
 // must have distinct controllers (e.g. Peel from Reality, Nature's Way).
 func TargetCreatureOpponentControls(filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 1, max: 1,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          1, max: 1,
 		Filters:      filters,
 		opponentOnly: true,
-	}
+	}}
 }
 
 // TargetUpToNCreatures creates a target that selects from 0 up to n creatures
@@ -491,10 +490,11 @@ func TargetCreatureOpponentControls(filters ...PermanentFilter) Target {
 // this for "up to N target creatures" spells (Dauntless Onslaught, Tandem
 // Tactics, Rishkar's ETB).
 func TargetUpToNCreatures(n int, filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 0, max: n,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          0, max: n,
 		Filters: filters,
-	}
+	}}
 }
 
 // TargetUpToOneCreature creates a target that selects from 0 up to one
@@ -511,21 +511,23 @@ func TargetUpToOneCreature(filters ...PermanentFilter) Target {
 // predicates. Used for "any number of target creatures you control" effects
 // such as Rabid Attack.
 func TargetUpToNCreaturesYouControl(n int, filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 0, max: n,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          0, max: n,
 		Filters:        filters,
 		controllerOnly: true,
-	}
+	}}
 }
 
 // TargetUpToNCreaturesOpponentControls creates a target that selects from zero
 // up to n creatures controlled by an opponent.
 func TargetUpToNCreaturesOpponentControls(n int, filters ...PermanentFilter) Target {
-	return &CreatureTarget{
-		min: 0, max: n,
+	return &CreatureTarget{PermanentTarget: &PermanentTarget{
+		objectFilter: IsCardType(TypeCreature),
+		min:          0, max: n,
 		Filters:      filters,
 		opponentOnly: true,
-	}
+	}}
 }
 
 // TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
@@ -545,44 +547,6 @@ func TargetUpToNCardsInYourGraveyard(n int, filters ...CardFilter) Target {
 		min: 0, max: n,
 		Filters: filters,
 	}
-}
-
-func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
-	var result []uuid.UUID
-	sourceID := sourceCard.ID()
-	for _, p := range g.zones.battlefield {
-		if !p.HasType(TypeCreature) {
-			continue
-		}
-		if t.excludeSource && p.ID() == sourceID {
-			continue
-		}
-		if t.controllerOnly && p.ControllerID() != controller {
-			continue
-		}
-		if t.opponentOnly && p.ControllerID() == controller {
-			continue
-		}
-		if !p.CanBeTargetedBy(sourceCard, controller, g) {
-			continue
-		}
-		match := true
-		for _, f := range t.Filters {
-			if !f.Match(p, g) {
-				match = false
-				break
-			}
-		}
-		if match {
-			result = append(result, p.ID())
-		}
-	}
-	return result
-}
-
-// Filter returns a combined PermanentFilter that checks creature type and all filters.
-func (t *CreatureTarget) Filter() PermanentFilter {
-	return And(append([]PermanentFilter{IsCreature}, t.Filters...)...)
 }
 
 // PlayerTarget targets a player.
@@ -730,24 +694,41 @@ func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard *Ca
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	BaseTarget
-	Filters       []PermanentFilter
-	opponentOnly  bool
-	opponentOwned bool
+	Filters        []PermanentFilter
+	objectFilter   ObjectFilter
+	excludeSource  bool
+	controllerOnly bool
+	opponentOnly   bool
+	opponentOwned  bool
 }
 
 // TargetPermanent creates a target that selects any permanent on the battlefield,
 // optionally narrowed by PermanentFilter predicates.
-func TargetPermanent(filters ...PermanentFilter) Target {
-	return &PermanentTarget{
-		min: 1, max: 1,
-		Filters: filters,
+func TargetPermanent(filters ...any) Target {
+	target := &PermanentTarget{min: 1, max: 1}
+	var objects []ObjectFilter
+	for _, filter := range filters {
+		switch f := filter.(type) {
+		case PermanentFilter:
+			target.Filters = append(target.Filters, f)
+		case ObjectFilter:
+			objects = append(objects, f)
+		default:
+			panic("mage: unsupported permanent target filter")
+		}
 	}
+	target.objectFilter = ObjectAnd(objects...)
+	return target
+}
+
+func targetPermanentLegacy(filters ...PermanentFilter) Target {
+	return &PermanentTarget{min: 1, max: 1, Filters: slices.Clone(filters)}
 }
 
 // TargetXPermanents requires exactly the announced value of X in distinct
 // target permanents matching all filters.
 func TargetXPermanents(filters ...PermanentFilter) Target {
-	return &countBoundTarget{inner: TargetPermanent(filters...), usesX: true}
+	return &countBoundTarget{inner: targetPermanentLegacy(filters...), usesX: true}
 }
 
 // TargetPermanentOpponentControls creates a target that selects a permanent an
@@ -789,6 +770,15 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if t.excludeSource && p.ID() == sourceCard.ID() {
+			continue
+		}
+		if t.controllerOnly && p.ControllerID() != controller {
+			continue
+		}
+		if !t.objectFilter.Match(p, g, AbilityContext{SourceID: sourceCard.ID(), Controller: controller}) {
+			continue
+		}
 		if t.opponentOnly && p.ControllerID() == controller {
 			continue
 		}
@@ -812,9 +802,10 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Ga
 	return result
 }
 
-// Filter returns a combined PermanentFilter that checks all filters.
+// Filter supplies characteristic checks without an ability context.
+// Use Possible to check target legality with source and controller bindings.
 func (t *PermanentTarget) Filter() PermanentFilter {
-	return And(t.Filters...)
+	return And(append([]PermanentFilter{t.objectFilter.Permanents()}, t.Filters...)...)
 }
 
 // TargetLand creates a target that selects a land on the battlefield.
@@ -1268,4 +1259,23 @@ func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceC
 		}
 	}
 	return result
+}
+
+// TargetsOnlyCreatures reports a static restriction to battlefield creatures.
+// False means that the restriction is not known.
+func TargetsOnlyCreatures(target Target) bool {
+	switch t := target.(type) {
+	case *CreatureTarget:
+		return true
+	case *PermanentTarget:
+		return t.objectFilter.creatureOnly
+	case *countBoundTarget:
+		return TargetsOnlyCreatures(t.inner)
+	case *randomTarget:
+		return TargetsOnlyCreatures(t.inner)
+	case *opponentChosenTarget:
+		return TargetsOnlyCreatures(t.inner)
+	default:
+		return false
+	}
 }

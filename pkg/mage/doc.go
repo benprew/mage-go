@@ -533,4 +533,49 @@
 // library top for symmetric effects such as Field of Dreams. Both permissions
 // are recomputed with continuous effects and disappear when their source
 // leaves the battlefield.
+//
+// # Import Compiler Primitives
+//
+// ObjectFilter uses ObjectView for cards, live permanents, and LKI snapshots.
+// LKIView includes ObjectView. ObjectFilter.Match accepts an optional
+// AbilityContext after the game reader. ObjectAnd, ObjectOr, and ObjectNot
+// preserve this context. Use OtherThan(SourceObject()), ObjectControlledBy,
+// and ObjectOwnedBy for relative references. ObjectHasSubtype and
+// ObjectHasSuperType test subtypes and supertypes. Cards and Permanents
+// adapters accept the same optional context. Card views have no controller;
+// spell trigger views use the caster as controller. Match rejects nil objects,
+// including typed nil pointers. ObjectControlledBy and ObjectOwnedBy require
+// a nonzero player identifier on the object. Live object views include current
+// power and toughness bonuses even without a game reader.
+//
+// TriggerSpec separates event checks from ability effects. NewTriggeredAbility
+// accepts a TriggerSpec, effects, and WithTarget options. Use TriggerOr for
+// alternative events. The permanent entry, death, departure, and attack
+// constructors test ObjectFilter with the ability context. LookupObject
+// supplies live state or LKI. Player event constructors use PlayerSelector.
+// Existing NewTriggered helpers remain available.
+//
+// TargetPermanent accepts ObjectFilter and PermanentFilter values. TargetCreature
+// and its variants use the same permanent targeting implementation. Use
+// Target.Possible to check target legality with source and controller bindings.
+// PermanentTarget.Filter supplies only checks without an ability context. The
+// CreatureTarget wrapper preserves type checks in existing AI code. TargetGroup,
+// FirstTarget, and VarObject return Selector, which supports both object effects
+// and player effects. TargetsOnlyCreatures supplies a conservative static
+// restriction for AI inspection. ObjectAnd and ObjectOr preserve this restriction
+// when their child filters guarantee it.
+//
+// StaticInt reads Fixed, Add, and Mul expressions without an execution context.
+// It returns false for dynamic values. Boost uses this check for text and AI
+// properties. It does not resolve dynamic values during static inspection.
+//
+// ActionDefinition.Type applies CR 605.1a to activated actions. A targetless
+// action with a ManaProductionEffect is a mana ability, even with other effects.
+// WithLoyaltyAbility excludes a loyalty ability from this classification; it
+// does not implement loyalty costs or timing. Mana actions resolve immediately.
+// ManaProfile exposes only effects that the automatic payment planner can
+// execute in full. Other mana actions remain available for manual activation.
+// TapForMana checks activation restrictions and records activation counts and
+// events for ActionDefinition mana abilities. Production metadata describes
+// potential output; it does not grant permission to activate an ability.
 package mage

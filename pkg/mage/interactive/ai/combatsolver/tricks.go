@@ -212,7 +212,7 @@ func gatherAbilityPumps(g *mage.Game, playerID uuid.UUID) []abilityPump {
 			if len(targets) != 1 {
 				continue
 			}
-			if _, ok := targets[0].(*mage.CreatureTarget); !ok {
+			if !mage.TargetsOnlyCreatures(targets[0]) {
 				continue
 			}
 			cost := manaOnlyCost(ab)
@@ -293,7 +293,7 @@ func pumpSpellBoost(card *mage.Card) (power, toughness int, targetsCreature bool
 			continue
 		}
 		for _, t := range def.Targets() {
-			if _, ok := t.(*mage.CreatureTarget); ok {
+			if mage.TargetsOnlyCreatures(t) {
 				targetsCreature = true
 			}
 		}

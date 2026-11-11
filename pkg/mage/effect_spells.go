@@ -492,7 +492,7 @@ func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 	}
 	for _, land := range ctx.Game.FilterBattlefield(And(ControlledBy(obj.Controller), IsLand)) {
 		for _, a := range land.RuntimeAbilities {
-			if _, ok := UnwrapAbility(a).(*ManaAbility); ok {
+			if UnwrapAbility(a).Type() == AbilityMana {
 				ctx.Game.TapPermanent(land)
 				break
 			}

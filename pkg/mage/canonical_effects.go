@@ -182,7 +182,7 @@ func (r variableObjectReference) Select(ctx *EffectContext) []uuid.UUID {
 }
 
 // VarObject selects an object stored in the execution variables.
-func VarObject(name string) ObjectSelector { return variableObjectReference{name: name} }
+func VarObject(name string) Selector { return variableObjectReference{name: name} }
 
 type legacyDamageSourceReference struct{}
 

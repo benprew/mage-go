@@ -14,6 +14,9 @@ type manaSourceAbility struct {
 }
 
 func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex int, g *Game) (manaSourceAbility, bool) {
+	if a.Type() != AbilityMana {
+		return manaSourceAbility{}, false
+	}
 	producer, ok := UnwrapAbility(a).(ManaProducer)
 	if !ok {
 		return manaSourceAbility{}, false

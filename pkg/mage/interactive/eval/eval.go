@@ -631,13 +631,11 @@ func abilityBonus(perm *mage.Permanent) int {
 	score := 0
 	for _, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
+		if inner.Type() == core.AbilityMana {
+			score += manaAbilityScore(inner, nil, perm.ID())
+			continue
+		}
 		switch ab := inner.(type) {
-		case *mage.ManaAbility:
-			if ab.HasAnyColor() {
-				score += 3
-			} else {
-				score += 2
-			}
 		case mage.ActivatedAbility:
 			score += intrinsicAbilityQuality(ab)
 		case mage.TriggeredAbility:
@@ -837,13 +835,11 @@ func abilityBonusInGame(perm *mage.Permanent, g *mage.Game) int {
 	score := 0
 	for _, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
+		if inner.Type() == core.AbilityMana {
+			score += manaAbilityScore(inner, g, perm.ID())
+			continue
+		}
 		switch ab := inner.(type) {
-		case *mage.ManaAbility:
-			if ab.HasAnyColor() {
-				score += 3
-			} else {
-				score += 2
-			}
 		case mage.ActivatedAbility:
 			score += AbilityQuality(ab, p, g)
 		case mage.TriggeredAbility:
@@ -886,20 +882,17 @@ func evalNonCreaturePermanent(perm *mage.Permanent, g *mage.Game) int {
 			continue
 		}
 		hasBehavior = true
+		if inner.Type() == core.AbilityMana {
+			bonus = max(bonus, manaAbilityScore(inner, g, perm.ID()))
+			continue
+		}
 		switch ab := inner.(type) {
-		case *mage.ManaAbility:
-			// Mana-producing artifacts get a small bonus.
-			s := 2
-			if ab.HasAnyColor() {
-				s = 3
-			}
-			if s > bonus {
-				bonus = s
-			}
 		case mage.ActivatedAbility:
 			q := intrinsicAbilityQuality(ab)
-			if p := g.GetPlayer(perm.ControllerID()); p != nil {
-				q = AbilityQuality(ab, p, g)
+			if g != nil {
+				if p := g.GetPlayer(perm.ControllerID()); p != nil {
+					q = AbilityQuality(ab, p, g)
+				}
 			}
 			if q > bonus {
 				bonus = q
@@ -955,4 +948,19 @@ func triggeredAbilityQuality(ab mage.TriggeredAbility) int {
 		return 1
 	}
 	return bestScore
+}
+
+func manaAbilityScore(ability mage.Ability, g *mage.Game, source uuid.UUID) int {
+	var reader mage.GameReader
+	if g != nil {
+		reader = g
+	}
+	if producer, ok := ability.(mage.ManaProducer); ok {
+		for _, production := range producer.ManaProfile(reader, source).Productions {
+			if production.Color == core.AnyColor {
+				return 3
+			}
+		}
+	}
+	return 2
 }

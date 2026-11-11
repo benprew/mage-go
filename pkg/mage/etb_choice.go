@@ -79,7 +79,7 @@ func ETBChooseColorOtherThan(reason string, excluded Color) *ETBEffectAbility {
 				}
 			}
 			// Fallback: pick the first legal basic color.
-			for _, c := range []Color{White, Blue, Black, Red, Green} {
+			for _, c := range Colors() {
 				if c != excluded {
 					perm.ChosenColor = c
 					return nil

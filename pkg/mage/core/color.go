@@ -14,3 +14,9 @@ const (
 	Green
 	AnyColor
 )
+
+// Colors returns the five Magic colors in white, blue, black, red, green order.
+// Each call returns a separate slice.
+func Colors() []Color {
+	return []Color{White, Blue, Black, Red, Green}
+}

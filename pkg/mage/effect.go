@@ -840,3 +840,27 @@ func (e *theFallenUpkeepEffect) Apply(ctx *EffectContext) error {
 	}
 	return nil
 }
+
+// StaticInt reads constant values without an execution context.
+func StaticInt(value ValueSource) (int, bool) {
+	switch v := value.(type) {
+	case fixedValue:
+		return v.n, true
+	case addValue:
+		a, okA := StaticInt(v.a)
+		b, okB := StaticInt(v.b)
+		if !okA || !okB {
+			return 0, false
+		}
+		return a + b, true
+	case mulValue:
+		a, okA := StaticInt(v.a)
+		b, okB := StaticInt(v.b)
+		if !okA || !okB {
+			return 0, false
+		}
+		return a * b, true
+	default:
+		return 0, false
+	}
+}

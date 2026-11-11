@@ -7,8 +7,8 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// ActionKind identifies whether an action is cast as a spell or activated from
-// a permanent. Mana abilities remain separate because they do not use the stack.
+// ActionKind identifies spells and activated actions.
+// Mana abilities resolve without the stack.
 type ActionKind int
 
 const (
@@ -187,8 +187,7 @@ func WithActivationZone(zone Zone) ActionOption {
 	return func(a *ActionDefinition) { a.zone = zone }
 }
 
-// ActionDefinition is the shared resolvable action model for spells and
-// non-mana activated abilities.
+// ActionDefinition stores the specification for a spell or activated ability.
 type ActionDefinition struct {
 	BaseAbility
 	kind            ActionKind
@@ -204,6 +203,7 @@ type ActionDefinition struct {
 	aiHints         []AIHint
 	modes           []Mode
 	legacyModes     bool
+	loyalty         bool
 }
 
 // ActivationZone returns the zone from which this ability can be activated.
@@ -287,7 +287,7 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
 func (a *ActionDefinition) CanActivate(ctx AbilityContext, g *Game) bool {
-	if !a.canActivateWithoutPayingCosts(ctx, g, false) {
+	if !a.canActivateWithoutPayingCosts(ctx, g, a.Type() == AbilityMana) {
 		return false
 	}
 	for _, c := range a.costs {
@@ -307,7 +307,7 @@ func (a *ActionDefinition) canActivateWithoutPayingCosts(ctx AbilityContext, g *
 		if a.ActivationZone() != ZoneBattlefield {
 			return false
 		}
-		if !isManaAbility && (perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities)) {
+		if perm.HasAttr(AttrCantActivate) || (!isManaAbility && perm.HasAttr(AttrCantActivateNonManaAbilities)) {
 			return false
 		}
 		if perm.ControllerID() != controller && !a.permission.AnyPlayerMayUse {
@@ -405,4 +405,35 @@ func NewEquipAbility(cost Cost) *EquipAbility {
 	return &EquipAbility{
 		ActionDefinition: *action,
 	}
+}
+
+// WithLoyaltyAbility prevents mana classification for a loyalty ability.
+func WithLoyaltyAbility() ActionOption { return func(a *ActionDefinition) { a.loyalty = true } }
+
+// Type applies the mana ability criteria in CR 605.1a.
+func (a *ActionDefinition) Type() AbilityType {
+	if a.kind != ActionActivated {
+		return AbilitySpell
+	}
+	if a.loyalty || len(a.targets) > 0 {
+		return AbilityActivated
+	}
+	for _, mode := range a.modes {
+		if len(mode.Targets) > 0 {
+			return AbilityActivated
+		}
+	}
+	for _, effect := range a.effects {
+		if _, ok := effect.(ManaProductionEffect); ok {
+			return AbilityMana
+		}
+	}
+	for _, mode := range a.modes {
+		for _, effect := range mode.Effects {
+			if _, ok := effect.(ManaProductionEffect); ok {
+				return AbilityMana
+			}
+		}
+	}
+	return AbilityActivated
 }

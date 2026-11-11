@@ -47,17 +47,9 @@ import (
 // state of an object before the relevant event. LKIView is that "most
 // recent state" view, regardless of whether the object is still live.
 type LKIView interface {
-	ViewID() uuid.UUID
-	ViewName() string
-	ViewController() uuid.UUID
+	ObjectView
 	ViewAttachedTo() uuid.UUID
-	ViewOwner() uuid.UUID
-	ViewHasType(CardType) bool
-	ViewHasSubType(string) bool
-	ViewHasKeyword(Keyword) bool
 	ViewHasColor(Color) bool
-	ViewPower() int
-	ViewToughness() int
 	ViewIsToken() bool
 	ViewCounters(CounterType) int
 	ViewAbilities() []Ability
@@ -109,8 +101,8 @@ func (v livePermanentView) ViewHasKeyword(k Keyword) bool { return v.p.HasKeywor
 func (v livePermanentView) ViewHasColor(c Color) bool {
 	return slices.Contains(v.p.Colors(), c)
 }
-func (v livePermanentView) ViewPower() int     { return v.p.CurrentPower(v.g) }
-func (v livePermanentView) ViewToughness() int { return v.p.CurrentToughness(v.g) }
+func (v livePermanentView) ViewPower() int     { return v.p.ViewPower() }
+func (v livePermanentView) ViewToughness() int { return v.p.ViewToughness() }
 func (v livePermanentView) ViewIsToken() bool {
 	return v.p.IsToken
 }
@@ -223,4 +215,23 @@ func (g *Game) captureLKI(p *Permanent) {
 // FindPermanent returns nil.
 func (g *Game) LKI(id uuid.UUID) *PermanentLKI {
 	return g.zones.LKI(id)
+}
+
+func (v livePermanentView) ViewHasSuperType(t SuperType) bool { return v.p.HasSuperType(t) }
+func (v livePermanentView) ViewColors() []Color               { return v.p.Colors() }
+func (v livePermanentView) ViewManaValue() int                { return v.p.ManaValue() }
+func (l *PermanentLKI) ViewHasSuperType(t SuperType) bool {
+	return l.Snapshot != nil && l.Snapshot.HasSuperType(t)
+}
+func (l *PermanentLKI) ViewColors() []Color {
+	if l.Snapshot == nil {
+		return nil
+	}
+	return l.Snapshot.Colors()
+}
+func (l *PermanentLKI) ViewManaValue() int {
+	if l.Snapshot == nil {
+		return 0
+	}
+	return l.Snapshot.ManaValue()
 }

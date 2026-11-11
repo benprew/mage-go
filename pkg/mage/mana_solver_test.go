@@ -163,7 +163,7 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 			testSolverSource(landIDs[2], Black, 1),
 			{
 				PermanentID: prismID,
-				Colors:      []Color{White, Blue, Black, Red, Green},
+				Colors:      Colors(),
 				Abilities: []manaSourceAbility{{
 					AbilityIndex: 7,
 					Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
@@ -184,7 +184,7 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 			testSolverSource(landIDs[2], Black, 1),
 			{
 				PermanentID: prismID,
-				Colors:      []Color{White, Blue, Black, Red, Green},
+				Colors:      Colors(),
 				Abilities: []manaSourceAbility{{
 					AbilityIndex: 7,
 					Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},

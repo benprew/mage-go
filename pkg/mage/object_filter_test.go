@@ -68,3 +68,71 @@ func TestActivatedAbilitySupportsGraveyardActivationZoneDirectly(t *testing.T) {
 		t.Fatalf("expected life 22 after graveyard ability resolved, got %d", player.Life())
 	}
 }
+
+type customObjectView struct{ *Card }
+
+func TestObjectFilterRejectsTypedNilViews(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		object ObjectView
+	}{
+		{"nil", nil},
+		{"permanent", (*Permanent)(nil)},
+		{"card", (*Card)(nil)},
+		{"LKI", (*PermanentLKI)(nil)},
+		{"custom", (*customObjectView)(nil)},
+	} {
+		for _, filter := range []ObjectFilter{{}, ObjectHasType(TypeCreature), ObjectNot(ObjectHasType(TypeCreature))} {
+			t.Run(tc.name+"/"+filter.Text(), func(t *testing.T) {
+				defer func() {
+					if err := recover(); err != nil {
+						t.Errorf("nil object caused a panic: %v", err)
+					}
+				}()
+				if filter.Match(tc.object, nil) {
+					t.Fatal("nil object matched a filter")
+				}
+			})
+		}
+	}
+	for _, filter := range []ObjectFilter{{}, ObjectHasType(TypeCreature)} {
+		t.Run("adapters/"+filter.Text(), func(t *testing.T) {
+			defer func() {
+				if err := recover(); err != nil {
+					t.Errorf("nil adapter input caused a panic: %v", err)
+				}
+			}()
+			if filter.Cards().Match(nil) || filter.Permanents().Match(nil, nil) {
+				t.Fatal("nil adapter input matched")
+			}
+		})
+	}
+}
+
+func TestObjectPlayerFiltersRejectMissingIdentity(t *testing.T) {
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	card := NewCreature("Unowned", "{G}", 1, 1)
+	for _, filter := range []ObjectFilter{ObjectControlledBy(SelectController()), ObjectOwnedBy(SelectController())} {
+		if filter.Match(card, g) || filter.Cards().Match(card) {
+			t.Errorf("%s matched a missing identity", filter.Text())
+		}
+	}
+	card.SetOwner(owner)
+	permanent := g.PutOnBattlefield(card, owner)
+	ctx := AbilityContext{Controller: owner}
+	for _, filter := range []ObjectFilter{ObjectControlledBy(SelectController()), ObjectOwnedBy(SelectController())} {
+		if filter.Match(permanent, g) {
+			t.Errorf("%s matched without a controller binding", filter.Text())
+		}
+		if !filter.Match(permanent, g, ctx) {
+			t.Errorf("%s rejected a bound controller", filter.Text())
+		}
+	}
+	if ObjectControlledBy(SelectController()).Match(card, g, ctx) {
+		t.Fatal("card outside the battlefield has a controller")
+	}
+	if !ObjectOwnedBy(SelectController()).Cards(ctx).Match(card) {
+		t.Fatal("owned card did not match its owner")
+	}
+}

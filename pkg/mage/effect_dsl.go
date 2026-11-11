@@ -261,13 +261,11 @@ func (e *boostEffect) WhileSourceTapped() *boostEffect {
 
 // Effect interface
 func (e *boostEffect) Text() string {
-	_, pIsX := e.power.(xValue)
-	_, tIsX := e.toughness.(xValue)
-	if pIsX || tIsX {
-		return "gets +X/+0 until end of turn"
+	p, pStatic := StaticInt(e.power)
+	t, tStatic := StaticInt(e.toughness)
+	if !pStatic || !tStatic {
+		return "gets " + e.power.Text() + "/" + e.toughness.Text() + " until end of turn"
 	}
-	p := e.power.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
-	t := e.toughness.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
 	switch {
 	case isSourceSelector(e.selector):
 		return fmt.Sprintf("this creature gets %+d/%+d until end of turn", p, t)
@@ -279,13 +277,8 @@ func (e *boostEffect) Text() string {
 }
 
 func (e *boostEffect) Properties() EffectProperties {
-	var pb, tb int
-	if _, ok := e.power.(xValue); !ok {
-		pb = e.power.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
-	}
-	if _, ok := e.toughness.(xValue); !ok {
-		tb = e.toughness.Resolve(NewEffectContext(nil, uuid.Nil(), uuid.Nil(), nil))
-	}
+	pb, _ := StaticInt(e.power)
+	tb, _ := StaticInt(e.toughness)
 	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: isMassSelector(e.selector)}
 }
 
