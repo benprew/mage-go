@@ -1319,26 +1319,25 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 	g.damage.DealDamageToPermanent(g, perm, amount, sourceID)
 }
 
-// auraHostIsLegal reports whether host satisfies the aura's enchant ability
-// (CR 303.4c). It checks the aura's cast-target filter against the host,
-// ignoring targeting restrictions (shroud/hexproof don't make an already-attached
-// aura fall off — see CR 702.11b).
+// auraHostIsLegal checks the host against the Aura's enchant restrictions
+// (CR 303.4c). It uses the cast-target filters without targeting checks because
+// an Aura permanent does not target the object it enchants (CR 115.1b).
 func auraHostIsLegal(auraCard *Card, host *Permanent, g *Game) bool {
 	targets := auraCard.CastTargets()
 	if len(targets) == 0 {
 		return true
 	}
 	for _, t := range targets {
+		if creature, ok := t.(*CreatureTarget); ok {
+			t = creature.PermanentTarget
+		}
 		switch tt := t.(type) {
-		case *CreatureTarget:
-			if !host.HasType(TypeCreature) {
-				continue
-			}
-			if filtersMatch(tt.Filters, host, g) {
-				return true
-			}
 		case *PermanentTarget:
-			if filtersMatch(tt.Filters, host, g) {
+			owner := auraCard.Owner()
+			if p := g.FindPermanent(auraCard.ID()); p != nil {
+				owner = p.ControllerID()
+			}
+			if tt.objectFilter.Match(host, g, AbilityContext{SourceID: auraCard.ID(), Controller: owner}) && filtersMatch(tt.Filters, host, g) {
 				return true
 			}
 		default:
@@ -3442,6 +3441,9 @@ func productionsMatchColor(productions []ManaProduction, preferredColor Color) b
 // Recognizes both *ManaAbility and *SimpleActivatedAbility whose only cost is
 // tapping and whose effects all produce mana (AddMana / AddAnyMana).
 func abilityManaProductions(a Ability, g GameReader, sourceID uuid.UUID) []ManaProduction {
+	if a.Type() != AbilityMana {
+		return nil
+	}
 	producer, ok := UnwrapAbility(a).(ManaProducer)
 	if !ok {
 		return nil
@@ -3645,9 +3647,11 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 					continue
 				}
 			}
-			// Skip mana abilities - those are handled separately
-			if _, isMana := inner.(*ManaAbility); isMana {
-				continue
+			// The planner handles mana abilities with supported costs and effects.
+			if inner.Type() == AbilityMana {
+				if _, planned := manaSourceAbilityForPlanning(inner, perm.ID(), i, g); planned {
+					continue
+				}
 			}
 			if !aa.CanActivate(AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: i}, g) {
 				continue
@@ -3764,7 +3768,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if perm.ControllerID() == playerID && isSAA && saa.IsOpponentOnlyAbility() {
 		return fmt.Errorf("only opponents may activate this ability")
 	}
-	if perm.HasAttr(AttrCantActivateNonManaAbilities) {
+	if inner.Type() != AbilityMana && perm.HasAttr(AttrCantActivateNonManaAbilities) {
 		return fmt.Errorf("non-mana activated abilities of %s are prevented", perm.Name())
 	}
 	if !aa.CanActivate(AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: abilityIndex}, g) {
@@ -3870,12 +3874,13 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
 
-	if produced := tappedForManaAmount(aa, actionEffects, actionTargets); produced > 0 {
+	if inner.Type() == AbilityMana {
+		produced := tappedForManaAmount(aa, actionEffects, actionTargets)
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,
 			SourceID: perm.ID(),
 			PlayerID: playerID,
-			Flag:     true,
+			Flag:     hasTapCost,
 		})
 		g.ResolveStackObject(obj)
 		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)

@@ -169,7 +169,7 @@ func TestHumanPlayer_ChooseManaColor(t *testing.T) {
 }
 
 func TestHumanPlayer_ChooseManaColor_AllColors(t *testing.T) {
-	colors := []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green}
+	colors := core.Colors()
 	for _, want := range colors {
 
 		t.Run(want.String(), func(t *testing.T) {

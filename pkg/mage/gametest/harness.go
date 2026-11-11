@@ -679,13 +679,21 @@ func (tg *TestGame) untappedManaSupply(playerID uuid.UUID) map[core.Color]int {
 		if !perm.CanTapForEffect(tg.Game) {
 			continue
 		}
-		for _, a := range perm.RuntimeAbilities {
+		for index, a := range perm.RuntimeAbilities {
 			inner := mage.UnwrapAbility(a)
-			ma, ok := inner.(*mage.ManaAbility)
-			if !ok {
+			if inner.Type() != core.AbilityMana {
 				continue
 			}
-			out[ma.PrimaryColor()] += ma.ProducedAmount()
+			if ability, ok := inner.(mage.ActivatedAbility); ok && !ability.CanActivate(mage.AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: index}, tg.Game) {
+				continue
+			}
+			productions := mage.ManaProductionsForAbilityInGame(inner, tg.Game, perm.ID())
+			if len(productions) == 0 {
+				continue
+			}
+			for _, production := range productions {
+				out[production.Color] += production.Amount
+			}
 			break
 		}
 	}
@@ -1045,7 +1053,7 @@ func (tg *TestGame) ensureManaForActivate(aa activateAction) {
 }
 
 // findActivatableAbilityByName finds the first activatable ability on a named permanent.
-// Prefers non-mana activated abilities, falls back to mana abilities.
+// Checks full activated actions in declaration order, then tap mana abilities.
 func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName string, targets []uuid.UUID) (*mage.Permanent, int, error) {
 	perm := tg.FindPermanentByName(permName, playerID)
 	if perm == nil {
@@ -1060,12 +1068,10 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 		return nil, -1, fmt.Errorf("permanent %s not found", permName)
 	}
 
-	// First pass: activated abilities (non-mana)
+	// Full activated actions have their own cost and permission checks.
 	for i, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		if _, isMana := inner.(*mage.ManaAbility); isMana {
-			continue
-		}
+
 		aa, ok := inner.(mage.ActivatedAbility)
 		if !ok {
 			continue
@@ -1085,21 +1091,10 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 				if j >= len(targets) {
 					break
 				}
-				if tf, ok := t.(interface{ Filter() mage.PermanentFilter }); ok {
-					targetPerm := tg.FindPermanent(targets[j])
-					if targetPerm != nil {
-						if !tf.Filter().Match(targetPerm, tg.Game) || !targetPerm.CanBeTargetedBy(perm.Card, playerID, tg.Game) {
-							validTargets = false
-							break
-						}
-					}
-				} else {
-					possible := t.Possible(playerID, perm.Card, tg.Game)
-					found := slices.Contains(possible, targets[j])
-					if !found {
-						validTargets = false
-						break
-					}
+				possible := t.Possible(playerID, perm.Card, tg.Game)
+				if !slices.Contains(possible, targets[j]) {
+					validTargets = false
+					break
 				}
 			}
 			if !validTargets {
@@ -1113,10 +1108,15 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 	// Second pass: mana abilities
 	for i, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		if _, ok := inner.(*mage.ManaAbility); ok {
-			if !perm.Tapped && perm.CanTapForEffect(tg.Game) {
+		if inner.Type() != core.AbilityMana {
+			continue
+		}
+		if ability, ok := inner.(mage.ActivatedAbility); ok {
+			if ability.CanActivate(mage.AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: i}, tg.Game) {
 				return perm, i, nil
 			}
+		} else if perm.ControllerID() == playerID && !perm.HasAttr(core.AttrCantActivate) && !perm.Tapped && perm.CanTapForEffect(tg.Game) {
+			return perm, i, nil
 		}
 	}
 

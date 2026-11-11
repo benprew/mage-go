@@ -435,19 +435,28 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 
 	var chosen []ManaProduction
 	var chosenAbility *ManaAbility
+	chosenIndex := -1
 	var firstProd []ManaProduction
 	var firstAbility *ManaAbility
-	for _, a := range perm.RuntimeAbilities {
+	firstIndex := -1
+	for index, a := range perm.RuntimeAbilities {
+		if activation, ok := UnwrapAbility(a).(interface {
+			manaActivationAllowed(AbilityContext, *Game) bool
+		}); ok && !activation.manaActivationAllowed(AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: index}, g) {
+			continue
+		}
 		productions := abilityManaProductions(a, g, perm.ID())
 		if productions == nil {
 			continue
 		}
 		if firstProd == nil {
 			firstProd = productions
+			firstIndex = index
 			firstAbility, _ = UnwrapAbility(a).(*ManaAbility)
 		}
 		if preferredColor != Colorless && productionsMatchColor(productions, preferredColor) {
 			chosen = productions
+			chosenIndex = index
 			chosenAbility, _ = UnwrapAbility(a).(*ManaAbility)
 			break
 		}
@@ -455,6 +464,7 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 	if chosen == nil {
 		chosen = firstProd
 		chosenAbility = firstAbility
+		chosenIndex = firstIndex
 	}
 	if chosen == nil {
 		return fmt.Errorf("permanent has no mana ability")
@@ -467,6 +477,10 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 		produced := ms.AddManaProductions(g, chosen, p, perm, preferredColor)
 		if err := ms.RunManaPostProduction(g, chosenAbility, p, perm); err != nil {
 			return err
+		}
+		if action, ok := UnwrapAbility(perm.RuntimeAbilities[chosenIndex]).(*ActionDefinition); ok {
+			g.markAbilityActivated(perm.ID(), action.AbilityID(), chosenIndex)
+			g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), PlayerID: playerID, Flag: true})
 		}
 		ms.FireTappedForMana(g, perm.ID(), playerID, produced)
 	}
@@ -579,7 +593,7 @@ func addManaProductionToPool(pool *ManaPool, color Color, amount int, restrictio
 
 func expandProductionColor(c Color) []Color {
 	if c == AnyColor {
-		return []Color{White, Blue, Black, Red, Green}
+		return Colors()
 	}
 	return []Color{c}
 }

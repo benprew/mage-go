@@ -244,7 +244,7 @@ func hasManaAcceleration(card *mage.Card) bool {
 		return false
 	}
 	for _, ability := range card.AllAbilities() {
-		if _, ok := mage.UnwrapAbility(ability).(*mage.ManaAbility); ok {
+		if mage.UnwrapAbility(ability).Type() == core.AbilityMana {
 			return true
 		}
 	}

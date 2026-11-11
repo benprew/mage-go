@@ -13,16 +13,22 @@ type ObjectSelector interface {
 	Text() string
 }
 
+// Selector selects object or player identifiers.
+type Selector interface {
+	ObjectSelector
+	PlayerSelector
+}
+
 type objectReference struct {
 	kind  string
 	index int
 }
 
 // TargetGroup selects the declared targets in one group.
-func TargetGroup(index int) ObjectSelector { return objectReference{kind: "group", index: index} }
+func TargetGroup(index int) Selector { return objectReference{kind: "group", index: index} }
 
 // FirstTarget selects the first declared target.
-func FirstTarget() ObjectSelector { return objectReference{kind: "first"} }
+func FirstTarget() Selector { return objectReference{kind: "first"} }
 
 // SourceObject selects the source of the resolving effect.
 func SourceObject() ObjectSelector { return objectReference{kind: "source"} }

@@ -467,7 +467,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 			}
 			return nil, false
 
-		case *mage.CreatureTarget:
+		case *mage.CreatureTarget, *mage.PermanentTarget:
 			if outcome == mage.OutcomeBenefit {
 				chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
 				if len(chosen) == 0 {
@@ -577,7 +577,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Car
 			return nil
 		}
 		switch t.(type) {
-		case *mage.CreatureTarget:
+		case *mage.CreatureTarget, *mage.PermanentTarget:
 			if tg := bestAuraTarget(g, playerID, card, possible); len(tg) > 0 {
 				return tg
 			}
@@ -621,7 +621,7 @@ func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage
 		}
 		return chosen
 
-	case *mage.CreatureTarget:
+	case *mage.CreatureTarget, *mage.PermanentTarget:
 		preferOwn := outcome == mage.OutcomeBenefit
 		return bestNTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, !preferOwn, hint.PreferTarget, n)
 
@@ -646,7 +646,7 @@ func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage
 		preferOwn := outcome == mage.OutcomeBenefit
 		preferOpponent := outcome == mage.OutcomeDetriment
 		chosen := bestNTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, hint.PreferTarget, n)
-		if len(chosen) == 0 && !preferOpponent && len(possible) > 0 {
+		if len(chosen) == 0 && !preferOwn && !preferOpponent && len(possible) > 0 {
 			return []uuid.UUID{possible[0]}
 		}
 		return chosen
@@ -1255,7 +1255,7 @@ func chooseBestLand(p mage.Player, g *mage.Game) *mage.Card {
 		landColors, anyColor := landManaColors(land)
 		nextColors := copyColorCounts(baseColors)
 		if anyColor {
-			for _, color := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {
+			for _, color := range core.Colors() {
 				nextColors[color]++
 			}
 		}
@@ -1319,17 +1319,22 @@ func boardManaSources(g *mage.Game, playerID uuid.UUID) (colors map[core.Color]i
 			}
 		}
 		for _, a := range perm.RuntimeAbilities {
-			ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
-			if !ok {
-				continue
+			productions := mage.ManaProductionsForAbilityInGame(a, g, perm.ID())
+			if mage.UnwrapAbility(a).Type() == core.AbilityMana {
+				hasMana = true
 			}
-			hasMana = true
-			if ma.HasAnyColor() {
-				for _, color := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {
-					colors[color]++
+			seen := map[core.Color]bool{}
+			for _, production := range productions {
+				if production.Color == core.AnyColor {
+					for _, color := range core.Colors() {
+						seen[color] = true
+					}
+				} else if production.Color != core.Colorless {
+					seen[production.Color] = true
 				}
-			} else if ma.PrimaryColor() != core.Colorless {
-				colors[ma.PrimaryColor()]++
+			}
+			for color := range seen {
+				colors[color]++
 			}
 		}
 		if hasMana {
@@ -1342,19 +1347,16 @@ func boardManaSources(g *mage.Game, playerID uuid.UUID) (colors map[core.Color]i
 func landManaColors(card *mage.Card) ([]core.Color, bool) {
 	var colors []core.Color
 	anyColor := false
-	for _, a := range card.AllAbilities() {
-		ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
-		if !ok {
-			continue
-		}
-		if ma.HasAnyColor() {
-			anyColor = true
-			continue
-		}
-		if ma.PrimaryColor() != core.Colorless {
-			colors = append(colors, ma.PrimaryColor())
+	for _, ability := range card.AllAbilities() {
+		for _, production := range mage.ManaProductionsForAbility(ability) {
+			if production.Color == core.AnyColor {
+				anyColor = true
+			} else if production.Color != core.Colorless && !slices.Contains(colors, production.Color) {
+				colors = append(colors, production.Color)
+			}
 		}
 	}
+
 	return colors, anyColor
 }
 

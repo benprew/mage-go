@@ -111,7 +111,7 @@ func hasEvasion(p *mage.Permanent) bool {
 func hasManaAbility(p *mage.Permanent) bool {
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		if _, ok := inner.(*mage.ManaAbility); ok {
+		if inner.Type() == core.AbilityMana {
 			return true
 		}
 	}
@@ -160,10 +160,10 @@ func hasRepeatedActivatedAbility(p *mage.Permanent) bool {
 func hasUtilityActivatedAbility(p *mage.Permanent) bool {
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		switch inner.(type) {
-		case *mage.ManaAbility:
+		if inner.Type() == core.AbilityMana {
 			continue
-		case mage.ActivatedAbility:
+		}
+		if _, ok := inner.(mage.ActivatedAbility); ok {
 			return true
 		}
 	}

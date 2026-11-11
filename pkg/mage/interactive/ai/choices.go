@@ -171,7 +171,7 @@ func (ai *AIPlayer) libraryFetchValue(card *mage.Card, g *mage.Game) int {
 // ChooseManaColor returns the color the AI most needs for the spells in hand,
 // defaulting to White when the hand has no colored requirements.
 func (ai *AIPlayer) ChooseManaColor(reason string) core.Color {
-	colors := []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green}
+	colors := core.Colors()
 	counts := make(map[core.Color]int, len(colors))
 	for _, card := range ai.Hand() {
 		mc := card.ManaCost()

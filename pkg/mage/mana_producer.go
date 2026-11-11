@@ -33,7 +33,7 @@ func (ma *ManaAbility) ManaProfile(g GameReader, source uuid.UUID) ManaProfile {
 	return ManaProfile{Productions: slices.Clone(ma.currentProductions(g, source)), Costs: []Cost{&tap{}}, Interchangeable: ma.dynamicProductions == nil && len(ma.postProduction) == 0}
 }
 func (a *ActionDefinition) ManaProfile(_ GameReader, _ uuid.UUID) ManaProfile {
-	if a.kind != ActionActivated || len(a.targets) > 0 || len(a.modes) > 0 {
+	if a.Type() != AbilityMana || len(a.modes) > 0 {
 		return ManaProfile{}
 	}
 	productions, ok := activatedManaEffects(a.effects)

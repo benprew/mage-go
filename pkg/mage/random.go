@@ -6,8 +6,6 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-var colors = [...]Color{White, Blue, Black, Red, Green}
-
 // Random-card primitives. These cover effects that pick a card uniformly at
 // random from a zone (Goblin Lore's "discard three cards at random",
 // Charmbreaker Devils' "instant or sorcery card chosen at random from your
@@ -69,6 +67,7 @@ func (g *Game) RandomDamageTarget() uuid.UUID {
 // RandomColor returns one of Magic's five colors chosen uniformly at random
 // using the game's deterministic random source.
 func (g *Game) RandomColor() Color {
+	colors := Colors()
 	return colors[g.RandIntn(len(colors))]
 }
 

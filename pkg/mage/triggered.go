@@ -48,6 +48,7 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 type GenericTriggered struct {
 	attribute Attr
 	BaseAbility
+	spec           TriggerSpec
 	eventType      EventType
 	sourceZone     Zone
 	Optional       bool
@@ -188,10 +189,16 @@ func (t *GenericTriggered) Modes() []Mode { return cloneModes(t.modes) }
 func (t *GenericTriggered) IsModal() bool { return len(t.modes) > 0 }
 
 func (t *GenericTriggered) CheckEventType(et EventType) bool {
+	if t.spec != nil {
+		return t.spec.MatchesEventType(et)
+	}
 	return et == t.eventType
 }
 
 func (t *GenericTriggered) CheckTrigger(evt *GameEvent, ctx AbilityContext, g GameReader) bool {
+	if t.spec != nil && !t.spec.MatchesEvent(evt, ctx, g) {
+		return false
+	}
 	if t.Condition == nil {
 		return true
 	}
