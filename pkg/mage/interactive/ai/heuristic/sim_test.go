@@ -53,7 +53,23 @@ type simulationGameResult struct {
 	unresolvedAtReference bool
 }
 
-func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed int64) {
+type simulationOpening struct {
+	life     int
+	mulligan func(*ai.AIPlayer) bool
+}
+
+func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed int64, openings ...simulationOpening) {
+	shouldMulligan := func(p *ai.AIPlayer) bool { return p.ShouldMulligan(len(p.Hand())) }
+	if len(openings) > 0 {
+		opening := openings[0]
+		if opening.life > 0 {
+			player.SetLife(opening.life)
+			player.SetStartingLife(opening.life)
+		}
+		if opening.mulligan != nil {
+			shouldMulligan = opening.mulligan
+		}
+	}
 	rng := rand.New(rand.NewSource(seed))
 	var cards []*mage.Card
 	for _, entry := range entries {
@@ -69,7 +85,7 @@ func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed 
 	rng.Shuffle(len(cards), func(i, j int) { cards[i], cards[j] = cards[j], cards[i] })
 	player.SetLibrary(cards)
 	tui.DrawOpeningHand(player)
-	for len(player.Hand()) > 5 && player.ShouldMulligan(len(player.Hand())) {
+	for len(player.Hand()) > 5 && shouldMulligan(player) {
 		handSize := len(player.Hand())
 		cards = append(append([]*mage.Card(nil), player.Library()...), player.Hand()...)
 		player.SetHand(nil)
@@ -82,12 +98,17 @@ func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed 
 }
 
 // playSingleGame keeps the same deck order when a pair swaps AI seats.
-func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []tui.DeckEntry, maxTurns int, seedA, seedB int64) simulationGameResult {
+func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []tui.DeckEntry, maxTurns int, seedA, seedB int64, openings ...simulationOpening) simulationGameResult {
 	playerA := ai.NewAIPlayer("PlayerA", stratA)
 	playerB := ai.NewAIPlayer("PlayerB", stratB)
 	g := mage.NewGame(playerA, playerB)
-	prepareSimulationPlayer(playerA, deckAEntries, seedA)
-	prepareSimulationPlayer(playerB, deckBEntries, seedB)
+	if len(openings) == 2 {
+		prepareSimulationPlayer(playerA, deckAEntries, seedA, openings[0])
+		prepareSimulationPlayer(playerB, deckBEntries, seedB, openings[1])
+	} else {
+		prepareSimulationPlayer(playerA, deckAEntries, seedA)
+		prepareSimulationPlayer(playerB, deckBEntries, seedB)
+	}
 	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		p := g.PlayerAt(playerIdx)
 		aiPlayer, ok := p.(interactive.AutoPlayer)
@@ -222,7 +243,7 @@ func (s *simulationTally) record(result simulationGameResult, newIsPlayerA bool)
 // run1kGames repeats each mirror setup with the AI strategies in opposite seats.
 // SIM_GAMES controls the count. SIM_MAX_TURNS and SIM_SEED control the setup.
 // SIM_INCLUDE_PRIESTESS=1 adds the slow wall deck.
-func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.WeightedPersonality) ai.AIStrategy) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
+func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.WeightedPersonality) ai.AIStrategy, openings ...simulationOpening) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
 	totalGames := getSimulationGameCount()
 	if totalGames%2 != 0 {
 		t.Fatal("SIM_GAMES must be even for paired mirror matches")
@@ -258,7 +279,11 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.
 					} else {
 						stratA, stratB = baselineFactory(weights), newFactory(weights)
 					}
-					result := playSingleGame(stratA, stratB, deck, deck, maxTurns, seedA, seedB)
+					seatOpenings := openings
+					if len(openings) == 2 && seat == 1 {
+						seatOpenings = []simulationOpening{openings[1], openings[0]}
+					}
+					result := playSingleGame(stratA, stratB, deck, deck, maxTurns, seedA, seedB, seatOpenings...)
 					local[deckIndex].record(result, seat == 0)
 				}
 				pairWins := local[deckIndex].newWins - beforeWins
