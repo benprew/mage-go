@@ -505,15 +505,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 func (s *Strategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	playerID := p.PlayerID()
 
-	// Lethal short-circuit: if a known lethal attack exists, take it.
-	lethal := eval.CalculateLethal(g, playerID)
-	if lethal.IHaveLethal && len(lethal.LethalAttackers) > 0 {
-		return lethal.LethalAttackers
-	}
-
-	// Joint-optimal solver: enumerate attacker subsets, pick the one with the
-	// best outcome under opponent's optimal blocking response. Returns nil
-	// (skip combat) when no positive line exists.
+	// Combat simulation includes prevention effects that a lethal estimate can miss.
 	r := combatsolver.SolveAttack(g, playerID, combatsolver.Options{Profile: s.solverProfile()})
 	return r.Attackers
 }

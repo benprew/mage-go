@@ -29,6 +29,32 @@ func defaultOpts() Options {
 	return Options{Profile: Profile{Aggression: 0.5, BlockThreshold: 0.5}}
 }
 
+func TestSolveAttack_WinOverridesMaterial(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(1)
+	first := makePerm("First", "{W}", 1, 1, pa.PlayerID())
+	second := makePerm("Second", "{W}", 1, 1, pa.PlayerID())
+	blocker := makePerm("Blocker", "{1}{W}", 1, 3, pb.PlayerID())
+	g.AddToBattlefield(first, second, blocker)
+	r := SolveAttack(g, pa.PlayerID(), defaultOpts())
+	if len(r.Attackers) != 2 {
+		t.Fatalf("both creatures win through either block, got %v", r.Attackers)
+	}
+}
+
+func TestSolveDefense_SacrificeValuableBlockerToSurvive(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(2)
+	attacker := makePerm("Attacker", "{G}", 2, 10, pa.PlayerID())
+	blocker := makePerm("Flying blocker", "{4}{U}", 4, 1, pb.PlayerID(), mage.WithKeyword(core.Flying))
+	g.AddToBattlefield(attacker, blocker)
+	g.ExecuteAttackers(pa.PlayerID(), []uuid.UUID{attacker.ID()})
+	r := SolveDefense(g, pb.PlayerID(), defaultOpts())
+	if len(r.Blocks) != 1 || r.Blocks[0].BlockerID != blocker.ID() {
+		t.Fatalf("block lethal damage even when the blocker is valuable: %v", r.Blocks)
+	}
+}
+
 // ── SolveAttack ──────────────────────────────────────────────────────────────
 
 func TestSolveAttack_NoCreatures(t *testing.T) {

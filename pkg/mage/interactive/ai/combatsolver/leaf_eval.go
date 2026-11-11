@@ -1,6 +1,7 @@
 package combatsolver
 
 import (
+	"math"
 	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -25,6 +26,16 @@ func combatLeafEval(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 		return 0
 	}
 	oppID := opp.PlayerID()
+	if g.IsGameOver() {
+		switch g.Winner() {
+		case me.Name():
+			return math.MaxInt
+		case opp.Name():
+			return math.MinInt
+		default:
+			return 0
+		}
+	}
 
 	score := float64(me.Life()-opp.Life()) * w.Life
 

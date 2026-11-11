@@ -63,7 +63,8 @@ func SolveAttack(g *mage.Game, playerID uuid.UUID, opts Options) Result {
 			break
 		}
 
-		if setIdx == 0 || score > bestScore {
+		if setIdx == 0 || score > bestScore ||
+			(score == math.MaxInt && bestScore == math.MaxInt && len(atkSet) < len(best.Attackers)) {
 			bestScore = score
 			best.Attackers = atkSet
 			best.Score = score
@@ -161,9 +162,10 @@ func worstBlockingResponse(g *mage.Game, playerID, oppID uuid.UUID,
 	}
 
 	worst := math.MaxInt
+	evaluated := false
 	for _, blockSet := range blockSets {
 		if deadlinePassed(deadline) {
-			if worst == math.MaxInt {
+			if !evaluated {
 				return 0, false
 			}
 			return worst, true
@@ -178,6 +180,7 @@ func worstBlockingResponse(g *mage.Game, playerID, oppID uuid.UUID,
 		clone.CheckStateBasedActions()
 		score := leaf(clone, playerID)
 		*nodes++
+		evaluated = true
 		if score < worst {
 			worst = score
 		}

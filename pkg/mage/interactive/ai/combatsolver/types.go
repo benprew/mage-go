@@ -70,8 +70,8 @@ type Result struct {
 	// them when the blockers-declared priority window opens.
 	HeldTricks []TrickPlan
 
-	// Score is the leaf evaluation (eval.Evaluate) after combat resolves under
-	// the chosen line. From the AI's perspective: positive = good.
+	// Score gives the position value after combat. Higher scores are better.
+	// A win returns math.MaxInt. A loss returns math.MinInt. A draw returns zero.
 	Score int
 
 	// Nodes is the number of leaf evaluations performed. Diagnostic.
