@@ -2,6 +2,10 @@
 // for the MTG engine. Concrete strategies live in subpackages (heuristic,
 // search). This package defines the AIStrategy interface, the AIPlayer
 // wrapper, and shared personality types.
+//
+// Interactive clients use RespondToChoice for automatic card choices and
+// MulliganLondon for London mulligans. SuggestedCombatDamage and
+// CombatDamageOrder provide combat suggestions for an interface.
 package ai
 
 import (
