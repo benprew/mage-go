@@ -50,6 +50,7 @@ func run() int {
 	loopTiming := flag.Bool("loop-timing", false, "write aggregate main game-loop timing to stderr")
 	verbose := flag.Bool("verbose", false, "write per-search priority telemetry to stderr")
 	quiet := flag.Bool("quiet", false, "suppress per-action game log output")
+	showEval := flag.Bool("eval", false, "show position scores with moves; show hands and boards at turn start")
 	flag.Parse()
 
 	search.DebugStats = *verbose
@@ -119,6 +120,10 @@ func run() int {
 
 		playerA := createAI("Alice", wpA, *modeA)
 		playerB := createAI("Bob", wpB, *modeB)
+		if *showEval && !*quiet {
+			playerA.Strategy = &decisionTraceStrategy{AIStrategy: playerA.Strategy, out: os.Stdout}
+			playerB.Strategy = &decisionTraceStrategy{AIStrategy: playerB.Strategy, out: os.Stdout}
+		}
 
 		cardsA := tui.BuildDeck(selectedA.Entries, playerA.PlayerID())
 		cardsB := tui.BuildDeck(selectedB.Entries, playerB.PlayerID())
@@ -142,8 +147,15 @@ func run() int {
 		printSkippedCards("Bob", selectedB.Skipped)
 		fmt.Printf("Alice hand (%d): %s\n", len(playerA.Hand()), handStr(playerA.Hand()))
 		fmt.Printf("Bob   hand (%d): %s\n\n", len(playerB.Hand()), handStr(playerB.Hand()))
+		if *showEval && !*quiet {
+			fmt.Println("Evaluation: each player's combat solver score with its personality weights; higher is better.")
+			fmt.Println("These are position scores, not the spell-ranking scores used for every casting decision.")
+			fmt.Println("Scores can differ in magnitude because the evaluator includes each player's own mana development.")
+			fmt.Println("Option predictions: (acting player/opponent), absolute scores after stack resolution with no responses; heuristic targets and X values.")
+			fmt.Println("Automatic passes with no alternatives are omitted.")
+		}
 
-		totalLoop += runGame(g, *maxTurns, *quiet)
+		totalLoop += runGame(g, *maxTurns, *quiet, *showEval)
 	}
 	if *loopTiming {
 		fmt.Fprintf(
@@ -304,15 +316,21 @@ func printSkippedCards(playerName string, skipped []string) {
 		playerName, len(skipped), strings.Join(skipped, ", "))
 }
 
-func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
+func runGame(g *mage.Game, maxTurns int, quiet, showEval bool) time.Duration {
 
 	// Track last printed turn so we print the header once.
 	lastTurn := -1
+	pendingResolution := false
 
 	// Install priority handler: log choices and the AI's decision.
 	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		p := g.PlayerAt(playerIdx)
 		aiPlayer := p.(interactive.AutoPlayer)
+		if showEval && !quiet && pendingResolution {
+			fmt.Println("  Evaluation after resolution:")
+			printPositionScores(os.Stdout, g)
+			pendingResolution = false
+		}
 
 		// Print turn header on first priority of a new turn.
 		if !quiet && g.CurrentTurn() != lastTurn {
@@ -330,6 +348,12 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 		if quiet {
 			return convertAction(action)
 		}
+		if action.Type == interactive.ActionPass && len(g.CombatGroups()) == 0 {
+			switch g.GetStep() {
+			case core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers, core.FirstStrikeDamage, core.CombatDamage, core.EndCombat:
+				return convertAction(action)
+			}
+		}
 
 		// Get available actions for display.
 		options := interactive.GetAvailableActions(g, p.PlayerID())
@@ -337,14 +361,22 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 		// Only print non-pass actions (or pass when there were real choices).
 		hasRealChoice := len(options) > 1 || (len(options) == 1 && options[0].Type != interactive.ActionPass)
 		if action.Type != interactive.ActionPass || hasRealChoice {
-			if action.Type != interactive.ActionPass {
+			if action.Type != interactive.ActionPass || showEval {
 				phase := "priority"
 				if mainPhase {
 					phase = "main phase"
 				}
 				fmt.Printf("  [%s · %s · %s] %s decides:\n", g.GetStep(), phase, p.Name(), p.Name())
-				printOptions(options)
+				if showEval {
+					printPredictedOptions(os.Stdout, g, p, options)
+				} else {
+					printOptions(options)
+				}
 				fmt.Printf("    → %s\n", describeAction(g, action))
+				if showEval {
+					fmt.Println("    Evaluation before move:")
+					printPositionScores(os.Stdout, g)
+				}
 			}
 		}
 
@@ -378,6 +410,10 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 				}
 				fmt.Printf("    ✓ Activated %s%s\n", name, targetSuffix(g, action.Targets))
 			}
+			if showEval {
+				fmt.Println("    Evaluation after action (spells and abilities can still be on the stack):")
+				printPositionScores(os.Stdout, g)
+			}
 		})
 
 		// Log stack resolution.
@@ -391,6 +427,7 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 				name = top.Card.Name()
 			}
 			fmt.Printf("  ⟳ Resolving %s%s\n", name, targetSuffix(g, top.Targets))
+			pendingResolution = true
 		})
 	}
 
@@ -409,13 +446,35 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 			// Post-step info.
 			if !quiet {
 				switch step {
+				case core.DeclareAttackers:
+					if showEval && len(g.CombatGroups()) > 0 {
+						fmt.Println("  ── Declared attackers ──")
+						for _, group := range g.CombatGroups() {
+							if attacker := g.FindPermanent(group.AttackerID); attacker != nil {
+								fmt.Printf("    %s attacks with %s %d/%d\n", g.ActivePlayerObj().Name(), attacker.Name(), attacker.CurrentPower(g), attacker.CurrentToughness(g))
+							}
+						}
+						printPositionScores(os.Stdout, g)
+					}
+				case core.DeclareBlockers:
+					if showEval && len(g.CombatGroups()) > 0 {
+						fmt.Println("  ── Declared blocks ──")
+						printCombatPreview(g)
+						printPositionScores(os.Stdout, g)
+					}
 				case core.Draw:
 					fmt.Printf("  %s draws a card\n", g.ActivePlayerObj().Name())
+					if showEval {
+						printPositionScores(os.Stdout, g)
+					}
 				case core.CombatDamage:
 					if len(g.CombatGroups()) > 0 {
 						for _, p := range g.AllPlayers() {
 							fmt.Printf("  %s: %d life\n", p.Name(), p.Life())
 						}
+					}
+					if showEval && len(g.CombatGroups()) > 0 {
+						printPositionScores(os.Stdout, g)
 					}
 				}
 			}
@@ -424,7 +483,11 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 				if !quiet {
 					fmt.Printf("\n=== Game Over ===\n")
 					fmt.Printf("Winner: %s\n", g.Winner())
+					fmt.Printf("Turns: %d\n", g.CurrentTurn())
 					printFinalState(g)
+					if showEval {
+						printPositionScores(os.Stdout, g)
+					}
 				}
 				return time.Since(loopStart)
 			}
@@ -512,17 +575,7 @@ func handStr(hand []*mage.Card) string {
 func printTurnHeader(g *mage.Game) {
 	active := g.ActivePlayerObj()
 	fmt.Printf("\n════ Turn %d: %s ════\n", g.CurrentTurn(), active.Name())
-	for _, p := range g.AllPlayers() {
-		fmt.Printf("  %s: %d life, %d in library, hand: [%s]\n",
-			p.Name(), p.Life(), len(p.Library()), handStr(p.Hand()))
-	}
-	// Battlefield
-	for _, p := range g.AllPlayers() {
-		perms := battlefieldFor(g, p.PlayerID())
-		if len(perms) > 0 {
-			fmt.Printf("  %s's battlefield: %s\n", p.Name(), permStr(g, perms))
-		}
-	}
+	printBoardState(os.Stdout, g)
 }
 
 func battlefieldFor(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
@@ -633,10 +686,6 @@ func printFinalState(g *mage.Game) {
 	for _, p := range g.AllPlayers() {
 		fmt.Printf("  %s: %d life, %d cards in hand, %d in graveyard\n",
 			p.Name(), p.Life(), len(p.Hand()), len(p.Graveyard()))
-		perms := battlefieldFor(g, p.PlayerID())
-		if len(perms) > 0 {
-			fmt.Printf("    Battlefield: %s\n", permStr(g, perms))
-		}
 	}
 }
 

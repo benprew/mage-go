@@ -82,6 +82,11 @@ func (s *Strategy) solverProfile() combatsolver.Profile {
 	}
 }
 
+// PositionValue returns the combat solver's position score for this strategy.
+func (s *Strategy) PositionValue(g *mage.Game, playerID uuid.UUID) int {
+	return combatsolver.EvaluatePosition(g, playerID, s.solverProfile().Weights)
+}
+
 // New creates a Strategy from a WeightedPersonality.
 func New(w ai.WeightedPersonality) *Strategy {
 	return &Strategy{Weights: w, weightsInit: true}

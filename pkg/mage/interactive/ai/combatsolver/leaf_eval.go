@@ -9,7 +9,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
-// combatLeafEval scores a post-combat-damage position for the active player
+// EvaluatePosition scores a post-combat-damage position for the active player
 // (the AI making the decision).
 //
 // It mirrors eval.WeightedEvaluator but skips the tap-state penalty for the
@@ -19,7 +19,7 @@ import (
 //
 // The opponent's creatures keep the tap penalty (their tapped permanents
 // can't block this turn, which is a real positional cost).
-func combatLeafEval(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
+func EvaluatePosition(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 	me := g.GetPlayer(playerID)
 	opp := g.GetOpponent(playerID)
 	if me == nil || opp == nil {

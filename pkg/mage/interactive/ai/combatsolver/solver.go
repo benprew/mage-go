@@ -41,7 +41,7 @@ func SolveAttack(g *mage.Game, playerID uuid.UUID, opts Options) Result {
 		weights = defaultLeafWeights
 	}
 	leaf := func(g *mage.Game, pid uuid.UUID) int {
-		return combatLeafEval(g, pid, weights)
+		return EvaluatePosition(g, pid, weights)
 	}
 
 	var (
@@ -97,7 +97,7 @@ func SolveDefense(g *mage.Game, playerID uuid.UUID, opts Options) Result {
 		weights = defaultLeafWeights
 	}
 	leaf := func(g *mage.Game, pid uuid.UUID) int {
-		return combatLeafEval(g, pid, weights)
+		return EvaluatePosition(g, pid, weights)
 	}
 
 	var (
