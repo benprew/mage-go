@@ -86,6 +86,7 @@ func defaultEvaluate(g *mage.Game, playerID uuid.UUID) int {
 	}
 
 	score += (handQuality(me, g) - handQuality(opp, g)) * CardWeight
+	score += int(RemovalHandValue(g, me) - RemovalHandValue(g, opp))
 
 	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
 	score += g.CountBattlefield(ownLand) * LandWeight
@@ -152,6 +153,7 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 		myHandQuality := handQuality(me, g)
 		oppHandQuality := handQuality(opp, g)
 		score += float64(myHandQuality-oppHandQuality) * w.Card
+		score += (RemovalHandValue(g, me) - RemovalHandValue(g, opp)) * w.Board / 2
 
 		ownLandCount := g.CountBattlefield(mage.And(mage.IsLand, mage.ControlledBy(playerID)))
 		oppLandCount := g.CountBattlefield(mage.And(mage.IsLand, mage.ControlledBy(oppID)))
@@ -320,6 +322,11 @@ func calculateLethalOnBoard(g *mage.Game, playerID uuid.UUID) int {
 }
 
 func weightedEvaluate(g *mage.Game, playerID uuid.UUID, w Weights) int {
+	return int(WeightedPositionValue(g, playerID, w))
+}
+
+// WeightedPositionValue returns a position score without integer conversion.
+func WeightedPositionValue(g *mage.Game, playerID uuid.UUID, w Weights) float64 {
 	me := g.GetPlayer(playerID)
 	opp := g.GetOpponent(playerID)
 	if me == nil || opp == nil {
@@ -354,13 +361,14 @@ func weightedEvaluate(g *mage.Game, playerID uuid.UUID, w Weights) int {
 	}
 
 	score += float64(len(me.Hand())-len(opp.Hand())) * w.Card
+	score += (RemovalHandValue(g, me) - RemovalHandValue(g, opp)) * boardScale
 
 	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
 	score += float64(g.CountBattlefield(ownLand)) * w.Mana
 
 	score += float64(g.CountBattlefield(mage.And(ownLand, mage.IsUntapped))) * w.Tempo
 
-	return int(score)
+	return score
 }
 
 // EvalCreature scores a single creature permanent from its controller's perspective.
