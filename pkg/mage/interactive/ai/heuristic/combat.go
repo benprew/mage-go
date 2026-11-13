@@ -1136,6 +1136,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 
 	var bestAction *interactive.PriorityAction
 	bestValue := 0
+	bestEvaluated := false
 
 	for _, card := range p.Hand() {
 		if !card.HasType(core.TypeInstant) {
@@ -1205,10 +1206,21 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 			}
 		}
 
+		targets := s.autoSelectTargets(p, g, card)
+		evaluated := false
+		if value, ok := s.removalCastValue(g, playerID, card, targets, s.bestXValue(g, playerID, card, targets)); ok {
+			if value <= 0 {
+				continue
+			}
+			sv, evaluated = value, true
+		}
+		if !evaluated && sv < 3 {
+			continue
+		}
 		if sv > bestValue {
-			targets := s.autoSelectTargets(p, g, card)
 			if !requiresTargets(card) || len(targets) > 0 {
 				bestValue = sv
+				bestEvaluated = evaluated
 				bestAction = &interactive.PriorityAction{
 					Type:     interactive.ActionCastSpell,
 					CardID:   card.ID(),
@@ -1220,7 +1232,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 		}
 	}
 
-	if bestAction != nil && bestValue >= 3 {
+	if bestAction != nil && (bestEvaluated || bestValue >= 3) {
 		return bestAction
 	}
 

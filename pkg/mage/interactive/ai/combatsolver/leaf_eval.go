@@ -67,6 +67,7 @@ func EvaluatePosition(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 	}
 
 	score += float64(len(me.Hand())-len(opp.Hand())) * w.Card
+	score += (eval.RemovalHandValue(g, me) - eval.RemovalHandValue(g, opp)) * boardScale
 
 	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
 	score += float64(g.CountBattlefield(ownLand)) * w.Mana

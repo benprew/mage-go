@@ -232,6 +232,9 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			}
 			if hasUsableEffect {
 				targets := s.autoSelectTargets(p, g, card)
+				if value, evaluated := s.removalCastValue(g, playerID, card, targets, s.bestXValue(g, playerID, card, targets)); evaluated && value <= 0 {
+					continue
+				}
 				if !requiresTargets(card) || len(targets) > 0 {
 					return interactive.PriorityAction{
 						Type:     interactive.ActionCastSpell,
@@ -256,7 +259,7 @@ func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []*mage.Ca
 
 	for _, card := range cards {
 		score, ok := scoreCard(card)
-		if !ok || score <= 0 || eval.SpellIsWorthless(card, p, g) {
+		if !ok || eval.SpellIsWorthless(card, p, g) {
 			continue
 		}
 		if !aiHintAllowsTiming(cardAIHint(card), g, g.GetStep().IsMainPhase()) {
@@ -267,6 +270,16 @@ func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []*mage.Ca
 			continue
 		}
 		xVal := s.bestXValue(g, playerID, card, targets)
+		if value, simulated := s.permanentCastValue(g, playerID, card, targets, xVal); simulated {
+			score += value - eval.SpellValue(card, p, g)
+		} else if value, evaluated := s.removalCastValue(g, playerID, card, targets, xVal); evaluated {
+			if value <= 0 {
+				continue
+			}
+			score = value
+		} else {
+			score += creatureAbilityValue(g, p, card)
+		}
 		if card.ManaCost().HasX && isCardDamageSpell(card) {
 			if len(targets) > 0 {
 				if perm := g.FindPermanent(targets[0]); perm != nil {
