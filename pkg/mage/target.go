@@ -134,7 +134,7 @@ func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard *Card, targe
 		return nil
 	}
 
-	candidates := uniqueTargetCandidates(target.Possible(controller, sourceCard, g))
+	candidates := uniqueTargetCandidates(PossibleTargets(target, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true}))
 	minimum, maximum := TargetBounds(target, x)
 	maximum = min(maximum, len(candidates))
 	if maximum < minimum {
@@ -294,6 +294,9 @@ func (t *opponentChosenTarget) Possible(controller uuid.UUID, sourceCard *Card, 
 func (t *opponentChosenTarget) Min() int                    { return t.inner.Min() }
 func (t *opponentChosenTarget) Max() int                    { return t.inner.Max() }
 func (t *opponentChosenTarget) OpponentChoosesTarget() bool { return true }
+func (t *opponentChosenTarget) BoundsForX(x int) (minimum, maximum int) {
+	return TargetBounds(t.inner, x)
+}
 
 func isOpponentChosenTarget(t Target) bool {
 	opponentChoice, ok := t.(interface{ OpponentChoosesTarget() bool })
@@ -309,7 +312,7 @@ func hasOpponentChosenTarget(targets []Target) bool {
 // candidates are still computed using the action's controller and source, so
 // changing who makes the choice does not change control restrictions,
 // protection, hexproof, or any other targeting requirement.
-func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Card, specs []Target, supplied []uuid.UUID) []uuid.UUID {
+func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Card, specs []Target, supplied []uuid.UUID, x int) []uuid.UUID {
 	if len(specs) == 0 {
 		return supplied
 	}
@@ -320,15 +323,14 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Ca
 	out := make([]uuid.UUID, 0, len(supplied))
 	offset := 0
 	for i, spec := range specs {
+		minimum, maximum := TargetBounds(spec, x)
 		remainingRequired := 0
 		for _, later := range specs[i+1:] {
-			remainingRequired += later.Min()
+			laterMinimum, _ := TargetBounds(later, x)
+			remainingRequired += laterMinimum
 		}
 		available := max(0, len(supplied)-offset-remainingRequired)
-		count := min(spec.Max(), available)
-		if count < spec.Min() {
-			count = spec.Min()
-		}
+		count := max(min(maximum, available), minimum)
 		consumed := min(count, len(supplied)-offset)
 
 		if !isOpponentChosenTarget(spec) {
@@ -337,15 +339,15 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Ca
 			continue
 		}
 
-		possible := spec.Possible(controller, sourceCard, g)
+		possible := PossibleTargets(spec, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true})
 		chooser := g.GetOpponent(controller)
 		var requested []uuid.UUID
 		if chooser != nil && len(possible) > 0 {
-			requested = chooser.ChooseTargets(possible, spec.Min(), spec.Max(), g)
+			requested = chooser.ChooseTargets(possible, minimum, maximum, g)
 		}
-		chosen := make([]uuid.UUID, 0, min(spec.Max(), len(requested)))
+		chosen := make([]uuid.UUID, 0, min(maximum, len(requested)))
 		for _, id := range requested {
-			if len(chosen) == spec.Max() {
+			if len(chosen) == maximum {
 				break
 			}
 			if slices.Contains(possible, id) && !slices.Contains(chosen, id) {
@@ -353,14 +355,14 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard *Ca
 			}
 		}
 		for _, id := range possible {
-			if len(chosen) >= spec.Min() {
+			if len(chosen) >= minimum {
 				break
 			}
 			if !slices.Contains(chosen, id) {
 				chosen = append(chosen, id)
 			}
 		}
-		if len(chosen) == 0 && spec.Min() > 0 {
+		if len(chosen) == 0 && minimum > 0 {
 			chosen = append(chosen, uuid.Nil())
 		}
 
@@ -768,15 +770,24 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 }
 
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	return t.PossibleWithContext(controller, sourceCard, g, TargetingContext{})
+}
+
+// PossibleWithContext checks targets with explicit announcement values.
+func (t *PermanentTarget) PossibleWithContext(controller uuid.UUID, sourceCard *Card, g *Game, ctx TargetingContext) []uuid.UUID {
 	var result []uuid.UUID
+	sourceID := uuid.Nil()
+	if sourceCard != nil {
+		sourceID = sourceCard.ID()
+	}
 	for _, p := range g.zones.battlefield {
-		if t.excludeSource && p.ID() == sourceCard.ID() {
+		if t.excludeSource && p.ID() == sourceID {
 			continue
 		}
 		if t.controllerOnly && p.ControllerID() != controller {
 			continue
 		}
-		if !t.objectFilter.Match(p, g, AbilityContext{SourceID: sourceCard.ID(), Controller: controller}) {
+		if !t.objectFilter.matchTarget(p, g, AbilityContext{SourceID: sourceID, Controller: controller}, ctx) {
 			continue
 		}
 		if t.opponentOnly && p.ControllerID() == controller {
@@ -851,34 +862,9 @@ func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, 
 }
 
 // TargetArtifactWithManaValueX creates a target that selects an artifact on the
-// battlefield whose mana value equals the current X value (g.currentX). Used by
-// spells like Detonate where the targeting restriction depends on X.
+// battlefield whose mana value equals the announced X.
 func TargetArtifactWithManaValueX() Target {
-	return &artifactWithManaValueXTarget{
-		min: 1, max: 1,
-	}
-}
-
-type artifactWithManaValueXTarget struct {
-	BaseTarget
-}
-
-func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
-	x := g.resolution.X()
-	var result []uuid.UUID
-	for _, p := range g.zones.battlefield {
-		if !p.HasType(TypeArtifact) {
-			continue
-		}
-		if !p.CanBeTargetedBy(sourceCard, controller, g) {
-			continue
-		}
-		if p.Card.ManaCost().CMC() != x {
-			continue
-		}
-		result = append(result, p.ID())
-	}
-	return result
+	return TargetPermanent(IsCardType(TypeArtifact), ManaValueIs(EqualTo(XValue())))
 }
 
 // TargetArtifactOrEnchantment creates a target that selects an artifact or enchantment on the battlefield.

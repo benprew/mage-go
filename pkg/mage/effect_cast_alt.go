@@ -199,7 +199,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return err
 	}
 
-	if g.resolution.X() != 0 && xValue == 0 {
+	if !card.ManaCost().HasX && g.resolution.X() != 0 && xValue == 0 {
 		xValue = g.resolution.X()
 		g.resolution.SetX(0)
 	}

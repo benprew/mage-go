@@ -71,7 +71,7 @@ func TestPromptTargetsForList_RoutesEachTargetToItsChooser(t *testing.T) {
 	got := g.promptTargetsForList(a.PlayerID(), source, []Target{
 		TargetCreatureYouControl(),
 		TargetOpponentChoice(TargetCreatureOpponentControls()),
-	})
+	}, 0)
 	if want := []uuid.UUID{minePerm.ID(), theirsPerm.ID()}; !slices.Equal(got, want) {
 		t.Fatalf("targets = %v, want %v", got, want)
 	}

@@ -838,8 +838,7 @@ func (tg *TestGame) buildPriorityActionForCast(idx int) (mage.PriorityAction, bo
 
 	card, _ := mage.CreateCard(ca.spell)
 	if card != nil {
-		tg.SetXValue(ca.xValue)
-		validTargets := tg.validateTargets(card, targets, playerID)
+		validTargets := tg.validateTargets(card, targets, playerID, ca.xValue)
 		if len(validTargets) == 0 && len(targets) > 0 {
 			return mage.PriorityAction{}, false
 		}
@@ -1227,12 +1226,12 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 	return targets
 }
 
-func (tg *TestGame) validateTargets(sourceCard *mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
+func (tg *TestGame) validateTargets(sourceCard *mage.Card, targets []uuid.UUID, controllerID uuid.UUID, x int) []uuid.UUID {
 	cts := sourceCard.CastTargets()
 	var valid []uuid.UUID
 	for i, tid := range targets {
 		if i < len(cts) {
-			possible := cts[i].Possible(controllerID, sourceCard, tg.Game)
+			possible := mage.PossibleTargets(cts[i], controllerID, sourceCard, tg.Game, mage.TargetingContext{X: x, XSpecified: true})
 			if !slices.Contains(possible, tid) {
 				continue
 			}

@@ -97,12 +97,12 @@ func registerSpells() {
 	// to that artifact's controller.
 	Register("Detonate", func() *Card {
 		return NewSorcery("Detonate", "{X}{R}",
-			NewTargetedSpell(TargetArtifactWithManaValueX(),
+			NewTargetedSpell(TargetPermanent(IsCardType(TypeArtifact), ManaValueIs(EqualTo(XValue()))),
 				Pipeline("destroy target artifact with CMC X; deal X damage to controller",
 					EffectProperties{Outcome: OutcomeDetriment},
 					SnapshotPermanent(SelectTarget, "victim"),
 					DestroyTargetNoRegenStep(),
-					DealDamageToPlayersFromVar("victim.cmc", VarPlayer("victim.controller")),
+					DealDamageToPlayers(XValue(), VarPlayer("victim.controller")),
 				)),
 		)
 	})

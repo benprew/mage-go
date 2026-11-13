@@ -75,7 +75,7 @@ func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source *mag
 
 	groups := make([][][]scoredTarget, 0, len(reqs))
 	for _, req := range reqs {
-		possible := req.Possible(playerID, source, g)
+		possible := mage.PossibleTargets(req, playerID, source, g, mage.TargetingContext{X: x, XSpecified: true})
 		minTargets, maxTargets := mage.TargetBounds(req, x)
 		if len(possible) < minTargets {
 			return nil

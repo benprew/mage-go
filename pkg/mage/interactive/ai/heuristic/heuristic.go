@@ -521,9 +521,36 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 }
 
 func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Card) []uuid.UUID {
-	playerID := p.PlayerID()
-	xValue := s.bestXValue(g, playerID, card, nil)
+	if mage.TargetsUseX(card.CastTargets()) {
+		var best []uuid.UUID
+		bestScore := -int(^uint(0) >> 1)
+		purpose := eval.TargetGeneric
+		for _, ability := range card.AllAbilities() {
+			if spell, ok := ability.(*mage.SpellAbility); ok && spell.Kind() == mage.ActionSpell {
+				purpose = eval.TargetPurposeForEffects(spell.Effects())
+				break
+			}
+		}
+		for _, option := range g.SpellTargetOptions(p.PlayerID(), card) {
+			targets := s.autoSelectTargetsAtX(p, g, card, option.XValue)
+			if requiresTargets(card) && len(targets) == 0 {
+				continue
+			}
+			score := 0
+			for _, target := range targets {
+				score += eval.TargetValueForPurpose(g, p.PlayerID(), target, purpose, option.XValue)
+			}
+			if score > bestScore {
+				best, bestScore = targets, score
+			}
+		}
+		return best
+	}
+	return s.autoSelectTargetsAtX(p, g, card, s.bestXValue(g, p.PlayerID(), card, nil))
+}
 
+func (s *Strategy) autoSelectTargetsAtX(p mage.Player, g *mage.Game, card *mage.Card, xValue int) []uuid.UUID {
+	playerID := p.PlayerID()
 	var targets []uuid.UUID
 
 	for _, a := range card.AllAbilities() {
@@ -549,7 +576,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Car
 		// creatures", "target player and target creature") are fully populated
 		// rather than only filling the first requirement.
 		for _, t := range sa.Targets() {
-			possible := t.Possible(playerID, card, g)
+			possible := mage.PossibleTargets(t, playerID, card, g, mage.TargetingContext{X: xValue, XSpecified: true})
 			minTargets, maxTargets := mage.TargetBounds(t, xValue)
 			if len(possible) == 0 {
 				if minTargets > 0 {
@@ -572,7 +599,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Car
 
 	// Check CastTargets for auras and other cards with cast-time targeting
 	for _, t := range card.CastTargets() {
-		possible := t.Possible(playerID, card, g)
+		possible := mage.PossibleTargets(t, playerID, card, g, mage.TargetingContext{X: xValue, XSpecified: true})
 		if len(possible) == 0 {
 			return nil
 		}
@@ -1110,6 +1137,15 @@ func isCardDamageSpell(card *mage.Card) bool {
 }
 
 func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
+	if mage.TargetsUseX(card.CastTargets()) {
+		for _, option := range g.SpellTargetOptions(playerID, card) {
+			if targetOptionMatches(card.CastTargets(), option, targets) {
+				return option.XValue
+			}
+		}
+		return 0
+	}
+
 	mc := card.ManaCost()
 	if !mc.HasX {
 		return 0
@@ -1141,6 +1177,15 @@ func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card,
 // bestXValue picks the best X value for an X-cost spell.
 // For damage spells it tries lethal values; otherwise it spends all available mana.
 func bestXValue(g *mage.Game, playerID uuid.UUID, card *mage.Card, targets []uuid.UUID) int {
+	if mage.TargetsUseX(card.CastTargets()) {
+		for _, option := range g.SpellTargetOptions(playerID, card) {
+			if targetOptionMatches(card.CastTargets(), option, targets) {
+				return option.XValue
+			}
+		}
+		return 0
+	}
+
 	mc := card.ManaCost()
 	if !mc.HasX {
 		return 0
@@ -1414,4 +1459,27 @@ func isPrecombatSpell(card *mage.Card) bool {
 	}
 	hint := cardAIHint(card)
 	return hint.Timing == mage.AITimingMainPhase
+}
+
+func targetOptionMatches(specs []mage.Target, option mage.SpellTargetOption, targets []uuid.UUID) bool {
+	offset := 0
+	for i, spec := range specs {
+		minimum, maximum := mage.TargetBounds(spec, option.XValue)
+		remaining := 0
+		for _, later := range specs[i+1:] {
+			n, _ := mage.TargetBounds(later, option.XValue)
+			remaining += n
+		}
+		count := min(maximum, max(0, len(targets)-offset-remaining))
+		if count < minimum {
+			return false
+		}
+		for _, id := range targets[offset : offset+count] {
+			if !slices.Contains(option.Candidates[i], id) {
+				return false
+			}
+		}
+		offset += count
+	}
+	return offset == len(targets)
 }

@@ -1839,7 +1839,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 			continue
 		}
 
-		possible := t.Possible(pt.controller, sourceCard, g)
+		possible := PossibleTargets(t, pt.controller, sourceCard, g, TargetingContext{X: 0, XSpecified: true})
 		if len(possible) == 0 {
 			if t.Min() > 0 {
 				out = append(out, uuid.Nil())
@@ -1965,7 +1965,7 @@ func (g *Game) pushStack(obj *StackObject) {
 
 // Check if target is still legal at resolution time. Used in stack responses and
 // resolutions.
-func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controller uuid.UUID, expectedZone Zone, spec Target) bool {
+func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controller uuid.UUID, expectedZone Zone, spec Target, x int) bool {
 	if g.GetPlayer(targetID) != nil {
 		return true
 	}
@@ -1979,7 +1979,7 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controll
 			return false
 		}
 	}
-	if spec != nil && !slices.Contains(spec.Possible(controller, sourceCard, g), targetID) {
+	if spec != nil && !slices.Contains(PossibleTargets(spec, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true}), targetID) {
 		return false
 	}
 	return true
@@ -2027,7 +2027,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			if obj.TargetSource != nil {
 				sourceCard = obj.TargetSource
 			}
-			if g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec) {
+			if g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec, obj.XValue) {
 				resolvedTargets[i] = t
 				anyLegal = true
 				continue
@@ -2203,7 +2203,7 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard *Card, spe
 		if count < minimum {
 			return fmt.Errorf("not enough targets for %s", label)
 		}
-		possible := spec.Possible(controller, sourceCard, g)
+		possible := PossibleTargets(spec, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true})
 		seen := make(map[uuid.UUID]bool, count)
 		for _, id := range chosen[offset : offset+count] {
 			if seen[id] || !slices.Contains(possible, id) {
@@ -2232,7 +2232,7 @@ func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard *Ca
 	if len(chosen) < minTargets || len(chosen) > maxTargets {
 		return fmt.Errorf("%s requires exactly %d targets", sourceCard.Name(), minTargets)
 	}
-	possible := spec.Possible(controller, sourceCard, g)
+	possible := PossibleTargets(spec, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true})
 	seen := make(map[uuid.UUID]bool, len(chosen))
 	for _, id := range chosen {
 		if seen[id] || !slices.Contains(possible, id) {
@@ -2368,9 +2368,9 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 		targets = flattenTargetGroups(groups)
 	} else {
 		targets = g.acquireRandomTargets(playerID, card, specs, targets, xValue)
-		targets = g.acquireOpponentChosenTargets(playerID, card, specs, targets)
+		targets = g.acquireOpponentChosenTargets(playerID, card, specs, targets, xValue)
 		if len(targets) == 0 && mode != nil && len(specs) > 0 {
-			groups = g.promptTargetGroups(playerID, card, specs)
+			groups = g.promptTargetGroups(playerID, card, specs, xValue)
 			targets = flattenTargetGroups(groups)
 		}
 		if groups == nil {
@@ -2468,7 +2468,7 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 	}
 
 	// If an additional cost set g.resolution.X (e.g. sacrifice-capture-CMC), use it
-	if g.resolution.X() != 0 && xValue == 0 {
+	if !card.ManaCost().HasX && g.resolution.X() != 0 && xValue == 0 {
 		xValue = g.resolution.X()
 		g.resolution.SetX(0)
 	}
@@ -3554,36 +3554,10 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []*Card {
 				continue
 			}
 		}
-		// Check mana (ignore X costs for now - those are always "castable" if base cost met)
-		mc := card.ManaCost()
-		checkMC := mc
-		if mc.HasX {
-			// For X spells, check if we can pay the non-X portion
-			checkMC = ManaCost{
-				Generic: mc.Generic,
-				White:   mc.White,
-				Blue:    mc.Blue,
-				Black:   mc.Black,
-				Red:     mc.Red,
-				Green:   mc.Green,
-			}
-		}
-		if !g.CanAfford(playerID, checkMC, SpellContextForCard(card)) {
+		if len(g.SpellTargetOptions(playerID, card, 0)) == 0 {
 			continue
 		}
-		// Spells with targets (e.g. auras) can't be cast if no legal targets exist
-		if ct := card.CastTargets(); len(ct) > 0 {
-			hasLegalTarget := false
-			for _, t := range ct {
-				if len(t.Possible(playerID, card, g)) > 0 {
-					hasLegalTarget = true
-					break
-				}
-			}
-			if !hasLegalTarget {
-				continue
-			}
-		}
+
 		castable = append(castable, card)
 	}
 	return castable
@@ -3802,7 +3776,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			if definition, ok := aa.(*ActionDefinition); ok && definition.legacyModes && len(targets) > 0 {
 				actionGroups = groupTargets(actionTargets, targets, g.resolution.X())
 			} else {
-				actionGroups = g.promptTargetGroups(playerID, perm.Card, actionTargets)
+				actionGroups = g.promptTargetGroups(playerID, perm.Card, actionTargets, g.resolution.X())
 			}
 		}
 		targets = flattenTargetGroups(actionGroups)
@@ -3821,7 +3795,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	if actionGroups == nil {
 		targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
-		targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
+		targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
 		actionGroups = groupTargets(actionTargets, targets, g.resolution.X())
 	} else if suppliedGroups != nil {
 		actionGroups = g.acquireTargetGroups(playerID, perm.Card, actionTargets, actionGroups, g.resolution.X())

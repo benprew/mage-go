@@ -32,7 +32,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		return nil, ErrPlayerNotFound
 	}
 
-	effects, targets, modalTargets, modeChoice := g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets, opts.ModePrompt, opts.Mode, opts.TargetGroups)
+	effects, targets, modalTargets, modeChoice := g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets, opts.ModePrompt, opts.Mode, opts.TargetGroups, opts.XValue)
 	sourceID := opts.SourceID
 	if sourceID == uuid.Nil() {
 		sourceID = card.ID()
@@ -81,7 +81,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	return obj, nil
 }
 
-func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uuid.UUID, promptTargets bool, modePrompt string, modeOverride *int, suppliedGroups [][]uuid.UUID) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
+func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uuid.UUID, promptTargets bool, modePrompt string, modeOverride *int, suppliedGroups [][]uuid.UUID, x int) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
 	if ms, ok := getModalSpellAbility(card); ok {
 		if modePrompt == "" {
 			modePrompt = card.Name()
@@ -99,7 +99,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uui
 		mode := ms.modes[modeChoice]
 		effects = append(effects, mode.Effects...)
 		if len(targets) == 0 && suppliedGroups == nil {
-			targets = g.promptTargetsForList(caster.PlayerID(), card, mode.Targets)
+			targets = g.promptTargetsForList(caster.PlayerID(), card, mode.Targets, x)
 		}
 		modalTargets = make([][]uuid.UUID, len(ms.modes))
 		modalTargets[modeChoice] = targets
@@ -120,7 +120,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uui
 		}
 		effects = append(effects, sa.Effects()...)
 		if promptTargets && len(sa.Targets()) > 0 {
-			targets = append(targets, g.promptTargetsForList(caster.PlayerID(), card, sa.Targets())...)
+			targets = append(targets, g.promptTargetsForList(caster.PlayerID(), card, sa.Targets(), x)...)
 		}
 	}
 	return effects, targets, nil, modeChoice

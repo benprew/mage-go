@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"uuid"
 	"weak"
@@ -349,7 +350,17 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		if ct := card.CastTargets(); len(ct) > 0 {
 			needsTarget = true
 			targetType = ct[0]
-			validTargets = targetType.Possible(playerID, card, g)
+			if mage.TargetsUseX(ct) {
+				for _, option := range g.SpellTargetOptions(playerID, card) {
+					for _, id := range option.Candidates[0] {
+						if !slices.Contains(validTargets, id) {
+							validTargets = append(validTargets, id)
+						}
+					}
+				}
+			} else {
+				validTargets = targetType.Possible(playerID, card, g)
+			}
 			if len(validTargets) == 0 {
 				// MTG 601.2c: can't begin to cast a spell with no legal targets.
 				continue

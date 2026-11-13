@@ -731,7 +731,7 @@ func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
 	}
 }
 
-func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
+func TestXSpell_ZeroVariantIfOnlyBaseCostAffordable(t *testing.T) {
 	g, pa, _ := makeGame()
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
@@ -744,10 +744,17 @@ func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
 	g.SetStep(core.PrecombatMain)
 
 	moves := GeneratePriorityMoves(g, pa, 0, true)
+	found := false
 	for _, m := range moves {
 		if m.CardName == "Fireball" {
-			t.Error("should not generate Fireball moves when can only afford X=0")
+			found = true
+			if m.XValue != 0 {
+				t.Errorf("unaffordable X=%d", m.XValue)
+			}
 		}
+	}
+	if !found {
+		t.Fatal("missing legal X=0 cast")
 	}
 }
 

@@ -280,6 +280,20 @@
 //
 // # Targeting Helpers
 //
+// Compose characteristic restrictions with [ObjectAnd], [IsCardType], and
+// [ManaValueIs]. For example, an artifact with mana value X uses:
+//
+//	TargetPermanent(IsCardType(TypeArtifact), ManaValueIs(EqualTo(XValue())))
+//
+// [ObjectFilter.Kind], [ObjectFilter.Children], and
+// [ObjectFilter.ManaValueComparison] retain the structure for inspection.
+// [PossibleTargets] accepts a [TargetingContext]. Set XSpecified for an exact
+// announcement, including X=0. An unspecified X leaves dependent comparisons
+// open for discovery. Queries do not change resolution state.
+// [Game.SpellTargetOptions] pairs affordable X values with legal candidates for
+// each target group. Required equality filters supply candidate X values from
+// battlefield mana values. Casting and resolution check the announced X.
+//
 // [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
 // controlled by the ability's controller.
 //
@@ -557,7 +571,7 @@
 //
 // TargetPermanent accepts ObjectFilter and PermanentFilter values. TargetCreature
 // and its variants use the same permanent targeting implementation. Use
-// Target.Possible to check target legality with source and controller bindings.
+// PossibleTargets to check target legality with source, controller, and X.
 // PermanentTarget.Filter supplies only checks without an ability context. The
 // CreatureTarget wrapper preserves type checks in existing AI code. TargetGroup,
 // FirstTarget, and VarObject return Selector, which supports both object effects

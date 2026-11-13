@@ -219,18 +219,18 @@ func expandModalSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, modes [
 }
 
 // expandXSpellMoves generates moves for X-cost spells with target-aware values.
-// In addition to 1, max/2, and max, it tries X values that are lethal to
+// In addition to 0, 1, max/2, and max, it tries X values that are lethal to
 // opponent creatures or the opponent's life total.
 func expandXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	playerID := p.PlayerID()
 	mc := card.ManaCost()
 	maxX := g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
-	if maxX < 1 {
+	if !g.CanAfford(playerID, mc, mage.SpellContextForCard(card)) {
 		return nil
 	}
 
-	// Standard X variants: 1, max/2, max
-	xValues := []int{1}
+	// Include zero so that removal can target objects with mana value zero.
+	xValues := []int{0, 1}
 	if half := maxX / 2; half > 1 {
 		xValues = append(xValues, half)
 	}
@@ -277,15 +277,15 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	seen := make(map[int]bool)
 	var unique []int
 	for _, x := range xValues {
-		if !seen[x] && x >= 1 && x <= maxX {
+		if !seen[x] && x >= 0 && x <= maxX {
 			seen[x] = true
 			unique = append(unique, x)
 		}
 	}
 
 	var allMoves []Move
-	for _, x := range unique {
-		moves := expandNonXSpellMoves(p, g, card, x, 0)
+	for _, option := range g.SpellTargetOptions(playerID, card, unique...) {
+		moves := expandNonXSpellMoves(p, g, card, option.XValue, 0)
 		allMoves = append(allMoves, moves...)
 	}
 	return allMoves
@@ -322,16 +322,7 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, xValue, 
 
 	combos := topTargetCombinations(g, playerID, card, allTargetReqs, purpose, damage, xValue)
 	if len(combos) == 0 {
-		return []Move{{
-			Type:       interactive.ActionCastSpell,
-			CardID:     card.ID(),
-			CardName:   card.Name(),
-			IsCreature: card.HasType(core.TypeCreature),
-			IsTactical: tactical,
-			XValue:     xValue,
-			ModeIndex:  modeIndex,
-			heuristic:  sv,
-		}}
+		return nil
 	}
 
 	moves := make([]Move, 0, len(combos))

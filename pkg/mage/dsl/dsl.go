@@ -662,6 +662,9 @@ var (
 	TargetControlledCreature                = mage.TargetControlledCreature
 	TargetControlledPermanent               = mage.TargetControlledPermanent
 	TargetArtifactWithManaValueX            = mage.TargetArtifactWithManaValueX
+	IsCardType                              = mage.IsCardType
+	ManaValueIs                             = mage.ManaValueIs
+	EqualTo                                 = mage.EqualTo
 	TargetCreatureBlockingOrBlockedBySource = mage.TargetCreatureBlockingOrBlockedBySource
 	TargetPermanentOpponentControls         = mage.TargetPermanentOpponentControls
 	TargetPermanentOpponentOwns             = mage.TargetPermanentOpponentOwns

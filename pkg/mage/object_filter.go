@@ -46,6 +46,10 @@ func (p *Permanent) ToughnessValue(g GameReader) int { return p.CurrentToughness
 // ObjectFilter tests current characteristics in any zone.
 // The zero value matches all objects.
 type ObjectFilter struct {
+	kind         string
+	children     []ObjectFilter
+	comparison   *ValueComparison
+	cardType     CardType
 	label        string
 	creatureOnly bool
 	predicate    func(ObjectView, AbilityContext, GameReader) bool
@@ -77,7 +81,8 @@ func (f ObjectFilter) Match(object ObjectView, g GameReader, contexts ...Ability
 	if p, ok := object.(*Permanent); ok {
 		object = livePermanentView{p: p, g: g}
 	}
-	return f.predicate == nil || f.predicate(object, ctx, g)
+	matched, known := f.evaluate(object, ctx, g, TargetingContext{})
+	return !known || matched
 }
 func (f ObjectFilter) Text() string { return f.label }
 
@@ -102,6 +107,7 @@ func (f ObjectFilter) Permanents(contexts ...AbilityContext) PermanentFilter {
 // ObjectHasType tests the current card type.
 func ObjectHasType(kind CardType) ObjectFilter {
 	filter := CharacteristicFilter(kind.String(), func(o ObjectView, _ GameReader) bool { return o.ViewHasType(kind) })
+	filter.kind, filter.cardType = "IsCardType", kind
 	filter.creatureOnly = kind == TypeCreature
 	return filter
 }
@@ -128,24 +134,13 @@ func ObjectHasColor(color Color) ObjectFilter {
 
 // ObjectNot negates a filter.
 func ObjectNot(filter ObjectFilter) ObjectFilter {
-	return ContextObjectFilter("not "+filter.label, func(o ObjectView, ctx AbilityContext, g GameReader) bool {
-		return !filter.Match(o, g, ctx)
-	})
+	return ObjectFilter{kind: "Not", label: "not " + filter.label, children: []ObjectFilter{filter}}
 }
 
 // ObjectOr requires at least one supplied filter to match.
 func ObjectOr(filters ...ObjectFilter) ObjectFilter {
-	specifications := slices.Clone(filters)
-	result := ContextObjectFilter("any characteristics", func(o ObjectView, ctx AbilityContext, g GameReader) bool {
-		for _, f := range specifications {
-			if f.Match(o, g, ctx) {
-				return true
-			}
-		}
-		return false
-	})
-	result.creatureOnly = len(specifications) > 0
-	for _, filter := range specifications {
+	result := ObjectFilter{kind: "Or", label: "any characteristics", children: slices.Clone(filters), creatureOnly: len(filters) > 0}
+	for _, filter := range filters {
 		result.creatureOnly = result.creatureOnly && filter.creatureOnly
 	}
 	return result
@@ -153,17 +148,8 @@ func ObjectOr(filters ...ObjectFilter) ObjectFilter {
 
 // ObjectAnd requires all supplied filters to match.
 func ObjectAnd(filters ...ObjectFilter) ObjectFilter {
-	specifications := slices.Clone(filters)
-	result := ContextObjectFilter("all characteristics", func(o ObjectView, ctx AbilityContext, g GameReader) bool {
-		for _, f := range specifications {
-			if !f.Match(o, g, ctx) {
-				return false
-			}
-		}
-		return true
-	})
-	result.creatureOnly = false
-	for _, filter := range specifications {
+	result := ObjectFilter{kind: "And", label: "all characteristics", children: slices.Clone(filters)}
+	for _, filter := range filters {
 		result.creatureOnly = result.creatureOnly || filter.creatureOnly
 	}
 	return result

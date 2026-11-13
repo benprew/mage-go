@@ -125,7 +125,7 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 			return
 		}
 		mode := ms.Modes()[modeIdx]
-		groups := g.promptTargetGroups(controller.PlayerID(), card, mode.Targets)
+		groups := g.promptTargetGroups(controller.PlayerID(), card, mode.Targets, copyObj.XValue)
 		newTargets := flattenTargetGroups(groups)
 		copyObj.TargetGroups = groups
 		copyObj.TargetSpecs = expandedTargetGroups(mode.Targets, groups)
@@ -147,7 +147,7 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 		if len(sa.Targets()) == 0 {
 			continue
 		}
-		groups := g.promptTargetGroups(controller.PlayerID(), card, sa.Targets())
+		groups := g.promptTargetGroups(controller.PlayerID(), card, sa.Targets(), copyObj.XValue)
 		newTargets := flattenTargetGroups(groups)
 		copyObj.TargetGroups = groups
 		copyObj.TargetSpecs = expandedTargetGroups(sa.Targets(), groups)
@@ -161,15 +161,16 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 // promptTargetsForList walks a flat list of Targets and prompts the
 // controller for choices. Used by spell-copy reprompts and by the modal
 // cast-target gather.
-func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard *Card, targets []Target) []uuid.UUID {
+func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard *Card, targets []Target, x int) []uuid.UUID {
 	if g.GetPlayer(controller) == nil {
 		return nil
 	}
 	var out []uuid.UUID
 	for _, t := range targets {
+		minimum, maximum := TargetBounds(t, x)
 		if random, ok := t.(*randomTarget); ok {
-			chosen := g.chooseRandomTargets(controller, sourceCard, random, g.resolution.X())
-			if len(chosen) == 0 && t.Min() > 0 {
+			chosen := g.chooseRandomTargets(controller, sourceCard, random, x)
+			if len(chosen) == 0 && minimum > 0 {
 				out = append(out, uuid.Nil())
 			} else {
 				out = append(out, chosen...)
@@ -177,9 +178,9 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard *Card, targ
 			continue
 		}
 
-		possible := t.Possible(controller, sourceCard, g)
+		possible := PossibleTargets(t, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true})
 		if len(possible) == 0 {
-			if t.Min() > 0 {
+			if minimum > 0 {
 				out = append(out, uuid.Nil())
 			}
 			continue
@@ -190,10 +191,10 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard *Card, targ
 		}
 		var chosen []uuid.UUID
 		if chooser != nil {
-			chosen = chooser.ChooseTargets(possible, t.Min(), t.Max(), g)
+			chosen = chooser.ChooseTargets(possible, minimum, maximum, g)
 		}
-		if len(chosen) == 0 && t.Min() > 0 {
-			chosen = possible[:1]
+		if len(chosen) == 0 && minimum > 0 {
+			chosen = possible[:min(minimum, len(possible))]
 		}
 
 		out = append(out, chosen...)

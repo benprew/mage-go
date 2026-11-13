@@ -57,10 +57,10 @@ func (g *Game) validateTargetGroups(controller uuid.UUID, source *Card, specs []
 	}
 	return nil
 }
-func (g *Game) promptTargetGroups(controller uuid.UUID, source *Card, specs []Target) [][]uuid.UUID {
+func (g *Game) promptTargetGroups(controller uuid.UUID, source *Card, specs []Target, x int) [][]uuid.UUID {
 	groups := make([][]uuid.UUID, len(specs))
 	for i, spec := range specs {
-		groups[i] = g.promptTargetsForList(controller, source, []Target{spec})
+		groups[i] = g.promptTargetsForList(controller, source, []Target{spec}, x)
 	}
 	return groups
 }
@@ -90,7 +90,7 @@ func (g *Game) acquireTargetGroups(controller uuid.UUID, card *Card, specs []Tar
 			result[i] = g.chooseRandomTargets(controller, card, random, x)
 		}
 		if isOpponentChosenTarget(spec) {
-			result[i] = g.acquireOpponentChosenTargets(controller, card, []Target{spec}, slices.Clone(result[i]))
+			result[i] = g.acquireOpponentChosenTargets(controller, card, []Target{spec}, slices.Clone(result[i]), x)
 		}
 	}
 	return result

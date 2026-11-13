@@ -30,6 +30,9 @@ func ThreatPerManaInGame(perm *mage.Permanent, g *mage.Game) float64 {
 // SpellIsWorthless returns true if the spell requires at least one target but
 // has no valid targets available right now.
 func SpellIsWorthless(card *mage.Card, p mage.Player, g *mage.Game) bool {
+	if mage.TargetsUseX(card.CastTargets()) {
+		return len(g.SpellTargetOptions(p.PlayerID(), card)) == 0
+	}
 	playerID := p.PlayerID()
 	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)

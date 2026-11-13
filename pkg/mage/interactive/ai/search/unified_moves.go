@@ -40,34 +40,26 @@ func expandSpell(g *mage.Game, p mage.Player, card *mage.Card) []Move {
 
 	xValues := []int{0}
 	if mc.HasX {
-		availMana := eval.CountAvailableMana(g, playerID)
-		fixedCost := mc.CMC()
-		maxX := availMana - fixedCost
-		if maxX < 1 {
-			return nil
-		}
+		maxX := g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
 		const maxXVariants = 8
-		if maxX > maxXVariants {
-			maxX = maxXVariants
-		}
-		xValues = xValues[:0]
-		for x := 1; x <= maxX; x++ {
+		for x := 1; x <= min(maxX, maxXVariants); x++ {
 			xValues = append(xValues, x)
 		}
 	}
 
 	modeIndices := []int{0}
 	if modes := card.Modes(); len(modes) > 1 {
-		modeIndices = nil
+		modeIndices = make([]int, 0, len(modes))
 		for i := range modes {
 			modeIndices = append(modeIndices, i)
 		}
 	}
 
-	var out []Move
+	options := g.SpellTargetOptions(playerID, card, xValues...)
+	out := make([]Move, 0, len(modeIndices)*len(options))
 	for _, mode := range modeIndices {
-		for _, x := range xValues {
-			out = append(out, expandTargets(g, playerID, card, mode, x)...)
+		for _, option := range options {
+			out = append(out, expandTargets(g, playerID, card, mode, option.XValue)...)
 		}
 	}
 	return out
