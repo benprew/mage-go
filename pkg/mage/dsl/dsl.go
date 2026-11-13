@@ -492,6 +492,7 @@ var (
 	DealDamageToPlayersStep   = mage.DealDamageToPlayersStep
 	DealDamageStep            = mage.DealDamageStep
 	DealDamageToSourceStep    = mage.DealDamageToSourceStep
+	DealDamageDividedEvenly   = mage.DealDamageDividedEvenly
 	GainLifeStep              = mage.GainLifeStep
 	DealDamageToAllCreatures  = mage.DealDamageToAllCreatures
 	SacrificeCreatureOrDamage = mage.SacrificeCreatureOrDamage
@@ -639,6 +640,7 @@ var (
 	TargetOtherCreature                     = mage.TargetOtherCreature
 	TargetArtifact                          = mage.TargetArtifact
 	TargetDamageAnyTarget                   = mage.TargetDamageAnyTarget
+	TargetDamageAnyNumberOfTargets          = mage.TargetDamageAnyNumberOfTargets
 	TargetDamageSource                      = mage.TargetDamageSource
 	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
 	TargetCreatureYouControl                = mage.TargetCreatureYouControl
@@ -688,6 +690,7 @@ var (
 	WithPlayerOnly                               = mage.WithPlayerOnly
 	GenericCost                                  = mage.GenericCost
 	ManaCostPerTarget                            = mage.ManaCostPerTarget
+	ManaCostPerTargetBeyondFirst                 = mage.ManaCostPerTargetBeyondFirst
 	RandomCounterDistribution                    = mage.RandomCounterDistribution
 	ExchangeControlOfTargets                     = mage.ExchangeControlOfTargets
 	ExchangeControlOfTargetsSharingPermanentType = mage.ExchangeControlOfTargetsSharingPermanentType
