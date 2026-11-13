@@ -45,7 +45,6 @@ func convertActionToPriority(action interactive.PriorityAction) mage.PriorityAct
 
 const simulationReferenceTurns = 50
 const defaultSimulationMaxTurns = 200
-const defaultSimulationGames = 30000
 
 type simulationGameResult struct {
 	winner                int
@@ -170,7 +169,7 @@ func getSimulationGameCount() int {
 			return n
 		}
 	}
-	return defaultSimulationGames
+	return 0
 }
 
 func getSimulationTurnLimit() int {
@@ -256,6 +255,7 @@ func (s *simulationTally) record(result simulationGameResult, newIsPlayerA bool)
 // SIM_GAMES controls the count. SIM_MAX_TURNS and SIM_SEED control the setup.
 // SIM_INCLUDE_PRIESTESS=1 adds the slow wall deck.
 func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.WeightedPersonality) ai.AIStrategy, openings ...simulationOpening) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
+	t.Helper()
 	wrap := func(factory func(ai.WeightedPersonality) ai.AIStrategy) simulationPlayerFactory {
 		return func(name string, deck []tui.DeckEntry) simulationPlayer {
 			return ai.NewAIPlayer(name, factory(ai.InferPersonalityFromDeck(aiDeckEntries(deck))))
@@ -265,7 +265,11 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.
 }
 
 func runSimulationGames(t *testing.T, label string, newFactory, baselineFactory simulationPlayerFactory, openings ...simulationOpening) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
+	t.Helper()
 	totalGames := getSimulationGameCount()
+	if totalGames == 0 {
+		t.Skip("set SIM_GAMES to a positive even number to run AI comparisons")
+	}
 	if totalGames%2 != 0 {
 		t.Fatal("SIM_GAMES must be even for paired mirror matches")
 	}

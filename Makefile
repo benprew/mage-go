@@ -1,14 +1,7 @@
 .PHONY: test test-short test-ai build vet lint wasm cardart clean
 
 test:
-	go test -timeout=30m ./...
-	$(MAKE) test-ai
-
-test-short:
-	go test -short ./...
-
-test-ai:
-	go run ./cmd/aibench
+	go test ./...
 
 build:
 	go build ./...

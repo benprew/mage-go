@@ -50,8 +50,8 @@ func simulationCardNames(cards []*mage.Card) []string {
 
 func TestSimulation_DefaultGameCount(t *testing.T) {
 	t.Setenv("SIM_GAMES", "")
-	if got := getSimulationGameCount(); got != 30000 {
-		t.Fatalf("default comparison must run 30000 games, got %d", got)
+	if got := getSimulationGameCount(); got != 0 {
+		t.Fatalf("comparison must require an explicit game count, got %d", got)
 	}
 	t.Setenv("SIM_GAMES", "10")
 	if got := getSimulationGameCount(); got != 10 {

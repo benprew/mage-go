@@ -67,9 +67,7 @@ The project includes a pipeline for implementing entire card sets:
 ## Build & Test
 
 ```bash
-make test        # All tests, including full AI comparisons.
-make test-short  # Tests without the long AI comparisons.
-make test-ai     # AI comparisons only.
+make test        # Unit tests.
 go build ./...   # Build check.
 go vet ./...     # Vet.
 ```

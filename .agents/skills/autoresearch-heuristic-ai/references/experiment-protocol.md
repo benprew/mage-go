@@ -1,19 +1,19 @@
 # Experiment protocol
 
-The comparison harness currently runs 1,000 games per invocation. Confirm `totalGames` in `pkg/mage/interactive/ai/heuristic/sim_test.go` before relying on this protocol.
+The comparison harness requires an explicit `SIM_GAMES` count. The commands below use 1,000 games per invocation.
 
 ## Establish the incumbent
 
 Run focused tests first. Then measure the unchanged incumbent:
 
 ```bash
-go test ./pkg/mage/interactive/ai/heuristic -run '^TestSimulation_CombatTricksAndTiming$' -count=1 -v
+SIM_GAMES=1000 go test ./pkg/mage/interactive/ai/heuristic -run '^TestSimulation_CombatTricksAndTiming$' -count=1 -v
 ```
 
 Run the control once at the start unless a recent result from the same checkout and machine exists:
 
 ```bash
-go test ./pkg/mage/interactive/ai/heuristic -run '^TestSimulation_BaselineVsBaseline$' -count=1 -v
+SIM_GAMES=1000 go test ./pkg/mage/interactive/ai/heuristic -run '^TestSimulation_BaselineVsBaseline$' -count=1 -v
 ```
 
 Investigate a large or repeatable control bias before trusting candidate results.
