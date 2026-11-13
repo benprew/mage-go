@@ -16,7 +16,7 @@ func TestSimulation_MulliganPolicySetup(t *testing.T) {
 		player := ai.NewAIPlayer("Player", New(ai.MidrangeWeighted))
 		opening := simulationOpening{life: 10}
 		if keep {
-			opening.mulligan = func(*ai.AIPlayer) bool { return false }
+			opening.mulligan = func(simulationPlayer) bool { return false }
 		}
 		prepareSimulationPlayer(player, deck, 42, opening)
 		want := 5
@@ -38,7 +38,7 @@ func TestSimulation_MulligansVsKeep(t *testing.T) {
 			factory := func(w ai.WeightedPersonality) ai.AIStrategy { return New(w) }
 			run1kGames(t, fmt.Sprintf("Existing mulligans vs keep all; %d life", life), factory, factory,
 				simulationOpening{life: life},
-				simulationOpening{life: life, mulligan: func(*ai.AIPlayer) bool { return false }})
+				simulationOpening{life: life, mulligan: func(simulationPlayer) bool { return false }})
 		})
 	}
 }

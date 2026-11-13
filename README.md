@@ -74,8 +74,19 @@ go build ./...   # Build check.
 go vet ./...     # Vet.
 ```
 
-AI comparisons run 30,000 paired mirror games by default. Each pair uses the
-same opening deck orders and swaps the AI strategies between seats. The limit
+`make test-ai` compares the working tree AI with committed `HEAD`. Each run
+resolves and prints the full HEAD commit hash. It copies the committed
+interactive packages into a separate package tree in a temporary directory.
+Historical AI, combat solver, evaluation, personality inference, and player
+methods use that tree. No historical package can import current interactive
+code. Both opponents use the committed HEAD rules engine and card implementations.
+This also pins engine-level decision helpers. Working tree changes outside
+the interactive packages do not change the engine or cards in this comparison.
+An incompatible historical API causes a build failure.
+
+The command first runs a HEAD-versus-HEAD control, then the working tree
+comparison. Each suite runs 30,000 paired mirror games by default. Each pair
+uses the same opening deck orders and swaps the AI strategies between seats. The limit
 is 200 individual turns. Reports separate actual draws from turn-limit games
 and use game pairs to calculate confidence intervals.
 
@@ -84,6 +95,10 @@ and the existing Merfolk Shaman rogue deck. `SIM_INCLUDE_PRIESTESS=1` adds
 Priestess for slow-game stress tests. `SIM_GAMES`, `SIM_MAX_TURNS`, and
 `SIM_SEED` override the game count, turn limit, and opening shuffle seed.
 For example, `SIM_GAMES=10 make test-ai` runs a quick comparison check.
+Each opponent infers its own personality from the deck with its own version
+of the inference code and presets. The report lists both personality names
+for each deck. This inference does not search for the best personality.
+The temporary source tree is removed after the run.
 
 The rules engine uses only the Go standard library.
 

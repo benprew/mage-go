@@ -53,13 +53,21 @@ type simulationGameResult struct {
 	unresolvedAtReference bool
 }
 
-type simulationOpening struct {
-	life     int
-	mulligan func(*ai.AIPlayer) bool
+type simulationPlayer interface {
+	mage.Player
+	ShouldMulligan(int) bool
+	GetPriorityAction(*mage.Game, int, bool) interactive.PriorityAction
 }
 
-func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed int64, openings ...simulationOpening) {
-	shouldMulligan := func(p *ai.AIPlayer) bool { return p.ShouldMulligan(len(p.Hand())) }
+type simulationPlayerFactory func(string, []tui.DeckEntry) simulationPlayer
+
+type simulationOpening struct {
+	life     int
+	mulligan func(simulationPlayer) bool
+}
+
+func prepareSimulationPlayer(player simulationPlayer, entries []tui.DeckEntry, seed int64, openings ...simulationOpening) {
+	shouldMulligan := func(p simulationPlayer) bool { return p.ShouldMulligan(len(p.Hand())) }
 	if len(openings) > 0 {
 		opening := openings[0]
 		if opening.life > 0 {
@@ -101,6 +109,10 @@ func prepareSimulationPlayer(player *ai.AIPlayer, entries []tui.DeckEntry, seed 
 func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []tui.DeckEntry, maxTurns int, seedA, seedB int64, openings ...simulationOpening) simulationGameResult {
 	playerA := ai.NewAIPlayer("PlayerA", stratA)
 	playerB := ai.NewAIPlayer("PlayerB", stratB)
+	return playSimulationGame(playerA, playerB, deckAEntries, deckBEntries, maxTurns, seedA, seedB, openings...)
+}
+
+func playSimulationGame(playerA, playerB simulationPlayer, deckAEntries, deckBEntries []tui.DeckEntry, maxTurns int, seedA, seedB int64, openings ...simulationOpening) simulationGameResult {
 	g := mage.NewGame(playerA, playerB)
 	if len(openings) == 2 {
 		prepareSimulationPlayer(playerA, deckAEntries, seedA, openings[0])
@@ -244,6 +256,15 @@ func (s *simulationTally) record(result simulationGameResult, newIsPlayerA bool)
 // SIM_GAMES controls the count. SIM_MAX_TURNS and SIM_SEED control the setup.
 // SIM_INCLUDE_PRIESTESS=1 adds the slow wall deck.
 func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.WeightedPersonality) ai.AIStrategy, openings ...simulationOpening) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
+	wrap := func(factory func(ai.WeightedPersonality) ai.AIStrategy) simulationPlayerFactory {
+		return func(name string, deck []tui.DeckEntry) simulationPlayer {
+			return ai.NewAIPlayer(name, factory(ai.InferPersonalityFromDeck(aiDeckEntries(deck))))
+		}
+	}
+	return runSimulationGames(t, label, wrap(newFactory), wrap(baselineFactory), openings...)
+}
+
+func runSimulationGames(t *testing.T, label string, newFactory, baselineFactory simulationPlayerFactory, openings ...simulationOpening) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
 	totalGames := getSimulationGameCount()
 	if totalGames%2 != 0 {
 		t.Fatal("SIM_GAMES must be even for paired mirror matches")
@@ -268,22 +289,21 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(ai.
 			for pair := worker; pair < pairs; pair += workers {
 				deckIndex := pair % len(archetypes)
 				deck := archetypes[deckIndex].Entries
-				weights := ai.InferPersonalityFromDeck(aiDeckEntries(deck))
 				seedA := baseSeed + int64(pair)*7919
 				seedB := seedA + 1
 				beforeWins, beforeLosses := local[deckIndex].newWins, local[deckIndex].baselineWins
 				for seat := range 2 {
-					var stratA, stratB ai.AIStrategy
+					var playerA, playerB simulationPlayer
 					if seat == 0 {
-						stratA, stratB = newFactory(weights), baselineFactory(weights)
+						playerA, playerB = newFactory("PlayerA", deck), baselineFactory("PlayerB", deck)
 					} else {
-						stratA, stratB = baselineFactory(weights), newFactory(weights)
+						playerA, playerB = baselineFactory("PlayerA", deck), newFactory("PlayerB", deck)
 					}
 					seatOpenings := openings
 					if len(openings) == 2 && seat == 1 {
 						seatOpenings = []simulationOpening{openings[1], openings[0]}
 					}
-					result := playSingleGame(stratA, stratB, deck, deck, maxTurns, seedA, seedB, seatOpenings...)
+					result := playSimulationGame(playerA, playerB, deck, deck, maxTurns, seedA, seedB, seatOpenings...)
 					local[deckIndex].record(result, seat == 0)
 				}
 				pairWins := local[deckIndex].newWins - beforeWins
@@ -371,26 +391,4 @@ func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
 		deck = append(deck, ai.DeckCard{Name: entry.Name, Count: entry.Count})
 	}
 	return deck
-}
-
-func TestSimulation_BaselineVsBaseline(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping full AI comparison in short mode")
-	}
-	run1kGames(t, "Baseline vs Baseline (Control)", func(wp ai.WeightedPersonality) ai.AIStrategy {
-		return newBaselineStrategy(wp)
-	}, func(wp ai.WeightedPersonality) ai.AIStrategy {
-		return newBaselineStrategy(wp)
-	})
-}
-
-func TestSimulation_CombatTricksAndTiming(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping full AI comparison in short mode")
-	}
-	run1kGames(t, "Combat Pump & Phase Timing vs Baseline", func(wp ai.WeightedPersonality) ai.AIStrategy {
-		return New(wp)
-	}, func(wp ai.WeightedPersonality) ai.AIStrategy {
-		return newBaselineStrategy(wp)
-	})
 }

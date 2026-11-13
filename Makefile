@@ -2,12 +2,13 @@
 
 test:
 	go test -timeout=30m ./...
+	$(MAKE) test-ai
 
 test-short:
 	go test -short ./...
 
 test-ai:
-	go test ./pkg/mage/interactive/ai/heuristic -run '^TestSimulation_(BaselineVsBaseline|CombatTricksAndTiming)$$' -count=1 -timeout=30m -v
+	go run ./cmd/aibench
 
 build:
 	go build ./...

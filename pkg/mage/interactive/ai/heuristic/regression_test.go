@@ -42,5 +42,5 @@ func TestSimulation_PassiveAttackRegression(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping 1k simulation in short mode")
 	}
-	run1kGames(t, "Passive attack regression vs baseline", newPassiveAttackRegression, newBaselineStrategy)
+	run1kGames(t, "Passive attack negative control vs current", newPassiveAttackRegression, func(w ai.WeightedPersonality) ai.AIStrategy { return New(w) })
 }
