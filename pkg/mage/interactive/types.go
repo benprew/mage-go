@@ -107,6 +107,8 @@ type ActionOption struct {
 	NeedsX         bool
 	MaxXValue      int
 	XTargetOptions []mage.SpellTargetOption
+
+	IsManaAbility bool
 }
 
 // GameMsg is sent from the game goroutine to the TUI.
