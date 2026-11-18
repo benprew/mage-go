@@ -106,6 +106,8 @@ type ActionOption struct {
 	// MaxXByTargetCount holds the limit for each selectable target count.
 	// The first entry is for one target.
 	MaxXByTargetCount []int
+
+	IsManaAbility bool
 }
 
 // GameMsg is sent from the game goroutine to the TUI.

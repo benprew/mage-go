@@ -346,6 +346,7 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 			Type:         ActionActivateAbility,
 			PermanentID:  info.PermanentID,
 			AbilityIndex: info.AbilityIndex,
+			CardName:     info.PermanentName,
 		}
 		if includeLabels {
 			opt.Label = fmt.Sprintf("Activate %s: %s", info.PermanentName, info.Description)
@@ -370,6 +371,20 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 					}
 				}
 			}
+		}
+		options = append(options, opt)
+	}
+
+	for _, info := range g.GetActivatableManaAbilities(playerID) {
+		opt := ActionOption{
+			Type:          ActionActivateAbility,
+			PermanentID:   info.PermanentID,
+			AbilityIndex:  info.AbilityIndex,
+			CardName:      info.PermanentName,
+			IsManaAbility: true,
+		}
+		if includeLabels {
+			opt.Label = fmt.Sprintf("Tap %s: %s", info.PermanentName, info.Description)
 		}
 		options = append(options, opt)
 	}
