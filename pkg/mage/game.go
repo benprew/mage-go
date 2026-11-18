@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"slices"
+	"strings"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -3517,6 +3518,68 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 				}
 				desc += e.Text()
 			}
+			result = append(result, ActivatableInfo{
+				PermanentID:   perm.ID(),
+				PermanentName: perm.Name(),
+				AbilityIndex:  i,
+				Description:   desc,
+			})
+		}
+	}
+	return result
+}
+
+func formatManaProductions(productions []ManaProduction) string {
+	if len(productions) == 0 {
+		return "add mana"
+	}
+	var parts []string
+	for _, p := range productions {
+		amt := p.Amount
+		if amt <= 0 {
+			amt = 1
+		}
+		if p.Color == AnyColor {
+			if amt == 1 {
+				parts = append(parts, "add 1 mana of any color")
+			} else {
+				parts = append(parts, fmt.Sprintf("add %d mana of any color", amt))
+			}
+		} else {
+			parts = append(parts, fmt.Sprintf("add %d %s mana", amt, p.Color))
+		}
+	}
+	return strings.Join(parts, ", ")
+}
+
+// GetActivatableManaAbilities returns mana abilities the player can currently activate to produce mana.
+func (g *Game) GetActivatableManaAbilities(playerID uuid.UUID) []ActivatableInfo {
+	var result []ActivatableInfo
+	for _, perm := range g.zones.battlefield {
+		if perm.ControllerID() != playerID {
+			continue
+		}
+		if perm.Tapped || !perm.CanTapForEffect(g) {
+			continue
+		}
+		if perm.HasAttr(AttrCantActivate) {
+			continue
+		}
+		for i, a := range perm.RuntimeAbilities {
+			inner := UnwrapAbility(a)
+			if inner.Type() != AbilityMana {
+				continue
+			}
+			if activation, ok := inner.(interface {
+				manaActivationAllowed(AbilityContext, *Game) bool
+			}); ok && !activation.manaActivationAllowed(AbilityContext{SourceID: perm.ID(), Controller: playerID, AbilityIndex: i}, g) {
+				continue
+			}
+			productions := abilityManaProductions(a, g, perm.ID())
+			if productions == nil {
+				continue
+			}
+			desc := formatManaProductions(productions)
 			result = append(result, ActivatableInfo{
 				PermanentID:   perm.ID(),
 				PermanentName: perm.Name(),
