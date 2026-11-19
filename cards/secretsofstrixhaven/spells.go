@@ -66,10 +66,7 @@ func registerSpells() {
 	// Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard.
 	// Draw a card.
 	Register("Ancestral Anger", func() *Card {
-		ancestralAngerFilter := NewCardFilter("Ancestral Anger", func(c *Card) bool {
-			return c.Name() == "Ancestral Anger"
-		})
-		xVal := CountZone(ZoneGraveyard, SelectController(), ancestralAngerFilter)
+		xVal := CountZone(ZoneGraveyard, SelectController(), ObjectNamed("Ancestral Anger"))
 		return NewSorcery("Ancestral Anger", "{R}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"gain trample, get +X/+0 where X=1+Ancestral Angers in GY, draw a card",
@@ -498,12 +495,9 @@ func registerSpells() {
 	// XXX: "Choose one or both" is not supported (engine only supports "choose one" modal spells). Implements mode 1 only.
 	// XXX: Mode 2 (copy creature spell, token gains haste + sac trigger) requires engine support for permanent spell copies entering the battlefield as tokens (CR 706.12). Not implemented.
 	Register("Choreographed Sparks", func() *Card {
-		instantOrSorcery := NewCardFilter("instant or sorcery spell", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewInstant("Choreographed Sparks", "{R}{R}",
 			NewTargetedSpell(
-				TargetOwnSpellOnStack(instantOrSorcery),
+				TargetSpellOnStack(ObjectControlledBy(SelectController()), IsInstantOrSorceryCard),
 				CopySpellAndMayChooseNewTargetsWithEffects(),
 			),
 		)
@@ -907,10 +901,7 @@ func registerSpells() {
 							return nil
 						}
 						// Pick a land card from hand
-						landFilter := NewCardFilter("land card", func(c *Card) bool {
-							return c.HasType(TypeLand)
-						})
-						chosen := g.PickFromHand(p, p, landFilter, false, "put land onto battlefield tapped")
+						chosen := g.PickFromHand(p, p, ObjectHasType(TypeLand), false, "put land onto battlefield tapped")
 						if chosen == nil {
 							return nil
 						}
@@ -1028,11 +1019,8 @@ func registerSpells() {
 	// Instant
 	// Counter target creature spell.
 	Register("Essence Scatter", func() *Card {
-		creatureSpellFilter := NewCardFilter("creature spell", func(c *Card) bool {
-			return c.HasType(TypeCreature)
-		})
 		return NewInstant("Essence Scatter", "{1}{U}",
-			NewTargetedSpell(TargetSpellOnStack(creatureSpellFilter), CounterSpell()),
+			NewTargetedSpell(TargetSpellOnStack(IsCreatureCard), CounterSpell()),
 		)
 	})
 
@@ -1138,9 +1126,7 @@ func registerSpells() {
 						var inHand []*Card
 						var remaining []*Card
 						for i := 0; i < putToHand && len(removed) > 0; i++ {
-							anyFilter := NewCardFilter("any card", func(c *Card) bool { return true })
 							chosen := p.ChooseCardFromLibrary(removed, "put into your hand", g)
-							_ = anyFilter
 							if chosen == nil {
 								break
 							}
@@ -1169,9 +1155,6 @@ func registerSpells() {
 	// Sorcery
 	// Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this turn, you may instead reveal two creature and/or land cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.
 	Register("Follow the Lumarets", func() *Card {
-		isCreatureOrLand := NewCardFilter("creature or land card", func(c *Card) bool {
-			return c.HasType(TypeCreature) || c.HasType(TypeLand)
-		})
 		return NewSorcery("Follow the Lumarets", "{1}{G}",
 			NewSpellAbility(
 				FuncEffect(
@@ -1196,7 +1179,7 @@ func registerSpells() {
 						// Collect eligible candidates.
 						var candidates []*Card
 						for _, c := range top4 {
-							if isCreatureOrLand.Match(c) {
+							if ObjectOr(IsCreatureCard, ObjectHasType(TypeLand)).Match(c, g) {
 								candidates = append(candidates, c)
 							}
 						}
@@ -1759,11 +1742,11 @@ func registerSpells() {
 	// • Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.
 	// • Creatures you control get +1/+1 and gain trample until end of turn.
 	Register("Lorehold Charm", func() *Card {
-		isArtifactOrCreatureLe2 := NewCardFilter("artifact or creature card with mana value 2 or less", func(c *Card) bool {
-			if c.ManaCost().CMC() > 2 {
+		isArtifactOrCreatureLe2 := CharacteristicFilter("artifact or creature card with mana value 2 or less", func(o ObjectView, _ GameReader) bool {
+			if o.ViewManaValue() > 2 {
 				return false
 			}
-			return c.HasType(TypeArtifact) || c.HasType(TypeCreature)
+			return o.ViewHasType(TypeArtifact) || o.ViewHasType(TypeCreature)
 		})
 		c := NewInstant("Lorehold Charm", "{R}{W}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
@@ -2006,15 +1989,6 @@ func registerSpells() {
 	// Sorcery
 	// Draw X cards. Then you may put a permanent card with mana value X or less from your hand onto the battlefield tapped.
 	Register("Mind into Matter", func() *Card {
-		isPermanentCard := NewCardFilter("permanent card", func(c *Card) bool {
-			for _, t := range c.Types() {
-				switch t {
-				case TypeCreature, TypeArtifact, TypeEnchantment, TypeLand, TypePlaneswalker:
-					return true
-				}
-			}
-			return false
-		})
 		return NewSorcery("Mind into Matter", "{X}{G}{U}",
 			NewSpellAbility(
 				FuncEffect(
@@ -2032,7 +2006,7 @@ func registerSpells() {
 						// Collect eligible permanent cards from hand with mana value <= X.
 						var cands []*Card
 						for _, c := range p.Hand() {
-							if isPermanentCard.Match(c) && c.ManaCost().CMC() <= x {
+							if IsPermanentCard.Match(c, g) && c.ManaCost().CMC() <= x {
 								cands = append(cands, c)
 							}
 						}
@@ -2119,9 +2093,6 @@ func registerSpells() {
 	// XXX: "up to four, you may choose the same mode more than once" is not supported;
 	// engine NewModalSpell only supports choosing a single mode once. Each mode is correctly implemented.
 	Register("Moment of Reckoning", func() *Card {
-		nonlandCard := NewCardFilter("nonland permanent card", func(c *Card) bool {
-			return !c.HasType(TypeLand)
-		})
 		c := NewSorcery("Moment of Reckoning", "{3}{W}{W}{B}{B}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{
@@ -2131,7 +2102,7 @@ func registerSpells() {
 			},
 			{
 				Label:   "Return target nonland permanent card from your graveyard to the battlefield",
-				Targets: []Target{TargetCardInYourGraveyard(nonlandCard)},
+				Targets: []Target{TargetCardInYourGraveyard(ObjectNot(ObjectHasType(TypeLand)))},
 				Effects: []Effect{ReturnFromGraveyardToBattlefield()},
 			},
 		}))
@@ -2698,10 +2669,7 @@ func registerSpells() {
 						oppID := targets[0]
 						opp := g.GetPlayer(oppID)
 						if opp != nil {
-							nonlandFilter := NewCardFilter("nonland card", func(c *Card) bool {
-								return !c.HasType(TypeLand)
-							})
-							chosen := g.PickFromHand(g.GetPlayer(controller), opp, nonlandFilter, true, "choose a nonland card to discard")
+							chosen := g.PickFromHand(g.GetPlayer(controller), opp, ObjectNot(ObjectHasType(TypeLand)), true, "choose a nonland card to discard")
 							if chosen != nil {
 								g.PlayerDiscard(opp, chosen.ID())
 							}
@@ -2726,12 +2694,9 @@ func registerSpells() {
 	// Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)
 	Register("Restoration Seminar", func() *Card {
 		const cardName = "Restoration Seminar"
-		nonlandPermanentCard := NewCardFilter("nonland permanent card", func(c *Card) bool {
-			return !c.HasType(TypeLand)
-		})
 		return NewSorcery(cardName, "{5}{W}{W}",
 			NewTargetedSpell(
-				TargetCardInYourGraveyard(nonlandPermanentCard),
+				TargetCardInYourGraveyard(ObjectNot(ObjectHasType(TypeLand))),
 				FuncEffect(
 					"return target nonland permanent card from your graveyard to the battlefield; exile this spell (Paradigm)",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -3080,9 +3045,7 @@ func registerSpells() {
 				},
 			),
 			true,
-			NewCardFilter("Social Snub", func(c *Card) bool {
-				return c.Name() == "Social Snub"
-			}),
+			ObjectNamed("Social Snub"),
 		)
 		c.AddAbility(castTrigger)
 		return c
@@ -3157,9 +3120,6 @@ func registerSpells() {
 	// • Steal the Show deals damage equal to the number of instant and sorcery cards in your graveyard to target creature or planeswalker.
 	// XXX: "Choose one or both" is not supported by the engine (only "choose one"). Implements as "choose one" modal.
 	Register("Steal the Show", func() *Card {
-		instantOrSorceryGY := NewCardFilter("instant or sorcery in graveyard", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		c := NewSorcery("Steal the Show", "{2}{R}", nil)
 		c.AddAbility(NewModalSpell([]Mode{
 			{
@@ -3228,7 +3188,7 @@ func registerSpells() {
 							}
 							count := 0
 							for _, card := range p.Graveyard() {
-								if instantOrSorceryGY.Match(card) {
+								if IsInstantOrSorceryCard.Match(card, g) {
 									count++
 								}
 							}
@@ -3275,7 +3235,7 @@ func registerSpells() {
 							return nil
 						}
 						chosen, _ := g.RevealAndPickFromTop(p, p, 2,
-							NewCardFilter("any card", func(c *Card) bool { return true }),
+							ObjectFilter{},
 							false, "put into hand")
 						top2 := g.RemoveTopN(p, 2)
 						if len(top2) == 0 {
@@ -3559,7 +3519,7 @@ func registerSpells() {
 						return nil
 					}
 					chosen, _ := g.RevealAndPickFromTop(g.GetPlayer(controller), g.GetPlayer(controller), 2,
-						NewCardFilter("any card", func(c *Card) bool { return true }),
+						ObjectFilter{},
 						false, "put into hand")
 					if chosen != nil {
 						p.AddToHand(chosen)
@@ -3824,11 +3784,11 @@ func registerSpells() {
 							for _, r := range revealed {
 								revealedIDs[r.ID()] = true
 							}
-							creatOrLandFilter := NewCardFilter("creature or land (not yet revealed)", func(c *Card) bool {
-								if revealedIDs[c.ID()] {
+							creatOrLandFilter := CharacteristicFilter("creature or land (not yet revealed)", func(o ObjectView, _ GameReader) bool {
+								if revealedIDs[o.ViewID()] {
 									return false
 								}
-								return c.HasType(TypeCreature) || c.HasType(TypeLand)
+								return o.ViewHasType(TypeCreature) || o.ViewHasType(TypeLand)
 							})
 							chosen, _ := g.RevealAndPickFromTop(g.GetPlayer(controller), g.GetPlayer(controller), 5,
 								creatOrLandFilter,

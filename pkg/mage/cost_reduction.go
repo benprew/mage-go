@@ -219,16 +219,17 @@ func CondAnd(cs ...SpellCondition) SpellCondition {
 // ---------------------------------------------------------------------------
 
 // AmountByGraveyardCount returns the count of cards in the casting player's
-// graveyard matching the given CardFilter (Cryptic Serpent: instant/sorcery).
-func AmountByGraveyardCount(f CardFilter) SpellAmount {
-	return func(g *Game, controller uuid.UUID, _ *Card, _ uuid.UUID) int {
+// graveyard matching the given ObjectFilter (Cryptic Serpent: instant/sorcery).
+func AmountByGraveyardCount(f ObjectFilter) SpellAmount {
+	return func(g *Game, controller uuid.UUID, _ *Card, sourceID uuid.UUID) int {
 		p := g.GetPlayer(controller)
 		if p == nil {
 			return 0
 		}
+		ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 		n := 0
 		for _, c := range p.Graveyard() {
-			if f.IsZero() || f.Match(c) {
+			if f.IsZero() || f.Match(c, g, ctx) {
 				n++
 			}
 		}

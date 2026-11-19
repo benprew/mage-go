@@ -542,9 +542,9 @@ func TargetUpToNCreaturesOrPlayers(n int) Target {
 }
 
 // TargetUpToNCardsInYourGraveyard creates a target that selects from 0 up to n
-// cards in the controller's graveyard, optionally narrowed by CardFilter
-// predicates. Used for Macabre Waltz, Soul Salvage, etc.
-func TargetUpToNCardsInYourGraveyard(n int, filters ...CardFilter) Target {
+// cards in the controller's graveyard, narrowed by ObjectFilter predicates.
+// Used for Macabre Waltz, Soul Salvage, etc.
+func TargetUpToNCardsInYourGraveyard(n int, filters ...ObjectFilter) Target {
 	return &GraveyardCardTarget{
 		min: 0, max: n,
 		Filters: filters,
@@ -719,7 +719,11 @@ func TargetPermanent(filters ...any) Target {
 			panic("mage: unsupported permanent target filter")
 		}
 	}
-	target.objectFilter = ObjectAnd(objects...)
+	if len(objects) == 1 {
+		target.objectFilter = objects[0]
+	} else if len(objects) > 1 {
+		target.objectFilter = ObjectAnd(objects...)
+	}
 	return target
 }
 
@@ -940,40 +944,16 @@ func (t *DamageSourceTarget) Possible(controller uuid.UUID, sourceCard *Card, g 
 // SpellOnStackTarget selects spells that match all supplied filters.
 type SpellOnStackTarget struct {
 	BaseTarget
-	Filters         []CardFilter
-	objectFilter    ObjectFilter
-	controlledByYou bool
+	objectFilter ObjectFilter
 }
 
 // TargetSpellOnStack selects a spell that matches all filters.
-// Each filter must be a [CardFilter] or an [ObjectFilter].
-func TargetSpellOnStack(filters ...any) Target {
-	return spellOnStackTarget(false, filters)
-}
-
-// TargetOwnSpellOnStack selects a matching spell controlled by the player.
-// Each filter must be a [CardFilter] or an [ObjectFilter].
-func TargetOwnSpellOnStack(filters ...any) Target {
-	return spellOnStackTarget(true, filters)
-}
-
-func spellOnStackTarget(controlledByYou bool, filters []any) *SpellOnStackTarget {
-	target := &SpellOnStackTarget{min: 1, max: 1, controlledByYou: controlledByYou}
-	var objectFilters []ObjectFilter
-	for _, filter := range filters {
-		switch f := filter.(type) {
-		case CardFilter:
-			target.Filters = append(target.Filters, f)
-		case ObjectFilter:
-			objectFilters = append(objectFilters, f)
-		default:
-			panic("mage: unsupported stack spell target filter")
-		}
-	}
-	if len(objectFilters) == 1 {
-		target.objectFilter = objectFilters[0]
-	} else if len(objectFilters) > 1 {
-		target.objectFilter = ObjectAnd(objectFilters...)
+func TargetSpellOnStack(filters ...ObjectFilter) Target {
+	target := &SpellOnStackTarget{min: 1, max: 1}
+	if len(filters) == 1 {
+		target.objectFilter = filters[0]
+	} else if len(filters) > 1 {
+		target.objectFilter = ObjectAnd(filters...)
 	}
 	return target
 }
@@ -993,38 +973,25 @@ func (t *SpellOnStackTarget) PossibleWithContext(controller uuid.UUID, sourceCar
 		if obj.IsAbility || obj.Card == nil || (ctx.StackObjectID != uuid.Nil() && obj.ID == ctx.StackObjectID) {
 			continue
 		}
-		if t.controlledByYou && obj.Controller != controller {
-			continue
-		}
 		view := stackObjectView{Card: obj.Card, object: obj}
 		if !t.objectFilter.matchTarget(view, g, AbilityContext{SourceID: sourceID, Controller: controller}, ctx) {
 			continue
 		}
-		match := true
-		for _, f := range t.Filters {
-			if !f.Match(obj.Card) {
-				match = false
-				break
-			}
-		}
-		if match {
-			result = append(result, obj.SourceID)
-		}
+		result = append(result, obj.SourceID)
 	}
 	return result
 }
 
-// GraveyardCardTarget targets any card in your graveyard (not just creatures),
-// optionally filtered by CardFilter predicates.
+// GraveyardCardTarget targets any card in your graveyard, narrowed by ObjectFilter predicates.
 type GraveyardCardTarget struct {
 	BaseTarget
-	Filters       []CardFilter
+	Filters       []ObjectFilter
 	excludeSource bool
 }
 
 // TargetCardInYourGraveyard creates a target that selects any card in the controller's graveyard,
-// optionally narrowed by CardFilter predicates.
-func TargetCardInYourGraveyard(filters ...CardFilter) Target {
+// narrowed by ObjectFilter predicates.
+func TargetCardInYourGraveyard(filters ...ObjectFilter) Target {
 	return &GraveyardCardTarget{
 		min: 1, max: 1,
 		Filters: filters,
@@ -1037,7 +1004,7 @@ func TargetCardInYourGraveyard(filters ...CardFilter) Target {
 func TargetOtherCreatureInYourGraveyard() Target {
 	return &GraveyardCardTarget{
 		min: 1, max: 1,
-		Filters:       []CardFilter{IsCreatureCard},
+		Filters:       []ObjectFilter{IsCreatureCard},
 		excludeSource: true,
 	}
 }
@@ -1051,6 +1018,7 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g
 	if sourceCard != nil {
 		sourceID = sourceCard.ID()
 	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var result []uuid.UUID
 	for _, c := range p.Graveyard() {
 		if t.excludeSource && c.ID() == sourceID {
@@ -1058,7 +1026,7 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g
 		}
 		match := true
 		for _, f := range t.Filters {
-			if !f.Match(c) {
+			if !f.Match(c, g, ctx) {
 				match = false
 				break
 			}
@@ -1071,27 +1039,26 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g
 }
 
 // TargetAnyNumberOfCardsInYourGraveyard creates a target that selects any number
-// (0 or more) of cards from the controller's graveyard, optionally filtered by
-// CardFilter predicates.
-func TargetAnyNumberOfCardsInYourGraveyard(filters ...CardFilter) Target {
+// (0 or more) of cards from the controller's graveyard, narrowed by ObjectFilter predicates.
+func TargetAnyNumberOfCardsInYourGraveyard(filters ...ObjectFilter) Target {
 	return &GraveyardCardTarget{
 		min: 0, max: 100,
 		Filters: filters,
 	}
 }
 
-// AnyGraveyardCardTarget targets a card in any player's graveyard, optionally
-// filtered by CardFilter predicates. Used by effects worded "from a graveyard"
+// AnyGraveyardCardTarget targets a card in any player's graveyard, narrowed by
+// ObjectFilter predicates. Used by effects worded "from a graveyard"
 // (e.g. Reanimate, "Put target creature card from a graveyard onto the
 // battlefield under your control").
 type AnyGraveyardCardTarget struct {
 	BaseTarget
-	Filters []CardFilter
+	Filters []ObjectFilter
 }
 
 // TargetCardInAnyGraveyard creates a target that selects any card in any
-// player's graveyard, optionally narrowed by CardFilter predicates.
-func TargetCardInAnyGraveyard(filters ...CardFilter) Target {
+// player's graveyard, narrowed by ObjectFilter predicates.
+func TargetCardInAnyGraveyard(filters ...ObjectFilter) Target {
 	return &AnyGraveyardCardTarget{
 		min: 1, max: 1,
 		Filters: filters,
@@ -1105,12 +1072,17 @@ func TargetCreatureCardInAnyGraveyard() Target {
 }
 
 func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	var sourceID uuid.UUID
+	if sourceCard != nil {
+		sourceID = sourceCard.ID()
+	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var result []uuid.UUID
 	for _, p := range g.players {
 		for _, c := range p.Graveyard() {
 			match := true
 			for _, f := range t.Filters {
-				if !f.Match(c) {
+				if !f.Match(c, g, ctx) {
 					match = false
 					break
 				}
@@ -1123,15 +1095,15 @@ func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card
 	return result
 }
 
-// HandCardTarget targets a card in the controller's hand, optionally filtered by CardFilter predicates.
+// HandCardTarget targets a card in the controller's hand, narrowed by ObjectFilter predicates.
 type HandCardTarget struct {
 	BaseTarget
-	Filters []CardFilter
+	Filters []ObjectFilter
 }
 
 // TargetCardInHand creates a target that selects a card in the controller's hand,
-// optionally narrowed by CardFilter predicates.
-func TargetCardInHand(filters ...CardFilter) Target {
+// narrowed by ObjectFilter predicates.
+func TargetCardInHand(filters ...ObjectFilter) Target {
 	return &HandCardTarget{
 		min: 1, max: 1,
 		Filters: filters,
@@ -1144,16 +1116,21 @@ func TargetCreatureInHand() Target {
 	return TargetCardInHand(IsCreatureCard)
 }
 
-func (t *HandCardTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
+func (t *HandCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
 	}
+	var sourceID uuid.UUID
+	if sourceCard != nil {
+		sourceID = sourceCard.ID()
+	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var result []uuid.UUID
 	for _, c := range p.Hand() {
 		match := true
 		for _, f := range t.Filters {
-			if !f.Match(c) {
+			if !f.Match(c, g, ctx) {
 				match = false
 				break
 			}

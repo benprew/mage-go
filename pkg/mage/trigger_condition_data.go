@@ -650,19 +650,29 @@ func (CreatureDeathsOccurred) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ 
 // Spell-cast predicates
 // ---------------------------------------------------------------------------
 
-// SpellCastMatchesCardFilters checks that the spell referenced by evt.SourceID
-// matches all given CardFilter predicates.
-type SpellCastMatchesCardFilters struct {
-	Filters []CardFilter
+// SpellCastMatchesObjectFilters checks that the spell referenced by evt.SourceID
+// matches all given ObjectFilter predicates.
+type SpellCastMatchesObjectFilters struct {
+	Filters []ObjectFilter
 }
 
-func (c SpellCastMatchesCardFilters) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	card := g.FindCardAnywhere(evt.SourceID)
-	if card == nil {
-		return false
+func (c SpellCastMatchesObjectFilters) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+	var view ObjectView
+	if game, ok := g.(*Game); ok {
+		if stackObj := game.stack.FindBySourceID(evt.SourceID); stackObj != nil && !stackObj.IsAbility && stackObj.Card != nil {
+			view = stackObjectView{Card: stackObj.Card, object: stackObj}
+		}
 	}
+	if view == nil {
+		card := g.FindCardAnywhere(evt.SourceID)
+		if card == nil {
+			return false
+		}
+		view = spellObjectView{Card: card, controller: evt.PlayerID}
+	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controllerID}
 	for _, f := range c.Filters {
-		if !f.Match(card) {
+		if !f.Match(view, g, ctx) {
 			return false
 		}
 	}

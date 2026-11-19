@@ -212,7 +212,7 @@
 // [ProtectionFromColor] and [ProtectionFromColors] use [EffectiveColors] to
 // check legality for targeting, damage, blocking, fighting, and attachment.
 // Protection from card types, subtypes, or all characteristics uses
-// [CardFilter].
+// [ObjectFilter].
 //
 // # State Triggers and Simultaneous Deaths
 //
@@ -295,13 +295,13 @@
 // each target group. The query uses cast cost adjustments and direct mana
 // and life costs. Required equality filters supply candidate X values from
 // battlefield or stack spell mana values. Casting and resolution check X.
-// [TargetSpellOnStack] accepts both [CardFilter] and [ObjectFilter] values.
+// [TargetSpellOnStack] accepts [ObjectFilter] values.
 // Use an object filter to check the mana value of a spell on the stack:
 //
 //	TargetSpellOnStack(ManaValueIs(EqualTo(XValue())))
 //
-// [TargetOwnSpellOnStack] also checks the spell's controller.
-// [StackObject.ManaValue] includes each X in the spell's mana cost.
+// Use [ObjectControlledBy] with [TargetSpellOnStack] to restrict the spell's
+// controller. [StackObject.ManaValue] includes each X in the spell's mana cost.
 //
 // [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
 // controlled by the ability's controller.
@@ -564,8 +564,8 @@
 // AbilityContext after the game reader. ObjectAnd, ObjectOr, and ObjectNot
 // preserve this context. Use OtherThan(SourceObject()), ObjectControlledBy,
 // and ObjectOwnedBy for relative references. ObjectHasSubtype and
-// ObjectHasSuperType test subtypes and supertypes. Cards and Permanents
-// adapters accept the same optional context. Card views have no controller;
+// ObjectHasSuperType test subtypes and supertypes. The Permanents adapter
+// accepts the same optional context. Card views have no controller;
 // spell trigger views use the caster as controller. Match rejects nil objects,
 // including typed nil pointers. ObjectControlledBy and ObjectOwnedBy require
 // a nonzero player identifier on the object. Live object views include current

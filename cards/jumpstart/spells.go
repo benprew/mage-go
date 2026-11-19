@@ -16,14 +16,14 @@ func init() {
 // hand matching the given filter. Used by Thirst for Knowledge ("discard an
 // artifact card"). The controller chooses which matching card to discard.
 type discardCardOfTypeCost struct {
-	filter CardFilter
+	filter ObjectFilter
 	label  string
 }
 
-func (c *discardCardOfTypeCost) candidates(p Player) []*Card {
+func (c *discardCardOfTypeCost) candidates(p Player, g *Game) []*Card {
 	var out []*Card
 	for _, card := range p.Hand() {
-		if c.filter.IsZero() || c.filter.Match(card) {
+		if c.filter.IsZero() || c.filter.Match(card, g) {
 			out = append(out, card)
 		}
 	}
@@ -35,7 +35,7 @@ func (c *discardCardOfTypeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
 	if p == nil {
 		return false
 	}
-	return len(c.candidates(p)) > 0
+	return len(c.candidates(p, g)) > 0
 }
 
 func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
@@ -43,7 +43,7 @@ func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	cands := c.candidates(p)
+	cands := c.candidates(p, g)
 	if len(cands) == 0 {
 		return ErrPlayerNotFound
 	}
@@ -400,15 +400,6 @@ func registerSpells() {
 	// Sorcery
 	// Look at the top five cards of your library. You may reveal a Dinosaur or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.
 	Register("Commune with Dinosaurs", func() *Card {
-		dinoOrLandCard := NewCardFilter("Dinosaur or land card", func(c *Card) bool {
-			if c.HasType(TypeLand) {
-				return true
-			}
-			if !c.HasType(TypeCreature) {
-				return false
-			}
-			return slices.Contains(c.SubTypes(), "Dinosaur")
-		})
 		return NewSorcery("Commune with Dinosaurs", "{G}",
 			NewSpellAbility(FuncEffect(
 				"look at top 5; may reveal a Dinosaur or land and put in hand; rest to bottom",
@@ -418,7 +409,8 @@ func registerSpells() {
 					if p == nil {
 						return nil
 					}
-					chosen, _ := g.RevealAndPickFromTop(p, p, 5, dinoOrLandCard, true,
+					chosen, _ := g.RevealAndPickFromTop(p, p, 5,
+						ObjectOr(ObjectHasType(TypeLand), ObjectAnd(ObjectHasType(TypeCreature), ObjectHasSubtype("Dinosaur"))), true,
 						"reveal a Dinosaur or land card and put it into your hand")
 					taken := g.RemoveTopN(p, 5)
 					rest := taken
@@ -534,9 +526,6 @@ func registerSpells() {
 	// CR 608.2g: both halves of the bonus condition are evaluated against
 	// the cast-time snapshot (CastContext), not live state at resolution.
 	Register("Draconic Roar", func() *Card {
-		dragonCard := NewCardFilter("Dragon card", func(c *Card) bool {
-			return c.HasSubType("Dragon")
-		})
 		return NewInstant("Draconic Roar", "{1}{R}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"3 damage to target creature; +3 to its controller if revealed/controlled a Dragon",
@@ -565,7 +554,7 @@ func registerSpells() {
 				},
 			)),
 			WithAdditionalCost(OptionalCost(
-				RevealFromHandCost(dragonCard, "Reveal a Dragon card"),
+				RevealFromHandCost(ObjectHasSubtype("Dragon"), "Reveal a Dragon card"),
 				"Reveal a Dragon card from your hand?",
 			)),
 		)
@@ -655,7 +644,7 @@ func registerSpells() {
 	// Draw a card.
 	Register("Exclude", func() *Card {
 		return NewInstant("Exclude", "{2}{U}",
-			NewTargetedSpell(TargetSpellOnStack(creatureSpellFilter), CompositeEffects(
+			NewTargetedSpell(TargetSpellOnStack(IsCreatureCard), CompositeEffects(
 				"counter creature spell, draw a card",
 				CounterSpell(),
 				drawSelfCard(1),
@@ -1829,15 +1818,12 @@ func registerSpells() {
 	// Instant
 	// Draw three cards. Then discard two cards unless you discard an artifact card.
 	Register("Thirst for Knowledge", func() *Card {
-		artifactCard := NewCardFilter("artifact card", func(c *Card) bool {
-			return c.HasType(TypeArtifact)
-		})
 		return NewInstant("Thirst for Knowledge", "{2}{U}",
 			NewSpellAbility(
 				drawSelfCard(3),
 				UnlessTargetPays(
 					SelectController(),
-					&discardCardOfTypeCost{filter: artifactCard, label: "Discard an artifact card"},
+					&discardCardOfTypeCost{filter: IsArtifactCard, label: "Discard an artifact card"},
 					"Discard an artifact card to avoid discarding two cards?",
 					FuncEffect(
 						"discard two cards",
@@ -2199,11 +2185,6 @@ func millSelf(g *Game, p Player, n int) {
 	p.SetLibrary(lib)
 }
 
-// creatureSpellFilter matches creature spells on the stack.
-var creatureSpellFilter = NewCardFilter("creature spell", func(c *Card) bool {
-	return c.HasType(TypeCreature)
-})
-
 // registerDoublecastDelayedTrigger sets up a one-shot delayed trigger that
 // fires on the controller's next spell cast. If the cast spell is an instant
 // or sorcery, it is copied with new targets allowed (CR 706.10c). Otherwise
@@ -2231,11 +2212,6 @@ func registerDoublecastDelayedTrigger(g *Game, sourceID, controller uuid.UUID) {
 	}
 	g.RegisterDelayedTrigger(dt)
 }
-
-// instantOrSorcerySpellFilter matches instant or sorcery spells on the stack.
-var instantOrSorcerySpellFilter = NewCardFilter("instant or sorcery spell", func(c *Card) bool {
-	return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-})
 
 // toughness4OrGreater matches creatures with current toughness >= 4.
 var toughness4OrGreater = NewPermanentFilter("toughness 4 or greater", func(p *Permanent, g *Game) bool {

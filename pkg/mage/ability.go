@@ -59,11 +59,11 @@ func AbilityAttribute(a Ability) Attr {
 	return 0
 }
 
-// ProtectionAbility grants protection from specific colors.
+// ProtectionAbility grants protection from specific qualities.
 type ProtectionAbility struct {
 	BaseAbility
 	FromColors []Color
-	Filter     CardFilter
+	Filter     ObjectFilter
 	// ExemptCardID names one card this protection never stops: the Ward that
 	// grants it ("This effect doesn't remove this Aura").
 	ExemptCardID uuid.UUID
@@ -75,28 +75,24 @@ func ProtectionFromColor(c Color) *ProtectionAbility {
 		id:          uuid.New(),
 		abilityType: AbilityStatic,
 		FromColors:  []Color{c},
-		Filter: NewCardFilter(c.String(), func(card *Card) bool {
-			return slices.Contains(card.Colors(), c)
-		}),
+		Filter:      ObjectHasColor(c),
 	}
 }
 
 // ProtectionFromColors creates a static ability granting protection from multiple colors.
 func ProtectionFromColors(cs ...Color) *ProtectionAbility {
-	colorSet := make(map[Color]bool)
-	for _, c := range cs {
-		colorSet[c] = true
-	}
+	colorSet := make(map[Color]bool, len(cs))
 	labels := make([]string, len(cs))
 	for i, c := range cs {
+		colorSet[c] = true
 		labels[i] = c.String()
 	}
 	return &ProtectionAbility{
 		id:          uuid.New(),
 		abilityType: AbilityStatic,
 		FromColors:  cs,
-		Filter: NewCardFilter(strings.Join(labels, " and "), func(card *Card) bool {
-			for _, col := range card.Colors() {
+		Filter: CharacteristicFilter(strings.Join(labels, " and "), func(o ObjectView, _ GameReader) bool {
+			for _, col := range o.ViewColors() {
 				if colorSet[col] {
 					return true
 				}
@@ -112,9 +108,7 @@ func ProtectionFromCardType(ct CardType) *ProtectionAbility {
 	return &ProtectionAbility{
 		id:          uuid.New(),
 		abilityType: AbilityStatic,
-		Filter: NewCardFilter(ct.String(), func(card *Card) bool {
-			return card.HasType(ct)
-		}),
+		Filter:      ObjectHasType(ct),
 	}
 }
 
@@ -124,19 +118,17 @@ func ProtectionFromSubType(subtype string) *ProtectionAbility {
 	return &ProtectionAbility{
 		id:          uuid.New(),
 		abilityType: AbilityStatic,
-		Filter: NewCardFilter(subtype, func(card *Card) bool {
-			return slices.Contains(card.SubTypes(), subtype)
-		}),
+		Filter:      ObjectHasSubtype(subtype),
 	}
 }
 
 // ProtectionFromAll creates a static ability granting protection from everything
-// (e.g. Progenitus). Matches all cards.
+// (e.g. Progenitus). Matches all objects.
 func ProtectionFromAll() *ProtectionAbility {
 	return &ProtectionAbility{
 		id:          uuid.New(),
 		abilityType: AbilityStatic,
-		Filter: NewCardFilter("everything", func(card *Card) bool {
+		Filter: CharacteristicFilter("everything", func(ObjectView, GameReader) bool {
 			return true
 		}),
 	}
@@ -147,28 +139,37 @@ func (pa *ProtectionAbility) Blocks(card *Card) bool {
 	if pa.exempts(card) {
 		return false
 	}
-	return pa.Filter.Match(card)
+	return pa.Filter.Match(card, nil)
 }
 
 func (pa *ProtectionAbility) exempts(card *Card) bool {
 	return card != nil && pa.ExemptCardID != uuid.Nil() && card.ID() == pa.ExemptCardID
 }
 
-// BlocksInGame evaluates color protection against the source object's current
-// colors. Other protection qualities continue to use their CardFilter.
+// BlocksInGame evaluates protection against the source object's current
+// characteristics in the game.
 func (pa *ProtectionAbility) BlocksInGame(card *Card, g *Game) bool {
 	if card == nil || pa.exempts(card) {
 		return false
 	}
-	if len(pa.FromColors) == 0 || g == nil {
+	if g == nil {
 		return pa.Blocks(card)
 	}
-	for _, sourceColor := range g.EffectiveColors(card.ID()) {
-		if slices.Contains(pa.FromColors, sourceColor) {
-			return true
+	if len(pa.FromColors) > 0 {
+		for _, sourceColor := range g.EffectiveColors(card.ID()) {
+			if slices.Contains(pa.FromColors, sourceColor) {
+				return true
+			}
 		}
+		return false
 	}
-	return false
+	if view := g.LookupObject(card.ID()); view != nil {
+		return pa.Filter.Match(view, g)
+	}
+	if stackObj := g.stack.FindBySourceID(card.ID()); stackObj != nil && !stackObj.IsAbility && stackObj.Card != nil {
+		return pa.Filter.Match(stackObjectView{Card: stackObj.Card, object: stackObj}, g)
+	}
+	return pa.Filter.Match(card, g)
 }
 
 // StaticAbilityHolder holds continuous effects as a static ability.

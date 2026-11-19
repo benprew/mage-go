@@ -142,15 +142,12 @@ func TestCostReductionSelfByGraveyardCount(t *testing.T) {
 			return mage.NewInstant(jolt, "{U}", mage.NewSpellAbility(mage.GainLife(1)))
 		})
 	}
-	isInstantOrSorcery := mage.NewCardFilter("instant or sorcery", func(c *mage.Card) bool {
-		return c.HasType(core.TypeInstant) || c.HasType(core.TypeSorcery)
-	})
 	if !mage.CardRegistered(serpent) {
 		mage.Register(serpent, func() *mage.Card {
 			return mage.NewCreature(serpent, "{6}{U}", 6, 5,
 				mage.WithSubTypes("Serpent"),
 				mage.WithSelfCostReduction(
-					mage.AmountByGraveyardCount(isInstantOrSorcery), nil,
+					mage.AmountByGraveyardCount(mage.IsInstantOrSorceryCard), nil,
 				),
 			)
 		})

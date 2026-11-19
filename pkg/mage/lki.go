@@ -219,6 +219,7 @@ func (g *Game) LKI(id uuid.UUID) *PermanentLKI {
 
 func (v livePermanentView) ViewHasSuperType(t SuperType) bool { return v.p.HasSuperType(t) }
 func (v livePermanentView) ViewColors() []Color               { return v.p.Colors() }
+func (v livePermanentView) ViewManaCost() ManaCost            { return v.p.ViewManaCost() }
 func (v livePermanentView) ViewManaValue() int                { return v.p.ManaValue() }
 func (l *PermanentLKI) ViewHasSuperType(t SuperType) bool {
 	return l.Snapshot != nil && l.Snapshot.HasSuperType(t)
@@ -228,6 +229,12 @@ func (l *PermanentLKI) ViewColors() []Color {
 		return nil
 	}
 	return l.Snapshot.Colors()
+}
+func (l *PermanentLKI) ViewManaCost() ManaCost {
+	if l.Snapshot == nil {
+		return ManaCost{}
+	}
+	return l.Snapshot.ViewManaCost()
 }
 func (l *PermanentLKI) ViewManaValue() int {
 	if l.Snapshot == nil {

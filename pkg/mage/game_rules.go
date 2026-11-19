@@ -49,7 +49,7 @@ type GameRules struct {
 type flashGrantEntry struct {
 	SourceID uuid.UUID
 	Player   uuid.UUID
-	Filter   CardFilter
+	Filter   ObjectFilter
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -188,7 +188,7 @@ func (r *GameRules) PlayerCantCastSpells(playerID uuid.UUID) bool {
 // permanent leaves the battlefield (continuous-effect framework drops the
 // effect, ResetPerCycle clears the slice, and Apply re-registers it only if
 // the source is still active).
-func (r *GameRules) AddFlashGrant(sourceID, player uuid.UUID, filter CardFilter) {
+func (r *GameRules) AddFlashGrant(sourceID, player uuid.UUID, filter ObjectFilter) {
 	r.FlashGrants = append(r.FlashGrants, flashGrantEntry{SourceID: sourceID, Player: player, Filter: filter})
 }
 
@@ -201,7 +201,7 @@ func (r *GameRules) HasFlashGrant(player uuid.UUID, card *Card) bool {
 		if g.Player != uuid.Nil() && g.Player != player {
 			continue
 		}
-		if g.Filter.Match(card) {
+		if g.Filter.Match(card, nil, AbilityContext{SourceID: g.SourceID, Controller: g.Player}) {
 			return true
 		}
 	}

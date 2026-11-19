@@ -3,6 +3,7 @@ package mage
 import (
 	"reflect"
 	"slices"
+	"strings"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -19,6 +20,7 @@ type ObjectView interface {
 	ViewHasSubType(string) bool
 	ViewHasKeyword(Keyword) bool
 	ViewColors() []Color
+	ViewManaCost() ManaCost
 	ViewManaValue() int
 	ViewPower() int
 	ViewToughness() int
@@ -86,14 +88,8 @@ func (f ObjectFilter) Match(object ObjectView, g GameReader, contexts ...Ability
 }
 func (f ObjectFilter) Text() string { return f.label }
 
-// Cards adapts a characteristic filter for a card query.
-func (f ObjectFilter) Cards(contexts ...AbilityContext) CardFilter {
-	var ctx AbilityContext
-	if len(contexts) > 0 {
-		ctx = contexts[0]
-	}
-	return NewCardFilter(f.label, func(c *Card) bool { return f.Match(c, nil, ctx) })
-}
+// IsZero reports whether the filter is the zero value and matches all objects.
+func (f ObjectFilter) IsZero() bool { return f.kind == "" && f.predicate == nil }
 
 // Permanents adapts a characteristic filter for a battlefield query.
 func (f ObjectFilter) Permanents(contexts ...AbilityContext) PermanentFilter {
@@ -132,14 +128,33 @@ func ObjectHasColor(color Color) ObjectFilter {
 	return CharacteristicFilter(color.String(), func(o ObjectView, _ GameReader) bool { return slices.Contains(o.ViewColors(), color) })
 }
 
+// ObjectNamed tests whether the object has the given name.
+func ObjectNamed(name string) ObjectFilter {
+	return CharacteristicFilter(name, func(o ObjectView, _ GameReader) bool { return o.ViewName() == name })
+}
+
 // ObjectNot negates a filter.
 func ObjectNot(filter ObjectFilter) ObjectFilter {
-	return ObjectFilter{kind: "Not", label: "not " + filter.label, children: []ObjectFilter{filter}}
+	label := "not " + filter.label
+	if filter.label == "" {
+		label = ""
+	}
+	return ObjectFilter{kind: "Not", label: label, children: []ObjectFilter{filter}}
 }
 
 // ObjectOr requires at least one supplied filter to match.
 func ObjectOr(filters ...ObjectFilter) ObjectFilter {
-	result := ObjectFilter{kind: "Or", label: "any characteristics", children: slices.Clone(filters), creatureOnly: len(filters) > 0}
+	parts := make([]string, 0, len(filters))
+	for _, filter := range filters {
+		if filter.label != "" {
+			parts = append(parts, filter.label)
+		}
+	}
+	label := "any characteristics"
+	if len(parts) > 0 {
+		label = strings.Join(parts, " or ")
+	}
+	result := ObjectFilter{kind: "Or", label: label, children: slices.Clone(filters), creatureOnly: len(filters) > 0}
 	for _, filter := range filters {
 		result.creatureOnly = result.creatureOnly && filter.creatureOnly
 	}
@@ -148,12 +163,39 @@ func ObjectOr(filters ...ObjectFilter) ObjectFilter {
 
 // ObjectAnd requires all supplied filters to match.
 func ObjectAnd(filters ...ObjectFilter) ObjectFilter {
-	result := ObjectFilter{kind: "And", label: "all characteristics", children: slices.Clone(filters)}
+	parts := make([]string, 0, len(filters))
+	for _, filter := range filters {
+		if filter.label != "" {
+			parts = append(parts, filter.label)
+		}
+	}
+	label := "all characteristics"
+	if len(parts) > 0 {
+		label = strings.Join(parts, " ")
+	}
+	result := ObjectFilter{kind: "And", label: label, children: slices.Clone(filters)}
 	for _, filter := range filters {
 		result.creatureOnly = result.creatureOnly || filter.creatureOnly
 	}
 	return result
 }
+
+// Common object characteristic filters.
+var (
+	IsCreatureCard         = ObjectHasType(TypeCreature)
+	IsArtifactCard         = ObjectHasType(TypeArtifact)
+	IsEnchantmentCard      = ObjectHasType(TypeEnchantment)
+	IsInstantCard          = ObjectHasType(TypeInstant)
+	IsSorceryCard          = ObjectHasType(TypeSorcery)
+	IsInstantOrSorceryCard = ObjectOr(ObjectHasType(TypeInstant), ObjectHasType(TypeSorcery))
+	IsPermanentCard        = ObjectOr(
+		ObjectHasType(TypeArtifact),
+		ObjectHasType(TypeCreature),
+		ObjectHasType(TypeEnchantment),
+		ObjectHasType(TypeLand),
+		ObjectHasType(TypePlaneswalker),
+	)
+)
 
 // IsCardType tests the current card type.
 func IsCardType(t CardType) ObjectFilter { return ObjectHasType(t) }
@@ -195,6 +237,7 @@ func (c *Card) ViewHasSuperType(t SuperType) bool { return c.HasSuperType(t) }
 func (c *Card) ViewHasSubType(t string) bool      { return c.HasSubType(t) }
 func (c *Card) ViewHasKeyword(t Keyword) bool     { return c.HasKeyword(t) }
 func (c *Card) ViewColors() []Color               { return c.Colors() }
+func (c *Card) ViewManaCost() ManaCost            { return c.ManaCost() }
 func (c *Card) ViewManaValue() int                { return c.ManaValue() }
 func (c *Card) ViewPower() int                    { return c.Power() }
 func (c *Card) ViewToughness() int                { return c.Toughness() }
@@ -208,9 +251,15 @@ func (p *Permanent) ViewHasSuperType(t SuperType) bool { return p.HasSuperType(t
 func (p *Permanent) ViewHasSubType(t string) bool      { return p.HasSubType(t) }
 func (p *Permanent) ViewHasKeyword(t Keyword) bool     { return p.HasKeyword(t) }
 func (p *Permanent) ViewColors() []Color               { return p.Colors() }
-func (p *Permanent) ViewManaValue() int                { return p.ManaValue() }
-func (p *Permanent) ViewPower() int                    { return p.CurrentPower(nil) + p.powerBonus }
-func (p *Permanent) ViewToughness() int                { return p.CurrentToughness(nil) + p.toughBonus }
+func (p *Permanent) ViewManaCost() ManaCost {
+	if p.FaceDown {
+		return ManaCost{}
+	}
+	return p.Card.ManaCost()
+}
+func (p *Permanent) ViewManaValue() int { return p.ManaValue() }
+func (p *Permanent) ViewPower() int     { return p.CurrentPower(nil) + p.powerBonus }
+func (p *Permanent) ViewToughness() int { return p.CurrentToughness(nil) + p.toughBonus }
 
 type spellObjectView struct {
 	*Card

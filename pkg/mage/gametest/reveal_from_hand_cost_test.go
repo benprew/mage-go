@@ -15,14 +15,11 @@ func registerRevealFromHandCostCards() {
 		// Wren's Run Vanquisher analog: "As an additional cost to cast this
 		// spell, reveal an Elf card from your hand or pay {3}."
 		if !mage.CardRegistered("Test Reveal Or Pay") {
-			elfCardFilter := mage.NewCardFilter("Elf card", func(c *mage.Card) bool {
-				return c.HasSubType("Elf")
-			})
 			mage.Register("Test Reveal Or Pay", func() *mage.Card {
 				return mage.NewCreature("Test Reveal Or Pay", "{1}{G}", 3, 3,
 					mage.WithSubTypes("Elf", "Warrior"),
 					mage.WithAdditionalCost(mage.EitherCost(
-						mage.RevealFromHandCost(elfCardFilter, "Reveal an Elf card"),
+						mage.RevealFromHandCost(mage.ObjectHasSubtype("Elf"), "Reveal an Elf card"),
 						mage.ManaCostOf("{3}"),
 					)),
 				)

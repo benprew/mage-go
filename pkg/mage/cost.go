@@ -475,7 +475,7 @@ func (c *discardCardsWithDifferentNamesCost) Text() string {
 // Used by "as an additional cost, reveal an X card from your hand"
 // (Wren's Run Vanquisher's first OR branch, etc.).
 type revealFromHandCost struct {
-	filter CardFilter
+	filter ObjectFilter
 	label  string
 }
 
@@ -487,10 +487,10 @@ type revealFromHandCost struct {
 // spell, reveal an Elf card from your hand or pay {3}":
 //
 //	WithAdditionalCost(EitherCost(
-//	    RevealFromHandCost(HasSubTypeCardFilter("Elf"), "Reveal an Elf card"),
+//	    RevealFromHandCost(ObjectHasSubtype("Elf"), "Reveal an Elf card"),
 //	    ManaCostOf("{3}"),
 //	))
-func RevealFromHandCost(filter CardFilter, label string) Cost {
+func RevealFromHandCost(filter ObjectFilter, label string) Cost {
 	return &revealFromHandCost{filter: filter, label: label}
 }
 
@@ -499,13 +499,14 @@ func (c *revealFromHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) boo
 	if p == nil {
 		return false
 	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	for _, card := range p.Hand() {
 		// Skip the card currently being cast (it is no longer in hand
 		// by the time costs are paid, but defensively skip).
 		if card.ID() == sourceID {
 			continue
 		}
-		if c.filter.IsZero() || c.filter.Match(card) {
+		if c.filter.IsZero() || c.filter.Match(card, g, ctx) {
 			return true
 		}
 	}
@@ -517,12 +518,13 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	if p == nil {
 		return ErrPlayerNotFound
 	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var matches []*Card
 	for _, card := range p.Hand() {
 		if card.ID() == sourceID {
 			continue
 		}
-		if c.filter.IsZero() || c.filter.Match(card) {
+		if c.filter.IsZero() || c.filter.Match(card, g, ctx) {
 			matches = append(matches, card)
 		}
 	}
@@ -665,13 +667,13 @@ func (c *exileFromGraveyardCost) Text() string {
 }
 
 type exileMatchingCardFromGraveyardCost struct {
-	filter CardFilter
+	filter ObjectFilter
 	text   string
 }
 
 // ExileMatchingCardFromGraveyardCost creates a cost that requires the controller
 // to exile a card matching the given filter from their graveyard.
-func ExileMatchingCardFromGraveyardCost(filter CardFilter, text string) Cost {
+func ExileMatchingCardFromGraveyardCost(filter ObjectFilter, text string) Cost {
 	return &exileMatchingCardFromGraveyardCost{filter: filter, text: text}
 }
 
@@ -680,7 +682,10 @@ func (c *exileMatchingCardFromGraveyardCost) CanPay(sourceID, controller uuid.UU
 	if p == nil {
 		return false
 	}
-	return slices.ContainsFunc(p.Graveyard(), c.filter.Match)
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
+	return slices.ContainsFunc(p.Graveyard(), func(card *Card) bool {
+		return c.filter.Match(card, g, ctx)
+	})
 }
 
 func (c *exileMatchingCardFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
@@ -688,9 +693,10 @@ func (c *exileMatchingCardFromGraveyardCost) Pay(sourceID, controller uuid.UUID,
 	if p == nil {
 		return ErrPlayerNotFound
 	}
+	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var candidates []*Card
 	for _, card := range p.Graveyard() {
-		if c.filter.Match(card) {
+		if c.filter.Match(card, g, ctx) {
 			candidates = append(candidates, card)
 		}
 	}

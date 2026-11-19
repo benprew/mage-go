@@ -87,3 +87,23 @@ func TestRemovalHandValueExcludesDamagePrevention(t *testing.T) {
 		t.Fatalf("damage prevention must not count as removal in hand, got %v", got)
 	}
 }
+
+func TestRemovalCardValueRespectsPermanentObjectFilter(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	g.SetTurn(4)
+	g.AddToBattlefield(mage.NewPermanent(mage.NewLand("Mountain", mage.WithManaAbility(core.Red)), a.PlayerID()))
+
+	unrestricted := mage.NewSorcery("Vindicate", "{1}", mage.NewTargetedSpell(mage.TargetPermanent(), mage.DestroyTarget()))
+	if got := RemovalCardValue(g, a, unrestricted); got <= 0 {
+		t.Fatalf("unrestricted permanent removal should have positive value, got %v", got)
+	}
+
+	narrow := mage.NewSorcery("Detonate", "{X}{R}", mage.NewTargetedSpell(
+		mage.TargetPermanent(mage.IsCardType(core.TypeArtifact), mage.ManaValueIs(mage.EqualTo(mage.XValue()))),
+		mage.DestroyTarget(),
+	))
+	if got := RemovalCardValue(g, a, narrow); got != 0 {
+		t.Fatalf("artifact-only permanent removal must not score as unrestricted removal, got %v", got)
+	}
+}

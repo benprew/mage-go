@@ -73,14 +73,14 @@ func (g *Game) RemoveTopN(p Player, n int) []*Card {
 // chosen card from the library and place the rest somewhere; the typical
 // pattern is RemoveTopN followed by inserting the chosen card into the
 // destination zone and bottoming the rest in random order.
-func (g *Game) RevealAndPickFromTop(chooser, owner Player, n int, filter CardFilter, mayDecline bool, reason string) (chosen *Card, revealed []*Card) {
+func (g *Game) RevealAndPickFromTop(chooser, owner Player, n int, filter ObjectFilter, mayDecline bool, reason string) (chosen *Card, revealed []*Card) {
 	revealed = g.RevealTopN(owner, n)
 	if len(revealed) == 0 {
 		return nil, revealed
 	}
 	var candidates []*Card
 	for _, c := range revealed {
-		if filter.Match(c) {
+		if filter.Match(c, g) {
 			candidates = append(candidates, c)
 		}
 	}
@@ -199,14 +199,14 @@ func (g *Game) RevealHand(viewer, owner Player) []*Card {
 // This is the primitive behind "target opponent reveals their hand. You
 // choose a [filter] card from it. That player discards that card." (Corpse
 // Traders, Entomber Exarch mode 2).
-func (g *Game) PickFromHand(chooser, owner Player, filter CardFilter, mayDecline bool, reason string) *Card {
+func (g *Game) PickFromHand(chooser, owner Player, filter ObjectFilter, mayDecline bool, reason string) *Card {
 	if chooser == nil || owner == nil {
 		return nil
 	}
 	hand := owner.Hand()
 	var candidates []*Card
 	for _, c := range hand {
-		if filter.Match(c) {
+		if filter.Match(c, g) {
 			candidates = append(candidates, c)
 		}
 	}

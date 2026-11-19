@@ -44,7 +44,7 @@ func RemovalCardValue(g *mage.Game, p mage.Player, card *mage.Card) float64 {
 				}
 				flexibility = max(flexibility, capacity)
 			case *mage.PermanentTarget:
-				if len(target.Filters) == 0 {
+				if len(target.Filters) == 0 && target.ObjectFilter().IsZero() {
 					flexibility = max(flexibility, 5)
 				}
 			case *mage.DamageAnyTarget:

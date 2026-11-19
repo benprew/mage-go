@@ -1,10 +1,7 @@
 package mage
 
 import (
-	"slices"
 	"testing"
-
-	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // chooserPlayer wraps BasePlayer to script ChooseCardFromLibrary returns
@@ -107,9 +104,8 @@ func TestRevealAndPickFromTop_ChoosesMatchingCard(t *testing.T) {
 	creature := NewCreature("Goblin", "{R}", 1, 1)
 	a.AddToLibrary(creature)
 	a.AddToLibrary(NewLand("Plains"))
-	creatureFilter := IsCreatureCard
 	a.pick = "Goblin"
-	chosen, revealed := g.RevealAndPickFromTop(a, a, 3, creatureFilter, false, "test pick")
+	chosen, revealed := g.RevealAndPickFromTop(a, a, 3, IsCreatureCard, false, "test pick")
 	if chosen == nil || chosen.Name() != "Goblin" {
 		t.Fatalf("expected Goblin chosen, got %v", chosen)
 	}
@@ -129,8 +125,7 @@ func TestRevealAndPickFromTop_NoMatchReturnsNil(t *testing.T) {
 	g, a, _ := revealTestGame()
 	a.AddToLibrary(NewLand("Forest"))
 	a.AddToLibrary(NewLand("Plains"))
-	creatureFilter := IsCreatureCard
-	chosen, revealed := g.RevealAndPickFromTop(a, a, 2, creatureFilter, false, "test")
+	chosen, revealed := g.RevealAndPickFromTop(a, a, 2, IsCreatureCard, false, "test")
 	if chosen != nil {
 		t.Errorf("expected nil chosen, got %v", chosen)
 	}
@@ -146,9 +141,8 @@ func TestRevealAndPickFromTop_MayDeclineHonored(t *testing.T) {
 	g, a, _ := revealTestGame()
 	creature := NewCreature("Goblin", "{R}", 1, 1)
 	a.AddToLibrary(creature)
-	cf := IsCreatureCard
 	a.pick = "" // decline
-	chosen, _ := g.RevealAndPickFromTop(a, a, 1, cf, true, "test")
+	chosen, _ := g.RevealAndPickFromTop(a, a, 1, IsCreatureCard, true, "test")
 	if chosen != nil {
 		t.Errorf("expected decline to return nil, got %v", chosen)
 	}
@@ -158,9 +152,8 @@ func TestRevealAndPickFromTop_MayDeclineFalseForcesPick(t *testing.T) {
 	g, a, _ := revealTestGame()
 	creature := NewCreature("Goblin", "{R}", 1, 1)
 	a.AddToLibrary(creature)
-	cf := IsCreatureCard
 	a.pick = "" // try to decline
-	chosen, _ := g.RevealAndPickFromTop(a, a, 1, cf, false, "test")
+	chosen, _ := g.RevealAndPickFromTop(a, a, 1, IsCreatureCard, false, "test")
 	if chosen == nil {
 		t.Errorf("mayDecline=false: expected fallback pick, got nil")
 	}
@@ -218,11 +211,8 @@ func TestPickFromHand_ChoosesMatchingCard(t *testing.T) {
 	target := NewCreature("Goblin", "{R}", 1, 1)
 	b.AddToHand(target)
 	b.AddToHand(NewLand("Plains"))
-	noncreature := NewCardFilter("noncreature", func(c *Card) bool {
-		return !slices.Contains(c.Types(), TypeCreature)
-	})
 	a.pick = "Forest"
-	chosen := g.PickFromHand(a, b, noncreature, false, "you choose a noncreature")
+	chosen := g.PickFromHand(a, b, ObjectNot(IsCreatureCard), false, "you choose a noncreature")
 	if chosen == nil || chosen.Name() != "Forest" {
 		t.Errorf("expected Forest, got %v", chosen)
 	}
@@ -241,10 +231,7 @@ func TestPickFromHand_ChoosesMatchingCard(t *testing.T) {
 func TestPickFromHand_NoMatchReturnsNil(t *testing.T) {
 	g, a, b := revealTestGame()
 	b.AddToHand(NewCreature("Goblin", "{R}", 1, 1))
-	noncreature := NewCardFilter("noncreature", func(c *Card) bool {
-		return !slices.Contains(c.Types(), TypeCreature)
-	})
-	chosen := g.PickFromHand(a, b, noncreature, false, "test")
+	chosen := g.PickFromHand(a, b, ObjectNot(IsCreatureCard), false, "test")
 	if chosen != nil {
 		t.Errorf("expected nil, got %v", chosen)
 	}

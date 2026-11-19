@@ -837,9 +837,6 @@ func registerCreatures() {
 	// When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.
 	Register("Deluge Virtuoso", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Deluge Virtuoso", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 			// ETB: tap target creature an opponent controls and put a stun counter on it.
@@ -895,7 +892,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -998,9 +995,6 @@ func registerCreatures() {
 	// 0/2
 	// Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.
 	Register("Exhibition Tidecaller", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Exhibition Tidecaller", "{U}", 0, 2,
 			WithSubTypes("Djinn", "Wizard"),
 			// Opus — Whenever you cast an instant or sorcery spell, target player mills
@@ -1043,7 +1037,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			).AddTarget(TargetPlayer())),
 		)
 	})
@@ -1243,8 +1237,8 @@ func registerCreatures() {
 	// When this creature enters, return up to one other target creature to its owner's hand.
 	// Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
 	Register("Matterbending Mage", func() *Card {
-		hasXFilter := NewCardFilter("spell with {X} in mana cost", func(c *Card) bool {
-			return c.ManaCost().HasX
+		hasXFilter := CharacteristicFilter("spell with {X} in mana cost", func(o ObjectView, _ GameReader) bool {
+			return o.ViewManaCost().HasX
 		})
 		return NewCreature("Matterbending Mage", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
@@ -1306,9 +1300,6 @@ func registerCreatures() {
 	// 1/2
 	// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell.
 	Register("Muse Seeker", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Muse Seeker", "{1}{U}", 1, 2,
 			WithSubTypes("Elf", "Wizard"),
 			// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard
@@ -1337,7 +1328,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2397,9 +2388,6 @@ func registerCreatures() {
 	// 2/2
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.
 	Register("Expressive Firedancer", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Expressive Firedancer", "{1}{R}", 2, 2,
 			WithSubTypes("Human", "Sorcerer"),
 			// Opus — Whenever you cast an instant or sorcery spell, this creature gets
@@ -2418,7 +2406,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2496,9 +2484,6 @@ func registerCreatures() {
 	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
 	// Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.
 	Register("Magmablood Archaic", func() *Card {
-		isInstantOrSorceryCard := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Magmablood Archaic", "{2/R}{2/R}{2/R}", 2, 2,
 			WithSubTypes("Avatar"),
 			WithKeyword(Trample),
@@ -2560,7 +2545,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorceryCard,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2571,9 +2556,6 @@ func registerCreatures() {
 	// Ward—Pay 3 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 3 life.)
 	// Whenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy.
 	Register("Mica, Reader of Ruins", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Mica, Reader of Ruins", "{3}{R}", 4, 4,
 			WithSubTypes("Human", "Artificer"),
 			WithSuperTypes(SuperLegendary),
@@ -2623,7 +2605,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2634,9 +2616,6 @@ func registerCreatures() {
 	// Menace
 	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.
 	Register("Molten-Core Maestro", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Molten-Core Maestro", "{1}{R}", 2, 2,
 			WithSubTypes("Goblin", "Bard"),
 			WithKeyword(Menace),
@@ -2666,7 +2645,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2795,9 +2774,6 @@ func registerCreatures() {
 	// Trample
 	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.
 	Register("Tackle Artist", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Tackle Artist", "{3}{R}", 4, 3,
 			WithSubTypes("Orc", "Sorcerer"),
 			WithKeyword(Trample),
@@ -2821,7 +2797,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2831,9 +2807,6 @@ func registerCreatures() {
 	// Reach
 	// Opus — Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. If five or more mana was spent to cast that spell, this creature deals 3 damage to each opponent instead.
 	Register("Thunderdrum Soloist", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Thunderdrum Soloist", "{1}{R}", 1, 3,
 			WithSubTypes("Dwarf", "Bard"),
 			WithKeyword(Reach),
@@ -2856,7 +2829,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2884,9 +2857,6 @@ func registerCreatures() {
 	// Trample
 	// Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell.
 	Register("Aberrant Manawurm", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Aberrant Manawurm", "{3}{G}", 2, 5,
 			WithSubTypes("Wurm"),
 			WithKeyword(Trample),
@@ -2904,7 +2874,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -3762,9 +3732,6 @@ func registerCreatures() {
 	// Ward {1}, haste
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.
 	Register("Colorstorm Stallion", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Colorstorm Stallion", "{1}{U}{R}", 3, 3,
 			WithSubTypes("Elemental", "Horse"),
 			WithWard(ManaCostOf("{1}")),
@@ -3792,7 +3759,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -3915,9 +3882,6 @@ func registerCreatures() {
 	// Flying, vigilance
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.
 	Register("Elemental Mascot", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Elemental Mascot", "{1}{U}{R}", 1, 4,
 			WithSubTypes("Elemental", "Bird"),
 			WithKeyword(Flying),
@@ -3952,7 +3916,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -4387,9 +4351,6 @@ func registerCreatures() {
 	Register("Nita, Forum Conciliator", func() *Card {
 		// XXX: "Whenever you cast a spell you don't own" trigger not implemented — engine
 		// does not track spell ownership separately from controller.
-		instantOrSorceryCard := NewCardFilter("instant or sorcery card", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Nita, Forum Conciliator", "{1}{W}{B}", 2, 3,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
@@ -4413,7 +4374,7 @@ func registerCreatures() {
 								continue
 							}
 							for _, c := range opp.Graveyard() {
-								if instantOrSorceryCard.Match(c) {
+								if IsInstantOrSorceryCard.Match(c, g) {
 									candidates = append(candidates, c)
 								}
 							}
@@ -4481,11 +4442,11 @@ func registerCreatures() {
 	// Reach
 	// When this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it into your hand. Put the rest on the bottom of your library in a random order.
 	Register("Paradox Surveyor", func() *Card {
-		landOrXCostCard := NewCardFilter("land card or card with {X} in its mana cost", func(c *Card) bool {
-			if c.HasType(TypeLand) {
+		landOrXCostCard := CharacteristicFilter("land card or card with {X} in its mana cost", func(o ObjectView, _ GameReader) bool {
+			if o.ViewHasType(TypeLand) {
 				return true
 			}
-			return c.ManaCost().HasX
+			return o.ViewManaCost().HasX
 		})
 		return NewCreature("Paradox Surveyor", "{G}{G/U}{U}", 3, 3,
 			WithSubTypes("Elf", "Druid"),
@@ -4547,9 +4508,6 @@ func registerCreatures() {
 	// First strike
 	// When this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card.
 	Register("Practiced Scrollsmith", func() *Card {
-		isNonCreatureNonLandCard := NewCardFilter("noncreature, nonland card", func(c *Card) bool {
-			return !c.HasType(TypeCreature) && !c.HasType(TypeLand)
-		})
 		return NewCreature("Practiced Scrollsmith", "{R}{R/W}{W}", 3, 2,
 			WithSubTypes("Dwarf", "Cleric"),
 			WithKeyword(FirstStrike),
@@ -4579,7 +4537,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetCardInYourGraveyard(isNonCreatureNonLandCard))),
+			).AddTarget(TargetCardInYourGraveyard(ObjectAnd(ObjectNot(IsCreatureCard), ObjectNot(ObjectHasType(TypeLand)))))),
 		)
 	})
 
@@ -4828,9 +4786,6 @@ func registerCreatures() {
 	// Flying
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. If five or more mana was spent to cast that spell, put three +1/+1 counters on this creature instead.
 	Register("Spectacular Skywhale", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Spectacular Skywhale", "{2}{U}{R}", 1, 4,
 			WithSubTypes("Elemental", "Whale"),
 			WithKeyword(Flying),
@@ -4855,7 +4810,7 @@ func registerCreatures() {
 					},
 				),
 				false,
-				isInstantOrSorcery,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -5236,8 +5191,8 @@ func registerCreatures() {
 	// 2/1
 	// Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
 	Register("Mage Tower Referee", func() *Card {
-		isMulticoloredCard := NewCardFilter("multicolored", func(c *Card) bool {
-			return len(c.Colors()) >= 2
+		isMulticoloredCard := CharacteristicFilter("multicolored", func(o ObjectView, _ GameReader) bool {
+			return len(o.ViewColors()) >= 2
 		})
 		return NewCreature("Mage Tower Referee", "{2}", 2, 1,
 			WithSubTypes("Construct"),
@@ -5257,9 +5212,6 @@ func registerCreatures() {
 	// {T}: Add {C}.
 	// Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.
 	Register("Page, Loose Leaf", func() *Card {
-		isInstantOrSorcery := NewCardFilter("instant or sorcery card", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		grandeurEffect := FuncEffect(
 			"reveal cards from the top of your library until you reveal an instant or sorcery card; put it into your hand and the rest on the bottom in a random order",
 			EffectProperties{Outcome: OutcomeBenefit},
@@ -5273,7 +5225,7 @@ func registerCreatures() {
 				var found *Card
 				for _, c := range p.Library() {
 					revealed = append(revealed, c)
-					if isInstantOrSorcery.Match(c) {
+					if IsInstantOrSorceryCard.Match(c, g) {
 						found = c
 						break
 					}

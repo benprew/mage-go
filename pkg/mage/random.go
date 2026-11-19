@@ -130,16 +130,16 @@ func (g *Game) DiscardAtRandom(p Player, n int, sources ...uuid.UUID) []*Card {
 // the graveyard is empty. The card is NOT removed from the graveyard;
 // callers that need to move it use p.RemoveFromGraveyard(card.ID()).
 //
-// Use a zero-value CardFilter (or one whose Match always returns true) for
+// Use a zero-value ObjectFilter (or one whose Match always returns true) for
 // "any card" — Charmbreaker Devils and similar specify a card type, while
 // Ghoulraiser-style filters narrow further by subtype.
-func (g *Game) RandomCardFromGraveyard(p Player, filter CardFilter) *Card {
+func (g *Game) RandomCardFromGraveyard(p Player, filter ObjectFilter) *Card {
 	if p == nil {
 		return nil
 	}
 	var candidates []*Card
 	for _, c := range p.Graveyard() {
-		if filter.Match(c) {
+		if filter.Match(c, g) {
 			candidates = append(candidates, c)
 		}
 	}
@@ -154,13 +154,13 @@ func (g *Game) RandomCardFromGraveyard(p Player, filter CardFilter) *Card {
 // NOT removed from the hand; callers move it themselves. Useful for "reveal
 // a card at random from your hand" patterns and AI heuristics that need a
 // random hand card.
-func (g *Game) RandomCardFromHand(p Player, filter CardFilter) *Card {
+func (g *Game) RandomCardFromHand(p Player, filter ObjectFilter) *Card {
 	if p == nil {
 		return nil
 	}
 	var candidates []*Card
 	for _, c := range p.Hand() {
-		if filter.Match(c) {
+		if filter.Match(c, g) {
 			candidates = append(candidates, c)
 		}
 	}

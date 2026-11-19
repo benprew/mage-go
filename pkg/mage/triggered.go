@@ -469,21 +469,21 @@ func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggere
 }
 
 // WheneverSpellCastTrigger fires whenever any player casts a spell matching the
-// given CardFilter predicates. Pass no filters to trigger on any spell.
-func WheneverSpellCastTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
+// given ObjectFilter predicates. Pass no filters to trigger on any spell.
+func WheneverSpellCastTrigger(effect Effect, optional bool, filters ...ObjectFilter) *GenericTriggered {
 	if len(filters) == 0 {
 		return NewTriggered(EvtSpellCast, optional, effect)
 	}
 	return NewTriggered(EvtSpellCast, optional, effect).
-		SetConditionData(SpellCastMatchesCardFilters{Filters: filters})
+		SetConditionData(SpellCastMatchesObjectFilters{Filters: filters})
 }
 
 // WheneverYouCastSpellTrigger fires whenever the controller casts a spell matching
-// the given CardFilter predicates. Pass no filters to trigger on any of your spells.
-func WheneverYouCastSpellTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
+// the given ObjectFilter predicates. Pass no filters to trigger on any of your spells.
+func WheneverYouCastSpellTrigger(effect Effect, optional bool, filters ...ObjectFilter) *GenericTriggered {
 	conds := []TriggerConditionData{EventPlayerIsController{}}
 	if len(filters) > 0 {
-		conds = append(conds, SpellCastMatchesCardFilters{Filters: filters})
+		conds = append(conds, SpellCastMatchesObjectFilters{Filters: filters})
 	}
 	return NewTriggered(EvtSpellCast, optional, effect).
 		SetConditionData(AndTriggerCond{Conditions: conds})

@@ -127,11 +127,11 @@ func registerEnchantments() {
 	// When this enchantment enters, return target nonland permanent card with mana value 3 or less from your graveyard to the battlefield.
 	// At the beginning of your end step, if a card left your graveyard this turn, draw a card.
 	Register("Primary Research", func() *Card {
-		nonlandMV3OrLess := NewCardFilter("nonland permanent card with mana value 3 or less", func(c *Card) bool {
-			if c.HasType(TypeLand) {
+		nonlandMV3OrLess := CharacteristicFilter("nonland permanent card with mana value 3 or less", func(o ObjectView, _ GameReader) bool {
+			if o.ViewHasType(TypeLand) {
 				return false
 			}
-			return c.ManaCost().CMC() <= 3
+			return o.ViewManaValue() <= 3
 		})
 		return NewEnchantment("Primary Research", "{4}{W}",
 			WithAbility(

@@ -85,7 +85,7 @@ func TestLibrarySearchRequiresStoredCard(t *testing.T) {
 				case "top":
 					effect = SearchLibraryToTop()
 				case "battlefield":
-					effect = SearchLibraryToBattlefield(CardFilter{})
+					effect = SearchLibraryToBattlefield(ObjectFilter{})
 				}
 				if err := effect.Apply(&EffectContext{Game: g, Controller: p.PlayerID()}); err != nil {
 					t.Fatal(err)

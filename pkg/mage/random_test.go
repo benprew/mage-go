@@ -2,7 +2,6 @@ package mage
 
 import (
 	"math/rand"
-	"slices"
 	"testing"
 	"uuid"
 
@@ -170,7 +169,7 @@ func TestRandomHelpersUseGameScriptedResults(t *testing.T) {
 	if len(discarded) != 1 || discarded[0].Name() != "Plains" {
 		t.Fatalf("scripted discard = %v, want Plains", discarded)
 	}
-	if got := g.RandomCardFromHand(a, CardFilter{}); got == nil || got.Name() != "Mountain" {
+	if got := g.RandomCardFromHand(a, ObjectFilter{}); got == nil || got.Name() != "Mountain" {
 		t.Errorf("scripted hand choice = %v, want Mountain", got)
 	}
 }
@@ -239,13 +238,7 @@ func TestRandomCardFromGraveyard_FiltersAndDoesNotRemove(t *testing.T) {
 	zombie := NewCreature("Zombie A", "{1}{B}", 2, 2, WithSubTypes("Zombie"))
 	a.AddToGraveyard(zombie)
 	a.AddToGraveyard(NewLand("Swamp"))
-	zombieFilter := NewCardFilter("zombie", func(c *Card) bool {
-		if !c.HasType(TypeCreature) {
-			return false
-		}
-		return slices.Contains(c.SubTypes(), "Zombie")
-	})
-	chosen := g.RandomCardFromGraveyard(a, zombieFilter)
+	chosen := g.RandomCardFromGraveyard(a, ObjectAnd(ObjectHasType(TypeCreature), ObjectHasSubtype("Zombie")))
 	if chosen == nil || chosen.Name() != "Zombie A" {
 		t.Errorf("expected Zombie A, got %v", chosen)
 	}
@@ -258,13 +251,7 @@ func TestRandomCardFromGraveyard_FiltersAndDoesNotRemove(t *testing.T) {
 func TestRandomCardFromGraveyard_NoMatchReturnsNil(t *testing.T) {
 	g, a, _ := randomTestGame()
 	a.AddToGraveyard(NewLand("Forest"))
-	zombieFilter := NewCardFilter("zombie", func(c *Card) bool {
-		if !c.HasType(TypeCreature) {
-			return false
-		}
-		return slices.Contains(c.SubTypes(), "Zombie")
-	})
-	if got := g.RandomCardFromGraveyard(a, zombieFilter); got != nil {
+	if got := g.RandomCardFromGraveyard(a, ObjectAnd(ObjectHasType(TypeCreature), ObjectHasSubtype("Zombie"))); got != nil {
 		t.Errorf("expected nil, got %v", got)
 	}
 }
@@ -275,7 +262,7 @@ func TestRandomCardFromGraveyard_AnyCardWithZeroFilter(t *testing.T) {
 	a.AddToGraveyard(NewLand("Forest"))
 	a.AddToGraveyard(NewLand("Plains"))
 	a.AddToGraveyard(NewLand("Mountain"))
-	got := g.RandomCardFromGraveyard(a, CardFilter{})
+	got := g.RandomCardFromGraveyard(a, ObjectFilter{})
 	if got == nil {
 		t.Fatal("expected a card, got nil")
 	}
@@ -301,7 +288,7 @@ func TestRandomCardFromGraveyard_UniformDistribution(t *testing.T) {
 	a.AddToGraveyard(NewLand("Mountain"))
 	counts := map[string]int{}
 	for range 3000 {
-		c := g.RandomCardFromGraveyard(a, CardFilter{})
+		c := g.RandomCardFromGraveyard(a, ObjectFilter{})
 		counts[c.Name()]++
 	}
 	for name, n := range counts {

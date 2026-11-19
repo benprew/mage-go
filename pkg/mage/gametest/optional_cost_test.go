@@ -16,9 +16,6 @@ func registerOptionalCostCards() {
 		// Draconic Roar pattern: instant {1}{R}, deal 3 damage to any target.
 		// Additional cost: you may reveal a Dragon card from your hand. If
 		// you do, this spell deals an extra 3 damage on top of the base 3.
-		dragonCardFilter := mage.NewCardFilter("Dragon card", func(c *mage.Card) bool {
-			return c.HasSubType("Dragon")
-		})
 		damageEffect := mage.FuncEffect(
 			"deal 3 damage; if reveal cost was paid, deal 3 more",
 			mage.EffectProperties{Outcome: mage.OutcomeDetriment},
@@ -50,7 +47,7 @@ func registerOptionalCostCards() {
 				return mage.NewInstant("Test Optional Roar", "{1}{R}",
 					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), damageEffect),
 					mage.WithAdditionalCost(mage.OptionalCost(
-						mage.RevealFromHandCost(dragonCardFilter, "Reveal a Dragon card"),
+						mage.RevealFromHandCost(mage.ObjectHasSubtype("Dragon"), "Reveal a Dragon card"),
 						"Reveal a Dragon card to deal 3 additional damage?",
 					)),
 				)

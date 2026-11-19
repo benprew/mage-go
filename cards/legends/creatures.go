@@ -1508,7 +1508,7 @@ func registerCreatures() {
 						opponent.LoseLife(10)
 						return nil
 					}
-					revealed := g.RandomCardFromHand(opponent, mage.CardFilter{})
+					revealed := g.RandomCardFromHand(opponent, mage.ObjectFilter{})
 					if revealed != nil {
 						if err := g.ChangeOwner(revealed.ID(), controller); err != nil {
 							return err
@@ -2978,7 +2978,7 @@ func registerCreatures() {
 			WithSubTypes("Demon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Swampwalk),
-			WithAbility(WheneverSpellCastTrigger(GainLife(1), false, HasColorCardFilter(Black))),
+			WithAbility(WheneverSpellCastTrigger(GainLife(1), false, ObjectHasColor(Black))),
 		)
 	})
 

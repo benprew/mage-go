@@ -15,7 +15,7 @@ import (
 // The grant lives on the GameRules registry, registered each Apply() cycle
 // while the source is on the battlefield. It expires automatically when the
 // source leaves play.
-func CastAsThoughHadFlash(filter CardFilter) ContinuousEffect {
+func CastAsThoughHadFlash(filter ObjectFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		perm := g.FindPermanent(sourceID)
 		if perm == nil {
@@ -27,9 +27,9 @@ func CastAsThoughHadFlash(filter CardFilter) ContinuousEffect {
 }
 
 // CastAsThoughHadFlashGlobal grants the flash permission to every player,
-// for cards matching filter (or every nonland card if filter == nil). Used
+// for cards matching filter (or every nonland card if filter is zero). Used
 // by Vedalken Orrery / Leyline of Anticipation.
-func CastAsThoughHadFlashGlobal(filter CardFilter) ContinuousEffect {
+func CastAsThoughHadFlashGlobal(filter ObjectFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		if g.FindPermanent(sourceID) == nil {
 			return nil

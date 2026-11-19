@@ -2,6 +2,7 @@ package mage
 
 import (
 	"testing"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -18,8 +19,73 @@ func TestObjectFilterUsesCurrentCharacteristicsAcrossZones(t *testing.T) {
 	if filter.Match(permanent, g) || !filter.Match(card, g) {
 		t.Fatal("filter ignored current battlefield characteristics")
 	}
-	if !filter.Cards().Match(card) || filter.Permanents().Match(permanent, g) {
+	if filter.Permanents().Match(permanent, g) {
 		t.Fatal("filter adapter changed meaning")
+	}
+}
+
+func TestObjectFilterIsZeroViewManaCostLabelsAndName(t *testing.T) {
+	if !(ObjectFilter{}).IsZero() {
+		t.Fatal("zero ObjectFilter must report IsZero")
+	}
+	if ObjectHasType(TypeCreature).IsZero() || CharacteristicFilter("any", func(ObjectView, GameReader) bool { return true }).IsZero() {
+		t.Fatal("non-zero ObjectFilter must not report IsZero")
+	}
+	andFilter := ObjectAnd(ObjectHasType(TypeCreature), ObjectHasColor(Green))
+	if andFilter.Text() != "Creature Green" {
+		t.Fatalf("ObjectAnd label = %q, want %q", andFilter.Text(), "Creature Green")
+	}
+	orFilter := ObjectOr(ObjectHasType(TypeInstant), ObjectHasType(TypeSorcery))
+	if orFilter.Text() != "Instant or Sorcery" {
+		t.Fatalf("ObjectOr label = %q, want %q", orFilter.Text(), "Instant or Sorcery")
+	}
+
+	g := newPriorityTestGame()
+	owner := g.players[0].PlayerID()
+	xSpell := NewSorcery("Fireball", "{X}{R}")
+	hasX := CharacteristicFilter("spell with {X}", func(o ObjectView, _ GameReader) bool {
+		return o.ViewManaCost().HasX
+	})
+	if !hasX.Match(xSpell, g) {
+		t.Fatal("expected ViewManaCost().HasX to match {X}{R} card")
+	}
+	if !ObjectNamed("Fireball").Match(xSpell, g) || ObjectNamed("Lightning Bolt").Match(xSpell, g) {
+		t.Fatal("ObjectNamed did not match expected card name")
+	}
+
+	perm := g.PutOnBattlefield(NewCreature("X Creature", "{X}{G}", 1, 1), owner)
+	if !hasX.Match(perm, g) {
+		t.Fatal("expected live permanent ViewManaCost().HasX to match")
+	}
+	perm.FaceDown = true
+	if hasX.Match(perm, g) {
+		t.Fatal("face-down permanent must report zero mana cost")
+	}
+	perm.FaceDown = false
+	g.captureLKI(perm)
+	lki := g.LKI(perm.ID())
+	if !hasX.Match(lki, g) {
+		t.Fatal("LKI view lost mana cost")
+	}
+}
+
+func TestTargetSpellOnStackHonorsColorOverride(t *testing.T) {
+	g := newPriorityTestGame()
+	a, b := g.players[0], g.players[1]
+	bolt := NewInstant("Bolt", "{R}")
+	override := []Color{Blue}
+	g.pushStack(&StackObject{
+		ID:            uuid.New(),
+		Card:          bolt,
+		SourceID:      bolt.ID(),
+		Controller:    b.PlayerID(),
+		ColorOverride: &override,
+	})
+	if got := TargetSpellOnStack(ObjectHasColor(Blue)).Possible(a.PlayerID(), nil, g); len(got) != 1 || got[0] != bolt.ID() {
+		t.Fatalf("expected blue-overridden spell to match blue filter, got %v", got)
+	}
+	if got := TargetSpellOnStack(ObjectHasColor(Red)).Possible(a.PlayerID(), nil, g); len(got) != 0 {
+		t.Fatalf("expected blue-overridden spell not to match red filter, got %v", got)
 	}
 }
 
@@ -102,7 +168,7 @@ func TestObjectFilterRejectsTypedNilViews(t *testing.T) {
 					t.Errorf("nil adapter input caused a panic: %v", err)
 				}
 			}()
-			if filter.Cards().Match(nil) || filter.Permanents().Match(nil, nil) {
+			if filter.Permanents().Match(nil, nil) {
 				t.Fatal("nil adapter input matched")
 			}
 		})
@@ -114,7 +180,7 @@ func TestObjectPlayerFiltersRejectMissingIdentity(t *testing.T) {
 	owner := g.players[0].PlayerID()
 	card := NewCreature("Unowned", "{G}", 1, 1)
 	for _, filter := range []ObjectFilter{ObjectControlledBy(SelectController()), ObjectOwnedBy(SelectController())} {
-		if filter.Match(card, g) || filter.Cards().Match(card) {
+		if filter.Match(card, g) {
 			t.Errorf("%s matched a missing identity", filter.Text())
 		}
 	}
@@ -132,7 +198,7 @@ func TestObjectPlayerFiltersRejectMissingIdentity(t *testing.T) {
 	if ObjectControlledBy(SelectController()).Match(card, g, ctx) {
 		t.Fatal("card outside the battlefield has a controller")
 	}
-	if !ObjectOwnedBy(SelectController()).Cards(ctx).Match(card) {
+	if !ObjectOwnedBy(SelectController()).Match(card, g, ctx) {
 		t.Fatal("owned card did not match its owner")
 	}
 }

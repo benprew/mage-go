@@ -330,9 +330,7 @@ func registerSpells() {
 	Register("Flash Counter", func() *Card {
 		return NewInstant("Flash Counter", "{1}{U}",
 			NewTargetedSpell(
-				TargetSpellOnStack(NewCardFilter("instant", func(c *Card) bool {
-					return c.HasType(TypeInstant)
-				})),
+				TargetSpellOnStack(IsInstantCard),
 				CounterSpell(),
 			),
 		)
@@ -981,9 +979,7 @@ func registerSpells() {
 	Register("Remove Soul", func() *Card {
 		return NewInstant("Remove Soul", "{1}{U}",
 			NewTargetedSpell(
-				TargetSpellOnStack(NewCardFilter("creature spell", func(c *Card) bool {
-					return c.HasType(TypeCreature)
-				})),
+				TargetSpellOnStack(IsCreatureCard),
 				CounterSpell(),
 			),
 		)
@@ -1253,7 +1249,9 @@ func registerSpells() {
 	// Search your library for a basic land card, put that card onto the battlefield, then shuffle.
 	Register("Untamed Wilds", func() *Card {
 		return NewSorcery("Untamed Wilds", "{2}{G}",
-			NewSpellAbility(SearchLibraryToBattlefield(NewCardFilter("basic land card", isBasicLand))),
+			NewSpellAbility(SearchLibraryToBattlefield(CharacteristicFilter("basic land card", func(o ObjectView, _ GameReader) bool {
+				return basicLandNames[o.ViewName()]
+			}))),
 		)
 	})
 

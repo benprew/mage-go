@@ -24,15 +24,14 @@ func TestStackManaValueTargetContext(t *testing.T) {
 	sourceSpell := &StackObject{ID: uuid.New(), Card: source, SourceID: source.ID(), Controller: a.PlayerID()}
 	g.pushStack(sourceSpell)
 	g.pushStack(&StackObject{ID: uuid.New(), Card: NewInstant("Ability", "{3}"), SourceID: uuid.New(), IsAbility: true})
-	instant := NewCardFilter("instant", func(card *Card) bool { return card.HasType(TypeInstant) })
 	g.SetXValue(7)
 	for _, tc := range []struct {
 		name   string
 		target Target
 		want   []uuid.UUID
 	}{
-		{"any", TargetSpellOnStack(instant, ManaValueIs(EqualTo(XValue()))), ids[:2]},
-		{"own", TargetOwnSpellOnStack(instant, ManaValueIs(EqualTo(XValue()))), ids[:1]},
+		{"any", TargetSpellOnStack(IsInstantCard, ManaValueIs(EqualTo(XValue()))), ids[:2]},
+		{"own", TargetSpellOnStack(ObjectControlledBy(SelectController()), IsInstantCard, ManaValueIs(EqualTo(XValue()))), ids[:1]},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if !TargetsUseX([]Target{tc.target}) {
@@ -138,7 +137,7 @@ func TestCastTriggerCanTargetItsSourceSpell(t *testing.T) {
 		WithAbility(NewTriggered(EvtSpellCast, false, CounterSpell()).
 			InZone(ZoneStack).
 			SetConditionData(EventSourceIsSelf{}).
-			AddTarget(TargetOwnSpellOnStack(IsInstantCard))))
+			AddTarget(TargetSpellOnStack(ObjectControlledBy(SelectController()), IsInstantCard))))
 	a.AddToHand(spell)
 	if err := g.CastSpellByID(a.PlayerID(), spell.ID(), nil, 0); err != nil {
 		t.Fatal(err)
@@ -148,7 +147,7 @@ func TestCastTriggerCanTargetItsSourceSpell(t *testing.T) {
 	if len(stack) != 2 || !stack[1].IsAbility || !slices.Equal(stack[1].Targets, []uuid.UUID{spell.ID()}) {
 		t.Fatalf("cast trigger did not target its source spell: %v", stack)
 	}
-	target := TargetOwnSpellOnStack()
+	target := TargetSpellOnStack(ObjectControlledBy(SelectController()))
 	if got := PossibleTargets(target, a.PlayerID(), spell, g, TargetingContext{StackObjectID: stack[0].ID}); len(got) != 0 {
 		t.Fatalf("a spell can target itself: %v", got)
 	}
@@ -177,11 +176,12 @@ func TestStackTargetConstructorsAcceptMixedFilters(t *testing.T) {
 	} {
 		g.pushStack(obj)
 	}
-	filters := []any{IsInstantCard, ManaValueIs(EqualTo(Fixed(1))), ObjectHasColor(Blue)}
+	filters := []ObjectFilter{IsInstantCard, ManaValueIs(EqualTo(Fixed(1))), ObjectHasColor(Blue)}
 	if got := TargetSpellOnStack(filters...).Possible(a.PlayerID(), nil, g); !slices.Equal(got, []uuid.UUID{own.ID(), other.ID()}) {
 		t.Fatalf("instant spell candidates = %v", got)
 	}
-	if got := TargetOwnSpellOnStack(filters...).Possible(a.PlayerID(), nil, g); !slices.Equal(got, []uuid.UUID{own.ID()}) {
+	ownFilters := append([]ObjectFilter{ObjectControlledBy(SelectController())}, filters...)
+	if got := TargetSpellOnStack(ownFilters...).Possible(a.PlayerID(), nil, g); !slices.Equal(got, []uuid.UUID{own.ID()}) {
 		t.Fatalf("controlled instant spell candidates = %v", got)
 	}
 }

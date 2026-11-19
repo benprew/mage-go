@@ -949,7 +949,7 @@ func NewLuckyCharm(name, cost string, color Color) *Card {
 		WithAbility(WheneverSpellCastTrigger(
 			MayPayMana("{1}", "gain 1 life", GainLife(1)),
 			false,
-			HasColorCardFilter(color),
+			ObjectHasColor(color),
 		)),
 	)
 }

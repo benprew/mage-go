@@ -732,9 +732,6 @@ func registerEnchantments() {
 	// Whenever you cast a noncreature spell, put three +1/+1 counters on target creature you control.
 	// Landfall — Whenever a land you control enters, you gain 3 life.
 	Register("Primeval Bounty", func() *Card {
-		noncreatureCard := NewCardFilter("noncreature card", func(c *Card) bool {
-			return !c.HasType(TypeCreature)
-		})
 		return NewEnchantment("Primeval Bounty", "{5}{G}",
 			WithAbility(WheneverYouCastSpellTrigger(
 				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
@@ -742,7 +739,7 @@ func registerEnchantments() {
 			)),
 			WithAbility(WheneverYouCastSpellTrigger(
 				AddCounters(P1P1, Fixed(3)).Targeting(ToTarget()),
-				false, noncreatureCard,
+				false, ObjectNot(IsCreatureCard),
 			).AddTarget(TargetCreatureYouControl())),
 			WithAbility(WheneverLandEntersBattlefieldTrigger(
 				GainLife(3), false,
@@ -772,15 +769,15 @@ func registerEnchantments() {
 	// Whenever you cast a creature spell with power 4, 5, or 6, this enchantment deals 4 damage to any target.
 	// Whenever you cast a creature spell with power 7 or greater, this enchantment deals 4 damage to each opponent and each creature and planeswalker they control.
 	Register("Sarkhan's Unsealing", func() *Card {
-		creaturePower4to6 := NewCardFilter("creature with power 4, 5, or 6", func(c *Card) bool {
-			if !c.HasType(TypeCreature) {
+		creaturePower4to6 := CharacteristicFilter("creature with power 4, 5, or 6", func(o ObjectView, _ GameReader) bool {
+			if !o.ViewHasType(TypeCreature) {
 				return false
 			}
-			p := c.Power()
+			p := o.ViewPower()
 			return p >= 4 && p <= 6
 		})
-		creaturePower7plus := NewCardFilter("creature with power 7 or greater", func(c *Card) bool {
-			return c.HasType(TypeCreature) && c.Power() >= 7
+		creaturePower7plus := CharacteristicFilter("creature with power 7 or greater", func(o ObjectView, _ GameReader) bool {
+			return o.ViewHasType(TypeCreature) && o.ViewPower() >= 7
 		})
 		return NewEnchantment("Sarkhan's Unsealing", "{3}{R}",
 			WithAbility(

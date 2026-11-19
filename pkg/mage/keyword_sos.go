@@ -266,7 +266,7 @@ func ManaSpentForSpellEvent(evt *GameEvent, g GameReader) int {
 // spent through the cast context — typical use is to wrap the closure in a
 // FuncEffect that calls Game.ResolvingCastContext() or to pass the mana
 // amount via OpusEffect / IncrementEffect.
-func WheneverYouCastSpellWithManaSpent(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
+func WheneverYouCastSpellWithManaSpent(effect Effect, optional bool, filters ...ObjectFilter) *GenericTriggered {
 	return WheneverYouCastSpellTrigger(effect, optional, filters...)
 }
 

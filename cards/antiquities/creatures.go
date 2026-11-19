@@ -308,7 +308,7 @@ func registerCreatures() {
 					),
 				),
 				Tap(),
-				WithTarget(TargetOwnSpellOnStack(IsArtifactCard)),
+				WithTarget(TargetSpellOnStack(ObjectControlledBy(SelectController()), IsArtifactCard)),
 			),
 		)
 	})

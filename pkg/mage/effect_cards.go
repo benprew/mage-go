@@ -341,12 +341,12 @@ func (e *shuffleLibraryEffect) Properties() EffectProperties { return EffectProp
 
 // putFromHandOntoBattlefieldEffect lets the controller put a card from hand onto the battlefield.
 type putFromHandOntoBattlefieldEffect struct {
-	filter CardFilter
+	filter ObjectFilter
 }
 
 // PutFromHandOntoBattlefield creates an effect that lets the controller put a card from hand
-// onto the battlefield (e.g. Elvish Piper, Show and Tell). Pass a zero CardFilter to allow any card.
-func PutFromHandOntoBattlefield(filter CardFilter) Effect {
+// onto the battlefield (e.g. Elvish Piper, Show and Tell). Pass a zero ObjectFilter to allow any card.
+func PutFromHandOntoBattlefield(filter ObjectFilter) Effect {
 	return &putFromHandOntoBattlefieldEffect{filter: filter}
 }
 
@@ -359,13 +359,13 @@ func (e *putFromHandOntoBattlefieldEffect) Properties() EffectProperties {
 
 // searchLibraryToBattlefieldEffect searches library and puts a matching card onto the battlefield.
 type searchLibraryToBattlefieldEffect struct {
-	filter CardFilter
+	filter ObjectFilter
 }
 
 // SearchLibraryToBattlefield creates an effect that searches the controller's
 // library for a card matching the filter, puts it onto the battlefield, then
 // shuffles (e.g. Untamed Wilds, Rampant Growth).
-func SearchLibraryToBattlefield(filter CardFilter) Effect {
+func SearchLibraryToBattlefield(filter ObjectFilter) Effect {
 	return &searchLibraryToBattlefieldEffect{filter: filter}
 }
 
@@ -630,10 +630,11 @@ func (e *putFromHandOntoBattlefieldEffect) Apply(ctx *EffectContext) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
+	abilityCtx := AbilityContext{SourceID: ctx.SourceID, Controller: ctx.Controller}
 	hand := p.Hand()
 	var candidates []*Card
 	for _, c := range hand {
-		if e.filter.Match(c) {
+		if e.filter.Match(c, ctx.Game, abilityCtx) {
 			candidates = append(candidates, c)
 		}
 	}
@@ -655,10 +656,11 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
+	abilityCtx := AbilityContext{SourceID: ctx.SourceID, Controller: ctx.Controller}
 	lib := p.Library()
 	var candidates []*Card
 	for _, c := range lib {
-		if e.filter.Match(c) {
+		if e.filter.Match(c, ctx.Game, abilityCtx) {
 			candidates = append(candidates, c)
 		}
 	}

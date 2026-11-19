@@ -326,9 +326,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
 				false,
-				NewCardFilter("noncreature card", func(c *Card) bool {
-					return !c.HasType(TypeCreature)
-				}),
+				ObjectNot(IsCreatureCard),
 			)),
 		)
 	})
@@ -533,9 +531,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				DrawCards(Fixed(1)),
 				true,
-				NewCardFilter("aura card", func(c *Card) bool {
-					return slices.Contains(c.SubTypes(), "Aura")
-				}),
+				ObjectHasSubtype("Aura"),
 			)),
 		)
 	})
@@ -858,9 +854,6 @@ func registerCreatures() {
 	// • Put a +1/+1 counter on this creature.
 	// • Return target artifact or enchantment card from your graveyard to your hand.
 	Register("Trusty Retriever", func() *Card {
-		artifactOrEnchantmentCard := NewCardFilter("artifact or enchantment card", func(card *Card) bool {
-			return card.HasType(TypeArtifact) || card.HasType(TypeEnchantment)
-		})
 		return NewCreature("Trusty Retriever", "{3}{W}", 2, 3,
 			WithSubTypes("Dog"),
 			WithAbility(EntersBattlefieldTrigger(nil, false).WithModes(
@@ -870,7 +863,7 @@ func registerCreatures() {
 				},
 				Mode{
 					Label:   "Return target artifact or enchantment card from your graveyard to your hand",
-					Targets: []Target{TargetCardInYourGraveyard(artifactOrEnchantmentCard)},
+					Targets: []Target{TargetCardInYourGraveyard(ObjectOr(IsArtifactCard, IsEnchantmentCard))},
 					Effects: []Effect{ReturnFromGraveyardToHandTarget()},
 				},
 			)),
@@ -1085,9 +1078,7 @@ func registerCreatures() {
 		return NewCreature("Cryptic Serpent", "{5}{U}{U}", 6, 5,
 			WithSubTypes("Serpent"),
 			WithSelfCostReduction(
-				AmountByGraveyardCount(NewCardFilter("instant or sorcery", func(c *Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				})),
+				AmountByGraveyardCount(IsInstantOrSorceryCard),
 				nil,
 			),
 		)
@@ -1454,13 +1445,10 @@ func registerCreatures() {
 	// Flying
 	// Whenever you cast an instant or sorcery spell, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
 	Register("Prescient Chimera", func() *Card {
-		instOrSorc := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Prescient Chimera", "{3}{U}{U}", 3, 4,
 			WithSubTypes("Chimera"),
 			WithKeyword(Flying),
-			WithAbility(WheneverYouCastSpellTrigger(Scry(Fixed(1)), false, instOrSorc)),
+			WithAbility(WheneverYouCastSpellTrigger(Scry(Fixed(1)), false, IsInstantOrSorceryCard)),
 		)
 	})
 
@@ -1483,16 +1471,13 @@ func registerCreatures() {
 	// When this creature enters, target Spirit gains hexproof until end of turn.
 	// You may cast Spirit spells as though they had flash.
 	Register("Rattlechains", func() *Card {
-		spiritCard := NewCardFilter("Spirit card", func(c *Card) bool {
-			return c.HasSubType("Spirit")
-		})
 		return NewCreature("Rattlechains", "{1}{U}", 2, 1,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithCastTarget(TargetCreature(HasSubType("Spirit"))),
 			WithETBEffect(GrantKeyword(Hexproof).Targeting(ToTarget()).Until(EndOfTurn)),
-			WithStaticAbility(CastAsThoughHadFlash(spiritCard)),
+			WithStaticAbility(CastAsThoughHadFlash(ObjectHasSubtype("Spirit"))),
 		)
 	})
 
@@ -1570,9 +1555,6 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, you may cast target instant, sorcery, or artifact card from your graveyard without paying its mana cost. If an instant or sorcery spell cast this way would be put into your graveyard, exile it instead.
 	Register("Scholar of the Lost Trove", func() *Card {
-		isInstantSorceryOrArtifactCard := NewCardFilter("instant, sorcery, or artifact", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery) || c.HasType(TypeArtifact)
-		})
 		return NewCreature("Scholar of the Lost Trove", "{5}{U}{U}", 5, 5,
 			WithSubTypes("Sphinx"),
 			WithKeyword(Flying),
@@ -1605,7 +1587,7 @@ func registerCreatures() {
 						return g.CastCardFromZoneWithoutPaying(controller, cardID, ZoneGraveyard, castTargets, 0)
 					}),
 				true,
-			).AddTarget(TargetCardInYourGraveyard(isInstantSorceryOrArtifactCard))),
+			).AddTarget(TargetCardInYourGraveyard(ObjectOr(IsInstantCard, IsSorceryCard, IsArtifactCard)))),
 		)
 	})
 
@@ -1729,15 +1711,12 @@ func registerCreatures() {
 	// 2/2
 	// Whenever you cast an instant or sorcery spell, create a 2/2 blue Drake creature token with flying.
 	Register("Talrand, Sky Summoner", func() *Card {
-		instOrSorc := NewCardFilter("instant or sorcery", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Talrand, Sky Summoner", "{2}{U}{U}", 2, 2,
 			WithSubTypes("Merfolk", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			WithAbility(WheneverYouCastSpellTrigger(
 				CreateColoredToken("Drake", 2, 2, []Color{Blue}, []CardType{TypeCreature}, []string{"Drake"}, Flying),
-				false, instOrSorc,
+				false, IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -2243,7 +2222,7 @@ func registerCreatures() {
 							return nil
 						}
 						_ = g.RevealHand(you, target)
-						chosen := g.PickFromHand(you, target, CardFilter{}, false,
+						chosen := g.PickFromHand(you, target, ObjectFilter{}, false,
 							"choose a card to discard")
 						if chosen == nil {
 							return nil
@@ -2355,9 +2334,6 @@ func registerCreatures() {
 	// • Return target creature card from your graveyard to your hand.
 	// • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
 	Register("Entomber Exarch", func() *Card {
-		noncreatureCard := NewCardFilter("noncreature card", func(c *Card) bool {
-			return !c.HasType(TypeCreature)
-		})
 		revealAndDiscard := FuncEffect(
 			"target opponent reveals their hand; you choose a noncreature card; they discard it",
 			EffectProperties{Outcome: OutcomeDetriment},
@@ -2371,7 +2347,7 @@ func registerCreatures() {
 					return nil
 				}
 				_ = g.RevealHand(you, opp)
-				chosen := g.PickFromHand(you, opp, noncreatureCard, false,
+				chosen := g.PickFromHand(you, opp, ObjectNot(IsCreatureCard), false,
 					"choose a noncreature card to discard")
 				if chosen == nil {
 					return nil
@@ -3521,7 +3497,7 @@ func registerCreatures() {
 						continue
 					}
 					for _, c := range pl.Graveyard() {
-						if IsCreatureCard.Match(c) {
+						if IsCreatureCard.Match(c, g) {
 							count++
 						}
 					}
@@ -3763,9 +3739,6 @@ func registerCreatures() {
 	// At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand.
 	// Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.
 	Register("Charmbreaker Devils", func() *Card {
-		instantOrSorceryCard := NewCardFilter("instant or sorcery card", func(c *Card) bool {
-			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-		})
 		return NewCreature("Charmbreaker Devils", "{5}{R}", 4, 4,
 			WithSubTypes("Devil"),
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -3776,7 +3749,7 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						chosen := g.RandomCardFromGraveyard(p, instantOrSorceryCard)
+						chosen := g.RandomCardFromGraveyard(p, IsInstantOrSorceryCard)
 						if chosen == nil {
 							return nil
 						}
@@ -3790,7 +3763,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				Boost(Fixed(4), Fixed(0)).Targeting(ToSource()),
 				false,
-				instantOrSorceryCard,
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -3868,7 +3841,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CopySpellAndMayChooseNewTargetsWithEffects(),
 				false,
-			).AddTarget(TargetSpellOnStack(instantOrSorcerySpellFilter))),
+			).AddTarget(TargetSpellOnStack(IsInstantOrSorceryCard))),
 		)
 	})
 
@@ -4184,9 +4157,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				Boost(Fixed(3), Fixed(0)).Targeting(ToSource()),
 				false,
-				NewCardFilter("instant or sorcery", func(c *Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				}),
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -4327,9 +4298,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
 				false,
-				NewCardFilter("noncreature", func(c *Card) bool {
-					return !c.HasType(TypeCreature)
-				}),
+				ObjectNot(IsCreatureCard),
 			)),
 		)
 	})
@@ -4345,9 +4314,7 @@ func registerCreatures() {
 				ReturnFromGraveyardToHandTarget(),
 				false,
 			).AddTarget(
-				TargetCardInYourGraveyard(NewCardFilter("instant or sorcery", func(c *Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				})),
+				TargetCardInYourGraveyard(IsInstantOrSorceryCard),
 			)),
 		)
 	})
@@ -4687,9 +4654,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-				NewCardFilter("instant or sorcery", func(c *Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				}),
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -4752,10 +4717,7 @@ func registerCreatures() {
 		return NewCreature("Warfire Javelineer", "{3}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Warrior"),
 			WithAbility(EntersBattlefieldTrigger(
-				DealDamage(CountZone(ZoneGraveyard, SelectController(),
-					NewCardFilter("instant or sorcery", func(c *Card) bool {
-						return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-					}))),
+				DealDamage(CountZone(ZoneGraveyard, SelectController(), IsInstantOrSorceryCard)),
 				false,
 			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
@@ -4773,9 +4735,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				DealDamage(Fixed(1)),
 				false,
-				NewCardFilter("instant or sorcery", func(c *Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				}),
+				IsInstantOrSorceryCard,
 			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
@@ -4790,9 +4750,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				CreateToken("Elemental", 1, 1, []CardType{TypeCreature}, []string{"Elemental"}),
 				false,
-				NewCardFilter("instant or sorcery", func(c *Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				}),
+				IsInstantOrSorceryCard,
 			)),
 		)
 	})
@@ -5868,9 +5826,6 @@ func registerCreatures() {
 	// 2/1
 	// When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. Put the rest on the bottom of your library in a random order.
 	Register("Silhana Wayfinder", func() *Card {
-		creatureOrLandCard := NewCardFilter("creature or land card", func(c *Card) bool {
-			return c.HasType(TypeCreature) || c.HasType(TypeLand)
-		})
 		return NewCreature("Silhana Wayfinder", "{1}{G}", 2, 1,
 			WithSubTypes("Elf", "Scout"),
 			WithAbility(EntersBattlefieldTrigger(
@@ -5881,7 +5836,7 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						chosen, _ := g.RevealAndPickFromTop(p, p, 4, creatureOrLandCard, true,
+						chosen, _ := g.RevealAndPickFromTop(p, p, 4, ObjectOr(IsCreatureCard, ObjectHasType(TypeLand)), true,
 							"reveal a creature or land card to put on top of your library")
 						taken := g.RemoveTopN(p, 4)
 						rest := taken
@@ -6172,14 +6127,11 @@ func registerCreatures() {
 	// As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}.
 	// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
 	Register("Wren's Run Vanquisher", func() *Card {
-		elfCardFilter := NewCardFilter("Elf card", func(c *Card) bool {
-			return c.HasSubType("Elf")
-		})
 		return NewCreature("Wren's Run Vanquisher", "{1}{G}", 3, 3,
 			WithSubTypes("Elf", "Warrior"),
 			WithKeyword(Deathtouch),
 			WithAdditionalCost(EitherCost(
-				RevealFromHandCost(elfCardFilter, "Reveal an Elf card"),
+				RevealFromHandCost(ObjectHasSubtype("Elf"), "Reveal an Elf card"),
 				ManaCostOf("{3}"),
 			)),
 		)
@@ -6626,9 +6578,7 @@ func registerCreatures() {
 				ReturnFromGraveyardToBattlefield(),
 				ManaCostOf("{4}"),
 				WithCost(Tap()),
-				WithTarget(TargetCardInYourGraveyard(NewCardFilter("artifact creature card", func(c *Card) bool {
-					return c.HasType(TypeArtifact) && c.HasType(TypeCreature)
-				}))),
+				WithTarget(TargetCardInYourGraveyard(ObjectAnd(IsArtifactCard, IsCreatureCard))),
 			),
 		)
 	})

@@ -345,7 +345,7 @@ func registerCreatures() {
 		return NewCreature("Goblin Wizard", "{2}{R}{R}", 1, 1,
 			WithSubTypes("Goblin", "Wizard"),
 			WithActivatedAbility(
-				PutFromHandOntoBattlefield(AndCardFilter(HasSubTypeCardFilter("Goblin"), IsPermanentCard)),
+				PutFromHandOntoBattlefield(ObjectAnd(ObjectHasSubtype("Goblin"), IsPermanentCard)),
 				Tap(),
 			),
 			WithActivatedAbility(

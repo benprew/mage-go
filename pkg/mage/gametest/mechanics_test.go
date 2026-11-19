@@ -478,7 +478,7 @@ func TestPutFromHandOntoBattlefield(t *testing.T) {
 	if !mage.CardRegistered(name) {
 		mage.Register(name, func() *mage.Card {
 			return mage.NewSorcery(name, "{G}",
-				mage.NewSpellAbility(mage.PutFromHandOntoBattlefield(mage.CardFilter{})),
+				mage.NewSpellAbility(mage.PutFromHandOntoBattlefield(mage.ObjectFilter{})),
 			)
 		})
 	}

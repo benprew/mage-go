@@ -15,11 +15,10 @@ func TestCastAsThoughHadFlash_LiftsSorcerySpeedGate(t *testing.T) {
 	const cardName = "CASTPERM Spirit Granter"
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() *mage.Card {
-			isSpirit := mage.NewCardFilter("Spirit creature", func(c *mage.Card) bool {
-				return c.HasType(core.TypeCreature) && c.HasSubType("Spirit")
-			})
 			return mage.NewEnchantment(cardName, "{0}",
-				mage.WithStaticAbility(mage.CastAsThoughHadFlash(isSpirit)),
+				mage.WithStaticAbility(mage.CastAsThoughHadFlash(
+					mage.ObjectAnd(mage.ObjectHasType(core.TypeCreature), mage.ObjectHasSubtype("Spirit")),
+				)),
 			)
 		})
 	}
@@ -49,11 +48,10 @@ func TestCastAsThoughHadFlash_FilterRestricts(t *testing.T) {
 	const cardName = "CASTPERM Spirit-only Granter"
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() *mage.Card {
-			isSpirit := mage.NewCardFilter("Spirit creature", func(c *mage.Card) bool {
-				return c.HasType(core.TypeCreature) && c.HasSubType("Spirit")
-			})
 			return mage.NewEnchantment(cardName, "{0}",
-				mage.WithStaticAbility(mage.CastAsThoughHadFlash(isSpirit)),
+				mage.WithStaticAbility(mage.CastAsThoughHadFlash(
+					mage.ObjectAnd(mage.ObjectHasType(core.TypeCreature), mage.ObjectHasSubtype("Spirit")),
+				)),
 			)
 		})
 	}

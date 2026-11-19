@@ -492,16 +492,17 @@ func (v untappedLandsAtTurnStartValue) Text() string {
 type countZoneValue struct {
 	zone   Zone
 	who    PlayerSelector
-	filter CardFilter // nil matches any card
+	filter ObjectFilter
 }
 
 // CountZone creates a ValueSource that counts cards in the given zone for the selected
-// players. Pass filter=nil to count all cards in the zone.
-func CountZone(zone Zone, who PlayerSelector, f CardFilter) ValueSource {
+// players. Pass a zero ObjectFilter to count all cards in the zone.
+func CountZone(zone Zone, who PlayerSelector, f ObjectFilter) ValueSource {
 	return countZoneValue{zone: zone, who: who, filter: f}
 }
 func (v countZoneValue) Resolve(ctx *EffectContext) int {
 	g := GameReader(ctx.Game)
+	abilityCtx := AbilityContext{SourceID: ctx.SourceID, Controller: ctx.Controller}
 
 	total := 0
 	for _, pid := range v.who.Select(ctx) {
@@ -519,7 +520,7 @@ func (v countZoneValue) Resolve(ctx *EffectContext) int {
 			cards = p.Library()
 		}
 		for _, c := range cards {
-			if v.filter.Match(c) {
+			if v.filter.Match(c, g, abilityCtx) {
 				total++
 			}
 		}

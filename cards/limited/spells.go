@@ -392,9 +392,7 @@ func registerSpells() {
 	// Copy target instant or sorcery spell, except that the copy is red. You may choose new targets for the copy.
 	Register("Fork", func() *Card {
 		return NewInstant("Fork", "{R}{R}",
-			NewTargetedSpell(TargetSpellOnStack(NewCardFilter("instant or sorcery", func(c *Card) bool {
-				return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-			})), CopySpellAndMayChooseNewTargetsWithEffects(ChangeColorEffect(Red))),
+			NewTargetedSpell(TargetSpellOnStack(IsInstantOrSorceryCard), CopySpellAndMayChooseNewTargetsWithEffects(ChangeColorEffect(Red))),
 		)
 	})
 
