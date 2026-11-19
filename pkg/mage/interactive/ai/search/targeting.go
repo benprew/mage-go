@@ -43,14 +43,6 @@ func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card *mage.Card, x i
 	return purpose, damage, outcome
 }
 
-func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, xValues ...int) [][]uuid.UUID {
-	x := 0
-	if len(xValues) > 0 {
-		x = xValues[0]
-	}
-	return topTargetCombinationsFiltered(g, playerID, source, reqs, purpose, damage, x, nil)
-}
-
 func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage.Permanent, ability mage.ActivatedAbility, purpose eval.TargetPurpose, damage int) [][]uuid.UUID {
 	var allow func(uuid.UUID) bool
 	if len(ability.Targets()) == 1 {
@@ -58,7 +50,7 @@ func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage
 			return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), []uuid.UUID{targetID})
 		}
 	}
-	combos := topTargetCombinationsFiltered(g, playerID, source.Card, ability.Targets(), purpose, damage, 0, allow)
+	combos := topTargetCombinationsFiltered(g, playerID, source.Card, ability.Targets(), purpose, damage, mage.SpellTargetOption{}, allow)
 	result := combos[:0]
 	for _, combo := range combos {
 		if !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), combo) {
@@ -68,15 +60,20 @@ func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage
 	return result
 }
 
-func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source *mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage, x int, allow func(uuid.UUID) bool) [][]uuid.UUID {
+func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source *mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, option mage.SpellTargetOption, allow func(uuid.UUID) bool) [][]uuid.UUID {
 	if len(reqs) == 0 {
 		return [][]uuid.UUID{{}}
 	}
 
 	groups := make([][][]scoredTarget, 0, len(reqs))
-	for _, req := range reqs {
-		possible := mage.PossibleTargets(req, playerID, source, g, mage.TargetingContext{X: x, XSpecified: true})
-		minTargets, maxTargets := mage.TargetBounds(req, x)
+	for i, req := range reqs {
+		var possible []uuid.UUID
+		if i < len(option.Candidates) {
+			possible = option.Candidates[i]
+		} else {
+			possible = mage.PossibleTargets(req, playerID, source, g, mage.TargetingContext{X: option.XValue, XSpecified: true})
+		}
+		minTargets, maxTargets := mage.TargetBounds(req, option.XValue)
 		if len(possible) < minTargets {
 			return nil
 		}

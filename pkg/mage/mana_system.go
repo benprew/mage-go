@@ -177,6 +177,7 @@ func (ms *ManaSystem) ComputeHandDemand(g *Game, playerID, exclude uuid.UUID) [A
 			continue
 		}
 		mc := c.ManaCost()
+		demand[Colorless] += mc.Colorless
 		demand[White] += mc.White
 		demand[Blue] += mc.Blue
 		demand[Black] += mc.Black
@@ -262,18 +263,9 @@ func (ms *ManaSystem) MaxXValue(g *Game, playerID uuid.UUID, mc ManaCost, spellC
 		upperMana += maxManaSourceOutput(src)
 	}
 	tryX := func(x int) bool {
-		cost := ManaCost{
-			Generic: mc.Generic + x*mc.XCount,
-			White:   mc.White,
-			Blue:    mc.Blue,
-			Black:   mc.Black,
-			Red:     mc.Red,
-			Green:   mc.Green,
-			Hybrid:  mc.Hybrid,
-		}
 		_, err := SolveMana(ManaSolverInputs{
 			Pool:         pool,
-			Cost:         cost,
+			Cost:         resolvedSpellManaCost(mc, x),
 			Sources:      sources,
 			Scores:       scores,
 			Conversions:  conv,

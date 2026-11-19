@@ -218,3 +218,18 @@ type spellObjectView struct {
 }
 
 func (s spellObjectView) ViewController() uuid.UUID { return s.controller }
+
+type stackObjectView struct {
+	*Card
+	object *StackObject
+}
+
+func (s stackObjectView) ViewID() uuid.UUID         { return s.object.SourceID }
+func (s stackObjectView) ViewController() uuid.UUID { return s.object.Controller }
+func (s stackObjectView) ViewManaValue() int        { return s.object.ManaValue() }
+func (s stackObjectView) ViewColors() []Color {
+	if s.object.ColorOverride != nil {
+		return slices.Clone(*s.object.ColorOverride)
+	}
+	return s.Colors()
+}

@@ -395,12 +395,8 @@ func WithSelfCostReduction(amount SpellAmount, condition SpellCondition) CardOpt
 	return func(c *Card) { c.AddAbility(SelfCostReduction(amount, condition)) }
 }
 
-// applySelfCostReductions checks card abilities and returns the total generic
-// reduction owed by intrinsic SelfCostReductionAbility entries. The targets
-// slice carries the chosen targets for this cast (per CR 601.2f, the total
-// cost is determined after modes and targets are chosen). Pass nil for
-// pre-target queries — target-conditional reducers will skip themselves.
-func applySelfCostReductions(g *Game, controller uuid.UUID, card *Card, targets []uuid.UUID) int {
+// Include all possible target reductions when you calculate an upper bound for X.
+func applySelfCostReductions(g *Game, controller uuid.UUID, card *Card, targets []uuid.UUID, includePossibleReductions bool) int {
 	total := 0
 	for _, a := range card.abilities {
 		scr, ok := UnwrapAbility(a).(*SelfCostReductionAbility)
@@ -410,7 +406,7 @@ func applySelfCostReductions(g *Game, controller uuid.UUID, card *Card, targets 
 		if scr.Condition != nil && !scr.Condition(g, controller, card, card.ID()) {
 			continue
 		}
-		if scr.TargetPredicate != nil {
+		if scr.TargetPredicate != nil && !includePossibleReductions {
 			if targets == nil || !scr.TargetPredicate(g, controller, card, targets) {
 				continue
 			}
@@ -445,13 +441,9 @@ func applyExternalCostReductions(g *Game, controller uuid.UUID, card *Card) int 
 	return total
 }
 
-// computeConditionalCostReduction is the entry point used by the cast-cost
-// pipeline. It returns the total generic reduction owed (capped to the
-// caller's current generic cost). The targets slice carries the chosen
-// targets for the cast (CR 601.2f: total cost is calculated after modes
-// and targets are chosen). Pass nil for pre-target queries.
+// computeConditionalCostReduction limits the reduction to the current generic cost.
 func computeConditionalCostReduction(g *Game, controller uuid.UUID, card *Card, currentGeneric int, targets []uuid.UUID) int {
-	red := min(max(applySelfCostReductions(g, controller, card, targets)+applyExternalCostReductions(g, controller, card), 0), currentGeneric)
+	red := min(max(applySelfCostReductions(g, controller, card, targets, false)+applyExternalCostReductions(g, controller, card), 0), currentGeneric)
 	return red
 }
 
@@ -468,9 +460,8 @@ func (g *Game) ConditionalSpellCostReduction(controller uuid.UUID, card *Card) i
 	return computeConditionalCostReduction(g, controller, card, card.ManaCost().Generic, nil)
 }
 
-// ConditionalSpellCostReductionWithTargets is like ConditionalSpellCostReduction
-// but evaluates target-conditional reducers (CR 601.2f) against the given
-// chosen-target list. Used by the cast pipeline and for engine tests.
+// ConditionalSpellCostReductionWithTargets reports the reduction for the
+// specified targets. The printed generic cost is the maximum.
 func (g *Game) ConditionalSpellCostReductionWithTargets(controller uuid.UUID, card *Card, targets []uuid.UUID) int {
 	if card == nil {
 		return 0

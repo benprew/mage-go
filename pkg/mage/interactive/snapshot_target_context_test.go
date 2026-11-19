@@ -1,6 +1,7 @@
 package interactive
 
 import (
+	"reflect"
 	"slices"
 	"testing"
 	"uuid"
@@ -31,6 +32,13 @@ func TestAvailableActionsManaValueTargets(t *testing.T) {
 			if !slices.Equal(action.ValidTargets, []uuid.UUID{zero.ID(), three.ID()}) {
 				t.Fatalf("labels %t: targets = %v, want affordable artifacts", includeLabels, action.ValidTargets)
 			}
+			wantOptions := []mage.SpellTargetOption{
+				{XValue: 0, Candidates: [][]uuid.UUID{{zero.ID()}}},
+				{XValue: 3, Candidates: [][]uuid.UUID{{three.ID()}}},
+			}
+			if !reflect.DeepEqual(action.XTargetOptions, wantOptions) {
+				t.Fatalf("labels %t: X target options = %+v, want %+v", includeLabels, action.XTargetOptions, wantOptions)
+			}
 			if !action.NeedsX || action.MaxXValue != 3 {
 				t.Fatalf("wrong X options: %+v", action)
 			}
@@ -42,4 +50,56 @@ func TestAvailableActionsManaValueTargets(t *testing.T) {
 			t.Fatal("action query changed announcement state")
 		}
 	}
+}
+
+func TestAvailableActionsRetainXTargetGroups(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	g.SetStep(core.PrecombatMain)
+	a.ManaPool().Add(core.Red, 8)
+	three := g.PutOnBattlefield(mage.NewArtifact("Three", "{3}"), b.PlayerID())
+	creature := g.PutOnBattlefield(mage.NewCreature("Creature", "{1}", 1, 1), b.PlayerID())
+	spell := mage.NewSorcery("Removal", "{X}{R}", mage.NewMultiTargetSpell([]mage.Target{
+		mage.TargetPermanent(mage.IsCardType(core.TypeArtifact), mage.ManaValueIs(mage.EqualTo(mage.HalfXRoundedDown()))),
+		mage.TargetCreature(),
+	}, mage.DestroyTarget()))
+	a.AddToHand(spell)
+
+	for _, action := range GetAvailableActions(g, a.PlayerID()) {
+		if action.CardID != spell.ID() {
+			continue
+		}
+		want := []mage.SpellTargetOption{
+			{XValue: 6, Candidates: [][]uuid.UUID{{three.ID()}, {creature.ID()}}},
+			{XValue: 7, Candidates: [][]uuid.UUID{{three.ID()}, {creature.ID()}}},
+		}
+		if !reflect.DeepEqual(action.XTargetOptions, want) {
+			t.Fatalf("X target options = %+v, want %+v", action.XTargetOptions, want)
+		}
+		return
+	}
+	t.Fatal("missing affordable spell")
+}
+
+func TestAvailableActionsReportChannelX(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	g.SetStep(core.PrecombatMain)
+	a.ManaPool().Add(core.Red, 1)
+	g.SetChannelActive(a.PlayerID())
+	target := g.PutOnBattlefield(mage.NewArtifact("Three", "{3}"), b.PlayerID())
+	spell := mage.NewSorcery("Removal", "{X}{R}", mage.NewTargetedSpell(mage.TargetArtifactWithManaValueX(), mage.DestroyTarget()))
+	a.AddToHand(spell)
+
+	for _, action := range GetAvailableActions(g, a.PlayerID()) {
+		if action.CardID != spell.ID() {
+			continue
+		}
+		want := []mage.SpellTargetOption{{XValue: 3, Candidates: [][]uuid.UUID{{target.ID()}}}}
+		if !reflect.DeepEqual(action.XTargetOptions, want) || action.MaxXValue != 3 {
+			t.Fatalf("expected an X=3 cast with Channel, got %+v", action)
+		}
+		return
+	}
+	t.Fatal("missing cast with Channel")
 }

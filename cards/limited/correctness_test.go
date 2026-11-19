@@ -600,20 +600,6 @@ func TestLifeforce(t *testing.T) {
 	})
 }
 
-func TestSpellBlast(t *testing.T) {
-	t.Run("fails when X is less than target CMC", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth") // CMC 1
-		g.AddCard(core.ZoneHand, gametest.PlayerB, "Spell Blast")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
-		g.CastInResponseToWithX(gametest.PlayerB, "Spell Blast", 0) // X=0 < CMC 1
-		g.StopAt(1, core.BeginCombat)
-		g.Execute()
-		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 5, 5)
-	})
-}
-
 func TestPowerSink(t *testing.T) {
 	t.Run("does not counter if opponent can pay X", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

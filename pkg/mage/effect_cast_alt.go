@@ -104,13 +104,10 @@ func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) *Card {
 	return nil
 }
 
-// CastCardFromZoneWithoutPaying puts the named card on the stack from the
-// given zone, paying no mana cost. Additional costs printed on the card
-// (sacrifice, discard, etc.) are still paid (CR 601.2b, 118.9).
+// CastCardFromZoneWithoutPaying casts the card from the specified zone
+// without paying its printed mana cost. Other costs can apply (CR 601.2f).
 //
-// X is set to xValue (used for spells with X in their cost; "without paying
-// its mana cost" sets X = 0 unless the alternate cost specifies otherwise —
-// callers may pass 0 for the standard case).
+// If the spell has X in its mana cost, xValue must be zero (CR 107.3b).
 func (g *Game) CastCardFromZoneWithoutPaying(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int) error {
 	return g.castCardFromZone(playerID, cardID, zone, targets, xValue, nil, false)
 }
@@ -172,23 +169,28 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	if alternateMC != nil {
 		mana = *alternateMC
 	}
-	totalCosts := append([]Cost(nil), extraCosts...)
-	totalCosts = append(totalCosts, card.AdditionalCosts()...)
-	var actionCosts []Cost
-	for _, ability := range card.abilities {
-		if spell, ok := ability.(*SpellAbility); ok && spell.Kind() == ActionSpell {
-			actionCosts = append(actionCosts, spell.Costs()...)
-		}
+	if xValue > 0 && card.ManaCost().HasX && !mana.HasX {
+		return fmt.Errorf("x must be zero when casting %s without paying an X cost", card.Name())
 	}
-	totalCosts = append(totalCosts, g.prepareActionCosts(actionCosts, targets, xValue)...)
-
+	announcement := castStackObjectOptions{
+		Card:              card,
+		Controller:        playerID,
+		Targets:           targets,
+		XValue:            xValue,
+		CastZone:          zone,
+		ExileOnLeaveStack: exileOnLeaveStack,
+		SnapshotCast:      true,
+	}
+	if err := g.prepareSpellAnnouncement(&announcement); err != nil {
+		return err
+	}
 	payment, err := g.prepareSpellPaymentTransaction(spellPaymentSpec{
 		Card:       card,
 		Controller: playerID,
 		Zone:       zone,
 		Mana:       mana,
-		Costs:      totalCosts,
-		Targets:    targets,
+		Costs:      extraCosts,
+		Targets:    announcement.Targets,
 		XValue:     xValue,
 		AnyColor:   anyColor,
 	})
@@ -199,20 +201,12 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return err
 	}
 
-	if !card.ManaCost().HasX && g.resolution.X() != 0 && xValue == 0 {
-		xValue = g.resolution.X()
+	if !card.ManaCost().HasX && !mana.HasX && g.resolution.X() != 0 && xValue == 0 {
+		announcement.XValue = g.resolution.X()
 		g.resolution.SetX(0)
 	}
 
-	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		Card:              card,
-		Controller:        playerID,
-		Targets:           targets,
-		XValue:            xValue,
-		CastZone:          zone,
-		ExileOnLeaveStack: exileOnLeaveStack,
-		SnapshotCast:      true,
-	})
+	_, err = g.pushCastSpellObject(announcement)
 	return err
 }
 

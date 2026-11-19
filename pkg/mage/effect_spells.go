@@ -43,8 +43,8 @@ func (e *counterSpellIfColorEffect) Properties() EffectProperties {
 // counterSpellIfXMeetsOrExceedsCMCEffect counters a spell only if X >= its CMC.
 type counterSpellIfXMeetsOrExceedsCMCEffect struct{}
 
-// CounterSpellIfXMeetsCMC creates an effect that counters a target spell only if X >= its mana value
-// (e.g. Spell Blast).
+// CounterSpellIfXMeetsCMC counters a target spell if X is at least its mana value.
+// Use a target filter when X must equal the mana value.
 func CounterSpellIfXMeetsCMC() Effect {
 	return &counterSpellIfXMeetsOrExceedsCMCEffect{}
 }

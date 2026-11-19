@@ -1142,7 +1142,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 		if !card.HasType(core.TypeInstant) {
 			continue
 		}
-		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
+		if !mage.TargetsUseX(card.CastTargets()) && !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
 		if !aiHintAllowsTiming(cardAIHint(card), g, false) {

@@ -67,14 +67,15 @@ func multiplyManaCost(mc ManaCost, n int) ManaCost {
 		return ManaCost{}
 	}
 	out := ManaCost{
-		Generic: mc.Generic * n,
-		White:   mc.White * n,
-		Blue:    mc.Blue * n,
-		Black:   mc.Black * n,
-		Red:     mc.Red * n,
-		Green:   mc.Green * n,
-		HasX:    mc.HasX,
-		XCount:  mc.XCount * n,
+		Generic:   mc.Generic * n,
+		Colorless: mc.Colorless * n,
+		White:     mc.White * n,
+		Blue:      mc.Blue * n,
+		Black:     mc.Black * n,
+		Red:       mc.Red * n,
+		Green:     mc.Green * n,
+		HasX:      mc.HasX,
+		XCount:    mc.XCount * n,
 	}
 	for range n {
 		out.Hybrid = append(out.Hybrid, mc.Hybrid...)
@@ -110,13 +111,10 @@ func (c *ManaCostPayment) reducedCost(sourceID uuid.UUID, g *Game) ManaCost {
 		return c.MC
 	}
 	mc := c.MC
-	// Total colored mana in the cost
-	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
-	total := coloredTotal + mc.Generic
-	// Can't reduce below 1 total mana
+	// If the ability costs mana, the cost must be at least one mana.
 	minGeneric := 0
-	if total > 0 {
-		minGeneric = max(0, 1-coloredTotal)
+	if total := mc.CMC(); total > 0 {
+		minGeneric = max(0, 1-(total-mc.Generic))
 	}
 	mc.Generic = max(minGeneric, mc.Generic-reduction)
 	return mc

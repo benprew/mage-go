@@ -31,6 +31,64 @@ type spellPaymentSpec struct {
 	AnyColor   bool
 }
 
+func (g *Game) spellGenericCostAdjustment(controller uuid.UUID, card *Card, targets []uuid.UUID, includePossibleReductions bool) int {
+	rules := g.effects.Rules
+	increase, reduction := 0, 0
+	if len(rules.SpellCostIncreases) > 0 || len(rules.SpellCostReductions) > 0 {
+		for _, color := range card.ManaCost().Colors() {
+			if increase == 0 {
+				increase = max(0, rules.SpellCostIncrease(color))
+			}
+			if reduction == 0 {
+				reduction = max(0, rules.SpellCostReduction(color))
+			}
+		}
+	}
+	if len(rules.SpellTypeCostReductions) > 0 {
+		for _, kind := range card.Types() {
+			reduction += max(0, rules.SpellTypeCostReduction(kind))
+		}
+	}
+	reduction += applySelfCostReductions(g, controller, card, targets, includePossibleReductions)
+	reduction += applyExternalCostReductions(g, controller, card)
+	return increase - reduction
+}
+
+func (g *Game) spellAnnouncementCosts(spec spellPaymentSpec) spellPaymentSpec {
+	spec.Mana = resolvedSpellManaCost(spec.Mana, spec.XValue)
+	spec.Mana.Generic = max(0, spec.Mana.Generic+g.spellGenericCostAdjustment(spec.Controller, spec.Card, spec.Targets, false))
+	if g.effects.Rules.IsChannelActive(spec.Controller) {
+		spec.LifeLoss += spec.Mana.Generic
+		spec.Mana.Generic = 0
+	}
+
+	costs := append([]Cost(nil), spec.Costs...)
+	costs = append(costs, spec.Card.AdditionalCosts()...)
+	for _, ability := range spec.Card.abilities {
+		if spell, ok := ability.(*SpellAbility); ok && spell.Kind() == ActionSpell {
+			costs = append(costs, spell.Costs()...)
+		}
+	}
+	spec.Costs = g.prepareActionCosts(costs, spec.Targets, spec.XValue)
+	return spec
+}
+
+func (g *Game) canAffordSpellAnnouncement(player Player, card *Card, x int, targets []uuid.UUID) bool {
+	spec := g.spellAnnouncementCosts(spellPaymentSpec{
+		Card: card, Controller: player.PlayerID(), Mana: card.ManaCost(), XValue: x, Targets: targets,
+	})
+	life := spec.LifeLoss
+	for _, cost := range spec.Costs {
+		life += LifePaymentAmount(cost)
+	}
+	if life > 0 && player.Life() <= life {
+		return false
+	}
+	extra, _ := directSpellManaCosts(spec.Costs, x)
+	addActionManaCost(&spec.Mana, extra)
+	return g.CanAfford(spec.Controller, spec.Mana, SpellContextForCard(card))
+}
+
 func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaymentTransaction, error) {
 	if spec.Card == nil {
 		return nil, ErrSourceNotFound
@@ -39,8 +97,9 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
+	spec = g.spellAnnouncementCosts(spec)
 	if extraMana, direct := directSpellManaCosts(spec.Costs, spec.XValue); direct {
-		totalMana := resolvedSpellManaCost(spec.Mana, spec.XValue)
+		totalMana := spec.Mana
 		addActionManaCost(&totalMana, extraMana)
 		if spec.AnyColor {
 			totalMana = flattenManaCost(totalMana)
@@ -77,7 +136,7 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	if err != nil {
 		return nil, err
 	}
-	totalMana := resolvedSpellManaCost(spec.Mana, spec.XValue)
+	totalMana := spec.Mana
 	var nonMana []Cost
 	for _, cost := range lockedCosts {
 		switch payment := cost.(type) {
@@ -120,6 +179,7 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 
 func directSpellManaCosts(costs []Cost, xValue int) (ManaCost, bool) {
 	var total ManaCost
+	direct := true
 	for _, cost := range costs {
 		switch payment := cost.(type) {
 		case *ManaCostPayment:
@@ -127,10 +187,10 @@ func directSpellManaCosts(costs []Cost, xValue int) (ManaCost, bool) {
 		case *xManaCost:
 			total.Generic += xValue
 		default:
-			return ManaCost{}, false
+			direct = false
 		}
 	}
-	return total, true
+	return total, direct
 }
 
 func resolvedSpellManaCost(cost ManaCost, xValue int) ManaCost {
@@ -143,7 +203,7 @@ func resolvedSpellManaCost(cost ManaCost, xValue int) ManaCost {
 }
 
 func flattenManaCost(cost ManaCost) ManaCost {
-	return ManaCost{Generic: manaCostUnits(cost)}
+	return ManaCost{Generic: cost.CMC() - cost.Colorless, Colorless: cost.Colorless}
 }
 
 func lockPaymentCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uuid.UUID, xValue int, validation *Game, chooser Player) ([]Cost, map[uuid.UUID]bool, error) {

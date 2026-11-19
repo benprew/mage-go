@@ -53,7 +53,7 @@ type ManaCost struct {
 // CMC returns the converted mana cost (total mana value).
 // Hybrid symbols contribute 1 each (CR 202.3f: each {X/Y} hybrid is mana value 1).
 func (mc ManaCost) CMC() int {
-	return mc.Generic + mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
+	return mc.Generic + mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + mc.Colorless + len(mc.Hybrid)
 }
 
 // Colors returns the set of colors in this mana cost.
@@ -89,9 +89,9 @@ func (mc ManaCost) Colors() []Color {
 	return colors
 }
 
-// IsZero returns true if the mana cost is empty (e.g., for lands).
+// IsZero reports whether the cost has no fixed mana requirements.
 func (mc ManaCost) IsZero() bool {
-	return mc.Generic == 0 && mc.White == 0 && mc.Blue == 0 && mc.Black == 0 && mc.Red == 0 && mc.Green == 0 && len(mc.Hybrid) == 0
+	return mc.CMC() == 0
 }
 
 func (mc ManaCost) String() string {
@@ -101,6 +101,9 @@ func (mc ManaCost) String() string {
 	}
 	if mc.Generic > 0 || (mc.CMC() == 0 && !mc.HasX) {
 		parts = append(parts, fmt.Sprintf("{%d}", mc.Generic))
+	}
+	for range mc.Colorless {
+		parts = append(parts, "{C}")
 	}
 	for i := 0; i < mc.White; i++ {
 		parts = append(parts, "{W}")
@@ -176,6 +179,8 @@ func ParseManaCost(s string) ManaCost {
 					mc.Red++
 				case "G":
 					mc.Green++
+				case "C":
+					mc.Colorless++
 				case "X":
 					mc.HasX = true
 					mc.XCount++

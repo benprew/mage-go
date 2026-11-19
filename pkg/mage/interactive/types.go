@@ -100,8 +100,9 @@ type ActionOption struct {
 	ValidTargets      []uuid.UUID
 	ValidTargetLabels []string
 
-	NeedsX    bool
-	MaxXValue int
+	NeedsX         bool
+	MaxXValue      int
+	XTargetOptions []mage.SpellTargetOption
 }
 
 // GameMsg is sent from the game goroutine to the TUI.

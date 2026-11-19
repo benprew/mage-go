@@ -347,11 +347,13 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		var targetType mage.Target
 		var validTargets []uuid.UUID
 		var validLabels []string
+		var xTargetOptions []mage.SpellTargetOption
 		if ct := card.CastTargets(); len(ct) > 0 {
 			needsTarget = true
 			targetType = ct[0]
 			if mage.TargetsUseX(ct) {
-				for _, option := range g.SpellTargetOptions(playerID, card) {
+				xTargetOptions = g.SpellTargetOptions(playerID, card)
+				for _, option := range xTargetOptions {
 					for _, id := range option.Candidates[0] {
 						if !slices.Contains(validTargets, id) {
 							validTargets = append(validTargets, id)
@@ -378,6 +380,7 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 			TargetType:        targetType,
 			ValidTargets:      validTargets,
 			ValidTargetLabels: validLabels,
+			XTargetOptions:    xTargetOptions,
 		}
 		if includeLabels {
 			opt.Label = fmt.Sprintf("Cast %s %s", card.Name(), mc)
@@ -385,7 +388,11 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		}
 		if mc.HasX {
 			opt.NeedsX = true
-			opt.MaxXValue = g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
+			if len(xTargetOptions) > 0 {
+				opt.MaxXValue = xTargetOptions[len(xTargetOptions)-1].XValue
+			} else {
+				opt.MaxXValue = g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
+			}
 		}
 		options = append(options, opt)
 	}

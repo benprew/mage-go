@@ -545,7 +545,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Car
 			}
 		}
 		for _, option := range g.SpellTargetOptions(p.PlayerID(), card) {
-			targets := s.autoSelectTargetsAtX(p, g, card, option.XValue)
+			targets := s.autoSelectTargetsAtX(p, g, card, option)
 			if requiresTargets(card) && len(targets) == 0 {
 				continue
 			}
@@ -559,13 +559,21 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card *mage.Car
 		}
 		return best
 	}
-	return s.autoSelectTargetsAtX(p, g, card, s.bestXValue(g, p.PlayerID(), card, nil))
+	return s.autoSelectTargetsAtX(p, g, card, mage.SpellTargetOption{XValue: s.bestXValue(g, p.PlayerID(), card, nil)})
 }
 
-func (s *Strategy) autoSelectTargetsAtX(p mage.Player, g *mage.Game, card *mage.Card, xValue int) []uuid.UUID {
+func (s *Strategy) autoSelectTargetsAtX(p mage.Player, g *mage.Game, card *mage.Card, option mage.SpellTargetOption) []uuid.UUID {
 	playerID := p.PlayerID()
+	xValue := option.XValue
 	var targets []uuid.UUID
+	candidates := func(index int, target mage.Target) []uuid.UUID {
+		if index < len(option.Candidates) {
+			return option.Candidates[index]
+		}
+		return mage.PossibleTargets(target, playerID, card, g, mage.TargetingContext{X: xValue, XSpecified: true})
+	}
 
+	groupIndex := 0
 	for _, a := range card.AllAbilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
@@ -589,7 +597,8 @@ func (s *Strategy) autoSelectTargetsAtX(p mage.Player, g *mage.Game, card *mage.
 		// creatures", "target player and target creature") are fully populated
 		// rather than only filling the first requirement.
 		for _, t := range sa.Targets() {
-			possible := mage.PossibleTargets(t, playerID, card, g, mage.TargetingContext{X: xValue, XSpecified: true})
+			possible := candidates(groupIndex, t)
+			groupIndex++
 			minTargets, maxTargets := mage.TargetBounds(t, xValue)
 			if len(possible) == 0 {
 				if minTargets > 0 {
@@ -611,8 +620,8 @@ func (s *Strategy) autoSelectTargetsAtX(p mage.Player, g *mage.Game, card *mage.
 	}
 
 	// Check CastTargets for auras and other cards with cast-time targeting
-	for _, t := range card.CastTargets() {
-		possible := mage.PossibleTargets(t, playerID, card, g, mage.TargetingContext{X: xValue, XSpecified: true})
+	for i, t := range card.CastTargets() {
+		possible := candidates(i, t)
 		if len(possible) == 0 {
 			return nil
 		}

@@ -911,8 +911,13 @@ func TargetSpellOrPermanent() Target {
 }
 
 func (t *SpellOrPermanentTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	return t.PossibleWithContext(controller, sourceCard, g, TargetingContext{})
+}
+
+// PossibleWithContext finds spell and permanent targets.
+func (t *SpellOrPermanentTarget) PossibleWithContext(controller uuid.UUID, sourceCard *Card, g *Game, ctx TargetingContext) []uuid.UUID {
 	permanents := TargetPermanent().Possible(controller, sourceCard, g)
-	spells := TargetSpellOnStack().Possible(controller, sourceCard, g)
+	spells := PossibleTargets(TargetSpellOnStack(), controller, sourceCard, g, ctx)
 	return uniqueTargetCandidates(append(permanents, spells...))
 }
 
@@ -932,49 +937,78 @@ func (t *DamageSourceTarget) Possible(controller uuid.UUID, sourceCard *Card, g 
 	return uniqueTargetCandidates(append(permanents, spells...))
 }
 
-// SpellOnStackTarget targets a spell on the stack, optionally filtered by CardFilter predicates.
+// SpellOnStackTarget selects spells that match all supplied filters.
 type SpellOnStackTarget struct {
 	BaseTarget
 	Filters         []CardFilter
+	objectFilter    ObjectFilter
 	controlledByYou bool
 }
 
-// TargetSpellOnStack creates a target that selects a spell currently on the stack (for counterspells),
-// optionally narrowed by CardFilter predicates.
-func TargetSpellOnStack(filters ...CardFilter) Target {
-	return &SpellOnStackTarget{
-		min: 1, max: 1,
-		Filters: filters,
-	}
+// TargetSpellOnStack selects a spell that matches all filters.
+// Each filter must be a [CardFilter] or an [ObjectFilter].
+func TargetSpellOnStack(filters ...any) Target {
+	return spellOnStackTarget(false, filters)
 }
 
-// TargetOwnSpellOnStack creates a target that selects a spell you control on the stack,
-// optionally narrowed by CardFilter predicates.
-func TargetOwnSpellOnStack(filters ...CardFilter) Target {
-	return &SpellOnStackTarget{
-		min: 1, max: 1,
-		Filters:         filters,
-		controlledByYou: true,
-	}
+// TargetOwnSpellOnStack selects a matching spell controlled by the player.
+// Each filter must be a [CardFilter] or an [ObjectFilter].
+func TargetOwnSpellOnStack(filters ...any) Target {
+	return spellOnStackTarget(true, filters)
 }
 
-func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ *Card, g *Game) []uuid.UUID {
+func spellOnStackTarget(controlledByYou bool, filters []any) *SpellOnStackTarget {
+	target := &SpellOnStackTarget{min: 1, max: 1, controlledByYou: controlledByYou}
+	var objectFilters []ObjectFilter
+	for _, filter := range filters {
+		switch f := filter.(type) {
+		case CardFilter:
+			target.Filters = append(target.Filters, f)
+		case ObjectFilter:
+			objectFilters = append(objectFilters, f)
+		default:
+			panic("mage: unsupported stack spell target filter")
+		}
+	}
+	if len(objectFilters) == 1 {
+		target.objectFilter = objectFilters[0]
+	} else if len(objectFilters) > 1 {
+		target.objectFilter = ObjectAnd(objectFilters...)
+	}
+	return target
+}
+
+func (t *SpellOnStackTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	return t.PossibleWithContext(controller, sourceCard, g, TargetingContext{})
+}
+
+// PossibleWithContext checks stack spells with explicit announcement values.
+func (t *SpellOnStackTarget) PossibleWithContext(controller uuid.UUID, sourceCard *Card, g *Game, ctx TargetingContext) []uuid.UUID {
 	var result []uuid.UUID
+	sourceID := uuid.Nil()
+	if sourceCard != nil {
+		sourceID = sourceCard.ID()
+	}
 	for _, obj := range g.stack.Objects() {
-		if !obj.IsAbility && obj.Card != nil {
-			if t.controlledByYou && obj.Controller != controller {
-				continue
+		if obj.IsAbility || obj.Card == nil || (ctx.StackObjectID != uuid.Nil() && obj.ID == ctx.StackObjectID) {
+			continue
+		}
+		if t.controlledByYou && obj.Controller != controller {
+			continue
+		}
+		view := stackObjectView{Card: obj.Card, object: obj}
+		if !t.objectFilter.matchTarget(view, g, AbilityContext{SourceID: sourceID, Controller: controller}, ctx) {
+			continue
+		}
+		match := true
+		for _, f := range t.Filters {
+			if !f.Match(obj.Card) {
+				match = false
+				break
 			}
-			match := true
-			for _, f := range t.Filters {
-				if !f.Match(obj.Card) {
-					match = false
-					break
-				}
-			}
-			if match {
-				result = append(result, obj.SourceID)
-			}
+		}
+		if match {
+			result = append(result, obj.SourceID)
 		}
 	}
 	return result

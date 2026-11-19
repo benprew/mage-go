@@ -204,7 +204,7 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	if mc.HasX {
 		return expandXSpellMoves(p, g, card)
 	}
-	return expandNonXSpellMoves(p, g, card, 0, 0)
+	return expandNonXSpellMoves(p, g, card, mage.SpellTargetOption{}, 0)
 }
 
 // expandModalSpellMoves generates one set of moves per mode for modal spells.
@@ -212,7 +212,7 @@ func expandModalSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, modes [
 	var allMoves []Move
 	maxModes := min(len(modes), 3)
 	for modeIdx := range maxModes {
-		baseMoves := expandNonXSpellMoves(p, g, card, 0, modeIdx)
+		baseMoves := expandNonXSpellMoves(p, g, card, mage.SpellTargetOption{}, modeIdx)
 		allMoves = append(allMoves, baseMoves...)
 	}
 	return allMoves
@@ -225,9 +225,6 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 	playerID := p.PlayerID()
 	mc := card.ManaCost()
 	maxX := g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
-	if !g.CanAfford(playerID, mc, mage.SpellContextForCard(card)) {
-		return nil
-	}
 
 	// Include zero so that removal can target objects with mana value zero.
 	xValues := []int{0, 1}
@@ -285,15 +282,16 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card) []Move {
 
 	var allMoves []Move
 	for _, option := range g.SpellTargetOptions(playerID, card, unique...) {
-		moves := expandNonXSpellMoves(p, g, card, option.XValue, 0)
+		moves := expandNonXSpellMoves(p, g, card, option, 0)
 		allMoves = append(allMoves, moves...)
 	}
 	return allMoves
 }
 
 // expandNonXSpellMoves generates targeting variants for a spell with an optional X value and mode index.
-func expandNonXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, xValue, modeIndex int) []Move {
+func expandNonXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, option mage.SpellTargetOption, modeIndex int) []Move {
 	playerID := p.PlayerID()
+	xValue := option.XValue
 	sv := eval.SpellValue(card, p, g)
 	// Bonus for higher X values
 	if xValue > 0 {
@@ -320,7 +318,7 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card *mage.Card, xValue, 
 		}}
 	}
 
-	combos := topTargetCombinations(g, playerID, card, allTargetReqs, purpose, damage, xValue)
+	combos := topTargetCombinationsFiltered(g, playerID, card, allTargetReqs, purpose, damage, option, nil)
 	if len(combos) == 0 {
 		return nil
 	}

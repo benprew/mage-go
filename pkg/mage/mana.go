@@ -194,11 +194,15 @@ func (mp *ManaPool) paymentPlan(mc ManaCost, spellCtx *SpellPaymentContext) ([An
 
 	requirements := make([]manaPaymentRequirement, 0, mc.CMC()-mc.Generic)
 	appendRequirements := func(color Color, count int) {
+		if count == 0 {
+			return
+		}
 		candidates := mp.paymentCandidates(color)
 		for range count {
 			requirements = append(requirements, manaPaymentRequirement{candidates: candidates})
 		}
 	}
+	appendRequirements(Colorless, mc.Colorless)
 	appendRequirements(White, mc.White)
 	appendRequirements(Blue, mc.Blue)
 	appendRequirements(Black, mc.Black)
@@ -267,6 +271,7 @@ func directManaPaymentPlan(available [AnyColor + 1]int, mc ManaCost) ([AnyColor 
 		color Color
 		count int
 	}{
+		{Colorless, mc.Colorless},
 		{White, mc.White},
 		{Blue, mc.Blue},
 		{Black, mc.Black},
@@ -294,7 +299,7 @@ func directManaPaymentPlan(available [AnyColor + 1]int, mc ManaCost) ([AnyColor 
 func (mp *ManaPool) paymentCandidates(required Color) []Color {
 	candidates := []Color{required}
 	for _, from := range manaPoolColors {
-		if from != required && mp.ManaConversions[from] == required {
+		if to, ok := mp.ManaConversions[from]; from != required && ok && to == required {
 			candidates = append(candidates, from)
 		}
 	}

@@ -15,7 +15,8 @@ func TestTargetSpellOrPermanentIncludesBothZones(t *testing.T) {
 		t.Fatalf("cast spell target: %v", err)
 	}
 
-	possible := TargetSpellOrPermanent().Possible(a.PlayerID(), spell, g)
+	source := NewInstant("Source", "{0}")
+	possible := TargetSpellOrPermanent().Possible(a.PlayerID(), source, g)
 	if !slices.Contains(possible, permanent.ID()) {
 		t.Fatalf("possible targets %v do not include permanent %v", possible, permanent.ID())
 	}

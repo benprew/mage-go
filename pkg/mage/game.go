@@ -1965,7 +1965,7 @@ func (g *Game) pushStack(obj *StackObject) {
 
 // Check if target is still legal at resolution time. Used in stack responses and
 // resolutions.
-func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controller uuid.UUID, expectedZone Zone, spec Target, x int) bool {
+func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controller uuid.UUID, expectedZone Zone, spec Target, ctx TargetingContext) bool {
 	if g.GetPlayer(targetID) != nil {
 		return true
 	}
@@ -1979,7 +1979,7 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard *Card, controll
 			return false
 		}
 	}
-	if spec != nil && !slices.Contains(PossibleTargets(spec, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true}), targetID) {
+	if spec != nil && !slices.Contains(PossibleTargets(spec, controller, sourceCard, g, ctx), targetID) {
 		return false
 	}
 	return true
@@ -2010,6 +2010,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	resolvedTargets := make([]uuid.UUID, len(obj.Targets))
 	hasRealTarget := false
 	anyLegal := false
+	targeting := TargetingContext{X: obj.XValue, XSpecified: true, StackObjectID: obj.ID}
 	for i, t := range obj.Targets {
 		if t != uuid.Nil() {
 			hasRealTarget = true
@@ -2027,7 +2028,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			if obj.TargetSource != nil {
 				sourceCard = obj.TargetSource
 			}
-			if g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec, obj.XValue) {
+			if g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec, targeting) {
 				resolvedTargets[i] = t
 				anyLegal = true
 				continue
@@ -2219,32 +2220,9 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard *Card, spe
 	return nil
 }
 
-func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard *Card, chosen []uuid.UUID, x int) error {
-	specs := sourceCard.CastTargets()
-	if len(specs) != 1 {
-		return nil
-	}
-	spec := specs[0]
-	minTargets, maxTargets := TargetBounds(spec, x)
-	if _, variable := spec.(VariableTarget); !variable {
-		return nil
-	}
-	if len(chosen) < minTargets || len(chosen) > maxTargets {
-		return fmt.Errorf("%s requires exactly %d targets", sourceCard.Name(), minTargets)
-	}
-	possible := PossibleTargets(spec, controller, sourceCard, g, TargetingContext{X: x, XSpecified: true})
-	seen := make(map[uuid.UUID]bool, len(chosen))
-	for _, id := range chosen {
-		if seen[id] || !slices.Contains(possible, id) {
-			return fmt.Errorf("invalid target for %s", sourceCard.Name())
-		}
-		seen[id] = true
-	}
-	return nil
-}
-
 func addActionManaCost(total *ManaCost, add ManaCost) {
 	total.Generic += add.Generic
+	total.Colorless += add.Colorless
 	total.White += add.White
 	total.Blue += add.Blue
 	total.Black += add.Black
@@ -2271,7 +2249,7 @@ func (g *Game) prepareActionCosts(costs []Cost, targets []uuid.UUID, x int) []Co
 		}
 		resolved = append(resolved, cost)
 	}
-	if !mana.IsZero() {
+	if !mana.IsZero() || mana.HasX {
 		resolved = append([]Cost{&ManaCostPayment{MC: mana}}, resolved...)
 	}
 	return resolved
@@ -2346,118 +2324,25 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 	if len(xValues) > 0 {
 		xValue = xValues[0]
 	}
-	if xValue < 0 {
-		return fmt.Errorf("x cannot be negative")
+	announcement := castStackObjectOptions{
+		Card:         card,
+		Controller:   playerID,
+		Targets:      targets,
+		TargetGroups: groups,
+		Mode:         mode,
+		XValue:       xValue,
+		CastZone:     ZoneHand,
+		SnapshotCast: true,
 	}
-	specs := card.CastTargets()
-	if action, ok := getModalSpellAbility(card); ok {
-		if mode == nil {
-			choice := chooseActionMode(g.GetPlayer(playerID), action, card.Name(), g)
-			mode = &choice
-		}
-		if *mode < 0 || *mode >= len(action.modes) {
-			return fmt.Errorf("invalid modal choice")
-		}
-		specs = action.modes[*mode].Targets
-	}
-	if groups != nil {
-		groups = g.acquireTargetGroups(playerID, card, specs, groups, xValue)
-		if err := g.validateTargetGroups(playerID, card, specs, groups, xValue); err != nil {
-			return err
-		}
-		targets = flattenTargetGroups(groups)
-	} else {
-		targets = g.acquireRandomTargets(playerID, card, specs, targets, xValue)
-		targets = g.acquireOpponentChosenTargets(playerID, card, specs, targets, xValue)
-		if len(targets) == 0 && mode != nil && len(specs) > 0 {
-			groups = g.promptTargetGroups(playerID, card, specs, xValue)
-			targets = flattenTargetGroups(groups)
-		}
-		if groups == nil {
-			groups = groupTargets(specs, targets, xValue)
-		}
-		if err := g.validateTargetGroups(playerID, card, specs, groups, xValue); err != nil {
-			return err
-		}
-	}
-	if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
+	if err := g.prepareSpellAnnouncement(&announcement); err != nil {
 		return err
 	}
-
-	mc := card.ManaCost()
-
-	// Apply spell cost increases (e.g. Gloom)
-	for _, col := range mc.Colors() {
-		increase := g.effects.Rules.SpellCostIncrease(col)
-		if increase > 0 {
-			mc.Generic += increase
-			break // only apply once per spell
-		}
-	}
-
-	// Apply spell cost reductions (by color)
-	for _, col := range mc.Colors() {
-		reduction := g.effects.Rules.SpellCostReduction(col)
-		if reduction > 0 {
-			mc.Generic -= reduction
-			if mc.Generic < 0 {
-				mc.Generic = 0
-			}
-			break // only apply once per spell
-		}
-	}
-
-	// Apply spell cost reductions (by type, e.g. Mana Matrix, Planar Gate)
-	for _, ct := range card.Types() {
-		reduction := g.effects.Rules.SpellTypeCostReduction(ct)
-		if reduction > 0 {
-			mc.Generic -= reduction
-			if mc.Generic < 0 {
-				mc.Generic = 0
-			}
-		}
-	}
-
-	// Conditional cost reductions (CR 601.2f). Reduce generic only; never
-	// below zero. Covers static-source reducers (Warden of Evos Isle,
-	// Dragonlord's Servant, Herald's Horn) and intrinsic self-reducers
-	// (Bone Picker, Cryptic Serpent, Ghalta).
-	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic, targets); r > 0 {
-		mc.Generic -= r
-	}
-
-	payMC := mc
-	lifeLoss := 0
-	// Channel: pay life for the printed generic/X portion instead of mana.
-	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
-		payMC.Generic = 0
-		payMC.HasX = false
-		payMC.XCount = 0
-		lifeLoss = mc.Generic
-		if mc.HasX {
-			lifeLoss += xValue * mc.XCount
-		}
-	}
-
-	totalCosts := append([]Cost(nil), card.AdditionalCosts()...)
-
-	var actionCosts []Cost
-	for _, a := range card.abilities {
-		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
-			actionCosts = append(actionCosts, sa.Costs()...)
-		}
-	}
-	actionCosts = g.prepareActionCosts(actionCosts, targets, xValue)
-	totalCosts = append(totalCosts, actionCosts...)
-
 	payment, err := g.prepareSpellPaymentTransaction(spellPaymentSpec{
 		Card:       card,
 		Controller: playerID,
 		Zone:       ZoneHand,
-		Mana:       payMC,
-		LifeLoss:   lifeLoss,
-		Costs:      totalCosts,
-		Targets:    targets,
+		Mana:       card.ManaCost(),
+		Targets:    announcement.Targets,
 		XValue:     xValue,
 	})
 	if err != nil {
@@ -2469,19 +2354,11 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 
 	// If an additional cost set g.resolution.X (e.g. sacrifice-capture-CMC), use it
 	if !card.ManaCost().HasX && g.resolution.X() != 0 && xValue == 0 {
-		xValue = g.resolution.X()
+		announcement.XValue = g.resolution.X()
 		g.resolution.SetX(0)
 	}
 
-	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		Card:         card,
-		Controller:   playerID,
-		Targets:      targets,
-		TargetGroups: groups, Mode: mode,
-		XValue:       xValue,
-		CastZone:     ZoneHand,
-		SnapshotCast: true,
-	})
+	_, err = g.pushCastSpellObject(announcement)
 	return err
 }
 

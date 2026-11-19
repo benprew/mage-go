@@ -96,6 +96,42 @@ func (g *Game) acquireTargetGroups(controller uuid.UUID, card *Card, specs []Tar
 	return result
 }
 
+func (g *Game) prepareSpellAnnouncement(opts *castStackObjectOptions) error {
+	if opts.XValue < 0 {
+		return fmt.Errorf("x cannot be negative")
+	}
+	card, controller, x := opts.Card, opts.Controller, opts.XValue
+	specs := card.CastTargets()
+	if action, ok := getModalSpellAbility(card); ok {
+		if opts.Mode == nil {
+			choice := chooseActionMode(g.GetPlayer(controller), action, card.Name(), g)
+			opts.Mode = &choice
+		}
+		if *opts.Mode < 0 || *opts.Mode >= len(action.modes) {
+			return fmt.Errorf("invalid modal choice")
+		}
+		specs = action.modes[*opts.Mode].Targets
+	}
+
+	if opts.TargetGroups != nil {
+		opts.TargetGroups = g.acquireTargetGroups(controller, card, specs, opts.TargetGroups, x)
+		opts.Targets = flattenTargetGroups(opts.TargetGroups)
+	} else {
+		opts.Targets = g.acquireRandomTargets(controller, card, specs, opts.Targets, x)
+		opts.Targets = g.acquireOpponentChosenTargets(controller, card, specs, opts.Targets, x)
+		if len(opts.Targets) == 0 && opts.Mode != nil && len(specs) > 0 {
+			opts.TargetGroups = g.promptTargetGroups(controller, card, specs, x)
+			opts.Targets = flattenTargetGroups(opts.TargetGroups)
+		} else {
+			opts.TargetGroups = groupTargets(specs, opts.Targets, x)
+			if (len(specs) > 0 || opts.Mode != nil) && len(flattenTargetGroups(opts.TargetGroups)) != len(opts.Targets) {
+				return fmt.Errorf("too many targets for %s", card.Name())
+			}
+		}
+	}
+	return g.validateTargetGroups(controller, card, specs, opts.TargetGroups, x)
+}
+
 // ActivateAbilityWithTargetGroups activates an ability with explicit target groups.
 func (g *Game) ActivateAbilityWithTargetGroups(playerID, permanentID uuid.UUID, abilityIndex int, groups [][]uuid.UUID) error {
 	return g.activateAbilityByIndex(playerID, permanentID, abilityIndex, flattenTargetGroups(groups), groups)

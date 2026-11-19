@@ -98,6 +98,15 @@ type StackObject struct {
 	CastContext *CastContext
 }
 
+// ManaValue includes the X value announced for a spell on the stack.
+func (obj *StackObject) ManaValue() int {
+	if obj.IsAbility || obj.Card == nil {
+		return 0
+	}
+	cost := obj.Card.ManaCost()
+	return cost.CMC() + cost.XCount*obj.XValue
+}
+
 // CastContext captures the cast-time snapshot mandated by CR 608.2g for
 // effects that reference values "as you cast this spell". Fields are
 // intentionally minimal — extend as new cards require.

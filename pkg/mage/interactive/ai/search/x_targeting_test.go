@@ -20,7 +20,7 @@ func TestTopTargetCombinationsUsesAnnouncedX(t *testing.T) {
 		mage.FuncEffect("tap", mage.EffectProperties{Outcome: mage.OutcomeDetriment}, nil),
 	))
 
-	combos := topTargetCombinations(g, player.PlayerID(), spell, spell.CastTargets(), eval.TargetGeneric, 0, 2)
+	combos := topTargetCombinationsFiltered(g, player.PlayerID(), spell, spell.CastTargets(), eval.TargetGeneric, 0, mage.SpellTargetOption{XValue: 2}, nil)
 	if len(combos) == 0 {
 		t.Fatal("expected target combinations")
 	}

@@ -242,7 +242,7 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		}
 		maxUsableMana += bestAbility
 	}
-	if maxUsableMana < manaCostUnits(in.Cost) {
+	if maxUsableMana < in.Cost.CMC() {
 		return false
 	}
 
@@ -273,7 +273,7 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		}
 		for _, bonus := range source.Bonuses {
 			if bonus == MatchProduced {
-				for _, color := range Colors() {
+				for _, color := range manaPoolColors {
 					available[color]++
 				}
 				continue
@@ -285,13 +285,14 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		color Color
 		count int
 	}{
+		{Colorless, in.Cost.Colorless},
 		{White, in.Cost.White},
 		{Blue, in.Cost.Blue},
 		{Black, in.Cost.Black},
 		{Red, in.Cost.Red},
 		{Green, in.Cost.Green},
 	} {
-		if relaxedManaAvailableForColor(available, requirement.color, in.Conversions) < requirement.count {
+		if requirement.count > 0 && relaxedManaAvailableForColor(available, requirement.color, in.Conversions) < requirement.count {
 			return false
 		}
 	}
@@ -314,7 +315,7 @@ func productionRestrictionUsable(restriction ManaRestriction, spellCtx *SpellPay
 func relaxedManaAvailableForColor(available [AnyColor + 1]int, required Color, conversions map[Color]Color) int {
 	total := available[required]
 	for _, from := range manaPoolColors {
-		if from != required && conversions[from] == required {
+		if to, ok := conversions[from]; from != required && ok && to == required {
 			total += available[from]
 		}
 	}
@@ -371,7 +372,7 @@ func manaSourcesEquivalentForSearch(a, b manaSourceInfo, aScore, bScore int, spe
 }
 
 func manaCostsEqual(a, b ManaCost) bool {
-	if a.Generic != b.Generic || a.White != b.White || a.Blue != b.Blue || a.Black != b.Black ||
+	if a.Generic != b.Generic || a.Colorless != b.Colorless || a.White != b.White || a.Blue != b.Blue || a.Black != b.Black ||
 		a.Red != b.Red || a.Green != b.Green || a.HasX != b.HasX || a.XCount != b.XCount || len(a.Hybrid) != len(b.Hybrid) {
 		return false
 	}
@@ -474,7 +475,7 @@ func normalizedManaAmount(amount int) int {
 }
 
 func manaSearchLowerBound(node *manaSearchNode, in ManaSolverInputs) int {
-	need := manaCostUnits(in.Cost) - usableManaCount(node.pool, in.SpellContext)
+	need := in.Cost.CMC() - usableManaCount(node.pool, in.SpellContext)
 	if need <= 0 {
 		return 0
 	}
@@ -492,10 +493,6 @@ func manaSearchLowerBound(node *manaSearchNode, in ManaSolverInputs) int {
 		return 0
 	}
 	return (need + maxOutput - 1) / maxOutput
-}
-
-func manaCostUnits(cost ManaCost) int {
-	return cost.Generic + cost.White + cost.Blue + cost.Black + cost.Red + cost.Green + len(cost.Hybrid)
 }
 
 func usableManaCount(pool *ManaPool, spellCtx *SpellPaymentContext) int {
@@ -550,6 +547,7 @@ func addManaChoiceCaps(caps *manaChoiceCaps, cost ManaCost, conversions map[Colo
 		color Color
 		count int
 	}{
+		{Colorless, cost.Colorless},
 		{White, cost.White},
 		{Blue, cost.Blue},
 		{Black, cost.Black},
@@ -586,7 +584,7 @@ func addManaRequirementCaps(caps *manaChoiceCaps, required Color, count int, con
 func markManaRequirementCandidates(candidates *[AnyColor + 1]bool, required Color, conversions map[Color]Color) {
 	candidates[required] = true
 	for _, from := range manaPoolColors {
-		if conversions[from] == required {
+		if to, ok := conversions[from]; ok && to == required {
 			candidates[from] = true
 		}
 	}

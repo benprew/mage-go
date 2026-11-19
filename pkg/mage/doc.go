@@ -288,11 +288,20 @@
 // [ObjectFilter.Kind], [ObjectFilter.Children], and
 // [ObjectFilter.ManaValueComparison] retain the structure for inspection.
 // [PossibleTargets] accepts a [TargetingContext]. Set XSpecified for an exact
-// announcement, including X=0. An unspecified X leaves dependent comparisons
-// open for discovery. Queries do not change resolution state.
+// announcement, including X=0. Set StackObjectID if the spell or ability
+// that selects the target is on the stack. An unspecified X leaves dependent
+// comparisons open for discovery. Queries do not change resolution state.
 // [Game.SpellTargetOptions] pairs affordable X values with legal candidates for
-// each target group. Required equality filters supply candidate X values from
-// battlefield mana values. Casting and resolution check the announced X.
+// each target group. The query uses cast cost adjustments and direct mana
+// and life costs. Required equality filters supply candidate X values from
+// battlefield or stack spell mana values. Casting and resolution check X.
+// [TargetSpellOnStack] accepts both [CardFilter] and [ObjectFilter] values.
+// Use an object filter to check the mana value of a spell on the stack:
+//
+//	TargetSpellOnStack(ManaValueIs(EqualTo(XValue())))
+//
+// [TargetOwnSpellOnStack] also checks the spell's controller.
+// [StackObject.ManaValue] includes each X in the spell's mana cost.
 //
 // [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
 // controlled by the ability's controller.
@@ -321,9 +330,9 @@
 // surplus distributions to simplify calculation. The solver also groups
 // equivalent static sources and rejects impossible costs early.
 //
-// [ManaPool.CanPay] and [ManaPool.Pay] use the same logic for colored and
-// hybrid symbols, including one-way conversions. This shared logic guarantees
-// consistent results between payment checks and actual payments.
+// [ManaPool.CanPay] and [ManaPool.Pay] use the same logic for colored,
+// colorless, and hybrid symbols, including one-way conversions. Payment
+// checks and actual payments use those same requirements.
 //
 // [EvtTappedForMana] occurs after a mana ability with a tap cost resolves and
 // produces mana (CR 106.12a). The event records the permanent in SourceID, the

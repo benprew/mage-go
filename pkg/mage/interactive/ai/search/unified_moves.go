@@ -59,14 +59,15 @@ func expandSpell(g *mage.Game, p mage.Player, card *mage.Card) []Move {
 	out := make([]Move, 0, len(modeIndices)*len(options))
 	for _, mode := range modeIndices {
 		for _, option := range options {
-			out = append(out, expandTargets(g, playerID, card, mode, option.XValue)...)
+			out = append(out, expandTargets(g, playerID, card, mode, option)...)
 		}
 	}
 	return out
 }
 
-func expandTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, mode, x int) []Move {
+func expandTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, mode int, option mage.SpellTargetOption) []Move {
 	targets := card.CastTargets()
+	x := option.XValue
 	if len(targets) == 0 {
 		return []Move{{
 			Type:      interactive.ActionCastSpell,
@@ -77,7 +78,7 @@ func expandTargets(g *mage.Game, playerID uuid.UUID, card *mage.Card, mode, x in
 		}}
 	}
 	purpose, damage, _ := targetPurposeForCard(g, playerID, card, x)
-	combos := topTargetCombinations(g, playerID, card, targets, purpose, damage, x)
+	combos := topTargetCombinationsFiltered(g, playerID, card, targets, purpose, damage, option, nil)
 	if len(combos) == 0 {
 		return nil
 	}

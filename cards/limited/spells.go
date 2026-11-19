@@ -159,9 +159,10 @@ func registerSpells() {
 		)
 	})
 
+	// Counter target spell with mana value X. (For example, if that spell's mana cost is {3}{U}{U}, X is 5.)
 	Register("Spell Blast", func() *Card {
 		return NewInstant("Spell Blast", "{X}{U}",
-			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfXMeetsCMC()),
+			NewTargetedSpell(TargetSpellOnStack(ManaValueIs(EqualTo(XValue()))), CounterSpell()),
 		)
 	})
 

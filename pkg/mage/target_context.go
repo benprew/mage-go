@@ -11,6 +11,8 @@ import (
 type TargetingContext struct {
 	X          int
 	XSpecified bool
+	// StackObjectID identifies the spell or ability that selects the target.
+	StackObjectID uuid.UUID
 }
 
 // ValueComparison retains the operator and value for inspection.
@@ -99,8 +101,11 @@ func (f ObjectFilter) evaluate(o ObjectView, ability AbilityContext, g GameReade
 	}
 }
 
-func (f ObjectFilter) matchTarget(p *Permanent, g *Game, ability AbilityContext, ctx TargetingContext) bool {
-	matched, known := f.evaluate(livePermanentView{p: p, g: g}, ability, g, ctx)
+func (f ObjectFilter) matchTarget(object ObjectView, g *Game, ability AbilityContext, ctx TargetingContext) bool {
+	if p, ok := object.(*Permanent); ok {
+		object = livePermanentView{p: p, g: g}
+	}
+	matched, known := f.evaluate(object, ability, g, ctx)
 	return !known || matched
 }
 
@@ -124,6 +129,9 @@ func PossibleTargets(target Target, controller uuid.UUID, source *Card, g *Game,
 
 // ObjectFilter returns the structured characteristic restriction.
 func (t *PermanentTarget) ObjectFilter() ObjectFilter { return t.objectFilter }
+
+// ObjectFilter returns the structured restriction for a stack spell.
+func (t *SpellOnStackTarget) ObjectFilter() ObjectFilter { return t.objectFilter }
 
 // TargetsUseX reports whether target characteristics depend on X.
 func TargetsUseX(targets []Target) bool {
@@ -150,21 +158,16 @@ func TargetsUseX(targets []Target) bool {
 	return false
 }
 
-func (f ObjectFilter) candidateXValues(g *Game) ([]int, bool) {
+func (f ObjectFilter) candidateXValues(manaValues []int) ([]int, bool) {
 	if f.kind == "ManaValueIs" {
 		if _, directX := f.comparison.Value.(xValue); !directX {
 			return nil, false
 		}
-		battlefield := g.AllBattlefield()
-		values := make([]int, 0, len(battlefield))
-		for _, p := range battlefield {
-			values = append(values, p.ManaValue())
-		}
-		return values, true
+		return manaValues, true
 	}
 	if f.kind == "And" {
 		for _, child := range f.children {
-			if values, finite := child.candidateXValues(g); finite {
+			if values, finite := child.candidateXValues(manaValues); finite {
 				return values, true
 			}
 		}
@@ -172,7 +175,7 @@ func (f ObjectFilter) candidateXValues(g *Game) ([]int, bool) {
 	if f.kind == "Or" {
 		var values []int
 		for _, child := range f.children {
-			candidates, finite := child.candidateXValues(g)
+			candidates, finite := child.candidateXValues(manaValues)
 			if !finite {
 				return nil, false
 			}
@@ -191,8 +194,21 @@ func targetCandidateXValues(target Target, g *Game) ([]int, bool) {
 		return targetCandidateXValues(t.inner, g)
 	case *opponentChosenTarget:
 		return targetCandidateXValues(t.inner, g)
+	case *SpellOnStackTarget:
+		var values []int
+		for _, obj := range g.stack.Objects() {
+			if !obj.IsAbility && obj.Card != nil {
+				values = append(values, obj.ManaValue())
+			}
+		}
+		return t.objectFilter.candidateXValues(values)
 	case interface{ ObjectFilter() ObjectFilter }:
-		return t.ObjectFilter().candidateXValues(g)
+		battlefield := g.AllBattlefield()
+		values := make([]int, 0, len(battlefield))
+		for _, p := range battlefield {
+			values = append(values, p.ManaValue())
+		}
+		return t.ObjectFilter().candidateXValues(values)
 	default:
 		return nil, false
 	}
@@ -204,11 +220,16 @@ type SpellTargetOption struct {
 	Candidates [][]uuid.UUID
 }
 
-// SpellTargetOptions finds affordable announcements with enough legal targets.
+// SpellTargetOptions checks direct mana and life costs for each announcement.
 // Supplied values limit X choices for spells without an X target restriction.
 func (g *Game) SpellTargetOptions(controller uuid.UUID, card *Card, values ...int) []SpellTargetOption {
+	player := g.GetPlayer(controller)
+	if player == nil {
+		return nil
+	}
 	specs := card.CastTargets()
-	if !card.ManaCost().HasX {
+	cost := card.ManaCost()
+	if !cost.HasX {
 		values = []int{0}
 	} else if len(values) == 0 || TargetsUseX(specs) {
 		values = nil
@@ -223,31 +244,118 @@ func (g *Game) SpellTargetOptions(controller uuid.UUID, card *Card, values ...in
 			}
 		}
 		if !finite {
-			for x, maximum := 0, g.MaxXValue(controller, card.ManaCost(), SpellContextForCard(card)); x <= maximum; x++ {
+			for x, maximum := 0, g.spellTargetXLimit(player, card, cost); x <= maximum; x++ {
 				values = append(values, x)
 			}
 		}
 		slices.Sort(values)
 		values = slices.Compact(values)
 	}
+	targetReduction := slices.ContainsFunc(card.abilities, func(ability Ability) bool {
+		reduction, ok := UnwrapAbility(ability).(*SelfCostReductionAbility)
+		return ok && reduction.TargetPredicate != nil
+	})
 	var result []SpellTargetOption
 	for _, x := range values {
-		if x < 0 || !g.CanAfford(controller, resolvedSpellManaCost(card.ManaCost(), x), SpellContextForCard(card)) {
+		if x < 0 {
 			continue
 		}
 		option := SpellTargetOption{XValue: x, Candidates: make([][]uuid.UUID, len(specs))}
-		legal := true
+		var required []uuid.UUID
+		enoughTargets := true
 		for i, spec := range specs {
 			option.Candidates[i] = PossibleTargets(spec, controller, card, g, TargetingContext{X: x, XSpecified: true})
 			minimum, _ := TargetBounds(spec, x)
 			if len(option.Candidates[i]) < minimum {
-				legal = false
+				enoughTargets = false
 				break
 			}
+			required = append(required, option.Candidates[i][:minimum]...)
 		}
-		if legal {
+		if !enoughTargets {
+			continue
+		}
+		if targetReduction {
+			if g.filterAffordableTargetGroups(player, card, specs, &option) {
+				result = append(result, option)
+			}
+		} else if g.canAffordSpellAnnouncement(player, card, x, required) {
 			result = append(result, option)
 		}
 	}
 	return result
+}
+
+func (g *Game) spellTargetXLimit(player Player, card *Card, cost ManaCost) int {
+	if cost.XCount == 0 {
+		return 0
+	}
+	controller := player.PlayerID()
+	genericBudget := player.Life() - 1
+	if !g.effects.Rules.IsChannelActive(controller) {
+		genericBudget = g.mana.HypotheticalMana(g, controller) - (cost.CMC() - cost.Generic)
+	}
+	adjustment := g.spellGenericCostAdjustment(controller, card, nil, true)
+	return max(0, (genericBudget-cost.Generic-adjustment)/cost.XCount)
+}
+
+func (g *Game) filterAffordableTargetGroups(player Player, card *Card, specs []Target, option *SpellTargetOption) bool {
+	groups := make([][]uuid.UUID, len(specs))
+	matches := make([]map[uuid.UUID]bool, len(specs))
+	unmatched := 0
+	for i, candidates := range option.Candidates {
+		matches[i] = make(map[uuid.UUID]bool, len(candidates))
+		unmatched += len(candidates)
+	}
+	affordable := false
+	var visitGroup func(int)
+	visitGroup = func(index int) {
+		if index == len(specs) {
+			if !g.canAffordSpellAnnouncement(player, card, option.XValue, flattenTargetGroups(groups)) {
+				return
+			}
+			affordable = true
+			for i, group := range groups {
+				for _, id := range group {
+					if !matches[i][id] {
+						matches[i][id] = true
+						unmatched--
+					}
+				}
+			}
+			return
+		}
+		candidates := option.Candidates[index]
+		minimum, maximum := TargetBounds(specs[index], option.XValue)
+		var choose func(int)
+		choose = func(start int) {
+			if affordable && unmatched == 0 {
+				return
+			}
+			count := len(groups[index])
+			if count >= minimum {
+				visitGroup(index + 1)
+			}
+			if count >= maximum {
+				return
+			}
+			for j := start; j < len(candidates) && count+len(candidates)-j >= minimum; j++ {
+				groups[index] = append(groups[index], candidates[j])
+				choose(j + 1)
+				groups[index] = groups[index][:count]
+			}
+		}
+		choose(0)
+	}
+	visitGroup(0)
+	for i, candidates := range option.Candidates {
+		filtered := make([]uuid.UUID, 0, len(matches[i]))
+		for _, id := range candidates {
+			if matches[i][id] {
+				filtered = append(filtered, id)
+			}
+		}
+		option.Candidates[i] = filtered
+	}
+	return affordable
 }
