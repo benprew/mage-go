@@ -6,15 +6,9 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// CastAsThoughHadFlash returns a continuous effect that grants the source
-// permanent's controller permission to cast cards matching the filter "as
-// though they had flash" (CR 702.8). Used by Rattlechains ("you may cast
-// Spirit spells as though they had flash"), Vedalken Orrery, and
-// Leyline of Anticipation (filter == nil grants every nonland card).
-//
-// The grant lives on the GameRules registry, registered each Apply() cycle
-// while the source is on the battlefield. It expires automatically when the
-// source leaves play.
+// CastAsThoughHadFlash gives the source's controller permission to cast cards
+// that match the filter as though they had flash. A zero filter matches all
+// cards. The permission expires when the source leaves the battlefield.
 func CastAsThoughHadFlash(filter ObjectFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		perm := g.FindPermanent(sourceID)
@@ -26,9 +20,8 @@ func CastAsThoughHadFlash(filter ObjectFilter) ContinuousEffect {
 	})
 }
 
-// CastAsThoughHadFlashGlobal grants the flash permission to every player,
-// for cards matching filter (or every nonland card if filter is zero). Used
-// by Vedalken Orrery / Leyline of Anticipation.
+// CastAsThoughHadFlashGlobal gives the flash permission to all players.
+// The filter uses the source permanent's controller.
 func CastAsThoughHadFlashGlobal(filter ObjectFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		if g.FindPermanent(sourceID) == nil {

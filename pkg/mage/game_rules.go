@@ -42,10 +42,8 @@ type GameRules struct {
 	deepWaterActive          map[uuid.UUID]bool          // player -> if true, lands they control produce {U} instead of other types (Deep Water)
 }
 
-// flashGrantEntry holds a continuous flash-permission grant. Player is the
-// player whose spells are affected; if Player == uuid.Nil() the grant applies
-// to every player. Filter restricts which cards in that player's hand are
-// granted flash; a nil filter grants flash to every nonland card.
+// flashGrantEntry stores a flash permission. A zero Player applies the
+// permission to all players. A zero Filter matches all cards.
 type flashGrantEntry struct {
 	SourceID uuid.UUID
 	Player   uuid.UUID
@@ -181,27 +179,23 @@ func (r *GameRules) PlayerCantCastSpells(playerID uuid.UUID) bool {
 	return r.cantCastSpells[playerID]
 }
 
-// AddFlashGrant registers a continuous "may cast as though it had flash"
-// permission for this Apply() cycle. If player == uuid.Nil() the grant
-// applies globally; if filter == nil it applies to every nonland card. The
-// grant is keyed by sourceID so it is dropped automatically when the source
-// permanent leaves the battlefield (continuous-effect framework drops the
-// effect, ResetPerCycle clears the slice, and Apply re-registers it only if
-// the source is still active).
+// AddFlashGrant registers a flash permission for the current effect cycle.
+// A zero player ID applies the permission to all players.
 func (r *GameRules) AddFlashGrant(sourceID, player uuid.UUID, filter ObjectFilter) {
 	r.FlashGrants = append(r.FlashGrants, flashGrantEntry{SourceID: sourceID, Player: player, Filter: filter})
 }
 
-// HasFlashGrant returns true if any active grant lets the given player cast
-// the given card as though it had flash. A grant whose Filter is the zero
-// value matches all cards (CR semantics for "may cast as though it had
-// flash" when no card-type restriction is named).
-func (r *GameRules) HasFlashGrant(player uuid.UUID, card *Card) bool {
-	for _, g := range r.FlashGrants {
-		if g.Player != uuid.Nil() && g.Player != player {
+// HasFlashGrant reports if a player can cast the card as though it had flash.
+func (r *GameRules) HasFlashGrant(g *Game, player uuid.UUID, card *Card) bool {
+	for _, grant := range r.FlashGrants {
+		if grant.Player != uuid.Nil() && grant.Player != player {
 			continue
 		}
-		if g.Filter.Match(card, nil, AbilityContext{SourceID: g.SourceID, Controller: g.Player}) {
+		ability := AbilityContext{SourceID: grant.SourceID, Controller: grant.Player}
+		if source := g.FindPermanent(grant.SourceID); source != nil {
+			ability.Controller = source.ControllerID()
+		}
+		if grant.Filter.Match(card, g, ability) {
 			return true
 		}
 	}

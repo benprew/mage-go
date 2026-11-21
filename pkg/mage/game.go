@@ -2300,7 +2300,7 @@ func (g *Game) castSpellCard(playerID uuid.UUID, card *Card, targets []uuid.UUID
 	// (i.e. could cast a sorcery).
 	// CR 702.8 — Flash: "You may cast this spell any time you could cast an
 	// instant." A card with Flash bypasses the sorcery-speed gate entirely.
-	if !card.HasType(TypeInstant) && !cardHasKeyword(card, Flash) && !g.effects.Rules.HasFlashGrant(playerID, card) {
+	if !card.HasType(TypeInstant) && !cardHasKeyword(card, Flash) && !g.effects.Rules.HasFlashGrant(g, playerID, card) {
 		if !g.turns.Step().IsMainPhase() {
 			return ErrSorcerySpeed
 		}
@@ -3419,7 +3419,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []*Card {
 		}
 		// CR 702.8 — Flash lets a spell be cast any time you could cast an instant,
 		// bypassing the sorcery-speed gate below.
-		hasFlash := cardHasKeyword(card, Flash) || g.effects.Rules.HasFlashGrant(p.PlayerID(), card)
+		hasFlash := cardHasKeyword(card, Flash) || g.effects.Rules.HasFlashGrant(g, p.PlayerID(), card)
 		// Sorceries can only be cast at sorcery speed (main phase, active player, empty stack)
 		if card.HasType(TypeSorcery) && !hasFlash {
 			if !isMainPhase || !isActive || !g.stack.IsEmpty() {

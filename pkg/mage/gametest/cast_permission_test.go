@@ -1,6 +1,8 @@
 package gametest
 
 import (
+	"errors"
+	"slices"
 	"testing"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -74,4 +76,49 @@ func TestCastAsThoughHadFlash_FilterRestricts(t *testing.T) {
 	// Cast attempt failed — the goblin is still in hand and there is no
 	// goblin permanent on the battlefield.
 	tg.AssertPermanentCount(PlayerB, goblinName, 0)
+}
+
+func TestCastAsThoughHadFlashUsesCurrentGame(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	g.SetStep(core.Upkeep)
+	g.PutOnBattlefield(mage.NewEnchantment("Flash Grant", "{0}", mage.WithStaticAbility(
+		mage.CastAsThoughHadFlash(mage.ObjectOwnedBy(mage.SelectActivePlayer())),
+	)), a.PlayerID())
+	card := mage.NewCreature("Creature", "{0}", 1, 1)
+	a.AddToHand(card)
+
+	g.SetActivePlayerIndex(1)
+	if slices.Contains(g.GetCastableSpells(a.PlayerID()), card) {
+		t.Fatal("grant admitted a card owned by the nonactive player")
+	}
+	if err := g.CastSpellByID(a.PlayerID(), card.ID(), nil, 0); !errors.Is(err, mage.ErrSorcerySpeed) {
+		t.Fatalf("cast with the grant inactive for this card: %v", err)
+	}
+
+	g.SetActivePlayerIndex(0)
+	if !slices.Contains(g.GetCastableSpells(a.PlayerID()), card) {
+		t.Fatal("grant excluded a card owned by the active player")
+	}
+	if err := g.CastSpellByID(a.PlayerID(), card.ID(), nil, 0); err != nil {
+		t.Fatalf("cast with the grant active for this card: %v", err)
+	}
+}
+
+func TestGlobalFlashGrantBindsSourceController(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	g.SetStep(core.Upkeep)
+	g.PutOnBattlefield(mage.NewEnchantment("Global Flash Grant", "{0}", mage.WithStaticAbility(
+		mage.CastAsThoughHadFlashGlobal(mage.ObjectOwnedBy(mage.SelectController())),
+	)), a.PlayerID())
+	a.AddToHand(mage.NewCreature("First Creature", "{0}", 1, 1))
+	b.AddToHand(mage.NewCreature("Second Creature", "{0}", 1, 1))
+
+	if got := g.GetCastableSpells(a.PlayerID()); len(got) != 1 {
+		t.Errorf("grant excluded a card owned by its controller: %v", got)
+	}
+	if got := g.GetCastableSpells(b.PlayerID()); len(got) != 0 {
+		t.Errorf("grant admitted a card owned by its controller's opponent: %v", got)
+	}
 }
