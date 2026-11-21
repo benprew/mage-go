@@ -53,6 +53,97 @@ func TestSpellTargetOptions(t *testing.T) {
 	}
 }
 
+func TestCardZoneTargetsHonorAnnouncedX(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		build func(...ObjectFilter) Target
+	}{
+		{"your hand", TargetCardInHand},
+		{"your graveyard", TargetCardInYourGraveyard},
+		{"any graveyard", TargetCardInAnyGraveyard},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g := newPriorityTestGame()
+			g.SetStep(PrecombatMain)
+			g.SetXValue(7)
+			a, b := g.players[0], g.players[1]
+			a.ManaPool().Add(Colorless, 2)
+			zero := NewArtifact("Zero", "{X}")
+			two := NewArtifact("Two", "{2}")
+			switch tc.name {
+			case "your hand":
+				a.AddToHand(zero)
+				a.AddToHand(two)
+			case "your graveyard":
+				a.AddToGraveyard(zero)
+				a.AddToGraveyard(two)
+			case "any graveyard":
+				a.AddToGraveyard(zero)
+				b.AddToGraveyard(two)
+			}
+			spec := tc.build(IsArtifactCard, ManaValueIs(EqualTo(XValue())))
+			spell := NewSorcery("Spell with X", "{X}", NewTargetedSpell(spec, GainLife(1)))
+			a.AddToHand(spell)
+
+			for _, choice := range []struct {
+				ctx  TargetingContext
+				want []uuid.UUID
+			}{
+				{TargetingContext{}, []uuid.UUID{zero.ID(), two.ID()}},
+				{TargetingContext{X: 0, XSpecified: true}, []uuid.UUID{zero.ID()}},
+				{TargetingContext{X: 1, XSpecified: true}, nil},
+				{TargetingContext{X: 2, XSpecified: true}, []uuid.UUID{two.ID()}},
+			} {
+				if got := PossibleTargets(spec, a.PlayerID(), spell, g, choice.ctx); !slices.Equal(got, choice.want) {
+					t.Errorf("targets for %+v = %v, want %v", choice.ctx, got, choice.want)
+				}
+			}
+
+			if !TargetsUseX(spell.CastTargets()) {
+				t.Error("target does not report its X restriction")
+			}
+			options := g.SpellTargetOptions(a.PlayerID(), spell, 0)
+			if len(options) != 2 ||
+				options[0].XValue != 0 || !slices.Equal(options[0].Candidates[0], []uuid.UUID{zero.ID()}) ||
+				options[1].XValue != 2 || !slices.Equal(options[1].Candidates[0], []uuid.UUID{two.ID()}) {
+				t.Errorf("spell target options = %+v, want X=0 and X=2 with their own candidates", options)
+			}
+
+			if err := g.CastSpellByID(a.PlayerID(), spell.ID(), []uuid.UUID{two.ID()}, 1); err == nil {
+				t.Fatal("casting for X=1 accepted the mana value 2 target")
+			}
+			if err := g.CastSpellByID(a.PlayerID(), spell.ID(), []uuid.UUID{two.ID()}, 2); err != nil {
+				t.Fatal(err)
+			}
+			g.ResolveStack()
+			if got := a.Life(); got != 21 {
+				t.Fatalf("life after resolution = %d, want 21", got)
+			}
+		})
+	}
+}
+
+func TestGraveyardTargetRechecksAnnouncedXAtResolution(t *testing.T) {
+	g := newPriorityTestGame()
+	g.SetStep(PrecombatMain)
+	a := g.players[0]
+	a.ManaPool().Add(Colorless, 1)
+	artifact := NewArtifact("Artifact", "{1}")
+	a.AddToGraveyard(artifact)
+	target := TargetCardInYourGraveyard(IsArtifactCard, ManaValueIs(EqualTo(XValue())))
+	spell := NewSorcery("Return Artifact", "{X}", NewTargetedSpell(target, ReturnFromGraveyardToHandTarget()))
+	a.AddToHand(spell)
+	if err := g.CastSpellByID(a.PlayerID(), spell.ID(), []uuid.UUID{artifact.ID()}, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	artifact.ApplyCopiableValues(NewArtifact("Changed Artifact", "{2}").CopiableValues())
+	g.ResolveStack()
+	if !slices.Contains(a.Graveyard(), artifact) {
+		t.Fatal("spell returned a card whose mana value changed before resolution")
+	}
+}
+
 func TestManaValueTargetCastAndResolution(t *testing.T) {
 	for _, x := range []int{0, 3} {
 		t.Run(fmt.Sprint(x), func(t *testing.T) {

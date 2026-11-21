@@ -1010,28 +1010,25 @@ func TargetOtherCreatureInYourGraveyard() Target {
 }
 
 func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	return t.PossibleWithContext(controller, sourceCard, g, TargetingContext{})
+}
+
+// PossibleWithContext checks cards in the controller's graveyard with the announced X.
+func (t *GraveyardCardTarget) PossibleWithContext(controller uuid.UUID, sourceCard *Card, g *Game, ctx TargetingContext) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
 	}
-	var sourceID uuid.UUID
+	ability := AbilityContext{Controller: controller}
 	if sourceCard != nil {
-		sourceID = sourceCard.ID()
+		ability.SourceID = sourceCard.ID()
 	}
-	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var result []uuid.UUID
 	for _, c := range p.Graveyard() {
-		if t.excludeSource && c.ID() == sourceID {
+		if t.excludeSource && c.ID() == ability.SourceID {
 			continue
 		}
-		match := true
-		for _, f := range t.Filters {
-			if !f.Match(c, g, ctx) {
-				match = false
-				break
-			}
-		}
-		if match {
+		if matchesCardTarget(c, t.Filters, g, ability, ctx) {
 			result = append(result, c.ID())
 		}
 	}
@@ -1072,22 +1069,19 @@ func TargetCreatureCardInAnyGraveyard() Target {
 }
 
 func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
-	var sourceID uuid.UUID
+	return t.PossibleWithContext(controller, sourceCard, g, TargetingContext{})
+}
+
+// PossibleWithContext checks cards in any graveyard with the announced X.
+func (t *AnyGraveyardCardTarget) PossibleWithContext(controller uuid.UUID, sourceCard *Card, g *Game, ctx TargetingContext) []uuid.UUID {
+	ability := AbilityContext{Controller: controller}
 	if sourceCard != nil {
-		sourceID = sourceCard.ID()
+		ability.SourceID = sourceCard.ID()
 	}
-	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var result []uuid.UUID
 	for _, p := range g.players {
 		for _, c := range p.Graveyard() {
-			match := true
-			for _, f := range t.Filters {
-				if !f.Match(c, g, ctx) {
-					match = false
-					break
-				}
-			}
-			if match {
+			if matchesCardTarget(c, t.Filters, g, ability, ctx) {
 				result = append(result, c.ID())
 			}
 		}
@@ -1117,29 +1111,35 @@ func TargetCreatureInHand() Target {
 }
 
 func (t *HandCardTarget) Possible(controller uuid.UUID, sourceCard *Card, g *Game) []uuid.UUID {
+	return t.PossibleWithContext(controller, sourceCard, g, TargetingContext{})
+}
+
+// PossibleWithContext checks cards in the controller's hand with the announced X.
+func (t *HandCardTarget) PossibleWithContext(controller uuid.UUID, sourceCard *Card, g *Game, ctx TargetingContext) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
 	}
-	var sourceID uuid.UUID
+	ability := AbilityContext{Controller: controller}
 	if sourceCard != nil {
-		sourceID = sourceCard.ID()
+		ability.SourceID = sourceCard.ID()
 	}
-	ctx := AbilityContext{SourceID: sourceID, Controller: controller}
 	var result []uuid.UUID
 	for _, c := range p.Hand() {
-		match := true
-		for _, f := range t.Filters {
-			if !f.Match(c, g, ctx) {
-				match = false
-				break
-			}
-		}
-		if match {
+		if matchesCardTarget(c, t.Filters, g, ability, ctx) {
 			result = append(result, c.ID())
 		}
 	}
 	return result
+}
+
+func matchesCardTarget(card *Card, filters []ObjectFilter, g *Game, ability AbilityContext, ctx TargetingContext) bool {
+	for _, filter := range filters {
+		if !filter.matchTarget(card, g, ability, ctx) {
+			return false
+		}
+	}
+	return true
 }
 
 // ControlledPermanentTarget targets a permanent you control.

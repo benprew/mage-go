@@ -149,13 +149,28 @@ func TargetsUseX(targets []Target) bool {
 			if TargetsUseX([]Target{t.inner}) {
 				return true
 			}
-		case interface{ ObjectFilter() ObjectFilter }:
-			if t.ObjectFilter().UsesX() {
+		default:
+			if slices.ContainsFunc(targetObjectFilters(t), ObjectFilter.UsesX) {
 				return true
 			}
 		}
 	}
 	return false
+}
+
+func targetObjectFilters(target Target) []ObjectFilter {
+	switch t := target.(type) {
+	case *GraveyardCardTarget:
+		return t.Filters
+	case *AnyGraveyardCardTarget:
+		return t.Filters
+	case *HandCardTarget:
+		return t.Filters
+	case interface{ ObjectFilter() ObjectFilter }:
+		return []ObjectFilter{t.ObjectFilter()}
+	default:
+		return nil
+	}
 }
 
 func (f ObjectFilter) candidateXValues(manaValues []int) ([]int, bool) {
@@ -186,32 +201,58 @@ func (f ObjectFilter) candidateXValues(manaValues []int) ([]int, bool) {
 	return nil, false
 }
 
-func targetCandidateXValues(target Target, g *Game) ([]int, bool) {
+func targetCandidateXValues(target Target, player Player, g *Game) ([]int, bool) {
 	switch t := target.(type) {
 	case *countBoundTarget:
-		return targetCandidateXValues(t.inner, g)
+		return targetCandidateXValues(t.inner, player, g)
 	case *randomTarget:
-		return targetCandidateXValues(t.inner, g)
+		return targetCandidateXValues(t.inner, player, g)
 	case *opponentChosenTarget:
-		return targetCandidateXValues(t.inner, g)
+		return targetCandidateXValues(t.inner, player, g)
+	}
+	filters := targetObjectFilters(target)
+	if !slices.ContainsFunc(filters, ObjectFilter.UsesX) {
+		return nil, false
+	}
+	values := targetManaValues(target, player, g)
+	for _, filter := range filters {
+		if candidates, finite := filter.candidateXValues(values); finite {
+			return candidates, true
+		}
+	}
+	return nil, false
+}
+
+func targetManaValues(target Target, player Player, g *Game) []int {
+	var values []int
+	switch target.(type) {
+	case *GraveyardCardTarget:
+		return appendCardManaValues(values, player.Graveyard())
+	case *AnyGraveyardCardTarget:
+		for _, p := range g.players {
+			values = appendCardManaValues(values, p.Graveyard())
+		}
+	case *HandCardTarget:
+		return appendCardManaValues(values, player.Hand())
 	case *SpellOnStackTarget:
-		var values []int
 		for _, obj := range g.stack.Objects() {
 			if !obj.IsAbility && obj.Card != nil {
 				values = append(values, obj.ManaValue())
 			}
 		}
-		return t.objectFilter.candidateXValues(values)
-	case interface{ ObjectFilter() ObjectFilter }:
-		battlefield := g.AllBattlefield()
-		values := make([]int, 0, len(battlefield))
-		for _, p := range battlefield {
+	default:
+		for _, p := range g.AllBattlefield() {
 			values = append(values, p.ManaValue())
 		}
-		return t.ObjectFilter().candidateXValues(values)
-	default:
-		return nil, false
 	}
+	return values
+}
+
+func appendCardManaValues(values []int, cards []*Card) []int {
+	for _, card := range cards {
+		values = append(values, card.ManaValue())
+	}
+	return values
 }
 
 // SpellTargetOption pairs an affordable X with candidates for every target group.
@@ -238,7 +279,7 @@ func (g *Game) SpellTargetOptions(controller uuid.UUID, card *Card, values ...in
 			if spec.Min() == 0 {
 				continue
 			}
-			if candidates, ok := targetCandidateXValues(spec, g); ok {
+			if candidates, ok := targetCandidateXValues(spec, player, g); ok {
 				values, finite = candidates, true
 				break
 			}
