@@ -146,30 +146,38 @@ func (pa *ProtectionAbility) exempts(card *Card) bool {
 	return card != nil && pa.ExemptCardID != uuid.Nil() && card.ID() == pa.ExemptCardID
 }
 
-// BlocksInGame evaluates protection against the source object's current
-// characteristics in the game.
-func (pa *ProtectionAbility) BlocksInGame(card *Card, g *Game) bool {
-	if card == nil || pa.exempts(card) {
+// AppliesToSource reports whether this protection applies to the source.
+// The game supplies the source's current or last known characteristics.
+func (pa *ProtectionAbility) AppliesToSource(source *Card, g *Game) bool {
+	if source == nil || pa.exempts(source) {
 		return false
 	}
 	if g == nil {
-		return pa.Blocks(card)
+		return pa.Blocks(source)
 	}
+	sourceID := source.ID()
 	if len(pa.FromColors) > 0 {
-		for _, sourceColor := range g.EffectiveColors(card.ID()) {
+		for _, sourceColor := range g.EffectiveColors(sourceID) {
 			if slices.Contains(pa.FromColors, sourceColor) {
 				return true
 			}
 		}
 		return false
 	}
-	if view := g.LookupObject(card.ID()); view != nil {
-		return pa.Filter.Match(view, g)
+	if permanent := g.FindPermanent(sourceID); permanent != nil {
+		return pa.Filter.Match(permanent, g)
 	}
-	if stackObj := g.stack.FindBySourceID(card.ID()); stackObj != nil && !stackObj.IsAbility && stackObj.Card != nil {
-		return pa.Filter.Match(stackObjectView{Card: stackObj.Card, object: stackObj}, g)
+	spell := g.resolution.resolvingSpell
+	if spell == nil || spell.SourceID != sourceID {
+		spell = g.stack.findSpellBySourceID(sourceID)
 	}
-	return pa.Filter.Match(card, g)
+	if spell != nil {
+		return pa.Filter.Match(stackObjectView{Card: spell.Card, object: spell}, g)
+	}
+	if snapshot := g.LKI(sourceID); snapshot != nil {
+		return pa.Filter.Match(snapshot, g)
+	}
+	return pa.Filter.Match(source, g)
 }
 
 // StaticAbilityHolder holds continuous effects as a static ability.

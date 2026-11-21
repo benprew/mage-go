@@ -28,6 +28,9 @@ type ResolutionState struct {
 	resolvingController        uuid.UUID
 	resolvingSourceIncarnation uuid.UUID
 
+	// Target checks need the spell after it leaves the stack.
+	resolvingSpell *StackObject
+
 	// Color state installed before target legality check during resolution
 	resolvingColorSourceID uuid.UUID
 	resolvingColorOverride *[]Color
@@ -98,6 +101,15 @@ func (s *ResolutionState) SetColorOverride(sourceID uuid.UUID, override *[]Color
 		s.resolvingColorSourceID = prevID
 		s.resolvingColorOverride = prevOverride
 	}
+}
+
+func (s *ResolutionState) setResolvingSpell(obj *StackObject) func() {
+	previous := s.resolvingSpell
+	s.resolvingSpell = nil
+	if !obj.IsAbility && obj.Card != nil {
+		s.resolvingSpell = obj
+	}
+	return func() { s.resolvingSpell = previous }
 }
 
 // Clear resets all resolving state fields to zero values.
@@ -183,6 +195,9 @@ func (s *ResolutionState) clone(ctx *gameCloneContext) ResolutionState {
 		lastSacrificedID:           s.lastSacrificedID,
 		lastCostReveal:             ctx.card(s.lastCostReveal),
 		lastExiledCard:             ctx.card(s.lastExiledCard),
+	}
+	if s.resolvingSpell != nil {
+		c.resolvingSpell = ctx.stackObject(s.resolvingSpell)
 	}
 	if s.resolvingColorOverride != nil {
 		colors := append([]Color(nil), (*s.resolvingColorOverride)...)

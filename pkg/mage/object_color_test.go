@@ -191,3 +191,61 @@ func TestProtectionFromCardTypeStillUsesItsFilter(t *testing.T) {
 		t.Fatal("protection from creatures stopped matching a recolored creature")
 	}
 }
+
+func TestProtectionUsesLiveRecastSpell(t *testing.T) {
+	g, a, b := newObjectColorGame()
+	g.SetStep(PrecombatMain)
+	protected := g.PutOnBattlefield(NewCreature("Protected", "{G}", 2, 2,
+		WithAbility(ProtectionFromSubType("Zombie"))), b.PlayerID())
+	zombie := NewCreature("Zombie", "{0}", 2, 2, WithSubTypes("Zombie"), WithKeyword(Flash),
+		WithActivatedAbility(GainLife(2), ManaCostOf("{0}")),
+		WithAbility(NewTriggered(EvtSpellCast, false, GainLife(1)).
+			InZone(ZoneStack).
+			SetConditionData(EventSourceIsSelf{}).
+			AddTarget(TargetCreature())),
+	)
+	permanent := g.PutOnBattlefield(zombie, a.PlayerID())
+	if err := g.ActivateAbilityByIndex(a.PlayerID(), permanent.ID(), 0, nil); err != nil {
+		t.Fatal(err)
+	}
+	permanent.FaceDown = true
+	g.BouncePermanentToHand(permanent)
+	if snapshot := g.LKI(zombie.ID()); snapshot == nil || snapshot.ViewHasSubType("Zombie") {
+		t.Fatal("expected a face-down snapshot of the old permanent")
+	}
+
+	if err := g.CastSpellByID(a.PlayerID(), zombie.ID(), nil, 0); err != nil {
+		t.Fatal(err)
+	}
+	g.PutTriggersOnStack()
+	for _, obj := range g.StackObjects() {
+		if obj.IsAbility && slices.Contains(obj.Targets, protected.ID()) {
+			t.Fatal("the recast Zombie's trigger targeted a creature with protection from Zombies")
+		}
+	}
+	if protected.CanBeTargetedBy(zombie, a.PlayerID(), g) {
+		t.Fatal("the old face-down permanent hid the current spell's subtype")
+	}
+}
+
+func TestProtectionUsesRecastSpellAtResolution(t *testing.T) {
+	g, a, b := newObjectColorGame()
+	target := g.PutOnBattlefield(NewCreature("Target", "{G}", 2, 2), b.PlayerID())
+	card := NewInstant("Zombie Spell", "{0}",
+		NewTargetedSpell(TargetCreature(), GainLife(1)), WithSubTypes("Zombie"))
+	faceDown := NewPermanent(card, a.PlayerID())
+	faceDown.FaceDown = true
+	g.AddToBattlefield(faceDown)
+	g.BouncePermanentToHand(faceDown)
+
+	if err := g.CastSpellByID(a.PlayerID(), card.ID(), []uuid.UUID{target.ID()}, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := ApplyEffect(g, GrantAbility(ProtectionFromSubType("Zombie")), target.ID(), b.PlayerID(), []uuid.UUID{target.ID()}); err != nil {
+		t.Fatal(err)
+	}
+	g.ResolveStack()
+	if got := a.Life(); got != 20 {
+		t.Fatalf("the Zombie spell resolved after its target gained protection, life = %d", got)
+	}
+}

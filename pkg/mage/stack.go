@@ -258,6 +258,15 @@ func (s *Stack) FindBySourceID(sourceID uuid.UUID) *StackObject {
 	return nil
 }
 
+func (s *Stack) findSpellBySourceID(sourceID uuid.UUID) *StackObject {
+	for _, obj := range s.objects {
+		if obj.SourceID == sourceID && !obj.IsAbility && obj.Card != nil {
+			return obj
+		}
+	}
+	return nil
+}
+
 // Objects returns all objects on the stack for inspection.
 func (s *Stack) Objects() []*StackObject {
 	return s.objects

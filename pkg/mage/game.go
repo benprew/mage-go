@@ -2000,6 +2000,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	defer g.ClearSacrificed()
 	defer g.resolution.SetColorOverride(obj.SourceID, obj.ColorOverride)()
+	defer g.resolution.setResolvingSpell(obj)()
 
 	// CR 608.2b: a spell/ability with target(s) fails to resolve only if ALL of
 	// them are illegal at resolution. uuid.Nil() entries are positional

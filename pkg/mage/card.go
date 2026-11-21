@@ -803,7 +803,7 @@ func (p *Permanent) HasProtectionFromInGame(card *Card, g *Game) bool {
 		return false
 	}
 	for _, a := range p.RuntimeAbilities {
-		if pa, ok := UnwrapAbility(a).(*ProtectionAbility); ok && pa.BlocksInGame(card, g) {
+		if pa, ok := UnwrapAbility(a).(*ProtectionAbility); ok && pa.AppliesToSource(card, g) {
 			return true
 		}
 	}
