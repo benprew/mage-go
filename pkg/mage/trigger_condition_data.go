@@ -650,25 +650,15 @@ func (CreatureDeathsOccurred) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ 
 // Spell-cast predicates
 // ---------------------------------------------------------------------------
 
-// SpellCastMatchesObjectFilters checks that the spell referenced by evt.SourceID
-// matches all given ObjectFilter predicates.
+// SpellCastMatchesObjectFilters checks all filters against the spell in the event.
 type SpellCastMatchesObjectFilters struct {
 	Filters []ObjectFilter
 }
 
 func (c SpellCastMatchesObjectFilters) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-	var view ObjectView
-	if game, ok := g.(*Game); ok {
-		if stackObj := game.stack.FindBySourceID(evt.SourceID); stackObj != nil && !stackObj.IsAbility && stackObj.Card != nil {
-			view = stackObjectView{Card: stackObj.Card, object: stackObj}
-		}
-	}
+	view := spellViewForCastEvent(evt, g)
 	if view == nil {
-		card := g.FindCardAnywhere(evt.SourceID)
-		if card == nil {
-			return false
-		}
-		view = spellObjectView{Card: card, controller: evt.PlayerID}
+		return false
 	}
 	ctx := AbilityContext{SourceID: sourceID, Controller: controllerID}
 	for _, f := range c.Filters {

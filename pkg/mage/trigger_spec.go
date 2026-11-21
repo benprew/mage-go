@@ -35,11 +35,7 @@ func (s eventTriggerSpec) MatchesEvent(evt *GameEvent, ctx AbilityContext, g Gam
 		return true
 	}
 	if s.spell {
-		card := g.FindCardAnywhere(evt.SourceID)
-		if card == nil {
-			return false
-		}
-		return s.objects.Match(spellObjectView{Card: card, controller: evt.PlayerID}, g, ctx)
+		return s.objects.Match(spellViewForCastEvent(evt, g), g, ctx)
 	}
 	object := g.LookupObject(evt.SourceID)
 

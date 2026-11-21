@@ -197,15 +197,8 @@ func (spellCastByControllerTargetsCreature) CheckTriggerCond(evt *GameEvent, g G
 	if evt.PlayerID != controllerID {
 		return false
 	}
-	card := g.FindCardAnywhere(evt.SourceID)
-	if card == nil {
-		return false
-	}
-	if !card.HasType(TypeInstant) && !card.HasType(TypeSorcery) {
-		return false
-	}
-	obj := g.FindStackObject(evt.SourceID)
-	if obj == nil {
+	obj := stackSpellForCastEvent(evt, g)
+	if obj == nil || (!obj.Card.HasType(TypeInstant) && !obj.Card.HasType(TypeSorcery)) {
 		return false
 	}
 	for _, tid := range collectAllTargets(obj) {
@@ -250,14 +243,10 @@ func ManaSpentToCast(obj *StackObject) int {
 	return n
 }
 
-// ManaSpentForSpellEvent looks up the StackObject for evt.SourceID (assumed
-// to be an EvtSpellCast event) on the live stack and returns the mana spent
-// to cast it. Returns 0 if the spell is not on the stack.
+// ManaSpentForSpellEvent returns the mana spent to cast the spell in a cast event.
+// If the spell has left the stack, it returns zero.
 func ManaSpentForSpellEvent(evt *GameEvent, g GameReader) int {
-	if evt == nil {
-		return 0
-	}
-	return ManaSpentToCast(g.FindStackObject(evt.SourceID))
+	return ManaSpentToCast(stackSpellForCastEvent(evt, g))
 }
 
 // WheneverYouCastSpellWithManaSpent is a trigger shorthand: fires whenever

@@ -200,8 +200,11 @@ func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 	return ctx
 }
 
-// FindStackObject finds a stack object by its source card ID.
+// FindStackObject finds a stack object by its ID or source ID.
 func (g *Game) FindStackObject(id uuid.UUID) *StackObject {
+	if obj := g.stack.FindByID(id); obj != nil {
+		return obj
+	}
 	return g.stack.FindBySourceID(id)
 }
 

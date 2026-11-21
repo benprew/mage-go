@@ -73,12 +73,42 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	g.pushStack(obj)
 	g.recordSpellCast(card, opts.Controller)
 	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: sourceID,
-		PlayerID: opts.Controller,
+		Type:          EvtSpellCast,
+		SourceID:      sourceID,
+		StackObjectID: obj.ID,
+		PlayerID:      opts.Controller,
 	})
 	g.fireBecomesTargetEvents(obj, false)
 	return obj, nil
+}
+
+func stackSpellForCastEvent(evt *GameEvent, g GameReader) *StackObject {
+	if evt == nil {
+		return nil
+	}
+	id := evt.StackObjectID
+	if id == uuid.Nil() {
+		id = evt.SourceID
+	}
+	if obj := g.FindStackObject(id); obj != nil && !obj.IsAbility && obj.Card != nil {
+		return obj
+	}
+	return nil
+}
+
+func spellViewForCastEvent(evt *GameEvent, g GameReader) ObjectView {
+	if evt == nil {
+		return nil
+	}
+	if obj := stackSpellForCastEvent(evt, g); obj != nil {
+		return stackObjectView{Card: obj.Card, object: obj}
+	}
+	if evt.StackObjectID == uuid.Nil() {
+		if card := g.FindCardAnywhere(evt.SourceID); card != nil {
+			return spellObjectView{Card: card, controller: evt.PlayerID}
+		}
+	}
+	return nil
 }
 
 func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uuid.UUID, promptTargets bool, modePrompt string, modeOverride *int, suppliedGroups [][]uuid.UUID, x int) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {

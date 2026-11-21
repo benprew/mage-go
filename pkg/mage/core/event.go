@@ -51,12 +51,13 @@ const (
 // ZoneLibrary's zero value and should be ignored — match on the EventType
 // first.
 type GameEvent struct {
-	Type     EventType
-	SourceID uuid.UUID
-	TargetID uuid.UUID
-	PlayerID uuid.UUID
-	Amount   int
-	Flag     bool // context-dependent
-	FromZone Zone
-	ToZone   Zone
+	Type          EventType
+	SourceID      uuid.UUID
+	StackObjectID uuid.UUID // ID of the spell on an EvtSpellCast event
+	TargetID      uuid.UUID
+	PlayerID      uuid.UUID
+	Amount        int
+	Flag          bool // context-dependent
+	FromZone      Zone
+	ToZone        Zone
 }
