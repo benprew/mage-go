@@ -39,7 +39,7 @@ func run() int {
 	rogueDir := flag.String("rogue-dir", "rogue_dck", "path to Rogue .dck deck directory")
 	minCards := flag.Int("min-cards", 25, "minimum playable cards for a Rogue deck to be eligible")
 	games := flag.Int("games", 1, "number of games to play in sequence (useful for profiling)")
-	seed := flag.Int64("seed", 0, "RNG seed for deck selection (0 = nondeterministic)")
+	seed := flag.Int64("seed", 0, "RNG seed for deck selection and game randomness (0 = nondeterministic)")
 	persA := flag.String("ai-a", "auto", "AI personality for player A (auto, aggro, control, midrange, tempo, burn)")
 	persB := flag.String("ai-b", "auto", "AI personality for player B (auto, aggro, control, midrange, tempo, burn)")
 	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, search, adaptive)")
@@ -95,23 +95,24 @@ func run() int {
 		return 1
 	}
 
-	var rng *rand.Rand
-	if *seed != 0 {
-		rng = rand.New(rand.NewSource(*seed))
-	} else {
-		rng = rand.New(rand.NewSource(rand.Int63()))
+	masterSeed := *seed
+	if masterSeed == 0 {
+		masterSeed = rand.Int63()
 	}
 
 	totalLoop := time.Duration(0)
 
 	for gameNum := 1; gameNum <= *games; gameNum++ {
+		gameSeed := masterSeed + int64(gameNum-1)
+		gameRNG := rand.New(rand.NewSource(gameSeed))
+
 		dA := *deckA
 		if dA < 0 {
-			dA = rng.Intn(len(deckPool))
+			dA = gameRNG.Intn(len(deckPool))
 		}
 		dB := *deckB
 		if dB < 0 {
-			dB = rng.Intn(len(deckPool))
+			dB = gameRNG.Intn(len(deckPool))
 		}
 		selectedA := deckPool[dA]
 		selectedB := deckPool[dB]
@@ -125,8 +126,8 @@ func run() int {
 			playerB.Strategy = &decisionTraceStrategy{AIStrategy: playerB.Strategy, out: os.Stdout}
 		}
 
-		cardsA := tui.BuildDeck(selectedA.Entries, playerA.PlayerID())
-		cardsB := tui.BuildDeck(selectedB.Entries, playerB.PlayerID())
+		cardsA := tui.BuildDeckUnshuffled(selectedA.Entries, playerA.PlayerID())
+		cardsB := tui.BuildDeckUnshuffled(selectedB.Entries, playerB.PlayerID())
 		for _, c := range cardsA {
 			playerA.AddToLibrary(c)
 		}
@@ -135,12 +136,15 @@ func run() int {
 		}
 
 		g := mage.NewGame(playerA, playerB)
+		g.SetSeed(uint64(gameSeed))
+		playerA.ShuffleLibrary()
+		playerB.ShuffleLibrary()
 		tui.DrawOpeningHand(playerA)
 		tui.DrawOpeningHand(playerB)
 		ai.MulliganAI(playerA)
 		ai.MulliganAI(playerB)
 
-		fmt.Printf("=== Game %d Start ===\n", gameNum)
+		fmt.Printf("=== Game %d Start (seed=%d) ===\n", gameNum, gameSeed)
 		fmt.Printf("Alice (%s/%s) deck: %s (%d cards)\n", personalityLabel(*persA, wpA), *modeA, selectedA.Name, len(playerA.Library())+len(playerA.Hand()))
 		printSkippedCards("Alice", selectedA.Skipped)
 		fmt.Printf("Bob   (%s/%s) deck: %s (%d cards)\n", personalityLabel(*persB, wpB), *modeB, selectedB.Name, len(playerB.Library())+len(playerB.Hand()))

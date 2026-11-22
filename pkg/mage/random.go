@@ -20,6 +20,11 @@ func (g *Game) RandIntn(n int) int {
 	return g.random.RandIntn(n)
 }
 
+// Shuffle pseudo-randomizes the order of elements using the game's random source.
+func (g *Game) Shuffle(n int, swap func(i, j int)) {
+	g.random.Shuffle(n, swap)
+}
+
 // RandomPlayer returns one player chosen uniformly at random using the game's
 // deterministic random source. It returns nil when the game has no players.
 func (g *Game) RandomPlayer() Player {

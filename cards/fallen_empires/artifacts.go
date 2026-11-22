@@ -1,7 +1,6 @@
 package fallen_empires
 
 import (
-	"math/rand"
 	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -168,7 +167,7 @@ func registerArtifacts() {
 						// Discard a card at random
 						hand := p.Hand()
 						if len(hand) > 0 {
-							idx := rand.Intn(len(hand))
+							idx := g.RandIntn(len(hand))
 							p.DiscardCard(hand[idx].ID())
 						}
 						// Then draw two cards

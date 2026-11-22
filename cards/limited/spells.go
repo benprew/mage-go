@@ -2,7 +2,6 @@ package limited
 
 import (
 	"fmt"
-	"math/rand"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -644,7 +643,7 @@ func registerSpells() {
 					n := min(len(lib), 3)
 					// TODO it's not a random shuffle, it's the controller choosing the order
 					// TODO the controller may also choose to shuffle the library
-					rand.Shuffle(n, func(i, j int) {
+					g.Shuffle(n, func(i, j int) {
 						lib[i], lib[j] = lib[j], lib[i]
 					})
 					targetPlayer.SetLibrary(lib)

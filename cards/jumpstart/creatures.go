@@ -1,7 +1,6 @@
 package jumpstart
 
 import (
-	"math/rand"
 	"slices"
 	"uuid"
 
@@ -1917,7 +1916,7 @@ func registerCreatures() {
 						if p == nil || len(p.Hand()) == 0 {
 							return nil
 						}
-						idx := rand.Intn(len(p.Hand()))
+						idx := g.RandIntn(len(p.Hand()))
 						p.DiscardCard(p.Hand()[idx].ID())
 						return nil
 					}),
@@ -2538,7 +2537,7 @@ func registerCreatures() {
 						if len(zombies) == 0 {
 							return nil
 						}
-						idx := rand.Intn(len(zombies))
+						idx := g.RandIntn(len(zombies))
 						chosen := zombies[idx]
 						if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
 							p.AddToHand(card)
@@ -2602,7 +2601,7 @@ func registerCreatures() {
 								bottom = append(bottom, c)
 							}
 						}
-						rand.Shuffle(len(bottom), func(i, j int) { bottom[i], bottom[j] = bottom[j], bottom[i] })
+						g.Shuffle(len(bottom), func(i, j int) { bottom[i], bottom[j] = bottom[j], bottom[i] })
 						newLib := make([]*Card, 0, len(rest)+len(bottom))
 						newLib = append(newLib, rest...)
 						newLib = append(newLib, bottom...)

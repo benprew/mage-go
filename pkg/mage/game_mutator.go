@@ -825,6 +825,12 @@ func (g *Game) AddEntersTappedRule(f func(*Permanent) bool) {
 	g.effects.Rules.AddEntersTappedRule(f)
 }
 
+// SetSeed configures a deterministic pseudorandom seed for game outcomes and player library shuffles.
+func (g *Game) SetSeed(seed uint64) {
+	g.random.SetSeed(seed)
+	g.attachPlayerRandomSources()
+}
+
 // SetCoinFlipResults sets deterministic coin flip results for testing.
 func (g *Game) SetCoinFlipResults(results []bool) {
 	g.random.SetCoinFlipResults(results)

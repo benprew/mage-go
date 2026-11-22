@@ -2,19 +2,32 @@ package mage
 
 import (
 	"math/rand"
+	randv2 "math/rand/v2"
 	"uuid"
 )
 
+const randomStreamMix uint64 = 0x9e3779b97f4a7c15
+
 // RandomSource encapsulates the generation and deterministic scripting of random
-// outcomes (coin flips and uniform integer selections) across games and clones.
+// outcomes (coin flips, shuffles, and uniform integer selections) across games and clones.
 type RandomSource struct {
 	coinFlipResults []bool
 	randomResults   []int
+	pcg             *randv2.PCG
+	rng             *randv2.Rand
 }
 
 // NewRandomSource returns an initialized RandomSource.
 func NewRandomSource() RandomSource {
 	return RandomSource{}
+}
+
+// SetSeed configures a deterministic pseudorandom generator for this source.
+// Cloned sources copy the generator state and advance independently.
+func (r *RandomSource) SetSeed(seed uint64) {
+	pcg := randv2.NewPCG(seed, seed^randomStreamMix)
+	r.pcg = pcg
+	r.rng = randv2.New(pcg)
 }
 
 // SetCoinFlipResults sets deterministic coin flip results for testing.
@@ -32,12 +45,16 @@ func (r *RandomSource) SetRandomResults(results []int) {
 // does not consume a scripted result. SetRandomResults can supply deterministic
 // raw values for tests; each value is normalized into range with mathematical
 // modulo, so negative scripted values wrap from the end of the range. Once the
-// scripted values are exhausted, RandIntn uses the process random source.
+// scripted values are exhausted, RandIntn uses the seeded generator when set,
+// or the process random source otherwise.
 func (r *RandomSource) RandIntn(n int) int {
 	if n <= 0 {
 		return 0
 	}
 	if len(r.randomResults) == 0 {
+		if r.rng != nil {
+			return r.rng.IntN(n)
+		}
 		return rand.Intn(n)
 	}
 	result := r.randomResults[0]
@@ -47,6 +64,17 @@ func (r *RandomSource) RandIntn(n int) int {
 		result += n
 	}
 	return result
+}
+
+// Shuffle pseudo-randomizes the order of elements using this random source.
+func (r *RandomSource) Shuffle(n int, swap func(i, j int)) {
+	if n < 2 {
+		return
+	}
+	for i := n - 1; i > 0; i-- {
+		j := r.RandIntn(i + 1)
+		swap(i, j)
+	}
 }
 
 // FlipCoin simulates a coin flip. Returns true for "win" (heads).
@@ -70,8 +98,17 @@ func (r *RandomSource) Clone() RandomSource {
 	if len(r.randomResults) > 0 {
 		randoms = append([]int(nil), r.randomResults...)
 	}
+	var pcg *randv2.PCG
+	var rng *randv2.Rand
+	if r.pcg != nil {
+		copied := *r.pcg
+		pcg = &copied
+		rng = randv2.New(pcg)
+	}
 	return RandomSource{
 		coinFlipResults: coins,
 		randomResults:   randoms,
+		pcg:             pcg,
+		rng:             rng,
 	}
 }

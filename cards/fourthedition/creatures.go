@@ -1,7 +1,6 @@
 package fourthedition
 
 import (
-	"math/rand"
 	"slices"
 	"uuid"
 
@@ -220,7 +219,7 @@ func registerCreatures() {
 						if len(creatures) == 0 {
 							return nil
 						}
-						chosen := creatures[rand.Intn(len(creatures))]
+						chosen := creatures[g.RandIntn(len(creatures))]
 						p.DiscardCard(chosen.ID())
 						return nil
 					},

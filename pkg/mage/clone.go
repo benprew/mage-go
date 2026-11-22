@@ -55,6 +55,7 @@ func (ctx *gameCloneContext) game(g *Game) *Game {
 	for i, p := range g.players {
 		c.players[i] = ctx.player(p)
 	}
+	c.attachPlayerRandomSources()
 
 	// Deep copy stack.
 	c.stack = ctx.stack(g.stack)

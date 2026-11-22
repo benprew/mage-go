@@ -404,12 +404,14 @@
 // # Random Selection
 //
 // [RandIntn] is the core function for random integers in card effects. It
-// returns zero when given a nonpositive upper bound. [SetRandomResults] sets
-// deterministic values for testing. The engine reads these values in order and
-// scales them to the requested range. Cloned games keep separate copies of the
-// remaining values. Random selection functions for graveyards, hands, players,
-// colors, permanents, spells, damage targets, and coin flips use this
-// function.
+// returns zero when given a nonpositive upper bound. [SetSeed] sets a
+// deterministic pseudorandom seed for game outcomes and player library
+// shuffles. [Shuffle] reorders elements with the game random source.
+// [SetRandomResults] sets deterministic values for testing. The engine reads
+// these values in order and scales them to the requested range. Cloned games
+// keep separate copies of the remaining values and generator state. Random
+// selection functions for graveyards, hands, players, colors, permanents,
+// spells, damage targets, and coin flips use this function.
 //
 // [RandomPlayer] and [RandomPermanent] return nil if no valid choices exist.
 // [RandomSpellOrPermanent] and [RandomDamageTarget] return [uuid.Nil] if no

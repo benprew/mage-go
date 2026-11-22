@@ -6,6 +6,7 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/benprew/mage-go/internal/tui"
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
@@ -143,5 +144,56 @@ func TestDecisionTraceOmitsEmptyCombat(t *testing.T) {
 	strategy.Blockers(b, g)
 	if out.Len() != 0 {
 		t.Fatalf("empty combat produced output:\n%s", out.String())
+	}
+}
+
+func TestSeededGameDeterminism(t *testing.T) {
+	runSeeded := func(seed uint64) string {
+		deckA := tui.Archetypes[0]
+		deckB := tui.Archetypes[1]
+		wpA := resolvePersonality("auto", deckA.Entries)
+		wpB := resolvePersonality("auto", deckB.Entries)
+		playerA := createAI("Alice", wpA, "heuristic")
+		playerB := createAI("Bob", wpB, "heuristic")
+
+		for _, c := range tui.BuildDeckUnshuffled(deckA.Entries, playerA.PlayerID()) {
+			playerA.AddToLibrary(c)
+		}
+		for _, c := range tui.BuildDeckUnshuffled(deckB.Entries, playerB.PlayerID()) {
+			playerB.AddToLibrary(c)
+		}
+
+		g := mage.NewGame(playerA, playerB)
+		g.SetSeed(seed)
+		playerA.ShuffleLibrary()
+		playerB.ShuffleLibrary()
+		tui.DrawOpeningHand(playerA)
+		tui.DrawOpeningHand(playerB)
+		ai.MulliganAI(playerA)
+		ai.MulliganAI(playerB)
+
+		openA := handStr(playerA.Hand())
+		openB := handStr(playerB.Hand())
+		runGame(g, 10, true, false)
+
+		bf := g.AllBattlefield()
+		board := make([]string, 0, len(bf))
+		for _, perm := range bf {
+			board = append(board, fmt.Sprintf("%s:%v:%d", perm.Name(), perm.Tapped, perm.Damage))
+		}
+		return fmt.Sprintf("openA=%s\nopenB=%s\nturn=%d\nlife=%d/%d\nhands=%s|%s\ngy=%d/%d\nlib=%d/%d\nboard=%s",
+			openA, openB, g.CurrentTurn(),
+			playerA.Life(), playerB.Life(),
+			handStr(playerA.Hand()), handStr(playerB.Hand()),
+			len(playerA.Graveyard()), len(playerB.Graveyard()),
+			len(playerA.Library()), len(playerB.Library()),
+			strings.Join(board, ","),
+		)
+	}
+
+	first := runSeeded(20261121)
+	second := runSeeded(20261121)
+	if first != second {
+		t.Fatalf("seeded game diverged:\n--- run 1 ---\n%s\n--- run 2 ---\n%s", first, second)
 	}
 }

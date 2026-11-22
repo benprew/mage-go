@@ -321,3 +321,130 @@ func TestRandomCardFromHand_NoMatchReturnsNil(t *testing.T) {
 		t.Errorf("expected nil, got %v", got)
 	}
 }
+
+type wrappedSeedPlayer struct {
+	*BasePlayer
+}
+
+func makeNumberedDeck(owner uuid.UUID, n int) []*Card {
+	cards := make([]*Card, n)
+	for i := range n {
+		c := NewLand(string(rune('A' + i)))
+		c.SetOwner(owner)
+		cards[i] = c
+	}
+	return cards
+}
+
+func cardNames(cards []*Card) []string {
+	out := make([]string, len(cards))
+	for i, c := range cards {
+		out[i] = c.Name()
+	}
+	return out
+}
+
+func TestGame_SetSeedDeterminism(t *testing.T) {
+	run := func(seed uint64) ([]string, []string, []int) {
+		a := &wrappedSeedPlayer{BasePlayer: NewBasePlayer("A")}
+		b := &wrappedSeedPlayer{BasePlayer: NewBasePlayer("B")}
+		g := NewGame(a, b)
+		g.SetSeed(seed)
+		for _, c := range makeNumberedDeck(a.PlayerID(), 12) {
+			a.AddToLibrary(c)
+		}
+		for _, c := range makeNumberedDeck(b.PlayerID(), 12) {
+			b.AddToLibrary(c)
+		}
+		a.ShuffleLibrary()
+		b.ShuffleLibrary()
+
+		bottom := makeNumberedDeck(a.PlayerID(), 6)
+		g.PutOnBottomInRandomOrder(a, bottom)
+
+		nums := make([]int, 10)
+		for i := range nums {
+			nums[i] = g.RandIntn(1000)
+		}
+		return cardNames(a.Library()), cardNames(b.Library()), nums
+	}
+
+	libA1, libB1, nums1 := run(424242)
+	libA2, libB2, nums2 := run(424242)
+	libA3, _, _ := run(999999)
+
+	for i := range libA1 {
+		if libA1[i] != libA2[i] {
+			t.Fatalf("player A library mismatch at %d: %v vs %v", i, libA1, libA2)
+		}
+	}
+	for i := range libB1 {
+		if libB1[i] != libB2[i] {
+			t.Fatalf("player B library mismatch at %d: %v vs %v", i, libB1, libB2)
+		}
+	}
+	for i := range nums1 {
+		if nums1[i] != nums2[i] {
+			t.Fatalf("RandIntn mismatch at %d: %v vs %v", i, nums1, nums2)
+		}
+	}
+	sameDifferentSeed := true
+	for i := range libA1 {
+		if libA1[i] != libA3[i] {
+			sameDifferentSeed = false
+			break
+		}
+	}
+	if sameDifferentSeed {
+		t.Fatalf("different seeds produced identical library order: %v", libA1)
+	}
+}
+
+func TestGame_SetSeedClonePreservesLibraryShuffleDeterminism(t *testing.T) {
+	a := &wrappedSeedPlayer{BasePlayer: NewBasePlayer("A")}
+	b := NewBasePlayer("B")
+	g := NewGame(a, b)
+	g.SetSeed(7777)
+	for _, c := range makeNumberedDeck(a.PlayerID(), 12) {
+		a.AddToLibrary(c)
+	}
+	a.ShuffleLibrary()
+
+	clone := g.Clone()
+	cloneA := clone.GetPlayer(a.PlayerID())
+
+	a.ShuffleLibrary()
+	cloneA.ShuffleLibrary()
+
+	gotOrig := cardNames(a.Library())
+	gotClone := cardNames(cloneA.Library())
+	for i := range gotOrig {
+		if gotOrig[i] != gotClone[i] {
+			t.Fatalf("cloned player ShuffleLibrary diverged at %d: orig=%v clone=%v", i, gotOrig, gotClone)
+		}
+	}
+}
+
+func TestDiscardRandomCostUsesGameSeed(t *testing.T) {
+	run := func(seed uint64) string {
+		g, a, _ := randomTestGame()
+		g.SetSeed(seed)
+		for _, c := range makeNumberedDeck(a.PlayerID(), 8) {
+			a.AddToHand(c)
+		}
+		if err := DiscardRandomCost(1).Pay(uuid.Nil(), a.PlayerID(), g); err != nil {
+			t.Fatalf("pay discard random cost: %v", err)
+		}
+		if len(a.Graveyard()) != 1 {
+			t.Fatalf("expected 1 card in graveyard, got %d", len(a.Graveyard()))
+		}
+		return a.Graveyard()[0].Name()
+	}
+
+	first := run(314159)
+	for range 10 {
+		if got := run(314159); got != first {
+			t.Fatalf("DiscardRandomCost was not deterministic: got %s, want %s", got, first)
+		}
+	}
+}

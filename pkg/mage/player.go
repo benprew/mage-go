@@ -164,6 +164,7 @@ type BasePlayer struct {
 	manaPool        *ManaPool
 	lastDrawnCardID uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
 	poisonCounters  int
+	random          *RandomSource
 }
 
 func NewBasePlayer(name string) *BasePlayer {
@@ -310,12 +311,22 @@ func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (*Card, bool) {
 	return nil, false
 }
 
+func (p *BasePlayer) setRandomSource(r *RandomSource) {
+	p.random = r
+}
+
 func (p *BasePlayer) ShuffleLibrary() {
 	// Library backing arrays are shared across game clones (see cloneCardSlice).
 	// Copy into a fresh array before shuffling so we don't mutate the parent's view.
 	fresh := make([]*Card, len(p.library))
 	copy(fresh, p.library)
 	p.library = fresh
+	if p.random != nil {
+		p.random.Shuffle(len(p.library), func(i, j int) {
+			p.library[i], p.library[j] = p.library[j], p.library[i]
+		})
+		return
+	}
 	rand.Shuffle(len(p.library), func(i, j int) {
 		p.library[i], p.library[j] = p.library[j], p.library[i]
 	})

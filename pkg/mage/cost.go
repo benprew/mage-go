@@ -2,7 +2,6 @@ package mage
 
 import (
 	"fmt"
-	"math/rand"
 	"slices"
 	"strings"
 	"uuid"
@@ -857,7 +856,7 @@ func (c *discardRandomCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		if len(hand) == 0 {
 			break
 		}
-		idx := rand.Intn(len(hand))
+		idx := g.RandIntn(len(hand))
 		card := hand[idx]
 		g.PlayerDiscard(p, card.ID())
 	}

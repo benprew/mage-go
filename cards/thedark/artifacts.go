@@ -2,7 +2,6 @@ package thedark
 
 import (
 	"fmt"
-	"math/rand"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage"
@@ -321,7 +320,7 @@ func registerArtifacts() {
 						if len(hand) == 0 {
 							return nil
 						}
-						chosenCard := hand[rand.Intn(len(hand))]
+						chosenCard := hand[g.RandIntn(len(hand))]
 						if chosenCard.HasType(TypeLand) {
 							// Discard unless pays 1 life
 							if targetPlayer.Life() > 1 && targetPlayer.ChooseMayAbility("pay 1 life to avoid discarding "+chosenCard.Name()) {

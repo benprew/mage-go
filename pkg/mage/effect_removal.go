@@ -1,7 +1,6 @@
 package mage
 
 import (
-	"math/rand"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -270,7 +269,7 @@ func (*chaosOrbEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	if len(candidates) > 0 {
-		chosen := candidates[rand.Intn(len(candidates))]
+		chosen := candidates[ctx.Game.RandIntn(len(candidates))]
 		ctx.Game.DestroyPermanent(chosen)
 	}
 	src := ctx.Game.FindPermanent(ctx.SourceID)

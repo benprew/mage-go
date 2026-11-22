@@ -1,7 +1,6 @@
 package mage
 
 import (
-	"math/rand"
 	"uuid"
 )
 
@@ -106,7 +105,7 @@ func (g *Game) PutOnBottomInRandomOrder(p Player, cards []*Card) {
 	}
 	shuffled := make([]*Card, len(cards))
 	copy(shuffled, cards)
-	rand.Shuffle(len(shuffled), func(i, j int) {
+	g.Shuffle(len(shuffled), func(i, j int) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 	lib := p.Library()

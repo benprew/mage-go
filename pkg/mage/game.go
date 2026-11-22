@@ -3,7 +3,6 @@ package mage
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"slices"
 	"uuid"
 
@@ -127,7 +126,7 @@ func NewGame(playerA, playerB Player) *Game {
 }
 
 func newGame(playerA, playerB Player, anteEnabled bool) *Game {
-	return &Game{
+	g := &Game{
 		players:        []Player{playerA, playerB},
 		anteEnabled:    anteEnabled,
 		originalOwners: make(map[uuid.UUID]uuid.UUID),
@@ -143,6 +142,16 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		damage:         NewDamageSystem(),
 		turns:          NewTurnSystem(),
 		customState:    make(map[string]any),
+	}
+	g.attachPlayerRandomSources()
+	return g
+}
+
+func (g *Game) attachPlayerRandomSources() {
+	for _, p := range g.players {
+		if attached, ok := p.(interface{ setRandomSource(*RandomSource) }); ok {
+			attached.setRandomSource(&g.random)
+		}
 	}
 }
 
@@ -2761,7 +2770,7 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 			rest = append(rest, c)
 		}
 	}
-	rand.Shuffle(len(rest), func(i, j int) { rest[i], rest[j] = rest[j], rest[i] })
+	g.Shuffle(len(rest), func(i, j int) { rest[i], rest[j] = rest[j], rest[i] })
 	newLib := make([]*Card, 1, 1+len(lib)-count+len(rest))
 	newLib[0] = chosen
 	newLib = append(newLib, lib[count:]...)
