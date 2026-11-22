@@ -2,7 +2,7 @@
 
 A Magic: The Gathering rules engine written in Go, inspired by [XMage](https://github.com/magefree/mage)'s approach to open-source rules enforcement. The engine is a ground-up reimplementation — not a port — using idiomatic Go patterns: flat interfaces, composition over inheritance, and functional options instead of deep class hierarchies.
 
-The engine is 2-player only. The card pool targets early Magic, from Alpha through roughly the Odyssey/Onslaught block era. Mechanics and rules from later sets (planeswalkers, transform, energy, sagas, etc.) are not in scope.
+The engine is 2-player only. The card pool targets early Magic, from Alpha through roughly the Odyssey/Onslaught block era.
 
 ## How the Engine Works
 
@@ -29,6 +29,7 @@ The TUI and SSH server (`cmd/tui/`, `cmd/server/`) are rough prototypes. They wo
 ```
 pkg/mage/              # engine (package mage)
 pkg/mage/core/         # enums, value types (package core)
+pkg/mage/mtgish/        # tagged JSON parser and compiler
 pkg/mage/gametest/     # test harness DSL (package gametest)
 pkg/mage/interactive/  # TUI/AI player layer
 cards/limited/         # Alpha (Limited Edition)
@@ -41,28 +42,20 @@ cmd/server/            # SSH multiplayer server
 cmd/fetchset/          # set data fetcher
 cmd/genset/            # stub generator from Scryfall JSON
 data/                  # Scryfall JSON card data per set
-.claude/skills/        # Claude Code skills for card implementation
+.agents/skills/        # Agent skills for the repo
 ```
 
-## Adding a New Set
+## Card Definitions and Sets
 
-The project includes a pipeline for implementing entire card sets:
+Use the sibling mtgish checkout to inspect card definitions from the mage-go root.
 
-1. **Fetch** card data from Scryfall:
-   ```bash
-   go run ./cmd/fetchset -o data/DRK.json DRK
-   ```
+```bash
+../mtgish/show_card "Sol Ring"
+```
 
-2. **Generate** Go stubs from the JSON. This creates one file per card type (`creatures.go`, `spells.go`, etc.) with full Oracle text as comments and `// TODO: implement` markers. Reprints already registered in other sets are automatically skipped.
-   ```bash
-   go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/
-   ```
+The compiler in `pkg/mage/mtgish` consumes tagged JSON from `../mtgish/data/mtgish.lines.json`. Its rule coverage is still growing. Existing Go definitions in `cards/` supply cards during the migration.
 
-3. **Implement** cards. Each card is implemented TDD-style: write a failing test that exercises the card's behavior, then implement the card to make it pass. The `pkg/mage/doc.go` file is the comprehensive API reference for all available effects, triggers, targets, and costs.
-
-4. **Validate** completeness by checking every implementation against Scryfall Oracle text, auditing test coverage, and running the full test suite.
-
-[Claude Code](https://claude.com/claude-code) skills (`.claude/skills/`) automate steps 3 and 4 — `/implement-set` handles the full implementation workflow and `/validate-set` audits the result.
+Use Scryfall JSON for the expected set roster and Oracle text. The repo skills cover [rules and card support](.agents/skills/implement-engine/SKILL.md), [set implementation](.agents/skills/implement-set/SKILL.md), and [set validation](.agents/skills/validate-set/SKILL.md).
 
 ## Build & Test
 
@@ -72,7 +65,7 @@ go build ./...   # Build check.
 go vet ./...     # Vet.
 ```
 
-`make test-ai` compares the working tree AI with committed `HEAD`. Each run
+`go run ./cmd/aibench` compares the working tree AI with committed `HEAD`. Each run
 resolves and prints the full HEAD commit hash. It copies the committed
 interactive packages into a separate package tree in a temporary directory.
 Historical AI, combat solver, evaluation, personality inference, and player
@@ -83,16 +76,16 @@ the interactive packages do not change the engine or cards in this comparison.
 An incompatible historical API causes a build failure.
 
 The command first runs a HEAD-versus-HEAD control, then the working tree
-comparison. Each suite runs 30,000 paired mirror games by default. Each pair
+comparison. Set `SIM_GAMES` to a positive even number of games per suite. Each pair
 uses the same opening deck orders and swaps the AI strategies between seats. The limit
 is 200 individual turns. Reports separate actual draws from turn-limit games
 and use game pairs to calculate confidence intervals.
 
 The primary suite uses WG Aggro, RB Burn, Aga Galneer, Guardian of the Tusk,
 and the existing Merfolk Shaman rogue deck. `SIM_INCLUDE_PRIESTESS=1` adds
-Priestess for slow-game stress tests. `SIM_GAMES`, `SIM_MAX_TURNS`, and
-`SIM_SEED` override the game count, turn limit, and opening shuffle seed.
-For example, `SIM_GAMES=10 make test-ai` runs a quick comparison check.
+Priestess for slow-game stress tests. Use `SIM_MAX_TURNS` and `SIM_SEED`
+to override the turn limit and opening shuffle seed.
+For a smoke test, run `SIM_GAMES=10 go run ./cmd/aibench`.
 Each opponent infers its own personality from the deck with its own version
 of the inference code and presets. The report lists both personality names
 for each deck. This inference does not search for the best personality.

@@ -72,8 +72,8 @@ def reconcile_card_summary(data, errors):
             counts[status] = counts.get(status, 0) + 1
     if data["summary"].get("total") != len(data["cards"]):
         errors.append("$.summary.total: does not match cards")
-    for status in ["implemented", "blocked_engine_gap", "accepted_unsupported", "defect", "stub"]:
-        if data["summary"].get(status) != counts.get(status, 0):
+    for status in ["implemented", "blocked_engine_gap", "accepted_unsupported", "defect", "stub", "missing"]:
+        if data["summary"].get(status, 0) != counts.get(status, 0):
             errors.append(f"$.summary.{status}: does not match cards")
 
 

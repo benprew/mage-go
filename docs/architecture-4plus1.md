@@ -424,7 +424,7 @@ Scryfall
   |-- cmd/fetchcatalog --> data/catalog/<SET>.json
   '-- cmd/genset --------> cards/<package>/*.go + embedded catalog JSON
                               -> card-by-card TDD
-                              -> implement-set / implement-card workflow
+                              -> implement-set / implement-engine workflow
                               -> validate-set audit
                               -> go test ./... and make lint
 ```

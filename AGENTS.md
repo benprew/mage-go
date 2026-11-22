@@ -23,15 +23,14 @@ make lint                                  # lint (run after making changes and 
 
 ## Cardinal Rules
 
-1. **Follow Oracle text exactly.** Include full Oracle text as comment above `Register()`. Check every word — "nontoken," "each," "nonbasic," etc. No paraphrasing, no shortcuts.
+1. **Follow Oracle text exactly.** Check each mtgish definition against Oracle text and the relevant rules. For hand-written Go cards, keep the full Oracle text above `Register()`. Preserve every condition, choice, timing restriction, and duration.
 
-2. **Never simplify.** Every condition, restriction, and edge case matters. A simplified implementation is a **wrong** implementation. If the engine can't support something, mark with `// XXX:` and ask — never silently simplify.
+2. **Reject incomplete behavior.** Fix reusable compiler and engine gaps when they are in scope. Reject an mtgish record if a required rule cannot compile. If a material gap requires deferral, report it and ask. Mark a deferred Go definition with `// XXX:`.
 
-3. **TDD.** Write a failing test first, then implement.
 
 ## Card Implementation Guide
 
-**Read `pkg/mage/doc.go` first** — comprehensive reference for the engine API: card constructors, effects, targets, filters, costs, abilities, continuous effects, layers, attrs, replacement effects, and `*Game` methods.
+Inspect the mtgish definition from the mage-go root with `../mtgish/show_card "Sol Ring"`. The source is `../mtgish/data/mtgish.lines.json`. Read `pkg/mage/doc.go` for the engine API before changing game behavior.
 
 **Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
 
@@ -39,22 +38,18 @@ make lint                                  # lint (run after making changes and 
 
 ## Set Implementation
 
-```bash
-go run ./cmd/fetchset -o data/DRK.json DRK                       # fetch from Scryfall
-go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/       # generate stubs
-# then use /implement-set, /implement-card, /validate-set skills
-```
+Use Scryfall JSON for the expected roster and Oracle text. Fetch missing set data with `go run ./cmd/fetchset -o data/DRK.json DRK` for The Dark. Use mtgish for the card definitions. Use `cmd/genset` for a requested legacy Go package.
 
-- **`cmd/genset`** creates `register.go`, `test.go`, `creatures.go`, `artifacts.go`, `enchantments.go`, `spells.go`, `lands.go` with Oracle text comments and `// TODO: implement` markers. Skips reprints from other sets.
-- **`/implement-card <names>`** — TDD workflow for one card or a batch
-- **`/implement-set <set-code> [set-name] [pkg]`** — full set implementation pipeline
-- **`/validate-set <pkg> [set-code]`** — audit completeness and Oracle fidelity
+- [implement-engine](.agents/skills/implement-engine/SKILL.md) covers named cards, mtgish compiler support, and reusable game rules.
+- [implement-set](.agents/skills/implement-set/SKILL.md) coordinates coverage and shared work across a set.
+- [validate-set](.agents/skills/validate-set/SKILL.md) audits coverage and Oracle fidelity.
 
 ## Package Layout
 
 ```
 pkg/mage/              # engine
 pkg/mage/core/         # enums, value types
+pkg/mage/mtgish/        # tagged JSON parser and compiler
 pkg/mage/gametest/     # test harness DSL
 pkg/mage/interactive/  # TUI/AI player layer
 cards/{limited,arabian,antiquities,legends,custom}/  # card sets
@@ -64,8 +59,8 @@ web/                   # browser UI
 docs/                  # comprehensive rules, tutorials
 ```
 
-Cards register via `Register(name, factory)` in `init()`. Each set's `test.go` has blank-identifier imports to ensure registration.
+Legacy Go cards register via `Register(name, factory)`. The mtgish compiler produces immutable `CardDefinition` values that can be registered with `RegisterDefinition`.
 
 ## Test Harness DSL
 
-Tests use `gametest.TestGame` with `PlayerA`/`PlayerB`. Card tests go in the card package.
+Tests use `gametest.TestGame` with `PlayerA`/`PlayerB`. Keep legacy Go tests in the card package. Test compiled cards from checked-in mtgish JSON fixtures.

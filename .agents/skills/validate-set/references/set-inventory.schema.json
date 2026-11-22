@@ -15,7 +15,7 @@
       "properties": {
         "code": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
-        "package": {"type": "string", "minLength": 1}
+        "package": {"type": ["string", "null"], "minLength": 1}
       }
     },
     "summary": {
@@ -28,7 +28,8 @@
         "blocked_engine_gap": {"type": "integer", "minimum": 0},
         "accepted_unsupported": {"type": "integer", "minimum": 0},
         "defect": {"type": "integer", "minimum": 0},
-        "stub": {"type": "integer", "minimum": 0}
+        "stub": {"type": "integer", "minimum": 0},
+        "missing": {"type": "integer", "minimum": 0}
       }
     },
     "cards": {
@@ -39,9 +40,11 @@
         "required": ["name", "status", "source_path", "oracle_text_complete", "oracle_match", "test_status", "evidence", "gap_ids"],
         "properties": {
           "name": {"type": "string", "minLength": 1},
-          "status": {"enum": ["implemented", "blocked_engine_gap", "accepted_unsupported", "defect", "stub"]},
-          "source_path": {"type": "string", "minLength": 1},
-          "oracle_text_complete": {"type": "boolean"},
+          "status": {"enum": ["implemented", "blocked_engine_gap", "accepted_unsupported", "defect", "stub", "missing"]},
+          "source_path": {"type": ["string", "null"], "minLength": 1},
+          "registration_source": {"enum": ["mtgish", "go", "none"]},
+          "mtgish_status": {"enum": ["compiled", "missing_source", "invalid_source", "compiler_gap", "engine_gap", "not_checked"]},
+          "oracle_text_complete": {"type": ["boolean", "null"]},
           "oracle_match": {"type": ["boolean", "null"]},
           "test_status": {"enum": ["absent", "present", "passing", "failing", "not_needed"]},
           "evidence": {"type": "array", "items": {"type": "string"}},

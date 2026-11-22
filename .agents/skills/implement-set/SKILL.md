@@ -1,57 +1,24 @@
 ---
 name: implement-set
-description: "Drive one Magic: The Gathering set from stubs or partial work to a verified mage-go implementation. Use to coordinate inventory, shared engine gaps, card batches, and final set validation."
+description: Bring a Magic set to verified playable coverage in mage-go. Use the expected set roster and mtgish definitions to prioritize shared compiler and engine work.
 ---
 
 # Implement a set
 
-Coordinate this state transition:
+Resolve the set name, code, or package using `data/sets.txt` and package metadata. Build the expected roster and initial coverage inventory with [validate-set](../validate-set/SKILL.md). Use the set's Scryfall JSON for the roster and Oracle text. If it is missing, fetch it with `go run ./cmd/fetchset -o data/<CODE>.json <CODE>`.
 
-```text
-resolve → inventory → order dependencies → execute batches → validate
-```
-
-## Resolve and bootstrap
-
-Resolve a set code, package, or name with `data/sets.txt` and package metadata.
-
-If canonical JSON is missing, fetch it with TLS verification enabled:
-
-```bash
-go run ./cmd/fetchset -o data/<CODE>.json <CODE>
-```
-
-If the package is missing, generate it with `cmd/genset`. Never generate over existing work.
-
-## Inventory
-
-Read `../validate-set/SKILL.md` and use its inventory workflow. For more than a few cards, maintain a record that follows `../validate-set/references/set-inventory.schema.json`. Do not start implementation from approximate counts or an unverified design note.
-
-Order remaining work by shared engine dependency, then by independent card batches. A card must have one explicit inventory status; a reusable engine gap must have a stable gap ID.
+Use `../mtgish/data/mtgish.lines.json` for card definitions. Join matching records to the roster, including cards playable through an existing registration from another set. Use the checked-in compiler API to establish what compiles today. Check whether the game loads each compiled card through its normal entry point. Use `cmd/genset` when the task calls for a new legacy Go package. Check the output paths for conflicts with existing work first.
 
 ## Execute
 
-1. Read `../implement-engine/SKILL.md` before resolving a shared engine gap.
-2. Read `../implement-card/SKILL.md` before wiring cards that current engine APIs support.
-3. Update the inventory after each batch and rerun affected tests without cache.
-4. Reorder work when a new engine gap appears. Do not approximate Oracle behavior to keep a batch moving.
+1. Group cards by the source, compiler, or engine work they share. Order batches by their dependencies.
+2. Use [implement-engine](../implement-engine/SKILL.md) to complete each batch, including compiler or engine changes needed for the selected cards. Cover the shared rule with representative gameplay tests and add cases for distinct behavior.
+3. Update the inventory after each batch and rerun affected tests without cache. Recheck other cards that use the constructs you changed.
 
-Delegate only when the user requests or permits delegation and the batches have disjoint files with no unresolved shared engine dependency.
-
-Ask for direction only for a material scope choice, an unsupported designation, or a priority that cannot be inferred safely.
+For a multi-batch handoff, use the [inventory schema](../validate-set/references/set-inventory.schema.json). Delegate independent batches only when the user requests or permits delegation.
 
 ## Complete
 
-Read and run `../validate-set/SKILL.md` again. Reconcile every card and every `TODO: implement`, `XXX:`, and `UNIMPLEMENTABLE:` marker with the final inventory.
+Run [validate-set](../validate-set/SKILL.md) against the complete expected roster. Reconcile legacy TODOs and deferred or unsupported markers with the findings. Run the set and importer checks that apply. Run repository-wide tests and build checks for shared engine changes.
 
-Run:
-
-```bash
-go test ./cards/<package>/ -count=1
-go test ./... -short -count=1
-go build ./...
-go vet ./...
-make lint
-```
-
-Report exact status counts, completed and unresolved cards, engine capabilities, verification, and changed files.
+Report exact playable and mtgish coverage, unresolved cards, shared capabilities added, and verification.

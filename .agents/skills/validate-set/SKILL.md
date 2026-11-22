@@ -1,53 +1,23 @@
 ---
 name: validate-set
-description: Audit one mage-go card set for completeness, Oracle fidelity, test quality, unsupported behavior, and regressions. Use for evidence-based assessment without changing card or engine implementations.
+description: Audit a mage-go set for playable coverage, mtgish imports, Oracle fidelity, and test quality. Use for read-only assessment of source, compiler, and engine behavior.
 ---
 
 # Validate a set
 
-Audit actual implementation behavior. Do not edit card or engine code.
+Resolve the set code and any Go package with `data/sets.txt` and package metadata. Use Scryfall JSON for the expected roster and Oracle text. Fetch missing data to a temporary path with `go run ./cmd/fetchset -o <output-path> <CODE>`. Count distinct card definitions across printings and include every expected card in the audit.
 
-## Inputs
+## Audit coverage and behavior
 
-Resolve the package and Scryfall code with the request, `data/sets.txt`, and package metadata. Use Scryfall JSON as the Oracle source of truth.
-
-If canonical JSON is missing, disclose that the audit will add `data/<CODE>.json`, or fetch it to a temporary path when persistence is unnecessary:
-
-```bash
-go run ./cmd/fetchset -o <output-path> <CODE>
-```
-
-Do not disable TLS verification as part of the normal workflow. Read only the comprehensive-rules sections needed to resolve specific questions.
-
-## Audit
-
-For every registered card, inspect code and tests and record:
-
-- one implementation status;
-- whether the complete Oracle text is above `Register()`;
-- whether actual behavior matches every rules-relevant word;
-- whether tests can fail for plausible incorrect behavior;
-- any card-code defect or reusable engine gap.
-
-Do not infer correctness from names, comments, markers, or passing tests alone. Do not demand redundant tests for declarative use of tested engine primitives. Reconcile every `UNIMPLEMENTABLE:` marker with `UNSUPPORTED.md`.
-
-For a set audit, create an inventory that follows [references/set-inventory.schema.json](references/set-inventory.schema.json). Use exact counts and validate the saved artifact:
-
-```bash
-python3 .agents/skills/scripts/validate_artifact.py .agents/skills/validate-set/references/set-inventory.schema.json <inventory.json>
-```
+- Use `../mtgish/data/mtgish.lines.json` or checked-in fixtures to inspect definitions. Match them to the expected cards. For an individual example, run `../mtgish/show_card "Sol Ring"` from the mage-go root.
+- Check `mtgish.ParseMtgishJSON` and `mtgish.Compile` with the available records. Record the failing card and rule path when present. Identify the cause as a missing or incorrect record, missing compiler support, or missing engine behavior. A successful compile establishes compiler coverage.
+- Check the game's normal loading path for each expected card. Include reprints provided by another package and cards with no registration. Record whether the active definition comes from mtgish or Go. Count cards as playable when the active definition implements the required behavior. Count mtgish cards as playable imports when the game loads the compiled definition.
+- Compare actual gameplay against Oracle text and the relevant rules. Inspect the tests for failures they can detect. For hand-written Go cards, check the full Oracle comment above `Register()` and reconcile any `UNIMPLEMENTABLE:` markers with the set's `UNSUPPORTED.md`.
 
 ## Checks and report
 
-Run:
+Run `go test ./pkg/mage/mtgish -count=1` for import checks. If the set has a Go package, run its package tests and `go vet` on that package. Use broader checks when needed to confirm a shared regression.
 
-```bash
-go test ./cards/<package>/ -count=1
-go vet ./cards/<package>/
-```
+Report the expected count, playable count, mtgish compiler coverage, and how many playable cards load mtgish definitions. Give the card, expected behavior, actual behavior, and evidence for each finding. Disclose any portion of the roster or behavior you could not verify.
 
-Run broader checks only to confirm an engine interaction or repository regression. Separate pre-existing failures when evidence permits.
-
-Write the result according to [references/validation-report.schema.json](references/validation-report.schema.json) when another skill or tool will consume it. Validate a saved report with the same script. Then give the user a concise human report led by exact counts and severity-ranked findings.
-
-Each correctness finding must state the card, authoritative behavior, actual behavior, evidence, required outcome, and confidence. Group shared root causes and end with prioritized next work, checks run, and confidence limits.
+Use the [inventory schema](references/set-inventory.schema.json) and [report schema](references/validation-report.schema.json) when a saved handoff is needed. Record the active path in `registration_source` and the import result in `mtgish_status`. Use `missing` for an absent implementation and `null` for fields that lack a Go package, a definition path, or a Go Oracle comment check. Validate saved artifacts with [the artifact validator](../scripts/validate_artifact.py).
