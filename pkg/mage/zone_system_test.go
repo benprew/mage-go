@@ -3,6 +3,8 @@ package mage
 import (
 	"testing"
 	"uuid"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 func TestZoneSystem_BattlefieldAndQueries(t *testing.T) {
@@ -204,5 +206,64 @@ func TestZoneSystem_CastFromExileAndExileInstead(t *testing.T) {
 	zs.ClearEndOfTurn()
 	if zs.IsExileInstead(cardID) {
 		t.Errorf("IsExileInstead should be false after ClearEndOfTurn")
+	}
+}
+
+func TestExilePermanent_TokenCeasesToExist(t *testing.T) {
+	a := NewBasePlayer("Alice")
+	b := NewBasePlayer("Bob")
+	bear := NewCreature("Grizzly Bears", "{1}{G}", 2, 2)
+	bear.SetOwner(a.PlayerID())
+	a.AddToLibrary(bear)
+
+	g := NewGame(a, b)
+	initial := g.SnapshotInitialCards()
+
+	tokCard := NewToken("Tetravite", 1, 1, []CardType{TypeArtifact, TypeCreature}, []string{"Tetravite"}, nil)
+	tokCard.SetOwner(a.PlayerID())
+	tokPerm := g.PutTokenOnBattlefield(tokCard, a.PlayerID())
+	if tokPerm == nil {
+		t.Fatal("expected token on battlefield")
+	}
+
+	var triggered bool
+	g.RegisterDelayedTrigger(&DelayedTrigger{
+		EventType:     EvtZoneChange,
+		SourceID:      tokPerm.ID(),
+		Controller:    a.PlayerID(),
+		MatchEventID:  tokPerm.ID(),
+		MatchFromZone: ZoneBattlefield,
+		MatchToZone:   ZoneExile,
+		Effects: []Effect{FuncEffect("record", EffectProperties{}, func(_ *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
+			triggered = true
+			return nil
+		})},
+	})
+
+	g.ExilePermanent(tokPerm)
+
+	if g.FindPermanent(tokPerm.ID()) != nil {
+		t.Fatal("exiled token is still on battlefield")
+	}
+	if len(g.GetExile()) != 0 {
+		t.Fatalf("exiled token leaked into exile zone: got %d card(s)", len(g.GetExile()))
+	}
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+	if !triggered {
+		t.Fatal("expected EvtZoneChange{Battlefield->Exile} trigger to fire for exiled token")
+	}
+	if violations := g.CheckInvariants(InvariantOptions{InitialCards: initial}); len(violations) != 0 {
+		t.Fatalf("expected no invariant violations, got: %v", violations)
+	}
+
+	realPerm := g.PutOnBattlefield(bear, a.PlayerID())
+	a.SetLibrary(nil)
+	g.ExilePermanent(realPerm)
+	if g.FindExiledCard(bear.ID()) == nil {
+		t.Fatal("expected non-token exiled permanent in exile zone")
+	}
+	if violations := g.CheckInvariants(InvariantOptions{InitialCards: initial}); len(violations) != 0 {
+		t.Fatalf("expected no invariant violations after exiling real card, got: %v", violations)
 	}
 }
