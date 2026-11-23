@@ -671,7 +671,7 @@ func registerEnchantments() {
 			// TODO: convert to pipeline — complex attachment manipulation
 			WithAbility(WhenAttachedBecomesTappedTrigger(FuncEffect(
 				"destroy enchanted land; its controller picks another land to attach Kudzu to",
-				EffectProperties{},
+				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					kudzu := g.MutablePermanent(sourceID)
 					if kudzu == nil {
