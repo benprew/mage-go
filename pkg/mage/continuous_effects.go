@@ -220,13 +220,12 @@ func ColorToBasicLandType(c Color) string {
 // Use this for auras like the Curse cycle and Stalwart Aven, where Oracle
 // text grants an ability "to enchanted creature" or "to enchanted player".
 func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond TriggerConditionData, effects ...Effect) ContinuousEffect {
+	trig := NewTriggered(eventType, optional, effects...)
+	if cond != nil {
+		trig.SetConditionData(cond)
+	}
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		trig := NewTriggered(eventType, optional, effects...)
-
-		if cond != nil {
-			trig.SetConditionData(cond)
-		}
-		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{Ability: trig})
+		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(trig))
 		return nil
 	})
 }
@@ -425,6 +424,7 @@ func PreventBlockingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
 
 // GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
 func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter) ContinuousEffect {
+	ab := NewActivatedAbility(effect, cost)
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) {
@@ -436,13 +436,12 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 			if !filter.Match(p, g) {
 				continue
 			}
-			ab := NewActivatedAbility(effect, cost)
 
 			p = g.MutablePermanent(p.ID())
 			if p == nil {
 				continue
 			}
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{Ability: ab})
+			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
 		}
 		return nil
 	})
@@ -468,6 +467,10 @@ func GrantTriggeredAbilityToAllIncludingSource(eventType EventType, optional boo
 }
 
 func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, includeSource bool, effects ...Effect) ContinuousEffect {
+	trig := NewTriggered(eventType, optional, effects...)
+	if cond != nil {
+		trig.SetConditionData(cond)
+	}
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.zones.battlefield {
 			if !includeSource && p.ID() == sourceID {
@@ -476,16 +479,11 @@ func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond Trigger
 			if !filter.Match(p, g) {
 				continue
 			}
-			trig := NewTriggered(eventType, optional, effects...)
-
-			if cond != nil {
-				trig.SetConditionData(cond)
-			}
 			p = g.MutablePermanent(p.ID())
 			if p == nil {
 				continue
 			}
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{Ability: trig})
+			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(trig))
 		}
 		return nil
 	})
@@ -906,6 +904,14 @@ func isBasicLandSubtype(subtype string) bool {
 	return ok
 }
 
+var intrinsicBasicLandManaAbilities = map[Color]Ability{
+	White: NewManaAbility(White),
+	Blue:  NewManaAbility(Blue),
+	Black: NewManaAbility(Black),
+	Red:   NewManaAbility(Red),
+	Green: NewManaAbility(Green),
+}
+
 func refreshIntrinsicBasicLandManaAbilities(target *Permanent) {
 	retained := target.RuntimeAbilities[:0]
 	for _, ability := range target.RuntimeAbilities {
@@ -923,9 +929,7 @@ func refreshIntrinsicBasicLandManaAbilities(target *Permanent) {
 		if !ok || permanentHasManaAbilityColor(target, color) {
 			continue
 		}
-		ability := NewManaAbility(color)
-
-		target.RuntimeAbilities = append(target.RuntimeAbilities, wrapIntrinsicBasicLandManaAbility(ability))
+		target.RuntimeAbilities = append(target.RuntimeAbilities, wrapIntrinsicBasicLandManaAbility(intrinsicBasicLandManaAbilities[color]))
 	}
 }
 
@@ -1167,9 +1171,8 @@ func AnimateAttachedLand(opts AnimateLandOptions) ContinuousEffect {
 // wrapped via WrapGrantedAbility so it is cleared and re-installed on each
 // Apply() cycle.
 func GrantManaAbilityToAttached(productions ...ManaProduction) ContinuousEffect {
+	ma := NewMultiManaAbility(productions...)
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		ma := NewMultiManaAbility(productions...)
-
 		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ma))
 		return nil
 	})
@@ -1178,6 +1181,11 @@ func GrantManaAbilityToAttached(productions ...ManaProduction) ContinuousEffect 
 // SourceHasManaAbilitiesOpponentLandsCouldProduce grants the source one
 // tap-for-mana ability for each color an opponent's land could produce.
 func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
+	allColors := Colors()
+	templates := make(map[Color]Ability, len(allColors))
+	for _, color := range allColors {
+		templates[color] = NewManaAbility(color)
+	}
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		source := g.MutablePermanent(sourceID)
 		if source == nil {
@@ -1191,7 +1199,7 @@ func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
 			for _, ability := range land.RuntimeAbilities {
 				for _, production := range abilityManaProductions(UnwrapAbility(ability), g, land.ID()) {
 					if production.Color == AnyColor {
-						for _, color := range Colors() {
+						for _, color := range allColors {
 							colors[color] = true
 						}
 						continue
@@ -1202,13 +1210,11 @@ func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
 				}
 			}
 		}
-		for _, color := range Colors() {
+		for _, color := range allColors {
 			if !colors[color] {
 				continue
 			}
-			ability := NewManaAbility(color)
-
-			source.RuntimeAbilities = append(source.RuntimeAbilities, WrapGrantedAbility(ability))
+			source.RuntimeAbilities = append(source.RuntimeAbilities, WrapGrantedAbility(templates[color]))
 		}
 		return nil
 	})

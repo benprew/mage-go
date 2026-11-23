@@ -596,3 +596,30 @@ func TestDeathtouchSBAUsesDamageEvent(t *testing.T) {
 		t.Error("creature survived a deathtouch damage event")
 	}
 }
+
+func TestCheckInvariants_GrantedAbilitiesKeepStableIdentity(t *testing.T) {
+	g, a, _ := invariantTestGame()
+	zombie := addInvariantPermanent(g, a, NewCreature("Scathe Zombies", "{2}{B}", 2, 2, WithSubTypes("Zombie")))
+	addInvariantPermanent(g, a, NewCreature("Zombie Lord", "{1}{B}{B}", 2, 3,
+		WithSubTypes("Zombie"),
+		WithStaticAbility(
+			GrantActivatedAbilityToAll(RegenerateSource(), ManaCostOf("{B}"), HasSubType("Zombie")),
+			GrantTriggeredAbilityToAll(EvtUpkeep, false, nil, HasSubType("Zombie"), GainLife(1)),
+		),
+	))
+	aura := addInvariantPermanent(g, a, NewEnchantment("Grant Aura", "{W}",
+		WithSubTypes("Aura"),
+		WithStaticAbility(
+			GrantTriggeredAbilityToAttached(EvtUpkeep, false, nil, GainLife(1)),
+			GrantManaAbilityToAttached(ManaProduction{Color: Green, Amount: 1}),
+		),
+	))
+	g.Attach(aura.ID(), zombie.ID())
+	land := addInvariantPermanent(g, a, NewLand("Plains", WithSubTypes("Plains")))
+	g.AddContinuousEffect(SetSubtypes(land.ID(), SubtypeLand, Indefinite, "Swamp"), land.ID())
+	g.ApplyContinuousEffects()
+
+	if got := g.CheckInvariants(InvariantOptions{CheckContinuousIdempotency: true}); len(got) != 0 {
+		t.Fatalf("expected granted abilities to be idempotent, got: %v", got)
+	}
+}
