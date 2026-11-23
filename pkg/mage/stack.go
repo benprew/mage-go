@@ -50,11 +50,13 @@ type StackObject struct {
 	// resolution. Map keys are the target IDs in StackObject.Targets; values
 	// sum to the spell's total damage.
 	DamageDistribution map[uuid.UUID]int
+	damageTotal        int
 
 	// CounterDistribution carries per-target counter assignments chosen when
 	// the stack object is created. Assignments remain fixed if targets become
 	// illegal before resolution.
 	CounterDistribution map[uuid.UUID]int
+	counterTotal        int
 
 	// IsCopy marks this stack object as a copy of a spell (CR 707.10).
 	// Copies of spells cease to exist when they resolve or are countered —

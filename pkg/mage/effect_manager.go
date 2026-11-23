@@ -573,6 +573,9 @@ func (em *EffectManager) Apply(g *Game) {
 				if p == nil {
 					continue
 				}
+				if len(g.combat.Groups) > 0 {
+					g.combat.RemoveFromCombat(p.ID())
+				}
 				p.turnControlGained = g.turns.Turn()
 				if !p.HasAttr(AttrSummonSick) {
 					p.GrantBaseAttr(AttrSummonSick)

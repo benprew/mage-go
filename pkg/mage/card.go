@@ -563,6 +563,8 @@ type Permanent struct {
 	Tapped             bool
 	PhasedOut          bool // true when phased out (treated as though it doesn't exist)
 	Damage             int
+	deathtouchDamage   bool
+	worldSince         uint64
 	// Counters is a fixed-size array indexed by CounterType, so cloning a
 	// Permanent is a memcpy instead of a map allocation. Absent counters are
 	// zero. To iterate, loop over [0, NumCounters) and skip zeros.

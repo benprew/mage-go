@@ -51,6 +51,8 @@ func run() int {
 	verbose := flag.Bool("verbose", false, "write per-search priority telemetry to stderr")
 	quiet := flag.Bool("quiet", false, "suppress per-action game log output")
 	showEval := flag.Bool("eval", false, "show position scores with moves; show hands and boards at turn start")
+	checkInvariants := flag.Bool("check-invariants", false, "verify game state invariants at every priority window and game end")
+	checkLayersEvery := flag.Int("check-layers-every", 0, "when -check-invariants is set, verify continuous-effect idempotency every N priority calls (0 disables)")
 	flag.Parse()
 
 	search.DebugStats = *verbose
@@ -137,6 +139,14 @@ func run() int {
 
 		g := mage.NewGame(playerA, playerB)
 		g.SetSeed(uint64(gameSeed))
+		var invCfg invariantConfig
+		if *checkInvariants {
+			invCfg = invariantConfig{
+				enabled:      true,
+				initialCards: g.SnapshotInitialCards(),
+				layersEvery:  *checkLayersEvery,
+			}
+		}
 		playerA.ShuffleLibrary()
 		playerB.ShuffleLibrary()
 		tui.DrawOpeningHand(playerA)
@@ -159,7 +169,13 @@ func run() int {
 			fmt.Println("Automatic passes with no alternatives are omitted.")
 		}
 
-		totalLoop += runGame(g, *maxTurns, *quiet, *showEval)
+		elapsed, invErr := runGame(g, *maxTurns, *quiet, *showEval, invCfg)
+		totalLoop += elapsed
+		if invErr != nil {
+			fmt.Fprintf(os.Stderr, "INVARIANT VIOLATION in game %d (seed=%d, decks=%q vs %q):\n%v\n",
+				gameNum, gameSeed, selectedA.Name, selectedB.Name, invErr)
+			return 1
+		}
 	}
 	if *loopTiming {
 		fmt.Fprintf(
@@ -320,15 +336,48 @@ func printSkippedCards(playerName string, skipped []string) {
 		playerName, len(skipped), strings.Join(skipped, ", "))
 }
 
-func runGame(g *mage.Game, maxTurns int, quiet, showEval bool) time.Duration {
+type invariantConfig struct {
+	enabled      bool
+	initialCards map[uuid.UUID]string
+	layersEvery  int
+}
+
+func formatViolations(g *mage.Game, context string, violations []mage.InvariantViolation) error {
+	var b strings.Builder
+	fmt.Fprintf(&b, "turn=%d step=%s (%s): %d violation(s):", g.CurrentTurn(), g.GetStep(), context, len(violations))
+	for _, v := range violations {
+		fmt.Fprintf(&b, "\n  - %s", v.String())
+	}
+	return fmt.Errorf("%s", b.String())
+}
+
+func runGame(g *mage.Game, maxTurns int, quiet, showEval bool, inv invariantConfig) (time.Duration, error) {
 
 	// Track last printed turn so we print the header once.
 	lastTurn := -1
 	pendingResolution := false
+	priorityChecks := 0
+	var invariantErr error
 
 	// Install priority handler: log choices and the AI's decision.
 	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		p := g.PlayerAt(playerIdx)
+		if inv.enabled {
+			priorityChecks++
+			checkLayers := inv.layersEvery > 0 && priorityChecks%inv.layersEvery == 0
+			if violations := g.CheckInvariants(mage.InvariantOptions{
+				AtPriority:                 true,
+				InitialCards:               inv.initialCards,
+				CheckContinuousIdempotency: checkLayers,
+			}); len(violations) > 0 {
+				context := fmt.Sprintf("priority player %d", playerIdx)
+				if p != nil {
+					context = "priority " + p.Name()
+				}
+				invariantErr = formatViolations(g, context, violations)
+				return mage.PriorityAction{Type: mage.PriorityAbort}
+			}
+		}
 		aiPlayer := p.(interactive.AutoPlayer)
 		if showEval && !quiet && pendingResolution {
 			fmt.Println("  Evaluation after resolution:")
@@ -437,8 +486,14 @@ func runGame(g *mage.Game, maxTurns int, quiet, showEval bool) time.Duration {
 
 	// Main turn loop.
 	loopStart := time.Now()
+	schedule := g.GetSchedule()
 	for g.CurrentTurn() <= maxTurns {
-		for _, step := range core.AllSteps() {
+		if schedule.ConsumeTurnSkip(g.ActivePlayerObj().PlayerID()) {
+			schedule.Remaining = nil
+		} else {
+			schedule.BuildNextTurn()
+		}
+		for step, ok := schedule.PopNextStep(); ok; step, ok = schedule.PopNextStep() {
 			// Combat preview.
 			if !quiet && step == core.CombatDamage && len(g.CombatGroups()) > 0 {
 				fmt.Printf("  ── Combat damage ──\n")
@@ -446,6 +501,9 @@ func runGame(g *mage.Game, maxTurns int, quiet, showEval bool) time.Duration {
 			}
 
 			g.RunStepWithPriority(step)
+			if invariantErr != nil {
+				return time.Since(loopStart), invariantErr
+			}
 
 			// Post-step info.
 			if !quiet {
@@ -493,7 +551,15 @@ func runGame(g *mage.Game, maxTurns int, quiet, showEval bool) time.Duration {
 						printPositionScores(os.Stdout, g)
 					}
 				}
-				return time.Since(loopStart)
+				if inv.enabled {
+					if violations := g.CheckInvariants(mage.InvariantOptions{
+						PostSBA:      false,
+						InitialCards: inv.initialCards,
+					}); len(violations) > 0 {
+						return time.Since(loopStart), formatViolations(g, "game-over", violations)
+					}
+				}
+				return time.Since(loopStart), nil
 			}
 		}
 
@@ -514,7 +580,15 @@ func runGame(g *mage.Game, maxTurns int, quiet, showEval bool) time.Duration {
 		fmt.Printf("\n=== Game ended after %d turns (no winner) ===\n", maxTurns)
 		printFinalState(g)
 	}
-	return time.Since(loopStart)
+	if inv.enabled {
+		if violations := g.CheckInvariants(mage.InvariantOptions{
+			PostSBA:      false,
+			InitialCards: inv.initialCards,
+		}); len(violations) > 0 {
+			return time.Since(loopStart), formatViolations(g, "max-turns", violations)
+		}
+	}
+	return time.Since(loopStart), nil
 }
 
 func createAI(name string, wp ai.WeightedPersonality, mode string) *ai.AIPlayer {

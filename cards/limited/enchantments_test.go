@@ -608,7 +608,6 @@ func TestLich(t *testing.T) {
 	t.Run("gain_life_draws_cards", func(t *testing.T) {
 		// Lich: If you would gain life, draw that many cards instead.
 		g := gametest.NewTestGame(t)
-		g.SetLife(gametest.PlayerA, 0)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lich")
 		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
@@ -633,7 +632,6 @@ func TestLich(t *testing.T) {
 		// which fires the "When Lich is put into a graveyard, you lose the
 		// game" trigger.
 		g := gametest.NewTestGame(t)
-		g.SetLife(gametest.PlayerA, 0)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lich")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
@@ -648,7 +646,6 @@ func TestLich(t *testing.T) {
 	t.Run("lose_when_lich_leaves", func(t *testing.T) {
 		// Lich: If Lich is put into a graveyard, you lose the game.
 		g := gametest.NewTestGame(t)
-		g.SetLife(gametest.PlayerA, 0)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lich")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Disenchant", "Lich")

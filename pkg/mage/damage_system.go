@@ -343,7 +343,16 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	amount := a.Amount()
 	sourceID := a.ActionSource()
 
-	perm.Damage += amount
+	if perm.HasType(TypePlaneswalker) {
+		perm.RemoveCounter(Loyalty, min(amount, int(perm.Counters[Loyalty])))
+	}
+	if perm.HasType(TypeCreature) {
+		perm.Damage += amount
+	}
+	src := g.ResolvingSourcePermanent(sourceID)
+	if amount > 0 && damageHasDeathtouch(g, src, sourceID) {
+		perm.deathtouchDamage = true
+	}
 	if ds.damageDealtBy[perm.ID()] == nil {
 		ds.damageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
 	}
@@ -370,13 +379,8 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		}
 		ds.onDamageDealt(sourceName, perm.Name(), amount, ds.resolvingCombatDamage)
 	}
-	src := g.FindPermanent(sourceID)
-	if src != nil && amount > 0 {
-		if src.HasKeyword(Deathtouch) {
-			perm.Damage = perm.CurrentToughness(g)
-		} else if src.HasKeyword(BasiliskTouch) && !perm.HasSubType("Wall") {
-			perm.Damage = perm.CurrentToughness(g)
-		}
+	if src != nil && amount > 0 && src.HasKeyword(BasiliskTouch) && !perm.HasSubType("Wall") {
+		perm.Damage = perm.CurrentToughness(g)
 	}
 	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.ControllerID())
@@ -390,6 +394,28 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	if src != nil && src.FaceDown {
 		g.turnFaceUp(src)
 	}
+}
+
+func damageHasDeathtouch(g *Game, source *Permanent, sourceID uuid.UUID) bool {
+	if sourceID == uuid.Nil() {
+		return false
+	}
+	resolving := g.resolution.resolvingSpell
+	if resolving != nil && resolving.SourceID == sourceID {
+		if !resolving.IsAbility {
+			return resolving.Card != nil && resolving.Card.HasKeyword(Deathtouch)
+		}
+		if resolving.SourceIncarnation == uuid.Nil() && resolving.TargetSource != nil {
+			return resolving.TargetSource.HasKeyword(Deathtouch)
+		}
+	}
+	if source != nil {
+		return source.HasKeyword(Deathtouch)
+	}
+	if last := g.zones.LKI(sourceID); last != nil && last.Snapshot != nil {
+		return last.Snapshot.HasKeyword(Deathtouch)
+	}
+	return false
 }
 
 // ---------------------------------------------------------------------------

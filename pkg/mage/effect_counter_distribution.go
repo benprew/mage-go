@@ -52,10 +52,10 @@ func (g *Game) chooseRandomCounterDistribution(obj *StackObject) {
 		if !ok {
 			continue
 		}
-		previousX := g.resolution.X()
-		g.resolution.SetX(obj.XValue)
-		total := distribution.total.Resolve(NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets))
-		g.resolution.SetX(previousX)
+		ctx := NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets)
+		ctx.XValue = obj.XValue
+		total := distribution.total.Resolve(ctx)
+		obj.counterTotal = total
 		if total < len(obj.Targets) {
 			return
 		}

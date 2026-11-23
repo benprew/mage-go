@@ -444,10 +444,18 @@ func (e *ChooseColorStepData) Apply(ctx *EffectContext) error {
 // RemoveFromCombatGathered
 // ---------------------------------------------------------------------------
 
-type RemoveFromCombatGatheredData struct{ VarName string }
+type RemoveFromCombatGatheredData struct {
+	VarName string
+	unblock bool
+}
 
 func RemoveFromCombatGathered(v string) Effect {
 	return &RemoveFromCombatGatheredData{VarName: v}
+}
+
+// RemoveFromCombatAndUnblockGathered removes the stored creature and unblocks each attacker it blocked alone.
+func RemoveFromCombatAndUnblockGathered(v string) Effect {
+	return &RemoveFromCombatGatheredData{VarName: v, unblock: true}
 }
 
 func (e *RemoveFromCombatGatheredData) Text() string                 { return "remove from combat" }
@@ -458,7 +466,7 @@ func (e *RemoveFromCombatGatheredData) Apply(ctx *EffectContext) error {
 	if id == uuid.Nil() {
 		return nil
 	}
-	ctx.Game.RemoveFromCombat(id)
+	ctx.Game.combat.removeFromCombat(id, e.unblock)
 	return nil
 }
 
@@ -627,15 +635,21 @@ func (e *ForEachCombatOpponentData) Text() string                 { return e.Txt
 func (e *ForEachCombatOpponentData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *ForEachCombatOpponentData) Apply(ctx *EffectContext) error {
+	g := ctx.Game
+	if g.ResolvingSourcePermanent(ctx.SourceID) != nil {
+		return ctx.withIterationTargets(g.combat.opponentsOf(ctx.SourceID), e.Inner)
+	}
+	snapshot := g.zones.LKI(ctx.SourceID)
+	if snapshot == nil || snapshot.Snapshot == nil {
+		return nil
+	}
+	if incarnation := g.resolution.resolvingSourceIncarnation; incarnation != uuid.Nil() && snapshot.Snapshot.incarnationID != incarnation {
+		return nil
+	}
 	var opponentIDs []uuid.UUID
-	for _, group := range ctx.Game.CombatGroups() {
-		if group.AttackerID == ctx.SourceID {
-			opponentIDs = append(opponentIDs, group.BlockerIDs...)
-		}
-		for _, bid := range group.BlockerIDs {
-			if bid == ctx.SourceID {
-				opponentIDs = append(opponentIDs, group.AttackerID)
-			}
+	for _, opponent := range snapshot.combatOpponents {
+		if perm := g.FindPermanent(opponent.id); perm != nil && perm.incarnationID == opponent.incarnation {
+			opponentIDs = append(opponentIDs, opponent.id)
 		}
 	}
 	return ctx.withIterationTargets(opponentIDs, e.Inner)

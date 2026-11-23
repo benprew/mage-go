@@ -174,7 +174,9 @@ func TestSeededGameDeterminism(t *testing.T) {
 
 		openA := handStr(playerA.Hand())
 		openB := handStr(playerB.Hand())
-		runGame(g, 10, true, false)
+		if _, err := runGame(g, 10, true, false, invariantConfig{}); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		bf := g.AllBattlefield()
 		board := make([]string, 0, len(bf))
@@ -195,5 +197,90 @@ func TestSeededGameDeterminism(t *testing.T) {
 	second := runSeeded(20261121)
 	if first != second {
 		t.Fatalf("seeded game diverged:\n--- run 1 ---\n%s\n--- run 2 ---\n%s", first, second)
+	}
+}
+
+func TestRunGameWithInvariants(t *testing.T) {
+	deckA := tui.Archetypes[0]
+	deckB := tui.Archetypes[1]
+	wpA := resolvePersonality("auto", deckA.Entries)
+	wpB := resolvePersonality("auto", deckB.Entries)
+	playerA := createAI("Alice", wpA, "heuristic")
+	playerB := createAI("Bob", wpB, "heuristic")
+
+	for _, c := range tui.BuildDeckUnshuffled(deckA.Entries, playerA.PlayerID()) {
+		playerA.AddToLibrary(c)
+	}
+	for _, c := range tui.BuildDeckUnshuffled(deckB.Entries, playerB.PlayerID()) {
+		playerB.AddToLibrary(c)
+	}
+
+	g := mage.NewGame(playerA, playerB)
+	g.SetSeed(1000)
+	inv := invariantConfig{
+		enabled:      true,
+		initialCards: g.SnapshotInitialCards(),
+		layersEvery:  10,
+	}
+	playerA.ShuffleLibrary()
+	playerB.ShuffleLibrary()
+	tui.DrawOpeningHand(playerA)
+	tui.DrawOpeningHand(playerB)
+	ai.MulliganAI(playerA)
+	ai.MulliganAI(playerB)
+
+	if _, err := runGame(g, 20, true, false, inv); err != nil {
+		t.Fatalf("invariant check failed: %v", err)
+	}
+}
+
+func TestRunGameStopsOnInvariantViolation(t *testing.T) {
+	g := mage.NewGame(mage.NewBasePlayer("Alice"), mage.NewBasePlayer("Bob"))
+	g.Stack().Push(nil)
+	defer func() {
+		if p := recover(); p != nil {
+			t.Errorf("game panicked on invariant violation: %v", p)
+		}
+	}()
+	_, err := runGame(g, 1, true, false, invariantConfig{enabled: true})
+	if err == nil || !strings.Contains(err.Error(), "nil stack object") {
+		t.Fatalf("expected the stack diagnostic, got %v", err)
+	}
+	if got := g.StackSize(); got != 1 {
+		t.Errorf("stack changed after the invariant violation, size = %d", got)
+	}
+}
+
+type scheduleTestPlayer struct {
+	*mage.BasePlayer
+	upkeeps   int
+	drawSteps int
+}
+
+func (p *scheduleTestPlayer) GetPriorityAction(g *mage.Game, _ int, _ bool) interactive.PriorityAction {
+	switch g.GetStep() {
+	case core.Upkeep:
+		p.upkeeps++
+		if p.upkeeps == 1 && p.PlayerID() == g.ActivePlayerObj().PlayerID() {
+			g.InsertStepAfter(core.PrecombatMain, core.Upkeep)
+		}
+	case core.Draw:
+		p.drawSteps++
+	}
+	return interactive.PriorityAction{Type: interactive.ActionPass}
+}
+
+func TestRunGameWithInvariantsUsesTurnSchedule(t *testing.T) {
+	a := &scheduleTestPlayer{BasePlayer: mage.NewBasePlayer("Alice")}
+	b := &scheduleTestPlayer{BasePlayer: mage.NewBasePlayer("Bob")}
+	g := mage.NewGame(a, b)
+	g.SetTurn(2)
+	g.SkipNextOccurrenceOfStep(core.Draw)
+	_, err := runGame(g, 2, true, false, invariantConfig{enabled: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.upkeeps != 2 || a.drawSteps != 0 {
+		t.Errorf("upkeep count = %d, draw count = %d, want 2 and 0", a.upkeeps, a.drawSteps)
 	}
 }

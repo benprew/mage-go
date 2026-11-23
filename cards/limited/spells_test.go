@@ -472,6 +472,25 @@ func TestFalseOrders(t *testing.T) {
 		// Hill Giant removed from combat -> Craw Wurm becomes unblocked -> 6 damage.
 		g.AssertLife(gametest.PlayerB, 14)
 	})
+
+	t.Run("attacker stays blocked after one of two blockers leaves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "False Orders")
+		g.Attack(1, gametest.PlayerA, "Craw Wurm")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Craw Wurm")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Craw Wurm")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "False Orders", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
 }
 
 func TestSirensCall(t *testing.T) {

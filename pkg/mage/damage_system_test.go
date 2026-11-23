@@ -70,8 +70,8 @@ func TestDamageSystem_CreatureDamageAndKeywords(t *testing.T) {
 
 	g.DealDamageToPermanent(targetPerm, 1, sourcePerm.ID())
 
-	if targetPerm.Damage != 2 {
-		t.Fatalf("expected deathtouch to mark lethal damage (2), got %d", targetPerm.Damage)
+	if targetPerm.Damage != 1 || !targetPerm.deathtouchDamage {
+		t.Fatalf("damage = %d, deathtouch damage = %t, want 1 and true", targetPerm.Damage, targetPerm.deathtouchDamage)
 	}
 	if !g.HasDealtDamageToPermanent(sourcePerm.ID(), targetPerm.ID()) {
 		t.Fatalf("expected duel damage to be tracked for permanent")

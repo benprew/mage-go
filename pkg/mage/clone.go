@@ -100,7 +100,9 @@ func extractBasePlayer(p Player) *BasePlayer {
 		poisonCounters:  p.PoisonCounters(),
 		lastDrawnCardID: p.LastDrawnCardID(),
 	}
-	if !p.IsAlive() && p.Life() > 0 {
+	if loss, ok := p.(interface{ hasLost() bool }); ok {
+		bp.lost = loss.hasLost()
+	} else if !p.IsAlive() && p.Life() > 0 {
 		bp.lost = true
 	}
 	// Copy zones.
@@ -154,6 +156,8 @@ func clonePermanentInto(dst, src *Permanent) {
 		Tapped:                     src.Tapped,
 		PhasedOut:                  src.PhasedOut,
 		Damage:                     src.Damage,
+		deathtouchDamage:           src.deathtouchDamage,
+		worldSince:                 src.worldSince,
 		AttachedTo:                 src.AttachedTo,
 		IsToken:                    src.IsToken,
 		FaceDown:                   src.FaceDown,
@@ -244,6 +248,8 @@ func (ctx *gameCloneContext) stackObject(obj *StackObject) *StackObject {
 		ModeChoice:        obj.ModeChoice,
 		EventAmount:       obj.EventAmount,
 		EventSourceID:     obj.EventSourceID,
+		damageTotal:       obj.damageTotal,
+		counterTotal:      obj.counterTotal,
 		IsCopy:            obj.IsCopy,
 		CastZone:          obj.CastZone,
 		CastContext:       ctx.castContext(obj.CastContext),
@@ -313,9 +319,10 @@ func cloneCombat(c *Combat) *Combat {
 		clone.Groups = make([]*CombatGroup, len(c.Groups))
 		for i, g := range c.Groups {
 			cg := &CombatGroup{
-				AttackerID: g.AttackerID,
-				DefenderID: g.DefenderID,
-				Blocked:    g.Blocked,
+				AttackerID:             g.AttackerID,
+				DefenderID:             g.DefenderID,
+				Blocked:                g.Blocked,
+				soleBlockerWhenBlocked: g.soleBlockerWhenBlocked,
 			}
 			if len(g.BlockerIDs) > 0 {
 				cg.BlockerIDs = make([]uuid.UUID, len(g.BlockerIDs))

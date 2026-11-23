@@ -229,6 +229,16 @@
 // share the same observation batch. Conditions use the state before the batch;
 // trigger effects resolve against the current game state.
 //
+// Deathtouch damage keeps its actual amount. The game records the deathtouch
+// event until the next state-based action check (CR 704.5h).
+//
+// # Game State Diagnostics
+//
+// Call [Game.CheckInvariants] from tests or a diagnostic runner. Use
+// [InvariantOptions.AtPriority] at a priority callback. Use
+// [Game.SnapshotInitialCards] after deck setup to check card conservation.
+// [PriorityAbort] stops a diagnostic run at the first violation.
+//
 // # Replacement Choices
 //
 // When multiple replacements apply to an existing action, the affected player

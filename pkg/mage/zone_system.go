@@ -4,6 +4,8 @@ import (
 	"maps"
 	"slices"
 	"uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // ZoneSystem manages the battlefield, exile zone, Last-Known Information (LKI),
@@ -15,6 +17,7 @@ type ZoneSystem struct {
 	lki                      map[uuid.UUID]*PermanentLKI
 	castFromExilePermissions []CastableFromExilePermission
 	exileInsteadCards        map[uuid.UUID]uuid.UUID
+	worldClock               uint64
 }
 
 // NewZoneSystem creates an initialized ZoneSystem.
@@ -30,7 +33,7 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 }
 
 func (zs *ZoneSystem) clone(ctx *gameCloneContext) ZoneSystem {
-	clone := ZoneSystem{}
+	clone := ZoneSystem{worldClock: zs.worldClock}
 	if zs.battlefield != nil {
 		clone.battlefield = make([]*Permanent, len(zs.battlefield))
 		for i, permanent := range zs.battlefield {
@@ -64,6 +67,7 @@ func (zs *ZoneSystem) clone(ctx *gameCloneContext) ZoneSystem {
 			}
 			copied := *snapshot
 			copied.Snapshot = ctx.permanent(snapshot.Snapshot)
+			copied.combatOpponents = slices.Clone(snapshot.combatOpponents)
 			clone.lki[id] = &copied
 		}
 	}
@@ -210,6 +214,12 @@ func (zs *ZoneSystem) MutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
 
 // AddToBattlefield appends permanents directly to the battlefield without ETB processing.
 func (zs *ZoneSystem) AddToBattlefield(perms ...*Permanent) {
+	var worldTime uint64
+	for _, perm := range perms {
+		if perm != nil && perm.Card != nil {
+			zs.recordWorldType(perm, &worldTime)
+		}
+	}
 	zs.battlefield = append(zs.battlefield, perms...)
 }
 
@@ -222,7 +232,26 @@ func (zs *ZoneSystem) TruncateBattlefield(n int) {
 
 // AddPermanent adds a permanent to the battlefield during ETB resolution.
 func (zs *ZoneSystem) AddPermanent(perm *Permanent) {
+	var worldTime uint64
+	zs.addPermanent(perm, &worldTime)
+}
+
+func (zs *ZoneSystem) addPermanent(perm *Permanent, worldTime *uint64) {
+	zs.recordWorldType(perm, worldTime)
 	zs.battlefield = append(zs.battlefield, perm)
+}
+
+// recordWorldType gives permanents that acquire world in one event the same time.
+func (zs *ZoneSystem) recordWorldType(perm *Permanent, worldTime *uint64) {
+	if !perm.HasSuperType(core.SuperWorld) {
+		perm.worldSince = 0
+	} else if perm.worldSince == 0 {
+		if *worldTime == 0 {
+			zs.worldClock++
+			*worldTime = zs.worldClock
+		}
+		perm.worldSince = *worldTime
+	}
 }
 
 // RemovePermanent removes a permanent from the battlefield by ID.

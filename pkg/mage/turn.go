@@ -19,7 +19,7 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 			return false
 		}
 		g.RunStepWithPriority(step)
-		if g.stopped {
+		if g.stopped || g.IsGameOver() {
 			return true
 		}
 	}
@@ -29,21 +29,19 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
+	if g.stopped {
+		return
+	}
 	g.turns.SetStep(step)
 
-	// CR 500.5: any unspent mana empties as the step/phase ends.
-	defer g.emptyManaPools()
-
-	// Re-apply continuous effects after SBAs run, so the post-step state is
-	// consistent for any reader (search evaluators, UI, replay): cached
-	// powerBonus/toughBonus/granted abilities reflect the final effect list,
-	// including effects removed during the step body (e.g. RemoveEndOfTurn
-	// in Cleanup) and effects whose source died via SBAs. Defers are LIFO,
-	// so the order on return is: SBAs → Apply → emptyManaPools.
-	defer g.effects.Apply(g)
-
-	// Check SBAs after each step
-	defer g.CheckStateBasedActions()
+	defer func() {
+		if g.stopped {
+			return
+		}
+		g.CheckStateBasedActions()
+		g.effects.Apply(g)
+		g.emptyManaPools()
+	}()
 
 	// Apply at start so the step's case body reads fresh continuous-effect
 	// state (in case anything mutated effects between calls).
@@ -89,6 +87,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		// priority. Priority is granted regardless of whether any attackers
 		// were declared — pass-pass simply ends the step.
 		g.doDeclareAttackers()
+		if len(g.combat.Groups) > 0 && len(g.effects.effects) > 0 {
+			g.effects.Apply(g)
+		}
 		g.PutTriggersOnStack()
 		g.runPriorityRound(false)
 
@@ -96,6 +97,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		// 508.8: Skip if no creatures are attacking.
 		if len(g.combat.Groups) > 0 {
 			g.doDeclareBlockers()
+			if len(g.effects.effects) > 0 {
+				g.effects.Apply(g)
+			}
 			g.PutTriggersOnStack()
 			g.runPriorityRound(false)
 		}
@@ -125,6 +129,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		})
 		g.PutTriggersOnStack()
 		g.runPriorityRound(false)
+		if g.stopped {
+			return
+		}
 		g.effects.RemoveEndOfCombat()
 		g.effects.Apply(g)
 		g.combat.Reset()
@@ -143,7 +150,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 			// then another cleanup step begins.
 			g.trackers.Turn.IncrementCleanupPriorityRounds()
 			g.runPriorityRound(false)
-			g.RunStepWithPriority(Cleanup)
+			if !g.stopped && !g.IsGameOver() {
+				g.RunStepWithPriority(Cleanup)
+			}
 		}
 	}
 }

@@ -9,8 +9,9 @@ import (
 )
 
 type battlefieldEntryOptions struct {
-	tapped bool
-	from   Zone
+	tapped    bool
+	from      Zone
+	worldTime *uint64
 }
 
 type moveOptions struct {
@@ -127,6 +128,7 @@ func (e *moveObjectsEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	ids := slices.Clone(currentObjectIDs(ctx, e.objects))
+	var worldTime uint64
 	graveyardCounts := make(map[uuid.UUID]int)
 	seen := make(map[uuid.UUID]bool)
 	for _, id := range ids {
@@ -162,7 +164,7 @@ func (e *moveObjectsEffect) Apply(ctx *EffectContext) error {
 				}
 				ctx.Game.RemoveFromBattlefield(permanent)
 				if !permanent.IsToken {
-					e.putCard(ctx, permanent.Card, owner, ZoneBattlefield)
+					e.putCard(ctx, permanent.Card, owner, ZoneBattlefield, nil, &worldTime)
 				}
 				event := GameEvent{Type: EvtZoneChange, SourceID: id, PlayerID: controller, FromZone: ZoneBattlefield, ToZone: ZoneLibrary}
 				ctx.Game.FireEvent(event)
@@ -194,7 +196,7 @@ func (e *moveObjectsEffect) Apply(ctx *EffectContext) error {
 				if owner == uuid.Nil() {
 					owner = object.Controller
 				}
-				move.putCard(ctx, object.Card, owner, ZoneStack, object.ColorOverride)
+				move.putCard(ctx, object.Card, owner, ZoneStack, object.ColorOverride, &worldTime)
 				if move.destination != ZoneBattlefield {
 					ctx.Game.FireEvent(GameEvent{Type: EvtZoneChange, SourceID: object.Card.ID(), PlayerID: object.Controller, FromZone: ZoneStack, ToZone: move.destination})
 				}
@@ -237,7 +239,7 @@ func (e *moveObjectsEffect) Apply(ctx *EffectContext) error {
 		if owner == uuid.Nil() {
 			owner = holder
 		}
-		e.putCard(ctx, removed, owner, from)
+		e.putCard(ctx, removed, owner, from, nil, &worldTime)
 		if e.destination != ZoneBattlefield {
 			ctx.Game.FireEvent(GameEvent{Type: EvtZoneChange, SourceID: id, PlayerID: holder, FromZone: from, ToZone: e.destination})
 		}
@@ -249,7 +251,7 @@ func (e *moveObjectsEffect) Apply(ctx *EffectContext) error {
 	}
 	return nil
 }
-func (e *moveObjectsEffect) putCard(ctx *EffectContext, card *Card, owner uuid.UUID, from Zone, colors ...*[]Color) {
+func (e *moveObjectsEffect) putCard(ctx *EffectContext, card *Card, owner uuid.UUID, from Zone, colors *[]Color, worldTime *uint64) {
 	if card.Owner() == uuid.Nil() {
 		card.SetOwner(owner)
 	}
@@ -279,10 +281,8 @@ func (e *moveObjectsEffect) putCard(ctx *EffectContext, card *Card, owner uuid.U
 			}
 			controller = ids[0]
 		}
-		var override *[]Color
-		if len(colors) > 0 {
-			override = colors[0]
-		}
-		ctx.Game.putOnBattlefield(card, controller, override, card.ID(), false, battlefieldEntryOptions{tapped: e.options.tapped, from: from})
+		ctx.Game.putOnBattlefield(card, controller, colors, card.ID(), false, battlefieldEntryOptions{
+			tapped: e.options.tapped, from: from, worldTime: worldTime,
+		})
 	}
 }
