@@ -498,7 +498,7 @@ body::before {
 }
 .info-strip span { cursor: help; }
 
-/* Rules text tooltip panel */
+/* Card tooltip */
 .card-tooltip {
   display: none;
   position: fixed;
@@ -518,13 +518,14 @@ body::before {
   font-size: 12px;
 }
 .card-tooltip .tt-type { color: var(--dim-gold); font-size: 11px; margin: 2px 0; }
-.card-tooltip .tt-rules {
+.card-tooltip .tt-status {
   color: var(--artifact-grey);
   font-size: 11px;
   margin-top: 4px;
   font-style: italic;
   line-height: 1.4;
 }
+.card-tooltip .tt-status:empty { display: none; }
 .card-tooltip .tt-pt {
   font-family: 'Cinzel', Georgia, serif;
   color: var(--aged-gold);
@@ -648,7 +649,7 @@ body::before {
 <div class="card-tooltip" id="card-tooltip">
   <div class="tt-name"></div>
   <div class="tt-type"></div>
-  <div class="tt-rules"></div>
+  <div class="tt-status"></div>
   <div class="tt-pt"></div>
 </div>
 

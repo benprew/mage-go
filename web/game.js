@@ -894,7 +894,6 @@ function showTooltip(e, cardData) {
     tt.querySelector(".tt-name").textContent = cardData.Name || "";
     const typeLine = [cardData.Types, cardData.SubTypes].filter(Boolean).join(" \u2014 ");
     tt.querySelector(".tt-type").textContent = (cardData.ManaCost ? cardData.ManaCost + "  " : "") + typeLine;
-    tt.querySelector(".tt-rules").textContent = cardData.RulesText || "";
 
     const ptEl = tt.querySelector(".tt-pt");
     if (cardData.IsCreature || (cardData.Types && cardData.Types.includes("Creature"))) {
@@ -914,10 +913,7 @@ function showTooltip(e, cardData) {
         const cstrs = Object.entries(cardData.Counters).filter(([,v]) => v > 0).map(([k,v]) => k + ": " + v);
         if (cstrs.length) statusParts.push(cstrs.join(", "));
     }
-    if (statusParts.length) {
-        tt.querySelector(".tt-rules").textContent =
-            (cardData.RulesText || "") + (cardData.RulesText ? "\n" : "") + statusParts.join(" \u2022 ");
-    }
+    tt.querySelector(".tt-status").textContent = statusParts.join(" \u2022 ");
 
     tt.classList.add("visible");
     moveTooltip(e);

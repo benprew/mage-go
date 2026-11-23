@@ -638,11 +638,6 @@ func renderCardDetail(c cardDetail) string {
 		lines = append(lines, strings.Join(c.Keywords, ", "))
 	}
 
-	// Rules text
-	if c.RulesText != "" {
-		lines = append(lines, c.RulesText)
-	}
-
 	// P/T
 	if c.IsCreature {
 		lines = append(lines, fmt.Sprintf("%d/%d", c.Power, c.Toughness))
