@@ -11,7 +11,6 @@ make test                                  # all tests
 go test ./cards/...                        # card tests only
 go test ./cards/arabian/ -run TestFooBar   # single test
 make build                                 # build check
-make wasm                                  # WASM build
 make lint                                  # lint (run after making changes and before commit)
 ```
 
@@ -53,9 +52,8 @@ pkg/mage/mtgish/        # tagged JSON parser and compiler
 pkg/mage/gametest/     # test harness DSL
 pkg/mage/interactive/  # TUI/AI player layer
 cards/{limited,arabian,antiquities,legends,custom}/  # card sets
-cmd/{tui,server,wasm,fetchset,genset}/               # binaries
+cmd/{tui,server,fetchset,genset}/                    # binaries
 data/                  # Scryfall JSON per set
-web/                   # browser UI
 docs/                  # comprehensive rules, tutorials
 ```
 

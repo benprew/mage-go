@@ -37,10 +37,6 @@ coverage.html
 coverage.out
 *.coverprofile
 
-# WASM build artifacts
-web/mage.wasm
-web/wasm_exec.js
-
 # OS
 .DS_Store
 Thumbs.db
