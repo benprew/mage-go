@@ -212,7 +212,8 @@
 // [ProtectionFromColor] and [ProtectionFromColors] use [EffectiveColors] to
 // check legality for targeting, damage, blocking, fighting, and attachment.
 // Protection from card types, subtypes, or all characteristics uses
-// [ObjectFilter].
+// [ObjectFilter]. A recast spell supplies its current characteristics on the
+// stack and during resolution, even if the card has a battlefield snapshot.
 //
 // # State Triggers and Simultaneous Deaths
 //
@@ -304,7 +305,8 @@
 // [Game.SpellTargetOptions] pairs affordable X values with legal candidates for
 // each target group. The query uses cast cost adjustments and direct mana
 // and life costs. Required equality filters supply candidate X values from
-// battlefield or stack spell mana values. Casting and resolution check X.
+// mana values in the target's zone. Battlefield, stack, hand, and graveyard
+// targets use the announced X during casting and resolution.
 // [TargetSpellOnStack] accepts [ObjectFilter] values.
 // Use an object filter to check the mana value of a spell on the stack:
 //
@@ -315,6 +317,9 @@
 //
 // [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
 // controlled by the ability's controller.
+//
+// [CastAsThoughHadFlash] and [CastAsThoughHadFlashGlobal] evaluate their filters
+// with the current game and the source permanent's controller.
 //
 // # Mana-Production Metadata
 //
@@ -588,7 +593,9 @@
 // alternative events. The permanent entry, death, departure, and attack
 // constructors test ObjectFilter with the ability context. LookupObject
 // supplies live state or LKI. Player event constructors use PlayerSelector.
-// Existing NewTriggered helpers remain available.
+// [WhenPlayerCastsSpell] and [WheneverYouCastSpellTrigger] use the stack spell
+// identified by the cast event. Spell filters can read its announced mana
+// value. Existing NewTriggered helpers remain available.
 //
 // TargetPermanent accepts ObjectFilter and PermanentFilter values. TargetCreature
 // and its variants use the same permanent targeting implementation. Use
