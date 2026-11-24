@@ -1,0 +1,22 @@
+{
+  "name": "Eater of the Dead",
+  "oracle_id": "3c414ace-fd04-4fac-9379-24f5910f20e4",
+  "rulings_uri": "https://api.scryfall.com/cards/23327a70-5e95-4aa4-824c-cdf3472f5422/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3c414ace-fd04-4fac-9379-24f5910f20e4",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It untaps during the resolution of its ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3c414ace-fd04-4fac-9379-24f5910f20e4",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "You can activate the ability whether or not Eater of the Dead is tapped. However, if Eater of the Dead is untapped when the ability resolves, the ability won't do anything."
+    }
+  ]
+}

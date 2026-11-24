@@ -1,0 +1,22 @@
+{
+  "name": "Rust",
+  "oracle_id": "597ca66c-6bb1-4661-8ed9-8236f546e536",
+  "rulings_uri": "https://api.scryfall.com/cards/ad4974c8-34c5-4290-b325-7586a67f6d56/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "597ca66c-6bb1-4661-8ed9-8236f546e536",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can’t be used on mana abilities because they don’t use the stack. They’ve already resolved by the time you get priority."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "597ca66c-6bb1-4661-8ed9-8236f546e536",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Activated abilities contain a colon. They’re generally written “[Cost]: [Effect].” Some keywords are activated abilities and will have colons in their reminder text."
+    }
+  ]
+}

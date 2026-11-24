@@ -1,0 +1,15 @@
+{
+  "name": "Guardian Beast",
+  "oracle_id": "34c3aebe-a224-426a-ae06-f3145193313e",
+  "rulings_uri": "https://api.scryfall.com/cards/68f362bb-6391-49de-bce6-2682ec100b6b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "34c3aebe-a224-426a-ae06-f3145193313e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This does not stop sacrifices."
+    }
+  ]
+}

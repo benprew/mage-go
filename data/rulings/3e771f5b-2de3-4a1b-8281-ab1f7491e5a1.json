@@ -1,0 +1,15 @@
+{
+  "name": "Fungusaur",
+  "oracle_id": "3e771f5b-2de3-4a1b-8281-ab1f7491e5a1",
+  "rulings_uri": "https://api.scryfall.com/cards/79324f73-25cd-477a-b4f0-fd3e1319e451/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3e771f5b-2de3-4a1b-8281-ab1f7491e5a1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If more than one creature damages it at one time, it only gets one counter."
+    }
+  ]
+}

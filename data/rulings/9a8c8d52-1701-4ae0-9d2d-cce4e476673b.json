@@ -1,0 +1,36 @@
+{
+  "name": "Power Artifact",
+  "oracle_id": "9a8c8d52-1701-4ae0-9d2d-cce4e476673b",
+  "rulings_uri": "https://api.scryfall.com/cards/c7b0c6c4-ec99-4af1-9527-41c428af7260/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9a8c8d52-1701-4ae0-9d2d-cce4e476673b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only affects the generic mana part of activation costs. Colored parts of mana costs are not affected."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9a8c8d52-1701-4ae0-9d2d-cce4e476673b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be placed on artifacts with no or zero activation costs, but this has no effect on them. It does not increase the cost to one."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9a8c8d52-1701-4ae0-9d2d-cce4e476673b",
+      "source": "wotc",
+      "published_at": "2006-07-15",
+      "comment": "Can't reduce Snow mana costs."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9a8c8d52-1701-4ae0-9d2d-cce4e476673b",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Activated abilities contain a colon. They're generally written \"[Cost]: [Effect].\" Some keywords are activated abilities and will have colons in their reminder text."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Arboria",
+  "oracle_id": "acb3e93c-a1d3-458f-b8c3-c426cd359fa4",
+  "rulings_uri": "https://api.scryfall.com/cards/b18f4de2-adfe-4784-bd57-9e2ad9088825/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "acb3e93c-a1d3-458f-b8c3-c426cd359fa4",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "Arboria’s effect cares whether a player put a nontoken permanent onto the battlefield. It’s unusual for an ability to care who put a permanent onto the battlefield, as opposed to under whose control it entered."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "acb3e93c-a1d3-458f-b8c3-c426cd359fa4",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If two or more permanents have the world supertype, all of them are put into their owners’ graveyards except the one that has had the world supertype for the shortest amount of time. If there’s a tie for the shortest amount of time, all world permanents are put into the graveyard."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "acb3e93c-a1d3-458f-b8c3-c426cd359fa4",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "Arboria doesn’t stop creatures from attacking planeswalkers, regardless of what their controllers did or didn’t do during their last turns."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "acb3e93c-a1d3-458f-b8c3-c426cd359fa4",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "Arboria’s effect cares about the actions taken by players, not their results. If a player cast a spell during their last turn but that spell was countered, that player may still be attacked. The same is true if a player put a nontoken permanent onto the battlefield during their last turn, but that permanent left the battlefield before their turn ended."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Gravity Sphere",
+  "oracle_id": "8ddf93fe-980b-4dc4-b56f-6a2ee50100a6",
+  "rulings_uri": "https://api.scryfall.com/cards/a2749332-e99a-4a0c-b3a3-5578b552fa11/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8ddf93fe-980b-4dc4-b56f-6a2ee50100a6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It removes Flying from all creatures on the battlefield when it enters and from each creature as that creature enters. It does not prevent the Flying ability being given to the creature *after* the Sphere is on the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8ddf93fe-980b-4dc4-b56f-6a2ee50100a6",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    }
+  ]
+}

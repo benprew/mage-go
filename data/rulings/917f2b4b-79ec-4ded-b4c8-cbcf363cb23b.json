@@ -1,0 +1,43 @@
+{
+  "name": "Eureka",
+  "oracle_id": "917f2b4b-79ec-4ded-b4c8-cbcf363cb23b",
+  "rulings_uri": "https://api.scryfall.com/cards/71725234-14fa-4a29-9efc-6dd2366d9798/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "917f2b4b-79ec-4ded-b4c8-cbcf363cb23b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In a game of N players, the process ends when all N players in sequence (starting with you) choose not to put a card onto the battlefield. It doesn’t end the first time a player chooses not to put a card onto the battlefield. If a player chooses not to put a card onto the battlefield but the process continues, that player may put a card onto the battlefield the next time the process gets around to them."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "917f2b4b-79ec-4ded-b4c8-cbcf363cb23b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the card has an X in its mana cost, treat X as zero."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "917f2b4b-79ec-4ded-b4c8-cbcf363cb23b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The cards are put onto the battlefield and will not trigger effects which trigger on such cards being “cast” or “played”."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "917f2b4b-79ec-4ded-b4c8-cbcf363cb23b",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Anything that triggers during the resolution of this will wait to be put on the stack until everything is put onto the battlefield and resolution is complete. The player whose turn it is will put all of their triggered abilities on the stack in any order, then each other player in turn order will do the same. (The last ability put on the stack will be the first one that resolves.)"
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "917f2b4b-79ec-4ded-b4c8-cbcf363cb23b",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "A “permanent card” is a card that would be a permanent once it’s on the battlefield. Specifically, it’s an artifact, creature, enchantment, land, or planeswalker card."
+    }
+  ]
+}

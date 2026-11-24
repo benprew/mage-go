@@ -1,0 +1,29 @@
+{
+  "name": "Mana Clash",
+  "oracle_id": "a2f5a5fd-14dc-48e8-bdb0-984a83288023",
+  "rulings_uri": "https://api.scryfall.com/cards/bd41352f-617f-40f6-b612-11022180c18b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a2f5a5fd-14dc-48e8-bdb0-984a83288023",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Always affects the player and targets one of their opponents."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a2f5a5fd-14dc-48e8-bdb0-984a83288023",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Each point of damage is dealt separately, so if you are damaged twice by this spell, each time is considered a separate time this source deals damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a2f5a5fd-14dc-48e8-bdb0-984a83288023",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card’s coin flip has no winner or loser."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "Safe Haven",
+  "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+  "rulings_uri": "https://api.scryfall.com/cards/d130205f-53e3-4c04-967c-4808d7945880/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Creatures return to the control of their owners, regardless of who controls the Haven when it is sacrificed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When creatures return to the battlefield, they are put onto the battlefield as if just cast. Creatures with X in the mana cost are treated as X is zero. Creatures which can pay costs when put onto the battlefield to determine abilities must have those costs paid at this time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Auras on creatures are put into the graveyard and counters on creatures are removed when the creatures are sent to the Haven."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "All cards in the Haven stay there even if they cease to be creatures. When the Haven is sacrificed, the cards come back onto the battlefield whether or not they are creatures."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Creatures return to the battlefield simultaneously."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Token creatures cease to exist when they leave the battlefield, so this effect just exiles them with no chance to bring them back like you can with cards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "When the creature leaves the battlefield any damage or “will be destroyed at some future time” effects are removed from the creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8f7f4061-8998-40e9-b980-c63f27e7a5cd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If changed to another land type, the creature cards are not lost but can’t be released until the land reverts to normal."
+    }
+  ]
+}

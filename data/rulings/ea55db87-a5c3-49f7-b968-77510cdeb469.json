@@ -1,0 +1,22 @@
+{
+  "name": "Goblin Chirurgeon",
+  "oracle_id": "ea55db87-a5c3-49f7-b968-77510cdeb469",
+  "rulings_uri": "https://api.scryfall.com/cards/6da90318-4db4-4f03-ae2f-b1faeca46f57/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ea55db87-a5c3-49f7-b968-77510cdeb469",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can sacrifice itself."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ea55db87-a5c3-49f7-b968-77510cdeb469",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Can also regenerate itself. If it sacrifices itself in an attempt to regenerate itself, the ability won’t resolve for having an illegal target."
+    }
+  ]
+}

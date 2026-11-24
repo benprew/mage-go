@@ -1,0 +1,22 @@
+{
+  "name": "Enchantment Alteration",
+  "oracle_id": "c80935bf-c17f-4940-ad9f-3f4e3e8f71bc",
+  "rulings_uri": "https://api.scryfall.com/cards/254aa8d0-f0f5-4fb2-a6ba-07453d71e229/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c80935bf-c17f-4940-ad9f-3f4e3e8f71bc",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "Only targets the Aura and not either of the things the Aura may be on."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c80935bf-c17f-4940-ad9f-3f4e3e8f71bc",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "If you change this card’s target, you can change which Aura is targeted, but you can’t choose where that Aura will be moved."
+    }
+  ]
+}

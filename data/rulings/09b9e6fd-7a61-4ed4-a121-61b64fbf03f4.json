@@ -1,0 +1,15 @@
+{
+  "name": "Shimian Night Stalker",
+  "oracle_id": "09b9e6fd-7a61-4ed4-a121-61b64fbf03f4",
+  "rulings_uri": "https://api.scryfall.com/cards/9caf87f7-36d5-478b-9836-52043833290f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "09b9e6fd-7a61-4ed4-a121-61b64fbf03f4",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can redirect damage from combat and from abilities, but the creature must be attacking before you can use this card’s ability."
+    }
+  ]
+}

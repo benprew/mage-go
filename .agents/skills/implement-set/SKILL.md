@@ -9,6 +9,8 @@ Resolve the set name, code, or package using `data/sets.txt` and package metadat
 
 Use `../mtgish/data/mtgish.lines.json` for card definitions. Join matching records to the roster, including cards playable through an existing registration from another set. Use the checked-in compiler API to establish what compiles today. Check whether the game loads each compiled card through its normal entry point. Use `cmd/genset` when the task calls for a new legacy Go package. Check the output paths for conflicts with existing work first.
 
+Read the local rulings for the cards in each batch to identify shared behavior and interactions specific to individual cards. Find the corresponding files by exact card name in `data/rulings/index.json`. See [Card rulings](../../../README.md#card-rulings).
+
 ## Execute
 
 1. Group cards by the source, compiler, or engine work they share. Order batches by their dependencies.

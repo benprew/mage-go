@@ -1,0 +1,22 @@
+{
+  "name": "Raging River",
+  "oracle_id": "a2310312-6e1e-4e34-a351-9aef499a810f",
+  "rulings_uri": "https://api.scryfall.com/cards/7ee63877-056e-413d-932a-a393a4183686/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a2310312-6e1e-4e34-a351-9aef499a810f",
+      "source": "wotc",
+      "published_at": "2008-05-01",
+      "comment": "If a creature is put onto the battlefield attacking after the ability resolves, it can be blocked by any creature that could normally block it (including creatures that entered after the ability resolved)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a2310312-6e1e-4e34-a351-9aef499a810f",
+      "source": "wotc",
+      "published_at": "2008-05-01",
+      "comment": "If a creature enters (or something becomes a creature) after the ability resolves, that creature will not be able to block any creature that was attacking at the time the ability resolved."
+    }
+  ]
+}

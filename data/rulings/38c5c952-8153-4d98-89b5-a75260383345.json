@@ -1,0 +1,15 @@
+{
+  "name": "False Orders",
+  "oracle_id": "38c5c952-8153-4d98-89b5-a75260383345",
+  "rulings_uri": "https://api.scryfall.com/cards/a59c24d9-804b-45d0-b60c-cfc7a6af7ef5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "38c5c952-8153-4d98-89b5-a75260383345",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If a creature is removed from being a blocker of a given attacker, any triggered abilities that would have happened because it was declared as a blocker still happen."
+    }
+  ]
+}

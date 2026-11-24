@@ -1,0 +1,15 @@
+{
+  "name": "Brass Man",
+  "oracle_id": "64f56228-7874-4465-ba58-1049083ea02f",
+  "rulings_uri": "https://api.scryfall.com/cards/82b0ff45-b98c-4e45-9a05-bbbdaaa62d3e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "64f56228-7874-4465-ba58-1049083ea02f",
+      "source": "wotc",
+      "published_at": "2006-05-01",
+      "comment": "Reworded so that it triggers only once at beginning of upkeep, instead of being an activated ability usable any time during your upkeep. You can no longer make infinite combos with this ability."
+    }
+  ]
+}

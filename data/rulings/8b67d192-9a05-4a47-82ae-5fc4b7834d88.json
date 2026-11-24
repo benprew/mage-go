@@ -1,0 +1,15 @@
+{
+  "name": "Berserk",
+  "oracle_id": "8b67d192-9a05-4a47-82ae-5fc4b7834d88",
+  "rulings_uri": "https://api.scryfall.com/cards/62bc9bff-89bd-4454-a876-53822cf48546/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8b67d192-9a05-4a47-82ae-5fc4b7834d88",
+      "source": "wotc",
+      "published_at": "2026-03-20",
+      "comment": "If the target permanent stops being a creature before the next end step, it is still destroyed when the delayed trigger resolves."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Giant Turtle",
+  "oracle_id": "9297c0a6-1a8e-4e6e-99d6-f0877b2ec46c",
+  "rulings_uri": "https://api.scryfall.com/cards/87e5fc19-3b10-476f-9a73-e8bf4b5fbec0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9297c0a6-1a8e-4e6e-99d6-f0877b2ec46c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It only cares if it attacked on _your_ last turn, and not your opponent’s. This makes a difference if you take control of the Turtle during your opponent’s turn after it attacks. You can use it on your turn because it began your turn on the battlefield and because you did not attack with it last turn."
+    }
+  ]
+}

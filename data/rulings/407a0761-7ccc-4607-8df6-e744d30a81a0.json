@@ -1,0 +1,43 @@
+{
+  "name": "Phyrexian Gremlins",
+  "oracle_id": "407a0761-7ccc-4607-8df6-e744d30a81a0",
+  "rulings_uri": "https://api.scryfall.com/cards/21a985a9-5612-4844-982e-fd1aa6249770/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "407a0761-7ccc-4607-8df6-e744d30a81a0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the Gremlins somehow become an artifact and then tap themselves, they can never be untapped during the untap phase. They must be untapped by an external effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "407a0761-7ccc-4607-8df6-e744d30a81a0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The target artifact can’t untap if the Gremlins and the artifact are tapped during untap, even if it is your artifact, and you plan on untapping the Gremlins."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "407a0761-7ccc-4607-8df6-e744d30a81a0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The effect does not end if the target stops being valid. For example, if it stops being an artifact."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "407a0761-7ccc-4607-8df6-e744d30a81a0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can target a tapped artifact."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "407a0761-7ccc-4607-8df6-e744d30a81a0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only prevents the artifact from untapping during untap step. Ones that untap during upkeep are not inhibited."
+    }
+  ]
+}

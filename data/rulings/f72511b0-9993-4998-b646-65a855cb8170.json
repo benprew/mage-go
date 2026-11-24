@@ -1,0 +1,15 @@
+{
+  "name": "Vodalian War Machine",
+  "oracle_id": "f72511b0-9993-4998-b646-65a855cb8170",
+  "rulings_uri": "https://api.scryfall.com/cards/cd962ff0-4aa6-453e-931e-bd36fc034273/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f72511b0-9993-4998-b646-65a855cb8170",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The Merfolk are tapped during announcement and as a cost. The ability can't be announced if the Merfolk are not in an untapped state."
+    }
+  ]
+}

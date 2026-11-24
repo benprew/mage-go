@@ -1,0 +1,29 @@
+{
+  "name": "Rubinia Soulsinger",
+  "oracle_id": "bd3eeaba-964b-49ea-bb11-5875a78b8a4c",
+  "rulings_uri": "https://api.scryfall.com/cards/ce216785-aa81-44b4-9562-9b7eca743a0c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "bd3eeaba-964b-49ea-bb11-5875a78b8a4c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Rubinia Soulsinger stops being tapped before its ability resolves — even if it becomes tapped again right away — you won't gain control of the targeted creature at all. The same is true if you lose control of Rubinia Soulsinger before the ability resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "bd3eeaba-964b-49ea-bb11-5875a78b8a4c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Once the ability resolves, it doesn't care whether the targeted permanent remains a legal target for the ability, only that it's on the battlefield. The effect will continue to apply to it even if it gains shroud, stops being a creature, or would no longer be a legal target for any other reason."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "bd3eeaba-964b-49ea-bb11-5875a78b8a4c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Rubinia Soulsinger leaves the battlefield, you no longer control it, so the duration of its control-change effect ends."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Blazing Effigy",
+  "oracle_id": "7879b37c-5e2a-4945-9378-47744b715a6c",
+  "rulings_uri": "https://api.scryfall.com/cards/921011ff-1696-4575-9198-abe993a0ee7a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7879b37c-5e2a-4945-9378-47744b715a6c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If it dies and there are no creatures to target, then the ability does nothing."
+    }
+  ]
+}

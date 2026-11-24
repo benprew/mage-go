@@ -1,0 +1,15 @@
+{
+  "name": "Sol'kanar the Swamp King",
+  "oracle_id": "b8aac8e8-4588-4cb9-8b95-5c4abab1c48b",
+  "rulings_uri": "https://api.scryfall.com/cards/88b4cb6a-ac4f-48ac-8c94-ba2b8e6b32a8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b8aac8e8-4588-4cb9-8b95-5c4abab1c48b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Will not trigger off itself being cast."
+    }
+  ]
+}

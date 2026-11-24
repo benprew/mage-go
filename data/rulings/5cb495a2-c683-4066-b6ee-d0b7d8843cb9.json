@@ -1,0 +1,15 @@
+{
+  "name": "Aerathi Berserker",
+  "oracle_id": "5cb495a2-c683-4066-b6ee-d0b7d8843cb9",
+  "rulings_uri": "https://api.scryfall.com/cards/06673800-22a7-4ee3-92fa-7c7cd4865d30/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5cb495a2-c683-4066-b6ee-d0b7d8843cb9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "There is a typographical error in the title of the card so that the \"Ae\" does not appear."
+    }
+  ]
+}

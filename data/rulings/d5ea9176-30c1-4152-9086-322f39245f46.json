@@ -1,0 +1,29 @@
+{
+  "name": "Preacher",
+  "oracle_id": "d5ea9176-30c1-4152-9086-322f39245f46",
+  "rulings_uri": "https://api.scryfall.com/cards/d8e6f74c-0c69-4b83-ba4e-4470f50c1fb4/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d5ea9176-30c1-4152-9086-322f39245f46",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The target of the ability is a creature the chosen opponent controls. As the ability resolves, if the target isn’t a creature controlled by the chosen opponent, the ability won’t resolve. If the ability’s target is changed somehow, the new target must be a creature controlled by the chosen opponent."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d5ea9176-30c1-4152-9086-322f39245f46",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Whether Preacher is tapped is checked continually, starting when the ability is activated. If, before the ability resolves, there’s any point at which Preacher is untapped, the ability has no effect — even if Preacher is tapped again by the time the ability resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d5ea9176-30c1-4152-9086-322f39245f46",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "When you activate the ability, you choose an opponent, then that opponent chooses the target."
+    }
+  ]
+}

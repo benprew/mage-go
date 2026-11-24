@@ -1,0 +1,36 @@
+{
+  "name": "Fireball",
+  "oracle_id": "aa7714b0-2bfb-458a-8ebf-37ec2c53383e",
+  "rulings_uri": "https://api.scryfall.com/cards/df45a43e-a5b7-4fd4-873b-7b3c021be198/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "aa7714b0-2bfb-458a-8ebf-37ec2c53383e",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "Fireball's damage is divided as Fireball resolves, not as it's cast, because there are no choices involved. The division involves only targets that are still legal as Fireball resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "aa7714b0-2bfb-458a-8ebf-37ec2c53383e",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "For example, if X is 5 and you choose three target creatures, Fireball has a total cost of {7}{R} (even though its mana cost is just {5}{R} and its mana value is 6). If those creatures are all still legal targets as Fireball resolves, it deals 1 damage to each of them."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "aa7714b0-2bfb-458a-8ebf-37ec2c53383e",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "You may cast Fireball with zero targets, regardless of the value chosen for X. If you do so, it will not be a targeted spell, and no damage will actually be dealt when it resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "aa7714b0-2bfb-458a-8ebf-37ec2c53383e",
+      "source": "wotc",
+      "published_at": "2017-11-17",
+      "comment": "You can target more than X creatures. However, if the number of legal targets at the time Fireball resolves is greater than X, none of them will be dealt any damage."
+    }
+  ]
+}

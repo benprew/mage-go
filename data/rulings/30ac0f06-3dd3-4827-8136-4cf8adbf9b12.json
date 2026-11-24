@@ -1,0 +1,15 @@
+{
+  "name": "Titania's Song",
+  "oracle_id": "30ac0f06-3dd3-4827-8136-4cf8adbf9b12",
+  "rulings_uri": "https://api.scryfall.com/cards/4bb135e7-f9e3-4abc-8374-180316498fc3/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "30ac0f06-3dd3-4827-8136-4cf8adbf9b12",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "A noncreature permanent that turns into a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn't matter how long the permanent has been a creature."
+    }
+  ]
+}

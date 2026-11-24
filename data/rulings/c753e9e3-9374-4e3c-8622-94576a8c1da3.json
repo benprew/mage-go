@@ -1,0 +1,71 @@
+{
+  "name": "Oubliette",
+  "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+  "rulings_uri": "https://api.scryfall.com/cards/d4800a7d-c229-4ced-97ff-0e58645d58d6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "If Oubliette leaves the battlefield before its triggered ability resolves, the target creature won't be phased out or tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Abilities that trigger when a creature becomes tapped won't trigger when the creature phases in tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Choices made for permanents as they entered the battlefield are remembered when they phase in."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Any one-shot effects that are waiting “until [this] leaves the battlefield,” such as that of Kitesail Freebooter, won't happen when a permanent phases out."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "While a permanent is phased out, it's treated as though it doesn't exist. It can't be the target of spells or abilities, its static abilities have no effect on the game, its triggered abilities can't trigger, it can't attack or block, and so on."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "A creature phased out by Oubliette doesn't phase in during its controller's untap step as normal. Rather, it phases in immediately after Oubliette leaves the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Phasing out doesn't cause any “leaves the battlefield” abilities to trigger. Similarly, phasing in won't cause any “enters the battlefield” abilities to trigger."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Each Aura and Equipment attached to a permanent that's phasing out also phases out. They will phase in with that permanent and still be attached to it. Similarly, permanents that phase out with counters phase in with those counters."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c753e9e3-9374-4e3c-8622-94576a8c1da3",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Any continuous effects with a “for as long as” duration such as that of Awakener Druid ignore phased-out objects. Any such effects will expire if their conditions are no longer met after ignoring the phased-out objects."
+    }
+  ]
+}

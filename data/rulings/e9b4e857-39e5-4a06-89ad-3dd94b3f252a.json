@@ -1,0 +1,43 @@
+{
+  "name": "Paralyze",
+  "oracle_id": "e9b4e857-39e5-4a06-89ad-3dd94b3f252a",
+  "rulings_uri": "https://api.scryfall.com/cards/fe85610f-b17e-4628-8f6b-544ea7b34327/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e9b4e857-39e5-4a06-89ad-3dd94b3f252a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The creature can only be untapped using Paralyze once per turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e9b4e857-39e5-4a06-89ad-3dd94b3f252a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Paying the cost is optional."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e9b4e857-39e5-4a06-89ad-3dd94b3f252a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Two Paralyzes are not cumulative. Paying either one will untap the creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e9b4e857-39e5-4a06-89ad-3dd94b3f252a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Paralyze can be cast targeting a creature which is already tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e9b4e857-39e5-4a06-89ad-3dd94b3f252a",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "This is a change from the most recent wording. As was the case in the past, Paralyze itself has the last triggered ability, rather than granting that ability to the enchanted creature."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Rocket Launcher",
+  "oracle_id": "11720db4-5b6b-49ba-bf31-4d944921d6f1",
+  "rulings_uri": "https://api.scryfall.com/cards/551c2217-fdf5-465f-8522-1b88c111be7d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "11720db4-5b6b-49ba-bf31-4d944921d6f1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Because it does not have tapping as part of its activation cost, you can activate the ability many times in one turn, but it is destroyed at the end of any turn in which you use it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "11720db4-5b6b-49ba-bf31-4d944921d6f1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can choose different targets for each use."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "11720db4-5b6b-49ba-bf31-4d944921d6f1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It is only destroyed at end of turn if the ability resolved. If the ability is countered, it is not sacrificed."
+    }
+  ]
+}

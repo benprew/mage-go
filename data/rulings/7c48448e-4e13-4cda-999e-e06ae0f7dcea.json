@@ -1,0 +1,22 @@
+{
+  "name": "Nebuchadnezzar",
+  "oracle_id": "7c48448e-4e13-4cda-999e-e06ae0f7dcea",
+  "rulings_uri": "https://api.scryfall.com/cards/1e50afb3-cf9f-4ce3-91ff-84f99860c181/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7c48448e-4e13-4cda-999e-e06ae0f7dcea",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You may activate the ability only during your turn, but you may do so any time you have priority. (In other words, it’s not restricted to only the times you could cast a sorcery.)"
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7c48448e-4e13-4cda-999e-e06ae0f7dcea",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You don’t name a card until the ability resolves. Once you name a card, it’s too late for the targeted opponent to respond."
+    }
+  ]
+}

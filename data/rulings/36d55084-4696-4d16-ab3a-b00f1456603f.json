@@ -1,0 +1,29 @@
+{
+  "name": "Spore Cloud",
+  "oracle_id": "36d55084-4696-4d16-ab3a-b00f1456603f",
+  "rulings_uri": "https://api.scryfall.com/cards/7a2cd32d-dea1-4d58-b8d6-5d7176c967f2/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "36d55084-4696-4d16-ab3a-b00f1456603f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only makes attackers or blockers that have been declared before the spell is cast unable to untap as normal next turn. So, if used before attackers or blockers are declared, it is simply a Fog-like effect. If used after attackers are declared but before blockers are declared, it does the Fog effect and makes attackers not untap as normal. If done after blockers are declared, it has full effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "36d55084-4696-4d16-ab3a-b00f1456603f",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "If a creature affected by Spore Cloud is untapped at the time its controller’s next untap step begins, the “doesn’t untap” effect doesn’t do anything. It won’t apply at some later time when that creature is tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "36d55084-4696-4d16-ab3a-b00f1456603f",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "Spore Cloud doesn’t track the creatures’ controllers. If an affected creature changes controllers before its old controller’s next untap step, Spore Cloud will prevent it from being untapped during its new controller’s next untap step."
+    }
+  ]
+}

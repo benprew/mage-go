@@ -1,0 +1,15 @@
+{
+  "name": "Triassic Egg",
+  "oracle_id": "4f27abe8-3e98-4bb8-afdb-e4b718d83032",
+  "rulings_uri": "https://api.scryfall.com/cards/7ccd4ea9-1552-4fcc-a443-0718b81dc6a6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4f27abe8-3e98-4bb8-afdb-e4b718d83032",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can use the sacrifice ability even if it is tapped."
+    }
+  ]
+}

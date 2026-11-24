@@ -1,0 +1,15 @@
+{
+  "name": "Crimson Kobolds",
+  "oracle_id": "93fdcc49-e3c8-4f8c-a3bc-064c6392b4ca",
+  "rulings_uri": "https://api.scryfall.com/cards/889f4908-42c0-46e2-a83f-394d9fcd58ba/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "93fdcc49-e3c8-4f8c-a3bc-064c6392b4ca",
+      "source": "wotc",
+      "published_at": "2013-06-07",
+      "comment": "Although originally printed with a characteristic-defining ability that defined its color, this card now has a color indicator. This color indicator can’t be affected by text-changing effects (such as the one created by Crystal Spray), although color-changing effects can still overwrite it."
+    }
+  ]
+}

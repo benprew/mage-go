@@ -1,0 +1,15 @@
+{
+  "name": "Relic Barrier",
+  "oracle_id": "90cd8274-3f21-4b78-8910-dcaa5f8fe25d",
+  "rulings_uri": "https://api.scryfall.com/cards/12d760d8-030e-47d0-a555-d88ee43d3d80/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "90cd8274-3f21-4b78-8910-dcaa5f8fe25d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can target a tapped artifact."
+    }
+  ]
+}

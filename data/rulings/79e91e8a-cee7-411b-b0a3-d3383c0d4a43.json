@@ -1,0 +1,15 @@
+{
+  "name": "Blue Mana Battery",
+  "oracle_id": "79e91e8a-cee7-411b-b0a3-d3383c0d4a43",
+  "rulings_uri": "https://api.scryfall.com/cards/cd2cb84e-c079-486e-87ad-d188fe38bc76/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "79e91e8a-cee7-411b-b0a3-d3383c0d4a43",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be tapped even if it has no counters."
+    }
+  ]
+}

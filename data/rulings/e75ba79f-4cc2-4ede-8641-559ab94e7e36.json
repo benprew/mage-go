@@ -1,0 +1,22 @@
+{
+  "name": "Drain Life",
+  "oracle_id": "e75ba79f-4cc2-4ede-8641-559ab94e7e36",
+  "rulings_uri": "https://api.scryfall.com/cards/41a9b3b2-4ac9-4e50-bcd2-8831d0739e85/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e75ba79f-4cc2-4ede-8641-559ab94e7e36",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Cost reducers can be used to reduce the X part of the mana cost."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e75ba79f-4cc2-4ede-8641-559ab94e7e36",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You may gain up to the total toughness of the creature even if it was already damaged."
+    }
+  ]
+}

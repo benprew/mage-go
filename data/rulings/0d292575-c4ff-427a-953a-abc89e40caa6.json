@@ -1,0 +1,15 @@
+{
+  "name": "Citanul Druid",
+  "oracle_id": "0d292575-c4ff-427a-953a-abc89e40caa6",
+  "rulings_uri": "https://api.scryfall.com/cards/2d6c1b0a-3fb9-426e-b3ed-f5d8d1096a51/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0d292575-c4ff-427a-953a-abc89e40caa6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In multiplayer games it affects all players."
+    }
+  ]
+}

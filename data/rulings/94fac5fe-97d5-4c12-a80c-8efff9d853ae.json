@@ -1,0 +1,36 @@
+{
+  "name": "Blood Moon",
+  "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+  "rulings_uri": "https://api.scryfall.com/cards/d072e9ca-aae7-45dc-8025-3ce590bae63f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "If a nonbasic land has an ability that triggers \"when\" it enters the battlefield, it will lose that ability before it can trigger."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "This effect doesn't affect names or supertypes. It won't turn any land into a basic land or remove the legendary supertype from a legendary land, and the lands won't be named \"Mountain.\""
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "Nonbasic lands will lose any other land types and abilities they had. They will gain the land type Mountain and gain the ability \"{T}: Add {R}.\""
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "source": "wotc",
+      "published_at": "2020-08-07",
+      "comment": "If a nonbasic land has an ability that causes it to enter the battlefield tapped, it will lose that ability before it can apply. The same is also true of any other abilities that modify how a land enters the battlefield or apply \"as\" a land enters the battlefield, such as the first ability of Cavern of Souls."
+    }
+  ]
+}

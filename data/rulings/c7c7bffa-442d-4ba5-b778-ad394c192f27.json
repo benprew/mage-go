@@ -1,0 +1,29 @@
+{
+  "name": "Candelabra of Tawnos",
+  "oracle_id": "c7c7bffa-442d-4ba5-b778-ad394c192f27",
+  "rulings_uri": "https://api.scryfall.com/cards/5e8416b8-aae1-4599-9e22-650dd86aefcb/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c7c7bffa-442d-4ba5-b778-ad394c192f27",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not mana ability. It is a normal ability and it will resolve along with other spells and abilities on the stack. The lands untap during resolution."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c7c7bffa-442d-4ba5-b778-ad394c192f27",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used on an untapped land."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c7c7bffa-442d-4ba5-b778-ad394c192f27",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You may untap your opponent's lands if desired."
+    }
+  ]
+}

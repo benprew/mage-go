@@ -1,0 +1,22 @@
+{
+  "name": "Svyelunite Priest",
+  "oracle_id": "fb7adbee-a3b0-42bf-988f-9d4faf6bd006",
+  "rulings_uri": "https://api.scryfall.com/cards/316d25ae-7ac6-4f5b-93ab-0e0e28ec104b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fb7adbee-a3b0-42bf-988f-9d4faf6bd006",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not cause Auras on the creature to be removed when the ability is activated. An Aura on the battlefield is neither a spell nor an ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fb7adbee-a3b0-42bf-988f-9d4faf6bd006",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "The effect prevents spells or the effects of permanents from targeting the creature. Auras which confer an ability (such as Lance or Firebreathing) are not prevented."
+    }
+  ]
+}

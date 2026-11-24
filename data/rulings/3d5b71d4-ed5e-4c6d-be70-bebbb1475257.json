@@ -1,0 +1,29 @@
+{
+  "name": "Clockwork Avian",
+  "oracle_id": "3d5b71d4-ed5e-4c6d-be70-bebbb1475257",
+  "rulings_uri": "https://api.scryfall.com/cards/8013397b-55c4-4439-a320-9c9feb6864c2/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3d5b71d4-ed5e-4c6d-be70-bebbb1475257",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the ability to add counters resolves when there are already the maximum number of counters on it, any counters over the maximum are simply not added."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3d5b71d4-ed5e-4c6d-be70-bebbb1475257",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Loses a counter even if it is affected by a Fog-like effect which prevents it from dealing damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3d5b71d4-ed5e-4c6d-be70-bebbb1475257",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can attack or block even if it has no counters."
+    }
+  ]
+}

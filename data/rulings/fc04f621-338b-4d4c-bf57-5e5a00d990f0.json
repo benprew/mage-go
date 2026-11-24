@@ -1,0 +1,36 @@
+{
+  "name": "Shahrazad",
+  "oracle_id": "fc04f621-338b-4d4c-bf57-5e5a00d990f0",
+  "rulings_uri": "https://api.scryfall.com/cards/0014def3-4063-4929-ac51-76aef1bb2a68/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fc04f621-338b-4d4c-bf57-5e5a00d990f0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "At the start of the sub-game both players draw their initial hand (usually 7 cards). If one player has fewer cards than required, that player loses. If both have fewer than required, both players lose."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fc04f621-338b-4d4c-bf57-5e5a00d990f0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Events in a Shahrazad sub-game do not normally trigger abilities in the main game. And continuous effects in the main game do not carry over into the sub-game."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fc04f621-338b-4d4c-bf57-5e5a00d990f0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You randomly chose which player chooses to go first or draw first."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fc04f621-338b-4d4c-bf57-5e5a00d990f0",
+      "source": "wotc",
+      "published_at": "2007-07-15",
+      "comment": "At the end of a subgame, each player puts all cards they own that are in the subgame into their library in the main game, then shuffles them. This includes cards in the subgame’s Exile zone."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Land Equilibrium",
+  "oracle_id": "a3711453-b17d-4b1c-b726-9b41f36d07ab",
+  "rulings_uri": "https://api.scryfall.com/cards/51c5df75-746c-4e4b-84f1-76b689d317d7/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a3711453-b17d-4b1c-b726-9b41f36d07ab",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "This effect applies no matter how the land would enter: because an opponent plays it, or because a spell or ability allows that opponent to put it onto the battlefield. Note that it doesn't matter under whose control the land enters. If the opponent would put the land onto the battlefield under someone else's control (as a result of Yavimaya Dryad's ability, for example), that opponent will still have to sacrifice a land."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a3711453-b17d-4b1c-b726-9b41f36d07ab",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If an opponent puts a land onto the battlefield under their own control, they may sacrifice that same land. The player won't be able to tap that land for mana before sacrificing it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a3711453-b17d-4b1c-b726-9b41f36d07ab",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If a land that would enter has its own \"If [this land] would enter\" replacement effect, the player who will control that land chooses which replacement effect to apply. After applying one, if the other one would still be applicable, it's then applied."
+    }
+  ]
+}

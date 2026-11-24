@@ -1,0 +1,15 @@
+{
+  "name": "Earthquake",
+  "oracle_id": "9a40614b-50a3-422c-849e-53c8b7d3d204",
+  "rulings_uri": "https://api.scryfall.com/cards/7cf2f3c7-66b2-48f6-97ef-09150903df7e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9a40614b-50a3-422c-849e-53c8b7d3d204",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Whether or not a creature is without flying is only checked on resolution."
+    }
+  ]
+}

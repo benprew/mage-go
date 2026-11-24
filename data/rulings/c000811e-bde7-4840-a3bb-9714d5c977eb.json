@@ -1,0 +1,15 @@
+{
+  "name": "Orcish Artillery",
+  "oracle_id": "c000811e-bde7-4840-a3bb-9714d5c977eb",
+  "rulings_uri": "https://api.scryfall.com/cards/606fca10-0eb8-4f70-80bb-dd9aee50a018/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c000811e-bde7-4840-a3bb-9714d5c977eb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You do not take the 3 points of damage if the ability doesn't resolve because the target is illegal."
+    }
+  ]
+}

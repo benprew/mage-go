@@ -1,0 +1,22 @@
+{
+  "name": "Infinite Authority",
+  "oracle_id": "b4faba1a-23db-4678-9ce6-a7816105f22a",
+  "rulings_uri": "https://api.scryfall.com/cards/dc60077f-d577-4a6c-a78f-697317024c40/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b4faba1a-23db-4678-9ce6-a7816105f22a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The enchanted creature gets a +1/+1 counter for each creature that triggers the ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b4faba1a-23db-4678-9ce6-a7816105f22a",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Moving the enchantment after the ability triggers will not affect which creatures are affected."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Island Sanctuary",
+  "oracle_id": "7d1769d0-d942-45b3-a31c-2bbe45e68661",
+  "rulings_uri": "https://api.scryfall.com/cards/5160e700-3bca-4992-a772-48f1f124cee6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7d1769d0-d942-45b3-a31c-2bbe45e68661",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since the draw is replaced, you can't use the same draw to do other things."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7d1769d0-d942-45b3-a31c-2bbe45e68661",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you get multiple draws or you use a spell or ability during the draw step to draw extra cards, you can have the replacement effect apply to any one or all of those. You need only have it apply once to get the effect. If you skip more than one, there is no additional effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7d1769d0-d942-45b3-a31c-2bbe45e68661",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the replacement effect is applied, the effect will continue until your next turn even if this card leaves the battlefield."
+    }
+  ]
+}

@@ -12,6 +12,7 @@ Resolve the set code and any Go package with `data/sets.txt` and package metadat
 - Use `../mtgish/data/mtgish.lines.json` or checked-in fixtures to inspect definitions. Match them to the expected cards. For an individual example, run `../mtgish/show_card "Sol Ring"` from the mage-go root.
 - Check `mtgish.ParseMtgishJSON` and `mtgish.Compile` with the available records. Record the failing card and rule path when present. Identify the cause as a missing or incorrect record, missing compiler support, or missing engine behavior. A successful compile establishes compiler coverage.
 - Check the game's normal loading path for each expected card. Include reprints provided by another package and cards with no registration. Record whether the active definition comes from mtgish or Go. Count cards as playable when the active definition implements the required behavior. Count mtgish cards as playable imports when the game loads the compiled definition.
+- Read the local rulings for each audited card. Look up the exact name in `data/rulings/index.json` and read the referenced file. See [Card rulings](../../../README.md#card-rulings).
 - Compare actual gameplay against Oracle text and the relevant rules. Inspect the tests for failures they can detect. For hand-written Go cards, check the full Oracle comment above `Register()` and reconcile any `UNIMPLEMENTABLE:` markers with the set's `UNSUPPORTED.md`.
 
 ## Checks and report

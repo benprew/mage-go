@@ -1,0 +1,29 @@
+{
+  "name": "Desert",
+  "oracle_id": "195107ad-879d-4b02-a44a-a3ba70fedf88",
+  "rulings_uri": "https://api.scryfall.com/cards/c74e13eb-6f82-4db1-9d0d-8310f48d9f6d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "195107ad-879d-4b02-a44a-a3ba70fedf88",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability can be used on any player's attacking creatures. This includes your own and creatures in an attack you are not involved in (for multiplayer games)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "195107ad-879d-4b02-a44a-a3ba70fedf88",
+      "source": "wotc",
+      "published_at": "2017-04-18",
+      "comment": "Desert is a land subtype with no special meaning. It doesn't grant the land an intrinsic mana ability. Other cards may care about which lands are Deserts."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "195107ad-879d-4b02-a44a-a3ba70fedf88",
+      "source": "wotc",
+      "published_at": "2024-04-12",
+      "comment": "The end of combat step happens after combat damage is dealt. You can't use Desert to destroy an attacking creature before it has a chance to deal combat damage."
+    }
+  ]
+}

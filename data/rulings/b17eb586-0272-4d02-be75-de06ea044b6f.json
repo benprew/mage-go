@@ -1,0 +1,15 @@
+{
+  "name": "Dust to Dust",
+  "oracle_id": "b17eb586-0272-4d02-be75-de06ea044b6f",
+  "rulings_uri": "https://api.scryfall.com/cards/0daac8e4-12cb-42d0-8a9b-1fbede68967b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b17eb586-0272-4d02-be75-de06ea044b6f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If one target is removed or becomes invalid after declaration, the other target is still affected."
+    }
+  ]
+}

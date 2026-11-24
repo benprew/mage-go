@@ -1,0 +1,15 @@
+{
+  "name": "Initiates of the Ebon Hand",
+  "oracle_id": "0bf359ef-669f-41dc-8ab5-ba8e58b2f398",
+  "rulings_uri": "https://api.scryfall.com/cards/c83085df-1ffb-4178-9fc0-fd347196673f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0bf359ef-669f-41dc-8ab5-ba8e58b2f398",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Mana which “changes color” as it goes through the Hand forgets its original source because the old mana gets used up and new mana gets generated."
+    }
+  ]
+}

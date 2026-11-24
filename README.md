@@ -57,6 +57,21 @@ The compiler in `pkg/mage/mtgish` consumes tagged JSON from `../mtgish/data/mtgi
 
 Use Scryfall JSON for the expected set roster and Oracle text. The repo skills cover [rules and card support](.agents/skills/implement-engine/SKILL.md), [set implementation](.agents/skills/implement-set/SKILL.md), and [set validation](.agents/skills/validate-set/SKILL.md).
 
+### Card rulings
+
+Use the Scryfall rulings snapshot in `data/rulings/` with Oracle text and the
+Comprehensive Rules when you implement or audit a card. Look up the exact card
+name in `index.json` and read the listed `<oracle-id>.json` file in the same
+directory. Reprints share one file. [Rulings index](data/rulings/index.json)
+
+The record's `retrieved_at` field gives the date and time of the Scryfall lookup.
+Each item in `rulings` stores the text in `comment`, the publication date in
+`published_at`, and the source in `source`. A source of `wotc` identifies Wizards
+of the Coast, and `scryfall` identifies a Scryfall note. An empty `rulings` array
+means Scryfall returned no rulings at retrieval time. If an entry or file is
+missing, consult the card's published rulings when you need them to establish
+its behavior.
+
 ## Build & Test
 
 ```bash

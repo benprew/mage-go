@@ -1,0 +1,50 @@
+{
+  "name": "Dance of Many",
+  "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+  "rulings_uri": "https://api.scryfall.com/cards/54d5d755-403a-4e81-837e-f516eb17e819/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Treat the token as entering as a copy of the chosen creature. If that creature normally gets counters when entering, the token creature gets counters."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability is targeted and checks the validity of the target when put on the stack and when resolving. If the creature is not still there when the copy ability resolves, the ability doesn't resolve and no token is put onto the battlefield. This card remains on the battlefield as an enchantment with no token."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Destroying the creature that was copied will not cause the token creature to be destroyed as well."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The mana cost is copied."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Each Dance of Many is associated only with its token creature. If one Dance leaves the battlefield, only the corresponding token is affected, not all tokens from all instances of Dance of Many."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72e1a239-11a7-4dbe-b093-65d395e3ccc9",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Dance of Many leaves the battlefield before its first ability has resolved, its second ability will trigger and do nothing. Then its first ability will resolve and put a token onto the battlefield. That token won't have any connection to a Dance of Many permanent, so it won't be exiled when a Dance of Many leaves the battlefield."
+    }
+  ]
+}

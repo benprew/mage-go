@@ -1,0 +1,43 @@
+{
+  "name": "Clockwork Beast",
+  "oracle_id": "eb97c8db-ac6c-476c-b14d-87785e9c82f0",
+  "rulings_uri": "https://api.scryfall.com/cards/1a3bdfda-4269-45be-931d-ecfecbb389a8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "eb97c8db-ac6c-476c-b14d-87785e9c82f0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can attack or block even if it has no counters."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb97c8db-ac6c-476c-b14d-87785e9c82f0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Loses a counter even if it is affected by a Fog-like effect which prevents it from dealing damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb97c8db-ac6c-476c-b14d-87785e9c82f0",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "This is a change from the most recent wording. Now, if some other spell or ability causes +1/+0 counters to be put on Clockwork Beast, it can wind up with more than seven such counters on it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb97c8db-ac6c-476c-b14d-87785e9c82f0",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If Clockwork Beast has seven or fewer +1/+0 counters on it when its last ability resolves, it can wind up a maximum of seven such counters on it. If it has seven or more +1/+0 counters on it, the ability will have no effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "eb97c8db-ac6c-476c-b14d-87785e9c82f0",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Clockwork Beast’s last ability resolves, you can choose to put fewer than X +1/+0 counters on it."
+    }
+  ]
+}

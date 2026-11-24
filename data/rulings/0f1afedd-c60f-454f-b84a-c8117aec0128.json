@@ -1,0 +1,43 @@
+{
+  "name": "Manabarbs",
+  "oracle_id": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+  "rulings_uri": "https://api.scryfall.com/cards/adf081d5-e644-4f46-8bc8-a754b089acb4/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card has a triggered ability that causes a separate effect for 1 point of damage each time a land is tapped for mana."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If any lands are tapped for mana while a player is casting a spell or activating an ability, Manabarbs’s ability will trigger that many times and wait. When the player finishes casting that spell or activating that ability, it’s put on the stack, then Manabarbs’s triggered abilities are put on the stack on top of it. The Manabarbs abilities will resolve first."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The ability will trigger each time a land is tapped for mana. Each ability is separate."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "On the other hand, a player can tap lands for mana, let the Manabarbs triggered abilities be put on the stack, and then respond to those abilities by casting an instant or activating an ability using that mana. In that case, the spell or ability will resolve first."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "This ability is not a mana ability. It goes on the stack and can be responded to."
+    }
+  ]
+}

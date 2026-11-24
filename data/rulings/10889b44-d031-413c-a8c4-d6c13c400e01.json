@@ -1,0 +1,15 @@
+{
+  "name": "Wall of Wonder",
+  "oracle_id": "10889b44-d031-413c-a8c4-d6c13c400e01",
+  "rulings_uri": "https://api.scryfall.com/cards/e8c73e58-e906-4c67-9f84-b20456629cb0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "10889b44-d031-413c-a8c4-d6c13c400e01",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Paying to make the Wall capable of attacking does not override the normal rule that a creature may not attack unless it began your turn on the battlefield."
+    }
+  ]
+}

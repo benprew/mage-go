@@ -1,0 +1,15 @@
+{
+  "name": "Gauntlet of Might",
+  "oracle_id": "d38ad188-515e-4865-a0ed-5d0fd4c7b453",
+  "rulings_uri": "https://api.scryfall.com/cards/df3bc33f-23f8-4eb4-a70e-b8b7af5b40f6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d38ad188-515e-4865-a0ed-5d0fd4c7b453",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Dual lands which have Mountain as one of their types produce an extra red mana when tapped for either color."
+    }
+  ]
+}

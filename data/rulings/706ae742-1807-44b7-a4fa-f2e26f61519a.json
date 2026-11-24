@@ -1,0 +1,15 @@
+{
+  "name": "Wild Growth",
+  "oracle_id": "706ae742-1807-44b7-a4fa-f2e26f61519a",
+  "rulings_uri": "https://api.scryfall.com/cards/47260e7c-29bf-46f1-a029-9da7bbb418b5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "706ae742-1807-44b7-a4fa-f2e26f61519a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The additional mana is not an ability of the land and is not something the land can produce."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Mishra's Factory",
+  "oracle_id": "5963e0ef-e0bc-4611-ad4f-813a4c0eacfb",
+  "rulings_uri": "https://api.scryfall.com/cards/6e9fec20-a52c-42c0-9928-c572d9e1b21f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5963e0ef-e0bc-4611-ad4f-813a4c0eacfb",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "After it becomes a creature, Mishra's Factory will still have all its abilities."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5963e0ef-e0bc-4611-ad4f-813a4c0eacfb",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "A noncreature permanent that becomes a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn't matter how long the permanent has been a creature. Notably, if you turn Mishra's Factory into a creature on the turn it entered the battlefield, you won't be able to then activate its first or last abilities."
+    }
+  ]
+}

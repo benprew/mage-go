@@ -1,0 +1,29 @@
+{
+  "name": "Time Elemental",
+  "oracle_id": "d89075a3-4413-4796-a055-eef51fddb7f3",
+  "rulings_uri": "https://api.scryfall.com/cards/720672dc-d75a-44c3-a48d-d2fe3993fbbf/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d89075a3-4413-4796-a055-eef51fddb7f3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You both sacrifice it and deal the 5 damage at end of combat."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d89075a3-4413-4796-a055-eef51fddb7f3",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "A “permanent that isn’t enchanted” is a permanent with no Auras on it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d89075a3-4413-4796-a055-eef51fddb7f3",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If Time Elemental attacks or blocks, but you no longer control it at end of combat, you can’t sacrifice it. However, it will still deal 5 damage to you."
+    }
+  ]
+}

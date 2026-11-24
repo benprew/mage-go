@@ -1,0 +1,15 @@
+{
+  "name": "Rapid Fire",
+  "oracle_id": "63c7248e-a7a2-4e32-b4d2-55dbc63e51e5",
+  "rulings_uri": "https://api.scryfall.com/cards/e26e7c9c-e6de-47f4-8394-7e853408f84c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "63c7248e-a7a2-4e32-b4d2-55dbc63e51e5",
+      "source": "wotc",
+      "published_at": "2013-09-20",
+      "comment": "If a turn has multiple combat phases, Rapid Fire can only be cast before the beginning of the Declare Blockers Step of the first combat phase in that turn."
+    }
+  ]
+}

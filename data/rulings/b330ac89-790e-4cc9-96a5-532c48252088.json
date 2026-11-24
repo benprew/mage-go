@@ -1,0 +1,22 @@
+{
+  "name": "Blaze of Glory",
+  "oracle_id": "b330ac89-790e-4cc9-96a5-532c48252088",
+  "rulings_uri": "https://api.scryfall.com/cards/2f6ed7bd-2186-4e92-9fbc-e2abbfd3bc23/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b330ac89-790e-4cc9-96a5-532c48252088",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not allow a tapped creature to block, or allow a creature to block any creatures it would not normally be able to block."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b330ac89-790e-4cc9-96a5-532c48252088",
+      "source": "wotc",
+      "published_at": "2013-09-20",
+      "comment": "If a turn has multiple combat phases, this spell can be cast during any of them as long as it's before the beginning of that phase's Declare Blockers Step."
+    }
+  ]
+}

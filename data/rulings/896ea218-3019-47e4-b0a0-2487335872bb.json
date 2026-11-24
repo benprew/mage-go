@@ -1,0 +1,15 @@
+{
+  "name": "Force Spike",
+  "oracle_id": "896ea218-3019-47e4-b0a0-2487335872bb",
+  "rulings_uri": "https://api.scryfall.com/cards/97a6c6c9-dd26-4ce7-850f-0b3fc49245bd/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "896ea218-3019-47e4-b0a0-2487335872bb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The payment is optional."
+    }
+  ]
+}

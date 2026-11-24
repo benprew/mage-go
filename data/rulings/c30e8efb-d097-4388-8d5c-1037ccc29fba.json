@@ -1,0 +1,15 @@
+{
+  "name": "Sentinel",
+  "oracle_id": "c30e8efb-d097-4388-8d5c-1037ccc29fba",
+  "rulings_uri": "https://api.scryfall.com/cards/ffd4921f-cda5-4318-837d-a3fe4f0d9362/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c30e8efb-d097-4388-8d5c-1037ccc29fba",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You apply power/toughness changing effects in a series of sublayers in the following order: (a) effects from characteristic-defining abilities; (b) effects that set power and/or toughness to a specific number or value; (c) effects that modify power and/or toughness but don’t set power and/or toughness to a specific number or value; (d) changes from counters; (e) effects that switch a creature’s power and toughness. This card’s effect is always applied in (b), which means that effects applied in sublayer (c), (d), or (e) will not be overwritten; they will be applied to the new value."
+    }
+  ]
+}

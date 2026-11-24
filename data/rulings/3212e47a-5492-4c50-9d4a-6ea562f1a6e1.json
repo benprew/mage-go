@@ -1,0 +1,29 @@
+{
+  "name": "Millstone",
+  "oracle_id": "3212e47a-5492-4c50-9d4a-6ea562f1a6e1",
+  "rulings_uri": "https://api.scryfall.com/cards/c2051fd0-99cf-4e11-a625-8294e6767e5b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3212e47a-5492-4c50-9d4a-6ea562f1a6e1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since you are putting more than one card in the graveyard at one time, the affected player can choose the order the 2 cards go in."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3212e47a-5492-4c50-9d4a-6ea562f1a6e1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used on a player with less than 2 cards in their library. It will remove 0 or 1 cards if that is all that is available."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3212e47a-5492-4c50-9d4a-6ea562f1a6e1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It is not a draw effect so it will not cause a player with less than 2 cards in their library to lose."
+    }
+  ]
+}

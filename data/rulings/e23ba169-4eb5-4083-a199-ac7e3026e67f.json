@@ -1,0 +1,15 @@
+{
+  "name": "Glyph of Delusion",
+  "oracle_id": "e23ba169-4eb5-4083-a199-ac7e3026e67f",
+  "rulings_uri": "https://api.scryfall.com/cards/ee39da13-4b8a-4796-a7c2-aaa11992d573/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e23ba169-4eb5-4083-a199-ac7e3026e67f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be cast at any time after the wall blocked a creature and can affect any creature that the wall was assigned to block or that was blocked by the wall due to being in a band or by being switched into or out of the block by an ability."
+    }
+  ]
+}

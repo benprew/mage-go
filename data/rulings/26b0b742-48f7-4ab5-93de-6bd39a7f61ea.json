@@ -1,0 +1,15 @@
+{
+  "name": "Thelonite Monk",
+  "oracle_id": "26b0b742-48f7-4ab5-93de-6bd39a7f61ea",
+  "rulings_uri": "https://api.scryfall.com/cards/5400ff25-c70e-4095-a228-190601b86043/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "26b0b742-48f7-4ab5-93de-6bd39a7f61ea",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Will not add or remove the supertype snow to or from a land."
+    }
+  ]
+}

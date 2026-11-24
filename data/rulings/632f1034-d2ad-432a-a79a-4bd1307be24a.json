@@ -1,0 +1,36 @@
+{
+  "name": "Planar Gate",
+  "oracle_id": "632f1034-d2ad-432a-a79a-4bd1307be24a",
+  "rulings_uri": "https://api.scryfall.com/cards/c880c236-a9d9-4e0d-bc4b-8910c75639cd/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "632f1034-d2ad-432a-a79a-4bd1307be24a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Multiple Gates are cumulative. Two will reduce the cost by up to {4}, and so on."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "632f1034-d2ad-432a-a79a-4bd1307be24a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only works for its controller, not all players."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "632f1034-d2ad-432a-a79a-4bd1307be24a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only reduces the generic mana portion of a spell's cost. If the cost does not include generic mana or includes less than {2}, you get a reduced or null effect from this card."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "632f1034-d2ad-432a-a79a-4bd1307be24a",
+      "source": "wotc",
+      "published_at": "2008-04-01",
+      "comment": "Works on all spells with the type Creature, even if the spell has another type like Artifact or Enchantment."
+    }
+  ]
+}

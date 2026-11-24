@@ -1,0 +1,29 @@
+{
+  "name": "Veteran Bodyguard",
+  "oracle_id": "d29078c0-1fb8-437a-81d1-bb319f646941",
+  "rulings_uri": "https://api.scryfall.com/cards/1dd4615d-7828-43fb-ab89-f7c732bca01a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d29078c0-1fb8-437a-81d1-bb319f646941",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you have multiple Veteran Bodyguards, you can decide which one receives the redirected damage each time damage would be dealt to you."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d29078c0-1fb8-437a-81d1-bb319f646941",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If a creature is blocked but Trample damage is still done to a player, this damage can't be redirected to the Bodyguard because the Bodyguard only takes damage from unblocked creatures."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d29078c0-1fb8-437a-81d1-bb319f646941",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Damage goes to the Bodyguard as long as he is untapped. This works even if he is blocking."
+    }
+  ]
+}

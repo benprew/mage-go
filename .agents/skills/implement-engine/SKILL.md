@@ -15,6 +15,8 @@ For a named card, inspect the mtgish definition from the mage-go root.
 
 If the helper is unavailable, look up the name in `../mtgish/data/mtgish.lines.json`. Use a matching [checked-in JSON fixture](../../../pkg/mage/testdata/mtgish/README.md) if the sibling checkout is unavailable. Check Scryfall Oracle text and the relevant [comprehensive rules](../../../docs/comprehensive-rules-index.md). For custom cards, use the requested rules text. Read the [engine API guide](../../../pkg/mage/doc.go) before changing runtime behavior.
 
+Read local rulings for the cards you implement and any published cards used to define or test a shared engine or compiler change. Find the corresponding files by exact card name in `data/rulings/index.json`. See [Card rulings](../../../README.md#card-rulings).
+
 ## Change the layer responsible
 
 - **Definition.** Fix a missing or incorrect mtgish record or grammar when the sibling repository is in scope. Identify the exact source issue if it remains open.

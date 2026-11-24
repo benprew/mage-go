@@ -1,0 +1,29 @@
+{
+  "name": "Erhnam Djinn",
+  "oracle_id": "d48a38c9-3dcd-4c18-8840-1b057ede3ff0",
+  "rulings_uri": "https://api.scryfall.com/cards/a1b20fb7-90f3-442c-b105-dfcaf619348d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d48a38c9-3dcd-4c18-8840-1b057ede3ff0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you have more than one Djinn, you can have all of them target the same creature with their ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d48a38c9-3dcd-4c18-8840-1b057ede3ff0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In multiplayer games you can choose a different player's creature each upkeep. You are forced to pick a creature that some opponent controls if there is at least one creature on the battlefield that is a legal target."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d48a38c9-3dcd-4c18-8840-1b057ede3ff0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If there are no creatures your opponent controls to target at the beginning of your upkeep, ignore this ability."
+    }
+  ]
+}

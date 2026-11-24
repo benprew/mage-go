@@ -1,0 +1,15 @@
+{
+  "name": "Stangg",
+  "oracle_id": "739eac91-3029-4ce7-9885-0af3ddea472e",
+  "rulings_uri": "https://api.scryfall.com/cards/a23f846e-b5e6-48c2-afea-c9be7fc8b7c3/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "739eac91-3029-4ce7-9885-0af3ddea472e",
+      "source": "wotc",
+      "published_at": "2018-03-16",
+      "comment": "If Stangg leaves the battlefield before its ability has resolved, that ability will still create a Stangg Twin token, but its delayed triggered ability that exiles the token will never have a chance to trigger. That token will remain on the battlefield."
+    }
+  ]
+}

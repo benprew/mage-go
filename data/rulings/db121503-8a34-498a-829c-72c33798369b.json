@@ -1,0 +1,36 @@
+{
+  "name": "Nova Pentacle",
+  "oracle_id": "db121503-8a34-498a-829c-72c33798369b",
+  "rulings_uri": "https://api.scryfall.com/cards/0e627164-da4e-4860-b516-7304fc41161e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "db121503-8a34-498a-829c-72c33798369b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In multi-player games you can choose a different opposing player each time it is used."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "db121503-8a34-498a-829c-72c33798369b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The next time damage from the chosen source would be dealt to you this turn, that damage is dealt to the targeted creature instead. Whether it’s still a legal target is not checked at this time. However, if it’s not able to be dealt damage because it’s neither a creature nor a planeswalker, or it’s no longer on the battlefield, then the damage is not redirected and is dealt to you as normal."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "db121503-8a34-498a-829c-72c33798369b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "As the ability resolves, you choose a damage source."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "db121503-8a34-498a-829c-72c33798369b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "As you activate the ability, you choose an opponent, then that opponent chooses a creature for the ability to target. It doesn’t have to be a creature that opponent controls. If there are no creatures that can be targeted with the ability, it can’t be activated."
+    }
+  ]
+}

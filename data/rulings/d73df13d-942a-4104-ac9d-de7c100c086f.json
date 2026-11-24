@@ -1,0 +1,15 @@
+{
+  "name": "Cosmic Horror",
+  "oracle_id": "d73df13d-942a-4104-ac9d-de7c100c086f",
+  "rulings_uri": "https://api.scryfall.com/cards/64288873-d3bf-49f6-b0e4-a1e712f8ba58/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d73df13d-942a-4104-ac9d-de7c100c086f",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "If you choose not to pay Cosmic Horror’s upkeep cost, it deals 7 damage to you only if it’s actually destroyed. If it regenerates or an effect has given it indestructible, it deals no damage."
+    }
+  ]
+}

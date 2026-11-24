@@ -1,0 +1,15 @@
+{
+  "name": "Ivory Tower",
+  "oracle_id": "d416a4ed-9f16-4a8b-8aee-03c630e1eb6c",
+  "rulings_uri": "https://api.scryfall.com/cards/aaf91af0-0243-4dca-90de-d7580f4f9d38/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d416a4ed-9f16-4a8b-8aee-03c630e1eb6c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you have four or fewer cards in your hand when Ivory Tower's ability resolves, the ability has no effect."
+    }
+  ]
+}

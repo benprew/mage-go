@@ -1,0 +1,15 @@
+{
+  "name": "Karma",
+  "oracle_id": "fac4da47-f0b2-4b57-9703-e0ed100d3499",
+  "rulings_uri": "https://api.scryfall.com/cards/cf9df1cc-9de3-42a6-9c28-f2d8db75322a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fac4da47-f0b2-4b57-9703-e0ed100d3499",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Amount of damage is determined when the ability resolves and not when it is placed on the stack."
+    }
+  ]
+}

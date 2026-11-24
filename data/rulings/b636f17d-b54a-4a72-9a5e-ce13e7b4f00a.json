@@ -1,0 +1,15 @@
+{
+  "name": "Martyr's Cry",
+  "oracle_id": "b636f17d-b54a-4a72-9a5e-ce13e7b4f00a",
+  "rulings_uri": "https://api.scryfall.com/cards/c9fb6ef0-0a57-4521-9401-92ad6c614af2/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b636f17d-b54a-4a72-9a5e-ce13e7b4f00a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only affects creatures on the battlefield, not ones in hands or graveyards."
+    }
+  ]
+}

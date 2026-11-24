@@ -1,0 +1,15 @@
+{
+  "name": "Martyrs of Korlis",
+  "oracle_id": "7ca54a23-f8eb-4982-b4ee-7392e2f2a1b3",
+  "rulings_uri": "https://api.scryfall.com/cards/41c0b6a9-8d1b-42b6-862d-7b21023df3a7/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7ca54a23-f8eb-4982-b4ee-7392e2f2a1b3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you have multiple Martyrs of Korlis, you can decide which one receives the redirected damage each time artifact damage would be dealt to you."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "The Fallen",
+  "oracle_id": "19348c1e-b683-4d2c-b4eb-82e538b314b0",
+  "rulings_uri": "https://api.scryfall.com/cards/49058733-6fd7-456f-a47b-10ebf7fb5232/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "19348c1e-b683-4d2c-b4eb-82e538b314b0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It stops damaging players and forgets which players it damaged when it leaves the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "19348c1e-b683-4d2c-b4eb-82e538b314b0",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "The effect isn’t cumulative. When it resolves, The Fallen deals 1 damage to each opponent previously dealt damage by it, regardless of how many times The Fallen dealt damage to that opponent before."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "19348c1e-b683-4d2c-b4eb-82e538b314b0",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "The Fallen’s ability causes it to deal damage only to opponents of its current controller. If The Fallen has dealt damage to you, and then you gain control of it, you won’t be damaged during your upkeep."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "19348c1e-b683-4d2c-b4eb-82e538b314b0",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If The Fallen phases out and back in, it remembers which players it has dealt damage to this game."
+    }
+  ]
+}

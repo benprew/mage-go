@@ -1,0 +1,29 @@
+{
+  "name": "Ali from Cairo",
+  "oracle_id": "6517edb3-30e2-40ba-b6e4-4554b4bbb342",
+  "rulings_uri": "https://api.scryfall.com/cards/2719516a-7a47-413e-b1a3-15543d229e08/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6517edb3-30e2-40ba-b6e4-4554b4bbb342",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This effect does not apply to effects which reduce your life without doing damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6517edb3-30e2-40ba-b6e4-4554b4bbb342",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This effect does not prevent damage, it prevents the damage from turning into loss of life. So the full damage is dealt (and abilities that trigger on damage being dealt still trigger), but the full loss of life is not applied."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6517edb3-30e2-40ba-b6e4-4554b4bbb342",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability works up until Ali enters the graveyard, so if he takes lethal damage or is destroyed at the same time you take damage, the ability helps you. If the damage occurs after it goes to the graveyard, however, it is not affected by the Ali which is no longer on the battlefield."
+    }
+  ]
+}

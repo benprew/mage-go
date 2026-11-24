@@ -1,0 +1,15 @@
+{
+  "name": "Keldon Warlord",
+  "oracle_id": "acc869f8-dcbe-4d57-baa0-3eef4aceb251",
+  "rulings_uri": "https://api.scryfall.com/cards/8e67a472-3058-47a7-90f5-1d26c4287cab/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "acc869f8-dcbe-4d57-baa0-3eef4aceb251",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "This is a Characteristic-Defining Ability. It checks the number of non-Wall creatures you control continuously, and applies in all zones. It is never “locked in”."
+    }
+  ]
+}

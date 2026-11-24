@@ -1,0 +1,22 @@
+{
+  "name": "Thicket Basilisk",
+  "oracle_id": "c4822813-cd81-465d-9fe8-3a4c2dcd31ef",
+  "rulings_uri": "https://api.scryfall.com/cards/2ac6ded0-4ff0-4827-a870-1a7851cd37b0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c4822813-cd81-465d-9fe8-3a4c2dcd31ef",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Protection from Green does not stop the Basilisk’s ability because the ability is not targeted."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c4822813-cd81-465d-9fe8-3a4c2dcd31ef",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability destroys the creature at the end of the combat, which is after all first strike and normal damage dealing is done. This means that a creature may have to regenerate twice to survive the combat, once from damage and once again at end of combat."
+    }
+  ]
+}

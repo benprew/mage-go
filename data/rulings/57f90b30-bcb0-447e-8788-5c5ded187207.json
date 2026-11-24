@@ -1,0 +1,15 @@
+{
+  "name": "Natural Selection",
+  "oracle_id": "57f90b30-bcb0-447e-8788-5c5ded187207",
+  "rulings_uri": "https://api.scryfall.com/cards/315a6bfb-5417-465f-97d9-e157f5c3cf79/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "57f90b30-bcb0-447e-8788-5c5ded187207",
+      "source": "wotc",
+      "published_at": "2007-07-15",
+      "comment": "This is now targeted."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Animate Dead",
+  "oracle_id": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+  "rulings_uri": "https://api.scryfall.com/cards/cc0c2bab-4392-4e7b-9d14-2901f4ffbae8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "If the creature put onto the battlefield has protection from black—or if the creature can't legally be enchanted by Animate Dead for another reason—Animate Dead won't be able to attach to it. It will be put into the graveyard as a state-based action, causing its delayed triggered ability to trigger. When the trigger resolves, if the creature's still on the battlefield, its controller will sacrifice it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Animate Dead is an Aura, albeit with an unusual enchant ability. You target a creature card in a graveyard when you cast it. It enters the battlefield attached to that card. Then it returns that card to the battlefield, and attaches itself to the card again (since the card is a new object on the battlefield). Animate Dead itself never moves into a graveyard during this process."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "If Animate Dead isn't on the battlefield as its triggered ability resolves, none of its effects happen. The creature card won't be returned to the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Once the creature is returned to the battlefield, Animate Dead can't be attached to anything other than it (unless Animate Dead somehow manages to put a different creature onto the battlefield). Attempting to move Animate Dead to another creature won't work."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c0d8fef4-65f4-4769-982d-b397d2b7e977",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "Abilities such as shroud and protection function only on the battlefield unless otherwise specified. A creature card with shroud may be targeted by Animate Dead, and Animate Dead will become attached to the creature that enters the battlefield."
+    }
+  ]
+}

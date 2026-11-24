@@ -1,0 +1,22 @@
+{
+  "name": "Raise Dead",
+  "oracle_id": "cbc9c731-181a-4f00-a7b0-eb7e56eac2ea",
+  "rulings_uri": "https://api.scryfall.com/cards/4950c3c2-80c1-4447-ac38-cf40f76b9545/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cbc9c731-181a-4f00-a7b0-eb7e56eac2ea",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You must show the card you bring out of the graveyard to your opponent."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "cbc9c731-181a-4f00-a7b0-eb7e56eac2ea",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The creature being brought back is chosen on announcement and not on resolution of the spell because it is targeted."
+    }
+  ]
+}

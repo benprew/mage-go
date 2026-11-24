@@ -1,0 +1,15 @@
+{
+  "name": "Reverberation",
+  "oracle_id": "d3088e1d-62c9-4478-9ef7-fc3c9e5cfadb",
+  "rulings_uri": "https://api.scryfall.com/cards/a3d1f470-058d-41b7-acaf-4f68431de9ed/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d3088e1d-62c9-4478-9ef7-fc3c9e5cfadb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If used on a sorcery which does damage to multiple creatures and/or players, it will cause that player to take damage equal to the sum of all damage inflicted by the spell."
+    }
+  ]
+}

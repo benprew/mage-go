@@ -1,0 +1,22 @@
+{
+  "name": "Presence of the Master",
+  "oracle_id": "e1aad679-93ec-420e-881b-35ebc99763a2",
+  "rulings_uri": "https://api.scryfall.com/cards/849adb29-61ad-4307-98b9-61e33aec6500/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e1aad679-93ec-420e-881b-35ebc99763a2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This effect triggers when the spell is announced and prior to allowing responses to it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e1aad679-93ec-420e-881b-35ebc99763a2",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not stop enchantments from being put onto the battlefield by a spell or ability."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Winter Orb",
+  "oracle_id": "1dcbd583-3388-4b34-a7cd-131648aa6abd",
+  "rulings_uri": "https://api.scryfall.com/cards/ab3cec7e-513e-400d-a1a8-2c71cdde02c6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1dcbd583-3388-4b34-a7cd-131648aa6abd",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "All permanents untap during a player’s untap step at once. If Winter Orb is tapped as your untap step begins, your lands will all untap."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "1dcbd583-3388-4b34-a7cd-131648aa6abd",
+      "source": "wotc",
+      "published_at": "2016-06-08",
+      "comment": "You can’t tap Winter Orb just because you want to. Another ability, such as that of Glare of Subdual, must instruct or allow you to do so."
+    }
+  ]
+}

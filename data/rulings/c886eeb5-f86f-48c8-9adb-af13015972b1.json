@@ -1,0 +1,15 @@
+{
+  "name": "Rabid Wombat",
+  "oracle_id": "c886eeb5-f86f-48c8-9adb-af13015972b1",
+  "rulings_uri": "https://api.scryfall.com/cards/604d52c5-ceab-40fd-936e-bab859c4333e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c886eeb5-f86f-48c8-9adb-af13015972b1",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "If an Aura is removed from the Wombat, its power and toughness change immediately."
+    }
+  ]
+}

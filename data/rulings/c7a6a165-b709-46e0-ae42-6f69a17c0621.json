@@ -1,0 +1,15 @@
+{
+  "name": "Animate Wall",
+  "oracle_id": "c7a6a165-b709-46e0-ae42-6f69a17c0621",
+  "rulings_uri": "https://api.scryfall.com/cards/0fa5725c-fcf8-4f84-9093-75b454b4755f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c7a6a165-b709-46e0-ae42-6f69a17c0621",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "This is a change from the most recent wording. As was the case in the past, Animate Wall can now enchant only a Wall."
+    }
+  ]
+}

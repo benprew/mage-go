@@ -1,0 +1,22 @@
+{
+  "name": "Bartel Runeaxe",
+  "oracle_id": "9beccf09-c024-408b-9f84-fe2c7462babb",
+  "rulings_uri": "https://api.scryfall.com/cards/3c635e33-c9f1-4508-986d-c0289921c299/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9beccf09-c024-408b-9f84-fe2c7462babb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card can be enchanted by moving Auras onto it. The “can’t be the target” text is different from “can’t be enchanted” in that it only applies to Aura spells when they are being cast."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "9beccf09-c024-408b-9f84-fe2c7462babb",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Bartel Runeaxe can be targeted by the abilities of enchantments, including Auras."
+    }
+  ]
+}

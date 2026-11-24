@@ -1,0 +1,36 @@
+{
+  "name": "Chain Lightning",
+  "oracle_id": "8785f42f-87b9-4a0a-89ce-ea423649ba9c",
+  "rulings_uri": "https://api.scryfall.com/cards/2105a0d9-ea2e-4ffc-be08-424b5617205d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8785f42f-87b9-4a0a-89ce-ea423649ba9c",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "The copy of Chain Lightning is created on the stack, so it's not cast. Abilities that trigger when a player casts a spell won't trigger. Players may respond to that spell before it resolves."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8785f42f-87b9-4a0a-89ce-ea423649ba9c",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "The player putting the copy of the spell on the stack controls that copy."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8785f42f-87b9-4a0a-89ce-ea423649ba9c",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "As Chain Lightning resolves, either the original or one of the copies, the targeted player or the controller of the targeted permanent may copy it. The copy has the same text, target, and color as the resolving spell, though the player creating the copy may choose a new target for it. Once that copy is created (or not), the Chain Lightning finishes resolving and leaves the stack."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8785f42f-87b9-4a0a-89ce-ea423649ba9c",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "If the targeted player or permanent is an illegal target as Chain Lightning tries to resolve, the spell doesn't resolve and none of its effects happen. It can't be copied."
+    }
+  ]
+}

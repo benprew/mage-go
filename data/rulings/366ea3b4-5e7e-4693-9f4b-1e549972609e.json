@@ -1,0 +1,22 @@
+{
+  "name": "Soul Exchange",
+  "oracle_id": "366ea3b4-5e7e-4693-9f4b-1e549972609e",
+  "rulings_uri": "https://api.scryfall.com/cards/6666dca1-5e33-4f5b-b449-76bcb0e15296/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "366ea3b4-5e7e-4693-9f4b-1e549972609e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You exile exactly one creature. You can’t exile more than one in an attempt to get a larger effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "366ea3b4-5e7e-4693-9f4b-1e549972609e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Putting a counter on the creature put onto the battlefield is not a targeted effect and so Protection from Black will not prevent it."
+    }
+  ]
+}

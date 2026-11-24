@@ -31,6 +31,8 @@ make lint                                  # lint (run after making changes and 
 
 Inspect the mtgish definition from the mage-go root with `../mtgish/show_card "Sol Ring"`. The source is `../mtgish/data/mtgish.lines.json`. Read `pkg/mage/doc.go` for the engine API before changing game behavior.
 
+Check local rulings when you implement or audit a card. For shared engine or compiler work, check the published cards that establish the required behavior. Look up the exact card name in `data/rulings/index.json` and read the listed file alongside the Oracle text and Comprehensive Rules. See [Card rulings](README.md#card-rulings).
+
 **Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
 
 **Replacement effects**: See "Replacement Effect System" in `doc.go`. Most cards use `*Game` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.).

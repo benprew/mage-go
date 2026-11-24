@@ -1,0 +1,15 @@
+{
+  "name": "Book of Rass",
+  "oracle_id": "a5e3ca74-ec33-4679-9366-8b1a45048783",
+  "rulings_uri": "https://api.scryfall.com/cards/7522bae1-f57e-4863-8c62-e335b1a7c747/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a5e3ca74-ec33-4679-9366-8b1a45048783",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can't spend yourself to below zero life. You can't spend life you don't have."
+    }
+  ]
+}

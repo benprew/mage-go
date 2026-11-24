@@ -1,0 +1,29 @@
+{
+  "name": "Instill Energy",
+  "oracle_id": "8695c3c1-fb4b-4429-ae33-ec186f68796b",
+  "rulings_uri": "https://api.scryfall.com/cards/a7d5d27f-759f-4e99-8ac4-e4b40865d557/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8695c3c1-fb4b-4429-ae33-ec186f68796b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Instill Energy's untap ability will not untap the creature until it resolves. This means other spells and abilities can be used before it actually becomes untapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8695c3c1-fb4b-4429-ae33-ec186f68796b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If attached to an opponent's creature, you can untap their creature during your turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "8695c3c1-fb4b-4429-ae33-ec186f68796b",
+      "source": "wotc",
+      "published_at": "2005-08-01",
+      "comment": "Any Auras (or other effects) which are on the creature that would cause it to not be untapped (or have a cost to be untapped) during untap step do not in any way hinder or imply a cost to use this card's ability to untap once during the turn."
+    }
+  ]
+}

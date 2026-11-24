@@ -1,0 +1,22 @@
+{
+  "name": "Mana Vortex",
+  "oracle_id": "98b88734-09e2-4209-a787-9b5b345391f9",
+  "rulings_uri": "https://api.scryfall.com/cards/b9d4d7da-f98a-4622-91b8-3460fe44551a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "98b88734-09e2-4209-a787-9b5b345391f9",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When you cast Mana Vortex, its first ability triggers and goes on the stack on top of the Mana Vortex spell. The triggered ability resolves first. When it resolves, you either sacrifice a land or you counter Mana Vortex."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "98b88734-09e2-4209-a787-9b5b345391f9",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Mana Vortex’s third ability is a “state trigger.” Once a state trigger triggers, it won’t trigger again as long as the ability is on the stack. If the ability is countered and the trigger condition is still true, it will immediately trigger again."
+    }
+  ]
+}

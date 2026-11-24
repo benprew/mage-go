@@ -1,0 +1,15 @@
+{
+  "name": "Gabriel Angelfire",
+  "oracle_id": "e8521fdf-0896-4747-8c66-ea3bb69eb876",
+  "rulings_uri": "https://api.scryfall.com/cards/2e349074-1402-44cf-be19-33a661cff3b6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e8521fdf-0896-4747-8c66-ea3bb69eb876",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Gabriel Angelfire will have the ability it gains through your next untap step, but will no longer have it during your next upkeep step."
+    }
+  ]
+}

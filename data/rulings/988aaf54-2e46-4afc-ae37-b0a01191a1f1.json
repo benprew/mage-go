@@ -1,0 +1,22 @@
+{
+  "name": "Dream Coat",
+  "oracle_id": "988aaf54-2e46-4afc-ae37-b0a01191a1f1",
+  "rulings_uri": "https://api.scryfall.com/cards/07edbbf4-c3d6-4ec1-ae9b-4ae202fb6998/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "988aaf54-2e46-4afc-ae37-b0a01191a1f1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The color change does not wear off at end of turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "988aaf54-2e46-4afc-ae37-b0a01191a1f1",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can choose any single color or combination of colors. The valid colors are Black, Blue, Green, Red, and White."
+    }
+  ]
+}

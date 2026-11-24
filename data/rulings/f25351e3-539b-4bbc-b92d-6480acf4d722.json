@@ -1,0 +1,29 @@
+{
+  "name": "City of Brass",
+  "oracle_id": "f25351e3-539b-4bbc-b92d-6480acf4d722",
+  "rulings_uri": "https://api.scryfall.com/cards/c21565d0-fc40-4d89-9b27-87c03385e0af/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f25351e3-539b-4bbc-b92d-6480acf4d722",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "On the other hand, you can tap City of Brass, put its triggered ability on the stack, and then respond to that ability by casting an instant or activating an ability using that mana. In that case, the instant spell or activated ability will resolve first."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "f25351e3-539b-4bbc-b92d-6480acf4d722",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The first ability triggers no matter how the land becomes tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "f25351e3-539b-4bbc-b92d-6480acf4d722",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you tap City of Brass while you are casting a spell or activating an ability, its ability will trigger and wait. When you finish casting that spell or activating that ability, City of Brass's triggered ability is put on the stack on top of it. City of Brass's ability will resolve first."
+    }
+  ]
+}

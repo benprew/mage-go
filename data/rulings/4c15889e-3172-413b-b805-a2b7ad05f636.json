@@ -1,0 +1,15 @@
+{
+  "name": "Volcanic Eruption",
+  "oracle_id": "4c15889e-3172-413b-b805-a2b7ad05f636",
+  "rulings_uri": "https://api.scryfall.com/cards/5828713a-edb3-4b11-b1f9-8f1bfc3c103f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "4c15889e-3172-413b-b805-a2b7ad05f636",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used with X equal to zero. This is useful if no Mountains are on the battlefield."
+    }
+  ]
+}

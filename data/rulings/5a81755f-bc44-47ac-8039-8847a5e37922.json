@@ -1,0 +1,29 @@
+{
+  "name": "Brainwash",
+  "oracle_id": "5a81755f-bc44-47ac-8039-8847a5e37922",
+  "rulings_uri": "https://api.scryfall.com/cards/0afcbd6d-2b83-4393-9fc8-fe91f86117fe/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5a81755f-bc44-47ac-8039-8847a5e37922",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Paying this cost is not an instant or any other kind of ability, it is an additional cost on the declaration of the attacker."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5a81755f-bc44-47ac-8039-8847a5e37922",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This ability is paid for during the declare attackers step of the combat phase."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5a81755f-bc44-47ac-8039-8847a5e37922",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If there are multiple combat phases during the turn, the attack cost must be paid each time if you want to attack with the creature."
+    }
+  ]
+}

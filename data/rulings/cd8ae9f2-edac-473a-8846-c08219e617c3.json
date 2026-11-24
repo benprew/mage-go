@@ -1,0 +1,15 @@
+{
+  "name": "Steal Artifact",
+  "oracle_id": "cd8ae9f2-edac-473a-8846-c08219e617c3",
+  "rulings_uri": "https://api.scryfall.com/cards/810f874e-98e1-402b-b48e-14c3e2a624f0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cd8ae9f2-edac-473a-8846-c08219e617c3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used on artifact creatures."
+    }
+  ]
+}

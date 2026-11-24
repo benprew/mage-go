@@ -1,0 +1,29 @@
+{
+  "name": "Dwarven Catapult",
+  "oracle_id": "2aae77ed-1a91-41f5-8dc2-e353d63a7586",
+  "rulings_uri": "https://api.scryfall.com/cards/9d6310cd-95e2-4e8c-952f-f7c572726a01/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2aae77ed-1a91-41f5-8dc2-e353d63a7586",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Count the number of creatures on resolution of the spell and divide X by that number at that time. If the number of creatures changes before resolution, the damage done may be different than what you expected."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2aae77ed-1a91-41f5-8dc2-e353d63a7586",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "For example, if X is 5 and the targeted opponent controls three creatures, Dwarven Catapult deals 1 damage to each of those creatures."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2aae77ed-1a91-41f5-8dc2-e353d63a7586",
+      "source": "wotc",
+      "published_at": "2014-02-01",
+      "comment": "If the targeted opponent controls more than X creatures, no damage will be dealt to any of them."
+    }
+  ]
+}

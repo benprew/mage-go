@@ -1,0 +1,22 @@
+{
+  "name": "Deep Water",
+  "oracle_id": "cf9ef041-5396-4f18-8233-42d667db0888",
+  "rulings_uri": "https://api.scryfall.com/cards/9dd6a230-6bc0-499c-b7fd-4aaa2569f98f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cf9ef041-5396-4f18-8233-42d667db0888",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Deep Waters affects lands you control when it resolves and any lands you gain control of this turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "cf9ef041-5396-4f18-8233-42d667db0888",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The amount of mana produced is unchanged, but it will all be {U}."
+    }
+  ]
+}

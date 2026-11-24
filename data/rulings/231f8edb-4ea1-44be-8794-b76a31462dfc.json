@@ -1,0 +1,22 @@
+{
+  "name": "Divine Offering",
+  "oracle_id": "231f8edb-4ea1-44be-8794-b76a31462dfc",
+  "rulings_uri": "https://api.scryfall.com/cards/fe7c7a65-5a96-4986-877b-b34583092bb6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "231f8edb-4ea1-44be-8794-b76a31462dfc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the target artifact becomes illegal before resolution, you do not gain any life."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "231f8edb-4ea1-44be-8794-b76a31462dfc",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "If Divine Offering resolves, but the artifact regenerates or has indestructible, you'll still gain the life."
+    }
+  ]
+}

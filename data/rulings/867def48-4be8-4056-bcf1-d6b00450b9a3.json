@@ -1,0 +1,71 @@
+{
+  "name": "Library of Leng",
+  "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+  "rulings_uri": "https://api.scryfall.com/cards/c2fbf45f-9599-42e2-8510-7e20731e6c68/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can look at a randomly discarded card before deciding where it goes."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability replaces the normal discard action with a discard action that puts the card on the library instead of the graveyard."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The discard triggers anything else that triggers on discards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability applies any time a spell or ability has you discard as part of its effect. It does not matter if you or your opponent control the spell or ability. The discard is forced because it is an effect."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can't use the Library of Leng ability to place a discarded card on top of your library when you discard a card as a cost, because costs aren't effects."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If more than one card is discarded due to a single effect, the Library allows you to decide whether or not to use it on each of the cards. You get to decide the order the cards are placed on the library if more than one goes there."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This effect has no effect on the cards being put into the graveyard from a library, because they are not \"discarded\"."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since the card goes directly to the library, the card is not revealed unless the spell or ability requiring the discard specifically says it is."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "867def48-4be8-4056-bcf1-d6b00450b9a3",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If multiple effects modify your hand size, apply them in timestamp order. For example, if you put Null Profusion (an enchantment that says your maximum hand size is two) onto the battlefield and then put Library of Leng onto the battlefield, you'll have no maximum hand size. However, if those permanents entered in the opposite order, your maximum hand size would be two."
+    }
+  ]
+}

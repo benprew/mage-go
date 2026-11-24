@@ -1,0 +1,15 @@
+{
+  "name": "Bottle of Suleiman",
+  "oracle_id": "f32d19d6-8ac1-4744-b2c2-5c9d4cd0da70",
+  "rulings_uri": "https://api.scryfall.com/cards/ab5afd8a-f689-4f5a-9c60-96f09c92e5a0/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f32d19d6-8ac1-4744-b2c2-5c9d4cd0da70",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The coin is flipped on resolution and not on declaration of the ability."
+    }
+  ]
+}

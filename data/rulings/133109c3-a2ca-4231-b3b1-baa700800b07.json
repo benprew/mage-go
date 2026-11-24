@@ -1,0 +1,15 @@
+{
+  "name": "Primordial Ooze",
+  "oracle_id": "133109c3-a2ca-4231-b3b1-baa700800b07",
+  "rulings_uri": "https://api.scryfall.com/cards/a53d8d6d-b8d3-4f71-a88a-5d639ce2925f/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "133109c3-a2ca-4231-b3b1-baa700800b07",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It becomes tapped even if the damage is prevented."
+    }
+  ]
+}

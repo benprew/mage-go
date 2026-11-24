@@ -1,0 +1,36 @@
+{
+  "name": "Old Man of the Sea",
+  "oracle_id": "cce84cf1-5574-43b0-9d75-72e6451403a7",
+  "rulings_uri": "https://api.scryfall.com/cards/9029ff19-753d-4031-a192-d36b165ebfe5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cce84cf1-5574-43b0-9d75-72e6451403a7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You lose control of the creature if the Old Man leaves the battlefield. This is because it is no longer tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "cce84cf1-5574-43b0-9d75-72e6451403a7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The ability doesn’t care whether Old Man of the Sea remains under your control, only that Old Man of the Sea remains tapped and its power remains large enough. If an opponent gains control of Old Man of the Sea, you’ll keep control of the affected creature (until Old Man of the Sea stops being tapped or it no longer has enough power)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "cce84cf1-5574-43b0-9d75-72e6451403a7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Once the ability resolves, it doesn’t care whether the targeted permanent remains a legal target for the ability, only that it’s on the battlefield and its power remains small enough. The effect will continue to apply to it even if it gains shroud, stops being a creature, or would no longer be a legal target for any other reason. If it stops being a creature, its power is considered to be 0."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "cce84cf1-5574-43b0-9d75-72e6451403a7",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Old Man of the Sea stops being tapped before its ability resolves — even if it becomes tapped again right away — you won’t gain control of the targeted creature at all. The same is true if the targeted creature’s power becomes greater than Old Man of the Sea’s power before the ability resolves."
+    }
+  ]
+}

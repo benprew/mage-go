@@ -1,0 +1,57 @@
+{
+  "name": "Fellwar Stone",
+  "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+  "rulings_uri": "https://api.scryfall.com/cards/3ef87948-0ad9-4757-a692-2262c8e24367/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It only produces one mana even if the land can produce more than one."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This works even if the opponent's lands are tapped. It only checks what kinds of mana can be produced, not if the abilities that produce them are usable right now."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability can be activated if the opponent has no lands that produce mana, but the effect will not be able to generate any mana."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Fellwar Stone doesn't care about any restrictions or riders your opponents' lands (such as Ancient Ziggurat or Hall of the Bandit Lord) put on the mana they produce. It just cares about colors of mana."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When determining what colors of mana your opponents' lands could produce, take into account any applicable replacement effects that would apply to those lands' mana abilities (such as Contamination's effect, for example). If there is more than one, consider them in any possible order."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Fellwar Stone checks the effects of all mana-producing abilities of lands your opponents control, but it doesn't check their costs. For example, Vivid Crag has the ability \"{T}, Remove a charge counter from Vivid Crag: Add one mana of any color.\" If an opponent controls Vivid Crag and you control Fellwar Stone, you can tap Fellwar Stone for any color of mana. It doesn't matter whether Vivid Crag has a charge counter on it, and it doesn't matter whether it's untapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The colors of mana are white, blue, black, red, and green. Fellwar Stone can't be tapped for colorless mana, even if a land an opponent controls could produce colorless mana."
+    }
+  ]
+}
