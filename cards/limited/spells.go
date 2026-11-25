@@ -311,9 +311,14 @@ func registerSpells() {
 		)
 	})
 
+	// Fireball {X}{R}
+	// Sorcery
+	// This spell costs {1} more to cast for each target beyond the first.
+	// Fireball deals X damage divided evenly, rounded down, among any number of targets.
 	Register("Fireball", func() *Card {
 		return NewSorcery("Fireball", "{X}{R}",
-			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(XValue())),
+			NewTargetedSpell(TargetDamageAnyNumberOfTargets(), DealDamageDividedEvenly(XValue())),
+			WithAdditionalCost(ManaCostPerTargetBeyondFirst("{1}")),
 		)
 	})
 

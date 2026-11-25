@@ -367,6 +367,10 @@
 // succeeds. A canceled transaction leaves mana pools, life totals, tapped
 // states, cards, counters, and other resources unchanged.
 //
+// For a spell, use the announced X to calculate each mana cost. Cost increases
+// and reductions apply to the combined mana cost. The spell keeps the
+// announced X on the stack.
+//
 // [AutoTapHint.ReservedSources] excludes specified permanents from mana
 // planning. Attack-cost payments reserve the attacking creature. An activated
 // ability with a tap cost reserves its source permanent. This reservation

@@ -28,7 +28,6 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Guardian Angel** — after the initial X prevention, its controller must be able to pay `{1}` repeatedly to prevent another 1 damage through end of turn.
 - **Blue Elemental Blast** — lacks its destroy-permanent mode; modal choices currently cannot declare targets in different zones.
 - **Drain Life** — X can use nonblack mana, and life gain is calculated from X rather than the damage actually dealt after prevention or replacement effects.
-- **Fireball** — needs any-number targeting, the extra generic cost for each target beyond the first, and evenly divided damage rounded down.
 - **Disintegrate** — needs the "if it would die this turn, exile it instead" replacement effect.
 - **Sacrifice** — sacrificing a creature is implemented as a targeted resolving effect rather than an additional cost and is not restricted to a creature the caster controls.
 - **Natural Selection** — randomly shuffles only the top three cards instead of letting the caster order them and optionally shuffle the full library.
