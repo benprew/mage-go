@@ -320,9 +320,8 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	return getAvailableActions(g, playerID, true)
 }
 
-// GetAvailableActionsWithoutLabels returns legal actions without UI-only label
-// strings. It is intended for non-interactive callers that only need action
-// metadata.
+// GetAvailableActionsWithoutLabels returns legal actions without details that
+// only the UI uses.
 func GetAvailableActionsWithoutLabels(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	return getAvailableActions(g, playerID, false)
 }
@@ -388,6 +387,9 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		}
 		if mc.HasX {
 			opt.NeedsX = true
+			if includeLabels && needsTarget {
+				opt.MaxXByTargetCount = g.SpellMaxXByTargetCount(playerID, card, validTargets)
+			}
 			if len(xTargetOptions) > 0 {
 				opt.MaxXValue = xTargetOptions[len(xTargetOptions)-1].XValue
 			} else {

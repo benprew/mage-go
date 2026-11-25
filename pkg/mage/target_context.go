@@ -2,6 +2,7 @@ package mage
 
 import (
 	"slices"
+	"sort"
 	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -292,10 +293,7 @@ func (g *Game) SpellTargetOptions(controller uuid.UUID, card *Card, values ...in
 		slices.Sort(values)
 		values = slices.Compact(values)
 	}
-	targetReduction := slices.ContainsFunc(card.abilities, func(ability Ability) bool {
-		reduction, ok := UnwrapAbility(ability).(*SelfCostReductionAbility)
-		return ok && reduction.TargetPredicate != nil
-	})
+	targetReduction := hasTargetCostReduction(card)
 	var result []SpellTargetOption
 	for _, x := range values {
 		if x < 0 {
@@ -325,6 +323,49 @@ func (g *Game) SpellTargetOptions(controller uuid.UUID, card *Card, values ...in
 		}
 	}
 	return result
+}
+
+func hasTargetCostReduction(card *Card) bool {
+	return slices.ContainsFunc(card.abilities, func(ability Ability) bool {
+		reduction, ok := UnwrapAbility(ability).(*SelfCostReductionAbility)
+		return ok && reduction.TargetPredicate != nil
+	})
+}
+
+// SpellMaxXByTargetCount reports the highest payable X for each number of
+// targets, starting with one. It applies to spells with a cost per extra target.
+// Use it with legal candidates when target identity does not change the cost.
+func (g *Game) SpellMaxXByTargetCount(controller uuid.UUID, card *Card, candidates []uuid.UUID) []int {
+	cost := card.ManaCost()
+	targets := card.CastTargets()
+	if !cost.HasX || len(targets) != 1 || targets[0].Min() != 1 || targets[0].Max() <= 1 ||
+		TargetsUseX(targets) || hasTargetCostReduction(card) {
+		return nil
+	}
+	if !slices.ContainsFunc(card.AdditionalCosts(), func(cost Cost) bool {
+		_, ok := cost.(*manaCostPerTargetBeyondFirst)
+		return ok
+	}) {
+		return nil
+	}
+	player := g.GetPlayer(controller)
+	if player == nil {
+		return nil
+	}
+
+	var limits []int
+	upper := g.spellTargetXLimit(player, card, cost)
+	for i := range min(len(candidates), targets[0].Max()) {
+		selected := candidates[:i+1]
+		if !g.canAffordSpellAnnouncement(player, card, 0, selected) {
+			break
+		}
+		upper = sort.Search(upper, func(x int) bool {
+			return !g.canAffordSpellAnnouncement(player, card, x+1, selected)
+		})
+		limits = append(limits, upper)
+	}
+	return limits
 }
 
 func (g *Game) spellTargetXLimit(player Player, card *Card, cost ManaCost) int {
