@@ -301,6 +301,65 @@ func TestSolveMana_PrunesImpossibleColoredCostBeforeSubsetSearch(t *testing.T) {
 	}
 }
 
+func TestSolveMana_PrunesImpossibleCostWithMatchingBonuses(t *testing.T) {
+	mountain := testSolverSource(uuid.New(), Red, 1)
+	mountain.Bonuses = []ManaBonusColor{MatchProduced}
+	plains := testSolverSource(uuid.New(), White, 1)
+	plains.Bonuses = []ManaBonusColor{MatchProduced}
+	stats := &manaSearchStats{}
+	if _, ok := searchManaForGoal(ManaSolverInputs{
+		Cost:    ManaCost{Red: 3},
+		Sources: []manaSourceInfo{mountain, plains},
+	}, manaSearchFeasible, stats); ok {
+		t.Fatal("one Mountain and one Plains with Mana Flare cannot pay three red mana")
+	}
+	if stats.ExpandedNodes != 1 {
+		t.Fatalf("impossible colored cost expanded %d nodes, want only the root", stats.ExpandedNodes)
+	}
+}
+
+func TestSolveMana_MatchingBonusCanUseRestrictedProductionColor(t *testing.T) {
+	source := testSolverSource(uuid.New(), AnyColor, 1)
+	source.Abilities[0].Productions[0].Restriction = ArtifactSpellsOnly{}
+	source.Bonuses = []ManaBonusColor{MatchProduced}
+	if _, err := SolveMana(ManaSolverInputs{
+		Cost:    ManaCost{Red: 1},
+		Sources: []manaSourceInfo{source},
+	}); err != nil {
+		t.Fatalf("unrestricted matching bonus should pay one red mana: %v", err)
+	}
+}
+
+func TestCanSolveMana_PrefersPathsTowardColorRequirement(t *testing.T) {
+	sources := make([]manaSourceInfo, 0, 13)
+	for range 5 {
+		mountain := testSolverSource(uuid.New(), Red, 1)
+		mountain.Bonuses = []ManaBonusColor{MatchProduced}
+		sources = append(sources, mountain)
+	}
+	for _, color := range []Color{White, White, Blue, Green, Black} {
+		source := testSolverSource(uuid.New(), color, 1)
+		source.Bonuses = []ManaBonusColor{MatchProduced}
+		sources = append(sources, source)
+	}
+	for range 2 {
+		sources = append(sources, testSolverSource(uuid.New(), AnyColor, 1))
+	}
+	prism := testSolverSource(uuid.New(), AnyColor, 1)
+	prism.Abilities[0].ManaCost = ManaCost{Generic: 2}
+	sources = append(sources, prism)
+	stats := &manaSearchStats{}
+	if _, ok := searchManaForGoal(ManaSolverInputs{
+		Cost:    ManaCost{Red: 13},
+		Sources: sources,
+	}, manaSearchFeasible, stats); !ok {
+		t.Fatal("the sources can pay thirteen red mana")
+	}
+	if limit := 2 * len(sources); stats.ExpandedNodes > limit {
+		t.Fatalf("affordability check expanded %d nodes, want at most %d", stats.ExpandedNodes, limit)
+	}
+}
+
 func TestSolveMana_RestrictedProductionUsesSpellContext(t *testing.T) {
 	workshopID := uuid.New()
 	inputs := ManaSolverInputs{
