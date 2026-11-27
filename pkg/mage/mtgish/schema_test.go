@@ -36,16 +36,6 @@ func TestParseMtgishJSON(t *testing.T) {
 	if damage["_Action"] != "SpellDealsDamage" || args[1].(map[string]any)["args"] != float64(3) || args[2].(map[string]any)["_DamageRecipient"] != "Ref_AnyTarget" {
 		t.Fatalf("unexpected damage action: %v", damage)
 	}
-	var original, preserved any
-	if err := json.Unmarshal(data, &original); err != nil {
-		t.Fatal(err)
-	}
-	if err := json.Unmarshal(card.Raw, &preserved); err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(original, preserved) {
-		t.Fatal("card data was lost")
-	}
 }
 
 func TestMtgishCardToCardDefinitionSpec(t *testing.T) {
@@ -117,7 +107,6 @@ func TestMtgishCardToCardDefinitionSpecMana(t *testing.T) {
 		kinds []string
 		want  core.ManaCost
 	}{
-		{nil, core.ManaCost{}},
 		{[]string{"ManaCostW", "ManaCostU", "ManaCostU", "ManaCostB", "ManaCostR", "ManaCostG", "ManaCostC"}, core.ManaCost{White: 1, Blue: 2, Black: 1, Red: 1, Green: 1, Colorless: 1}},
 		{[]string{"ManaCostWU", "ManaCostUB", "ManaCostBR", "ManaCostRG", "ManaCostGW", "ManaCostWB", "ManaCostUR", "ManaCostBG", "ManaCostRW", "ManaCostGU"}, core.ManaCost{Hybrid: []core.HybridSymbol{
 			{A: core.White, B: core.Blue}, {A: core.Blue, B: core.Black}, {A: core.Black, B: core.Red},
@@ -146,11 +135,6 @@ func TestMtgishCardToCardDefinitionSpecManaFromJSON(t *testing.T) {
 		mana string
 		want core.ManaCost
 	}{
-		{
-			name: "no mana cost",
-			mana: `[]`,
-			want: core.ManaCost{},
-		},
 		{
 			name: "zero generic",
 			mana: `[{"_ManaSymbol":"ManaCostGeneric","args":0}]`,
@@ -262,6 +246,7 @@ func TestMtgishCardToCardDefinitionSpecUnsupportedManaFromJSON(t *testing.T) {
 			if err == nil || !reflect.DeepEqual(card, CardDefinitionSpec{}) {
 				t.Fatalf("unsupported cost produced a spec: %+v, %v", card, err)
 			}
+			requireDiagnostic(t, err, EngineGap, "/ManaCost/1", "_ManaSymbol", tt.kind)
 		})
 	}
 }
@@ -274,11 +259,9 @@ func TestMtgishCardToCardDefinitionSpecErrors(t *testing.T) {
 		}
 	}
 	for _, input := range []string{
-		`{"_OracleCard":"Split","Cards":[]}`,
 		`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Battle"]}}`,
-		`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Creature"],"Supertypes":["Unknown"]}}`,
-		`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Creature"]},"ColorIndicator":["Unknown"]}`,
-		`{"_OracleCard":"Card","Name":"Test"}`,
+		`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Artifact"],"Supertypes":["Unknown"]},"ManaCost":[{"_ManaSymbol":"ManaCostGeneric","args":0}]}`,
+		`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Artifact"]},"ManaCost":[{"_ManaSymbol":"ManaCostGeneric","args":0}],"ColorIndicator":["Unknown"]}`,
 	} {
 		source, err := ParseMtgishJSON([]byte(input))
 		if err != nil {
@@ -303,7 +286,7 @@ func TestParseMtgishJSONManaSymbols(t *testing.T) {
 	}
 	for _, kind := range kinds {
 		t.Run(kind, func(t *testing.T) {
-			input := []byte(`{"_OracleCard":"Card","Name":"Test","ManaCost":[{"_ManaSymbol":"` + kind + `"}]}`)
+			input := []byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Instant"]},"ManaCost":[{"_ManaSymbol":"` + kind + `"}]}`)
 			card, err := ParseMtgishJSON(input)
 			if err != nil {
 				t.Fatal(err)
@@ -324,7 +307,7 @@ func TestParseMtgishJSONManaSymbols(t *testing.T) {
 }
 
 func TestParseMtgishJSONMixedManaCost(t *testing.T) {
-	input := []byte(`{"_OracleCard":"Card","Name":"Test","ManaCost":[
+	input := []byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Instant"]},"ManaCost":[
 		{"_ManaSymbol":"ManaCostGeneric","args":0},
 		{"_ManaSymbol":"ManaCostGeneric","args":3},
 		{"_ManaSymbol":"ManaCostX"},{"_ManaSymbol":"ManaCostX"},
@@ -373,7 +356,7 @@ func TestParseMtgishJSONInvalidMana(t *testing.T) {
 		`{"_ManaSymbol":"ManaCostWU","args":[]}`,
 	} {
 		t.Run(symbol, func(t *testing.T) {
-			input := []byte(`{"_OracleCard":"Card","Name":"Test","ManaCost":[` + symbol + `]}`)
+			input := []byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Instant"]},"ManaCost":[` + symbol + `]}`)
 			if _, err := ParseMtgishJSON(input); err == nil {
 				t.Fatalf("accepted invalid mana: %s", symbol)
 			}
@@ -389,14 +372,9 @@ func TestParseMtgishJSONErrors(t *testing.T) {
 	}
 }
 
-func TestParseMtgishJSONPreservesSplitCard(t *testing.T) {
+func TestParseMtgishJSONRejectsSplitCard(t *testing.T) {
 	data := []byte(`{"_OracleCard":"Split","Cards":[{"Name":"Fire","Rules":[]},{"Name":"Ice","Rules":[]}]}`)
-	card, err := ParseMtgishJSON(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	data[0] = '['
-	if card.Kind != "Split" || card.Raw[0] != '{' || !json.Valid(card.Raw) {
-		t.Fatalf("split card was not preserved: %+v", card)
+	if card, err := ParseMtgishJSON(data); err == nil || !reflect.DeepEqual(card, MtgishCard{}) {
+		t.Fatalf("accepted an unsupported card form: %+v, %v", card, err)
 	}
 }

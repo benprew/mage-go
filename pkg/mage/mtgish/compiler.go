@@ -2,8 +2,8 @@
 package mtgish
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -14,17 +14,14 @@ import (
 // Compile validates all card rules before it returns a shared definition.
 // Unsupported rules and fields cause an error with the card name and source path.
 func Compile(card MtgishCard) (*mage.CardDefinition, error) {
-	if err := validateFields(card); err != nil {
-		return nil, err
-	}
 	spec, err := card.ToCardDefinitionSpec()
 	if err != nil {
-		return nil, fmt.Errorf("mtgish card %q: %w", card.Name, err)
+		return nil, err
 	}
 	for i, raw := range card.Rules {
-		ability, err := compileAbility(raw)
+		ability, err := compileAbility(raw, indexPath("/Rules", i))
 		if err != nil {
-			return nil, fmt.Errorf("mtgish card %q: Rules[%d]: %w", card.Name, i, err)
+			return nil, withCard(err, card.Name)
 		}
 		spec.Abilities = append(spec.Abilities, ability)
 	}
@@ -38,24 +35,61 @@ func Compile(card MtgishCard) (*mage.CardDefinition, error) {
 			}
 		}
 	}
-	return mage.NewCardDefinition(spec)
+	definition, err := mage.NewCardDefinition(spec)
+	if err != nil {
+		return nil, withCard(err, card.Name)
+	}
+	return definition, nil
 }
 
-func compileAbility(raw json.RawMessage) (mage.Ability, error) {
-	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &fields); err != nil {
-		return nil, fmt.Errorf("expected a rule object: %w", err)
+type taggedNode struct {
+	Family string
+	Tag    string
+	Args   json.RawMessage
+}
+
+func decodeTaggedNode(raw json.RawMessage, family, path string) (taggedNode, error) {
+	fields, err := objectFields(raw, path)
+	if err != nil {
+		return taggedNode{}, err
 	}
-	var tag string
-	if err := json.Unmarshal(fields["_Rule"], &tag); err != nil || tag == "" {
-		return nil, fmt.Errorf("rule requires a string _Rule tag")
+	node := taggedNode{Family: family, Args: fields["args"]}
+	_ = json.Unmarshal(fields[family], &node.Tag)
+	if err := checkFields(fields, path, family, "args"); err != nil {
+		return taggedNode{}, withNode(err, node)
 	}
-	keyword, ok := keywords[tag]
+	if err := decodeValue(fields[family], pointerPath(path, family), &node.Tag); err != nil {
+		return taggedNode{}, withNode(err, node)
+	}
+	if node.Tag == "" {
+		return taggedNode{}, diagnostic(pointerPath(path, family), InvalidInput, family, "", "expected a nonempty tag")
+	}
+	return node, nil
+}
+
+func withNode(err error, node taggedNode) error {
+	if source, ok := errors.AsType[*CompileError](err); ok {
+		result := *source
+		result.Family, result.Tag = node.Family, node.Tag
+		return &result
+	}
+	return err
+}
+
+func compileAbility(raw json.RawMessage, path string) (mage.Ability, error) {
+	if err := validateJSONDepth(raw, path, 2); err != nil {
+		return nil, err
+	}
+	node, err := decodeTaggedNode(raw, "_Rule", path)
+	if err != nil {
+		return nil, err
+	}
+	keyword, ok := keywords[node.Tag]
 	if !ok {
-		return nil, fmt.Errorf("unsupported rule %q", tag)
+		return nil, diagnostic(path, UnsupportedConstruct, node.Family, node.Tag, fmt.Sprintf("unsupported rule %q", node.Tag))
 	}
-	if len(fields) != 1 {
-		return nil, fmt.Errorf("rule %q does not accept arguments or other fields", tag)
+	if len(node.Args) != 0 {
+		return nil, diagnostic(pointerPath(path, "args"), InvalidInput, node.Family, node.Tag, "keyword does not accept args")
 	}
 	return mage.NewAttributeAbility(keyword), nil
 }
@@ -67,22 +101,6 @@ var keywords = map[string]core.Attr{
 	"Lifelink": core.Lifelink, "Menace": core.Menace, "Reach": core.Reach,
 	"Shroud": core.Shroud, "Trample": core.Trample, "Vigilance": core.Vigilance,
 	"Banding": core.Banding, "Fear": core.Fear,
-}
-
-func validateFields(card MtgishCard) error {
-	if len(card.Raw) == 0 {
-		return nil
-	}
-	decoder := json.NewDecoder(bytes.NewReader(card.Raw))
-	decoder.DisallowUnknownFields()
-	var source MtgishCard
-	if err := decoder.Decode(&source); err != nil {
-		return fmt.Errorf("mtgish card %q: invalid source record: %w", card.Name, err)
-	}
-	if source.Kind == "" {
-		return fmt.Errorf("mtgish card %q: source record requires _OracleCard", card.Name)
-	}
-	return nil
 }
 
 var basicLandColors = map[string]core.Color{
