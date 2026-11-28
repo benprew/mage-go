@@ -66,6 +66,8 @@
 // Each active continuous effect owns its source binding and execution state.
 // Static definitions can be shared by cards, permanents, and simulation branches.
 // Layer application keeps registration order within each layer.
+// [RunStepWithPriority] removes effects that expire at the start of upkeep
+// before it applies layers and checks upkeep triggers.
 //
 // [Card.NewCopy] creates a new identity and retains the copiable definition.
 // [Card.CloneInstance] retains identity for a simulation branch. [Game.Clone]

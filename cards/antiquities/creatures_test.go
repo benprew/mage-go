@@ -277,16 +277,30 @@ func TestXenicPoltergeist(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 4, 4)
 	})
 
-	t.Run("animation expires at controller's next upkeep", func(t *testing.T) {
+	t.Run("animation expires before priority in the controller's next upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Xenic Poltergeist")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // CMC 4 artifact
+		tomeID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome")
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Xenic Poltergeist", "Jayemdae Tome")
-		// By PlayerA's next precombat main (turn 3), the effect should have expired at upkeep
-		g.StopAt(3, core.PrecombatMain)
+		g.StopAt(3, core.Untap)
 		g.Execute()
-		// Jayemdae Tome should no longer be a creature — assert it has its normal 0/0 (noncreature)
-		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 0, 0)
+		g.RunStepWithPriority(core.Untap)
+		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 4, 4)
+
+		sawPriority := false
+		g.OnPriority = func(game *mage.Game, _ int, _ bool) mage.PriorityAction {
+			sawPriority = true
+			tome := game.FindPermanent(tomeID)
+			if tome == nil || !tome.HasType(core.TypeArtifact) || tome.HasType(core.TypeCreature) {
+				t.Error("Jayemdae Tome must be a noncreature artifact at upkeep priority")
+			}
+			g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 0, 0)
+			return mage.PriorityAction{Type: mage.PriorityAbort}
+		}
+		g.RunStepWithPriority(core.Upkeep)
+		if !sawPriority {
+			t.Fatal("the game did not reach upkeep priority")
+		}
 	})
 }
 

@@ -2729,9 +2729,6 @@ func (g *Game) doUntap() {
 func (g *Game) doUpkeepActions() {
 	active := g.ActivePlayerObj()
 
-	// Expire "until your next upkeep" effects for the active player.
-	g.effects.RemoveUntilYourNextTurn(g, active.PlayerID())
-
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,
 		PlayerID: active.PlayerID(),

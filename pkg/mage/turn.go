@@ -33,6 +33,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		return
 	}
 	g.turns.SetStep(step)
+	if step == Upkeep {
+		g.effects.RemoveUntilYourNextTurn(g, g.ActivePlayerObj().PlayerID())
+	}
 
 	defer func() {
 		if g.stopped {
