@@ -450,7 +450,8 @@
 // [ApplyToRandomPlayer], and [ApplyToRandomDamageTarget] wrap an [Effect].
 // They choose the target during effect resolution.
 // [SetSourceChosenColorAtRandom] and [ChangeSourceToRandomColor] set a random
-// color on the source object.
+// color on the source object. A change to the chosen color updates continuous
+// effects that use the source's mana production.
 // [ChooseRandomCreatureSubtypeFromTargetLibrary] selects a creature subtype
 // from a library and stores it in the ChosenSubtype field.
 // [TargetCreatureOfSourceChosenSubtype] targets creatures that match that

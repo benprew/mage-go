@@ -114,8 +114,14 @@ func (*setSourceChosenColorAtRandomEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
 func (*setSourceChosenColorAtRandomEffect) Apply(ctx *EffectContext) error {
-	if source := ctx.Game.FindPermanent(ctx.SourceID); source != nil {
-		source.ChosenColor = ctx.Game.RandomColor()
+	source := ctx.Game.MutablePermanent(ctx.SourceID)
+	if source == nil {
+		return nil
+	}
+	color := ctx.Game.RandomColor()
+	if source.ChosenColor != color {
+		source.ChosenColor = color
+		ctx.Game.ApplyContinuousEffects()
 	}
 	return nil
 }

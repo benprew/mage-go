@@ -3,6 +3,7 @@ package astral
 import (
 	"testing"
 
+	_ "github.com/benprew/mage-go/cards/fourthedition" // Register Fellwar Stone.
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -74,4 +75,42 @@ func TestGemBazaar_CanAffordOnlyCurrentChosenColor(t *testing.T) {
 	if g.CanAfford(player.PlayerID(), core.ManaCost{White: 1}, nil) {
 		t.Fatal("solver treated Gem Bazaar as producing an unchosen color")
 	}
+}
+
+func TestGemBazaarUpdatesFellwarStone(t *testing.T) {
+	t.Run("when it enters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetRandomResults([]int{1})
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Fellwar Stone")
+		putGemBazaarOntoBattlefield(t, g)
+		g.ResolveStack()
+
+		stoneController := g.GetPlayer(gametest.PlayerB).PlayerID()
+		if !g.CanAfford(stoneController, core.ManaCost{Blue: 1}, nil) {
+			t.Fatal("Fellwar Stone cannot produce Gem Bazaar's first chosen color")
+		}
+	})
+
+	t.Run("after producing mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetRandomResults([]int{1, 3})
+		putGemBazaarOntoBattlefield(t, g)
+		g.ResolveStack()
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Fellwar Stone")
+
+		gemController := g.GetPlayer(gametest.PlayerA).PlayerID()
+		stoneController := g.GetPlayer(gametest.PlayerB).PlayerID()
+		if !g.CanAfford(stoneController, core.ManaCost{Blue: 1}, nil) {
+			t.Fatal("Fellwar Stone cannot produce blue before Gem Bazaar changes color")
+		}
+		if err := g.AutoTapForCost(gemController, core.ManaCost{Blue: 1}); err != nil {
+			t.Fatalf("auto-tap Gem Bazaar for blue: %v", err)
+		}
+		if g.CanAfford(stoneController, core.ManaCost{Blue: 1}, nil) {
+			t.Error("Fellwar Stone still offers blue after Gem Bazaar changes color")
+		}
+		if err := g.AutoTapForCost(stoneController, core.ManaCost{Red: 1}); err != nil {
+			t.Fatalf("auto-tap Fellwar Stone for Gem Bazaar's new color: %v", err)
+		}
+	})
 }
