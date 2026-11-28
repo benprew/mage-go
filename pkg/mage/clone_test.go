@@ -780,11 +780,22 @@ func TestCloneGameRules(t *testing.T) {
 	// Mutate clone rules.
 	c.effects.Rules.LandUntapMax = 99
 	c.effects.Rules.SpellCostIncreases[Blue] = 5
+	c.effects.Rules.SpellCostReductions[Blue] = 2
+	c.effects.Rules.SetMaxHandSize(pA.PlayerID(), 4)
 	if g.effects.Rules.LandUntapMax != 2 {
 		t.Errorf("Original LandUntapMax should still be 2, got %d", g.effects.Rules.LandUntapMax)
 	}
 	if g.effects.Rules.SpellCostIncreases[Blue] != 0 {
 		t.Errorf("Original SpellCostIncreases[Blue] should be 0, got %d", g.effects.Rules.SpellCostIncreases[Blue])
+	}
+	if got := g.effects.Rules.SpellCostReduction(Blue); got != 0 {
+		t.Errorf("Original blue spell cost reduction = %d, want 0", got)
+	}
+	if got := c.effects.Rules.MaxHandSize(pA.PlayerID()); got != 4 {
+		t.Errorf("Cloned hand size = %d, want 4", got)
+	}
+	if got := g.effects.Rules.MaxHandSize(pA.PlayerID()); got != 7 {
+		t.Errorf("Original hand size = %d, want 7", got)
 	}
 }
 
