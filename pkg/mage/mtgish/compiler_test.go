@@ -2,7 +2,6 @@ package mtgish
 
 import (
 	"encoding/json"
-	"os"
 	"strings"
 	"testing"
 	"uuid"
@@ -111,20 +110,6 @@ func TestCompileMetadataValidation(t *testing.T) {
 	card.Kind = "SplitCard"
 	if def, err := Compile(card); def != nil || err == nil {
 		t.Fatal("accepted unsupported card form")
-	}
-}
-
-func TestCompileRejectsLightningBolt(t *testing.T) {
-	data, err := os.ReadFile("../testdata/mtgish/lightning_bolt.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	card, err := ParseMtgishJSON(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if def, err := Compile(card); def != nil || err == nil || !strings.Contains(err.Error(), "SpellActions") {
-		t.Fatalf("accepted uncompiled spell actions: %v, %v", def, err)
 	}
 }
 

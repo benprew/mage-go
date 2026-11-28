@@ -1,0 +1,71 @@
+{
+  "_OracleCard": "Card",
+  "Name": "Prodigal Sorcerer",
+  "Typeline": {
+    "Supertypes": [],
+    "Cardtypes": [
+      "Creature"
+    ],
+    "Subtypes": [
+      "Human",
+      "Wizard",
+      "Sorcerer"
+    ]
+  },
+  "ManaCost": [
+    {
+      "_ManaSymbol": "ManaCostGeneric",
+      "args": 2
+    },
+    {
+      "_ManaSymbol": "ManaCostU"
+    }
+  ],
+  "Rules": [
+    {
+      "_Rule": "Activated",
+      "args": [
+        {
+          "_Cost": "TapPermanent",
+          "args": {
+            "_Permanent": "ThisPermanent"
+          }
+        },
+        {
+          "_Actions": "Targeted",
+          "args": [
+            [
+              {
+                "_Target": "AnyTarget"
+              }
+            ],
+            {
+              "_Actions": "ActionList",
+              "args": [
+                {
+                  "_Action": "PermanentDealsDamage",
+                  "args": [
+                    {
+                      "_Permanent": "ThisPermanent"
+                    },
+                    {
+                      "_GameNumber": "Integer",
+                      "args": 1
+                    },
+                    {
+                      "_DamageRecipient": "Ref_AnyTarget"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "CardPT": {
+    "Power": 1,
+    "Toughness": 1
+  }
+}

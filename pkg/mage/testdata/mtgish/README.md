@@ -30,12 +30,16 @@ Pass the parsed card to `mtgish.Compile` from `pkg/mage/mtgish` to compile its
 rules into an immutable `mage.CardDefinition`. The compiler currently supports
 Flying, FirstStrike, DoubleStrike, Deathtouch, Defender, Flash, Haste, Hexproof,
 Indestructible, Lifelink, Menace, Reach, Shroud, Trample, Vigilance, Banding, and
-Fear. Keywords use the same immutable ability specifications as executable rules.
-Instances expose them through `card.Abilities()` and the normal engine keyword
-attributes. Land subtypes supply their intrinsic mana abilities. `definition.NewInstance(owner)` creates
-a playable instance. Rules with arguments, other rules, and unknown card
-fields return errors. Loyalty and defense metadata return `engine_gap`.
-A failure returns no partial definition.
+Fear. It also compiles one `SpellActions` section per card and `Activated` rules
+with a self-tap cost. Their action lists can add fixed mana or deal fixed damage
+from the spell or activated ability's source. A `Targeted` wrapper declares
+one `AnyTarget` group for a creature, planeswalker, or player.
+
+Instances expose keywords through `card.Abilities()` and the normal engine
+keyword attributes. Basic land subtypes supply their intrinsic mana abilities.
+`definition.NewInstance(owner)` creates a playable instance. Unsupported rules
+return `unsupported_construct`. Loyalty and defense metadata return
+`engine_gap`. The compiler returns a definition only after every rule compiles.
 
 Parser, metadata, and compiler failures return `*mtgish.CompileError`. Use
 `errors.As` to read the card name, JSON Pointer path, diagnostic code, family,
@@ -55,13 +59,20 @@ mana. It returns an error for costs that the engine cannot represent, including
 snow, Phyrexian, two-generic hybrid, and colorless hybrid mana. Unknown types
 and card forms with multiple faces also return an error.
 
-The Lightning Bolt fixture comes from the top-level card named `Lightning Bolt`
-in `~/src/mtgish/data/mtgish.lines.json`, at revision
-`153451e44d88baabfeb9902092032c328f4d5416`. Its Oracle text is
-"Lightning Bolt deals 3 damage to any target." The source snapshot has SHA-256
+The fixtures come from top-level `Card` records in
+`~/src/mtgish/data/mtgish.lines.json` at revision
+`153451e44d88baabfeb9902092032c328f4d5416`. The source snapshot has SHA-256
 `f2513283c1ffd32ab954bdc10a4bd78a495f297f532c68b8c69d6f05f1e95d06`.
-Tests use the checked fixture and do not require that checkout. To refresh it
-from the mage-go root:
+Tests use the checked fixtures.
+
+| Fixture | Oracle text |
+| --- | --- |
+| [Lightning Bolt](lightning_bolt.json) | Lightning Bolt deals 3 damage to any target. |
+| [Prodigal Sorcerer](prodigal_sorcerer.json) | {T}: This creature deals 1 damage to any target. |
+| [Llanowar Elves](llanowar_elves.json) | {T}: Add {G}. |
+| [Dark Ritual](dark_ritual.json) | Add {B}{B}{B}. |
+
+To refresh the Lightning Bolt fixture, run this command from the mage-go root.
 
 ```sh
 jq -s 'map(select(._OracleCard == "Card" and .Name == "Lightning Bolt")) | if length == 1 then .[0] else error("expected one Lightning Bolt record") end' \
@@ -74,10 +85,29 @@ mtgish, use its `just rust_build_all` and `just convert_to_json` recipes.
 Its current `export_sets` script exports RON; use the full JSON file as the
 input to mage-go instead.
 
-Run the importer tests with:
+Run the importer tests with this command.
 
 ```sh
-go test ./pkg/mage/mtgish -run TestParseMtgishJSON
+go test ./pkg/mage/mtgish
 ```
+
+## Corpus audit
+
+The [compiled-card list](../../../../mtgish-compiled-cards.json) includes the
+input checksums and test results. To regenerate it from the mage-go root, point
+the audit at the mtgish data directory containing `mtgish.lines.json` and
+`oracle.json`.
+
+```sh
+MTGISH_AUDIT_DATA="$HOME/src/mtgish/data" \
+MTGISH_AUDIT_REPORT="$PWD/mtgish-compiled-cards.json" \
+  go test ./pkg/mage/mtgish -run '^TestMtgishCorpus$' -count=1
+```
+
+The audit checks printed characteristics and abilities against the Oracle
+snapshot. It plays permanents, casts spells, and activates mana and damage
+abilities through the game API. Each damage action is tested against a player,
+a creature, and a planeswalker. The report lists every compiled card in
+alphabetical order and records how many cards the test ran.
 
 Validated against mtgish revision `153451e44d88baabfeb9902092032c328f4d5416`.

@@ -334,7 +334,7 @@ func (ds *DamageSystem) DealDamageToPermanent(g *Game, perm *Permanent, amount i
 	g.executeAction(result)
 }
 
-// ExecuteDamageToCreature applies damage to a creature after all replacements have been applied.
+// ExecuteDamageToCreature applies damage to a permanent after replacement effects.
 func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureAction) {
 	perm := g.MutablePermanent(a.PermanentID())
 	if perm == nil {
@@ -343,7 +343,14 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	amount := a.Amount()
 	sourceID := a.ActionSource()
 
-	perm.Damage += amount
+	planeswalker := perm.HasType(TypePlaneswalker)
+	if planeswalker {
+		perm.RemoveCounter(Loyalty, min(amount, int(perm.Counters[Loyalty])))
+	}
+	markDamage := !planeswalker || perm.HasType(TypeCreature)
+	if markDamage {
+		perm.Damage += amount
+	}
 	if ds.damageDealtBy[perm.ID()] == nil {
 		ds.damageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
 	}
@@ -371,7 +378,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		ds.onDamageDealt(sourceName, perm.Name(), amount, ds.resolvingCombatDamage)
 	}
 	src := g.FindPermanent(sourceID)
-	if src != nil && amount > 0 {
+	if markDamage && src != nil && amount > 0 {
 		if src.HasKeyword(Deathtouch) {
 			perm.Damage = perm.CurrentToughness(g)
 		} else if src.HasKeyword(BasiliskTouch) && !perm.HasSubType("Wall") {

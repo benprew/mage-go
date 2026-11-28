@@ -31,6 +31,30 @@ func TestRegistryIsolation(t *testing.T) {
 	}
 }
 
+func TestRegistryDefinitionTakesPrecedence(t *testing.T) {
+	registry := NewRegistry()
+	const name = "Test Land"
+	definition := NewLand(name).Definition()
+	if err := registry.RegisterDefinition(definition); err != nil {
+		t.Fatal(err)
+	}
+	registry.Register(name, func() *Card {
+		t.Error("CreateCard called the factory for a registered definition")
+		return NewLand(name)
+	})
+
+	card, err := registry.CreateCard(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if card.Definition() != definition {
+		t.Fatal("CreateCard did not use the registered definition")
+	}
+	if names := registry.RegisteredCardNames(); len(names) != 1 || names[0] != name {
+		t.Fatalf("registered names = %v, want one entry for %q", names, name)
+	}
+}
+
 func TestRegistryDiacriticFold(t *testing.T) {
 	r := NewRegistry()
 	r.Register("El-Hajjâj", func() *Card { return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1) })
