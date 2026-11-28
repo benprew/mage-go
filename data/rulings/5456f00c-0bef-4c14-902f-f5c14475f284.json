@@ -1,0 +1,29 @@
+{
+  "name": "Aisling Leprechaun",
+  "oracle_id": "5456f00c-0bef-4c14-902f-f5c14475f284",
+  "rulings_uri": "https://api.scryfall.com/cards/640a161d-ad7b-4e5b-8f2d-d3753cb9daa3/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5456f00c-0bef-4c14-902f-f5c14475f284",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Creatures change color as a triggered ability upon the block being declared."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5456f00c-0bef-4c14-902f-f5c14475f284",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "A Leprechaun with Protection from Green can be blocked by a creature (since it is not green at that time) but will not take damage from the creature (since it is green during the combat damage step)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5456f00c-0bef-4c14-902f-f5c14475f284",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The change to green does not end even if the Leprechaun leaves the battlefield."
+    }
+  ]
+}

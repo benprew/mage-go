@@ -1,0 +1,36 @@
+{
+  "name": "Nightmare",
+  "oracle_id": "375932e6-1b3e-48dc-8154-9b664c3add34",
+  "rulings_uri": "https://api.scryfall.com/cards/052022ff-795f-4f50-a45c-91cf8be9fbe9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "375932e6-1b3e-48dc-8154-9b664c3add34",
+      "source": "wotc",
+      "published_at": "2008-04-01",
+      "comment": "If you control 0 swamps, then the Nightmare has 0 toughness and will be put into its owner’s graveyard as a state-based action right before the next player gains priority."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "375932e6-1b3e-48dc-8154-9b664c3add34",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Nightmare’s power and toughness changes as the number of Swamps you control changes."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "375932e6-1b3e-48dc-8154-9b664c3add34",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "Nightmare’s ability counts all lands you control with the subtype Swamp, not just ones named Swamp."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "375932e6-1b3e-48dc-8154-9b664c3add34",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "The ability that defines Nightmare’s power and toughness works everywhere, not just on the battlefield."
+    }
+  ]
+}

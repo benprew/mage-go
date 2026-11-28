@@ -1,0 +1,22 @@
+{
+  "name": "Invoke Prejudice",
+  "oracle_id": "854ad486-0c59-4c57-9a76-ab1dff0ff37c",
+  "rulings_uri": "https://api.scryfall.com/cards/903d9fde-d7da-4a0e-a337-b63023c6d74b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "854ad486-0c59-4c57-9a76-ab1dff0ff37c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In a multi-player game, it affects all opposing players."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "854ad486-0c59-4c57-9a76-ab1dff0ff37c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This ability triggers when the spell is cast."
+    }
+  ]
+}

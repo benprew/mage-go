@@ -129,7 +129,32 @@ func (g *Game) prepareSpellAnnouncement(opts *castStackObjectOptions) error {
 			}
 		}
 	}
-	return g.validateTargetGroups(controller, card, specs, opts.TargetGroups, x)
+	if err := g.validateTargetGroups(controller, card, specs, opts.TargetGroups, x); err != nil {
+		return err
+	}
+	if len(opts.Targets) == 0 {
+		return nil
+	}
+	if modal, ok := getModalSpellAbility(card); ok {
+		var err error
+		opts.damageDistribution, opts.damageTotal, err = g.announceDividedDamage(modal.modes[*opts.Mode].Effects, card, controller, opts.Targets, x)
+		return err
+	}
+	for _, ability := range card.abilities {
+		action, ok := ability.(*SpellAbility)
+		if !ok || action.Kind() != ActionSpell {
+			continue
+		}
+		shares, total, err := g.announceDividedDamage(action.effects, card, controller, opts.Targets, x)
+		if err != nil {
+			return err
+		}
+		if shares != nil {
+			opts.damageDistribution, opts.damageTotal = shares, total
+			break
+		}
+	}
+	return nil
 }
 
 // ActivateAbilityWithTargetGroups activates an ability with explicit target groups.

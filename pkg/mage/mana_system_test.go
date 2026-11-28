@@ -2,6 +2,7 @@ package mage
 
 import (
 	"testing"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -107,6 +108,43 @@ func TestManaSystem_TapForMana_And_Events(t *testing.T) {
 
 	if got := p1.Life(); got != 21 {
 		t.Errorf("expected life 21, got %d", got)
+	}
+}
+
+func TestManaActivationFinishesWhenTappingRemovesTheAbility(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		activate func(*Game, uuid.UUID, uuid.UUID) error
+	}{
+		{"manual", (*Game).TapForMana},
+		{"automatic", func(g *Game, controller, _ uuid.UUID) error {
+			return g.AutoTapForCost(controller, ManaCost{Blue: 1})
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g, player, _ := invariantTestGame()
+			mana := NewManaAbility(Blue)
+			land := NewLand("Conditional Mana Land",
+				WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+					func(g *Game, sourceID uuid.UUID) error {
+						source := g.MutablePermanent(sourceID)
+						source.RuntimeAbilities = append(source.RuntimeAbilities, WrapGrantedAbility(mana))
+						return nil
+					}, SourceUntapped)),
+			)
+			source := addInvariantPermanent(g, player, land)
+			if err := tc.activate(g, player.PlayerID(), source.ID()); err != nil {
+				t.Fatalf("activate mana ability: %v", err)
+			}
+			if got := player.ManaPool().Count(Blue); got != 1 {
+				t.Errorf("produced %d blue mana, want 1", got)
+			}
+			for _, ability := range g.FindPermanent(source.ID()).RuntimeAbilities {
+				if ability.Type() == AbilityMana {
+					t.Error("the granted mana ability must end when the source taps")
+				}
+			}
+		})
 	}
 }
 

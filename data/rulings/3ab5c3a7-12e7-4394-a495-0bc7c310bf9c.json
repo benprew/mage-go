@@ -1,0 +1,22 @@
+{
+  "name": "Goblin Caves",
+  "oracle_id": "3ab5c3a7-12e7-4394-a495-0bc7c310bf9c",
+  "rulings_uri": "https://api.scryfall.com/cards/bcba2255-b0ae-43b9-b9fd-62da04d5e397/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3ab5c3a7-12e7-4394-a495-0bc7c310bf9c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Works if enchanting a Snow-Covered Mountain."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "3ab5c3a7-12e7-4394-a495-0bc7c310bf9c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Works even if placed on one of your opponent's Mountains."
+    }
+  ]
+}

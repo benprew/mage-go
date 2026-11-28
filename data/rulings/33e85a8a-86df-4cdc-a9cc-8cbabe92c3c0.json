@@ -1,0 +1,22 @@
+{
+  "name": "Urza's Mine",
+  "oracle_id": "33e85a8a-86df-4cdc-a9cc-8cbabe92c3c0",
+  "rulings_uri": "https://api.scryfall.com/cards/396bbb7d-ae61-4d8d-b931-9ed2f712832e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "33e85a8a-86df-4cdc-a9cc-8cbabe92c3c0",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you have at least one of each of the three Urza's lands on the battlefield, you must take the 2 mana instead of just one."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "33e85a8a-86df-4cdc-a9cc-8cbabe92c3c0",
+      "source": "wotc",
+      "published_at": "2024-06-07",
+      "comment": "The ability checks for land types, not the names of other permanents you control."
+    }
+  ]
+}

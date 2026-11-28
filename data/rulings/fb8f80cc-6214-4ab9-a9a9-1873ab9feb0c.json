@@ -1,0 +1,22 @@
+{
+  "name": "Xenic Poltergeist",
+  "oracle_id": "fb8f80cc-6214-4ab9-a9a9-1873ab9feb0c",
+  "rulings_uri": "https://api.scryfall.com/cards/37055986-85e0-4568-a301-b8726da23b75/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fb8f80cc-6214-4ab9-a9a9-1873ab9feb0c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Wears off at the beginning of the upkeep, not during upkeep."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "fb8f80cc-6214-4ab9-a9a9-1873ab9feb0c",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "A noncreature permanent that turns into a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn't matter how long the permanent has been a creature."
+    }
+  ]
+}

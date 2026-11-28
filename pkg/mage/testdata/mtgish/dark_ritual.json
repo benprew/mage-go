@@ -1,0 +1,43 @@
+{
+  "_OracleCard": "Card",
+  "Name": "Dark Ritual",
+  "Typeline": {
+    "Supertypes": [],
+    "Cardtypes": [
+      "Instant"
+    ],
+    "Subtypes": []
+  },
+  "ManaCost": [
+    {
+      "_ManaSymbol": "ManaCostB"
+    }
+  ],
+  "Rules": [
+    {
+      "_Rule": "SpellActions",
+      "args": {
+        "_Actions": "ActionList",
+        "args": [
+          {
+            "_Action": "AddMana",
+            "args": {
+              "_ManaProduce": "And",
+              "args": [
+                {
+                  "_ManaProduce": "ManaProduceB"
+                },
+                {
+                  "_ManaProduce": "ManaProduceB"
+                },
+                {
+                  "_ManaProduce": "ManaProduceB"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

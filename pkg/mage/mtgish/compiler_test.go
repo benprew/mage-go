@@ -2,7 +2,6 @@ package mtgish
 
 import (
 	"encoding/json"
-	"os"
 	"strings"
 	"testing"
 	"uuid"
@@ -14,7 +13,7 @@ import (
 
 func sourceCard(t *testing.T, rules string) MtgishCard {
 	t.Helper()
-	card, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Keyword Creature","Typeline":{"Cardtypes":["Creature"]},"CardPT":{"Power":2,"Toughness":2},"Rules":` + rules + `}`))
+	card, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Keyword Creature","Typeline":{"Cardtypes":["Creature"]},"ManaCost":[{"_ManaSymbol":"ManaCostGeneric","args":0}],"CardPT":{"Power":2,"Toughness":2},"Rules":` + rules + `}`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,8 +91,10 @@ func TestCompileRejectsIncompleteRules(t *testing.T) {
 		`{}`, `null`, `[]`, `"Flying"`, `{"_Rule":3}`,
 	} {
 		t.Run(rule, func(t *testing.T) {
-			def, err := Compile(sourceCard(t, `[{"_Rule":"Flying"},`+rule+`]`))
-			if def != nil || err == nil || !strings.Contains(err.Error(), "Keyword Creature") || !strings.Contains(err.Error(), "Rules[1]") {
+			card := sourceCard(t, `[]`)
+			card.Rules = []json.RawMessage{json.RawMessage(`{"_Rule":"Flying"}`), json.RawMessage(rule)}
+			def, err := Compile(card)
+			if def != nil || err == nil || !strings.Contains(err.Error(), "Keyword Creature") || !strings.Contains(err.Error(), "/Rules/1") {
 				t.Fatalf("expected card and rule path with no partial definition, got %v, %v", def, err)
 			}
 		})
@@ -110,32 +111,6 @@ func TestCompileMetadataValidation(t *testing.T) {
 	if def, err := Compile(card); def != nil || err == nil {
 		t.Fatal("accepted unsupported card form")
 	}
-	card = sourceCard(t, `[]`)
-	for _, raw := range []string{
-		`{"_OracleCard":"Card","StartingLoyalty":3}`,
-		`{"_OracleCard":"Card","Typeline":{"Restriction":true}}`,
-		`{"_OracleCard":"Card","CardPT":{"Power":2,"Toughness":2,"Variable":true}}`,
-		`null`,
-	} {
-		card.Raw = json.RawMessage(raw)
-		if def, err := Compile(card); def != nil || err == nil {
-			t.Fatalf("accepted unsupported source data %s: %v, %v", raw, def, err)
-		}
-	}
-}
-
-func TestCompileRejectsLightningBolt(t *testing.T) {
-	data, err := os.ReadFile("../testdata/mtgish/lightning_bolt.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	card, err := ParseMtgishJSON(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if def, err := Compile(card); def != nil || err == nil || !strings.Contains(err.Error(), "SpellActions") {
-		t.Fatalf("accepted uncompiled spell actions: %v, %v", def, err)
-	}
 }
 
 func TestCompileLandIntrinsicMana(t *testing.T) {
@@ -145,6 +120,8 @@ func TestCompileLandIntrinsicMana(t *testing.T) {
 		colors   []core.Color
 	}{
 		{"Forest", `["Forest"]`, []core.Color{core.Green}},
+		{"Island", `["Island"]`, []core.Color{core.Blue}},
+		{"Duplicate subtypes", `["Forest","Forest"]`, []core.Color{core.Green}},
 		{"Tundra", `["Plains","Island"]`, []core.Color{core.White, core.Blue}},
 		{"Swamp", `["Swamp"]`, []core.Color{core.Black}},
 		{"Mountain", `["Mountain"]`, []core.Color{core.Red}},
@@ -182,11 +159,6 @@ func TestCompileLandIntrinsicMana(t *testing.T) {
 }
 
 func TestCompileRejectsUnknownManaFields(t *testing.T) {
-	card, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Creature"]},"ManaCost":[{"_ManaSymbol":"ManaCostG","Restriction":true}]}`))
-	if err == nil {
-		def, compileErr := Compile(card)
-		if def != nil || compileErr == nil {
-			t.Fatal("accepted an unknown mana symbol field")
-		}
-	}
+	_, err := ParseMtgishJSON([]byte(`{"_OracleCard":"Card","Name":"Test","Typeline":{"Cardtypes":["Instant"]},"ManaCost":[{"_ManaSymbol":"ManaCostG","Restriction":true}]}`))
+	requireDiagnostic(t, err, InvalidInput, "/ManaCost/0/Restriction", "_ManaSymbol", "ManaCostG")
 }

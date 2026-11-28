@@ -70,8 +70,8 @@ func TestDamageSystem_CreatureDamageAndKeywords(t *testing.T) {
 
 	g.DealDamageToPermanent(targetPerm, 1, sourcePerm.ID())
 
-	if targetPerm.Damage != 2 {
-		t.Fatalf("expected deathtouch to mark lethal damage (2), got %d", targetPerm.Damage)
+	if targetPerm.Damage != 1 || !targetPerm.deathtouchDamage {
+		t.Fatalf("damage = %d, deathtouch damage = %t, want 1 and true", targetPerm.Damage, targetPerm.deathtouchDamage)
 	}
 	if !g.HasDealtDamageToPermanent(sourcePerm.ID(), targetPerm.ID()) {
 		t.Fatalf("expected duel damage to be tracked for permanent")
@@ -201,6 +201,47 @@ func TestDamageSystem_PreventionShields(t *testing.T) {
 	// Bob took 5 - 4 = 1 damage, life 20 - 1 = 19
 	if pB.Life() != 19 {
 		t.Fatalf("expected Bob's life to be 19 after 4 prevented, got %d", pB.Life())
+	}
+}
+
+func TestDamageSystem_PlaneswalkerDamage(t *testing.T) {
+	pA := NewBasePlayer("Alice")
+	pB := NewBasePlayer("Bob")
+	g := NewGame(pA, pB)
+	source := g.PutOnBattlefield(NewCreature("Source", "{W}", 1, 1, WithKeyword(Lifelink)), pA.PlayerID())
+	target := g.PutOnBattlefield(NewPlaneswalker("Planeswalker", "{U}", 5), pB.PlayerID())
+
+	g.AddPreventionShield(target.ID(), 2)
+	g.DealDamageToPermanent(target, 5, source.ID())
+	if loyalty := target.Counters[Loyalty]; loyalty != 2 || target.Damage != 0 {
+		t.Fatalf("after 3 damage: loyalty=%d, damage marked=%d", loyalty, target.Damage)
+	}
+
+	g.DealDamageToPermanent(target, 7, source.ID())
+	if target.Counters[Loyalty] != 0 || pA.Life() != 30 {
+		t.Fatalf("after excess damage: loyalty=%d, source controller's life=%d", target.Counters[Loyalty], pA.Life())
+	}
+	g.CheckStateBasedActions()
+	if g.FindPermanent(target.ID()) != nil || len(pB.Graveyard()) != 1 {
+		t.Fatal("a planeswalker with no loyalty remained on the battlefield")
+	}
+}
+
+func TestDamageSystem_PlaneswalkerCreatureDamage(t *testing.T) {
+	pA := NewBasePlayer("Alice")
+	pB := NewBasePlayer("Bob")
+	g := NewGame(pA, pB)
+	definition, err := NewCardDefinition(CardDefinitionSpec{
+		Name: "Creature Planeswalker", TypeLine: TypeLine{CardTypes: []CardType{TypeCreature, TypePlaneswalker}},
+		Power: 5, Toughness: 5, BaseLoyalty: 5,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := g.PutOnBattlefield(definition.NewInstance(pB.PlayerID()), pB.PlayerID())
+	g.DealDamageToPermanent(target, 2, uuid.New())
+	if loyalty := target.Counters[Loyalty]; loyalty != 3 || target.Damage != 2 {
+		t.Fatalf("after 2 damage: loyalty=%d, damage marked=%d", loyalty, target.Damage)
 	}
 }
 

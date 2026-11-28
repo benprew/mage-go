@@ -135,6 +135,13 @@ type PermanentLKI struct {
 	// subtypes, keywords, counters, runtime abilities, attachments, and
 	// the various override fields. Read-only — never mutate.
 	Snapshot *Permanent
+
+	combatOpponents []combatOpponent
+}
+
+type combatOpponent struct {
+	id          uuid.UUID
+	incarnation uuid.UUID
 }
 
 // HasType reports whether the LKI snapshot had the given card type.
@@ -206,6 +213,18 @@ func (l *PermanentLKI) ViewAbilities() []Ability {
 // the battlefield.
 func (g *Game) captureLKI(p *Permanent) {
 	g.zones.CaptureLKI(p, g)
+	before := g
+	if batch := g.triggers.zoneBatch; batch != nil {
+		before = batch.before
+	}
+	if ids := before.combat.opponentsOf(p.ID()); len(ids) > 0 {
+		snapshot := g.zones.LKI(p.ID())
+		for _, id := range ids {
+			if opponent := before.FindPermanent(id); opponent != nil {
+				snapshot.combatOpponents = append(snapshot.combatOpponents, combatOpponent{id, opponent.incarnationID})
+			}
+		}
+	}
 }
 
 // LKI returns the last-known-information snapshot for a permanent that has

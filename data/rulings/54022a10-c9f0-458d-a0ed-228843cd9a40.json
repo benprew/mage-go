@@ -1,0 +1,15 @@
+{
+  "name": "Bazaar of Baghdad",
+  "oracle_id": "54022a10-c9f0-458d-a0ed-228843cd9a40",
+  "rulings_uri": "https://api.scryfall.com/cards/c88acaa8-ad4d-4321-a6f6-9361916e5b5e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "54022a10-c9f0-458d-a0ed-228843cd9a40",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can’t cast spells or activate mana abilities before discarding the extra cards."
+    }
+  ]
+}

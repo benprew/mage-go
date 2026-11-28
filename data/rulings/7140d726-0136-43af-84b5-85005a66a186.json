@@ -1,0 +1,29 @@
+{
+  "name": "Metamorphosis",
+  "oracle_id": "7140d726-0136-43af-84b5-85005a66a186",
+  "rulings_uri": "https://api.scryfall.com/cards/fc73bd94-6e14-4798-b9ff-163ba7bdd663/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7140d726-0136-43af-84b5-85005a66a186",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This mana may be used on additional costs to cast the spell, such as Kicker."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7140d726-0136-43af-84b5-85005a66a186",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "Players can only respond once this spell has been cast and all its costs have been paid. No one can try to destroy the creature you sacrificed to prevent you from casting this spell."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7140d726-0136-43af-84b5-85005a66a186",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "You must sacrifice exactly one creature to cast this spell; you cannot cast it without sacrificing a creature, and you cannot sacrifice additional creatures."
+    }
+  ]
+}

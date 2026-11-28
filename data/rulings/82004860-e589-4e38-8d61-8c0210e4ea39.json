@@ -1,0 +1,29 @@
+{
+  "name": "Demonic Tutor",
+  "oracle_id": "82004860-e589-4e38-8d61-8c0210e4ea39",
+  "rulings_uri": "https://api.scryfall.com/cards/a24b4cb6-cebb-428b-8654-74347a6a8d63/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "82004860-e589-4e38-8d61-8c0210e4ea39",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You pick a card on resolution."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "82004860-e589-4e38-8d61-8c0210e4ea39",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You don't reveal the card to your opponent."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "82004860-e589-4e38-8d61-8c0210e4ea39",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This card is put directly into your hand. It is not drawn."
+    }
+  ]
+}

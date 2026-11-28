@@ -1,0 +1,15 @@
+{
+  "name": "Evil Presence",
+  "oracle_id": "3d8ac41c-0566-48b2-a744-39db2f72272c",
+  "rulings_uri": "https://api.scryfall.com/cards/4dd00bc5-234c-4ded-b0b7-1181bc16cb28/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3d8ac41c-0566-48b2-a744-39db2f72272c",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The enchanted land loses its existing land types and any abilities printed on it. It now has the land type Swamp and has the ability “{T}: Add {B}.” Evil Presence doesn’t change the enchanted land’s name or whether it’s legendary, basic, or snow."
+    }
+  ]
+}

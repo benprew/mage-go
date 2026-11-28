@@ -1,0 +1,15 @@
+{
+  "name": "Shelkin Brownie",
+  "oracle_id": "507ce455-bd02-49f9-bf64-4b2d21ffe0ea",
+  "rulings_uri": "https://api.scryfall.com/cards/fddcc557-871d-425b-b4ee-bc0c9bc717aa/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "507ce455-bd02-49f9-bf64-4b2d21ffe0ea",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can only remove “bands with other” and not normal “banding” ability."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "The Abyss",
+  "oracle_id": "a02a7816-c967-4503-bb08-f8db44915250",
+  "rulings_uri": "https://api.scryfall.com/cards/f11db51c-bbbc-4890-960e-d8a3eacca1e5/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a02a7816-c967-4503-bb08-f8db44915250",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The controller of The Abyss controls the ability, but the current player chooses what gets destroyed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a02a7816-c967-4503-bb08-f8db44915250",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    }
+  ]
+}

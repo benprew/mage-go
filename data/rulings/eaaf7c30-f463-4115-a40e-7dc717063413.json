@@ -1,0 +1,15 @@
+{
+  "name": "Reverse Damage",
+  "oracle_id": "eaaf7c30-f463-4115-a40e-7dc717063413",
+  "rulings_uri": "https://api.scryfall.com/cards/5f938c52-c7f6-41a4-b480-632b43b60b67/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "eaaf7c30-f463-4115-a40e-7dc717063413",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It only affects damage dealt by the source one time. If the source damages you a second time this turn, the damage will not be reversed."
+    }
+  ]
+}

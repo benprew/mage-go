@@ -11,65 +11,10 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func buildRulesText(c *mage.Card) string {
-	var parts []string
-	formatActivated := func(ab mage.ActivatedAbility) string {
-		costParts := make([]string, 0, len(ab.Costs()))
-		for _, cost := range ab.Costs() {
-			costParts = append(costParts, cost.Text())
-		}
-		effParts := make([]string, 0, len(ab.Effects()))
-		for _, eff := range ab.Effects() {
-			effParts = append(effParts, eff.Text())
-		}
-		return fmt.Sprintf("%s: %s", joinStrings(costParts), joinStrings(effParts))
-	}
-	var seenKeywords [core.NumAttrs]bool
-	for _, a := range c.AllAbilities() {
-		if attr := mage.AbilityAttribute(a); attr != 0 && core.IsKeywordAttr(attr) && !seenKeywords[attr] {
-			parts = append(parts, attr.String())
-			seenKeywords[attr] = true
-		}
-	}
-	for _, a := range c.AllAbilities() {
-		switch ab := a.(type) {
-		case *mage.ProtectionAbility:
-			colors := make([]string, 0, len(ab.FromColors))
-			for _, col := range ab.FromColors {
-				colors = append(colors, col.String())
-			}
-			parts = append(parts, fmt.Sprintf("Protection from %s", joinStrings(colors)))
-		case *mage.SpellAbility:
-			if ab.Kind() != mage.ActionSpell {
-				parts = append(parts, formatActivated(ab))
-				break
-			}
-			for _, eff := range ab.Effects() {
-				parts = append(parts, eff.Text())
-			}
-		case mage.ActivatedAbility:
-			parts = append(parts, formatActivated(ab))
-		}
-	}
-	return joinStrings(parts)
-}
-
-func joinStrings(ss []string) string {
-	var result strings.Builder
-	for i, s := range ss {
-		if i > 0 {
-			result.WriteString(", ")
-		}
-		result.WriteString(s)
-	}
-	return result.String()
-}
-
 type cardMetadata struct {
-	manaCost  string
-	rulesText string
-	types     string
-	subTypes  string
+	manaCost string
+	types    string
+	subTypes string
 }
 
 type cardMetadataCache map[*mage.CardDefinition]cardMetadata
@@ -98,10 +43,9 @@ func (cache cardMetadataCache) metadata(c *mage.Card) cardMetadata {
 		names[i] = t.String()
 	}
 	metadata := cardMetadata{
-		manaCost:  c.ManaCost().String(),
-		rulesText: buildRulesText(c),
-		types:     strings.Join(names, " "),
-		subTypes:  strings.Join(c.SubTypes(), " "),
+		manaCost: c.ManaCost().String(),
+		types:    strings.Join(names, " "),
+		subTypes: strings.Join(c.SubTypes(), " "),
 	}
 	cache[c.CardDefinition] = metadata
 	return metadata
@@ -118,7 +62,6 @@ func snapshotCard(c *mage.Card, cache cardMetadataCache) CardState {
 		Toughness: c.Toughness(),
 		Types:     metadata.types,
 		SubTypes:  metadata.subTypes,
-		RulesText: metadata.rulesText,
 	}
 }
 
@@ -128,7 +71,7 @@ func snapshotCard(c *mage.Card, cache cardMetadataCache) CardState {
 // keeps the opponent's hand hidden.
 var RevealOpponentHand bool
 
-// SnapshotGameState creates a read-only snapshot of the game for the TUI.
+// SnapshotGameState creates a read-only snapshot of the game for one player.
 func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 	human := g.PlayerAt(humanIndex)
 	aiIndex := (humanIndex + 1) % 2
@@ -235,10 +178,9 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 			IsArtifact: perm.HasType(core.TypeArtifact),
 			Attacking:  g.GetCombat().IsAttacking(perm.ID()),
 			ManaCost:   metadata.manaCost,
-			RulesText:  metadata.rulesText,
-
-			Types:    metadata.types,
-			SubTypes: strings.Join(perm.SubTypes(), " ")}
+			Types:      metadata.types,
+			SubTypes:   strings.Join(perm.SubTypes(), " "),
+		}
 		for ct := range core.NumCounters {
 			n := perm.Counters[ct]
 			if n == 0 {
@@ -320,9 +262,8 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	return getAvailableActions(g, playerID, true)
 }
 
-// GetAvailableActionsWithoutLabels returns legal actions without UI-only label
-// strings. It is intended for non-interactive callers that only need action
-// metadata.
+// GetAvailableActionsWithoutLabels returns legal actions without details that
+// only the UI uses.
 func GetAvailableActionsWithoutLabels(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	return getAvailableActions(g, playerID, false)
 }
@@ -388,6 +329,9 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		}
 		if mc.HasX {
 			opt.NeedsX = true
+			if includeLabels && needsTarget {
+				opt.MaxXByTargetCount = g.SpellMaxXByTargetCount(playerID, card, validTargets)
+			}
 			if len(xTargetOptions) > 0 {
 				opt.MaxXValue = xTargetOptions[len(xTargetOptions)-1].XValue
 			} else {

@@ -77,6 +77,21 @@ func TestHurkyrlsRecall(t *testing.T) {
 		g.AssertHandCount(gametest.PlayerB, "Ornithopter", 1)
 		g.AssertHandCount(gametest.PlayerB, "Yotian Soldier", 1)
 	})
+
+	t.Run("artifact token ceases to exist", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		owner := g.GetPlayer(gametest.PlayerB).PlayerID()
+		wasp := mage.NewToken("Wasp", 1, 1, []core.CardType{core.TypeArtifact, core.TypeCreature}, []string{"Insect"}, nil, core.Flying)
+		g.PutTokenOnBattlefield(wasp, owner)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hurkyl's Recall")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hurkyl's Recall", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		if g.FindCardAnywhere(wasp.ID()) != nil {
+			t.Error("Wasp token remained in the game after Hurkyl's Recall")
+		}
+	})
 }
 
 func TestReversePolarity(t *testing.T) {

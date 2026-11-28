@@ -1,0 +1,22 @@
+{
+  "name": "Ali Baba",
+  "oracle_id": "ef3fdfea-330d-4948-94ec-67e344b48086",
+  "rulings_uri": "https://api.scryfall.com/cards/92191f72-e3d7-4679-97a2-f0c2d19d7738/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ef3fdfea-330d-4948-94ec-67e344b48086",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This ability may be used to tap more than one Wall per turn if you have enough mana, since tapping isn't part of the activation cost."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ef3fdfea-330d-4948-94ec-67e344b48086",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability may tap walls even when Ali Baba is tapped or entered that turn, since the activation cost doesn't include {T}."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Reincarnation",
+  "oracle_id": "d6bf5e22-8d33-43a9-8824-435068e0a87a",
+  "rulings_uri": "https://api.scryfall.com/cards/7ee379cd-b3fb-487b-846c-eab02902de79/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "d6bf5e22-8d33-43a9-8824-435068e0a87a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "All Reincarnation does when it resolves is set up a delayed triggered ability. If the targeted creature isn't put into a graveyard this turn, that ability never triggers. If the targeted creature is put into a graveyard this turn, that ability triggers and resolves like any other triggered ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d6bf5e22-8d33-43a9-8824-435068e0a87a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The creature card that will be returned to the battlefield isn't chosen until the delayed triggered ability resolves. The player who chooses is the player who controlled Reincarnation. The player under whose control the chosen creature card enters is the player who owned the targeted creature (in other words, the player into whose graveyard it went), not necessarily the controller of that creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "d6bf5e22-8d33-43a9-8824-435068e0a87a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The creature that's returned to the battlefield may be the same one that was put into the graveyard (assuming it's still in the graveyard when the delayed triggered ability resolves). If so, it returns to the battlefield as a brand-new creature."
+    }
+  ]
+}

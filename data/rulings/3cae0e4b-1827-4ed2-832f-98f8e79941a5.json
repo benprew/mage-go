@@ -1,0 +1,15 @@
+{
+  "name": "Thrull Wizard",
+  "oracle_id": "3cae0e4b-1827-4ed2-832f-98f8e79941a5",
+  "rulings_uri": "https://api.scryfall.com/cards/c4e732fb-cbef-4fd8-b704-e4d513a6cf2d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3cae0e4b-1827-4ed2-832f-98f8e79941a5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can use this ability multiple times on one spell to force your opponent to use more than one mana to prevent the spell from being countered. You can even use this ability, let them pay, then use this ability repeatedly."
+    }
+  ]
+}

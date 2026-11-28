@@ -1,0 +1,22 @@
+{
+  "name": "Stone Calendar",
+  "oracle_id": "301a59c1-e372-4c31-a2a8-88c5ba7d822a",
+  "rulings_uri": "https://api.scryfall.com/cards/e682d19b-7936-4942-b42c-c836d6741a45/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "301a59c1-e372-4c31-a2a8-88c5ba7d822a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Does not change the mana cost of the spell, it just reduces what you pay for it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "301a59c1-e372-4c31-a2a8-88c5ba7d822a",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You may choose not to apply Stone Calendar’s cost reduction effect."
+    }
+  ]
+}

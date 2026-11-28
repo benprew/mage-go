@@ -1,0 +1,15 @@
+{
+  "name": "Ball Lightning",
+  "oracle_id": "7485cf25-eb41-4397-be13-7f0b8c10c70a",
+  "rulings_uri": "https://api.scryfall.com/cards/5f27dbf0-6818-40ea-832d-10686b4c2900/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7485cf25-eb41-4397-be13-7f0b8c10c70a",
+      "source": "wotc",
+      "published_at": "2007-02-01",
+      "comment": "The creature is sacrificed at the end of every turn in which it is on the battlefield. There is no choice about what turn to sacrifice it."
+    }
+  ]
+}

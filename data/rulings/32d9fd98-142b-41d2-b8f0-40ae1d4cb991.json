@@ -1,0 +1,15 @@
+{
+  "name": "Jalum Tome",
+  "oracle_id": "32d9fd98-142b-41d2-b8f0-40ae1d4cb991",
+  "rulings_uri": "https://api.scryfall.com/cards/3d2db45f-4cdb-4b7f-a270-44b2b1482f69/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "32d9fd98-142b-41d2-b8f0-40ae1d4cb991",
+      "source": "wotc",
+      "published_at": "2020-11-10",
+      "comment": "You draw a card and discard a card all while Jalum Tome's ability is resolving. Nothing can happen in between, and no player can choose to take actions."
+    }
+  ]
+}

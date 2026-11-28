@@ -1,0 +1,22 @@
+{
+  "name": "Dwarven Warriors",
+  "oracle_id": "cfc553cd-3b4c-47a9-bffb-e5790befb32c",
+  "rulings_uri": "https://api.scryfall.com/cards/d217942b-1253-4d4b-b0d2-09fc4e15cc62/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cfc553cd-3b4c-47a9-bffb-e5790befb32c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you increase the power of the targeted creature after the ability resolves, it still can’t be blocked that turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "cfc553cd-3b4c-47a9-bffb-e5790befb32c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The ability can be activated after a creature is blocked, but it has no effect. Once a creature is blocked, it can’t be unblocked."
+    }
+  ]
+}

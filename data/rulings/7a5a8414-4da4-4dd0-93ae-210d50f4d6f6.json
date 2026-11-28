@@ -1,0 +1,22 @@
+{
+  "name": "Circle of Protection: Black",
+  "oracle_id": "7a5a8414-4da4-4dd0-93ae-210d50f4d6f6",
+  "rulings_uri": "https://api.scryfall.com/cards/edab2933-5970-4a17-ac00-abcd2c048fdc/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7a5a8414-4da4-4dd0-93ae-210d50f4d6f6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "A source of damage is a permanent, a spell on the stack (including one that creates a permanent), or any object referred to by an object on the stack. A source doesn’t need to be capable of dealing damage to be a legal choice."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "7a5a8414-4da4-4dd0-93ae-210d50f4d6f6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be used even when there is no damage to prevent. It prevents the next damage (if any) from the source this turn."
+    }
+  ]
+}

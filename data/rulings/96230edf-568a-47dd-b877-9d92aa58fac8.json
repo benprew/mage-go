@@ -1,0 +1,15 @@
+{
+  "name": "Nevinyrral's Disk",
+  "oracle_id": "96230edf-568a-47dd-b877-9d92aa58fac8",
+  "rulings_uri": "https://api.scryfall.com/cards/36fb6ee3-bd54-4e5b-b055-c2c42515c162/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "96230edf-568a-47dd-b877-9d92aa58fac8",
+      "source": "wotc",
+      "published_at": "2020-11-10",
+      "comment": "You don't sacrifice Nevinyrral's Disk to activate its ability. It's destroyed as part of the ability's resolution if it's still on the battlefield. If an effect gives Nevinyrral's Disk indestructible or regenerates it, it stays on the battlefield."
+    }
+  ]
+}

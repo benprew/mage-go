@@ -1,0 +1,22 @@
+{
+  "name": "Lifetap",
+  "oracle_id": "52ac09af-2aa7-4d80-be26-3e6a6efd5c23",
+  "rulings_uri": "https://api.scryfall.com/cards/af066a2d-d357-45a7-90d8-2c34b6d0ebf8/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "52ac09af-2aa7-4d80-be26-3e6a6efd5c23",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In multi-player games it affects all opponents."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "52ac09af-2aa7-4d80-be26-3e6a6efd5c23",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Gives one life for each and every Forest tapped."
+    }
+  ]
+}

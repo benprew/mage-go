@@ -1,0 +1,36 @@
+{
+  "name": "Field of Dreams",
+  "oracle_id": "6dcc62f8-2fd9-473b-9e6a-2dd7e610f855",
+  "rulings_uri": "https://api.scryfall.com/cards/6a63e119-3b1b-4964-a4b9-b10170ff542b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6dcc62f8-2fd9-473b-9e6a-2dd7e610f855",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6dcc62f8-2fd9-473b-9e6a-2dd7e610f855",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "When playing with the top card of your library revealed, if an effect tells you to draw several cards, reveal each one before you draw it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6dcc62f8-2fd9-473b-9e6a-2dd7e610f855",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "The top card of your library isn't in your hand, so you can't suspend it, cycle it, discard it, or activate any of its activated abilities."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6dcc62f8-2fd9-473b-9e6a-2dd7e610f855",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "If the top card of your library changes while you're casting a spell, playing a land, or activating an ability, the new top card won't be revealed until you finish doing so."
+    }
+  ]
+}

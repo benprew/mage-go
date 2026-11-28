@@ -107,6 +107,9 @@ type ActionOption struct {
 	NeedsX         bool
 	MaxXValue      int
 	XTargetOptions []mage.SpellTargetOption
+	// MaxXByTargetCount holds the limit for each selectable target count.
+	// The first entry is for one target.
+	MaxXByTargetCount []int
 }
 
 // GameMsg is sent from the game goroutine to the TUI.
@@ -131,7 +134,7 @@ type undoSnapshot struct {
 	logLen         int
 }
 
-// GameState is a read-only snapshot of the game for the TUI.
+// GameState is a read-only snapshot of the game for one player.
 type GameState struct {
 	Turn         int
 	Step         string
@@ -178,19 +181,14 @@ type PermanentState struct {
 	ManaCost    string
 	Types       string
 	SubTypes    string
-	RulesText   string
 	AttachedTo  uuid.UUID
 }
 
 // CardState is a snapshot of a card in a zone (hand, graveyard, exile).
 //
-// FaceDown is set for cards in face-down exile (CR 707, 406.3). When the
-// viewer producing this snapshot is not permitted to inspect a face-down
-// exiled card's identity, Name / ManaCost / Types / SubTypes / Power /
-// Toughness / RulesText are zero-valued and only ID + FaceDown are
-// populated, so opponents see "a face-down card" without leaking
-// identity. The owning player's snapshot is also redacted unless the
-// owner was added to the card's RevealedTo set.
+// FaceDown is set for a card in face-down exile (CR 707, 406.3).
+// Only ID and FaceDown have values if the viewer is outside the card's
+// RevealedTo set. That set also controls access for the card's owner.
 type CardState struct {
 	ID        uuid.UUID
 	Name      string
@@ -200,7 +198,6 @@ type CardState struct {
 	SubTypes  string
 	Power     int
 	Toughness int
-	RulesText string
 	FaceDown  bool
 }
 

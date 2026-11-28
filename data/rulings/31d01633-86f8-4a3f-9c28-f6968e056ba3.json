@@ -1,0 +1,36 @@
+{
+  "name": "Takklemaggot",
+  "oracle_id": "31d01633-86f8-4a3f-9c28-f6968e056ba3",
+  "rulings_uri": "https://api.scryfall.com/cards/a1171f5b-5b92-4a65-a59d-97ac6ce1283d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "31d01633-86f8-4a3f-9c28-f6968e056ba3",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the creature leaves the battlefield without going to the graveyard, Takklemaggot is simply put into its owner's graveyard."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "31d01633-86f8-4a3f-9c28-f6968e056ba3",
+      "source": "wotc",
+      "published_at": "2008-05-01",
+      "comment": "Takklemaggot's controller no longer changes as it returns to the battlefield. The player who controlled it when it left the battlefield is the same player that controls it when it returns to the battlefield, even though a different player may be choosing what it will be attached to after returning onto the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "31d01633-86f8-4a3f-9c28-f6968e056ba3",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When the enchanted creature is put into a graveyard, Takklemaggot's second ability triggers, then Takklemaggot is put into its owner's graveyard as a state-based action. When the ability resolves, if Takklemaggot is still in that graveyard, it's returned to the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "31d01633-86f8-4a3f-9c28-f6968e056ba3",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The player who controlled the creature that went to the graveyard (and caused Takklemaggot's second ability to trigger) chooses what creature Takklemaggot will return to the battlefield attached to. The creature isn't chosen until the ability resolves, so no player can respond between the time the creature is chosen and the time Takklemaggot returns to the battlefield attached to it. The ability doesn't target a creature, so a creature with shroud, for example, can be chosen. However, only a creature that can be legally enchanted by Takklemaggot can be chosen, so a creature with protection from black, for example, can't be chosen. If the player can choose a creature, they must do so, no matter who controls it. If the player can't choose a creature, Takklemaggot returns to the battlefield as a non-Aura enchantment, and that player is the player that Takklemaggot will deal damage to."
+    }
+  ]
+}

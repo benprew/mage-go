@@ -209,7 +209,13 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 // out — the permanent followed by its attachments — so the caller can later
 // phase exactly that set back in with PhaseIn.
 func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
-	return g.zones.PhaseOut(id)
+	phased := g.zones.PhaseOut(id)
+	if len(g.combat.Groups) > 0 {
+		for _, id := range phased {
+			g.combat.RemoveFromCombat(id)
+		}
+	}
+	return phased
 }
 
 // PhaseIn phases the given permanents back onto the battlefield. IDs that are
@@ -490,7 +496,11 @@ func (g *Game) putOnBattlefield(card *Card, controller uuid.UUID, colors *[]Colo
 		}
 	}
 
-	g.zones.AddPermanent(perm)
+	if len(entryOptions) > 0 && entryOptions[0].worldTime != nil {
+		g.zones.addPermanent(perm, entryOptions[0].worldTime)
+	} else {
+		g.zones.AddPermanent(perm)
+	}
 	if colors != nil {
 		g.effects.Add(permanentColorEffect(perm, *colors), colorSourceID)
 	}
@@ -589,7 +599,7 @@ func (g *Game) putOnBattlefieldBlocking(card *Card, controller, attackerID uuid.
 	if perm == nil || attackerID == uuid.Nil() || !g.combat.IsAttacking(attackerID) {
 		return perm
 	}
-	g.combat.AddBlocker(perm.ID(), attackerID)
+	g.combat.addBlocker(perm.ID(), attackerID, false)
 	g.trackers.Turn.RecordBlocked(perm.ID(), attackerID)
 	return perm
 }
@@ -597,10 +607,11 @@ func (g *Game) putOnBattlefieldBlocking(card *Card, controller, attackerID uuid.
 func (g *Game) isValidDefender(id uuid.UUID) bool {
 	for _, p := range g.players {
 		if p.PlayerID() == id {
-			return true
+			return g.playerIsAlive(p)
 		}
 	}
-	return g.FindPermanent(id) != nil
+	defender := g.FindPermanent(id)
+	return defender != nil && defender.HasType(TypePlaneswalker)
 }
 
 // turnFaceUp flips a face-down permanent face up, restoring its original characteristics.
@@ -614,6 +625,8 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 	}
 	perm.FaceDown = false
 	perm.BasePTOverride = nil
+	var worldTime uint64
+	g.zones.recordWorldType(perm, &worldTime)
 	// Restore original abilities from the card
 	perm.RuntimeAbilities = slices.Clone(perm.Card.abilities)
 
@@ -642,6 +655,9 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Snapshot LKI before any state mutation so death/leave-triggers can
 	// read the dying permanent's controller, types, and P/T after the move.
 	g.captureLKI(perm)
+	if len(g.combat.Groups) > 0 {
+		g.combat.RemoveFromCombat(perm.ID())
+	}
 	if perm.Card.unflippedValues != nil {
 		perm.Card.ApplyCopiableValues(*perm.Card.unflippedValues)
 	}
@@ -659,7 +675,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 
 	// If this was attached to something, remove it from that thing's attachments
 	if perm.IsAttached() {
-		host := g.MutablePermanent(perm.AttachedTo)
+		host := g.mutablePermanentIncludingPhased(perm.AttachedTo)
 		if host != nil {
 			filtered := host.Attachments[:0]
 			for _, id := range host.Attachments {
@@ -691,11 +707,11 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// graveyard so that "when enchanted creature dies" triggers can still see
 	// the attachment relationship when the host's death events fire.
 	for _, attID := range attachments {
-		att := g.MutablePermanent(attID)
+		att := g.mutablePermanentIncludingPhased(attID)
 		if att == nil {
 			continue
 		}
-		if !att.HasSubType("Aura") {
+		if att.PhasedOut || !att.HasSubType("Aura") {
 			att.AttachedTo = uuid.Nil()
 		}
 	}
@@ -756,15 +772,19 @@ func (g *Game) TapPermanent(perm *Permanent) {
 		return
 	}
 	perm = g.MutablePermanent(perm.ID())
-	if perm == nil {
+	if perm == nil || perm.Tapped {
 		return
 	}
 	perm.Tapped = true
-	g.FireEvent(GameEvent{
+	event := GameEvent{
 		Type:     EvtTapped,
 		SourceID: perm.ID(),
 		PlayerID: perm.ControllerID(),
-	})
+	}
+	if len(g.effects.effects) > 0 {
+		g.effects.Apply(g)
+	}
+	g.FireEvent(event)
 }
 
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
@@ -1052,12 +1072,19 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 // an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing leave
 // triggers fire via the LKI snapshot's captured abilities per CR 603.6c.
 func (g *Game) ExilePermanent(perm *Permanent) {
+	if perm == nil {
+		return
+	}
 	controller := perm.ControllerID()
 	permID := perm.ID()
 	card := perm.Card
+	isToken := perm.IsToken
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
-	g.zones.ExileCard(card, uuid.Nil())
+	if !isToken {
+		// CR 111.7 / 704.5d: tokens cease to exist outside the battlefield.
+		g.zones.ExileCard(card, uuid.Nil())
+	}
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
@@ -1356,6 +1383,39 @@ func auraHostIsLegal(auraCard *Card, host *Permanent, g *Game) bool {
 	return false
 }
 
+func (g *Game) attachmentIsLegal(attachment, host *Permanent) bool {
+	if host == nil || host.PhasedOut || host.ID() == attachment.ID() || attachment.HasType(TypeCreature) {
+		return false
+	}
+	switch {
+	case attachment.HasSubType("Aura"):
+		if host.HasAttr(AttrCantBeEnchanted) || !auraHostIsLegal(attachment.Card, host, g) {
+			return false
+		}
+	case attachment.HasSubType("Equipment"):
+		if !host.HasType(TypeCreature) {
+			return false
+		}
+	case attachment.HasSubType("Fortification"):
+		if !host.HasType(TypeLand) {
+			return false
+		}
+	default:
+		return false
+	}
+	return !host.HasProtectionFromInGame(attachment.Card, g)
+}
+
+func (g *Game) detach(attachment *Permanent) {
+	if !attachment.IsAttached() {
+		return
+	}
+	if host := g.mutablePermanentIncludingPhased(attachment.AttachedTo); host != nil {
+		host.Attachments = slices.DeleteFunc(host.Attachments, func(id uuid.UUID) bool { return id == attachment.ID() })
+	}
+	attachment.AttachedTo = uuid.Nil()
+}
+
 // HasDealtDamageToPlayer reports whether the given source permanent has dealt damage to playerID this game.
 func (g *Game) HasDealtDamageToPlayer(sourceID, playerID uuid.UUID) bool {
 	return g.damage.HasDealtDamageToPlayer(sourceID, playerID)
@@ -1388,20 +1448,7 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 		return
 	}
 
-	// Detach from current host if any
-	if src.IsAttached() {
-		oldHost := g.MutablePermanent(src.AttachedTo)
-		if oldHost != nil {
-			filtered := oldHost.Attachments[:0]
-			for _, id := range oldHost.Attachments {
-				if id != sourceID {
-					filtered = append(filtered, id)
-				}
-			}
-			oldHost.Attachments = filtered
-		}
-	}
-
+	g.detach(src)
 	src.AttachedTo = targetID
 	target.Attachments = append(target.Attachments, sourceID)
 
@@ -1887,13 +1934,13 @@ func reverseTriggers(s []*pendingTrigger) {
 
 // ResolveStack resolves all objects on the stack (simplified: no priority passing).
 func (g *Game) ResolveStack() {
+	if g.IsGameOver() {
+		return
+	}
 	// Move any pending triggers to the stack first (e.g. from EvtCardDrawn during draw step)
 	g.PutTriggersOnStack()
-	for !g.stack.IsEmpty() {
-		obj := g.stack.Pop()
-		g.ResolveStackObject(obj)
-		// Check for new triggers after each resolution
-		g.PutTriggersOnStack()
+	for !g.IsGameOver() && !g.stack.IsEmpty() {
+		g.ResolveTopOfStack()
 	}
 }
 
@@ -2149,54 +2196,6 @@ func (g *Game) cleanupSpell(obj *StackObject) {
 	}
 }
 
-// sanitizeDamageDistribution validates a player-chosen damage division for a
-// divided-damage spell or ability (CR 601.2d). The returned map is restricted
-// to keys present in `targets`, has only non-negative values, and sums to
-// exactly `total`. If the player's input is malformed (sum mismatch, unknown
-// target, negative entry, missing assignment when total > 0) we fall back to
-// "all damage to the first target," which is always a legal distribution
-// because total damage must be assigned across the chosen targets.
-func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total int) map[uuid.UUID]int {
-	if total <= 0 || len(targets) == 0 {
-		return nil
-	}
-	allowed := make(map[uuid.UUID]struct{}, len(targets))
-	for _, t := range targets {
-		if t == uuid.Nil() {
-			continue
-		}
-		allowed[t] = struct{}{}
-	}
-	out := make(map[uuid.UUID]int, len(in))
-	sum := 0
-	valid := true
-	for k, v := range in {
-		if _, ok := allowed[k]; !ok {
-			valid = false
-			break
-		}
-		if v < 0 {
-			valid = false
-			break
-		}
-		if v > 0 {
-			out[k] = v
-			sum += v
-		}
-	}
-	if !valid || sum != total || len(out) == 0 {
-		out = map[uuid.UUID]int{}
-		for _, t := range targets {
-			if t != uuid.Nil() {
-				out[t] = total
-				return out
-			}
-		}
-		return nil
-	}
-	return out
-}
-
 func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard *Card, specs []Target, chosen []uuid.UUID, x int, label string) error {
 	if len(specs) == 0 {
 		return nil
@@ -2379,9 +2378,16 @@ func (g *Game) CheckStateBasedActions() {
 
 		var toDestroy, toGraveyard []*Permanent
 		for _, p := range g.zones.battlefield {
+			deathtouchDamage := p.deathtouchDamage
+			if deathtouchDamage {
+				p.deathtouchDamage = false
+			}
+			if p.PhasedOut {
+				continue
+			}
 			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 || p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
 				toGraveyard = append(toGraveyard, p)
-			} else if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
+			} else if p.HasType(TypeCreature) && (deathtouchDamage || p.LethalDamage(g)) && !p.HasKeyword(Indestructible) {
 				toDestroy = append(toDestroy, p)
 			}
 		}
@@ -2399,6 +2405,9 @@ func (g *Game) CheckStateBasedActions() {
 
 		// MTG rule 704.5q: +1/+1 and -1/-1 counter annihilation
 		for _, p := range g.zones.battlefield {
+			if p.PhasedOut {
+				continue
+			}
 			plus := p.Counters[P1P1]
 			minus := p.Counters[M1M1]
 			if plus > 0 && minus > 0 {
@@ -2413,47 +2422,7 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 
-		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
-		var aurasToDrop []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.PhasedOut {
-				continue
-			}
-			if p.HasSubType("Aura") && p.IsAttached() {
-				host := g.FindPermanent(p.AttachedTo)
-				if host == nil {
-					aurasToDrop = append(aurasToDrop, p)
-					actions = true
-				} else if host.HasProtectionFromInGame(p.Card, g) {
-					aurasToDrop = append(aurasToDrop, p)
-					actions = true
-				} else if !auraHostIsLegal(p.Card, host, g) {
-					aurasToDrop = append(aurasToDrop, p)
-					actions = true
-				}
-			}
-		}
-		for _, a := range aurasToDrop {
-			g.DestroyPermanent(a)
-		}
-
-		// Equipment attached to a non-creature or missing host becomes unattached
-		for _, p := range g.zones.battlefield {
-			if p.PhasedOut {
-				continue
-			}
-			if p.HasSubType("Equipment") && p.IsAttached() {
-				host := g.FindPermanent(p.AttachedTo)
-				if host == nil || !host.HasType(TypeCreature) {
-					p = g.MutablePermanent(p.ID())
-					if p == nil {
-						continue
-					}
-					p.AttachedTo = uuid.Nil()
-					actions = true
-				}
-			}
-		}
+		actions = g.checkAttachmentStateBasedActions() || actions
 
 		// Sacrifice creatures that require a land type the controller doesn't have
 		var toSacrifice []*Permanent
@@ -2517,7 +2486,7 @@ func (g *Game) CheckStateBasedActions() {
 		// permanents with the same name, they choose one and sacrifice the rest.
 		var legendCounts map[uuid.UUID]map[string][]*Permanent // controller -> name -> perms
 		for _, p := range g.zones.battlefield {
-			if p.Card.HasSuperType(SuperLegendary) {
+			if !p.PhasedOut && p.HasSuperType(SuperLegendary) {
 				if legendCounts == nil {
 					legendCounts = make(map[uuid.UUID]map[string][]*Permanent)
 				}
@@ -2542,24 +2511,7 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 
-		// MTG rule 704.5k: World rule — if two or more permanents have the World
-		// supertype, all except the most recent one are put into their owners' graveyards.
-		var worldPerms []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.Card.HasSuperType(SuperWorld) {
-				worldPerms = append(worldPerms, p)
-			}
-		}
-		if len(worldPerms) > 1 {
-			// Keep the most recently entered one (last in Battlefield slice)
-			keep := worldPerms[len(worldPerms)-1]
-			for _, p := range worldPerms {
-				if p != keep {
-					g.PutPermanentIntoGraveyard(p)
-				}
-			}
-			actions = true
-		}
+		actions = g.checkWorldStateBasedAction() || actions
 
 		// MTG rule 704.5c: player with 10 or more poison counters loses
 		for _, p := range g.players {
@@ -2586,8 +2538,92 @@ func (g *Game) CheckStateBasedActions() {
 		}
 	}
 
-	// Put any pending triggers on the stack
-	g.PutTriggersOnStack()
+	if !g.IsGameOver() {
+		g.PutTriggersOnStack()
+	}
+}
+
+func (g *Game) checkAttachmentStateBasedActions() bool {
+	var auras, detach []*Permanent
+	for _, p := range g.zones.battlefield {
+		if p.PhasedOut {
+			continue
+		}
+		isAura := p.HasSubType("Aura")
+		if !p.IsAttached() && !isAura {
+			continue
+		}
+		if g.attachmentIsLegal(p, g.FindPermanent(p.AttachedTo)) {
+			continue
+		}
+		if isAura {
+			auras = append(auras, p)
+		} else {
+			detach = append(detach, p)
+		}
+	}
+	for _, p := range detach {
+		g.detach(p)
+	}
+	if len(auras) > 0 {
+		g.withZoneChangeBatch(func() {
+			for _, p := range auras {
+				g.PutPermanentIntoGraveyard(p)
+			}
+		})
+	} else if len(detach) > 0 {
+		g.effects.Apply(g)
+	}
+	return len(auras)+len(detach) > 0
+}
+
+func (g *Game) checkWorldStateBasedAction() bool {
+	var worlds []*Permanent
+	var worldTime, newest uint64
+	var keep *Permanent
+	for _, p := range g.zones.battlefield {
+		if p.PhasedOut {
+			continue
+		}
+		g.zones.recordWorldType(p, &worldTime)
+		if p.worldSince == 0 {
+			continue
+		}
+		worlds = append(worlds, p)
+		if p.worldSince > newest {
+			newest, keep = p.worldSince, p
+		} else if p.worldSince == newest {
+			keep = nil
+		}
+	}
+	if len(worlds) < 2 {
+		return false
+	}
+	g.withZoneChangeBatch(func() {
+		for _, p := range worlds {
+			if p != keep {
+				g.PutPermanentIntoGraveyard(p)
+			}
+		}
+	})
+	return true
+}
+
+// HasUntapStepRestriction reports whether an ability or continuous effect
+// prevents this permanent from untapping during its controller's untap step.
+func (g *Game) HasUntapStepRestriction(p *Permanent) bool {
+	if p == nil || p.PhasedOut {
+		return false
+	}
+	if p.HasAttr(AttrDoesNotUntap) {
+		return true
+	}
+	for _, filter := range g.effects.Rules.untapRestrictions {
+		if filter.Match(p, g) {
+			return true
+		}
+	}
+	return false
 }
 
 // UntapPermanent untaps the given permanent unless it has a stun counter
@@ -2598,6 +2634,17 @@ func (g *Game) CheckStateBasedActions() {
 // permanent is currently tapped it untaps and EvtBecameUntapped fires.
 // Returns true if the permanent actually untapped.
 func (g *Game) UntapPermanent(p *Permanent) bool {
+	if !g.untapPermanentState(p) {
+		return false
+	}
+	if len(g.effects.effects) > 0 {
+		g.effects.Apply(g)
+	}
+	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
+	return true
+}
+
+func (g *Game) untapPermanentState(p *Permanent) bool {
 	if p == nil {
 		return false
 	}
@@ -2613,7 +2660,6 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 		return false
 	}
 	p.Tapped = false
-	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 	return true
 }
 
@@ -2626,31 +2672,22 @@ func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 	g.turns.SkipNextUntap(permanentID)
 }
 
-func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
-	if p == nil || !p.Tapped {
-		return false
-	}
-	if g.turns.ConsumeSkipNextUntap(p.ID()) {
-		return false
-	}
-	return g.UntapPermanent(p)
-}
-
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
+	activeID := active.PlayerID()
 	// Island Sanctuary: clear protection at the start of the player's turn
-	g.effects.Rules.ClearSanctuary(active.PlayerID())
+	g.effects.Rules.ClearSanctuary(activeID)
 
 	// Snapshot the active player's untapped land count before the untap loop
 	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
 	// similar effects read this at upkeep.
 	count := 0
 	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
+		if p.ControllerID() == activeID && p.HasType(TypeLand) && !p.Tapped {
 			count++
 		}
 	}
-	g.trackers.Turn.SetUntappedLandsAtTurnStart(active.PlayerID(), count)
+	g.trackers.Turn.SetUntappedLandsAtTurnStart(activeID, count)
 
 	landUntapLimit := g.effects.Rules.LandUntapMax
 	landsUntapped := 0
@@ -2659,9 +2696,27 @@ func (g *Game) doUntap() {
 	creatureUntapLimit := g.effects.Rules.CreatureUntapMax
 	creaturesUntapped := 0
 
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() {
-			if p.HasAttr(AttrDoesNotUntap) {
+	// Check the restrictions before any permanent untaps (CR 502.3).
+	var restricted []bool
+	if len(g.effects.Rules.untapRestrictions) > 0 {
+		restricted = make([]bool, len(g.zones.battlefield))
+		for i, p := range g.zones.battlefield {
+			restricted[i] = p.Tapped && p.ControllerID() == activeID && g.HasUntapStepRestriction(p)
+		}
+	}
+
+	var untapped []uuid.UUID
+	untap := func(p *Permanent) bool {
+		if !p.Tapped || g.turns.ConsumeSkipNextUntap(p.ID()) || !g.untapPermanentState(p) {
+			return false
+		}
+		untapped = append(untapped, p.ID())
+		return true
+	}
+
+	for i, p := range g.zones.battlefield {
+		if p.ControllerID() == activeID {
+			if p.HasAttr(AttrDoesNotUntap) || (i < len(restricted) && restricted[i]) {
 				// Does not untap — skip
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
 				// Player may choose not to untap, but only when staying tapped
@@ -2675,35 +2730,36 @@ func (g *Game) doUntap() {
 				if !autoUntap && !active.ChooseMayAbility("untap "+p.Name()) {
 					continue
 				}
-				g.untapPermanentDuringUntapStep(p)
+				untap(p)
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
-				if p.Tapped && landsUntapped < landUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						landsUntapped++
-					}
+				if landsUntapped < landUntapLimit && untap(p) {
+					landsUntapped++
 				}
 			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
 				// Artifact (non-land) with untap limit in effect (Damping Field)
-				if p.Tapped && artifactsUntapped < artifactUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						artifactsUntapped++
-					}
+				if artifactsUntapped < artifactUntapLimit && untap(p) {
+					artifactsUntapped++
 				}
 			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
 				// Creature with untap limit in effect (Smoke)
-				if p.Tapped && creaturesUntapped < creatureUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						creaturesUntapped++
-					}
+				if creaturesUntapped < creatureUntapLimit && untap(p) {
+					creaturesUntapped++
 				}
-			} else if p.Tapped {
-				g.untapPermanentDuringUntapStep(p)
+			} else {
+				untap(p)
 			}
 			if mp := g.MutablePermanent(p.ID()); mp != nil {
 				mp.RevokeBaseAttr(AttrSummonSick)
 			}
 		}
+	}
+	// Triggers must see the state after all eligible permanents untap.
+	if len(untapped) > 0 && len(g.effects.effects) > 0 {
+		g.effects.Apply(g)
+	}
+	for _, id := range untapped {
+		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: id})
 	}
 	g.trackers.Turn.ResetLandsPlayed()
 }
@@ -2713,9 +2769,6 @@ func (g *Game) doUntap() {
 // What the fuck is this method doing here? Why isn't it part of Turn or similar?
 func (g *Game) doUpkeepActions() {
 	active := g.ActivePlayerObj()
-
-	// Expire "until your next upkeep" effects for the active player.
-	g.effects.RemoveUntilYourNextTurn(g, active.PlayerID())
 
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,
@@ -3005,6 +3058,7 @@ func (g *Game) enforceMinimumBlockers() {
 		dropped := group.BlockerIDs
 		group.BlockerIDs = nil
 		group.Blocked = false
+		group.soleBlockerWhenBlocked = uuid.Nil()
 		for _, bid := range dropped {
 			// Also clean up the per-turn blocked tracking for this attacker.
 			g.trackers.Turn.RemoveBlockedAttacker(bid, group.AttackerID)
@@ -3691,6 +3745,10 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if err := g.validateTargetGroups(playerID, perm.Card, actionTargets, actionGroups, g.resolution.X()); err != nil {
 		return err
 	}
+	damageDistribution, damageTotal, err := g.announceDividedDamage(actionEffects, perm.Card, playerID, targets, g.resolution.X())
+	if err != nil {
+		return err
+	}
 
 	// Lock and validate the total activation cost before changing live state.
 	// If the ability includes {T}, reserve its source from mana planning.
@@ -3734,6 +3792,8 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.TargetSource = perm.Card
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
+	obj.DamageDistribution = damageDistribution
+	obj.damageTotal = damageTotal
 
 	if inner.Type() == AbilityMana {
 		produced := tappedForManaAmount(aa, actionEffects, actionTargets)
@@ -3746,21 +3806,6 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		g.ResolveStackObject(obj)
 		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		return nil
-	}
-
-	for _, eff := range actionEffects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(NewEffectContext(g, perm.ID(), playerID, targets))
-		if total > 0 && len(targets) > 0 {
-			pl := g.GetPlayer(playerID)
-			if pl != nil {
-				dist := pl.ChooseDamageDistribution(targets, total, perm.Card.Name(), g)
-				obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
-			}
-		}
-		break
 	}
 
 	g.pushStack(obj)
@@ -3810,13 +3855,26 @@ func (g *Game) ResolveTopOfStack() {
 	}
 	obj := g.stack.Pop()
 	g.ResolveStackObject(obj)
-	g.PutTriggersOnStack()
+	if !g.IsGameOver() {
+		g.PutTriggersOnStack()
+	}
 }
 
-// IsGameOver returns true if any player has 0 or less life.
+func (g *Game) playerIsAlive(p Player) bool {
+	if p.IsAlive() {
+		return true
+	}
+	if p.Life() > 0 || !g.IsLichActive(p.PlayerID()) {
+		return false
+	}
+	loss, ok := p.(interface{ hasLost() bool })
+	return ok && !loss.hasLost()
+}
+
+// IsGameOver reports whether any player has lost the game.
 func (g *Game) IsGameOver() bool {
 	for _, p := range g.players {
-		if !p.IsAlive() {
+		if !g.playerIsAlive(p) {
 			return true
 		}
 	}
@@ -3825,9 +3883,12 @@ func (g *Game) IsGameOver() bool {
 
 // Winner returns the name of the winning player, or "" if no winner yet.
 func (g *Game) Winner() string {
+	if !g.IsGameOver() {
+		return ""
+	}
 	for _, p := range g.players {
-		if !p.IsAlive() {
-			return g.GetOpponent(p.PlayerID()).Name()
+		if g.playerIsAlive(p) {
+			return p.Name()
 		}
 	}
 	return ""

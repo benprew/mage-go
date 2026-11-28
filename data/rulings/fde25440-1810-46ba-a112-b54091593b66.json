@@ -1,0 +1,15 @@
+{
+  "name": "Urza's Chalice",
+  "oracle_id": "fde25440-1810-46ba-a112-b54091593b66",
+  "rulings_uri": "https://api.scryfall.com/cards/67678871-a1e4-42ef-b49d-bb646ee9595d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "fde25440-1810-46ba-a112-b54091593b66",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This will not trigger on its own casting. It must be on the battlefield at the time the artifact is cast."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Eye for an Eye",
+  "oracle_id": "22647b1a-5a7c-41b5-b820-b2e9f49c7aad",
+  "rulings_uri": "https://api.scryfall.com/cards/7b4b8de1-a548-4398-887e-f95b4c15590c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "22647b1a-5a7c-41b5-b820-b2e9f49c7aad",
+      "source": "wotc",
+      "published_at": "2009-02-01",
+      "comment": "Eye for an Eye must resolve before damage would be dealt to you in order to affect that damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "22647b1a-5a7c-41b5-b820-b2e9f49c7aad",
+      "source": "wotc",
+      "published_at": "2009-02-01",
+      "comment": "The damage dealt to you is still being dealt by the original source. The damage dealt to the other player is being dealt by Eye for an Eye."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Phantasmal Terrain",
+  "oracle_id": "7dcbce46-2973-4a9f-93df-95ac41ce668a",
+  "rulings_uri": "https://api.scryfall.com/cards/e9640cd5-bef8-486f-b903-46ff92efe3d3/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "7dcbce46-2973-4a9f-93df-95ac41ce668a",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Will not add or remove the supertype snow to or from a land."
+    }
+  ]
+}

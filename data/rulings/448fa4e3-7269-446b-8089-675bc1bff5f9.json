@@ -1,0 +1,29 @@
+{
+  "name": "Visions",
+  "oracle_id": "448fa4e3-7269-446b-8089-675bc1bff5f9",
+  "rulings_uri": "https://api.scryfall.com/cards/b0fed0e6-0e56-4987-b0dd-b294156c0233/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "448fa4e3-7269-446b-8089-675bc1bff5f9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If there are less than 5 cards in the library, you look at whatever ones remain and you still get the option to shuffle."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "448fa4e3-7269-446b-8089-675bc1bff5f9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You can’t rearrange the cards. You put them back in the same order or have the whole library shuffled."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "448fa4e3-7269-446b-8089-675bc1bff5f9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This is not a draw and will not cause a player to lose if there are less than 5 cards in the library."
+    }
+  ]
+}

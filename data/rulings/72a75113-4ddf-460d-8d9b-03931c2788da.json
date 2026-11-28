@@ -1,0 +1,36 @@
+{
+  "name": "Transmutation",
+  "oracle_id": "72a75113-4ddf-460d-8d9b-03931c2788da",
+  "rulings_uri": "https://api.scryfall.com/cards/e2d90519-68f8-43ab-902a-0fed0f526488/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "72a75113-4ddf-460d-8d9b-03931c2788da",
+      "source": "wotc",
+      "published_at": "2005-11-01",
+      "comment": "Note that the wording \"Effects that alter the creature's power alter its toughness instead, and vice versa, this turn\" has been removed."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72a75113-4ddf-460d-8d9b-03931c2788da",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "Effects that switch a creature's power and toughness apply after all other effects, regardless of when those effects began to apply. For instance, if you target a 1/2 creature then give it +2/+0 later in the turn, it's a 2/3 creature, not a 4/1 creature."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72a75113-4ddf-460d-8d9b-03931c2788da",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "Because damage remains marked on a creature until the damage is removed as the turn ends, nonlethal damage dealt to a creature may become lethal if you switch its power and toughness during that turn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "72a75113-4ddf-460d-8d9b-03931c2788da",
+      "source": "wotc",
+      "published_at": "2021-03-19",
+      "comment": "Switching a creature's power and toughness twice (or any even number of times) effectively returns the creature to the power and toughness it had before any switches."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Gauntlets of Chaos",
+  "oracle_id": "924ef69f-9977-439c-ace9-353b429e4be6",
+  "rulings_uri": "https://api.scryfall.com/cards/8ea1b001-1eb6-4bb9-b8f3-1aaea14a9a13/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "924ef69f-9977-439c-ace9-353b429e4be6",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "As you activate the ability, the targets you choose must be two artifacts, two creatures, or two lands. As the ability resolves, both targets will be legal only if they are two artifacts, two creatures, or two lands at that time as well, though they may be a different type than they were at the time the ability was activated. For example, if the targets were a creature and an artifact creature when the ability was activated, but the first target became a noncreature artifact by the time the ability resolves, both targets will still be legal (since they’re both artifacts)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "924ef69f-9977-439c-ace9-353b429e4be6",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If one of the targets is illegal by the time the ability resolves (because the wrong player controls it, or it’s the wrong card type, or for any other reason), the exchange doesn’t happen. The target that’s still legal will remain under its controller’s control. Since the exchange doesn’t happen, no Auras are destroyed. (If both targets are illegal, the ability doesn’t resolve.)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Urza's Tower",
+  "oracle_id": "32fbb638-ab14-4e8b-a07a-d4c44e3496f2",
+  "rulings_uri": "https://api.scryfall.com/cards/1e9f09b3-dd2d-4ba9-a57e-4f3c1793f752/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "32fbb638-ab14-4e8b-a07a-d4c44e3496f2",
+      "source": "wotc",
+      "published_at": "2024-06-07",
+      "comment": "The ability checks for land types, not the names of other permanents you control."
+    }
+  ]
+}

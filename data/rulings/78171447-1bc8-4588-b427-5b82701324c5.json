@@ -1,0 +1,29 @@
+{
+  "name": "Ivory Guardians",
+  "oracle_id": "78171447-1bc8-4588-b427-5b82701324c5",
+  "rulings_uri": "https://api.scryfall.com/cards/e8142471-0ded-410b-bdd5-ac241735b0ce/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "78171447-1bc8-4588-b427-5b82701324c5",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The abilities from multiple Ivory Guardians are cumulative. For example, if you control two different Ivory Guardians and an opponent controls a nontoken red permanent, each of your Ivory Guardians will be 5/5."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "78171447-1bc8-4588-b427-5b82701324c5",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The ability of an Ivory Guardians will affect itself as well as all other creatures named Ivory Guardians (not just the ones you control)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "78171447-1bc8-4588-b427-5b82701324c5",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Each ability applies a maximum of once, even if an opponent controls multiple nontoken red permanents or multiple opponents each control a nontoken red permanent."
+    }
+  ]
+}

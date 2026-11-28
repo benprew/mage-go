@@ -1,0 +1,15 @@
+{
+  "name": "Arcades Sabboth",
+  "oracle_id": "8ead94c5-8447-4f20-87ec-efdccde689fc",
+  "rulings_uri": "https://api.scryfall.com/cards/175695bb-2630-4269-a407-9138c7008e81/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8ead94c5-8447-4f20-87ec-efdccde689fc",
+      "source": "wotc",
+      "published_at": "2022-12-08",
+      "comment": "As long as Arcades Sabboth is untapped and isn’t attacking, it gets +0/+2 from its own third ability."
+    }
+  ]
+}

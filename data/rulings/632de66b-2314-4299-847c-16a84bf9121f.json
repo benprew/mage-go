@@ -1,0 +1,22 @@
+{
+  "name": "Imprison",
+  "oracle_id": "632de66b-2314-4299-847c-16a84bf9121f",
+  "rulings_uri": "https://api.scryfall.com/cards/12671381-beb7-41b8-9484-97f8aca5c981/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "632de66b-2314-4299-847c-16a84bf9121f",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Both abilities are triggered abilities. The first one triggers on the activating of a creature ability, and the second triggers on declaration of attacking or blocking."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "632de66b-2314-4299-847c-16a84bf9121f",
+      "source": "wotc",
+      "published_at": "2013-04-15",
+      "comment": "A mana ability is an ability that (1) isn't a loyalty ability, (2) doesn't target, and (3) could add mana when it resolves."
+    }
+  ]
+}

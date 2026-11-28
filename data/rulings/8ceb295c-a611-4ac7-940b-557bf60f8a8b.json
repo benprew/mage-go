@@ -1,0 +1,15 @@
+{
+  "name": "Red Mana Battery",
+  "oracle_id": "8ceb295c-a611-4ac7-940b-557bf60f8a8b",
+  "rulings_uri": "https://api.scryfall.com/cards/e4e507bc-441d-4f44-85d4-cf93ca199d2e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8ceb295c-a611-4ac7-940b-557bf60f8a8b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be tapped even if it has no counters."
+    }
+  ]
+}

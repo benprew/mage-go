@@ -1,0 +1,29 @@
+{
+  "name": "Mijae Djinn",
+  "oracle_id": "61bebdfa-5df0-4952-abf9-dc5e0e4f57ea",
+  "rulings_uri": "https://api.scryfall.com/cards/b4eb4f9e-4c11-4563-9f9a-87ec93274695/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "61bebdfa-5df0-4952-abf9-dc5e0e4f57ea",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Any abilities which have already resolved before the coin flip are not undone. Any abilities that trigger when it attacks which have not already resolved will still resolve."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "61bebdfa-5df0-4952-abf9-dc5e0e4f57ea",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The coin flip is done as a triggered ability on declaring the Djinn as an attacker."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "61bebdfa-5df0-4952-abf9-dc5e0e4f57ea",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the Djinn attacks, but you lose the coin toss, then it is still considered to have attacked, and any other abilities that trigger on it attacking will resolve normally."
+    }
+  ]
+}

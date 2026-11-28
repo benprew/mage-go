@@ -557,25 +557,7 @@ func (*copySpellOnStackEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
-	// Find the target spell on the stack
-	original := ctx.Game.FindStackObject(ctx.legacyTargets()[0])
-	if original == nil {
-		return nil
-	}
-	// Create a copy of the stack object
-	cp := &StackObject{
-		ID:         uuid.New(),
-		Card:       original.Card,
-		Controller: ctx.Controller,
-		SourceID:   original.SourceID,
-		Effects:    make([]Effect, len(original.Effects)),
-		Targets:    make([]uuid.UUID, len(original.Targets)),
-		IsAbility:  original.IsAbility,
-		XValue:     original.XValue,
-	}
-	copy(cp.Effects, original.Effects)
-	copy(cp.Targets, original.Targets)
-	ctx.Game.PushStack(cp)
+	ctx.Game.CopyStackObjectDirect(ctx.Game.FindStackObject(ctx.legacyTargets()[0]), ctx.Controller, false)
 	return nil
 }
 

@@ -2,7 +2,6 @@ package interactive
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -32,17 +31,16 @@ func TestSnapshotMetadataTracksDefinitionChanges(t *testing.T) {
 	before := SnapshotGameState(game, 0)
 	card.AddType(core.TypeArtifact)
 	card.AddSubType("Wizard")
-	card.AddAbility(mage.StaticKeyword(core.Haste))
 	after := SnapshotGameState(game, 0)
-	if after.You.Hand[0].Types != "Creature Artifact" || after.You.Hand[0].SubTypes != "Bird Wizard" || !strings.Contains(after.You.Hand[0].RulesText, "Haste") {
+	if after.You.Hand[0].Types != "Creature Artifact" || after.You.Hand[0].SubTypes != "Bird Wizard" {
 		t.Fatalf("stale metadata after card changes: %+v", after.You.Hand[0])
 	}
 	if !reflect.DeepEqual(before.You.Hand[1], after.You.Hand[1]) {
 		t.Fatalf("changing one instance changed its copy: before=%+v copy=%+v", before.You.Hand[0], after.You.Hand[1])
 	}
-	card.CloneFrom(mage.NewCreature("Bird", "{R}", 4, 5, mage.WithSubTypes("Dragon"), mage.WithKeyword(core.Trample)))
+	card.CloneFrom(mage.NewCreature("Bird", "{R}", 4, 5, mage.WithSubTypes("Dragon")))
 	copied := SnapshotGameState(game, 0).You.Hand[0]
-	if copied.ManaCost != "{R}" || copied.SubTypes != "Dragon" || copied.RulesText != "Trample" || copied.Power != 4 || copied.Toughness != 5 {
+	if copied.ManaCost != "{R}" || copied.SubTypes != "Dragon" || copied.Power != 4 || copied.Toughness != 5 {
 		t.Fatalf("stale metadata after copy: %+v", copied)
 	}
 }
@@ -50,10 +48,10 @@ func TestSnapshotMetadataTracksDefinitionChanges(t *testing.T) {
 func TestSnapshotMetadataDoesNotAliasSnapshots(t *testing.T) {
 	game, human, _ := snapshotAllocationGame()
 	before := SnapshotGameState(game, 0)
-	before.You.Hand[0].RulesText = "modified"
+	before.You.Hand[0].SubTypes = "modified"
 	human.AddToGraveyard(mage.NewCreature("Bear", "{G}", 2, 2))
 	after := SnapshotGameState(game, 0)
-	if after.You.Hand[0].RulesText == "modified" || len(before.You.Graveyard) != 0 || len(after.You.Graveyard) != 1 {
+	if after.You.Hand[0].SubTypes == "modified" || len(before.You.Graveyard) != 0 || len(after.You.Graveyard) != 1 {
 		t.Fatal("snapshots share mutable state")
 	}
 }

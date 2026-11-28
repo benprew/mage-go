@@ -1,0 +1,36 @@
+{
+  "name": "All Hallow's Eve",
+  "oracle_id": "ebed900f-6de3-4ae7-9795-fae34882298d",
+  "rulings_uri": "https://api.scryfall.com/cards/af266eec-e61b-4bda-be7f-3a5a59eee864/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ebed900f-6de3-4ae7-9795-fae34882298d",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since you can respond to triggered abilities, it is legal to sacrifice creatures using some spell or ability prior to resolving the ability that removes the final counter from All Hallow's Eve."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ebed900f-6de3-4ae7-9795-fae34882298d",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Each creature returned to the battlefield by All Hallow's Eve enters under its owner's control."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ebed900f-6de3-4ae7-9795-fae34882298d",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "All Hallow's Eve's triggered ability functions from the exile zone. This ability has an \"intervening 'if' clause.\" It won't trigger at all unless All Hallow's Eve is exiled and has a scream counter on it (which can happen only if it resolves as a spell)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ebed900f-6de3-4ae7-9795-fae34882298d",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The only thing that happens when All Hallow's Eve resolves is that it's exiled with two scream counters on it."
+    }
+  ]
+}

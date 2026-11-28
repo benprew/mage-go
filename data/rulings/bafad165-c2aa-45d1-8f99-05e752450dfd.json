@@ -1,0 +1,15 @@
+{
+  "name": "Hyperion Blacksmith",
+  "oracle_id": "bafad165-c2aa-45d1-8f99-05e752450dfd",
+  "rulings_uri": "https://api.scryfall.com/cards/44d499a9-fe7c-4a1a-9eb3-a7fd9f85ae08/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "bafad165-c2aa-45d1-8f99-05e752450dfd",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You decide whether you are tapping or untapping the artifact on resolution."
+    }
+  ]
+}

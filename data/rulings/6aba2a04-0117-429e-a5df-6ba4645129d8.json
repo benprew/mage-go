@@ -1,0 +1,15 @@
+{
+  "name": "Ichneumon Druid",
+  "oracle_id": "6aba2a04-0117-429e-a5df-6ba4645129d8",
+  "rulings_uri": "https://api.scryfall.com/cards/cf2313bb-6f9b-49d6-b069-9f3b77b6e107/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6aba2a04-0117-429e-a5df-6ba4645129d8",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It tracks the instant count for each player separately."
+    }
+  ]
+}

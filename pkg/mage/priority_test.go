@@ -1,7 +1,9 @@
 package mage
 
 import (
+	"slices"
 	"testing"
+	"uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -28,6 +30,65 @@ func newPriorityTestGame() *Game {
 	return g
 }
 
+func TestRunPriorityRound_ActingPlayerRetainsPriority(t *testing.T) {
+	g, _, b := invariantTestGame()
+	spell := NewInstant("Response", "", NewSpellAbility())
+	spell.SetOwner(b.PlayerID())
+	b.AddToHand(spell)
+
+	var order []int
+	g.SetOnPriority(func(_ *Game, playerIdx int, _ bool) PriorityAction {
+		order = append(order, playerIdx)
+		if len(order) == 2 {
+			return PriorityAction{Type: PriorityCastSpell, CardID: spell.ID()}
+		}
+		return PriorityAction{Type: PriorityPass}
+	})
+	g.RunStepWithPriority(Upkeep)
+	if want := []int{0, 1, 1, 0, 0, 1}; !slices.Equal(order, want) {
+		t.Errorf("priority order = %v, want %v", order, want)
+	}
+}
+
+func TestRunPriorityRound_NoPriorityAfterLoss(t *testing.T) {
+	g, a, _ := invariantTestGame()
+	g.SetTurn(2)
+	a.SetLibrary(nil)
+	g.SetOnPriority(func(_ *Game, playerIdx int, _ bool) PriorityAction {
+		t.Errorf("player %d received priority after deck-out", playerIdx)
+		return PriorityAction{Type: PriorityPass}
+	})
+	g.RunStepWithPriority(Draw)
+	if !g.IsGameOver() {
+		t.Error("expected the game to end")
+	}
+}
+
+type priorityTestAttacker struct {
+	*BasePlayer
+	attackers []uuid.UUID
+}
+
+func (p *priorityTestAttacker) DeclareAttackers(_ *Game) []uuid.UUID {
+	return p.attackers
+}
+
+func TestRunPriorityRound_AttackersUpdateContinuousEffects(t *testing.T) {
+	a := &priorityTestAttacker{BasePlayer: NewBasePlayer("Alice")}
+	g := NewGame(a, NewBasePlayer("Bob"))
+	addInvariantPermanent(g, a.BasePlayer, NewEnchantment("Castle", "{3}{W}",
+		WithStaticAbility(BoostControlledCreatures(0, 2, IsUntapped))))
+	attacker := addInvariantPermanent(g, a.BasePlayer, NewCreature("Pegasus", "", 1, 1, WithKeyword(Haste)))
+	a.attackers = []uuid.UUID{attacker.ID()}
+	g.SetOnPriority(func(g *Game, _ int, _ bool) PriorityAction {
+		if got := attacker.CurrentToughness(g); got != 1 || !attacker.Tapped {
+			t.Errorf("attacking creature tapped = %t, toughness = %d, want true and 1", attacker.Tapped, got)
+		}
+		return PriorityAction{Type: PriorityPass}
+	})
+	g.RunStepWithPriority(DeclareAttackers)
+}
+
 func TestRunStepWithPriority_Untap(t *testing.T) {
 	g := newPriorityTestGame()
 
@@ -42,6 +103,27 @@ func TestRunStepWithPriority_Untap(t *testing.T) {
 
 	if perm.Tapped {
 		t.Error("expected creature to be untapped after untap step")
+	}
+}
+
+func TestRunStepWithPriority_UntapChecksRestrictionsBeforeUntapping(t *testing.T) {
+	g, player, _ := invariantTestGame()
+	first := addInvariantPermanent(g, player, NewArtifact("First artifact", ""))
+	second := addInvariantPermanent(g, player, NewArtifact("Second artifact", ""))
+	firstID, secondID := first.ID(), second.ID()
+	filter := NewPermanentFilter("second artifact while the first is tapped", func(p *Permanent, g *Game) bool {
+		return p.ID() == secondID && g.FindPermanent(firstID).Tapped
+	})
+	addInvariantPermanent(g, player, NewEnchantment("Untap restriction", "", WithStaticAbility(PreventUntapForMatching(filter))))
+	g.TapPermanent(first)
+	g.TapPermanent(second)
+
+	g.RunStepWithPriority(Untap)
+	if g.FindPermanent(firstID).Tapped || !g.FindPermanent(secondID).Tapped {
+		t.Fatal("only the first artifact must untap")
+	}
+	if g.HasUntapStepRestriction(g.FindPermanent(secondID)) {
+		t.Error("the restriction must end once the first artifact untaps")
 	}
 }
 

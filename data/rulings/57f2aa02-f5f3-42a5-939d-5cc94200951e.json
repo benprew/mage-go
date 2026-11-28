@@ -1,0 +1,15 @@
+{
+  "name": "Livonya Silone",
+  "oracle_id": "57f2aa02-f5f3-42a5-939d-5cc94200951e",
+  "rulings_uri": "https://api.scryfall.com/cards/d4ef4c06-9dab-499c-a270-0ba7f0b5fd77/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "57f2aa02-f5f3-42a5-939d-5cc94200951e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "“Legendary landwalk” means “This creature is can’t be blocked as long as defending player controls a legendary land.”"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Raiding Party",
+  "oracle_id": "1d9b8859-14e3-4bbe-ad92-916b25a37b31",
+  "rulings_uri": "https://api.scryfall.com/cards/907a3396-706b-4ca2-9973-bca758986032/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1d9b8859-14e3-4bbe-ad92-916b25a37b31",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "A player can choose zero or one Plains if they want."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "1d9b8859-14e3-4bbe-ad92-916b25a37b31",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The creatures are tapped during spell resolution."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "1d9b8859-14e3-4bbe-ad92-916b25a37b31",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The color of creature to be tapped is set when the effect is announced and even if you use Sleight of Mind after that, you can’t change what color creature needs to be tapped to prevent the destruction."
+    }
+  ]
+}

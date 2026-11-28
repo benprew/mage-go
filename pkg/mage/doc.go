@@ -66,6 +66,13 @@
 // Each active continuous effect owns its source binding and execution state.
 // Static definitions can be shared by cards, permanents, and simulation branches.
 // Layer application keeps registration order within each layer.
+// [RunStepWithPriority] removes effects that expire at the start of upkeep
+// before it applies layers and checks upkeep triggers.
+// [Game.TapPermanent] and [Game.UntapPermanent] update continuous effects
+// before they check triggers. During the untap step, the engine updates the
+// effects after all eligible permanents untap.
+// [PreventUntapForMatching] registers an untap rule. Use
+// [Game.HasUntapStepRestriction] to test its filter against current characteristics.
 //
 // [Card.NewCopy] creates a new identity and retains the copiable definition.
 // [Card.CloneInstance] retains identity for a simulation branch. [Game.Clone]
@@ -212,7 +219,8 @@
 // [ProtectionFromColor] and [ProtectionFromColors] use [EffectiveColors] to
 // check legality for targeting, damage, blocking, fighting, and attachment.
 // Protection from card types, subtypes, or all characteristics uses
-// [ObjectFilter].
+// [ObjectFilter]. A recast spell supplies its current characteristics on the
+// stack and during resolution, even if the card has a battlefield snapshot.
 //
 // # State Triggers and Simultaneous Deaths
 //
@@ -228,6 +236,16 @@
 // state-based actions use this path. Zero-toughness and zero-loyalty deaths
 // share the same observation batch. Conditions use the state before the batch;
 // trigger effects resolve against the current game state.
+//
+// Deathtouch damage keeps its actual amount. The game records the deathtouch
+// event until the next state-based action check (CR 704.5h).
+//
+// # Game State Diagnostics
+//
+// Call [Game.CheckInvariants] from tests or a diagnostic runner. Use
+// [InvariantOptions.AtPriority] at a priority callback. Use
+// [Game.SnapshotInitialCards] after deck setup to check card conservation.
+// [PriorityAbort] stops a diagnostic run at the first violation.
 //
 // # Replacement Choices
 //
@@ -249,6 +267,12 @@
 //
 // [SacrificeSource] and [SacrificeSourceStep] require the resolving controller
 // to control the source when the effect applies.
+//
+// # Damage
+//
+// [Game.DealDamageToPermanent] applies replacement and prevention effects
+// before it removes loyalty counters from a planeswalker (CR 120.3c).
+// Damage is also marked if the planeswalker is a creature (CR 120.3e).
 //
 // # Damage-Source Choices
 //
@@ -294,7 +318,8 @@
 // [Game.SpellTargetOptions] pairs affordable X values with legal candidates for
 // each target group. The query uses cast cost adjustments and direct mana
 // and life costs. Required equality filters supply candidate X values from
-// battlefield or stack spell mana values. Casting and resolution check X.
+// mana values in the target's zone. Battlefield, stack, hand, and graveyard
+// targets use the announced X during casting and resolution.
 // [TargetSpellOnStack] accepts [ObjectFilter] values.
 // Use an object filter to check the mana value of a spell on the stack:
 //
@@ -305,6 +330,9 @@
 //
 // [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
 // controlled by the ability's controller.
+//
+// [CastAsThoughHadFlash] and [CastAsThoughHadFlashGlobal] evaluate their filters
+// with the current game and the source permanent's controller.
 //
 // # Mana-Production Metadata
 //
@@ -351,6 +379,10 @@
 // isolated game state. [Commit] updates the active game only after verification
 // succeeds. A canceled transaction leaves mana pools, life totals, tapped
 // states, cards, counters, and other resources unchanged.
+//
+// For a spell, use the announced X to calculate each mana cost. Cost increases
+// and reductions apply to the combined mana cost. The spell keeps the
+// announced X on the stack.
 //
 // [AutoTapHint.ReservedSources] excludes specified permanents from mana
 // planning. Attack-cost payments reserve the attacking creature. An activated
@@ -425,7 +457,8 @@
 // [ApplyToRandomPlayer], and [ApplyToRandomDamageTarget] wrap an [Effect].
 // They choose the target during effect resolution.
 // [SetSourceChosenColorAtRandom] and [ChangeSourceToRandomColor] set a random
-// color on the source object.
+// color on the source object. A change to the chosen color updates continuous
+// effects that use the source's mana production.
 // [ChooseRandomCreatureSubtypeFromTargetLibrary] selects a creature subtype
 // from a library and stores it in the ChosenSubtype field.
 // [TargetCreatureOfSourceChosenSubtype] targets creatures that match that
@@ -578,7 +611,9 @@
 // alternative events. The permanent entry, death, departure, and attack
 // constructors test ObjectFilter with the ability context. LookupObject
 // supplies live state or LKI. Player event constructors use PlayerSelector.
-// Existing NewTriggered helpers remain available.
+// [WhenPlayerCastsSpell] and [WheneverYouCastSpellTrigger] use the stack spell
+// identified by the cast event. Spell filters can read its announced mana
+// value. Existing NewTriggered helpers remain available.
 //
 // TargetPermanent accepts ObjectFilter and PermanentFilter values. TargetCreature
 // and its variants use the same permanent targeting implementation. Use

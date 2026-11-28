@@ -393,6 +393,7 @@ var (
 	Tap                                       = mage.Tap
 	UntapSource                               = mage.UntapSource
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
+	RemoveFromCombatAndUnblockGathered        = mage.RemoveFromCombatAndUnblockGathered
 	TapGathered                               = mage.TapGathered
 	FightGathered                             = mage.FightGathered
 	UntapTarget                               = mage.UntapTarget
@@ -432,6 +433,7 @@ var (
 	VarPlayer                                 = mage.VarPlayer
 	TapAllLands                               = mage.TapAllLands
 	RemoveFromCombat                          = mage.RemoveFromCombat
+	RemoveFromCombatAndUnblock                = mage.RemoveFromCombatAndUnblock
 	RegenerateSource                          = mage.RegenerateSource
 	StunCreature                              = mage.StunCreature
 	SkipNextUntapTarget                       = mage.SkipNextUntapTarget

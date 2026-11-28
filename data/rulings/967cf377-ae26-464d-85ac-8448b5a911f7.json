@@ -1,0 +1,29 @@
+{
+  "name": "Underworld Dreams",
+  "oracle_id": "967cf377-ae26-464d-85ac-8448b5a911f7",
+  "rulings_uri": "https://api.scryfall.com/cards/03919c86-1c4a-43b0-a2db-54ca6ae1ac57/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "967cf377-ae26-464d-85ac-8448b5a911f7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If multiple cards are drawn at once, this card triggers once for each card drawn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "967cf377-ae26-464d-85ac-8448b5a911f7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "In a multi-player game, it affects all opponents."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "967cf377-ae26-464d-85ac-8448b5a911f7",
+      "source": "wotc",
+      "published_at": "2020-01-24",
+      "comment": "If a spell or ability causes you to put cards into your hand without specifically using the word “draw,” it’s not a card drawn."
+    }
+  ]
+}

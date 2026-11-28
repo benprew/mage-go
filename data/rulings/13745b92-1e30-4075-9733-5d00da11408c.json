@@ -1,0 +1,29 @@
+{
+  "name": "Seasinger",
+  "oracle_id": "13745b92-1e30-4075-9733-5d00da11408c",
+  "rulings_uri": "https://api.scryfall.com/cards/473c8a26-4971-4b17-bdef-4c8f8120360d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "13745b92-1e30-4075-9733-5d00da11408c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You do not lose control of the stolen creature if it stops being a creature. You only lose control if Seasinger leaves your control or becomes untapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "13745b92-1e30-4075-9733-5d00da11408c",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Whether you control Seasinger is checked continually, starting when the ability is activated. If, before the ability resolves, there’s any point at which you don’t control Seasinger, the ability has no effect — even if you control Seasinger again by the time the ability resolves. The same is true regarding whether Seasinger remains tapped."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "13745b92-1e30-4075-9733-5d00da11408c",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "If a creature’s controller doesn’t control an Island, that creature is an illegal target. Whether that player controls an Island is checked both when Seasinger’s ability is activated and when it resolves. However, targeting restrictions aren’t checked continually while a spell or ability is on the stack."
+    }
+  ]
+}

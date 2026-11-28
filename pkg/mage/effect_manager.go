@@ -7,11 +7,7 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// layerPostPT is not one of the CR 613.1 layers but the pass CR 613.11 asks
-// for: continuous effects that modify the game rules rather than an object's
-// characteristics are applied after all other continuous effects. Meekstone's
-// "power 3 or greater" reads the power the layers produced, so in layer 6 it
-// would still see a creature's power before the layer 7 modifications.
+// layerPostPT applies rules after effects that change characteristics (CR 613.11).
 const layerPostPT Layer = LayerPT + 1
 
 // ContinuousEffect represents an ongoing effect on the game.
@@ -572,6 +568,9 @@ func (em *EffectManager) Apply(g *Game) {
 				p = g.MutablePermanent(p.ID())
 				if p == nil {
 					continue
+				}
+				if len(g.combat.Groups) > 0 {
+					g.combat.RemoveFromCombat(p.ID())
 				}
 				p.turnControlGained = g.turns.Turn()
 				if !p.HasAttr(AttrSummonSick) {

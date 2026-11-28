@@ -1,0 +1,22 @@
+{
+  "name": "Hurkyl's Recall",
+  "oracle_id": "ed1e5d24-c8a8-48fe-a88f-1003ad432477",
+  "rulings_uri": "https://api.scryfall.com/cards/73edeaaa-6a87-4cf1-b013-bab9a7bb94d9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ed1e5d24-c8a8-48fe-a88f-1003ad432477",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Retrieves all artifacts owned by the target player regardless of who controls them. Ignores artifacts owned by other players even if target player has control of them."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ed1e5d24-c8a8-48fe-a88f-1003ad432477",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "It only returns artifacts which are on the battlefield."
+    }
+  ]
+}

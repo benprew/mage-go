@@ -1,0 +1,92 @@
+{
+  "name": "Word of Command",
+  "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+  "rulings_uri": "https://api.scryfall.com/cards/8b1be5ba-6e5e-4801-815b-5e82b9e72b3d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "To \"play a card\" is to either cast a spell or to put a land onto the battlefield using the main phase special action."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You do get to choose which lands get tapped. You can make them choose an optional mana generating ability of the land that they tap, such as making them tap and sacrifice the land instead of just tap it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "During the resolution of this spell, that player plays the chosen card."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "Word of Command can't be used to force a player to play a card that isn't in their hand."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "You control the player while this spell is resolving, which means you get to see anything they can see. If that player is required to search their library as part of playing the card or as part of its resolution if it's cast as a spell, then you can see the cards in that player's library as well."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "You may Command your opponent to play a land (if they have not already done so this turn)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "You must order your opponent to play the chosen card if it is possible to do so."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "If there is a non-mana way to cast a spell, as with Pitch Spells, you may require that way to be used if it is possible to do so."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "Your opponent can't counter the Word of Command after letting you look at their hand, but they can attempt to counter the spell you force them to cast."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2011-01-01",
+      "comment": "Since this spell is an instant, your opponent gets a chance to respond to it as normal. Once this spell resolves, you look at your opponent's hand and choose a card. Note that it is common practice to respond to Word of Command by using up any spells or mana you have prior to letting it resolve."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2016-07-13",
+      "comment": "While controlling another player, you can see all cards in the game that player can see. This includes cards in that player's hand, face-down cards that player controls, and any cards in that player's library the player may look at."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e8ad3a77-b293-4d69-b080-27ca9f95d443",
+      "source": "wotc",
+      "published_at": "2016-07-13",
+      "comment": "Controlling a player doesn't allow you to look at that player's sideboard. If an effect instructs that player to choose a card from outside the game, you can't have that player choose any card."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Stone Giant",
+  "oracle_id": "0b8e3f9b-a4da-49a3-8545-ce7a265e5856",
+  "rulings_uri": "https://api.scryfall.com/cards/fbd9a10e-2bf7-4af7-bb34-52de01e03523/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "0b8e3f9b-a4da-49a3-8545-ce7a265e5856",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "If the Giant’s power and/or toughness change so that its toughness is less than its power, you can have the ability target the Giant itself."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0b8e3f9b-a4da-49a3-8545-ce7a265e5856",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "If Stone Giant’s ability is activated during a turn’s end step, the delayed triggered ability won’t trigger until the beginning of the next turn’s end step. The targeted creature will be destroyed at that time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0b8e3f9b-a4da-49a3-8545-ce7a265e5856",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When the delayed triggered ability resolves, the targeted creature is destroyed, even if it’s no longer a creature, no longer under your control, or no longer has toughness less than Stone Giant’s power at that time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "0b8e3f9b-a4da-49a3-8545-ce7a265e5856",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "To work as an evasion ability, an attacking creature must already have flying when the declare blockers step begins. Once a creature has become blocked, giving it flying won’t change that."
+    }
+  ]
+}

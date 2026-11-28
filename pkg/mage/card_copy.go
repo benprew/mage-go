@@ -105,6 +105,8 @@ func (g *Game) applyPermanentCopy(perm *Permanent, values CopiableValues) {
 	perm.RuntimeAbilities = fresh.RuntimeAbilities
 	perm.printedAbilitiesSuppressed = false
 	if g.zones.EnteringPermanent() != perm {
+		var worldTime uint64
+		g.zones.recordWorldType(perm, &worldTime)
 		for abilityIndex, ability := range perm.RuntimeAbilities {
 			if static, ok := ability.(*StaticAbilityHolder); ok {
 				for effectIndex, effect := range static.Effects {

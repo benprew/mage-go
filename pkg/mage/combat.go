@@ -29,6 +29,9 @@ type CombatGroup struct {
 	BlockerIDs []uuid.UUID
 	DefenderID uuid.UUID
 	Blocked    bool
+
+	// soleBlockerWhenBlocked records which creature alone made the attacker blocked.
+	soleBlockerWhenBlocked uuid.UUID
 }
 
 func NewCombat() *Combat {
@@ -57,8 +60,17 @@ func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
 }
 
 func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
+	c.addBlocker(blockerID, attackerID, true)
+}
+
+func (c *Combat) addBlocker(blockerID, attackerID uuid.UUID, declared bool) {
 	for _, g := range c.Groups {
 		if g.AttackerID == attackerID {
+			if !g.Blocked {
+				g.soleBlockerWhenBlocked = blockerID
+			} else if declared {
+				g.soleBlockerWhenBlocked = uuid.Nil()
+			}
 			g.BlockerIDs = append(g.BlockerIDs, blockerID)
 			g.Blocked = true
 			return
@@ -78,6 +90,18 @@ func (c *Combat) IsBlocking(id uuid.UUID) bool {
 		}
 	}
 	return false
+}
+
+func (c *Combat) opponentsOf(id uuid.UUID) []uuid.UUID {
+	var opponents []uuid.UUID
+	for _, group := range c.Groups {
+		if group.AttackerID == id {
+			opponents = append(opponents, group.BlockerIDs...)
+		} else if group.AttackerID != uuid.Nil() && slices.Contains(group.BlockerIDs, id) {
+			opponents = append(opponents, group.AttackerID)
+		}
+	}
+	return opponents
 }
 
 // SnapshotAttackedAlone records, at the end of the declare-attackers step,
@@ -179,27 +203,26 @@ func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
 	return slices.Contains(members, id2)
 }
 
-// RemoveFromCombat removes a permanent from combat (attacker or blocker).
-// Per Oracle text on cards like False Orders and Ydwen Efreet: "Creatures it
-// was blocking that had become blocked by only that creature this combat become
-// unblocked." If the removed creature was the sole blocker, the attacker
-// becomes unblocked (Blocked = false).
+// RemoveFromCombat removes a permanent from combat. A blocked attacker remains blocked.
 func (c *Combat) RemoveFromCombat(id uuid.UUID) {
+	c.removeFromCombat(id, false)
+}
+
+func (c *Combat) removeFromCombat(id uuid.UUID, unblock bool) {
 	delete(c.Attackers, id)
+	delete(c.FirstStruck, id)
 	for _, g := range c.Groups {
 		if g.AttackerID == id {
 			g.AttackerID = uuid.Nil()
 		}
-		filtered := g.BlockerIDs[:0]
-		for _, bid := range g.BlockerIDs {
-			if bid != id {
-				filtered = append(filtered, bid)
-			}
+		if g.DefenderID == id {
+			g.DefenderID = uuid.Nil()
 		}
-		g.BlockerIDs = filtered
-		// If this was the only blocker, the attacker becomes unblocked.
-		if len(g.BlockerIDs) == 0 {
+		before := len(g.BlockerIDs)
+		g.BlockerIDs = slices.DeleteFunc(g.BlockerIDs, func(blocker uuid.UUID) bool { return blocker == id })
+		if unblock && g.soleBlockerWhenBlocked == id && before == 1 && len(g.BlockerIDs) == 0 {
 			g.Blocked = false
+			g.soleBlockerWhenBlocked = uuid.Nil()
 		}
 	}
 }
@@ -332,6 +355,17 @@ func combatDamageValue(p *Permanent, g *Game) int {
 	return p.CurrentPower(g)
 }
 
+func dealCombatDamageToDefender(g *Game, defenderID uuid.UUID, damage int, sourceID uuid.UUID) {
+	if defenderID == uuid.Nil() || damage <= 0 {
+		return
+	}
+	if defender := g.GetPlayer(defenderID); defender != nil {
+		g.DealDamageToPlayer(defender, damage, sourceID)
+	} else if defender := g.FindPermanent(defenderID); defender != nil && defender.HasType(TypePlaneswalker) {
+		g.DealDamageToPermanent(defender, damage, sourceID)
+	}
+}
+
 // ResolveDamage executes combat damage for all combat groups. It replaces the
 // old Game.DoCombatDamage method and operates on the Combat receiver so the
 // logic lives alongside the rest of the combat state.
@@ -362,21 +396,13 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 			// Unblocked — damage to defending player.
 			// Forcefield and bodyguard are now replacement effects in the pipeline.
 			if c.DealsDamageInStep(atk, isFirstStrikeStep) {
-				defender := g.GetPlayer(group.DefenderID)
-				if defender != nil {
-					dmg := combatDamageValue(atk, g)
-					g.DealDamageToPlayer(defender, dmg, atk.ID())
-				}
+				dealCombatDamageToDefender(g, group.DefenderID, combatDamageValue(atk, g), atk.ID())
 			}
 		} else if len(group.BlockerIDs) == 0 {
 			// CR 509.1h + 510.1c: blocked but all blockers removed.
 			// Deals no damage unless it has trample.
 			if atk.HasKeyword(Trample) && c.DealsDamageInStep(atk, isFirstStrikeStep) {
-				defender := g.GetPlayer(group.DefenderID)
-				if defender != nil {
-					dmg := atk.CurrentPower(g)
-					g.DealDamageToPlayer(defender, dmg, atk.ID())
-				}
+				dealCombatDamageToDefender(g, group.DefenderID, atk.CurrentPower(g), atk.ID())
 			}
 		} else if c.isBlockingBand(g, group.BlockerIDs) {
 			// Blocking band: defending player distributes attacker's damage.
@@ -463,10 +489,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			remainingDmg = dealDefaultBlockedCombatDamage(g, atk, orderedPerms, atkPower, atk.HasKeyword(Trample))
 		}
 		if remainingDmg > 0 && atk.HasKeyword(Trample) {
-			defender := g.GetPlayer(group.DefenderID)
-			if defender != nil {
-				g.DealDamageToPlayer(defender, remainingDmg, atk.ID())
-			}
+			dealCombatDamageToDefender(g, group.DefenderID, remainingDmg, atk.ID())
 		}
 	}
 	for _, bid := range group.BlockerIDs {
@@ -646,20 +669,14 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 			// Trample: any damage beyond what was distributed goes to the defending player.
 			if atk.HasKeyword(Trample) {
 				if trampleDmg := atkPower - usedDmg; trampleDmg > 0 {
-					defender := g.GetPlayer(group.DefenderID)
-					if defender != nil {
-						g.DealDamageToPlayer(defender, trampleDmg, atk.ID())
-					}
+					dealCombatDamageToDefender(g, group.DefenderID, trampleDmg, atk.ID())
 				}
 			}
 		} else {
 			// Default: normal distribution (no banding benefit).
 			remainingDmg := dealDefaultBlockedCombatDamage(g, atk, blockerPerms, atkPower, atk.HasKeyword(Trample))
 			if remainingDmg > 0 && atk.HasKeyword(Trample) {
-				defender := g.GetPlayer(group.DefenderID)
-				if defender != nil {
-					g.DealDamageToPlayer(defender, remainingDmg, atk.ID())
-				}
+				dealCombatDamageToDefender(g, group.DefenderID, remainingDmg, atk.ID())
 			}
 		}
 	}
@@ -704,6 +721,9 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 	// Does the band contain any member with trample?
 	hasTrample := false
 	for _, memberID := range bandMemberIDs {
+		if !c.IsAttacking(memberID) {
+			continue
+		}
 		member := g.FindPermanent(memberID)
 		if member != nil && member.HasKeyword(Trample) {
 			hasTrample = true
@@ -714,6 +734,9 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 	if !isBlocked {
 		// Unblocked: each member independently deals its power to the defending player.
 		for _, memberID := range bandMemberIDs {
+			if !c.IsAttacking(memberID) {
+				continue
+			}
 			member := g.FindPermanent(memberID)
 			if member == nil {
 				continue
@@ -725,12 +748,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			if dmg <= 0 {
 				continue
 			}
-			defender := g.GetPlayer(defenderID)
-			if defender == nil {
-				continue
-			}
-			// Forcefield and bodyguard are now replacement effects in the pipeline.
-			g.DealDamageToPlayer(defender, dmg, member.ID())
+			dealCombatDamageToDefender(g, defenderID, dmg, member.ID())
 		}
 		return
 	}
@@ -741,6 +759,9 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 	totalBandPower := 0
 	var primaryAttacker *Permanent
 	for _, memberID := range bandMemberIDs {
+		if !c.IsAttacking(memberID) {
+			continue
+		}
 		member := g.FindPermanent(memberID)
 		if member == nil {
 			continue
@@ -786,10 +807,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			remainingDmg = dealDefaultBlockedCombatDamage(g, primaryAttacker, blockerPerms, totalBandPower, hasTrample)
 		}
 		if remainingDmg > 0 && hasTrample {
-			defender := g.GetPlayer(defenderID)
-			if defender != nil {
-				g.DealDamageToPlayer(defender, remainingDmg, primaryAttacker.ID())
-			}
+			dealCombatDamageToDefender(g, defenderID, remainingDmg, primaryAttacker.ID())
 		}
 	}
 

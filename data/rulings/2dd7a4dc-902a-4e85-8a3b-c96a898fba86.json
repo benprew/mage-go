@@ -1,0 +1,22 @@
+{
+  "name": "Animate Artifact",
+  "oracle_id": "2dd7a4dc-902a-4e85-8a3b-c96a898fba86",
+  "rulings_uri": "https://api.scryfall.com/cards/63aec27b-8cda-46c2-9f4f-9ebe98dffe2e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2dd7a4dc-902a-4e85-8a3b-c96a898fba86",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "This card has been returned to its original functionality. If it is enchanting an artifact that's already a creature, it won't change its power and toughness."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2dd7a4dc-902a-4e85-8a3b-c96a898fba86",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "A noncreature permanent that turns into a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn't matter how long the permanent has been a creature."
+    }
+  ]
+}

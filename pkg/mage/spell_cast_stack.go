@@ -7,19 +7,21 @@ import (
 )
 
 type castStackObjectOptions struct {
-	TargetGroups      [][]uuid.UUID
-	Mode              *int
-	Card              *Card
-	Controller        uuid.UUID
-	Targets           []uuid.UUID
-	XValue            int
-	CastZone          Zone
-	SourceID          uuid.UUID
-	IsCopy            bool
-	ExileOnLeaveStack bool
-	SnapshotCast      bool
-	PromptTargets     bool
-	ModePrompt        string
+	TargetGroups       [][]uuid.UUID
+	Mode               *int
+	Card               *Card
+	Controller         uuid.UUID
+	Targets            []uuid.UUID
+	XValue             int
+	CastZone           Zone
+	SourceID           uuid.UUID
+	IsCopy             bool
+	ExileOnLeaveStack  bool
+	SnapshotCast       bool
+	PromptTargets      bool
+	ModePrompt         string
+	damageDistribution map[uuid.UUID]int
+	damageTotal        int
 }
 
 func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, error) {
@@ -39,20 +41,22 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	}
 
 	obj := &StackObject{
-		ID:                uuid.New(),
-		Card:              card,
-		Controller:        opts.Controller,
-		SourceID:          sourceID,
-		Effects:           effects,
-		Targets:           targets,
-		TargetSpecs:       expandTargetSpecs(card.CastTargets(), targets, opts.XValue),
-		TargetSource:      card,
-		XValue:            opts.XValue,
-		ModeChoice:        modeChoice,
-		ModalTargets:      modalTargets,
-		IsCopy:            opts.IsCopy,
-		CastZone:          opts.CastZone,
-		ExileOnLeaveStack: opts.ExileOnLeaveStack,
+		ID:                 uuid.New(),
+		Card:               card,
+		Controller:         opts.Controller,
+		SourceID:           sourceID,
+		Effects:            effects,
+		Targets:            targets,
+		TargetSpecs:        expandTargetSpecs(card.CastTargets(), targets, opts.XValue),
+		TargetSource:       card,
+		XValue:             opts.XValue,
+		ModeChoice:         modeChoice,
+		ModalTargets:       modalTargets,
+		IsCopy:             opts.IsCopy,
+		CastZone:           opts.CastZone,
+		ExileOnLeaveStack:  opts.ExileOnLeaveStack,
+		DamageDistribution: opts.damageDistribution,
+		damageTotal:        opts.damageTotal,
 	}
 	specs := card.CastTargets()
 	if action, ok := getModalSpellAbility(card); ok {
@@ -69,7 +73,13 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		obj.CastContext = g.snapshotCastContext(opts.Controller)
 	}
 
-	g.chooseDividedDamageForSpell(obj, card, controller)
+	if opts.PromptTargets {
+		var err error
+		obj.DamageDistribution, obj.damageTotal, err = g.announceDividedDamage(effects, card, opts.Controller, targets, opts.XValue)
+		if err != nil {
+			return nil, err
+		}
+	}
 	g.pushStack(obj)
 	g.recordSpellCast(card, opts.Controller)
 	g.FireEvent(GameEvent{
@@ -154,23 +164,6 @@ func (g *Game) prepareSpellStackPayload(caster Player, card *Card, targets []uui
 		}
 	}
 	return effects, targets, nil, modeChoice
-}
-
-func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card *Card, controller Player) {
-	if obj == nil || card == nil || controller == nil {
-		return
-	}
-	for _, eff := range obj.Effects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(NewEffectContext(g, obj.SourceID, obj.Controller, obj.Targets))
-		if total > 0 && len(obj.Targets) > 0 {
-			dist := controller.ChooseDamageDistribution(obj.Targets, total, card.Name(), g)
-			obj.DamageDistribution = sanitizeDamageDistribution(dist, obj.Targets, total)
-		}
-		break
-	}
 }
 
 func (g *Game) recordSpellCast(card *Card, playerID uuid.UUID) {

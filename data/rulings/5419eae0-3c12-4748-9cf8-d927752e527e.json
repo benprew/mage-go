@@ -1,0 +1,57 @@
+{
+  "name": "Sorrow's Path",
+  "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+  "rulings_uri": "https://api.scryfall.com/cards/9347f02e-270b-44da-988c-d99a0fc5dfcb/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-02-01",
+      "comment": "This has two abilities. The second ability triggers any time it becomes tapped, whether to pay for its ability or not."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When Sorrow’s Path’s first ability is activated, its second ability triggers and goes on the stack on top of the first ability. The second ability resolves first, and may cause some of the attacking creatures to be dealt lethal damage."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Abilities that trigger whenever one of the targeted creatures blocks will trigger when the first ability resolves, because those creatures will change from not blocking (since they’re removed from combat) to blocking. It doesn’t matter if those abilities triggered when those creatures blocked the first time. Abilities that trigger whenever one of the attacking creatures becomes blocked will not trigger again, because they never stopped being blocked creatures. Abilities that trigger whenever a creature blocks one of the attacking creatures will trigger again, though; those kinds of abilities trigger once for each creature that blocks."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When the first ability resolves, if all the creatures that one of the targeted creatures was blocking have left combat, then the other targeted creature is considered to be able to block all creatures the first creature is blocking. If the ability has its full effect, the second creature will be removed from combat but not returned to combat; it doesn’t block anything."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "A “blocking creature” is one that has been declared as a blocker this combat, or one that was put onto the battlefield blocking this combat. Unless that creature leaves combat, it continues to be a blocking creature through the end of combat step, even if the creature or creatures that it was blocking are no longer on the battlefield or have otherwise left combat by then."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "When determining whether a creature could block all creatures the other is blocking, take into account evasion abilities (like flying), protection abilities, and other blocking restrictions, as well as abilities that allow a creature to block multiple creatures or block as though a certain condition were true. Take into account whether those creatures are tapped, but not whether they have costs to block (since those apply only as blockers are declared)."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "5419eae0-3c12-4748-9cf8-d927752e527e",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The first ability can target any two blocking creatures a single opponent controls. Whether those creatures could block all creatures the other is blocking isn’t determined until the ability resolves."
+    }
+  ]
+}

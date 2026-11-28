@@ -389,8 +389,9 @@ func TestRishkarPeemaRenegade_ETBCountersAndManaGrant(t *testing.T) {
 func TestRonomUnicorn(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ronom Unicorn")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Holy Strength") // an enchantment
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // for Holy Strength to attach
+	strength := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Holy Strength")
+	bears := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.Attach(strength, bears)
 	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Ronom Unicorn", "Holy Strength")
 	g.StopAt(3, core.PostcombatMain)
 	g.Execute()

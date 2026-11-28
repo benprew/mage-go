@@ -1,0 +1,15 @@
+{
+  "name": "Su-Chi",
+  "oracle_id": "9a28d53e-c789-47de-8f3e-a251843ac596",
+  "rulings_uri": "https://api.scryfall.com/cards/f27a3660-a50d-4402-97c2-8d70dcbc1782/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "9a28d53e-c789-47de-8f3e-a251843ac596",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You get the mana whether you want it or not. If you don’t spend it, it will disappear at the end of the current step (or phase)."
+    }
+  ]
+}

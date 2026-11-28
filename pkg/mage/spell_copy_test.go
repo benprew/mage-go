@@ -266,7 +266,7 @@ func TestCopySpellOnStack_DividedDamageNewTargets(t *testing.T) {
 		Targets:    []uuid.UUID{b.PlayerID(), c1.ID()},
 		DamageDistribution: map[uuid.UUID]int{
 			b.PlayerID(): 3,
-			c1.ID():       1,
+			c1.ID():      1,
 		},
 	}
 	a.RemoveFromHand(pyro.ID())

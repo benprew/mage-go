@@ -1,0 +1,36 @@
+{
+  "name": "Tetravus",
+  "oracle_id": "85255c26-4e74-4cf0-91a6-78ddba5abdc6",
+  "rulings_uri": "https://api.scryfall.com/cards/c1b83a15-1d0b-4fc6-b7cb-fcd0063bfa7d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "85255c26-4e74-4cf0-91a6-78ddba5abdc6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Any +1/+1 counter which is on this card can be turned into a Tetravite token. It does not care where the +1/+1 counter came from."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "85255c26-4e74-4cf0-91a6-78ddba5abdc6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the Tetravus is destroyed when the Tetravites are off the card, they are not destroyed, they are just orphaned."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "85255c26-4e74-4cf0-91a6-78ddba5abdc6",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Only Tetravites from this specific Tetravus may be used for the ability. Ones from a different Tetravus can't."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "85255c26-4e74-4cf0-91a6-78ddba5abdc6",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "This card now has two upkeep-triggered abilities. Its controller chooses the order they are put on the stack, and thus the order in which they resolve each upkeep."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Wand of Ith",
+  "oracle_id": "3ec1ccd7-4970-4032-be7a-9e76ca6a139e",
+  "rulings_uri": "https://api.scryfall.com/cards/80c9070a-8c70-480e-a476-e00f8e2c71b9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3ec1ccd7-4970-4032-be7a-9e76ca6a139e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Any X in the mana cost of a card is zero for purposes of the Wand."
+    }
+  ]
+}

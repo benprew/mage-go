@@ -1,0 +1,15 @@
+{
+  "name": "The Rack",
+  "oracle_id": "3d873e1d-4fac-42c4-bb31-77e76099e1ef",
+  "rulings_uri": "https://api.scryfall.com/cards/696d1e25-5c25-4522-b085-90d49fe23a18/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "3d873e1d-4fac-42c4-bb31-77e76099e1ef",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "You choose one opposing player as this card enters, and it only affects that one player. This choice is not changed even if this card changes controllers. It becomes useless but stays on the battlefield if the chosen player leaves the game."
+    }
+  ]
+}

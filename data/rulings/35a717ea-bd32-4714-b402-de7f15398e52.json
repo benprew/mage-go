@@ -1,0 +1,29 @@
+{
+  "name": "Nameless Race",
+  "oracle_id": "35a717ea-bd32-4714-b402-de7f15398e52",
+  "rulings_uri": "https://api.scryfall.com/cards/348a467a-4661-4fdb-af1d-9171a1a930d9/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "35a717ea-bd32-4714-b402-de7f15398e52",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The life payment is made just as the card is being put onto the battlefield."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "35a717ea-bd32-4714-b402-de7f15398e52",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If put onto the battlefield by a spell or ability, you pay life during the resolution of that spell or ability."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "35a717ea-bd32-4714-b402-de7f15398e52",
+      "source": "wotc",
+      "published_at": "2007-10-01",
+      "comment": "This currently has no creature type. It's Nameless."
+    }
+  ]
+}

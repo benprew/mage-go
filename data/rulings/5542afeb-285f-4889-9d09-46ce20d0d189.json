@@ -1,0 +1,15 @@
+{
+  "name": "Lesser Werewolf",
+  "oracle_id": "5542afeb-285f-4889-9d09-46ce20d0d189",
+  "rulings_uri": "https://api.scryfall.com/cards/dcbda60c-5a53-4232-b89c-267f7b11c192/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5542afeb-285f-4889-9d09-46ce20d0d189",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "You may activate Lesser Werewolf’s ability no matter what its power is. However, if Lesser Werewolf’s power is 0 or less at the time the ability resolves, the ability won’t do anything."
+    }
+  ]
+}

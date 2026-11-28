@@ -1,0 +1,15 @@
+{
+  "name": "Thrull Retainer",
+  "oracle_id": "81a47019-1343-4a63-893a-0d8ba5e848d5",
+  "rulings_uri": "https://api.scryfall.com/cards/cc830040-543e-4d19-8601-4b687ee49122/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "81a47019-1343-4a63-893a-0d8ba5e848d5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "This leaves the battlefield when you activate its activated ability, but the enchanted creature won't be regenerated until the ability resolves. In the intervening time, the creature will no longer have the bonus that this had been giving it. This may cause the creature to be destroyed before the regeneration shield is created."
+    }
+  ]
+}

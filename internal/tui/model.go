@@ -89,7 +89,6 @@ type cardDetail struct {
 	Power      int
 	Toughness  int
 	Keywords   []string
-	RulesText  string
 	IsCreature bool
 }
 
@@ -514,7 +513,6 @@ func (m *Model) openBrowser() {
 					SubTypes:   c.SubTypes,
 					Power:      c.Power,
 					Toughness:  c.Toughness,
-					RulesText:  c.RulesText,
 					IsCreature: strings.Contains(c.Types, "Creature"),
 				},
 			})
@@ -542,7 +540,6 @@ func (m *Model) openBrowser() {
 					Power:      p.Power,
 					Toughness:  p.Toughness,
 					Keywords:   p.Keywords,
-					RulesText:  p.RulesText,
 					IsCreature: p.IsCreature,
 				},
 			})
@@ -573,7 +570,6 @@ func (m *Model) openBrowser() {
 					Power:      p.Power,
 					Toughness:  p.Toughness,
 					Keywords:   p.Keywords,
-					RulesText:  p.RulesText,
 					IsCreature: p.IsCreature,
 				},
 			})

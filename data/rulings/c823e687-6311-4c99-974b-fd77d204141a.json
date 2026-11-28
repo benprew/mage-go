@@ -1,0 +1,15 @@
+{
+  "name": "Timetwister",
+  "oracle_id": "c823e687-6311-4c99-974b-fd77d204141a",
+  "rulings_uri": "https://api.scryfall.com/cards/fbee1e10-0b8c-44ea-b0e5-44cdd0bfcd76/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c823e687-6311-4c99-974b-fd77d204141a",
+      "source": "wotc",
+      "published_at": "2013-07-01",
+      "comment": "This card won’t be put into your graveyard until after it’s finished resolving, which means it won’t be shuffled into your library as part of its own effect."
+    }
+  ]
+}

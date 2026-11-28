@@ -1,0 +1,15 @@
+{
+  "name": "Jacques le Vert",
+  "oracle_id": "c030ca14-33cb-40b3-a1f5-b6d0cb0efd49",
+  "rulings_uri": "https://api.scryfall.com/cards/6fde1e41-bb06-457e-8c61-4a41535e3a73/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c030ca14-33cb-40b3-a1f5-b6d0cb0efd49",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Gives himself +0/+2."
+    }
+  ]
+}

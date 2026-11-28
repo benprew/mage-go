@@ -5693,30 +5693,31 @@ func registerCreatures() {
 				AddCounters(P1P1, Fixed(1)).Targeting(ToAllTargets()),
 				false,
 			).AddTarget(TargetUpToNCreatures(2))),
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
-				func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
+			WithStaticAbility(func() ContinuousEffect {
+				ab := NewActivatedAbility(AddMana(Green, 1), Tap())
+				return FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+					func(g *Game, sourceID uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						for _, p := range g.FilterBattlefield(IsCreature) {
+							if p.ControllerID() != src.ControllerID() {
+								continue
+							}
+							if !hasAnyCounter(p) {
+								continue
+							}
+							p = g.MutablePermanent(p.ID())
+							if p == nil {
+								continue
+							}
+							p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
+						}
 						return nil
-					}
-					for _, p := range g.FilterBattlefield(IsCreature) {
-						if p.ControllerID() != src.ControllerID() {
-							continue
-						}
-						if !hasAnyCounter(p) {
-							continue
-						}
-						p = g.MutablePermanent(p.ID())
-						if p == nil {
-							continue
-						}
-						ab := NewActivatedAbility(AddMana(Green, 1), Tap())
-
-						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
-					}
-					return nil
-				},
-			)),
+					},
+				)
+			}()),
 		)
 	})
 

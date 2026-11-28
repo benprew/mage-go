@@ -1,0 +1,15 @@
+{
+  "name": "Akron Legionnaire",
+  "oracle_id": "c5f50a78-9dc4-4f3c-aa11-b41c8278bc16",
+  "rulings_uri": "https://api.scryfall.com/cards/b3e10240-8a4f-410f-a9b2-5df89d7038df/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c5f50a78-9dc4-4f3c-aa11-b41c8278bc16",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you have two or more Legionnaires, they can all attack."
+    }
+  ]
+}

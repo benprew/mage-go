@@ -71,12 +71,20 @@ func (e *tapAllLandsEffect) Properties() EffectProperties {
 }
 
 // removeFromCombatEffect removes a target creature from combat.
-type removeFromCombatEffect struct{}
+type removeFromCombatEffect struct{ unblock bool }
 
 // RemoveFromCombat creates an effect that removes a target creature from combat.
 func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 
-func (e *removeFromCombatEffect) Text() string                 { return "Remove target creature from combat" }
+// RemoveFromCombatAndUnblock removes the target from combat and unblocks each attacker it blocked alone.
+func RemoveFromCombatAndUnblock() Effect { return &removeFromCombatEffect{unblock: true} }
+
+func (e *removeFromCombatEffect) Text() string {
+	if e.unblock {
+		return "Remove target creature from combat. Unblock each attacker it blocked alone."
+	}
+	return "Remove target creature from combat"
+}
 func (e *removeFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
@@ -366,7 +374,7 @@ func (*tapAllLandsEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
+func (e *removeFromCombatEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.legacyTargets()) == 0 {
 		return nil
 	}
@@ -374,7 +382,7 @@ func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
 	if perm == nil {
 		return nil
 	}
-	ctx.Game.RemoveFromCombat(perm.ID())
+	ctx.Game.combat.removeFromCombat(perm.ID(), e.unblock)
 	return nil
 }
 

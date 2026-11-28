@@ -1,0 +1,15 @@
+{
+  "name": "White Mana Battery",
+  "oracle_id": "cf58682f-c305-4803-b54b-37f0841788e9",
+  "rulings_uri": "https://api.scryfall.com/cards/b622e694-858d-482f-a67d-0e52d268708c/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "cf58682f-c305-4803-b54b-37f0841788e9",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can be tapped even if it has no counters."
+    }
+  ]
+}

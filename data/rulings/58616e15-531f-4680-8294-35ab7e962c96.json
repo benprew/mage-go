@@ -1,0 +1,15 @@
+{
+  "name": "Scarecrow",
+  "oracle_id": "58616e15-531f-4680-8294-35ab7e962c96",
+  "rulings_uri": "https://api.scryfall.com/cards/4b0dcd50-7403-48e5-b928-5d35d7304f51/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "58616e15-531f-4680-8294-35ab7e962c96",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Even prevents non-combat damage from flying creatures."
+    }
+  ]
+}

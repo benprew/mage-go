@@ -1,0 +1,22 @@
+{
+  "name": "Concordant Crossroads",
+  "oracle_id": "ff01b408-6d17-40a3-9efd-a1b341ec1307",
+  "rulings_uri": "https://api.scryfall.com/cards/c9a26f51-5bff-4f06-abaa-6fbb56a8b5b6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "ff01b408-6d17-40a3-9efd-a1b341ec1307",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "ff01b408-6d17-40a3-9efd-a1b341ec1307",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "This ability affects all creatures, not just the ones you control."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Venarian Gold",
+  "oracle_id": "5d7acb89-1778-409a-9e91-aaeadd13ca27",
+  "rulings_uri": "https://api.scryfall.com/cards/11fb92c0-bb1e-463a-a6b6-887a5d0cb873/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "5d7acb89-1778-409a-9e91-aaeadd13ca27",
+      "source": "wotc",
+      "published_at": "2011-06-01",
+      "comment": "The counters are placed on the creature to which it enters attached. If you later move Venarian Gold to a different creature, the counters remain on the original creature and no counters are put on the new creature."
+    }
+  ]
+}

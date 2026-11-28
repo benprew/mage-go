@@ -1,0 +1,15 @@
+{
+  "name": "Aspect of Wolf",
+  "oracle_id": "77b7277d-90a1-4774-a998-8c35c3f94e4a",
+  "rulings_uri": "https://api.scryfall.com/cards/38af8356-2d7f-4699-9e57-08906c1c831b/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "77b7277d-90a1-4774-a998-8c35c3f94e4a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "The effect is continuously updated based on the number of Forests you control at any given time."
+    }
+  ]
+}

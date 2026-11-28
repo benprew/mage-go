@@ -34,7 +34,6 @@ func NewRegistry() *Registry {
 func (r *Registry) Register(name string, factory CardFactory) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	delete(r.definitions, name)
 	r.factories[name] = factory
 	if folded := FoldDiacritics(name); folded != name {
 		r.folded[folded] = name
@@ -42,6 +41,7 @@ func (r *Registry) Register(name string, factory CardFactory) {
 }
 
 // CreateCard creates a new card instance by name from this registry.
+// It uses the definition when a factory has the same name.
 func (r *Registry) CreateCard(name string) (*Card, error) {
 	r.mu.RLock()
 	canonical := name
@@ -173,13 +173,15 @@ func RegisteredCardNames() []string {
 	return DefaultRegistry.RegisteredCardNames()
 }
 
-// RegisteredCardNames returns a list of all registered card names.
+// RegisteredCardNames returns each registered card name once.
 func (r *Registry) RegisteredCardNames() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	names := make([]string, 0, len(r.factories)+len(r.definitions))
 	for name := range r.factories {
-		names = append(names, name)
+		if r.definitions[name] == nil {
+			names = append(names, name)
+		}
 	}
 	for name := range r.definitions {
 		names = append(names, name)

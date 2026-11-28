@@ -1,0 +1,36 @@
+{
+  "name": "Giant Shark",
+  "oracle_id": "44a10a63-be9c-4f1d-aad6-b5337112bda5",
+  "rulings_uri": "https://api.scryfall.com/cards/53ec4a19-0f2f-4713-a869-58832484648d/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "44a10a63-be9c-4f1d-aad6-b5337112bda5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The bonus happens when a previously damaged creature becomes a blocker and the bonus is not removed if that creature is removed from the blocking situation by any means."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "44a10a63-be9c-4f1d-aad6-b5337112bda5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Giant Shark only gains its bonus if the blocking creature was damaged before blocking was declared. Damaging the creature later will not give the Shark the bonus."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "44a10a63-be9c-4f1d-aad6-b5337112bda5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Giant Shark gets the bonus once for each creature it blocks or is blocked by that meets the criteria."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "44a10a63-be9c-4f1d-aad6-b5337112bda5",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If a creature enters a blocking situation with the Giant Shark due to being part of a banded group of attackers, the Shark will get the bonus if that creature is damaged at that time."
+    }
+  ]
+}

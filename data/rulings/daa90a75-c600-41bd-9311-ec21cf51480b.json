@@ -1,0 +1,15 @@
+{
+  "name": "Detonate",
+  "oracle_id": "daa90a75-c600-41bd-9311-ec21cf51480b",
+  "rulings_uri": "https://api.scryfall.com/cards/45d14cd5-8398-481a-a190-d6c0f6263e33/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "daa90a75-c600-41bd-9311-ec21cf51480b",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If the artifact becomes an illegal target before resolution, then no damage is done."
+    }
+  ]
+}

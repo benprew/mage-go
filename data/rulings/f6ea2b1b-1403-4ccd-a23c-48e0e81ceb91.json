@@ -1,0 +1,15 @@
+{
+  "name": "Orgg",
+  "oracle_id": "f6ea2b1b-1403-4ccd-a23c-48e0e81ceb91",
+  "rulings_uri": "https://api.scryfall.com/cards/e8961e50-dc20-40f9-86ca-968ba28ad0cc/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "f6ea2b1b-1403-4ccd-a23c-48e0e81ceb91",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Whether or not the creatures could attack or block is not important, just whether or not the defending player controls such a creature."
+    }
+  ]
+}

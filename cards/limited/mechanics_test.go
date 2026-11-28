@@ -531,17 +531,15 @@ func TestAuras(t *testing.T) {
 			name: "aura boosts enchanted creature P/T",
 			setup: func(g *gametest.TestGame) {
 				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rancor")
+				g.AddCard(core.ZoneHand, gametest.PlayerA, "Rancor")
 			},
 			script: func(g *gametest.TestGame) {
-				// Manually attach Rancor to Bears (simulating cast)
-				g.StopAt(1, core.PrecombatMain)
+				g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Rancor", "Grizzly Bears")
+				g.StopAt(1, core.BeginCombat)
 			},
 			check: func(g *gametest.TestGame) {
-				// We need to attach in setup - let's use a different approach
-				// For now just check Rancor is on the field
-				g.AssertPermanentCount(gametest.PlayerA, "Rancor", 1)
-				g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+				g.AssertAttachedTo(gametest.PlayerA, "Rancor", "Grizzly Bears")
+				g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 2)
 			},
 		},
 		{

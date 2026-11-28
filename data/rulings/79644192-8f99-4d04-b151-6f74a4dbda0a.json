@@ -1,0 +1,15 @@
+{
+  "name": "Amrou Kithkin",
+  "oracle_id": "79644192-8f99-4d04-b151-6f74a4dbda0a",
+  "rulings_uri": "https://api.scryfall.com/cards/278d86b4-8d62-4932-a66d-062971295631/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "79644192-8f99-4d04-b151-6f74a4dbda0a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "A creature with power 3 or greater can’t be declared as a blocker for Amrou Kithkin. If the power of a creature that’s already blocking Amrou Kithkin is increased to 3 or greater, it will continue to block Amrou Kithkin."
+    }
+  ]
+}

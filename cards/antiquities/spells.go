@@ -57,11 +57,7 @@ func registerSpells() {
 						}
 					}
 					for _, perm := range toReturn {
-						g.RemoveFromBattlefield(perm)
-						owner := g.GetPlayer(perm.Card.Owner())
-						if owner != nil {
-							owner.AddToHand(perm.Card)
-						}
+						g.BouncePermanentToHand(perm)
 					}
 					return nil
 				})),

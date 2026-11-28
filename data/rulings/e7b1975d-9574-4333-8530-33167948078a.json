@@ -1,0 +1,29 @@
+{
+  "name": "Hellfire",
+  "oracle_id": "e7b1975d-9574-4333-8530-33167948078a",
+  "rulings_uri": "https://api.scryfall.com/cards/e66002e6-f722-429c-94a0-f571d9110fbd/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "e7b1975d-9574-4333-8530-33167948078a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "A token creature that’s destroyed is put into its owner’s graveyard, and will be counted by Hellfire’s effect. (Immediately after Hellfire finishes resolving, the token will cease to exist.)"
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e7b1975d-9574-4333-8530-33167948078a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "Hellfire checks the number of creatures put into graveyards as the result of its effect, not the number of creatures destroyed as a result of its effect. For example, a replacement effect that says “If a creature would be put into a graveyard from the battlefield, exile it instead” won’t affect whether a creature is destroyed or not, but will affect whether it’s put into a graveyard or not."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "e7b1975d-9574-4333-8530-33167948078a",
+      "source": "wotc",
+      "published_at": "2009-10-01",
+      "comment": "A creature that regenerates instead of being destroyed doesn’t leave the battlefield, so it’s not put into a graveyard."
+    }
+  ]
+}

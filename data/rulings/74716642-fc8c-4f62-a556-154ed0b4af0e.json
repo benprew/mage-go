@@ -1,0 +1,22 @@
+{
+  "name": "Heroism",
+  "oracle_id": "74716642-fc8c-4f62-a556-154ed0b4af0e",
+  "rulings_uri": "https://api.scryfall.com/cards/08ee87a0-a7eb-4472-9045-85d11e8a1501/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "74716642-fc8c-4f62-a556-154ed0b4af0e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The cost to avoid the penalty must be paid when the ability resolves. You can’t wait until later to do so."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "74716642-fc8c-4f62-a556-154ed0b4af0e",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Paying the Heroism cost to allow a creature to deal damage does not prevent other effects from preventing it from dealing damage. Paying the cost only prevents the Heroism effect."
+    }
+  ]
+}

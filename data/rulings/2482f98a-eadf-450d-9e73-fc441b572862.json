@@ -1,0 +1,22 @@
+{
+  "name": "Sewers of Estark",
+  "oracle_id": "2482f98a-eadf-450d-9e73-fc441b572862",
+  "rulings_uri": "https://api.scryfall.com/cards/b0da11d4-3603-4f59-8f61-7204bf04e165/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2482f98a-eadf-450d-9e73-fc441b572862",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "This spell can target any creature. The check for whether that creature is attacking or blocking made on resolution, and it will have the appropriate effect at that time."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "2482f98a-eadf-450d-9e73-fc441b572862",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "If the creature is neither an attacking creature nor a blocking creature at the time the spell resolves, it will have no effect."
+    }
+  ]
+}

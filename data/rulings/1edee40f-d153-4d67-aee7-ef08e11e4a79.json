@@ -1,0 +1,29 @@
+{
+  "name": "Cyclopean Tomb",
+  "oracle_id": "1edee40f-d153-4d67-aee7-ef08e11e4a79",
+  "rulings_uri": "https://api.scryfall.com/cards/7c77c7c1-39a5-4049-8e2c-3561b046152e/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "1edee40f-d153-4d67-aee7-ef08e11e4a79",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Will not add or remove the supertype snow to or from a land."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "1edee40f-d153-4d67-aee7-ef08e11e4a79",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The delayed triggered ability created when Cyclopean Tomb is put into a graveyard from the battlefield triggers during each of your upkeeps for the rest of the game. As it resolves, you must remove a mire counter from a land that had a mire counter put on it by that instance of Cyclopean Tomb, but it doesn't matter where the mire counter you remove came from. For instance, you could remove mire counters that were put on the land by Gilder Bairn."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "1edee40f-d153-4d67-aee7-ef08e11e4a79",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "The land remains a Swamp as long as it has a mire counter on it. This effect is not tied to the Tomb remaining on the battlefield."
+    }
+  ]
+}

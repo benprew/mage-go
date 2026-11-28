@@ -52,22 +52,28 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp := &StackObject{
-		ID:           uuid.New(),
-		Card:         copiedCard,
-		Controller:   controller,
-		IsAbility:    original.IsAbility,
-		XValue:       original.XValue,
-		ModeChoice:   original.ModeChoice,
-		EventAmount:  original.EventAmount,
-		IsCopy:       true,
-		CastZone:     original.CastZone,
-		CastContext:  cloneCastContext(original.CastContext),
-		TargetSource: copiedCard,
+		ID:                uuid.New(),
+		Card:              copiedCard,
+		Controller:        controller,
+		IsAbility:         original.IsAbility,
+		XValue:            original.XValue,
+		ModeChoice:        original.ModeChoice,
+		EventAmount:       original.EventAmount,
+		EventSourceID:     original.EventSourceID,
+		SourceIncarnation: original.SourceIncarnation,
+		IsCopy:            true,
+		CastZone:          original.CastZone,
+		CastContext:       cloneCastContext(original.CastContext),
+		TargetSource:      copiedCard,
+		declaredTargets:   original.declaredTargets,
+		damageTotal:       original.damageTotal,
+		counterTotal:      original.counterTotal,
 	}
 	if copiedCard != nil {
 		cp.SourceID = copiedCard.ID()
 	} else {
 		cp.SourceID = original.SourceID
+		cp.TargetSource = original.TargetSource
 	}
 
 	if len(original.Effects) > 0 {
@@ -92,107 +98,113 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		}
 	}
 
-	if len(original.DamageDistribution) > 0 {
-		cp.DamageDistribution = make(map[uuid.UUID]int, len(original.DamageDistribution))
-		maps.Copy(cp.DamageDistribution, original.DamageDistribution)
-	}
-	if len(original.CounterDistribution) > 0 {
-		cp.CounterDistribution = make(map[uuid.UUID]int, len(original.CounterDistribution))
-		maps.Copy(cp.CounterDistribution, original.CounterDistribution)
-	}
-
 	if mayChooseNewTargets && copiedCard != nil {
 		g.repromptTargetsForCopy(cp, copiedCard)
 	}
+	cp.DamageDistribution = remapTargetShares(original.DamageDistribution, original.Targets, cp.Targets)
+	cp.CounterDistribution = remapTargetShares(original.CounterDistribution, original.Targets, cp.Targets)
 
 	g.pushStack(cp)
 	g.fireBecomesTargetEvents(cp, cp.IsAbility)
 	return cp
 }
 
-// repromptTargetsForCopy walks the spell's declared Target requirements and
-// asks the controller of the copy to choose new targets per CR 706.10c.
-// Modal spells reprompt only the chosen mode's targets.
+// repromptTargetsForCopy preserves the target slots and lets the controller change their targets.
 func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card *Card) {
 	controller := g.GetPlayer(copyObj.Controller)
 	if controller == nil {
 		return
 	}
 
-	oldTargets := append([]uuid.UUID(nil), copyObj.Targets...)
-
+	specs := card.CastTargets()
 	if ms, ok := getModalSpellAbility(card); ok {
 		modeIdx := copyObj.ModeChoice
 		if modeIdx < 0 || modeIdx >= len(ms.Modes()) {
 			return
 		}
-		mode := ms.Modes()[modeIdx]
-		groups := g.promptTargetGroups(controller.PlayerID(), card, mode.Targets, copyObj.XValue)
-		newTargets := flattenTargetGroups(groups)
-		copyObj.TargetGroups = groups
-		copyObj.TargetSpecs = expandedTargetGroups(mode.Targets, groups)
-		if copyObj.ModalTargets == nil {
-			copyObj.ModalTargets = make([][]uuid.UUID, len(ms.Modes()))
-		}
-		copyObj.ModalTargets[modeIdx] = newTargets
-		copyObj.Targets = newTargets
-		copyObj.TargetZones = nil
-		copyObj.TargetIncarnations = nil
-		g.remapDividedDistributions(copyObj, oldTargets, newTargets)
+		specs = ms.Modes()[modeIdx].Targets
+	}
+	if len(specs) == 0 {
 		return
 	}
-
-	for _, a := range card.abilities {
-		sa, ok := a.(*SpellAbility)
-		if !ok {
-			continue
-		}
-		if len(sa.Targets()) == 0 {
-			continue
-		}
-		specs := sa.Targets()
-		if (len(copyObj.DamageDistribution) > 0 || len(copyObj.CounterDistribution) > 0) && len(oldTargets) > 0 && len(specs) == 1 {
-			specs = []Target{exactCountTarget{Target: specs[0], count: len(oldTargets)}}
-		}
-		groups := g.promptTargetGroups(controller.PlayerID(), card, specs, copyObj.XValue)
-		newTargets := flattenTargetGroups(groups)
-		copyObj.TargetGroups = groups
-		copyObj.TargetSpecs = expandedTargetGroups(specs, groups)
-		copyObj.Targets = newTargets
-		copyObj.TargetZones = nil
-		copyObj.TargetIncarnations = nil
-		g.remapDividedDistributions(copyObj, oldTargets, newTargets)
+	groups := copyObj.TargetGroups
+	if groups == nil {
+		groups = groupTargets(specs, copyObj.Targets, copyObj.XValue)
+	}
+	if len(groups) != len(specs) || len(flattenTargetGroups(groups)) != len(copyObj.Targets) {
 		return
+	}
+	targeting := TargetingContext{X: copyObj.XValue, XSpecified: true, StackObjectID: copyObj.ID}
+	for i, spec := range specs {
+		previous := groups[i]
+		if len(previous) == 0 {
+			continue
+		}
+		legal := PossibleTargets(spec, controller.PlayerID(), card, g, targeting)
+		choices := slices.Clone(legal)
+		for _, id := range previous {
+			if id != uuid.Nil() && !slices.Contains(choices, id) {
+				choices = append(choices, id)
+			}
+		}
+		chooser := controller
+		if isOpponentChosenTarget(spec) {
+			chooser = g.GetOpponent(controller.PlayerID())
+		}
+		if chooser == nil || len(choices) < len(previous) {
+			continue
+		}
+		chosen := chooser.ChooseTargets(choices, len(previous), len(previous), g)
+		if !validCopyTargets(previous, chosen, legal) {
+			continue
+		}
+		for slot, id := range chosen {
+			if id == previous[slot] || copyObj.TargetZones == nil {
+				continue
+			}
+			copyObj.TargetZones[id] = g.zoneOfTarget(id)
+			if p := g.FindPermanent(id); p != nil {
+				if copyObj.TargetIncarnations == nil {
+					copyObj.TargetIncarnations = make(map[uuid.UUID]uuid.UUID)
+				}
+				copyObj.TargetIncarnations[id] = p.incarnationID
+			} else {
+				delete(copyObj.TargetIncarnations, id)
+			}
+		}
+		groups[i] = slices.Clone(chosen)
+	}
+	copyObj.TargetGroups = groups
+	copyObj.Targets = flattenTargetGroups(groups)
+	copyObj.TargetSpecs = expandedTargetGroups(specs, groups)
+	if copyObj.ModeChoice >= 0 && copyObj.ModeChoice < len(copyObj.ModalTargets) {
+		copyObj.ModalTargets[copyObj.ModeChoice] = slices.Clone(copyObj.Targets)
 	}
 }
 
-type exactCountTarget struct {
-	Target
-	count int
+func validCopyTargets(previous, chosen, legal []uuid.UUID) bool {
+	if len(chosen) != len(previous) {
+		return false
+	}
+	for i, id := range chosen {
+		if id == uuid.Nil() || slices.Contains(chosen[:i], id) || id != previous[i] && !slices.Contains(legal, id) {
+			return false
+		}
+	}
+	return true
 }
 
-func (t exactCountTarget) Min() int { return t.count }
-func (t exactCountTarget) Max() int { return t.count }
-
-func (g *Game) remapDividedDistributions(copyObj *StackObject, oldTargets, newTargets []uuid.UUID) {
-	if len(copyObj.DamageDistribution) > 0 && len(oldTargets) > 0 {
-		newDist := make(map[uuid.UUID]int, len(copyObj.DamageDistribution))
-		for i, oldT := range oldTargets {
-			if i < len(newTargets) {
-				newDist[newTargets[i]] += copyObj.DamageDistribution[oldT]
-			}
-		}
-		copyObj.DamageDistribution = newDist
+func remapTargetShares(shares map[uuid.UUID]int, previous, next []uuid.UUID) map[uuid.UUID]int {
+	if len(shares) == 0 {
+		return maps.Clone(shares)
 	}
-	if len(copyObj.CounterDistribution) > 0 && len(oldTargets) > 0 {
-		newDist := make(map[uuid.UUID]int, len(copyObj.CounterDistribution))
-		for i, oldT := range oldTargets {
-			if i < len(newTargets) {
-				newDist[newTargets[i]] += copyObj.CounterDistribution[oldT]
-			}
+	result := make(map[uuid.UUID]int, len(shares))
+	for i, id := range previous {
+		if amount, ok := shares[id]; ok {
+			result[next[i]] = amount
 		}
-		copyObj.CounterDistribution = newDist
 	}
+	return result
 }
 
 // promptTargetsForList walks a flat list of Targets and prompts the

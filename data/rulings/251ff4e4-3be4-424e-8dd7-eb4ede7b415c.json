@@ -1,0 +1,15 @@
+{
+  "name": "Revelation",
+  "oracle_id": "251ff4e4-3be4-424e-8dd7-eb4ede7b415c",
+  "rulings_uri": "https://api.scryfall.com/cards/d467517a-1e6f-4c1f-adb5-bf60df1284e2/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "251ff4e4-3be4-424e-8dd7-eb4ede7b415c",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "This has the supertype world. When a world permanent enters, any world permanents that were already on the battlefield are put into their owners' graveyards. This is a state-based action called the \"world rule.\" The new world permanent stays on the battlefield. If two world permanents enter at the same time, they're both put into their owners' graveyards."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Conversion",
+  "oracle_id": "a24e05fb-dffb-4400-b4ca-22fdde45e7a7",
+  "rulings_uri": "https://api.scryfall.com/cards/70bad071-f01e-4309-b37a-a3ea45dc7d3a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "a24e05fb-dffb-4400-b4ca-22fdde45e7a7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The Conversion effect is a continuous effect. There is no chance to tap a just-played mountain for red mana before it becomes a plains."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "a24e05fb-dffb-4400-b4ca-22fdde45e7a7",
+      "source": "wotc",
+      "published_at": "2006-10-15",
+      "comment": "Will not add or remove the supertype snow to or from a land."
+    }
+  ]
+}

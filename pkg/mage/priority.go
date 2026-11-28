@@ -20,6 +20,7 @@ const (
 	PriorityCastSpell
 	PriorityActivateAbility
 	PriorityPlayLand
+	PriorityAbort
 )
 
 // PriorityAction is what a player wants to do when they have priority.
@@ -34,6 +35,7 @@ type PriorityAction struct {
 
 // PriorityHandler is called by the engine whenever a player receives priority.
 // It returns the action the player wants to take.
+// Return [PriorityAbort] to stop the game at this point.
 //   - g is the current game state
 //   - playerIdx is the index into g.players
 //   - mainPhase is true during PrecombatMain and PostcombatMain
@@ -94,6 +96,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 	}
 
 	iterations := 0
+	firstPlayer := g.turns.ActivePlayerIndex()
 	for {
 		iterations++
 		timingEnabled := EngineTimingEnabled()
@@ -124,6 +127,9 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 			addEngineTiming(&engineTimingSBANs, time.Since(phaseStart))
 			phaseStart = time.Now()
 		}
+		if g.IsGameOver() {
+			return
+		}
 
 		// 2. Evaluate state triggers (CR 603.8) — they're checked alongside SBA.
 		g.CheckStateTriggers()
@@ -134,10 +140,10 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 			addEngineTiming(&engineTimingTriggersNs, time.Since(phaseStart))
 		}
 
-		// 3. Cycle through players starting from active player
+		// CR 117.3: The player who took the last action receives priority again.
 		allPassed := true
 		for i := 0; i < len(g.players); i++ {
-			playerIdx := (g.turns.ActivePlayerIndex() + i) % len(g.players)
+			playerIdx := (firstPlayer + i) % len(g.players)
 			if timingEnabled {
 				phaseStart = time.Now()
 			}
@@ -146,6 +152,10 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 				addEngineTiming(&engineTimingOnPriorityNs, time.Since(phaseStart))
 			}
 			if action.Type != PriorityPass {
+				if action.Type == PriorityAbort {
+					g.stopped = true
+					return
+				}
 				if DebugPriority {
 					actionName := "unknown"
 					cardName := ""
@@ -192,6 +202,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 						}
 					}
 					allPassed = false
+					firstPlayer = playerIdx
 					break // restart loop from SBA check
 				}
 				// Action failed — treat as pass for this player
@@ -215,6 +226,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 			phaseStart = time.Now()
 		}
 		g.ResolveTopOfStack()
+		firstPlayer = g.turns.ActivePlayerIndex()
 		if timingEnabled {
 			addEngineTiming(&engineTimingResolveNs, time.Since(phaseStart))
 		}

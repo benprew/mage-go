@@ -100,7 +100,9 @@ func extractBasePlayer(p Player) *BasePlayer {
 		poisonCounters:  p.PoisonCounters(),
 		lastDrawnCardID: p.LastDrawnCardID(),
 	}
-	if !p.IsAlive() && p.Life() > 0 {
+	if loss, ok := p.(interface{ hasLost() bool }); ok {
+		bp.lost = loss.hasLost()
+	} else if !p.IsAlive() && p.Life() > 0 {
 		bp.lost = true
 	}
 	// Copy zones.
@@ -154,6 +156,8 @@ func clonePermanentInto(dst, src *Permanent) {
 		Tapped:                     src.Tapped,
 		PhasedOut:                  src.PhasedOut,
 		Damage:                     src.Damage,
+		deathtouchDamage:           src.deathtouchDamage,
+		worldSince:                 src.worldSince,
 		AttachedTo:                 src.AttachedTo,
 		IsToken:                    src.IsToken,
 		FaceDown:                   src.FaceDown,
@@ -244,6 +248,8 @@ func (ctx *gameCloneContext) stackObject(obj *StackObject) *StackObject {
 		ModeChoice:        obj.ModeChoice,
 		EventAmount:       obj.EventAmount,
 		EventSourceID:     obj.EventSourceID,
+		damageTotal:       obj.damageTotal,
+		counterTotal:      obj.counterTotal,
 		IsCopy:            obj.IsCopy,
 		CastZone:          obj.CastZone,
 		CastContext:       ctx.castContext(obj.CastContext),
@@ -313,9 +319,10 @@ func cloneCombat(c *Combat) *Combat {
 		clone.Groups = make([]*CombatGroup, len(c.Groups))
 		for i, g := range c.Groups {
 			cg := &CombatGroup{
-				AttackerID: g.AttackerID,
-				DefenderID: g.DefenderID,
-				Blocked:    g.Blocked,
+				AttackerID:             g.AttackerID,
+				DefenderID:             g.DefenderID,
+				Blocked:                g.Blocked,
+				soleBlockerWhenBlocked: g.soleBlockerWhenBlocked,
 			}
 			if len(g.BlockerIDs) > 0 {
 				cg.BlockerIDs = make([]uuid.UUID, len(g.BlockerIDs))
@@ -355,8 +362,7 @@ func (ctx *gameCloneContext) effectManager(em *EffectManager) *EffectManager {
 	// Deep copy replacement effects (they hold mutable state).
 	clone.replacements = cloneReplacementSlice(em.replacements)
 	clone.cycleReplacements = cloneReplacementSlice(em.cycleReplacements)
-	// Clone subsystems.
-	clone.Rules = cloneGameRules(em.Rules)
+	clone.Rules = em.Rules.Clone()
 	return clone
 }
 
@@ -370,39 +376,6 @@ func cloneReplacementSlice(src []ReplacementEffect) []ReplacementEffect {
 		dst[i] = r.Clone()
 	}
 	return dst
-}
-
-// cloneGameRules deep copies the GameRules.
-func cloneGameRules(gr *GameRules) *GameRules {
-	clone := &GameRules{
-		LandUntapMax:       gr.LandUntapMax,
-		ArtifactUntapMax:   gr.ArtifactUntapMax,
-		CreatureUntapMax:   gr.CreatureUntapMax,
-		UnlimitedLandPlays: gr.UnlimitedLandPlays,
-	}
-	// Clone all maps.
-	clone.ManaConversion = cloneColorColorMap(gr.ManaConversion)
-	clone.SpellCostIncreases = cloneColorIntMap(gr.SpellCostIncreases)
-	clone.SpellCostReductions = cloneColorIntMap(gr.SpellCostReductions)
-	clone.SpellTypeCostReductions = cloneCardTypeIntMap(gr.SpellTypeCostReductions)
-	clone.sanctuaryActive = cloneUUIDBoolMap(gr.sanctuaryActive)
-	clone.lichActive = cloneUUIDUUIDMap(gr.lichActive)
-	clone.skipNextDraw = cloneUUIDBoolMap(gr.skipNextDraw)
-	clone.channelActive = cloneUUIDBoolMap(gr.channelActive)
-	clone.minimumLife = cloneUUIDBoolMap(gr.minimumLife)
-	clone.maxHandSize = cloneUUIDIntMap(gr.maxHandSize)
-	clone.NullifiedLandwalks = cloneAttrBoolMap(gr.NullifiedLandwalks)
-	clone.ActivationCostReductions = cloneUUIDIntMap(gr.ActivationCostReductions)
-	if len(gr.SpellCostReducers) > 0 {
-		clone.SpellCostReducers = make([]SpellCostReducer, len(gr.SpellCostReducers))
-		copy(clone.SpellCostReducers, gr.SpellCostReducers)
-	}
-	// Copy expansion cast blocks.
-	if len(gr.expansionCastBlock) > 0 {
-		clone.expansionCastBlock = make([]string, len(gr.expansionCastBlock))
-		copy(clone.expansionCastBlock, gr.expansionCastBlock)
-	}
-	return clone
 }
 
 // --- Map clone helpers ---
@@ -474,15 +447,6 @@ func cloneUUIDIntMap(src map[uuid.UUID]int) map[uuid.UUID]int {
 		return make(map[uuid.UUID]int)
 	}
 	dst := make(map[uuid.UUID]int, len(src))
-	maps.Copy(dst, src)
-	return dst
-}
-
-func cloneUUIDUUIDMap(src map[uuid.UUID]uuid.UUID) map[uuid.UUID]uuid.UUID {
-	if src == nil {
-		return make(map[uuid.UUID]uuid.UUID)
-	}
-	dst := make(map[uuid.UUID]uuid.UUID, len(src))
 	maps.Copy(dst, src)
 	return dst
 }
@@ -566,41 +530,5 @@ func cloneNestedUUIDStringUUIDMap(src map[uuid.UUID]map[string]uuid.UUID) map[uu
 		maps.Copy(innerDst, inner)
 		dst[k] = innerDst
 	}
-	return dst
-}
-
-func cloneColorColorMap(src map[Color]Color) map[Color]Color {
-	if src == nil {
-		return make(map[Color]Color)
-	}
-	dst := make(map[Color]Color, len(src))
-	maps.Copy(dst, src)
-	return dst
-}
-
-func cloneColorIntMap(src map[Color]int) map[Color]int {
-	if src == nil {
-		return make(map[Color]int)
-	}
-	dst := make(map[Color]int, len(src))
-	maps.Copy(dst, src)
-	return dst
-}
-
-func cloneCardTypeIntMap(src map[CardType]int) map[CardType]int {
-	if src == nil {
-		return make(map[CardType]int)
-	}
-	dst := make(map[CardType]int, len(src))
-	maps.Copy(dst, src)
-	return dst
-}
-
-func cloneAttrBoolMap(src map[Attr]bool) map[Attr]bool {
-	if src == nil {
-		return make(map[Attr]bool)
-	}
-	dst := make(map[Attr]bool, len(src))
-	maps.Copy(dst, src)
 	return dst
 }

@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"maps"
+	"slices"
 	"uuid"
 
 	"github.com/benprew/mage-go/pkg/catalog"
@@ -30,6 +32,7 @@ type GameRules struct {
 	NullifiedLandwalks       map[Attr]bool               // landwalk attrs that are nullified (Great Wall, etc.)
 	ActivationCostReductions map[uuid.UUID]int           // permanent ID → generic mana reduction for activated abilities
 	entersTappedRules        []func(*Permanent) bool     // filters registered by continuous effects (Kismet, etc.)
+	untapRestrictions        []PermanentFilter           // restrictions during the untap step
 	SpellCostReducers        []SpellCostReducer          // conditional generic-cost reducers registered each Apply() cycle
 	UncounterableFilters     []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
 	FlashGrants              []flashGrantEntry           // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
@@ -50,7 +53,7 @@ type flashGrantEntry struct {
 	Filter   ObjectFilter
 }
 
-// NewGameRules creates a GameRules with all maps initialized.
+// NewGameRules creates a GameRules with writable public maps.
 func NewGameRules() *GameRules {
 	return &GameRules{
 		LandUntapMax:             -1,
@@ -60,16 +63,52 @@ func NewGameRules() *GameRules {
 		SpellCostIncreases:       make(map[Color]int),
 		SpellCostReductions:      make(map[Color]int),
 		SpellTypeCostReductions:  make(map[CardType]int),
-		sanctuaryActive:          make(map[uuid.UUID]bool),
-		lichActive:               make(map[uuid.UUID]uuid.UUID),
-		skipNextDraw:             make(map[uuid.UUID]bool),
-		channelActive:            make(map[uuid.UUID]bool),
-		minimumLife:              make(map[uuid.UUID]bool),
-		maxHandSize:              make(map[uuid.UUID]int),
 		NullifiedLandwalks:       make(map[Attr]bool),
 		ActivationCostReductions: make(map[uuid.UUID]int),
-		deepWaterActive:          make(map[uuid.UUID]bool),
 	}
+}
+
+// Clone copies rule state for a simulation. Both games can use the same filters.
+func (r *GameRules) Clone() *GameRules {
+	clone := &GameRules{
+		ManaConversion:           cloneWritableRuleMap(r.ManaConversion),
+		SpellCostIncreases:       cloneWritableRuleMap(r.SpellCostIncreases),
+		SpellCostReductions:      cloneWritableRuleMap(r.SpellCostReductions),
+		SpellTypeCostReductions:  cloneWritableRuleMap(r.SpellTypeCostReductions),
+		LandUntapMax:             r.LandUntapMax,
+		ArtifactUntapMax:         r.ArtifactUntapMax,
+		CreatureUntapMax:         r.CreatureUntapMax,
+		UnlimitedLandPlays:       r.UnlimitedLandPlays,
+		sanctuaryActive:          clonePopulatedRuleMap(r.sanctuaryActive),
+		lichActive:               clonePopulatedRuleMap(r.lichActive),
+		skipNextDraw:             clonePopulatedRuleMap(r.skipNextDraw),
+		channelActive:            clonePopulatedRuleMap(r.channelActive),
+		minimumLife:              clonePopulatedRuleMap(r.minimumLife),
+		maxHandSize:              clonePopulatedRuleMap(r.maxHandSize),
+		NullifiedLandwalks:       cloneWritableRuleMap(r.NullifiedLandwalks),
+		ActivationCostReductions: cloneWritableRuleMap(r.ActivationCostReductions),
+		untapRestrictions:        slices.Clone(r.untapRestrictions),
+	}
+	if len(r.SpellCostReducers) > 0 {
+		clone.SpellCostReducers = slices.Clone(r.SpellCostReducers)
+	}
+	if len(r.expansionCastBlock) > 0 {
+		clone.expansionCastBlock = slices.Clone(r.expansionCastBlock)
+	}
+	return clone
+}
+
+func cloneWritableRuleMap[K comparable, V any](src map[K]V) map[K]V {
+	clone := make(map[K]V, len(src))
+	maps.Copy(clone, src)
+	return clone
+}
+
+func clonePopulatedRuleMap[K comparable, V any](src map[K]V) map[K]V {
+	if len(src) == 0 {
+		return nil
+	}
+	return cloneWritableRuleMap(src)
 }
 
 // ResetPerCycle resets all state that is recomputed each Apply() cycle.
@@ -88,6 +127,8 @@ func (r *GameRules) ResetPerCycle() {
 	clear(r.NullifiedLandwalks)
 	clear(r.ActivationCostReductions)
 	r.entersTappedRules = r.entersTappedRules[:0]
+	clear(r.untapRestrictions)
+	r.untapRestrictions = r.untapRestrictions[:0]
 	r.SpellCostReducers = r.SpellCostReducers[:0]
 	r.UncounterableFilters = r.UncounterableFilters[:0]
 	r.FlashGrants = r.FlashGrants[:0]
@@ -231,8 +272,8 @@ func (r *GameRules) ShouldEnterTapped(perm *Permanent) bool {
 
 // ClearEndOfTurn resets all turn-scoped game rule state.
 func (r *GameRules) ClearEndOfTurn() {
-	r.channelActive = make(map[uuid.UUID]bool)
-	r.deepWaterActive = make(map[uuid.UUID]bool)
+	clear(r.channelActive)
+	clear(r.deepWaterActive)
 }
 
 // SyncManaConversions syncs mana conversion state to all player mana pools.
@@ -252,6 +293,9 @@ func (r *GameRules) SyncManaConversions(players []Player) {
 
 // SetSanctuaryActive marks a player as protected by Island Sanctuary.
 func (r *GameRules) SetSanctuaryActive(playerID uuid.UUID) {
+	if r.sanctuaryActive == nil {
+		r.sanctuaryActive = make(map[uuid.UUID]bool)
+	}
 	r.sanctuaryActive[playerID] = true
 }
 
@@ -271,6 +315,9 @@ func (r *GameRules) ClearSanctuary(playerID uuid.UUID) {
 
 // SetLichActive records the source permanent ID of a Lich controlled by playerID.
 func (r *GameRules) SetLichActive(playerID, sourceID uuid.UUID) {
+	if r.lichActive == nil {
+		r.lichActive = make(map[uuid.UUID]uuid.UUID)
+	}
 	r.lichActive[playerID] = sourceID
 }
 
@@ -294,6 +341,9 @@ func (r *GameRules) ClearLich(playerID uuid.UUID) {
 
 // SetSkipNextDraw marks a player to skip their next draw step draw.
 func (r *GameRules) SetSkipNextDraw(playerID uuid.UUID) {
+	if r.skipNextDraw == nil {
+		r.skipNextDraw = make(map[uuid.UUID]bool)
+	}
 	r.skipNextDraw[playerID] = true
 }
 
@@ -332,6 +382,9 @@ func (r *GameRules) ClearManaConversion() {
 
 // SetChannelActive marks a player as having Channel active this turn.
 func (r *GameRules) SetChannelActive(playerID uuid.UUID) {
+	if r.channelActive == nil {
+		r.channelActive = make(map[uuid.UUID]bool)
+	}
 	r.channelActive[playerID] = true
 }
 
@@ -342,7 +395,7 @@ func (r *GameRules) IsChannelActive(playerID uuid.UUID) bool {
 
 // ClearChannelActive clears Channel state (called at end of turn).
 func (r *GameRules) ClearChannelActive() {
-	r.channelActive = make(map[uuid.UUID]bool)
+	clear(r.channelActive)
 }
 
 // ---------------------------------------------------------------------------
@@ -351,6 +404,9 @@ func (r *GameRules) ClearChannelActive() {
 
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (r *GameRules) SetMinimumLife(playerID uuid.UUID) {
+	if r.minimumLife == nil {
+		r.minimumLife = make(map[uuid.UUID]bool)
+	}
 	r.minimumLife[playerID] = true
 }
 
@@ -361,7 +417,7 @@ func (r *GameRules) IsMinimumLifeActive(playerID uuid.UUID) bool {
 
 // ClearMinimumLife resets minimum-life state (called when effect source leaves).
 func (r *GameRules) ClearMinimumLife() {
-	r.minimumLife = make(map[uuid.UUID]bool)
+	clear(r.minimumLife)
 }
 
 // ---------------------------------------------------------------------------
@@ -389,13 +445,16 @@ func (r *GameRules) IsCardExpansionBlocked(cardName string) bool {
 
 // SetMaxHandSize sets the max hand size override for a player.
 func (r *GameRules) SetMaxHandSize(playerID uuid.UUID, size int) {
+	if r.maxHandSize == nil {
+		r.maxHandSize = make(map[uuid.UUID]int)
+	}
 	r.maxHandSize[playerID] = size
 }
 
 // SetNoMaximumHandSize removes the player's maximum hand size while the
 // continuous effect that calls it remains active.
 func (r *GameRules) SetNoMaximumHandSize(playerID uuid.UUID) {
-	r.maxHandSize[playerID] = -1
+	r.SetMaxHandSize(playerID, -1)
 }
 
 // MaxHandSize returns the max hand size for a player (default 7).

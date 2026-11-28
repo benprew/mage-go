@@ -1,9 +1,10 @@
 package mtgish
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
+	"slices"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -25,27 +26,49 @@ type MtgishManaSymbol struct {
 
 // UnmarshalJSON checks the symbol and its argument before it stores the value.
 func (m *MtgishManaSymbol) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Kind string          `json:"_ManaSymbol"`
-		Args json.RawMessage `json:"args"`
-	}
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&raw); err != nil {
+	if err := validateJSON(data, ""); err != nil {
 		return err
 	}
-	symbol := MtgishManaSymbol{Kind: raw.Kind}
-	switch raw.Kind {
-	case "ManaCostGeneric":
-		if len(raw.Args) == 0 {
-			return fmt.Errorf("mtgish generic mana requires args")
+	symbol, err := decodeManaSymbol(data, "")
+	if err != nil {
+		return err
+	}
+	*m = symbol
+	return nil
+}
+
+func decodeManaSymbol(data []byte, path string) (MtgishManaSymbol, error) {
+	node, err := decodeTaggedNode(data, "_ManaSymbol", path)
+	if err != nil {
+		return MtgishManaSymbol{}, err
+	}
+	symbol := MtgishManaSymbol{Kind: node.Tag}
+	if node.Tag == "ManaCostGeneric" {
+		if err := decodeValue(node.Args, pointerPath(path, "args"), &symbol.Amount); err != nil {
+			return MtgishManaSymbol{}, withNode(err, node)
 		}
-		if err := json.Unmarshal(raw.Args, &symbol.Amount); err != nil {
-			return fmt.Errorf("decode mtgish generic mana: %w", err)
+	} else {
+		if err := symbol.validate(path); err != nil {
+			return MtgishManaSymbol{}, err
 		}
-		if symbol.Amount == nil || *symbol.Amount < 0 {
-			return fmt.Errorf("mtgish generic mana requires a nonnegative integer")
+		if len(node.Args) != 0 {
+			return MtgishManaSymbol{}, diagnostic(pointerPath(path, "args"), InvalidInput, node.Family, node.Tag, "mana symbol does not accept args")
 		}
+	}
+	if err := symbol.validate(path); err != nil {
+		return MtgishManaSymbol{}, err
+	}
+	return symbol, nil
+}
+
+func (m MtgishManaSymbol) validate(path string) error {
+	if m.Kind == "ManaCostGeneric" {
+		if m.Amount == nil || *m.Amount < 0 {
+			return diagnostic(pointerPath(path, "args"), InvalidInput, "_ManaSymbol", m.Kind, "generic mana requires a nonnegative 32-bit integer")
+		}
+		return nil
+	}
+	switch m.Kind {
 	case "ManaCostW", "ManaCostU", "ManaCostB", "ManaCostR", "ManaCostG",
 		"ManaCostC", "ManaCostS", "ManaCostX",
 		"ManaCostWP", "ManaCostUP", "ManaCostBP", "ManaCostRP", "ManaCostGP",
@@ -54,17 +77,19 @@ func (m *MtgishManaSymbol) UnmarshalJSON(data []byte) error {
 		"ManaCostCW", "ManaCostCU", "ManaCostCB", "ManaCostCR", "ManaCostCG",
 		"ManaCostWU", "ManaCostUB", "ManaCostBR", "ManaCostRG", "ManaCostGW",
 		"ManaCostWB", "ManaCostUR", "ManaCostBG", "ManaCostRW", "ManaCostGU":
-		if len(raw.Args) != 0 {
-			return fmt.Errorf("mtgish mana symbol %s does not accept args", raw.Kind)
+		if m.Amount != nil {
+			return diagnostic(pointerPath(path, "args"), InvalidInput, "_ManaSymbol", m.Kind, "mana symbol does not accept args")
 		}
+		return nil
+	case "":
+		return diagnostic(pointerPath(path, "_ManaSymbol"), InvalidInput, "_ManaSymbol", "", "expected a nonempty mana symbol tag")
 	default:
-		return fmt.Errorf("unknown mtgish mana symbol %q", raw.Kind)
+		return diagnostic(path, UnsupportedConstruct, "_ManaSymbol", m.Kind, "unsupported mana symbol")
 	}
-	*m = symbol
-	return nil
 }
 
 // MtgishCard contains card data from mtgish JSON.
+// Loyalty and Defense are retained so the compiler can report engine gaps.
 type MtgishCard struct {
 	Kind           string `json:"_OracleCard"`
 	Name           string
@@ -72,39 +97,111 @@ type MtgishCard struct {
 	ManaCost       []MtgishManaSymbol
 	CardPT         *MtgishCardPT
 	ColorIndicator []string
+	Loyalty        json.RawMessage `json:",omitempty"`
+	Defense        json.RawMessage `json:",omitempty"`
 	Rules          []json.RawMessage
-	Raw            json.RawMessage `json:"-"`
 }
 
 // MtgishCardPT contains printed power and toughness.
+// Pointers keep a printed zero distinct from a missing value.
 type MtgishCardPT struct {
-	Power     int32
-	Toughness int32
+	Power     *int32
+	Toughness *int32
+}
+
+func (c MtgishCard) validateMetadata() error {
+	if c.Kind == "" {
+		return diagnostic("/_OracleCard", InvalidInput, "_OracleCard", "", "expected a nonempty card form")
+	}
+	if c.Kind != "Card" {
+		return diagnostic("/_OracleCard", UnsupportedConstruct, "_OracleCard", c.Kind, "unsupported card form")
+	}
+	if c.Name == "" {
+		return diagnostic("/Name", InvalidInput, "", "", "expected a nonempty card name")
+	}
+	if len(c.Typeline.Cardtypes) == 0 {
+		return diagnostic("/Typeline/Cardtypes", InvalidInput, "", "", "expected at least one card type")
+	}
+	for _, field := range []struct {
+		path   string
+		values []string
+	}{
+		{"/Typeline/Supertypes", c.Typeline.Supertypes},
+		{"/Typeline/Cardtypes", c.Typeline.Cardtypes},
+		{"/Typeline/Subtypes", c.Typeline.Subtypes},
+		{"/ColorIndicator", c.ColorIndicator},
+	} {
+		for i, value := range field.values {
+			if value == "" {
+				return diagnostic(indexPath(field.path, i), InvalidInput, "", "", "expected a nonempty string")
+			}
+		}
+	}
+	if c.ManaCost != nil && len(c.ManaCost) == 0 {
+		return diagnostic("/ManaCost", InvalidInput, "", "", "an explicit mana cost requires at least one symbol")
+	}
+	for i, symbol := range c.ManaCost {
+		if err := symbol.validate(indexPath("/ManaCost", i)); err != nil {
+			return err
+		}
+	}
+	if c.CardPT == nil {
+		if slices.Contains(c.Typeline.Cardtypes, "Creature") {
+			return diagnostic("/CardPT", InvalidInput, "", "", "a creature requires printed power and toughness")
+		}
+	} else {
+		if c.CardPT.Power == nil {
+			return diagnostic("/CardPT/Power", InvalidInput, "", "", "printed power is required")
+		}
+		if c.CardPT.Toughness == nil {
+			return diagnostic("/CardPT/Toughness", InvalidInput, "", "", "printed toughness is required")
+		}
+	}
+	for _, field := range []struct {
+		path string
+		data json.RawMessage
+	}{
+		{"/Loyalty", c.Loyalty},
+		{"/Defense", c.Defense},
+	} {
+		if field.data != nil {
+			if err := validateJSONDepth(field.data, field.path, 1); err != nil {
+				return err
+			}
+			if isNull(field.data) {
+				return diagnostic(field.path, InvalidInput, "", "", "metadata must not be null")
+			}
+		}
+	}
+	return nil
 }
 
 // ToCardDefinitionSpec copies supported printed characteristics into a spec.
-// Rules and starting counters require a rules compiler and are not copied.
-// The compiler must complete and validate the spec before publication.
-func (c MtgishCard) ToCardDefinitionSpec() (mage.CardDefinitionSpec, error) {
-	if c.Kind != "Card" {
-		return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish card kind %q cannot be converted to mage.CardDefinitionSpec", c.Kind)
-	}
-	if c.Name == "" || len(c.Typeline.Cardtypes) == 0 {
-		return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish Card requires a name and card types")
-	}
-	cost, err := mtgishBaseManaCost(c.ManaCost)
-	if err != nil {
-		return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish card %q: %w", c.Name, err)
-	}
-	spec := mage.CardDefinitionSpec{Name: c.Name, ManaCost: cost}
-	for _, name := range c.Typeline.Cardtypes {
-		kind, err := core.CardTypeString(name)
+// Rules require a rules compiler and are not copied.
+// The compiler must complete the spec before publication.
+func (c MtgishCard) ToCardDefinitionSpec() (spec mage.CardDefinitionSpec, err error) {
+	defer func() {
 		if err != nil {
-			return mage.CardDefinitionSpec{}, fmt.Errorf("mtgish card type %q: %w", name, err)
+			spec = mage.CardDefinitionSpec{}
+			err = withCard(err, c.Name)
+		}
+	}()
+	if err := c.validateMetadata(); err != nil {
+		return spec, err
+	}
+	spec.Name = c.Name
+	for i, name := range c.Typeline.Cardtypes {
+		path := indexPath("/Typeline/Cardtypes", i)
+		if name == "Battle" {
+			return spec, diagnostic(path, EngineGap, "", "", "the engine does not support Battles")
+		}
+		kind, err := core.CardTypeString(name)
+		if err != nil || kind.String() != name {
+			return spec, diagnostic(path, UnsupportedConstruct, "", "", fmt.Sprintf("unsupported card type %q", name))
 		}
 		spec.TypeLine.CardTypes = append(spec.TypeLine.CardTypes, kind)
 	}
-	for _, name := range c.Typeline.Supertypes {
+	for i, name := range c.Typeline.Supertypes {
 		var kind core.SuperType
 		switch name {
 		case "Legendary":
@@ -116,20 +213,36 @@ func (c MtgishCard) ToCardDefinitionSpec() (mage.CardDefinitionSpec, error) {
 		case "World":
 			kind = core.SuperWorld
 		default:
-			return mage.CardDefinitionSpec{}, fmt.Errorf("unsupported mtgish supertype %q", name)
+			return spec, diagnostic(indexPath("/Typeline/Supertypes", i), UnsupportedConstruct, "", "", fmt.Sprintf("unsupported supertype %q", name))
 		}
 		spec.TypeLine.SuperTypes = append(spec.TypeLine.SuperTypes, kind)
 	}
-	spec.TypeLine.SubTypes = append([]string(nil), c.Typeline.Subtypes...)
-	if c.CardPT != nil {
-		spec.Power, spec.Toughness = int(c.CardPT.Power), int(c.CardPT.Toughness)
+	spec.TypeLine.SubTypes = slices.Clone(c.Typeline.Subtypes)
+	if c.ManaCost == nil && !slices.Contains(spec.TypeLine.CardTypes, core.TypeLand) {
+		return spec, diagnostic("/ManaCost", EngineGap, "", "", "the engine cannot preserve an absent nonland mana cost")
 	}
-	for _, name := range c.ColorIndicator {
+	spec.ManaCost, err = mtgishBaseManaCost(c.ManaCost)
+	if err != nil {
+		return spec, err
+	}
+	if c.CardPT != nil {
+		spec.Power, spec.Toughness = int(*c.CardPT.Power), int(*c.CardPT.Toughness)
+	}
+	if c.ColorIndicator != nil {
+		spec.Colors = make([]core.Color, 0, len(c.ColorIndicator))
+	}
+	for i, name := range c.ColorIndicator {
 		color, err := core.ColorString(name)
-		if err != nil || color == core.Colorless || color == core.AnyColor {
-			return mage.CardDefinitionSpec{}, fmt.Errorf("unsupported mtgish color indicator %q", name)
+		if err != nil || color.String() != name || color == core.Colorless || color == core.AnyColor {
+			return spec, diagnostic(indexPath("/ColorIndicator", i), UnsupportedConstruct, "", "", fmt.Sprintf("unsupported color indicator %q", name))
 		}
 		spec.Colors = append(spec.Colors, color)
+	}
+	if c.Loyalty != nil {
+		return spec, diagnostic("/Loyalty", EngineGap, "", "", "loyalty metadata has no supported lowering")
+	}
+	if c.Defense != nil {
+		return spec, diagnostic("/Defense", EngineGap, "", "", "defense metadata has no supported lowering")
 	}
 	return spec, nil
 }
@@ -148,15 +261,22 @@ func mtgishBaseManaCost(symbols []MtgishManaSymbol) (core.ManaCost, error) {
 		"ManaCostRW": {A: core.Red, B: core.White},
 		"ManaCostGU": {A: core.Green, B: core.Blue},
 	}
-	for _, symbol := range symbols {
-		if symbol.Kind != "ManaCostGeneric" && symbol.Amount != nil {
-			return core.ManaCost{}, fmt.Errorf("mtgish mana symbol %s does not accept args", symbol.Kind)
+	var total int64
+	for i, symbol := range symbols {
+		path := indexPath("/ManaCost", i)
+		if err := symbol.validate(path); err != nil {
+			return core.ManaCost{}, err
+		}
+		amount := int64(1)
+		if symbol.Kind == "ManaCostGeneric" {
+			amount = int64(*symbol.Amount)
+		}
+		total += amount
+		if total > math.MaxInt32 {
+			return core.ManaCost{}, diagnostic(path, InvalidInput, "_ManaSymbol", symbol.Kind, "mana cost total exceeds a 32-bit integer")
 		}
 		switch symbol.Kind {
 		case "ManaCostGeneric":
-			if symbol.Amount == nil || *symbol.Amount < 0 {
-				return core.ManaCost{}, fmt.Errorf("mtgish generic mana requires a nonnegative integer")
-			}
 			cost.Generic += int(*symbol.Amount)
 		case "ManaCostW":
 			cost.White++
@@ -177,26 +297,121 @@ func mtgishBaseManaCost(symbols []MtgishManaSymbol) (core.ManaCost, error) {
 			if hybrid, ok := hybrids[symbol.Kind]; ok {
 				cost.Hybrid = append(cost.Hybrid, hybrid)
 			} else {
-				return core.ManaCost{}, fmt.Errorf("mana symbol %q is not supported by ManaCost", symbol.Kind)
+				return core.ManaCost{}, diagnostic(path, EngineGap, "_ManaSymbol", symbol.Kind, "the engine cannot represent this mana symbol")
 			}
 		}
 	}
 	return cost, nil
 }
 
-// ParseMtgishJSON reads one card from mtgish JSON output.
-// Raw keeps all fields for later use by the rules compiler.
-func ParseMtgishJSON(data []byte) (MtgishCard, error) {
-	var card MtgishCard
-	if err := json.Unmarshal(data, &card); err != nil {
-		return MtgishCard{}, fmt.Errorf("decode mtgish JSON: %w", err)
+// ParseMtgishJSON reads one complete card record and checks its structure.
+// Rules remain source data until Compile validates and lowers them.
+func ParseMtgishJSON(data []byte) (card MtgishCard, err error) {
+	if err := validateJSON(data, ""); err != nil {
+		return MtgishCard{}, err
 	}
-	if card.Kind == "" {
-		return MtgishCard{}, fmt.Errorf("mtgish JSON requires _OracleCard")
+	fields, err := objectFields(data, "")
+	if err != nil {
+		return MtgishCard{}, err
 	}
-	if card.Kind == "Card" && card.Name == "" {
-		return MtgishCard{}, fmt.Errorf("mtgish Card requires Name")
+	var name string
+	_ = json.Unmarshal(fields["Name"], &name)
+	defer func() {
+		if err != nil {
+			card = MtgishCard{}
+			err = withCard(err, name)
+		}
+	}()
+	if err := decodeValue(fields["_OracleCard"], "/_OracleCard", &card.Kind); err != nil {
+		return card, err
 	}
-	card.Raw = append(json.RawMessage(nil), data...)
-	return card, nil
+	if card.Kind != "Card" {
+		return card, card.validateMetadata()
+	}
+	if err := checkFields(fields, "", "_OracleCard", "Name", "Typeline", "ManaCost", "CardPT", "ColorIndicator", "Loyalty", "Defense", "Rules"); err != nil {
+		return card, err
+	}
+	if err := decodeValue(fields["Name"], "/Name", &card.Name); err != nil {
+		return card, err
+	}
+	card.Typeline, err = decodeTypeline(fields["Typeline"])
+	if err != nil {
+		return card, err
+	}
+	if raw, present := fields["ManaCost"]; present {
+		var symbols []json.RawMessage
+		if err := decodeValue(raw, "/ManaCost", &symbols); err != nil {
+			return card, err
+		}
+		card.ManaCost = make([]MtgishManaSymbol, len(symbols))
+		for i, raw := range symbols {
+			card.ManaCost[i], err = decodeManaSymbol(raw, indexPath("/ManaCost", i))
+			if err != nil {
+				return card, err
+			}
+		}
+	}
+	if raw, present := fields["CardPT"]; present {
+		pt, err := objectFields(raw, "/CardPT")
+		if err != nil {
+			return card, err
+		}
+		if err := checkFields(pt, "/CardPT", "Power", "Toughness"); err != nil {
+			return card, err
+		}
+		card.CardPT = &MtgishCardPT{}
+		if err := decodeValue(pt["Power"], "/CardPT/Power", &card.CardPT.Power); err != nil {
+			return card, err
+		}
+		if err := decodeValue(pt["Toughness"], "/CardPT/Toughness", &card.CardPT.Toughness); err != nil {
+			return card, err
+		}
+	}
+	if raw, present := fields["ColorIndicator"]; present {
+		card.ColorIndicator, err = decodeStringList(raw, "/ColorIndicator")
+		if err != nil {
+			return card, err
+		}
+	}
+	card.Loyalty, card.Defense = fields["Loyalty"], fields["Defense"]
+	if raw, present := fields["Rules"]; present {
+		if err := decodeValue(raw, "/Rules", &card.Rules); err != nil {
+			return card, err
+		}
+		for i, rule := range card.Rules {
+			if isNull(rule) {
+				return card, diagnostic(indexPath("/Rules", i), InvalidInput, "", "", "a rule must not be null")
+			}
+		}
+	}
+	return card, card.validateMetadata()
+}
+
+func decodeTypeline(data []byte) (MtgishTypeline, error) {
+	fields, err := objectFields(data, "/Typeline")
+	if err != nil {
+		return MtgishTypeline{}, err
+	}
+	if err := checkFields(fields, "/Typeline", "Supertypes", "Cardtypes", "Subtypes"); err != nil {
+		return MtgishTypeline{}, err
+	}
+	var typeline MtgishTypeline
+	for _, field := range []struct {
+		name  string
+		value *[]string
+	}{
+		{"Supertypes", &typeline.Supertypes},
+		{"Cardtypes", &typeline.Cardtypes},
+		{"Subtypes", &typeline.Subtypes},
+	} {
+		raw, present := fields[field.name]
+		if !present && field.name != "Cardtypes" {
+			continue
+		}
+		*field.value, err = decodeStringList(raw, pointerPath("/Typeline", field.name))
+		if err != nil {
+			return MtgishTypeline{}, err
+		}
+	}
+	return typeline, nil
 }

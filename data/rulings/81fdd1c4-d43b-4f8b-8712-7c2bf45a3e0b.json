@@ -1,0 +1,29 @@
+{
+  "name": "Kismet",
+  "oracle_id": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
+  "rulings_uri": "https://api.scryfall.com/cards/f38cdfb1-0437-4afe-a777-60228b8eba69/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
+      "source": "wotc",
+      "published_at": "2007-02-01",
+      "comment": "It affects all opponents."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
+      "source": "wotc",
+      "published_at": "2007-02-01",
+      "comment": "The appropriate permanents enter tapped. They do not enter untapped and then immediately tap, therefore they do not trigger any effects due to tapping."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
+      "source": "wotc",
+      "published_at": "2007-02-01",
+      "comment": "Does not affect cards that phase in."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Merseine",
+  "oracle_id": "b6b6e085-eef8-486d-9d66-1b7f1ee7d0dc",
+  "rulings_uri": "https://api.scryfall.com/cards/b1e96895-ef1d-44fa-b263-bce833fc3109/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "b6b6e085-eef8-486d-9d66-1b7f1ee7d0dc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Can remove as many counters per turn as you want to and this can be done at any time instants are legal."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "b6b6e085-eef8-486d-9d66-1b7f1ee7d0dc",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The cost that needs to be paid includes colored mana requirements."
+    }
+  ]
+}

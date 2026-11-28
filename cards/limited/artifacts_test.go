@@ -235,6 +235,30 @@ func TestMeekstone(t *testing.T) {
 		// Grizzly Bears (power 2) should untap normally.
 		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
 	})
+
+	t.Run("adding a counter changes the restriction", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		bearsID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Meekstone")
+		g.TapPermanent(g.FindPermanent(bearsID))
+		g.AddCountersWithReplacement(g.FindPermanent(bearsID), core.P1P1, 1, uuid.Nil(), false)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+		if !g.HasUntapStepRestriction(g.FindPermanent(bearsID)) {
+			t.Error("Meekstone must restrict Grizzly Bears as soon as its power reaches 3")
+		}
+		clone := g.Clone()
+		if !clone.HasUntapStepRestriction(clone.FindPermanent(bearsID)) {
+			t.Error("the cloned game lost Meekstone's untap restriction")
+		}
+		if violations := g.CheckInvariants(mage.InvariantOptions{CheckContinuousIdempotency: true}); len(violations) != 0 {
+			t.Errorf("after Grizzly Bears reach 3 power: %v", violations)
+		}
+		g.RunStepWithPriority(core.Untap)
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
+		if !g.UntapPermanent(g.FindPermanent(bearsID)) {
+			t.Error("Meekstone must allow an effect to untap Grizzly Bears")
+		}
+	})
 }
 
 func TestHowlingMine(t *testing.T) {

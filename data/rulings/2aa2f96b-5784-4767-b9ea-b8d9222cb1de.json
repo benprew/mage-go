@@ -1,0 +1,15 @@
+{
+  "name": "Aladdin's Lamp",
+  "oracle_id": "2aa2f96b-5784-4767-b9ea-b8d9222cb1de",
+  "rulings_uri": "https://api.scryfall.com/cards/42e7cf40-c136-4fcb-a947-558b713b39f6/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "2aa2f96b-5784-4767-b9ea-b8d9222cb1de",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "If you use more than one Lamp effect, the second one will end up replacing the card being drawn with the first one."
+    }
+  ]
+}

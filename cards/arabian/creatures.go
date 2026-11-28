@@ -554,8 +554,9 @@ func registerCreatures() {
 		)
 	})
 
-	// Oracle: "Whenever Ydwen Efreet blocks, flip a coin. If you lose the flip,
-	// remove Ydwen Efreet from combat and it can't block this turn."
+	// Oracle: "Whenever this creature blocks, flip a coin. If you lose the flip,
+	// remove this creature from combat and it can't block this turn. Creatures it
+	// was blocking that had become blocked by only this creature this combat become unblocked."
 	Register("Ydwen Efreet", func() *Card {
 		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
 			WithSubTypes("Efreet"),
@@ -568,7 +569,7 @@ func registerCreatures() {
 						nil,
 						Pipeline("remove from combat and revoke can-block",
 							EffectProperties{},
-							RemoveFromCombatGathered("self"),
+							RemoveFromCombatAndUnblockGathered("self"),
 							RevokeKeyword(AttrCanBlock).Targeting(ToSource()),
 						),
 					),

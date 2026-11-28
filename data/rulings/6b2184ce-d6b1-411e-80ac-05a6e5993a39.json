@@ -1,0 +1,22 @@
+{
+  "name": "Damping Field",
+  "oracle_id": "6b2184ce-d6b1-411e-80ac-05a6e5993a39",
+  "rulings_uri": "https://api.scryfall.com/cards/12ab9836-bc90-4d92-a86d-b8e1b7671aa7/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "6b2184ce-d6b1-411e-80ac-05a6e5993a39",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Artifact creatures are artifacts. They are affected so only one may untap."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "6b2184ce-d6b1-411e-80ac-05a6e5993a39",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Damping Field does not prevent artifacts being untapped by spells or abilities at other times."
+    }
+  ]
+}

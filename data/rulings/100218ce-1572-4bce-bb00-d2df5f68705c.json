@@ -1,0 +1,15 @@
+{
+  "name": "Frankenstein's Monster",
+  "oracle_id": "100218ce-1572-4bce-bb00-d2df5f68705c",
+  "rulings_uri": "https://api.scryfall.com/cards/8f99894d-5ece-44f1-acce-474494ae2084/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "100218ce-1572-4bce-bb00-d2df5f68705c",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "X can be any number and it does not have to match the total contents of your graveyard."
+    }
+  ]
+}

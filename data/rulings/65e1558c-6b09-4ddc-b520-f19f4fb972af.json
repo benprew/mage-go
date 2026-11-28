@@ -1,0 +1,15 @@
+{
+  "name": "Blue Elemental Blast",
+  "oracle_id": "65e1558c-6b09-4ddc-b520-f19f4fb972af",
+  "rulings_uri": "https://api.scryfall.com/cards/2f51f88f-f662-4572-a371-9a77718ed079/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "65e1558c-6b09-4ddc-b520-f19f4fb972af",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The decision to counter a spell or destroy a permanent is a decision made on announcement before the target is selected. If the spell is redirected, this mode can't be changed, so only targets of the selected type are valid."
+    }
+  ]
+}

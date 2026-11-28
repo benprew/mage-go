@@ -1,0 +1,15 @@
+{
+  "name": "Ring of Ma'rûf",
+  "oracle_id": "c79b9187-cbfe-43a0-bdc8-4f7e0d215607",
+  "rulings_uri": "https://api.scryfall.com/cards/fa740755-244f-4658-a9e2-aa4cf6742808/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c79b9187-cbfe-43a0-bdc8-4f7e0d215607",
+      "source": "wotc",
+      "published_at": "2007-09-16",
+      "comment": "Ring of Ma’rûf works a little differently than the Wishes from others sets. Rather than letting you simply put a card into your hand from outside the game, this ability replaces your next draw. If you wouldn’t draw a card during the rest of the turn, the ability won’t have any effect."
+    }
+  ]
+}

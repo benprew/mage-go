@@ -1,0 +1,15 @@
+{
+  "name": "Living Lands",
+  "oracle_id": "8f0179fe-6d7d-49cc-ab06-d3b402c6fc8d",
+  "rulings_uri": "https://api.scryfall.com/cards/797577e4-9635-4544-a024-88c8deb9588a/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "8f0179fe-6d7d-49cc-ab06-d3b402c6fc8d",
+      "source": "wotc",
+      "published_at": "2008-08-01",
+      "comment": "A noncreature permanent that turns into a creature can attack, and its {T} abilities can be activated, only if its controller has continuously controlled that permanent since the beginning of their most recent turn. It doesn't matter how long the permanent has been a creature."
+    }
+  ]
+}

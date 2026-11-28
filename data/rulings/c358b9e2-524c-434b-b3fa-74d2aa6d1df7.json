@@ -1,0 +1,57 @@
+{
+  "name": "Nether Shadow",
+  "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+  "rulings_uri": "https://api.scryfall.com/cards/11988c46-6d0c-46a8-85aa-8c6da72bfe30/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Since it enters due to triggering at the beginning of upkeep, it is not possible to get an infinite loop with four Nether Shadows."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "Note that bringing the Shadow back onto the battlefield from the graveyard is not a spell, it is an ability. It can't be countered with something that counters spells."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "The last thing that happens to a resolving instant or sorcery spell is that it's put into its owner's graveyard. Example: You cast Wrath of God. All creatures on the battlefield are destroyed. You arrange all the cards put into your graveyard this way in any order you want. The other players in the game do the same to the cards that are put into their graveyards. Then you put Wrath of God into your graveyard, on top of the other cards."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "If an effect or rule puts two or more cards into the same graveyard at the same time, the owner of those cards may arrange them in any order."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "Say you're the owner of both a permanent and an Aura that's attached to it. If both the permanent and the Aura are destroyed at the same time (by Akroma's Vengeance, for example), you decide the order they're put into your graveyard. If just the enchanted permanent is destroyed, it's put into your graveyard first. Then, after state-based actions are checked, the Aura (which is no longer attached to anything) is put into your graveyard on top of it."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "A card is \"above\" another card in your graveyard if it was put into that graveyard later."
+    },
+    {
+      "object": "ruling",
+      "oracle_id": "c358b9e2-524c-434b-b3fa-74d2aa6d1df7",
+      "source": "wotc",
+      "published_at": "2008-10-01",
+      "comment": "Players may not rearrange the cards in their graveyards."
+    }
+  ]
+}

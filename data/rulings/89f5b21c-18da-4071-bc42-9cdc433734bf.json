@@ -1,0 +1,15 @@
+{
+  "name": "Jeweled Bird",
+  "oracle_id": "89f5b21c-18da-4071-bc42-9cdc433734bf",
+  "rulings_uri": "https://api.scryfall.com/cards/d78e61e5-9313-4c83-af38-98849aea4e42/rulings",
+  "retrieved_at": "2026-10-15T02:30:25Z",
+  "rulings": [
+    {
+      "object": "ruling",
+      "oracle_id": "89f5b21c-18da-4071-bc42-9cdc433734bf",
+      "source": "wotc",
+      "published_at": "2004-10-04",
+      "comment": "The card is exchanged for your entire contribution to the ante. This means that it replaces all the cards if you have more than one already contributed."
+    }
+  ]
+}
