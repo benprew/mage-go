@@ -1,0 +1,47 @@
+{
+  "_OracleCard": "Card",
+  "Name": "Llanowar Elves",
+  "Typeline": {
+    "Supertypes": [],
+    "Cardtypes": [
+      "Creature"
+    ],
+    "Subtypes": [
+      "Elf",
+      "Druid"
+    ]
+  },
+  "ManaCost": [
+    {
+      "_ManaSymbol": "ManaCostG"
+    }
+  ],
+  "Rules": [
+    {
+      "_Rule": "Activated",
+      "args": [
+        {
+          "_Cost": "TapPermanent",
+          "args": {
+            "_Permanent": "ThisPermanent"
+          }
+        },
+        {
+          "_Actions": "ActionList",
+          "args": [
+            {
+              "_Action": "AddMana",
+              "args": {
+                "_ManaProduce": "ManaProduceG"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "CardPT": {
+    "Power": 1,
+    "Toughness": 1
+  }
+}

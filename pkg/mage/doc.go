@@ -261,6 +261,12 @@
 // [SacrificeSource] and [SacrificeSourceStep] require the resolving controller
 // to control the source when the effect applies.
 //
+// # Damage
+//
+// [Game.DealDamageToPermanent] applies replacement and prevention effects
+// before it removes loyalty counters from a planeswalker (CR 120.3c).
+// Damage is also marked if the planeswalker is a creature (CR 120.3e).
+//
 // # Damage-Source Choices
 //
 // Effects that state "a source of your choice" do not target. The player

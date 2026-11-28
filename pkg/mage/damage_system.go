@@ -334,7 +334,7 @@ func (ds *DamageSystem) DealDamageToPermanent(g *Game, perm *Permanent, amount i
 	g.executeAction(result)
 }
 
-// ExecuteDamageToCreature applies damage to a creature after all replacements have been applied.
+// ExecuteDamageToCreature applies damage to a permanent after replacement effects.
 func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureAction) {
 	perm := g.MutablePermanent(a.PermanentID())
 	if perm == nil {
