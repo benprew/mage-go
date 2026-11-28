@@ -11,6 +11,42 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
+func TestCastleUpdatesWhenCreaturesTapOrUntap(t *testing.T) {
+	t.Run("a damaged Wall dies when Ali Baba taps it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		wallID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Swords")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Castle")
+		aliID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ali Baba")
+		player := g.GetPlayer(gametest.PlayerB)
+		player.ManaPool().Add(core.Red, 1)
+
+		g.DealDamageToPermanent(g.FindPermanent(wallID), 5, uuid.Nil())
+		g.CheckStateBasedActions()
+		g.AssertPowerToughness(gametest.PlayerA, "Wall of Swords", 3, 7)
+
+		if err := g.ActivateAbilityByIndex(player.PlayerID(), aliID, 0, []uuid.UUID{wallID}); err != nil {
+			t.Fatalf("activate Ali Baba: %v", err)
+		}
+		g.ResolveStack()
+		g.AssertGraveyardCount(gametest.PlayerA, "Wall of Swords", 1)
+	})
+
+	t.Run("untapping restores the bonus during the same step", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		bearsID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.TapPermanent(g.FindPermanent(bearsID))
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Castle")
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+
+		controller := g.GetPlayer(gametest.PlayerA).PlayerID()
+		if err := mage.ApplyEffect(g.Game, mage.UntapTarget(), uuid.Nil(), controller, []uuid.UUID{bearsID}); err != nil {
+			t.Fatalf("untap Grizzly Bears: %v", err)
+		}
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4)
+	})
+}
+
 // Tests for cards registered in alpha_enchantments.go.
 
 func TestHolyStrengthFizzlesWhenTargetDestroyed(t *testing.T) {

@@ -68,6 +68,9 @@
 // Layer application keeps registration order within each layer.
 // [RunStepWithPriority] removes effects that expire at the start of upkeep
 // before it applies layers and checks upkeep triggers.
+// [Game.TapPermanent] and [Game.UntapPermanent] update continuous effects
+// before they check triggers. During the untap step, the engine updates the
+// effects after all eligible permanents untap.
 //
 // [Card.NewCopy] creates a new identity and retains the copiable definition.
 // [Card.CloneInstance] retains identity for a simulation branch. [Game.Clone]

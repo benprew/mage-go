@@ -392,10 +392,10 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 		return err
 	}
 
+	inner := UnwrapAbility(perm.RuntimeAbilities[action.AbilityIndex])
 	g.TapPermanent(perm)
 	addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
 
-	inner := UnwrapAbility(perm.RuntimeAbilities[action.AbilityIndex])
 	switch activated := inner.(type) {
 	case *ManaAbility:
 		if err := ms.RunManaPostProduction(g, activated, player, perm); err != nil {
@@ -426,10 +426,8 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 	}
 
 	var chosen []ManaProduction
-	var chosenAbility *ManaAbility
 	chosenIndex := -1
 	var firstProd []ManaProduction
-	var firstAbility *ManaAbility
 	firstIndex := -1
 	for index, a := range perm.RuntimeAbilities {
 		if activation, ok := UnwrapAbility(a).(interface {
@@ -444,18 +442,15 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 		if firstProd == nil {
 			firstProd = productions
 			firstIndex = index
-			firstAbility, _ = UnwrapAbility(a).(*ManaAbility)
 		}
 		if preferredColor != Colorless && productionsMatchColor(productions, preferredColor) {
 			chosen = productions
 			chosenIndex = index
-			chosenAbility, _ = UnwrapAbility(a).(*ManaAbility)
 			break
 		}
 	}
 	if chosen == nil {
 		chosen = firstProd
-		chosenAbility = firstAbility
 		chosenIndex = firstIndex
 	}
 	if chosen == nil {
@@ -464,13 +459,15 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 	if !perm.CanTapForEffect(g) {
 		return fmt.Errorf("creature has summoning sickness")
 	}
+	inner := UnwrapAbility(perm.RuntimeAbilities[chosenIndex])
+	chosenAbility, _ := inner.(*ManaAbility)
 	g.TapPermanent(perm)
 	if p := g.GetPlayer(playerID); p != nil {
 		produced := ms.AddManaProductions(g, chosen, p, perm, preferredColor)
 		if err := ms.RunManaPostProduction(g, chosenAbility, p, perm); err != nil {
 			return err
 		}
-		if action, ok := UnwrapAbility(perm.RuntimeAbilities[chosenIndex]).(*ActionDefinition); ok {
+		if action, ok := inner.(*ActionDefinition); ok {
 			g.markAbilityActivated(perm.ID(), action.AbilityID(), chosenIndex)
 			g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), PlayerID: playerID, Flag: true})
 		}

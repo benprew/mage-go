@@ -772,15 +772,19 @@ func (g *Game) TapPermanent(perm *Permanent) {
 		return
 	}
 	perm = g.MutablePermanent(perm.ID())
-	if perm == nil {
+	if perm == nil || perm.Tapped {
 		return
 	}
 	perm.Tapped = true
-	g.FireEvent(GameEvent{
+	event := GameEvent{
 		Type:     EvtTapped,
 		SourceID: perm.ID(),
 		PlayerID: perm.ControllerID(),
-	})
+	}
+	if len(g.effects.effects) > 0 {
+		g.effects.Apply(g)
+	}
+	g.FireEvent(event)
 }
 
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
@@ -2613,6 +2617,17 @@ func (g *Game) checkWorldStateBasedAction() bool {
 // permanent is currently tapped it untaps and EvtBecameUntapped fires.
 // Returns true if the permanent actually untapped.
 func (g *Game) UntapPermanent(p *Permanent) bool {
+	if !g.untapPermanentState(p) {
+		return false
+	}
+	if len(g.effects.effects) > 0 {
+		g.effects.Apply(g)
+	}
+	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
+	return true
+}
+
+func (g *Game) untapPermanentState(p *Permanent) bool {
 	if p == nil {
 		return false
 	}
@@ -2628,7 +2643,6 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 		return false
 	}
 	p.Tapped = false
-	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 	return true
 }
 
@@ -2639,16 +2653,6 @@ func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 		return
 	}
 	g.turns.SkipNextUntap(permanentID)
-}
-
-func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
-	if p == nil || !p.Tapped {
-		return false
-	}
-	if g.turns.ConsumeSkipNextUntap(p.ID()) {
-		return false
-	}
-	return g.UntapPermanent(p)
 }
 
 func (g *Game) doUntap() {
@@ -2674,6 +2678,15 @@ func (g *Game) doUntap() {
 	creatureUntapLimit := g.effects.Rules.CreatureUntapMax
 	creaturesUntapped := 0
 
+	var untapped []uuid.UUID
+	untap := func(p *Permanent) bool {
+		if !p.Tapped || g.turns.ConsumeSkipNextUntap(p.ID()) || !g.untapPermanentState(p) {
+			return false
+		}
+		untapped = append(untapped, p.ID())
+		return true
+	}
+
 	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == active.PlayerID() {
 			if p.HasAttr(AttrDoesNotUntap) {
@@ -2690,35 +2703,36 @@ func (g *Game) doUntap() {
 				if !autoUntap && !active.ChooseMayAbility("untap "+p.Name()) {
 					continue
 				}
-				g.untapPermanentDuringUntapStep(p)
+				untap(p)
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
-				if p.Tapped && landsUntapped < landUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						landsUntapped++
-					}
+				if landsUntapped < landUntapLimit && untap(p) {
+					landsUntapped++
 				}
 			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
 				// Artifact (non-land) with untap limit in effect (Damping Field)
-				if p.Tapped && artifactsUntapped < artifactUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						artifactsUntapped++
-					}
+				if artifactsUntapped < artifactUntapLimit && untap(p) {
+					artifactsUntapped++
 				}
 			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
 				// Creature with untap limit in effect (Smoke)
-				if p.Tapped && creaturesUntapped < creatureUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						creaturesUntapped++
-					}
+				if creaturesUntapped < creatureUntapLimit && untap(p) {
+					creaturesUntapped++
 				}
-			} else if p.Tapped {
-				g.untapPermanentDuringUntapStep(p)
+			} else {
+				untap(p)
 			}
 			if mp := g.MutablePermanent(p.ID()); mp != nil {
 				mp.RevokeBaseAttr(AttrSummonSick)
 			}
 		}
+	}
+	// Triggers must see the state after all eligible permanents untap.
+	if len(untapped) > 0 && len(g.effects.effects) > 0 {
+		g.effects.Apply(g)
+	}
+	for _, id := range untapped {
+		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: id})
 	}
 	g.trackers.Turn.ResetLandsPlayed()
 }
