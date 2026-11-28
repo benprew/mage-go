@@ -71,6 +71,8 @@
 // [Game.TapPermanent] and [Game.UntapPermanent] update continuous effects
 // before they check triggers. During the untap step, the engine updates the
 // effects after all eligible permanents untap.
+// [PreventUntapForMatching] registers an untap rule. Use
+// [Game.HasUntapStepRestriction] to test its filter against current characteristics.
 //
 // [Card.NewCopy] creates a new identity and retains the copiable definition.
 // [Card.CloneInstance] retains identity for a simulation branch. [Game.Clone]

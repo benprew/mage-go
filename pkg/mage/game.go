@@ -2609,6 +2609,23 @@ func (g *Game) checkWorldStateBasedAction() bool {
 	return true
 }
 
+// HasUntapStepRestriction reports whether an ability or continuous effect
+// prevents this permanent from untapping during its controller's untap step.
+func (g *Game) HasUntapStepRestriction(p *Permanent) bool {
+	if p == nil || p.PhasedOut {
+		return false
+	}
+	if p.HasAttr(AttrDoesNotUntap) {
+		return true
+	}
+	for _, filter := range g.effects.Rules.untapRestrictions {
+		if filter.Match(p, g) {
+			return true
+		}
+	}
+	return false
+}
+
 // UntapPermanent untaps the given permanent unless it has a stun counter
 // (CR 122.1g — "If a permanent with a stun counter would become untapped,
 // remove a stun counter from it instead. It doesn't untap.") If the
@@ -2657,19 +2674,20 @@ func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
+	activeID := active.PlayerID()
 	// Island Sanctuary: clear protection at the start of the player's turn
-	g.effects.Rules.ClearSanctuary(active.PlayerID())
+	g.effects.Rules.ClearSanctuary(activeID)
 
 	// Snapshot the active player's untapped land count before the untap loop
 	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
 	// similar effects read this at upkeep.
 	count := 0
 	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
+		if p.ControllerID() == activeID && p.HasType(TypeLand) && !p.Tapped {
 			count++
 		}
 	}
-	g.trackers.Turn.SetUntappedLandsAtTurnStart(active.PlayerID(), count)
+	g.trackers.Turn.SetUntappedLandsAtTurnStart(activeID, count)
 
 	landUntapLimit := g.effects.Rules.LandUntapMax
 	landsUntapped := 0
@@ -2677,6 +2695,15 @@ func (g *Game) doUntap() {
 	artifactsUntapped := 0
 	creatureUntapLimit := g.effects.Rules.CreatureUntapMax
 	creaturesUntapped := 0
+
+	// Check the restrictions before any permanent untaps (CR 502.3).
+	var restricted []bool
+	if len(g.effects.Rules.untapRestrictions) > 0 {
+		restricted = make([]bool, len(g.zones.battlefield))
+		for i, p := range g.zones.battlefield {
+			restricted[i] = p.Tapped && p.ControllerID() == activeID && g.HasUntapStepRestriction(p)
+		}
+	}
 
 	var untapped []uuid.UUID
 	untap := func(p *Permanent) bool {
@@ -2687,9 +2714,9 @@ func (g *Game) doUntap() {
 		return true
 	}
 
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() {
-			if p.HasAttr(AttrDoesNotUntap) {
+	for i, p := range g.zones.battlefield {
+		if p.ControllerID() == activeID {
+			if p.HasAttr(AttrDoesNotUntap) || (i < len(restricted) && restricted[i]) {
 				// Does not untap — skip
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
 				// Player may choose not to untap, but only when staying tapped

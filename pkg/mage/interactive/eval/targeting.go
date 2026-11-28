@@ -96,7 +96,7 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		if perm.HasType(core.TypeCreature) && alreadyLethallyDamaged(g, perm) {
 			return -15
 		}
-		if perm.Tapped && perm.HasAttr(core.AttrDoesNotUntap) {
+		if perm.Tapped && g.HasUntapStepRestriction(perm) {
 			value /= 2
 		}
 		if perm.HasType(core.TypeCreature) {
@@ -115,7 +115,7 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		if perm.HasType(core.TypeCreature) && alreadyLethallyDamaged(g, perm) {
 			return -15
 		}
-		if perm.Tapped && perm.HasAttr(core.AttrDoesNotUntap) {
+		if perm.Tapped && g.HasUntapStepRestriction(perm) {
 			value /= 2
 		}
 		if perm.HasType(core.TypeCreature) {
@@ -175,7 +175,7 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		if purpose == TargetPump && perm.HasAttr(core.AttrSummonSick) && !perm.HasAttr(core.Haste) {
 			score -= 8
 		}
-		if perm.HasKeyword(core.Defender) || perm.HasAttr(core.AttrDoesNotUntap) {
+		if perm.HasKeyword(core.Defender) || g.HasUntapStepRestriction(perm) {
 			score -= 4
 		}
 		if hasTargetingEvasion(perm) {

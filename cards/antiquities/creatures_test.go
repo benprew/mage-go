@@ -3,6 +3,7 @@ package antiquities
 import (
 	"os"
 	"testing"
+	"uuid"
 
 	_ "github.com/benprew/mage-go/cards/limited" // register base cards
 	"github.com/benprew/mage-go/pkg/mage"
@@ -1091,6 +1092,32 @@ func TestTriskelion(t *testing.T) {
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 19)
 		g.AssertCounterCount(gametest.PlayerA, "Triskelion", core.P1P1, 2)
+	})
+
+	t.Run("Meekstone sees the power change when the cost is paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		triskelionID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Triskelion")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Meekstone")
+		g.TapPermanent(g.FindPermanent(triskelionID))
+		controller := g.GetPlayer(gametest.PlayerA).PlayerID()
+		targets := []uuid.UUID{g.GetPlayer(gametest.PlayerB).PlayerID()}
+
+		for _, power := range []int{3, 2} {
+			if err := g.ActivateAbilityByIndex(controller, triskelionID, 1, targets); err != nil {
+				t.Fatalf("activate Triskelion: %v", err)
+			}
+			g.AssertPowerToughness(gametest.PlayerA, "Triskelion", power, power)
+			wantRestricted := power >= 3
+			if got := g.HasUntapStepRestriction(g.FindPermanent(triskelionID)); got != wantRestricted {
+				t.Errorf("Triskelion at %d power: restriction = %t, want %t", power, got, wantRestricted)
+			}
+			if violations := g.CheckInvariants(mage.InvariantOptions{CheckContinuousIdempotency: true}); len(violations) != 0 {
+				t.Errorf("after Triskelion drops to %d power: %v", power, violations)
+			}
+		}
+		g.ResolveStack()
+		g.RunStepWithPriority(core.Untap)
+		g.AssertTapped(gametest.PlayerA, "Triskelion", false)
 	})
 }
 

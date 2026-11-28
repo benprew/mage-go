@@ -106,6 +106,27 @@ func TestRunStepWithPriority_Untap(t *testing.T) {
 	}
 }
 
+func TestRunStepWithPriority_UntapChecksRestrictionsBeforeUntapping(t *testing.T) {
+	g, player, _ := invariantTestGame()
+	first := addInvariantPermanent(g, player, NewArtifact("First artifact", ""))
+	second := addInvariantPermanent(g, player, NewArtifact("Second artifact", ""))
+	firstID, secondID := first.ID(), second.ID()
+	filter := NewPermanentFilter("second artifact while the first is tapped", func(p *Permanent, g *Game) bool {
+		return p.ID() == secondID && g.FindPermanent(firstID).Tapped
+	})
+	addInvariantPermanent(g, player, NewEnchantment("Untap restriction", "", WithStaticAbility(PreventUntapForMatching(filter))))
+	g.TapPermanent(first)
+	g.TapPermanent(second)
+
+	g.RunStepWithPriority(Untap)
+	if g.FindPermanent(firstID).Tapped || !g.FindPermanent(secondID).Tapped {
+		t.Fatal("only the first artifact must untap")
+	}
+	if g.HasUntapStepRestriction(g.FindPermanent(secondID)) {
+		t.Error("the restriction must end once the first artifact untaps")
+	}
+}
+
 func TestRunStepWithPriority_Draw(t *testing.T) {
 	g := newPriorityTestGame()
 	g.SetTurn(2) // not turn 1 so draw happens

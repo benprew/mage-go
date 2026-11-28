@@ -535,7 +535,7 @@ func keywordBonusInGame(perm *mage.Permanent, g *mage.Game) int {
 	if perm.HasKeyword(core.Defender) {
 		score -= max(2, power+1)
 	}
-	if perm.HasKeyword(core.DoesNotUntapKW) {
+	if g.HasUntapStepRestriction(perm) {
 		score -= max(2, combatSize/3)
 	}
 	if perm.HasKeyword(core.MustAttack) {

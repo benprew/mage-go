@@ -489,6 +489,8 @@ type permanentCharacteristics struct {
 	attrs      [NumAttrs]bool
 	counters   [NumCounters]uint8
 	abilities  []runtimeAbilitySnapshot
+
+	untapRestricted bool
 }
 
 type runtimeAbilitySnapshot struct {
@@ -539,6 +541,8 @@ func snapshotCharacteristics(g *Game) map[uuid.UUID]permanentCharacteristics {
 			subtypes:   append([]string(nil), perm.SubTypes()...),
 			colors:     append([]Color(nil), perm.Colors()...),
 			counters:   perm.Counters,
+
+			untapRestricted: g.HasUntapStepRestriction(perm),
 		}
 		if !perm.FaceDown {
 			snap.name = perm.Name()
@@ -592,6 +596,9 @@ func compareCharacteristics(before, after map[uuid.UUID]permanentCharacteristics
 			!slices.Equal(a.abilities, b.abilities) {
 			add("layers", "%s for %q (%s), P/T %d/%d to %d/%d and %d to %d runtime abilities",
 				message, b.name, id, b.power, b.toughness, a.power, a.toughness, len(b.abilities), len(a.abilities))
+		} else if a.untapRestricted != b.untapRestricted {
+			add("layers", "%s for %q (%s), untap restriction %t to %t",
+				message, b.name, id, b.untapRestricted, a.untapRestricted)
 		}
 	}
 	for id := range after {
