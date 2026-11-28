@@ -46,7 +46,7 @@ type TestPlayer struct {
 	chooseBandingDistribution []map[string]int
 	chooseMode                []int
 	chooseNumber              []int
-	chooseTarget              []string
+	chooseTargetGroups        [][]string
 	combatBlockerOrder        map[string][]string
 	combatDamageAssignment    map[string]map[string]int
 	chooseScryDecisions       []scryDecision
@@ -234,49 +234,34 @@ func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	return result
 }
 
-// ChooseTargets selects from possible targets (for auto-targeting).
-// If a scripted target name is queued (via TestGame.ChooseTarget), it is
-// resolved against the possible IDs by matching player name or permanent name.
+// ChooseTargets uses the next scripted group if all its choices fit the prompt.
 func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *mage.Game) []uuid.UUID {
-	var selected []uuid.UUID
-	for len(tp.chooseTarget) > 0 && len(selected) < maximum {
-		name := tp.chooseTarget[0]
-		found := false
-		for _, id := range possible {
+	if len(tp.chooseTargetGroups) == 0 {
+		return tp.BasePlayer.ChooseTargets(possible, minimum, maximum, g)
+	}
+	names := tp.chooseTargetGroups[0]
+	if len(names) < minimum || len(names) > maximum {
+		return tp.BasePlayer.ChooseTargets(possible, minimum, maximum, g)
+	}
+	selected := make([]uuid.UUID, 0, len(names))
+	for _, name := range names {
+		index := slices.IndexFunc(possible, func(id uuid.UUID) bool {
 			if slices.Contains(selected, id) {
-				continue
+				return false
 			}
-			if pl := g.GetPlayer(id); pl != nil && pl.Name() == name {
-				selected = append(selected, id)
-				tp.chooseTarget = tp.chooseTarget[1:]
-				found = true
-				break
+			if player := g.GetPlayer(id); player != nil {
+				return player.Name() == name
 			}
-			if perm := g.FindPermanent(id); perm != nil && perm.Name() == name {
-				selected = append(selected, id)
-				tp.chooseTarget = tp.chooseTarget[1:]
-				found = true
-				break
-			}
-			if card := g.FindCardAnywhere(id); card != nil && card.Name() == name {
-				selected = append(selected, id)
-				tp.chooseTarget = tp.chooseTarget[1:]
-				found = true
-				break
-			}
+			card := g.FindCardAnywhere(id)
+			return card != nil && card.Name() == name
+		})
+		if index < 0 {
+			return tp.BasePlayer.ChooseTargets(possible, minimum, maximum, g)
 		}
-		if !found {
-			break
-		}
+		selected = append(selected, possible[index])
 	}
-	if len(selected) >= minimum {
-		return selected
-	}
-	if len(possible) >= minimum {
-		n := min(minimum, len(possible))
-		return possible[:n]
-	}
-	return nil
+	tp.chooseTargetGroups = tp.chooseTargetGroups[1:]
+	return selected
 }
 
 // ChooseMayAbility consumes a queued decision (FIFO) if any; otherwise

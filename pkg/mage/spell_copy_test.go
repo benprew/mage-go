@@ -249,7 +249,7 @@ func TestCopySpellOnStack_DividedDamageNewTargets(t *testing.T) {
 	g, a, b := newSpellCopyGame()
 
 	pyro := NewSorcery("Pyrotechnics", "{4}{R}",
-		NewTargetedSpell(TargetDamageDivided(4), DealDividedDamage(Fixed(4))),
+		NewTargetedSpell(TargetUpToNCreaturesOrPlayers(4), DealDividedDamage(Fixed(4))),
 	)
 	pyro.SetOwner(a.PlayerID())
 	a.AddToHand(pyro)

@@ -1,12 +1,43 @@
 package gametest
 
 import (
+	"slices"
 	"testing"
 	"uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
+
+func TestScriptedTargetsStayWithTheirPrompts(t *testing.T) {
+	tg := NewTestGame(t)
+	player := tg.GetPlayer(PlayerA)
+	a, b := player.PlayerID(), tg.GetPlayer(PlayerB).PlayerID()
+	possible := []uuid.UUID{a, b}
+	tg.ChooseTarget(PlayerA, "PlayerA")
+	tg.ChooseTarget(PlayerA, "PlayerB")
+
+	if targets := player.ChooseTargets(possible, 1, 2, tg.Game); !slices.Equal(targets, []uuid.UUID{a}) {
+		t.Errorf("first prompt selected %v, want [%v]", targets, a)
+	}
+	if targets := player.ChooseTargets(possible, 1, 1, tg.Game); !slices.Equal(targets, []uuid.UUID{b}) {
+		t.Errorf("second prompt selected %v, want [%v]", targets, b)
+	}
+}
+
+func TestScriptedTargetGroupWaitsUntilLegal(t *testing.T) {
+	tg := NewTestGame(t)
+	player := tg.GetPlayer(PlayerA)
+	a, b := player.PlayerID(), tg.GetPlayer(PlayerB).PlayerID()
+	tg.ChooseTargets(PlayerA, "PlayerA", "PlayerB")
+
+	if targets := player.ChooseTargets([]uuid.UUID{a}, 1, 2, tg.Game); !slices.Equal(targets, []uuid.UUID{a}) {
+		t.Errorf("first prompt selected %v, want [%v]", targets, a)
+	}
+	if targets := player.ChooseTargets([]uuid.UUID{b, a}, 2, 2, tg.Game); !slices.Equal(targets, []uuid.UUID{a, b}) {
+		t.Errorf("second prompt selected %v, want [%v %v]", targets, a, b)
+	}
+}
 
 // TestMultiTargetUpToN exercises NewMultiTargetSpell + TargetUpToNCreatures +
 // ToAllTargets() — a single Target with min=0 max=N whose effect must apply
