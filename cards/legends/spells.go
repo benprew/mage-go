@@ -812,10 +812,11 @@ func registerSpells() {
 	// Sorcery
 	// Pyrotechnics deals 4 damage divided as you choose among any number of targets.
 	Register("Pyrotechnics", func() *Card {
+		const damage = 4
 		return NewSorcery("Pyrotechnics", "{4}{R}",
-			NewMultiTargetSpell(
-				[]Target{TargetDamageAnyTarget(), mage.TargetUpToNCreaturesOrPlayers(3)},
-				mage.DealDividedDamage(Fixed(4)),
+			NewTargetedSpell(
+				mage.TargetUpToNCreaturesOrPlayers(damage),
+				DealDividedDamage(Fixed(damage)),
 			),
 		)
 	})

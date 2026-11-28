@@ -36,6 +36,7 @@ const (
 	ActionSelectBlockers
 	ActionUndo
 	ActionAssignCombatDamage
+	ActionAssignDamage
 )
 
 // PriorityAction is a decision sent from the TUI (or AI) to the game loop.
@@ -64,6 +65,7 @@ const (
 	PromptDeclareBlockers
 	PromptChooseTargets
 	PromptAssignCombatDamage
+	PromptAssignDamage
 )
 
 func (pt PromptType) String() string {
@@ -80,6 +82,8 @@ func (pt PromptType) String() string {
 		return "Choose Targets"
 	case PromptAssignCombatDamage:
 		return "Assign Combat Damage"
+	case PromptAssignDamage:
+		return "Assign Damage"
 	default:
 		return ""
 	}

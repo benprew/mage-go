@@ -4,6 +4,23 @@
 
 Magic: The Gathering rules engine in Go (2-player, XMage-inspired).
 
+## Card Rulings
+
+Read the checked-in Scryfall rulings first when you implement or audit a card.
+For shared engine or compiler work, read the rulings for the cards that establish
+the required behavior. Find the exact card name in `data/rulings/index.json` and
+open the listed file in `data/rulings/`.
+
+```bash
+rg -F '"Vesuvan Doppelganger"' data/rulings/index.json
+cat data/rulings/aeaccab9-3e2c-4a40-a483-52c4972b2014.json
+```
+
+Use these rulings with the Oracle text and Comprehensive Rules. An empty
+`rulings` array means Scryfall had no rulings for the card at retrieval time.
+Consult Scryfall online for rulings only if the card or file is missing or the
+task requires current rulings. See [Card rulings](README.md#card-rulings).
+
 ## Commands
 
 ```bash
@@ -30,8 +47,6 @@ make lint                                  # lint (run after making changes and 
 ## Card Implementation Guide
 
 Inspect the mtgish definition from the mage-go root with `../mtgish/show_card "Sol Ring"`. The source is `../mtgish/data/mtgish.lines.json`. Read `pkg/mage/doc.go` for the engine API before changing game behavior.
-
-Check local rulings when you implement or audit a card. For shared engine or compiler work, check the published cards that establish the required behavior. Look up the exact card name in `data/rulings/index.json` and read the listed file alongside the Oracle text and Comprehensive Rules. See [Card rulings](README.md#card-rulings).
 
 **Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
 

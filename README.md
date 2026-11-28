@@ -40,8 +40,10 @@ cards/custom/          # custom/test cards
 cmd/tui/               # terminal UI
 cmd/server/            # SSH multiplayer server
 cmd/fetchset/          # set data fetcher
+cmd/fetchrulings/      # Scryfall rulings snapshot updater
 cmd/genset/            # stub generator from Scryfall JSON
 data/                  # Scryfall JSON card data per set
+data/rulings/          # Scryfall rulings indexed by card name
 .agents/skills/        # Agent skills for the repo
 ```
 
@@ -59,18 +61,28 @@ Use Scryfall JSON for the expected set roster and Oracle text. The repo skills c
 
 ### Card rulings
 
-Use the Scryfall rulings snapshot in `data/rulings/` with Oracle text and the
-Comprehensive Rules when you implement or audit a card. Look up the exact card
-name in `index.json` and read the listed `<oracle-id>.json` file in the same
-directory. Reprints share one file. [Rulings index](data/rulings/index.json)
+Start with the local Scryfall rulings in `data/rulings/`. Use them with Oracle text
+and the Comprehensive Rules when you implement or audit a card. Look up the
+exact card name in `index.json` and read the listed `<oracle-id>.json` file in the
+same directory. Reprints share one file. [Rulings index](data/rulings/index.json)
 
-The record's `retrieved_at` field gives the date and time of the Scryfall lookup.
-Each item in `rulings` stores the text in `comment`, the publication date in
-`published_at`, and the source in `source`. A source of `wotc` identifies Wizards
-of the Coast, and `scryfall` identifies a Scryfall note. An empty `rulings` array
-means Scryfall returned no rulings at retrieval time. If an entry or file is
-missing, consult the card's published rulings when you need them to establish
-its behavior.
+The record's `retrieved_at` field gives the date and time when the stored rulings
+were retrieved. Each item in `rulings` stores the text in `comment`, the
+publication date in `published_at`, and the source in `source`. A source of
+`wotc` identifies Wizards of the Coast, and `scryfall` identifies a Scryfall note.
+An empty `rulings` array means Scryfall had no rulings for the card at retrieval
+time. Consult Scryfall online for rulings only if the card or file is missing
+or the task requires current rulings.
+
+Run this from the repository root to refresh the snapshot.
+
+```bash
+go run ./cmd/fetchrulings
+```
+
+The command downloads the latest bulk export and updates the cards listed in
+`index.json` by Oracle ID. It writes a card file when its ruling list changes,
+including when Scryfall removes rulings. [Scryfall bulk rulings](https://api.scryfall.com/bulk-data/rulings)
 
 ## Build & Test
 

@@ -152,6 +152,65 @@ func (p *HumanPlayer) GetCombatDamageAssignment(g *mage.Game, attacker *mage.Per
 	return action.Damage
 }
 
+// ChooseDamageDistribution prompts the player to divide damage among multiple targets.
+func (p *HumanPlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, reason string, g *mage.Game) map[uuid.UUID]int {
+	if total <= 0 || len(possible) == 0 {
+		return nil
+	}
+	if len(possible) == 1 {
+		return map[uuid.UUID]int{possible[0]: total}
+	}
+	if len(possible) == total {
+		dist := make(map[uuid.UUID]int, len(possible))
+		for _, id := range possible {
+			dist[id] = 1
+		}
+		return dist
+	}
+
+	var state *GameState
+	if g != nil {
+		idx := findPlayerIndex(g, p.PlayerID())
+		state = SnapshotGameState(g, idx)
+	}
+	opt := ActionOption{
+		Type:         ActionAssignDamage,
+		Label:        fmt.Sprintf("%s assigns %d damage", reason, total),
+		CardName:     reason,
+		MaxXValue:    total,
+		ValidTargets: possible,
+	}
+	for _, id := range possible {
+		label := id.String()
+		if g != nil {
+			if player := g.GetPlayer(id); player != nil {
+				label = player.Name()
+			} else if perm := g.FindPermanent(id); perm != nil {
+				label = fmt.Sprintf("%s %d/%d", perm.Name(), perm.CurrentPower(g), perm.CurrentToughness(g))
+			}
+		}
+		opt.ValidTargetLabels = append(opt.ValidTargetLabels, label)
+	}
+
+	if !p.sendGameMsg(GameMsg{
+		State:   state,
+		Prompt:  PromptAssignDamage,
+		Options: []ActionOption{opt},
+		Log:     append([]string(nil), p.gameLog...),
+	}) {
+		return p.BasePlayer.ChooseDamageDistribution(possible, total, reason, g)
+	}
+
+	action := p.receiveAction()
+	if action.Type != ActionAssignDamage && action.Type != ActionAssignCombatDamage {
+		return p.BasePlayer.ChooseDamageDistribution(possible, total, reason, g)
+	}
+	if len(action.Damage) > 0 {
+		return action.Damage
+	}
+	return p.BasePlayer.ChooseDamageDistribution(possible, total, reason, g)
+}
+
 // ChoiceRequests returns a channel the TUI should read for incoming choice requests.
 func (p *HumanPlayer) ChoiceRequests() <-chan ChoiceRequest {
 	return p.choiceReqs

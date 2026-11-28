@@ -316,20 +316,20 @@ func (tg *TestGame) Block(turn int, p PlayerRef, blocker, attacker string) {
 	tp.blockActions[turn] = append(tp.blockActions[turn], blockPair{blocker, attacker})
 }
 
-// ChooseTarget scripts which target a player will choose when prompted by
-// ChooseTargets (e.g. for triggered abilities that declare .AddTarget(...)).
-// The name is matched against possible player names (e.g. "PlayerA",
-// "PlayerB") or permanent names.
+// ChooseTarget records one target name for one prompt.
 func (tg *TestGame) ChooseTarget(p PlayerRef, name string) {
-	tp := tg.GetPlayer(p)
-	tp.chooseTarget = append(tp.chooseTarget, name)
+	tg.ChooseTargets(p, name)
 }
 
-// ChooseDamageDistribution scripts the damage division a player will return
-// when casting a divided-damage spell (CR 601.2d). Keys are target names
-// (player names or permanent names); values are the per-target damage amount.
-// Values must sum to the spell's total or the engine will discard the
-// distribution and fall back to dumping all damage on the first target.
+// ChooseTargets records the target names for one prompt in selection order.
+func (tg *TestGame) ChooseTargets(p PlayerRef, names ...string) {
+	tp := tg.GetPlayer(p)
+	tp.chooseTargetGroups = append(tp.chooseTargetGroups, slices.Clone(names))
+}
+
+// ChooseDamageDistribution records the damage shares for a spell (CR 601.2d).
+// Use player or permanent names as keys. Each target must get at least one
+// damage, and the shares must add up to the spell's total damage.
 func (tg *TestGame) ChooseDamageDistribution(p PlayerRef, distribution map[string]int) {
 	tp := tg.GetPlayer(p)
 	cp := make(map[string]int, len(distribution))

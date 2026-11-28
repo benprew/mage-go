@@ -532,9 +532,8 @@ func TargetUpToNCreaturesOpponentControls(n int, filters ...PermanentFilter) Tar
 	}}
 }
 
-// TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
-// creatures or players. Used for divided-damage spells like Flames of the
-// Firebrand ("3 damage divided as you choose among any number of targets").
+// TargetUpToNCreaturesOrPlayers permits zero to n targets for damage.
+// The targets can be creatures, planeswalkers, or players.
 func TargetUpToNCreaturesOrPlayers(n int) Target {
 	return &DamageAnyTarget{
 		min: 0, max: n,
@@ -631,6 +630,14 @@ func TargetDamageAnyTarget() Target {
 func TargetDamageAnyNumberOfTargets() Target {
 	return &DamageAnyTarget{
 		min: 1, max: 100,
+	}
+}
+
+// TargetDamageDivided creates a target that selects from 1 up to maxTargets
+// creatures, planeswalkers, or players for divided-damage spells (CR 601.2d).
+func TargetDamageDivided(maxTargets int) Target {
+	return &DamageAnyTarget{
+		min: 1, max: maxTargets,
 	}
 }
 
